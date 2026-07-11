@@ -328,18 +328,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <div class="bh-tile" style="--tc:#C9A14A" onclick="abrirBiblia()">
         <div class="bh-tile-icon">📖</div>
         <div class="bh-tile-info">
-          <div class="bh-tile-nome">Ler Bíblia</div>
+          <div class="bh-tile-nome">BÍBLIA</div>
           <div class="bh-tile-desc">Almeida Atualizada — 66 livros</div>
         </div>
-        <span class="bh-tile-arr">›</span>
-      </div>
-      <div class="bh-tile" style="--tc:#C9A14A" onclick="abrirCRM('crm_biblia','Anotações da Bíblia','📋','bh')">
-        <div class="bh-tile-icon">📋</div>
-        <div class="bh-tile-info">
-          <div class="bh-tile-nome">Anotações</div>
-          <div class="bh-tile-desc">Estudos, sermões, passagens marcadas</div>
-        </div>
-        <span class="bh-tile-count" id="cnt-crm-biblia">0</span>
         <span class="bh-tile-arr">›</span>
       </div>
     </div>
@@ -349,18 +340,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <div class="bh-tile" style="--tc:#F0B060" onclick="abrirHarpa()">
         <div class="bh-tile-icon">🎵</div>
         <div class="bh-tile-info">
-          <div class="bh-tile-nome">Ler Harpa</div>
+          <div class="bh-tile-nome">HARPA CRISTÃ</div>
           <div class="bh-tile-desc">640 hinos — estrofe e coro coloridos</div>
         </div>
-        <span class="bh-tile-arr">›</span>
-      </div>
-      <div class="bh-tile" style="--tc:#F0B060" onclick="abrirCRM('crm_harpa','Repertório da Harpa','🎼','bh')">
-        <div class="bh-tile-icon">🎼</div>
-        <div class="bh-tile-info">
-          <div class="bh-tile-nome">Repertório</div>
-          <div class="bh-tile-desc">Hinos favoritos, listas de culto, notas</div>
-        </div>
-        <span class="bh-tile-count" id="cnt-crm-harpa">0</span>
         <span class="bh-tile-arr">›</span>
       </div>
     </div>
@@ -376,6 +358,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <div class="std-titulo" id="bib-titulo">Bíblia — Almeida Atualizada</div>
       <div class="std-sub" id="bib-bread"></div>
     </div>
+    <button class="std-back" onclick="abrirCRM('crm_biblia','Anotações da Bíblia','📋','biblia')" style="font-size:17px">📋</button>
   </div>
   <div class="bib-pos-bar" id="bib-pos-bar" style="display:none">
     <span class="bib-pos-txt" id="bib-pos-txt"></span>
@@ -400,7 +383,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <div class="std-titulo">Harpa Cristã</div>
       <div class="std-sub" id="harpa-lista-sub">640 hinos</div>
     </div>
-    <span style="font-size:24px">🎵</span>
+    <button class="std-back" onclick="abrirCRM('crm_harpa','Favoritos da Harpa','⭐','harpa-lista')" style="font-size:17px">⭐</button>
   </div>
   <div class="harpa-search-wrap">
     <input class="harpa-search" id="harpa-search" placeholder="Número ou nome do hino..." oninput="filtrarHarpa()">
@@ -473,7 +456,6 @@ function abrirMod(id){
   ocultarTodas();
   if(id==='biblia'){
     document.getElementById('tela-bh-landing').classList.add('ativa');
-    atualizarContadoresBH();
     return;
   }
   modAtual=id;
@@ -489,7 +471,16 @@ function voltarHome(){
   ocultarTodas();
   if(modPaiTela==='bh'){
     document.getElementById('tela-bh-landing').classList.add('ativa');
-    atualizarContadoresBH();
+    modPaiTela='home';
+    return;
+  }
+  if(modPaiTela==='biblia'){
+    document.getElementById('tela-biblia').classList.add('ativa');
+    modPaiTela='home';
+    return;
+  }
+  if(modPaiTela==='harpa-lista'){
+    document.getElementById('tela-harpa-lista').classList.add('ativa');
     modPaiTela='home';
     return;
   }
