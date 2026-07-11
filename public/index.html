@@ -106,15 +106,19 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
 /* ══ BH LANDING ══ */
 #tela-bh-landing{background:var(--bg)}
-.bh-tiles{display:flex;flex-direction:column;gap:14px;padding:24px 16px}
-.bh-tile{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;position:relative;overflow:hidden}
-.bh-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc);border-radius:4px 0 0 4px}
-.bh-tile:active{background:var(--card2)}
-.bh-tile-icon{font-size:36px;flex-shrink:0}
-.bh-tile-info{flex:1}
-.bh-tile-nome{font-size:18px;font-weight:800}
-.bh-tile-desc{font-size:12px;color:var(--sub);margin-top:4px}
-.bh-tile-arr{font-size:22px;color:var(--sub)}
+.bh-scroll{flex:1;overflow-y:auto;padding:16px 16px 40px;-webkit-overflow-scrolling:touch}
+.bh-scroll::-webkit-scrollbar{display:none}
+.bh-secao{font-size:9px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.6;margin:16px 0 8px}
+.bh-tiles{display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
+.bh-tile{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;cursor:pointer;position:relative;overflow:hidden}
+.bh-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tc);border-radius:3px 0 0 3px}
+.bh-tile:active{background:var(--card2);border-color:var(--tc)}
+.bh-tile-icon{font-size:28px;flex-shrink:0;width:42px;height:42px;display:grid;place-items:center;background:rgba(255,255,255,.04);border-radius:10px}
+.bh-tile-info{flex:1;min-width:0}
+.bh-tile-nome{font-size:15px;font-weight:700}
+.bh-tile-desc{font-size:11px;color:var(--sub);margin-top:2px}
+.bh-tile-arr{font-size:18px;color:var(--sub);flex-shrink:0}
+.bh-tile-count{font-size:11px;font-weight:800;color:var(--tc);background:rgba(255,255,255,.06);border-radius:20px;padding:3px 9px;flex-shrink:0}
 
 /* ══ BÍBLIA ══ */
 #tela-biblia{background:var(--bg)}
@@ -313,27 +317,54 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <button class="std-back" onclick="voltarHome()">‹</button>
     <div class="std-hinfo">
       <div class="std-titulo">Bíblia e Harpa Cristã</div>
-      <div class="std-sub">Escolha o conteúdo</div>
+      <div class="std-sub">Leitor + CRM isolados</div>
     </div>
-    <span style="font-size:24px">📖</span>
+    <span style="font-size:22px">📖</span>
   </div>
-  <div class="bh-tiles">
-    <div class="bh-tile" style="--tc:#C9A14A" onclick="abrirBiblia()">
-      <span class="bh-tile-icon">📖</span>
-      <div class="bh-tile-info">
-        <div class="bh-tile-nome">Bíblia</div>
-        <div class="bh-tile-desc">Almeida Atualizada — 66 livros completos</div>
+  <div class="bh-scroll">
+
+    <div class="bh-secao">Bíblia</div>
+    <div class="bh-tiles">
+      <div class="bh-tile" style="--tc:#C9A14A" onclick="abrirBiblia()">
+        <div class="bh-tile-icon">📖</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">Ler Bíblia</div>
+          <div class="bh-tile-desc">Almeida Atualizada — 66 livros</div>
+        </div>
+        <span class="bh-tile-arr">›</span>
       </div>
-      <span class="bh-tile-arr">›</span>
-    </div>
-    <div class="bh-tile" style="--tc:#F0B060" onclick="abrirHarpa()">
-      <span class="bh-tile-icon">🎵</span>
-      <div class="bh-tile-info">
-        <div class="bh-tile-nome">Harpa Cristã</div>
-        <div class="bh-tile-desc">640 hinos — estrofes e coro identificados</div>
+      <div class="bh-tile" style="--tc:#C9A14A" onclick="abrirCRM('crm_biblia','Anotações da Bíblia','📋','bh')">
+        <div class="bh-tile-icon">📋</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">Anotações</div>
+          <div class="bh-tile-desc">Estudos, sermões, passagens marcadas</div>
+        </div>
+        <span class="bh-tile-count" id="cnt-crm-biblia">0</span>
+        <span class="bh-tile-arr">›</span>
       </div>
-      <span class="bh-tile-arr">›</span>
     </div>
+
+    <div class="bh-secao">Harpa Cristã</div>
+    <div class="bh-tiles">
+      <div class="bh-tile" style="--tc:#F0B060" onclick="abrirHarpa()">
+        <div class="bh-tile-icon">🎵</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">Ler Harpa</div>
+          <div class="bh-tile-desc">640 hinos — estrofe e coro coloridos</div>
+        </div>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile" style="--tc:#F0B060" onclick="abrirCRM('crm_harpa','Repertório da Harpa','🎼','bh')">
+        <div class="bh-tile-icon">🎼</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">Repertório</div>
+          <div class="bh-tile-desc">Hinos favoritos, listas de culto, notas</div>
+        </div>
+        <span class="bh-tile-count" id="cnt-crm-harpa">0</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -411,7 +442,7 @@ const MODS = [
 ];
 
 // ══ STATE ═════════════════════════════════════════
-let modAtual=null, editId=null;
+let modAtual=null, editId=null, modPaiTela='home';
 function chave(id){ return 'radar_'+id; }
 function getData(id){ return JSON.parse(localStorage.getItem(chave(id))||'[]'); }
 function setData(id,arr){ localStorage.setItem(chave(id),JSON.stringify(arr)); }
@@ -442,6 +473,7 @@ function abrirMod(id){
   ocultarTodas();
   if(id==='biblia'){
     document.getElementById('tela-bh-landing').classList.add('ativa');
+    atualizarContadoresBH();
     return;
   }
   modAtual=id;
@@ -455,8 +487,33 @@ function abrirMod(id){
 
 function voltarHome(){
   ocultarTodas();
+  if(modPaiTela==='bh'){
+    document.getElementById('tela-bh-landing').classList.add('ativa');
+    atualizarContadoresBH();
+    modPaiTela='home';
+    return;
+  }
   document.getElementById('home').classList.add('ativa');
   renderHome();
+}
+
+function abrirCRM(id, nome, icon, paiTela){
+  modAtual=id; modPaiTela=paiTela||'home'; editId=null;
+  document.getElementById('mod-titulo-h').textContent=nome;
+  document.getElementById('mod-icon-h').textContent=icon;
+  document.getElementById('mod-busca').value='';
+  ocultarTodas();
+  document.getElementById('tela-modulo').classList.add('ativa');
+  renderMod();
+}
+
+function atualizarContadoresBH(){
+  const nb=getData('crm_biblia').length;
+  const nh=getData('crm_harpa').length;
+  const eb=document.getElementById('cnt-crm-biblia');
+  const eh=document.getElementById('cnt-crm-harpa');
+  if(eb) eb.textContent=nb||'';
+  if(eh) eh.textContent=nh||'';
 }
 
 function renderMod(){
@@ -466,7 +523,8 @@ function renderMod(){
   document.getElementById('mod-count-h').textContent=items.length+' item'+(items.length!==1?'s':'');
   const el=document.getElementById('mod-lista');
   if(!filtrado.length){
-    el.innerHTML=`<div class="mod-empty"><div class="mod-empty-icon">${MODS.find(x=>x.id===modAtual).icon}</div><div class="mod-empty-txt">Nenhum item ainda.<br>Toque em + ADD para começar.</div></div>`;
+    const iconeVazio = (MODS.find(x=>x.id===modAtual)||{icon:'📋'}).icon;
+    el.innerHTML=`<div class="mod-empty"><div class="mod-empty-icon">${iconeVazio}</div><div class="mod-empty-txt">Nenhum item ainda.<br>Toque em + ADD para começar.</div></div>`;
     return;
   }
   el.innerHTML=filtrado.map(i=>`
