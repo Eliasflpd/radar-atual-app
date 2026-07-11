@@ -15,9 +15,9 @@
   --bg:#080D1A;--card:#0F1525;--card2:#151C30;--line:rgba(201,161,74,.18);
   --gold:#C9A14A;--gold2:#F5C842;--txt:#fff;--sub:rgba(255,255,255,.45);
   --red:#f75f5f;--green:#34c77b;
+  --coro:#F0B060;--estrofe:rgba(255,255,255,.88);
 }
 html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
-
 .tela{position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden}
 .tela.ativa{display:flex}
 
@@ -27,11 +27,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
 /* ══ HOME ══ */
 #home{background:var(--bg)}
-.home-header{
-  padding:env(safe-area-inset-top,16px) 16px 0;
-  padding-top:max(env(safe-area-inset-top),16px);
-  background:linear-gradient(180deg,#050810 0%,transparent 100%);flex-shrink:0
-}
+.home-header{padding:env(safe-area-inset-top,16px) 16px 0;padding-top:max(env(safe-area-inset-top),16px);background:linear-gradient(180deg,#050810 0%,transparent 100%);flex-shrink:0}
 .home-logo{display:flex;align-items:center;gap:10px;padding:14px 0 12px;cursor:pointer;user-select:none}
 .logo-icon{width:36px;height:36px}
 .logo-txt{display:flex;flex-direction:column;line-height:1}
@@ -43,12 +39,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .home-scroll::-webkit-scrollbar{display:none}
 .sec-label{font-size:10px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.6;margin:16px 0 8px}
 .modulos{display:flex;flex-direction:column;gap:8px}
-.modulo-tile{
-  display:flex;align-items:center;gap:14px;
-  background:var(--card);border:1px solid var(--line);
-  border-radius:14px;padding:14px;cursor:pointer;
-  transition:border-color .15s;position:relative;overflow:hidden
-}
+.modulo-tile{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden}
 .modulo-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tile-color,var(--gold));border-radius:3px 0 0 3px}
 .modulo-tile:active{border-color:var(--tile-color,var(--gold));background:var(--card2)}
 .tile-icon{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:20px;flex-shrink:0;background:rgba(255,255,255,.05)}
@@ -58,19 +49,16 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .tile-count{font-size:11px;font-weight:800;color:var(--tile-color,var(--gold));background:rgba(255,255,255,.06);border-radius:20px;padding:3px 9px;flex-shrink:0}
 .tile-arr{color:var(--sub);font-size:18px;flex-shrink:0}
 
+/* ══ HEADER PADRÃO ══ */
+.std-header{display:flex;align-items:center;gap:12px;padding:max(env(safe-area-inset-top),14px) 14px 14px;background:var(--card);border-bottom:1px solid var(--line);flex-shrink:0}
+.std-back{background:rgba(255,255,255,.07);border:none;color:var(--txt);width:36px;height:36px;border-radius:10px;font-size:20px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
+.std-back:active{opacity:.6}
+.std-hinfo{flex:1;min-width:0}
+.std-titulo{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.std-sub{font-size:11px;color:var(--sub);margin-top:1px}
+
 /* ══ MÓDULO GENÉRICO ══ */
 #tela-modulo{background:var(--bg)}
-.mod-header{
-  display:flex;align-items:center;gap:12px;
-  padding:max(env(safe-area-inset-top),14px) 14px 14px;
-  background:var(--card);border-bottom:1px solid var(--line);flex-shrink:0
-}
-.mod-back{background:rgba(255,255,255,.07);border:none;color:var(--txt);width:36px;height:36px;border-radius:10px;font-size:20px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
-.mod-back:active{opacity:.6}
-.mod-hinfo{flex:1;min-width:0}
-.mod-titulo{font-size:15px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mod-subtit{font-size:11px;color:var(--sub)}
-.mod-icon-h{font-size:24px;flex-shrink:0}
 .mod-toolbar{display:flex;gap:8px;padding:12px 14px 8px;flex-shrink:0}
 .mod-search{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 13px;color:var(--txt);font-size:14px;outline:none;font-family:inherit}
 .mod-search::placeholder{color:var(--sub)}
@@ -81,7 +69,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
 .item:active{border-color:var(--gold)}
 .item-body{flex:1;min-width:0}
-.item-tit{font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-tit{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .item-meta{font-size:11px;color:var(--sub);margin-top:3px}
 .item-obs{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .item-acts{display:flex;gap:6px;flex-shrink:0}
@@ -103,7 +91,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .modal-x{background:rgba(255,255,255,.08);border:none;color:var(--sub);width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;display:grid;place-items:center}
 .field{margin-bottom:14px}
 .field label{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub);display:block;margin-bottom:6px}
-.field input,.field select,.field textarea{width:100%;background:#0B1020;border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--txt);font-size:15px;outline:none;font-family:inherit;-webkit-appearance:none}
+.field input,.field textarea{width:100%;background:#0B1020;border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--txt);font-size:15px;outline:none;font-family:inherit;-webkit-appearance:none}
 .field input:focus,.field textarea:focus{border-color:var(--gold)}
 .field textarea{resize:none;height:90px}
 .btn-salvar{width:100%;background:var(--gold);color:#080D1A;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px;font-family:inherit}
@@ -116,77 +104,137 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .nav-btn .nl{font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--sub);text-transform:uppercase}
 .nav-btn.on .nl{color:var(--gold)}
 
-/* ══ BÍBLIA ══════════════════════════════════════ */
-#tela-biblia{background:var(--bg)}
+/* ══ BH LANDING ══ */
+#tela-bh-landing{background:var(--bg)}
+.bh-tiles{display:flex;flex-direction:column;gap:14px;padding:24px 16px}
+.bh-tile{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;position:relative;overflow:hidden}
+.bh-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc);border-radius:4px 0 0 4px}
+.bh-tile:active{background:var(--card2)}
+.bh-tile-icon{font-size:36px;flex-shrink:0}
+.bh-tile-info{flex:1}
+.bh-tile-nome{font-size:18px;font-weight:800}
+.bh-tile-desc{font-size:12px;color:var(--sub);margin-top:4px}
+.bh-tile-arr{font-size:22px;color:var(--sub)}
 
-.bib-header{
-  display:flex;align-items:center;gap:10px;flex-shrink:0;
-  padding:max(env(safe-area-inset-top),14px) 14px 12px;
-  background:var(--card);border-bottom:1px solid var(--line)
-}
-.bib-back{background:rgba(255,255,255,.07);border:none;color:var(--txt);width:36px;height:36px;border-radius:10px;font-size:20px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
-.bib-back:active{opacity:.6}
-.bib-hinfo{flex:1;min-width:0}
-.bib-titulo{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bib-bread{font-size:11px;color:var(--gold);margin-top:1px}
+/* ══ BÍBLIA ══ */
+#tela-biblia{background:var(--bg)}
 .bib-search-wrap{padding:10px 14px 6px;flex-shrink:0}
 .bib-search{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--txt);font-size:14px;outline:none;font-family:inherit}
 .bib-search::placeholder{color:var(--sub)}
 .bib-search:focus{border-color:var(--gold)}
-
 .bib-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .bib-body::-webkit-scrollbar{display:none}
-
-/* Lista de livros */
 .bib-secao{font-size:9px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.55;padding:14px 16px 6px}
-.bib-livro{
-  display:flex;align-items:center;gap:12px;
-  padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.04);
-  cursor:pointer
-}
+.bib-livro{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
 .bib-livro:active{background:var(--card2)}
 .bib-livro-abbrev{width:36px;height:36px;border-radius:8px;background:rgba(201,161,74,.12);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--gold);flex-shrink:0;text-transform:uppercase}
 .bib-livro-nome{flex:1;font-size:14px;font-weight:600}
 .bib-livro-caps{font-size:11px;color:var(--sub)}
 .bib-livro-arr{color:var(--sub);font-size:18px}
 .bib-last-tag{font-size:10px;background:rgba(201,161,74,.15);color:var(--gold);border-radius:20px;padding:2px 8px;border:1px solid var(--line)}
-
-/* Grid de capítulos */
 .bib-caps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px}
-.bib-cap{
-  aspect-ratio:1;display:grid;place-items:center;
-  background:var(--card);border:1px solid var(--line);border-radius:10px;
-  font-size:15px;font-weight:700;cursor:pointer
-}
+.bib-cap{aspect-ratio:1;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
 .bib-cap:active{background:var(--gold);color:#080D1A;border-color:var(--gold)}
 .bib-cap.lido{border-color:rgba(201,161,74,.4);color:var(--gold)}
-
-/* Versículos */
 .bib-vers-wrap{padding:14px 16px 100px}
 .bib-vers-num{display:inline-block;min-width:28px;font-size:11px;font-weight:800;color:var(--gold);opacity:.7;vertical-align:top;padding-top:2px;user-select:none}
 .bib-vers-txt{display:inline;font-size:16px;line-height:1.75;color:rgba(255,255,255,.9)}
 .bib-verso{margin-bottom:8px;padding:6px 0;border-radius:6px;cursor:pointer}
 .bib-verso:active{background:rgba(201,161,74,.07)}
 .bib-verso.marcado .bib-vers-txt{color:var(--gold2)}
-
-/* Busca de resultados */
 .bib-result{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
 .bib-result:active{background:var(--card2)}
 .bib-result-ref{font-size:11px;font-weight:800;color:var(--gold);margin-bottom:4px}
 .bib-result-txt{font-size:14px;color:rgba(255,255,255,.8);line-height:1.5}
 .bib-result em{color:var(--gold2);font-style:normal;font-weight:700}
-
-/* Loading */
-.bib-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--sub)}
-.bib-spinner{width:36px;height:36px;border:3px solid rgba(201,161,74,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* Barra posição */
 .bib-pos-bar{padding:8px 14px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .bib-pos-txt{font-size:12px;color:var(--sub)}
 .bib-pos-nav{display:flex;gap:8px}
 .bib-nav-btn{background:rgba(255,255,255,.07);border:none;color:var(--txt);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit}
 .bib-nav-btn:active{opacity:.7}
+.bib-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--sub)}
+.bib-spinner{width:36px;height:36px;border:3px solid rgba(201,161,74,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══ HARPA CRISTÃ ══ */
+#tela-harpa-lista{background:var(--bg)}
+#tela-harpa-hino{background:var(--bg)}
+
+/* Lista */
+.harpa-search-wrap{padding:10px 14px 6px;flex-shrink:0}
+.harpa-search{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--txt);font-size:14px;outline:none;font-family:inherit}
+.harpa-search::placeholder{color:var(--sub)}
+.harpa-search:focus{border-color:var(--gold)}
+.harpa-lista{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.harpa-lista::-webkit-scrollbar{display:none}
+.harpa-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
+.harpa-item:active{background:var(--card2)}
+.harpa-num{width:40px;height:40px;border-radius:10px;background:rgba(201,161,74,.12);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:900;color:var(--gold);flex-shrink:0}
+.harpa-nome{flex:1;font-size:14px;font-weight:600;line-height:1.3}
+.harpa-arr{font-size:18px;color:var(--sub)}
+
+/* Hino detalhe */
+.harpa-hino-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.harpa-hino-scroll::-webkit-scrollbar{display:none}
+
+/* Posição nav */
+.harpa-nav-bar{padding:8px 14px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.harpa-nav-txt{font-size:12px;color:var(--sub)}
+.harpa-nav-bts{display:flex;gap:8px}
+.harpa-nav-bt{background:rgba(255,255,255,.07);border:none;color:var(--txt);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.harpa-nav-bt:active{opacity:.7}
+
+/* Conteúdo do hino */
+.harpa-hino-body{padding:24px 18px 100px}
+
+.harpa-hino-num{
+  text-align:center;
+  width:56px;height:56px;border-radius:50%;
+  background:rgba(201,161,74,.15);border:2px solid var(--gold);
+  display:grid;place-items:center;
+  font-size:18px;font-weight:900;color:var(--gold);
+  margin:0 auto 14px
+}
+.harpa-hino-titulo{
+  font-size:20px;font-weight:900;color:var(--txt);
+  text-align:center;margin-bottom:22px;line-height:1.3
+}
+.harpa-divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin-bottom:24px}
+
+/* Estrofe */
+.harpa-estrofe-label{
+  font-size:9px;font-weight:900;letter-spacing:2px;
+  text-transform:uppercase;color:var(--gold);opacity:.5;
+  margin-bottom:6px
+}
+.harpa-estrofe-txt{
+  font-size:16px;line-height:1.85;
+  color:var(--estrofe);
+  text-align:justify;
+  margin-bottom:20px;
+  white-space:pre-line
+}
+
+/* Coro */
+.harpa-coro-block{
+  background:rgba(240,176,96,.07);
+  border-left:3px solid var(--coro);
+  border-radius:0 10px 10px 0;
+  padding:12px 14px;
+  margin-bottom:24px
+}
+.harpa-coro-label{
+  font-size:9px;font-weight:900;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--coro);
+  margin-bottom:8px;display:block
+}
+.harpa-coro-txt{
+  font-size:16px;line-height:1.85;
+  color:var(--coro);
+  text-align:justify;
+  white-space:pre-line;
+  font-style:italic
+}
 </style>
 </head>
 <body>
@@ -228,13 +276,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
 <!-- MÓDULO GENÉRICO -->
 <div class="tela" id="tela-modulo">
-  <div class="mod-header">
-    <button class="mod-back" onclick="voltarHome()">‹</button>
-    <div class="mod-hinfo">
-      <div class="mod-titulo" id="mod-titulo-h">—</div>
-      <div class="mod-subtit" id="mod-count-h">0 itens</div>
+  <div class="std-header">
+    <button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="mod-titulo-h">—</div>
+      <div class="std-sub" id="mod-count-h">0 itens</div>
     </div>
-    <div class="mod-icon-h" id="mod-icon-h">📋</div>
+    <span id="mod-icon-h" style="font-size:24px;flex-shrink:0">📋</span>
   </div>
   <div class="mod-toolbar">
     <input class="mod-search" id="mod-busca" placeholder="Buscar..." oninput="renderMod()">
@@ -259,17 +307,45 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   </div>
 </div>
 
-<!-- ══ BÍBLIA ══════════════════════════════════════ -->
-<div class="tela" id="tela-biblia">
-  <div class="bib-header">
-    <button class="bib-back" id="bib-back-btn" onclick="bibVoltar()">‹</button>
-    <div class="bib-hinfo">
-      <div class="bib-titulo" id="bib-titulo">Bíblia — Almeida Atualizada</div>
-      <div class="bib-bread" id="bib-bread"></div>
+<!-- BH LANDING -->
+<div class="tela" id="tela-bh-landing">
+  <div class="std-header">
+    <button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">Bíblia e Harpa Cristã</div>
+      <div class="std-sub">Escolha o conteúdo</div>
+    </div>
+    <span style="font-size:24px">📖</span>
+  </div>
+  <div class="bh-tiles">
+    <div class="bh-tile" style="--tc:#C9A14A" onclick="abrirBiblia()">
+      <span class="bh-tile-icon">📖</span>
+      <div class="bh-tile-info">
+        <div class="bh-tile-nome">Bíblia</div>
+        <div class="bh-tile-desc">Almeida Atualizada — 66 livros completos</div>
+      </div>
+      <span class="bh-tile-arr">›</span>
+    </div>
+    <div class="bh-tile" style="--tc:#F0B060" onclick="abrirHarpa()">
+      <span class="bh-tile-icon">🎵</span>
+      <div class="bh-tile-info">
+        <div class="bh-tile-nome">Harpa Cristã</div>
+        <div class="bh-tile-desc">640 hinos — estrofes e coro identificados</div>
+      </div>
+      <span class="bh-tile-arr">›</span>
     </div>
   </div>
+</div>
 
-  <!-- barra navegação rápida (caps/vers) -->
+<!-- BÍBLIA -->
+<div class="tela" id="tela-biblia">
+  <div class="std-header">
+    <button class="std-back" id="bib-back-btn" onclick="bibVoltar()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="bib-titulo">Bíblia — Almeida Atualizada</div>
+      <div class="std-sub" id="bib-bread"></div>
+    </div>
+  </div>
   <div class="bib-pos-bar" id="bib-pos-bar" style="display:none">
     <span class="bib-pos-txt" id="bib-pos-txt"></span>
     <div class="bib-pos-nav">
@@ -277,106 +353,129 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <button class="bib-nav-btn" onclick="bibCapProximo()">Cap ›</button>
     </div>
   </div>
-
-  <!-- barra de busca -->
   <div class="bib-search-wrap" id="bib-search-wrap">
     <input class="bib-search" id="bib-search" placeholder="Buscar palavra ou referência (ex: Jo 3.16)..." oninput="bibBuscar()">
   </div>
-
   <div class="bib-body" id="bib-body">
-    <div class="bib-loading">
-      <div class="bib-spinner"></div>
-      <span>Carregando Bíblia...</span>
+    <div class="bib-loading"><div class="bib-spinner"></div><span>Carregando Bíblia...</span></div>
+  </div>
+</div>
+
+<!-- HARPA LISTA -->
+<div class="tela" id="tela-harpa-lista">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharHarpaLista()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">Harpa Cristã</div>
+      <div class="std-sub" id="harpa-lista-sub">640 hinos</div>
     </div>
+    <span style="font-size:24px">🎵</span>
+  </div>
+  <div class="harpa-search-wrap">
+    <input class="harpa-search" id="harpa-search" placeholder="Número ou nome do hino..." oninput="filtrarHarpa()">
+  </div>
+  <div class="harpa-lista" id="harpa-lista"></div>
+</div>
+
+<!-- HARPA HINO -->
+<div class="tela" id="tela-harpa-hino">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharHarpaHino()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="harpa-hino-header-titulo">Hino</div>
+      <div class="std-sub" id="harpa-hino-header-sub">Harpa Cristã</div>
+    </div>
+  </div>
+  <div class="harpa-nav-bar">
+    <span class="harpa-nav-txt" id="harpa-nav-txt"></span>
+    <div class="harpa-nav-bts">
+      <button class="harpa-nav-bt" onclick="hinoAnterior()">‹ Hino</button>
+      <button class="harpa-nav-bt" onclick="hinoProximo()">Hino ›</button>
+    </div>
+  </div>
+  <div class="harpa-hino-scroll" id="harpa-hino-scroll">
+    <div class="harpa-hino-body" id="harpa-hino-body"></div>
   </div>
 </div>
 
 <script>
 // ══ MÓDULOS ═══════════════════════════════════════
 const MODS = [
-  {id:'biblia',  nome:'Bíblia e Harpa Cristã',      icon:'📖', cor:'#C9A14A', desc:'Almeida Atualizada — 66 livros'},
-  {id:'israel',  nome:'Notícias de Israel',          icon:'📰', cor:'#4f8ef7', desc:'Mundo bíblico em tempo real'},
-  {id:'ebd',     nome:'EBD',                         icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
-  {id:'governo', nome:'Governo e a Bíblia',          icon:'⚖️', cor:'#f75f5f', desc:'Profecia e atualidade'},
-  {id:'arqueol', nome:'Arqueologia',                  icon:'🏺', cor:'#a78bfa', desc:'Descobertas e evidências'},
-  {id:'silas',   nome:'Projeto Silas',               icon:'✝️', cor:'#38bdf8', desc:'Documentos, cartazes, vídeos'},
-  {id:'templo',  nome:'Templo Central Tuntum-MA',    icon:'⛪', cor:'#f5a623', desc:'Sede central — Tuntum-MA'},
+  {id:'biblia',  nome:'Bíblia e Harpa Cristã',   icon:'📖', cor:'#C9A14A', desc:'Bíblia + 640 hinos'},
+  {id:'israel',  nome:'Notícias de Israel',       icon:'📰', cor:'#4f8ef7', desc:'Mundo bíblico em tempo real'},
+  {id:'ebd',     nome:'EBD',                      icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
+  {id:'governo', nome:'Governo e a Bíblia',       icon:'⚖️', cor:'#f75f5f', desc:'Profecia e atualidade'},
+  {id:'arqueol', nome:'Arqueologia',               icon:'🏺', cor:'#a78bfa', desc:'Descobertas e evidências'},
+  {id:'silas',   nome:'Projeto Silas',            icon:'✝️', cor:'#38bdf8', desc:'Documentos, cartazes, vídeos'},
+  {id:'templo',  nome:'Templo Central Tuntum-MA', icon:'⛪', cor:'#f5a623', desc:'Sede central — Tuntum-MA'},
 ];
 
-// ══ STATE GERAL ════════════════════════════════════
-let modAtual = null, editId = null;
-function chave(id){ return 'radar_' + id; }
-function getData(id){ return JSON.parse(localStorage.getItem(chave(id)) || '[]'); }
-function setData(id, arr){ localStorage.setItem(chave(id), JSON.stringify(arr)); }
+// ══ STATE ═════════════════════════════════════════
+let modAtual=null, editId=null;
+function chave(id){ return 'radar_'+id; }
+function getData(id){ return JSON.parse(localStorage.getItem(chave(id))||'[]'); }
+function setData(id,arr){ localStorage.setItem(chave(id),JSON.stringify(arr)); }
+function ocultarTodas(){ document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa')); }
 
 // ══ SPLASH ════════════════════════════════════════
 setTimeout(irHome, 2200);
 function irHome(){
-  document.getElementById('splash').classList.remove('ativa');
+  ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
 }
 
 // ══ HOME ══════════════════════════════════════════
 function renderHome(){
-  document.getElementById('modulos').innerHTML = MODS.map(m => {
-    const n = m.id === 'biblia' ? '' : getData(m.id).length;
-    return `<div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')">
+  document.getElementById('modulos').innerHTML = MODS.map(m => `
+    <div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')">
       <div class="tile-icon">${m.icon}</div>
       <div class="tile-info">
         <div class="tile-nome">${m.nome}</div>
         <div class="tile-desc">${m.desc}</div>
       </div>
-      ${n ? `<div class="tile-count">${n}</div>` : ''}
       <div class="tile-arr">›</div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
 }
 
-// ══ ABRIR MÓDULO ══════════════════════════════════
 function abrirMod(id){
-  document.getElementById('home').classList.remove('ativa');
-  if(id === 'biblia'){
-    document.getElementById('tela-biblia').classList.add('ativa');
-    iniciarBiblia();
+  ocultarTodas();
+  if(id==='biblia'){
+    document.getElementById('tela-bh-landing').classList.add('ativa');
     return;
   }
-  modAtual = id;
-  const m = MODS.find(x=>x.id===id);
-  document.getElementById('mod-titulo-h').textContent = m.nome;
-  document.getElementById('mod-icon-h').textContent = m.icon;
-  document.getElementById('mod-busca').value = '';
+  modAtual=id;
+  const m=MODS.find(x=>x.id===id);
+  document.getElementById('mod-titulo-h').textContent=m.nome;
+  document.getElementById('mod-icon-h').textContent=m.icon;
+  document.getElementById('mod-busca').value='';
   document.getElementById('tela-modulo').classList.add('ativa');
   renderMod();
 }
 
 function voltarHome(){
-  document.getElementById('tela-modulo').classList.remove('ativa');
+  ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
 }
 
 function renderMod(){
-  const items = getData(modAtual);
-  const busca = document.getElementById('mod-busca').value.toLowerCase();
-  const filtrado = busca ? items.filter(i =>
-    i.titulo.toLowerCase().includes(busca) ||
-    (i.sub||'').toLowerCase().includes(busca) ||
-    (i.obs||'').toLowerCase().includes(busca)
-  ) : items;
-  document.getElementById('mod-count-h').textContent = items.length + ' item' + (items.length!==1?'s':'');
-  const el = document.getElementById('mod-lista');
+  const items=getData(modAtual);
+  const busca=document.getElementById('mod-busca').value.toLowerCase();
+  const filtrado=busca?items.filter(i=>i.titulo.toLowerCase().includes(busca)||(i.sub||'').toLowerCase().includes(busca)||(i.obs||'').toLowerCase().includes(busca)):items;
+  document.getElementById('mod-count-h').textContent=items.length+' item'+(items.length!==1?'s':'');
+  const el=document.getElementById('mod-lista');
   if(!filtrado.length){
-    el.innerHTML = `<div class="mod-empty"><div class="mod-empty-icon">${MODS.find(x=>x.id===modAtual).icon}</div><div class="mod-empty-txt">Nenhum item ainda.<br>Toque em + ADD para começar.</div></div>`;
+    el.innerHTML=`<div class="mod-empty"><div class="mod-empty-icon">${MODS.find(x=>x.id===modAtual).icon}</div><div class="mod-empty-txt">Nenhum item ainda.<br>Toque em + ADD para começar.</div></div>`;
     return;
   }
-  el.innerHTML = filtrado.map(i => `
+  el.innerHTML=filtrado.map(i=>`
     <div class="item">
       <div class="item-body">
         <div class="item-tit">${i.titulo}</div>
-        ${i.sub ? `<div class="item-meta">${i.sub}${i.data?' · '+i.data:''}</div>` : (i.data?`<div class="item-meta">${i.data}</div>`:'')}
-        ${i.obs ? `<div class="item-obs">${i.obs}</div>` : ''}
-        ${i.link ? `<div class="item-meta" style="color:#4f8ef7;margin-top:4px">🔗 ${i.link.substring(0,40)}${i.link.length>40?'…':''}</div>` : ''}
+        ${i.sub?`<div class="item-meta">${i.sub}${i.data?' · '+i.data:''}</div>`:(i.data?`<div class="item-meta">${i.data}</div>`:'')}
+        ${i.obs?`<div class="item-obs">${i.obs}</div>`:''}
+        ${i.link?`<div class="item-meta" style="color:#4f8ef7;margin-top:4px">🔗 ${i.link.substring(0,40)}${i.link.length>40?'…':''}</div>`:''}
       </div>
       <div class="item-acts">
         <button class="btn-sm btn-ed" onclick="editarItem('${i.id}')">✏️</button>
@@ -386,247 +485,274 @@ function renderMod(){
 }
 
 function abrirModal(id){
-  editId = id||null;
-  document.getElementById('modal-label').textContent = id ? 'Editar Item' : 'Novo Item';
-  if(id){
-    const item = getData(modAtual).find(x=>x.id===id);
-    document.getElementById('f-titulo').value = item.titulo;
-    document.getElementById('f-sub').value = item.sub||'';
-    document.getElementById('f-data').value = item.data||'';
-    document.getElementById('f-link').value = item.link||'';
-    document.getElementById('f-obs').value = item.obs||'';
-  } else {
-    ['f-titulo','f-sub','f-link','f-obs'].forEach(f=>document.getElementById(f).value='');
-    document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
-  }
+  editId=id||null;
+  document.getElementById('modal-label').textContent=id?'Editar Item':'Novo Item';
+  if(id){const item=getData(modAtual).find(x=>x.id===id);document.getElementById('f-titulo').value=item.titulo;document.getElementById('f-sub').value=item.sub||'';document.getElementById('f-data').value=item.data||'';document.getElementById('f-link').value=item.link||'';document.getElementById('f-obs').value=item.obs||'';}
+  else{['f-titulo','f-sub','f-link','f-obs'].forEach(f=>document.getElementById(f).value='');document.getElementById('f-data').value=new Date().toISOString().split('T')[0];}
   document.getElementById('modal').classList.add('open');
   setTimeout(()=>document.getElementById('f-titulo').focus(),100);
 }
-function fecharModal(){ document.getElementById('modal').classList.remove('open'); }
-function editarItem(id){ abrirModal(id); }
+function fecharModal(){document.getElementById('modal').classList.remove('open');}
+function editarItem(id){abrirModal(id);}
 function salvarItem(){
-  const titulo = document.getElementById('f-titulo').value.trim();
-  if(!titulo){ document.getElementById('f-titulo').focus(); return; }
-  const obj = {id:editId||Date.now().toString(),titulo,sub:document.getElementById('f-sub').value.trim(),data:document.getElementById('f-data').value,link:document.getElementById('f-link').value.trim(),obs:document.getElementById('f-obs').value.trim()};
-  const arr = getData(modAtual);
-  if(editId){ const i=arr.findIndex(x=>x.id===editId); arr[i]=obj; } else arr.unshift(obj);
-  setData(modAtual, arr); fecharModal(); renderMod(); renderHome();
+  const titulo=document.getElementById('f-titulo').value.trim();
+  if(!titulo){document.getElementById('f-titulo').focus();return;}
+  const obj={id:editId||Date.now().toString(),titulo,sub:document.getElementById('f-sub').value.trim(),data:document.getElementById('f-data').value,link:document.getElementById('f-link').value.trim(),obs:document.getElementById('f-obs').value.trim()};
+  const arr=getData(modAtual);
+  if(editId){const i=arr.findIndex(x=>x.id===editId);arr[i]=obj;}else arr.unshift(obj);
+  setData(modAtual,arr);fecharModal();renderMod();
 }
 function deletarItem(id){
-  if(!confirm('Excluir este item?')) return;
-  setData(modAtual, getData(modAtual).filter(x=>x.id!==id));
-  renderMod(); renderHome();
+  if(!confirm('Excluir este item?'))return;
+  setData(modAtual,getData(modAtual).filter(x=>x.id!==id));renderMod();
 }
-document.getElementById('modal').addEventListener('click', e => { if(e.target===document.getElementById('modal')) fecharModal(); });
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))fecharModal();});
 
 // ══════════════════════════════════════════════════
-// ══ BÍBLIA PREMIUM ════════════════════════════════
+// ══ BÍBLIA ════════════════════════════════════════
 // ══════════════════════════════════════════════════
-const AT_TOTAL = 39;
-const NOMES_AT = ['Gênesis','Êxodo','Levítico','Números','Deuteronômio','Josué','Juízes','Rute','1 Samuel','2 Samuel','1 Reis','2 Reis','1 Crônicas','2 Crônicas','Esdras','Neemias','Ester','Jó','Salmos','Provérbios','Eclesiastes','Cântico dos Cânticos','Isaías','Jeremias','Lamentações','Ezequiel','Daniel','Oséias','Joel','Amós','Obadias','Jonas','Miquéias','Naum','Habacuque','Sofonias','Ageu','Zacarias','Malaquias'];
-const NOMES_NT = ['Mateus','Marcos','Lucas','João','Atos','Romanos','1 Coríntios','2 Coríntios','Gálatas','Efésios','Filipenses','Colossenses','1 Tessalonicenses','2 Tessalonicenses','1 Timóteo','2 Timóteo','Tito','Filemom','Hebreus','Tiago','1 Pedro','2 Pedro','1 João','2 João','3 João','Judas','Apocalipse'];
+const AT_TOTAL=39;
+let bibData=null, bibLevel='livros', bibLivroIdx=0, bibCapIdx=0;
+let bibMarcados=JSON.parse(localStorage.getItem('bib_marcados')||'{}');
+let bibBuscaTimer=null;
 
-let bibData = null;
-let bibLevel = 'livros'; // 'livros' | 'caps' | 'vers' | 'busca'
-let bibLivroIdx = 0, bibCapIdx = 0;
-let bibMarcados = JSON.parse(localStorage.getItem('bib_marcados') || '{}');
-let bibBuscaTimer = null;
+function salvarPos(){localStorage.setItem('bib_pos',JSON.stringify({l:bibLivroIdx,c:bibCapIdx}));}
+function carregarPos(){const p=JSON.parse(localStorage.getItem('bib_pos')||'null');if(p){bibLivroIdx=p.l;bibCapIdx=p.c;}}
 
-function salvarPos(){ localStorage.setItem('bib_pos', JSON.stringify({l:bibLivroIdx,c:bibCapIdx})); }
-function carregarPos(){ const p=JSON.parse(localStorage.getItem('bib_pos')||'null'); if(p){ bibLivroIdx=p.l; bibCapIdx=p.c; } }
-
-async function iniciarBiblia(){
-  if(bibData){ bibMostrarLivros(); return; }
-  document.getElementById('bib-body').innerHTML = '<div class="bib-loading"><div class="bib-spinner"></div><span>Carregando Bíblia...</span></div>';
-  document.getElementById('bib-search-wrap').style.display = 'none';
-  document.getElementById('bib-pos-bar').style.display = 'none';
-  try{
-    const r = await fetch('/biblia.json');
-    bibData = await r.json();
-    bibMostrarLivros();
-  } catch(e){
-    document.getElementById('bib-body').innerHTML = '<div class="bib-loading"><span style="color:var(--red)">Erro ao carregar. Verifique a conexão.</span></div>';
-  }
+function abrirBiblia(){
+  ocultarTodas();
+  document.getElementById('tela-biblia').classList.add('ativa');
+  if(bibData){bibMostrarLivros();return;}
+  document.getElementById('bib-body').innerHTML='<div class="bib-loading"><div class="bib-spinner"></div><span>Carregando Bíblia...</span></div>';
+  document.getElementById('bib-search-wrap').style.display='none';
+  document.getElementById('bib-pos-bar').style.display='none';
+  fetch('/biblia.json').then(r=>r.json()).then(d=>{bibData=d;bibMostrarLivros();}).catch(()=>{
+    document.getElementById('bib-body').innerHTML='<div class="bib-loading"><span style="color:var(--red)">Erro ao carregar.</span></div>';
+  });
 }
 
 function bibVoltar(){
-  if(bibLevel === 'caps'){ bibMostrarLivros(); return; }
-  if(bibLevel === 'vers'){ bibMostrarCaps(bibLivroIdx); return; }
-  if(bibLevel === 'busca'){ bibMostrarLivros(); return; }
-  // estava em livros → voltar pra home
-  document.getElementById('tela-biblia').classList.remove('ativa');
-  document.getElementById('home').classList.add('ativa');
-  renderHome();
+  if(bibLevel==='caps'){bibMostrarLivros();return;}
+  if(bibLevel==='vers'){bibMostrarCaps(bibLivroIdx);return;}
+  if(bibLevel==='busca'){bibMostrarLivros();return;}
+  ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');
 }
 
-function bibSetHeader(titulo, bread, posBar, posLabel, search){
-  document.getElementById('bib-titulo').textContent = titulo;
-  document.getElementById('bib-bread').textContent = bread||'';
-  document.getElementById('bib-pos-bar').style.display = posBar ? 'flex' : 'none';
-  document.getElementById('bib-pos-txt').textContent = posLabel||'';
-  document.getElementById('bib-search-wrap').style.display = search ? 'block' : 'none';
-  document.getElementById('bib-search').value = '';
+function bibSetHeader(titulo,bread,posBar,posLabel,search){
+  document.getElementById('bib-titulo').textContent=titulo;
+  document.getElementById('bib-bread').textContent=bread||'';
+  document.getElementById('bib-pos-bar').style.display=posBar?'flex':'none';
+  document.getElementById('bib-pos-txt').textContent=posLabel||'';
+  document.getElementById('bib-search-wrap').style.display=search?'block':'none';
+  if(search)document.getElementById('bib-search').value='';
 }
 
 function bibMostrarLivros(){
-  bibLevel = 'livros';
-  bibSetHeader('Bíblia — Almeida Atualizada', '66 livros', false, '', true);
-  carregarPos();
-
-  const posKey = `${bibLivroIdx}_${bibCapIdx}`;
-  let html = `<div class="bib-secao">Antigo Testamento — 39 livros</div>`;
-  bibData.forEach((liv, idx) => {
-    const isLast = (idx === bibLivroIdx);
-    const nomeDisplay = liv.name || NOMES_AT[idx] || NOMES_NT[idx-AT_TOTAL] || liv.abbrev;
-    const abbrev = liv.abbrev.substring(0,3).toUpperCase();
-    html += `<div class="bib-livro" onclick="bibMostrarCaps(${idx})">
+  bibLevel='livros'; carregarPos();
+  bibSetHeader('Bíblia — Almeida Atualizada','66 livros',false,'',true);
+  let html='<div class="bib-secao">Antigo Testamento — 39 livros</div>';
+  bibData.forEach((liv,idx)=>{
+    const isLast=(idx===bibLivroIdx);
+    const abbrev=liv.abbrev.substring(0,3).toUpperCase();
+    html+=`<div class="bib-livro" onclick="bibMostrarCaps(${idx})">
       <div class="bib-livro-abbrev">${abbrev}</div>
-      <div class="bib-livro-nome">${nomeDisplay}</div>
-      ${isLast ? `<span class="bib-last-tag">última leitura</span>` : `<span class="bib-livro-caps">${liv.chapters.length} cap</span>`}
+      <div class="bib-livro-nome">${liv.name}</div>
+      ${isLast?`<span class="bib-last-tag">última leitura</span>`:`<span class="bib-livro-caps">${liv.chapters.length} cap</span>`}
       <span class="bib-livro-arr">›</span>
     </div>`;
-    if(idx === AT_TOTAL - 1){
-      html += `<div class="bib-secao" style="margin-top:8px">Novo Testamento — 27 livros</div>`;
-    }
+    if(idx===AT_TOTAL-1)html+='<div class="bib-secao" style="margin-top:8px">Novo Testamento — 27 livros</div>';
   });
-  document.getElementById('bib-body').innerHTML = html;
+  document.getElementById('bib-body').innerHTML=html;
 }
 
 function bibMostrarCaps(livIdx){
-  bibLevel = 'caps';
-  bibLivroIdx = livIdx;
-  const liv = bibData[livIdx];
-  const nome = liv.name || (livIdx < AT_TOTAL ? NOMES_AT[livIdx] : NOMES_NT[livIdx-AT_TOTAL]);
-  bibSetHeader(nome, 'Selecione o capítulo', false, '', false);
-
-  let html = `<div class="bib-caps-grid">`;
-  liv.chapters.forEach((_,ci) => {
-    const marcado = bibMarcados[`${livIdx}_${ci}`];
-    html += `<div class="bib-cap ${marcado?'lido':''}" onclick="bibMostrarVers(${livIdx},${ci})">${ci+1}</div>`;
+  bibLevel='caps'; bibLivroIdx=livIdx;
+  const liv=bibData[livIdx];
+  bibSetHeader(liv.name,'Selecione o capítulo',false,'',false);
+  let html='<div class="bib-caps-grid">';
+  liv.chapters.forEach((_,ci)=>{
+    const marcado=bibMarcados[`${livIdx}_${ci}`];
+    html+=`<div class="bib-cap ${marcado?'lido':''}" onclick="bibMostrarVers(${livIdx},${ci})">${ci+1}</div>`;
   });
-  html += '</div>';
-  document.getElementById('bib-body').innerHTML = html;
+  document.getElementById('bib-body').innerHTML=html+'</div>';
 }
 
-function bibMostrarVers(livIdx, capIdx){
-  bibLevel = 'vers';
-  bibLivroIdx = livIdx;
-  bibCapIdx = capIdx;
-  salvarPos();
-  bibMarcados[`${livIdx}_${capIdx}`] = true;
-  localStorage.setItem('bib_marcados', JSON.stringify(bibMarcados));
-
-  const liv = bibData[livIdx];
-  const nome = liv.name || (livIdx < AT_TOTAL ? NOMES_AT[livIdx] : NOMES_NT[livIdx-AT_TOTAL]);
-  const cap = liv.chapters[capIdx];
-  const totalCaps = liv.chapters.length;
-
-  bibSetHeader(nome, `Capítulo ${capIdx+1} de ${totalCaps}`, true, `${nome} ${capIdx+1}`, false);
-
-  let html = '<div class="bib-vers-wrap">';
-  cap.forEach((v,vi) => {
-    const mk = bibMarcados[`v_${livIdx}_${capIdx}_${vi}`];
-    html += `<div class="bib-verso ${mk?'marcado':''}" onclick="toggleVers(${livIdx},${capIdx},${vi},this)">
-      <span class="bib-vers-num">${vi+1}</span>
-      <span class="bib-vers-txt">${v}</span>
-    </div>`;
+function bibMostrarVers(livIdx,capIdx){
+  bibLevel='vers'; bibLivroIdx=livIdx; bibCapIdx=capIdx; salvarPos();
+  bibMarcados[`${livIdx}_${capIdx}`]=true;
+  localStorage.setItem('bib_marcados',JSON.stringify(bibMarcados));
+  const liv=bibData[livIdx]; const cap=liv.chapters[capIdx];
+  bibSetHeader(liv.name,`Capítulo ${capIdx+1} de ${liv.chapters.length}`,true,`${liv.name} ${capIdx+1}`,false);
+  let html='<div class="bib-vers-wrap">';
+  cap.forEach((v,vi)=>{
+    const mk=bibMarcados[`v_${livIdx}_${capIdx}_${vi}`];
+    html+=`<div class="bib-verso ${mk?'marcado':''}" onclick="toggleVers(${livIdx},${capIdx},${vi},this)"><span class="bib-vers-num">${vi+1}</span><span class="bib-vers-txt">${v}</span></div>`;
   });
-  html += '</div>';
-  document.getElementById('bib-body').innerHTML = html;
-  document.getElementById('bib-body').scrollTop = 0;
+  document.getElementById('bib-body').innerHTML=html+'</div>';
+  document.getElementById('bib-body').scrollTop=0;
 }
 
 function toggleVers(li,ci,vi,el){
-  const k = `v_${li}_${ci}_${vi}`;
-  if(bibMarcados[k]){ delete bibMarcados[k]; el.classList.remove('marcado'); }
-  else { bibMarcados[k]=true; el.classList.add('marcado'); }
-  localStorage.setItem('bib_marcados', JSON.stringify(bibMarcados));
+  const k=`v_${li}_${ci}_${vi}`;
+  if(bibMarcados[k]){delete bibMarcados[k];el.classList.remove('marcado');}
+  else{bibMarcados[k]=true;el.classList.add('marcado');}
+  localStorage.setItem('bib_marcados',JSON.stringify(bibMarcados));
 }
 
 function bibCapAnterior(){
-  const liv = bibData[bibLivroIdx];
-  if(bibCapIdx > 0){ bibMostrarVers(bibLivroIdx, bibCapIdx-1); return; }
-  if(bibLivroIdx > 0){
-    const prevLiv = bibData[bibLivroIdx-1];
-    bibMostrarVers(bibLivroIdx-1, prevLiv.chapters.length-1);
-  }
+  if(bibCapIdx>0){bibMostrarVers(bibLivroIdx,bibCapIdx-1);return;}
+  if(bibLivroIdx>0){const p=bibData[bibLivroIdx-1];bibMostrarVers(bibLivroIdx-1,p.chapters.length-1);}
 }
 function bibCapProximo(){
-  const liv = bibData[bibLivroIdx];
-  if(bibCapIdx < liv.chapters.length-1){ bibMostrarVers(bibLivroIdx, bibCapIdx+1); return; }
-  if(bibLivroIdx < bibData.length-1){ bibMostrarVers(bibLivroIdx+1, 0); }
+  if(bibCapIdx<bibData[bibLivroIdx].chapters.length-1){bibMostrarVers(bibLivroIdx,bibCapIdx+1);return;}
+  if(bibLivroIdx<bibData.length-1)bibMostrarVers(bibLivroIdx+1,0);
 }
 
-// Busca
 function bibBuscar(){
   clearTimeout(bibBuscaTimer);
-  const q = document.getElementById('bib-search').value.trim();
-  if(!q){ bibMostrarLivros(); return; }
-
-  // Detecta referência: "Jo 3.16" ou "Gn 1.1"
-  const refMatch = q.match(/^(\w+)\s+(\d+)\.(\d+)$/i);
+  const q=document.getElementById('bib-search').value.trim();
+  if(!q){bibMostrarLivros();return;}
+  const refMatch=q.match(/^(\w+)\s+(\d+)\.(\d+)$/i);
   if(refMatch){
-    const abbrev = refMatch[1].toLowerCase();
-    const ci = parseInt(refMatch[2]) - 1;
-    const vi = parseInt(refMatch[3]) - 1;
-    const livIdx = bibData.findIndex(l => l.abbrev.toLowerCase().startsWith(abbrev) || (l.name||'').toLowerCase().startsWith(refMatch[1].toLowerCase()));
-    if(livIdx >= 0 && bibData[livIdx].chapters[ci] && bibData[livIdx].chapters[ci][vi] !== undefined){
-      bibBuscaTimer = setTimeout(()=>bibMostrarVers(livIdx, ci), 300);
-      return;
+    const abbrev=refMatch[1].toLowerCase();
+    const ci=parseInt(refMatch[2])-1; const vi=parseInt(refMatch[3])-1;
+    const livIdx=bibData.findIndex(l=>l.abbrev.toLowerCase().startsWith(abbrev)||(l.name||'').toLowerCase().startsWith(refMatch[1].toLowerCase()));
+    if(livIdx>=0&&bibData[livIdx].chapters[ci]&&bibData[livIdx].chapters[ci][vi]!==undefined){
+      bibBuscaTimer=setTimeout(()=>bibMostrarVers(livIdx,ci),300);return;
     }
   }
-
-  bibBuscaTimer = setTimeout(()=>{
-    bibLevel = 'busca';
-    bibSetHeader('Busca', `"${q}"`, false, '', true);
-    document.getElementById('bib-search').value = q;
-
-    const qLow = q.toLowerCase();
-    let resultados = [], total = 0;
-    for(let li=0; li<bibData.length && total<120; li++){
-      const liv = bibData[li];
-      const nome = liv.name || '';
-      for(let ci=0; ci<liv.chapters.length && total<120; ci++){
-        for(let vi=0; vi<liv.chapters[ci].length && total<120; vi++){
-          const txt = liv.chapters[ci][vi];
-          if(txt.toLowerCase().includes(qLow)){
-            resultados.push({li,ci,vi,nome,txt});
-            total++;
-          }
+  bibBuscaTimer=setTimeout(()=>{
+    bibLevel='busca';
+    bibSetHeader('Busca',`"${q}"`,false,'',true);
+    document.getElementById('bib-search').value=q;
+    const qLow=q.toLowerCase(); let resultados=[],total=0;
+    for(let li=0;li<bibData.length&&total<120;li++){
+      for(let ci=0;ci<bibData[li].chapters.length&&total<120;ci++){
+        for(let vi=0;vi<bibData[li].chapters[ci].length&&total<120;vi++){
+          const txt=bibData[li].chapters[ci][vi];
+          if(txt.toLowerCase().includes(qLow)){resultados.push({li,ci,vi,nome:bibData[li].name,txt});total++;}
         }
       }
     }
+    if(!resultados.length){document.getElementById('bib-body').innerHTML=`<div class="bib-loading"><span style="color:var(--sub)">Nenhum resultado para "${q}"</span></div>`;return;}
+    const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    let html=resultados.map(r=>`<div class="bib-result" onclick="bibMostrarVers(${r.li},${r.ci})"><div class="bib-result-ref">${r.nome} ${r.ci+1}.${r.vi+1}</div><div class="bib-result-txt">${r.txt.replace(re,m=>`<em>${m}</em>`)}</div></div>`).join('');
+    if(total===120)html+=`<div class="bib-result" style="color:var(--sub);font-size:12px;text-align:center">Primeiros 120 resultados</div>`;
+    document.getElementById('bib-body').innerHTML=html;
+  },500);
+}
 
-    if(!resultados.length){
-      document.getElementById('bib-body').innerHTML = `<div class="bib-loading"><span style="color:var(--sub)">Nenhum resultado para "${q}"</span></div>`;
-      return;
+// ══════════════════════════════════════════════════
+// ══ HARPA CRISTÃ ══════════════════════════════════
+// ══════════════════════════════════════════════════
+let harpaData=null, harpaFiltrada=null, harpaHinoIdx=0;
+let harpaTimer=null;
+
+async function abrirHarpa(){
+  ocultarTodas();
+  document.getElementById('tela-harpa-lista').classList.add('ativa');
+  if(harpaData){renderHarpaLista(harpaData);return;}
+  document.getElementById('harpa-lista').innerHTML='<div class="bib-loading"><div class="bib-spinner"></div><span>Carregando Harpa...</span></div>';
+  try{
+    const r=await fetch('/harpa.json');
+    harpaData=await r.json();
+    harpaFiltrada=harpaData;
+    document.getElementById('harpa-lista-sub').textContent=`${harpaData.length} hinos`;
+    renderHarpaLista(harpaData);
+  }catch(e){
+    document.getElementById('harpa-lista').innerHTML='<div class="bib-loading"><span style="color:var(--red)">Erro ao carregar.</span></div>';
+  }
+}
+
+function fecharHarpaLista(){
+  ocultarTodas();
+  document.getElementById('tela-bh-landing').classList.add('ativa');
+}
+
+function fecharHarpaHino(){
+  ocultarTodas();
+  document.getElementById('tela-harpa-lista').classList.add('ativa');
+}
+
+function renderHarpaLista(lista){
+  document.getElementById('harpa-lista').innerHTML=lista.map((h,fi)=>
+    `<div class="harpa-item" onclick="abrirHino(${h.n-1})">
+      <div class="harpa-num">${h.n}</div>
+      <div class="harpa-nome">${h.t}</div>
+      <span class="harpa-arr">›</span>
+    </div>`
+  ).join('');
+}
+
+function filtrarHarpa(){
+  clearTimeout(harpaTimer);
+  harpaTimer=setTimeout(()=>{
+    const q=document.getElementById('harpa-search').value.trim().toLowerCase();
+    if(!q){harpaFiltrada=harpaData;document.getElementById('harpa-lista-sub').textContent=`${harpaData.length} hinos`;renderHarpaLista(harpaData);return;}
+    const numExato=parseInt(q);
+    if(!isNaN(numExato)){
+      harpaFiltrada=harpaData.filter(h=>h.n===numExato||String(h.n).startsWith(q));
+    } else {
+      harpaFiltrada=harpaData.filter(h=>h.t.toLowerCase().includes(q)||h.c.toLowerCase().includes(q)||h.e.some(e=>e.toLowerCase().includes(q)));
     }
-
-    const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
-    let html = '';
-    resultados.forEach(r => {
-      const destaque = r.txt.replace(re, m=>`<em>${m}</em>`);
-      html += `<div class="bib-result" onclick="bibMostrarVers(${r.li},${r.ci})">
-        <div class="bib-result-ref">${r.nome} ${r.ci+1}.${r.vi+1}</div>
-        <div class="bib-result-txt">${destaque}</div>
-      </div>`;
-    });
-    if(total === 120) html += `<div class="bib-result" style="color:var(--sub);font-size:12px;text-align:center">Mostrando os primeiros 120 resultados</div>`;
-    document.getElementById('bib-body').innerHTML = html;
-  }, 500);
+    document.getElementById('harpa-lista-sub').textContent=`${harpaFiltrada.length} resultado${harpaFiltrada.length!==1?'s':''}`;
+    renderHarpaLista(harpaFiltrada);
+  },300);
 }
 
-// ══ 5 TOQUES NO LOGO ══════════════════════════════
-let tapCount=0, tapTimer=null;
+function abrirHino(idx){
+  // idx = índice 0-based no array harpaData (h.n - 1)
+  harpaHinoIdx=idx;
+  renderHino(idx);
+  ocultarTodas();
+  document.getElementById('tela-harpa-hino').classList.add('ativa');
+  document.getElementById('harpa-hino-scroll').scrollTop=0;
+}
+
+function renderHino(idx){
+  const h=harpaData[idx];
+  document.getElementById('harpa-hino-header-titulo').textContent=h.t;
+  document.getElementById('harpa-hino-header-sub').textContent=`Harpa Cristã — Hino ${h.n}`;
+  document.getElementById('harpa-nav-txt').textContent=`Hino ${h.n} de ${harpaData.length}`;
+
+  // Monta corpo: estrofe → coro → estrofe → coro ...
+  const coroHtml=h.c?`
+    <div class="harpa-coro-block">
+      <span class="harpa-coro-label">🎶 Coro</span>
+      <div class="harpa-coro-txt">${h.c.trim()}</div>
+    </div>`:'';
+
+  let estrofesHtml='';
+  h.e.forEach((est,i)=>{
+    estrofesHtml+=`
+      <div class="harpa-estrofe-label">Estrofe ${i+1}</div>
+      <div class="harpa-estrofe-txt">${est.trim()}</div>
+      ${coroHtml}`;
+  });
+
+  document.getElementById('harpa-hino-body').innerHTML=`
+    <div class="harpa-hino-num">${h.n}</div>
+    <div class="harpa-hino-titulo">${h.t}</div>
+    <div class="harpa-divider"></div>
+    ${estrofesHtml}`;
+}
+
+function hinoAnterior(){
+  if(harpaHinoIdx>0){harpaHinoIdx--;renderHino(harpaHinoIdx);document.getElementById('harpa-hino-scroll').scrollTop=0;}
+}
+function hinoProximo(){
+  if(harpaHinoIdx<harpaData.length-1){harpaHinoIdx++;renderHino(harpaHinoIdx);document.getElementById('harpa-hino-scroll').scrollTop=0;}
+}
+
+// ══ UTILS ═════════════════════════════════════════
+let tapCount=0,tapTimer=null;
 function tapLogo(){
-  tapCount++;
-  clearTimeout(tapTimer);
-  if(tapCount>=5){ tapCount=0; alert('🔐 CRM em breve'); return; }
-  tapTimer=setTimeout(()=>tapCount=0, 1500);
+  tapCount++;clearTimeout(tapTimer);
+  if(tapCount>=5){tapCount=0;alert('🔐 CRM em breve');return;}
+  tapTimer=setTimeout(()=>tapCount=0,1500);
 }
-
-function irBusca(){ alert('Busca global — em breve'); }
-function irRecentes(){ alert('Recentes — em breve'); }
+function irBusca(){alert('Busca global — em breve');}
+function irRecentes(){alert('Recentes — em breve');}
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 </script>
