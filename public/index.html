@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080D1A">
+<title>RADAR ATUAL</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#080D1A;--card:#0F1525;--card2:#151C30;--line:rgba(201,161,74,.18);
+  --gold:#C9A14A;--gold2:#F5C842;--txt:#fff;--sub:rgba(255,255,255,.45);
+  --red:#f75f5f;--green:#34c77b;
+}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
+
+/* ══ TELAS ══════════════════════════════════════ */
+.tela{position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden}
+.tela.ativa{display:flex}
+
+/* ══ SPLASH ══════════════════════════════════════ */
+#splash{background:var(--bg);align-items:center;justify-content:center;cursor:pointer}
+#splash img{width:100%;height:100%;object-fit:cover;object-position:top}
+
+/* ══ HOME ════════════════════════════════════════ */
+#home{background:var(--bg)}
+.home-header{
+  padding:env(safe-area-inset-top,16px) 16px 0;
+  padding-top:max(env(safe-area-inset-top),16px);
+  background:linear-gradient(180deg,#050810 0%,transparent 100%);
+  flex-shrink:0
+}
+.home-logo{display:flex;align-items:center;gap:10px;padding:14px 0 12px;cursor:pointer;user-select:none}
+.logo-icon{width:36px;height:36px}
+.logo-txt{display:flex;flex-direction:column;line-height:1}
+.logo-radar{font-size:20px;font-weight:900;color:var(--txt);letter-spacing:1px}
+.logo-atual{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:3px}
+.home-sub{font-size:11px;color:var(--sub);padding-bottom:14px;letter-spacing:.5px}
+.divider{height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin-bottom:4px}
+
+.home-scroll{flex:1;overflow-y:auto;padding:12px 14px 90px;-webkit-overflow-scrolling:touch}
+.home-scroll::-webkit-scrollbar{display:none}
+
+.sec-label{font-size:10px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.6;margin:16px 0 8px}
+
+/* TILES MÓDULOS */
+.modulos{display:flex;flex-direction:column;gap:8px}
+.modulo-tile{
+  display:flex;align-items:center;gap:14px;
+  background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:14px;cursor:pointer;
+  transition:border-color .15s;position:relative;overflow:hidden
+}
+.modulo-tile::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--tile-color,var(--gold));border-radius:3px 0 0 3px
+}
+.modulo-tile:active{border-color:var(--tile-color,var(--gold));background:var(--card2)}
+.tile-icon{
+  width:42px;height:42px;border-radius:10px;display:grid;place-items:center;
+  font-size:20px;flex-shrink:0;background:rgba(255,255,255,.05)
+}
+.tile-info{flex:1;min-width:0}
+.tile-nome{font-size:15px;font-weight:700;color:var(--txt)}
+.tile-desc{font-size:11px;color:var(--sub);margin-top:2px}
+.tile-count{
+  font-size:11px;font-weight:800;color:var(--tile-color,var(--gold));
+  background:rgba(255,255,255,.06);border-radius:20px;padding:3px 9px;flex-shrink:0
+}
+.tile-arr{color:var(--sub);font-size:18px;flex-shrink:0}
+
+/* ══ MÓDULO (tela interna) ════════════════════════ */
+#tela-modulo{background:var(--bg)}
+.mod-header{
+  display:flex;align-items:center;gap:12px;
+  padding:max(env(safe-area-inset-top),14px) 14px 14px;
+  background:var(--card);border-bottom:1px solid var(--line);flex-shrink:0
+}
+.mod-back{
+  background:rgba(255,255,255,.07);border:none;color:var(--txt);
+  width:36px;height:36px;border-radius:10px;font-size:20px;
+  display:grid;place-items:center;cursor:pointer;flex-shrink:0
+}
+.mod-back:active{opacity:.6}
+.mod-hinfo{flex:1;min-width:0}
+.mod-titulo{font-size:15px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mod-subtit{font-size:11px;color:var(--sub)}
+.mod-icon-h{font-size:24px;flex-shrink:0}
+
+.mod-toolbar{display:flex;gap:8px;padding:12px 14px 8px;flex-shrink:0}
+.mod-search{
+  flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:10px 13px;color:var(--txt);font-size:14px;outline:none;font-family:inherit
+}
+.mod-search::placeholder{color:var(--sub)}
+.mod-add{
+  background:var(--gold);color:#080D1A;border:none;border-radius:10px;
+  padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap
+}
+.mod-add:active{opacity:.8}
+
+.mod-lista{flex:1;overflow-y:auto;padding:4px 14px 90px;-webkit-overflow-scrolling:touch}
+.mod-lista::-webkit-scrollbar{display:none}
+
+.item{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:13px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start
+}
+.item:active{border-color:var(--gold)}
+.item-body{flex:1;min-width:0}
+.item-tit{font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{font-size:11px;color:var(--sub);margin-top:3px}
+.item-obs{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px;line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item-acts{display:flex;gap:6px;flex-shrink:0}
+.btn-sm{width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;display:grid;place-items:center;font-size:14px}
+.btn-ed{background:rgba(201,161,74,.15);color:var(--gold)}
+.btn-dl{background:rgba(247,95,95,.12);color:var(--red)}
+.btn-sm:active{opacity:.7}
+
+.mod-empty{text-align:center;padding:60px 20px;color:var(--sub)}
+.mod-empty-icon{font-size:40px;margin-bottom:10px}
+.mod-empty-txt{font-size:13px}
+
+/* ══ MODAL ═══════════════════════════════════════ */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:flex-end}
+.modal-bg.open{display:flex}
+.modal{
+  background:var(--card);border-radius:22px 22px 0 0;
+  padding:20px 16px max(env(safe-area-inset-bottom),28px);
+  width:100%;max-height:88vh;overflow-y:auto
+}
+.modal::-webkit-scrollbar{display:none}
+.modal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-titulo{font-size:16px;font-weight:800}
+.modal-x{
+  background:rgba(255,255,255,.08);border:none;color:var(--sub);
+  width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;display:grid;place-items:center
+}
+.field{margin-bottom:14px}
+.field label{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub);display:block;margin-bottom:6px}
+.field input,.field select,.field textarea{
+  width:100%;background:#0B1020;border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;color:var(--txt);font-size:15px;outline:none;font-family:inherit;-webkit-appearance:none
+}
+.field input:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{resize:none;height:90px}
+.btn-salvar{
+  width:100%;background:var(--gold);color:#080D1A;border:none;
+  border-radius:12px;padding:15px;font-size:16px;font-weight:800;
+  cursor:pointer;margin-top:4px;font-family:inherit
+}
+.btn-salvar:active{opacity:.85}
+
+/* ══ NAV BOTTOM ══════════════════════════════════ */
+.nav-bottom{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(8,13,26,.97);border-top:1px solid var(--line);
+  padding:10px 0 max(env(safe-area-inset-bottom),10px);
+  display:flex;z-index:50;backdrop-filter:blur(12px)
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;cursor:pointer;padding:4px 0
+}
+.nav-btn .ni{font-size:20px}
+.nav-btn .nl{font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--sub);text-transform:uppercase}
+.nav-btn.on .nl{color:var(--gold)}
+
+/* ══ SECRET CRM (5 toques) ════════════════════════ */
+#crm-tela{background:var(--bg)}
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══════════════════════════════════════ -->
+<div class="tela ativa" id="splash" onclick="irHome()">
+  <img src="/capa.png" alt="RADAR ATUAL">
+</div>
+
+<!-- ══ HOME ═══════════════════════════════════════ -->
+<div class="tela" id="home">
+  <div class="home-header">
+    <div class="home-logo" id="logo-tap" onclick="tapLogo()">
+      <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="18" stroke="#C9A14A" stroke-width="1.5" opacity=".4"/>
+        <circle cx="20" cy="20" r="12" stroke="#C9A14A" stroke-width="1.5" opacity=".6"/>
+        <circle cx="20" cy="20" r="6" stroke="#C9A14A" stroke-width="1.5"/>
+        <circle cx="20" cy="20" r="2" fill="#C9A14A"/>
+        <line x1="20" y1="20" x2="32" y2="8" stroke="#F5C842" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="logo-txt">
+        <span class="logo-radar">RADAR</span>
+        <span class="logo-atual">ATUAL</span>
+      </div>
+    </div>
+    <div class="home-sub">Informação em tempo real. Clareza para decidir.</div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="home-scroll">
+    <div class="sec-label">Módulos</div>
+    <div class="modulos" id="modulos"></div>
+  </div>
+
+  <nav class="nav-bottom">
+    <button class="nav-btn on"><span class="ni">🏠</span><span class="nl">Início</span></button>
+    <button class="nav-btn" onclick="irBusca()"><span class="ni">🔍</span><span class="nl">Buscar</span></button>
+    <button class="nav-btn" onclick="irRecentes()"><span class="ni">🕐</span><span class="nl">Recentes</span></button>
+  </nav>
+</div>
+
+<!-- ══ MÓDULO INTERNO ═════════════════════════════ -->
+<div class="tela" id="tela-modulo">
+  <div class="mod-header">
+    <button class="mod-back" onclick="voltarHome()">‹</button>
+    <div class="mod-hinfo">
+      <div class="mod-titulo" id="mod-titulo-h">—</div>
+      <div class="mod-subtit" id="mod-count-h">0 itens</div>
+    </div>
+    <div class="mod-icon-h" id="mod-icon-h">📋</div>
+  </div>
+  <div class="mod-toolbar">
+    <input class="mod-search" id="mod-busca" placeholder="Buscar..." oninput="renderMod()">
+    <button class="mod-add" onclick="abrirModal()">+ ADD</button>
+  </div>
+  <div class="mod-lista" id="mod-lista"></div>
+</div>
+
+<!-- ══ MODAL ADD/EDIT ═════════════════════════════ -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-top">
+      <span class="modal-titulo" id="modal-label">Novo Item</span>
+      <button class="modal-x" onclick="fecharModal()">×</button>
+    </div>
+    <div class="field"><label>Título</label><input id="f-titulo" placeholder="Nome do item"></div>
+    <div class="field"><label>Subtítulo / Referência</label><input id="f-sub" placeholder="Ex: Capítulo 3, Atos 2.1..."></div>
+    <div class="field"><label>Data</label><input type="date" id="f-data"></div>
+    <div class="field"><label>Link / Arquivo</label><input id="f-link" placeholder="URL ou caminho"></div>
+    <div class="field"><label>Observações</label><textarea id="f-obs" placeholder="Anotações..."></textarea></div>
+    <button class="btn-salvar" onclick="salvarItem()">SALVAR</button>
+  </div>
+</div>
+
+<script>
+// ══ MÓDULOS ════════════════════════════════════════
+const MODS = [
+  {id:'biblia',  nome:'Bíblia e Harpa Cristã',      icon:'📖', cor:'#C9A14A', desc:'Estudos, hinos e devocional'},
+  {id:'israel',  nome:'Notícias de Israel',          icon:'📰', cor:'#4f8ef7', desc:'Mundo bíblico em tempo real'},
+  {id:'ebd',     nome:'EBD',                         icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
+  {id:'governo', nome:'Governo e a Bíblia',          icon:'⚖️', cor:'#f75f5f', desc:'Profecia e atualidade'},
+  {id:'arqueol', nome:'Arqueologia',                  icon:'🏺', cor:'#a78bfa', desc:'Descobertas e evidências'},
+  {id:'silas',   nome:'Projeto Silas',               icon:'✝️', cor:'#38bdf8', desc:'Documentos, cartazes, vídeos'},
+  {id:'templo',  nome:'Templo Central Tuntum-MA',    icon:'⛪', cor:'#f5a623', desc:'Congregação local'},
+];
+
+// ══ STATE ══════════════════════════════════════════
+let modAtual = null;
+let editId = null;
+function chave(id){ return 'radar_' + id; }
+function getData(id){ return JSON.parse(localStorage.getItem(chave(id)) || '[]'); }
+function setData(id, arr){ localStorage.setItem(chave(id), JSON.stringify(arr)); }
+
+// ══ SPLASH ═════════════════════════════════════════
+setTimeout(irHome, 2200);
+function irHome(){
+  document.getElementById('splash').classList.remove('ativa');
+  document.getElementById('home').classList.add('ativa');
+  renderHome();
+}
+
+// ══ HOME ═══════════════════════════════════════════
+function renderHome(){
+  const el = document.getElementById('modulos');
+  el.innerHTML = MODS.map(m => {
+    const n = getData(m.id).length;
+    return `<div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')">
+      <div class="tile-icon">${m.icon}</div>
+      <div class="tile-info">
+        <div class="tile-nome">${m.nome}</div>
+        <div class="tile-desc">${m.desc}</div>
+      </div>
+      ${n ? `<div class="tile-count">${n}</div>` : ''}
+      <div class="tile-arr">›</div>
+    </div>`;
+  }).join('');
+}
+
+// ══ MÓDULO INTERNO ═════════════════════════════════
+function abrirMod(id){
+  modAtual = id;
+  const m = MODS.find(x=>x.id===id);
+  document.getElementById('mod-titulo-h').textContent = m.nome;
+  document.getElementById('mod-icon-h').textContent = m.icon;
+  document.getElementById('mod-busca').value = '';
+  document.getElementById('home').classList.remove('ativa');
+  document.getElementById('tela-modulo').classList.add('ativa');
+  renderMod();
+}
+
+function voltarHome(){
+  document.getElementById('tela-modulo').classList.remove('ativa');
+  document.getElementById('home').classList.add('ativa');
+  renderHome();
+}
+
+function renderMod(){
+  const items = getData(modAtual);
+  const busca = document.getElementById('mod-busca').value.toLowerCase();
+  const filtrado = busca ? items.filter(i =>
+    i.titulo.toLowerCase().includes(busca) ||
+    (i.sub||'').toLowerCase().includes(busca) ||
+    (i.obs||'').toLowerCase().includes(busca)
+  ) : items;
+
+  document.getElementById('mod-count-h').textContent = items.length + ' item' + (items.length!==1?'s':'');
+
+  const el = document.getElementById('mod-lista');
+  if(!filtrado.length){
+    el.innerHTML = `<div class="mod-empty"><div class="mod-empty-icon">${MODS.find(x=>x.id===modAtual).icon}</div><div class="mod-empty-txt">Nenhum item ainda.<br>Toque em + ADD para começar.</div></div>`;
+    return;
+  }
+  el.innerHTML = filtrado.map(i => `
+    <div class="item">
+      <div class="item-body">
+        <div class="item-tit">${i.titulo}</div>
+        ${i.sub ? `<div class="item-meta">${i.sub}${i.data?' · '+i.data:''}</div>` : (i.data?`<div class="item-meta">${i.data}</div>`:'')}
+        ${i.obs ? `<div class="item-obs">${i.obs}</div>` : ''}
+        ${i.link ? `<div class="item-meta" style="color:#4f8ef7;margin-top:4px">🔗 ${i.link.substring(0,40)}${i.link.length>40?'…':''}</div>` : ''}
+      </div>
+      <div class="item-acts">
+        <button class="btn-sm btn-ed" onclick="editarItem('${i.id}')">✏️</button>
+        <button class="btn-sm btn-dl" onclick="deletarItem('${i.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+// ══ MODAL ══════════════════════════════════════════
+function abrirModal(id){
+  editId = id||null;
+  document.getElementById('modal-label').textContent = id ? 'Editar Item' : 'Novo Item';
+  if(id){
+    const item = getData(modAtual).find(x=>x.id===id);
+    document.getElementById('f-titulo').value = item.titulo;
+    document.getElementById('f-sub').value = item.sub||'';
+    document.getElementById('f-data').value = item.data||'';
+    document.getElementById('f-link').value = item.link||'';
+    document.getElementById('f-obs').value = item.obs||'';
+  } else {
+    ['f-titulo','f-sub','f-link','f-obs'].forEach(f=>document.getElementById(f).value='');
+    document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
+  }
+  document.getElementById('modal').classList.add('open');
+  setTimeout(()=>document.getElementById('f-titulo').focus(),100);
+}
+
+function fecharModal(){
+  document.getElementById('modal').classList.remove('open');
+}
+
+function editarItem(id){ abrirModal(id); }
+
+function salvarItem(){
+  const titulo = document.getElementById('f-titulo').value.trim();
+  if(!titulo){ document.getElementById('f-titulo').focus(); return; }
+  const obj = {
+    id: editId || Date.now().toString(),
+    titulo,
+    sub: document.getElementById('f-sub').value.trim(),
+    data: document.getElementById('f-data').value,
+    link: document.getElementById('f-link').value.trim(),
+    obs: document.getElementById('f-obs').value.trim()
+  };
+  const arr = getData(modAtual);
+  if(editId){ const i=arr.findIndex(x=>x.id===editId); arr[i]=obj; }
+  else arr.unshift(obj);
+  setData(modAtual, arr);
+  fecharModal();
+  renderMod();
+  renderHome();
+}
+
+function deletarItem(id){
+  if(!confirm('Excluir este item?')) return;
+  setData(modAtual, getData(modAtual).filter(x=>x.id!==id));
+  renderMod(); renderHome();
+}
+
+// ══ 5 TOQUES NO LOGO = CRM SECRETO ═══════════════
+let tapCount=0, tapTimer=null;
+function tapLogo(){
+  tapCount++;
+  clearTimeout(tapTimer);
+  if(tapCount>=5){ tapCount=0; alert('🔐 CRM em breve'); return; }
+  tapTimer=setTimeout(()=>tapCount=0, 1500);
+}
+
+// ══ PLACEHOLDERS ══════════════════════════════════
+function irBusca(){ alert('Busca global — em breve'); }
+function irRecentes(){ alert('Recentes — em breve'); }
+
+// ══ MODAL FECHAR AO TOCAR FORA ════════════════════
+document.getElementById('modal').addEventListener('click', e => {
+  if(e.target === document.getElementById('modal')) fecharModal();
+});
+
+// ══ PWA ═══════════════════════════════════════════
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>
