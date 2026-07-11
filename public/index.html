@@ -18,21 +18,19 @@
 }
 html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
 
-/* ══ TELAS ══════════════════════════════════════ */
 .tela{position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden}
 .tela.ativa{display:flex}
 
-/* ══ SPLASH ══════════════════════════════════════ */
+/* ══ SPLASH ══ */
 #splash{background:var(--bg);align-items:center;justify-content:center;cursor:pointer}
 #splash img{width:100%;height:100%;object-fit:cover;object-position:top}
 
-/* ══ HOME ════════════════════════════════════════ */
+/* ══ HOME ══ */
 #home{background:var(--bg)}
 .home-header{
   padding:env(safe-area-inset-top,16px) 16px 0;
   padding-top:max(env(safe-area-inset-top),16px);
-  background:linear-gradient(180deg,#050810 0%,transparent 100%);
-  flex-shrink:0
+  background:linear-gradient(180deg,#050810 0%,transparent 100%);flex-shrink:0
 }
 .home-logo{display:flex;align-items:center;gap:10px;padding:14px 0 12px;cursor:pointer;user-select:none}
 .logo-icon{width:36px;height:36px}
@@ -41,13 +39,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .logo-atual{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:3px}
 .home-sub{font-size:11px;color:var(--sub);padding-bottom:14px;letter-spacing:.5px}
 .divider{height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin-bottom:4px}
-
 .home-scroll{flex:1;overflow-y:auto;padding:12px 14px 90px;-webkit-overflow-scrolling:touch}
 .home-scroll::-webkit-scrollbar{display:none}
-
 .sec-label{font-size:10px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.6;margin:16px 0 8px}
-
-/* TILES MÓDULOS */
 .modulos{display:flex;flex-direction:column;gap:8px}
 .modulo-tile{
   display:flex;align-items:center;gap:14px;
@@ -55,134 +49,154 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   border-radius:14px;padding:14px;cursor:pointer;
   transition:border-color .15s;position:relative;overflow:hidden
 }
-.modulo-tile::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:var(--tile-color,var(--gold));border-radius:3px 0 0 3px
-}
+.modulo-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tile-color,var(--gold));border-radius:3px 0 0 3px}
 .modulo-tile:active{border-color:var(--tile-color,var(--gold));background:var(--card2)}
-.tile-icon{
-  width:42px;height:42px;border-radius:10px;display:grid;place-items:center;
-  font-size:20px;flex-shrink:0;background:rgba(255,255,255,.05)
-}
+.tile-icon{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:20px;flex-shrink:0;background:rgba(255,255,255,.05)}
 .tile-info{flex:1;min-width:0}
 .tile-nome{font-size:15px;font-weight:700;color:var(--txt)}
 .tile-desc{font-size:11px;color:var(--sub);margin-top:2px}
-.tile-count{
-  font-size:11px;font-weight:800;color:var(--tile-color,var(--gold));
-  background:rgba(255,255,255,.06);border-radius:20px;padding:3px 9px;flex-shrink:0
-}
+.tile-count{font-size:11px;font-weight:800;color:var(--tile-color,var(--gold));background:rgba(255,255,255,.06);border-radius:20px;padding:3px 9px;flex-shrink:0}
 .tile-arr{color:var(--sub);font-size:18px;flex-shrink:0}
 
-/* ══ MÓDULO (tela interna) ════════════════════════ */
+/* ══ MÓDULO GENÉRICO ══ */
 #tela-modulo{background:var(--bg)}
 .mod-header{
   display:flex;align-items:center;gap:12px;
   padding:max(env(safe-area-inset-top),14px) 14px 14px;
   background:var(--card);border-bottom:1px solid var(--line);flex-shrink:0
 }
-.mod-back{
-  background:rgba(255,255,255,.07);border:none;color:var(--txt);
-  width:36px;height:36px;border-radius:10px;font-size:20px;
-  display:grid;place-items:center;cursor:pointer;flex-shrink:0
-}
+.mod-back{background:rgba(255,255,255,.07);border:none;color:var(--txt);width:36px;height:36px;border-radius:10px;font-size:20px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
 .mod-back:active{opacity:.6}
 .mod-hinfo{flex:1;min-width:0}
 .mod-titulo{font-size:15px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mod-subtit{font-size:11px;color:var(--sub)}
 .mod-icon-h{font-size:24px;flex-shrink:0}
-
 .mod-toolbar{display:flex;gap:8px;padding:12px 14px 8px;flex-shrink:0}
-.mod-search{
-  flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;
-  padding:10px 13px;color:var(--txt);font-size:14px;outline:none;font-family:inherit
-}
+.mod-search{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 13px;color:var(--txt);font-size:14px;outline:none;font-family:inherit}
 .mod-search::placeholder{color:var(--sub)}
-.mod-add{
-  background:var(--gold);color:#080D1A;border:none;border-radius:10px;
-  padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap
-}
+.mod-add{background:var(--gold);color:#080D1A;border:none;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap}
 .mod-add:active{opacity:.8}
-
 .mod-lista{flex:1;overflow-y:auto;padding:4px 14px 90px;-webkit-overflow-scrolling:touch}
 .mod-lista::-webkit-scrollbar{display:none}
-
-.item{
-  background:var(--card);border:1px solid var(--line);border-radius:12px;
-  padding:13px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start
-}
+.item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
 .item:active{border-color:var(--gold)}
 .item-body{flex:1;min-width:0}
 .item-tit{font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .item-meta{font-size:11px;color:var(--sub);margin-top:3px}
-.item-obs{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px;line-height:1.4;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item-obs{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .item-acts{display:flex;gap:6px;flex-shrink:0}
 .btn-sm{width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;display:grid;place-items:center;font-size:14px}
 .btn-ed{background:rgba(201,161,74,.15);color:var(--gold)}
 .btn-dl{background:rgba(247,95,95,.12);color:var(--red)}
 .btn-sm:active{opacity:.7}
-
 .mod-empty{text-align:center;padding:60px 20px;color:var(--sub)}
 .mod-empty-icon{font-size:40px;margin-bottom:10px}
 .mod-empty-txt{font-size:13px}
 
-/* ══ MODAL ═══════════════════════════════════════ */
+/* ══ MODAL ══ */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:flex-end}
 .modal-bg.open{display:flex}
-.modal{
-  background:var(--card);border-radius:22px 22px 0 0;
-  padding:20px 16px max(env(safe-area-inset-bottom),28px);
-  width:100%;max-height:88vh;overflow-y:auto
-}
+.modal{background:var(--card);border-radius:22px 22px 0 0;padding:20px 16px max(env(safe-area-inset-bottom),28px);width:100%;max-height:88vh;overflow-y:auto}
 .modal::-webkit-scrollbar{display:none}
 .modal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .modal-titulo{font-size:16px;font-weight:800}
-.modal-x{
-  background:rgba(255,255,255,.08);border:none;color:var(--sub);
-  width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;display:grid;place-items:center
-}
+.modal-x{background:rgba(255,255,255,.08);border:none;color:var(--sub);width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;display:grid;place-items:center}
 .field{margin-bottom:14px}
 .field label{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub);display:block;margin-bottom:6px}
-.field input,.field select,.field textarea{
-  width:100%;background:#0B1020;border:1px solid var(--line);border-radius:10px;
-  padding:12px 14px;color:var(--txt);font-size:15px;outline:none;font-family:inherit;-webkit-appearance:none
-}
+.field input,.field select,.field textarea{width:100%;background:#0B1020;border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--txt);font-size:15px;outline:none;font-family:inherit;-webkit-appearance:none}
 .field input:focus,.field textarea:focus{border-color:var(--gold)}
 .field textarea{resize:none;height:90px}
-.btn-salvar{
-  width:100%;background:var(--gold);color:#080D1A;border:none;
-  border-radius:12px;padding:15px;font-size:16px;font-weight:800;
-  cursor:pointer;margin-top:4px;font-family:inherit
-}
+.btn-salvar{width:100%;background:var(--gold);color:#080D1A;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px;font-family:inherit}
 .btn-salvar:active{opacity:.85}
 
-/* ══ NAV BOTTOM ══════════════════════════════════ */
-.nav-bottom{
-  position:fixed;bottom:0;left:0;right:0;
-  background:rgba(8,13,26,.97);border-top:1px solid var(--line);
-  padding:10px 0 max(env(safe-area-inset-bottom),10px);
-  display:flex;z-index:50;backdrop-filter:blur(12px)
-}
-.nav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-  background:none;border:none;cursor:pointer;padding:4px 0
-}
+/* ══ NAV BOTTOM ══ */
+.nav-bottom{position:fixed;bottom:0;left:0;right:0;background:rgba(8,13,26,.97);border-top:1px solid var(--line);padding:10px 0 max(env(safe-area-inset-bottom),10px);display:flex;z-index:50;backdrop-filter:blur(12px)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:4px 0}
 .nav-btn .ni{font-size:20px}
 .nav-btn .nl{font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--sub);text-transform:uppercase}
 .nav-btn.on .nl{color:var(--gold)}
 
-/* ══ SECRET CRM (5 toques) ════════════════════════ */
-#crm-tela{background:var(--bg)}
+/* ══ BÍBLIA ══════════════════════════════════════ */
+#tela-biblia{background:var(--bg)}
+
+.bib-header{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+  padding:max(env(safe-area-inset-top),14px) 14px 12px;
+  background:var(--card);border-bottom:1px solid var(--line)
+}
+.bib-back{background:rgba(255,255,255,.07);border:none;color:var(--txt);width:36px;height:36px;border-radius:10px;font-size:20px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
+.bib-back:active{opacity:.6}
+.bib-hinfo{flex:1;min-width:0}
+.bib-titulo{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bib-bread{font-size:11px;color:var(--gold);margin-top:1px}
+.bib-search-wrap{padding:10px 14px 6px;flex-shrink:0}
+.bib-search{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--txt);font-size:14px;outline:none;font-family:inherit}
+.bib-search::placeholder{color:var(--sub)}
+.bib-search:focus{border-color:var(--gold)}
+
+.bib-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.bib-body::-webkit-scrollbar{display:none}
+
+/* Lista de livros */
+.bib-secao{font-size:9px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.55;padding:14px 16px 6px}
+.bib-livro{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer
+}
+.bib-livro:active{background:var(--card2)}
+.bib-livro-abbrev{width:36px;height:36px;border-radius:8px;background:rgba(201,161,74,.12);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--gold);flex-shrink:0;text-transform:uppercase}
+.bib-livro-nome{flex:1;font-size:14px;font-weight:600}
+.bib-livro-caps{font-size:11px;color:var(--sub)}
+.bib-livro-arr{color:var(--sub);font-size:18px}
+.bib-last-tag{font-size:10px;background:rgba(201,161,74,.15);color:var(--gold);border-radius:20px;padding:2px 8px;border:1px solid var(--line)}
+
+/* Grid de capítulos */
+.bib-caps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px}
+.bib-cap{
+  aspect-ratio:1;display:grid;place-items:center;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  font-size:15px;font-weight:700;cursor:pointer
+}
+.bib-cap:active{background:var(--gold);color:#080D1A;border-color:var(--gold)}
+.bib-cap.lido{border-color:rgba(201,161,74,.4);color:var(--gold)}
+
+/* Versículos */
+.bib-vers-wrap{padding:14px 16px 100px}
+.bib-vers-num{display:inline-block;min-width:28px;font-size:11px;font-weight:800;color:var(--gold);opacity:.7;vertical-align:top;padding-top:2px;user-select:none}
+.bib-vers-txt{display:inline;font-size:16px;line-height:1.75;color:rgba(255,255,255,.9)}
+.bib-verso{margin-bottom:8px;padding:6px 0;border-radius:6px;cursor:pointer}
+.bib-verso:active{background:rgba(201,161,74,.07)}
+.bib-verso.marcado .bib-vers-txt{color:var(--gold2)}
+
+/* Busca de resultados */
+.bib-result{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
+.bib-result:active{background:var(--card2)}
+.bib-result-ref{font-size:11px;font-weight:800;color:var(--gold);margin-bottom:4px}
+.bib-result-txt{font-size:14px;color:rgba(255,255,255,.8);line-height:1.5}
+.bib-result em{color:var(--gold2);font-style:normal;font-weight:700}
+
+/* Loading */
+.bib-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--sub)}
+.bib-spinner{width:36px;height:36px;border:3px solid rgba(201,161,74,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Barra posição */
+.bib-pos-bar{padding:8px 14px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.bib-pos-txt{font-size:12px;color:var(--sub)}
+.bib-pos-nav{display:flex;gap:8px}
+.bib-nav-btn{background:rgba(255,255,255,.07);border:none;color:var(--txt);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.bib-nav-btn:active{opacity:.7}
 </style>
 </head>
 <body>
 
-<!-- ══ SPLASH ══════════════════════════════════════ -->
+<!-- SPLASH -->
 <div class="tela ativa" id="splash" onclick="irHome()">
   <img src="/capa.png" alt="RADAR ATUAL">
 </div>
 
-<!-- ══ HOME ═══════════════════════════════════════ -->
+<!-- HOME -->
 <div class="tela" id="home">
   <div class="home-header">
     <div class="home-logo" id="logo-tap" onclick="tapLogo()">
@@ -201,12 +215,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <div class="home-sub">Informação em tempo real. Clareza para decidir.</div>
     <div class="divider"></div>
   </div>
-
   <div class="home-scroll">
     <div class="sec-label">Módulos</div>
     <div class="modulos" id="modulos"></div>
   </div>
-
   <nav class="nav-bottom">
     <button class="nav-btn on"><span class="ni">🏠</span><span class="nl">Início</span></button>
     <button class="nav-btn" onclick="irBusca()"><span class="ni">🔍</span><span class="nl">Buscar</span></button>
@@ -214,7 +226,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   </nav>
 </div>
 
-<!-- ══ MÓDULO INTERNO ═════════════════════════════ -->
+<!-- MÓDULO GENÉRICO -->
 <div class="tela" id="tela-modulo">
   <div class="mod-header">
     <button class="mod-back" onclick="voltarHome()">‹</button>
@@ -231,7 +243,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   <div class="mod-lista" id="mod-lista"></div>
 </div>
 
-<!-- ══ MODAL ADD/EDIT ═════════════════════════════ -->
+<!-- MODAL -->
 <div class="modal-bg" id="modal">
   <div class="modal">
     <div class="modal-top">
@@ -247,10 +259,42 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   </div>
 </div>
 
+<!-- ══ BÍBLIA ══════════════════════════════════════ -->
+<div class="tela" id="tela-biblia">
+  <div class="bib-header">
+    <button class="bib-back" id="bib-back-btn" onclick="bibVoltar()">‹</button>
+    <div class="bib-hinfo">
+      <div class="bib-titulo" id="bib-titulo">Bíblia — Almeida Atualizada</div>
+      <div class="bib-bread" id="bib-bread"></div>
+    </div>
+  </div>
+
+  <!-- barra navegação rápida (caps/vers) -->
+  <div class="bib-pos-bar" id="bib-pos-bar" style="display:none">
+    <span class="bib-pos-txt" id="bib-pos-txt"></span>
+    <div class="bib-pos-nav">
+      <button class="bib-nav-btn" onclick="bibCapAnterior()">‹ Cap</button>
+      <button class="bib-nav-btn" onclick="bibCapProximo()">Cap ›</button>
+    </div>
+  </div>
+
+  <!-- barra de busca -->
+  <div class="bib-search-wrap" id="bib-search-wrap">
+    <input class="bib-search" id="bib-search" placeholder="Buscar palavra ou referência (ex: Jo 3.16)..." oninput="bibBuscar()">
+  </div>
+
+  <div class="bib-body" id="bib-body">
+    <div class="bib-loading">
+      <div class="bib-spinner"></div>
+      <span>Carregando Bíblia...</span>
+    </div>
+  </div>
+</div>
+
 <script>
-// ══ MÓDULOS ════════════════════════════════════════
+// ══ MÓDULOS ═══════════════════════════════════════
 const MODS = [
-  {id:'biblia',  nome:'Bíblia e Harpa Cristã',      icon:'📖', cor:'#C9A14A', desc:'Estudos, hinos e devocional'},
+  {id:'biblia',  nome:'Bíblia e Harpa Cristã',      icon:'📖', cor:'#C9A14A', desc:'Almeida Atualizada — 66 livros'},
   {id:'israel',  nome:'Notícias de Israel',          icon:'📰', cor:'#4f8ef7', desc:'Mundo bíblico em tempo real'},
   {id:'ebd',     nome:'EBD',                         icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
   {id:'governo', nome:'Governo e a Bíblia',          icon:'⚖️', cor:'#f75f5f', desc:'Profecia e atualidade'},
@@ -259,14 +303,13 @@ const MODS = [
   {id:'templo',  nome:'Templo Central Tuntum-MA',    icon:'⛪', cor:'#f5a623', desc:'Sede central — Tuntum-MA'},
 ];
 
-// ══ STATE ══════════════════════════════════════════
-let modAtual = null;
-let editId = null;
+// ══ STATE GERAL ════════════════════════════════════
+let modAtual = null, editId = null;
 function chave(id){ return 'radar_' + id; }
 function getData(id){ return JSON.parse(localStorage.getItem(chave(id)) || '[]'); }
 function setData(id, arr){ localStorage.setItem(chave(id), JSON.stringify(arr)); }
 
-// ══ SPLASH ═════════════════════════════════════════
+// ══ SPLASH ════════════════════════════════════════
 setTimeout(irHome, 2200);
 function irHome(){
   document.getElementById('splash').classList.remove('ativa');
@@ -274,11 +317,10 @@ function irHome(){
   renderHome();
 }
 
-// ══ HOME ═══════════════════════════════════════════
+// ══ HOME ══════════════════════════════════════════
 function renderHome(){
-  const el = document.getElementById('modulos');
-  el.innerHTML = MODS.map(m => {
-    const n = getData(m.id).length;
+  document.getElementById('modulos').innerHTML = MODS.map(m => {
+    const n = m.id === 'biblia' ? '' : getData(m.id).length;
     return `<div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')">
       <div class="tile-icon">${m.icon}</div>
       <div class="tile-info">
@@ -291,14 +333,19 @@ function renderHome(){
   }).join('');
 }
 
-// ══ MÓDULO INTERNO ═════════════════════════════════
+// ══ ABRIR MÓDULO ══════════════════════════════════
 function abrirMod(id){
+  document.getElementById('home').classList.remove('ativa');
+  if(id === 'biblia'){
+    document.getElementById('tela-biblia').classList.add('ativa');
+    iniciarBiblia();
+    return;
+  }
   modAtual = id;
   const m = MODS.find(x=>x.id===id);
   document.getElementById('mod-titulo-h').textContent = m.nome;
   document.getElementById('mod-icon-h').textContent = m.icon;
   document.getElementById('mod-busca').value = '';
-  document.getElementById('home').classList.remove('ativa');
   document.getElementById('tela-modulo').classList.add('ativa');
   renderMod();
 }
@@ -317,9 +364,7 @@ function renderMod(){
     (i.sub||'').toLowerCase().includes(busca) ||
     (i.obs||'').toLowerCase().includes(busca)
   ) : items;
-
   document.getElementById('mod-count-h').textContent = items.length + ' item' + (items.length!==1?'s':'');
-
   const el = document.getElementById('mod-lista');
   if(!filtrado.length){
     el.innerHTML = `<div class="mod-empty"><div class="mod-empty-icon">${MODS.find(x=>x.id===modAtual).icon}</div><div class="mod-empty-txt">Nenhum item ainda.<br>Toque em + ADD para começar.</div></div>`;
@@ -340,7 +385,6 @@ function renderMod(){
     </div>`).join('');
 }
 
-// ══ MODAL ══════════════════════════════════════════
 function abrirModal(id){
   editId = id||null;
   document.getElementById('modal-label').textContent = id ? 'Editar Item' : 'Novo Item';
@@ -358,40 +402,221 @@ function abrirModal(id){
   document.getElementById('modal').classList.add('open');
   setTimeout(()=>document.getElementById('f-titulo').focus(),100);
 }
-
-function fecharModal(){
-  document.getElementById('modal').classList.remove('open');
-}
-
+function fecharModal(){ document.getElementById('modal').classList.remove('open'); }
 function editarItem(id){ abrirModal(id); }
-
 function salvarItem(){
   const titulo = document.getElementById('f-titulo').value.trim();
   if(!titulo){ document.getElementById('f-titulo').focus(); return; }
-  const obj = {
-    id: editId || Date.now().toString(),
-    titulo,
-    sub: document.getElementById('f-sub').value.trim(),
-    data: document.getElementById('f-data').value,
-    link: document.getElementById('f-link').value.trim(),
-    obs: document.getElementById('f-obs').value.trim()
-  };
+  const obj = {id:editId||Date.now().toString(),titulo,sub:document.getElementById('f-sub').value.trim(),data:document.getElementById('f-data').value,link:document.getElementById('f-link').value.trim(),obs:document.getElementById('f-obs').value.trim()};
   const arr = getData(modAtual);
-  if(editId){ const i=arr.findIndex(x=>x.id===editId); arr[i]=obj; }
-  else arr.unshift(obj);
-  setData(modAtual, arr);
-  fecharModal();
-  renderMod();
-  renderHome();
+  if(editId){ const i=arr.findIndex(x=>x.id===editId); arr[i]=obj; } else arr.unshift(obj);
+  setData(modAtual, arr); fecharModal(); renderMod(); renderHome();
 }
-
 function deletarItem(id){
   if(!confirm('Excluir este item?')) return;
   setData(modAtual, getData(modAtual).filter(x=>x.id!==id));
   renderMod(); renderHome();
 }
+document.getElementById('modal').addEventListener('click', e => { if(e.target===document.getElementById('modal')) fecharModal(); });
 
-// ══ 5 TOQUES NO LOGO = CRM SECRETO ═══════════════
+// ══════════════════════════════════════════════════
+// ══ BÍBLIA PREMIUM ════════════════════════════════
+// ══════════════════════════════════════════════════
+const AT_TOTAL = 39;
+const NOMES_AT = ['Gênesis','Êxodo','Levítico','Números','Deuteronômio','Josué','Juízes','Rute','1 Samuel','2 Samuel','1 Reis','2 Reis','1 Crônicas','2 Crônicas','Esdras','Neemias','Ester','Jó','Salmos','Provérbios','Eclesiastes','Cântico dos Cânticos','Isaías','Jeremias','Lamentações','Ezequiel','Daniel','Oséias','Joel','Amós','Obadias','Jonas','Miquéias','Naum','Habacuque','Sofonias','Ageu','Zacarias','Malaquias'];
+const NOMES_NT = ['Mateus','Marcos','Lucas','João','Atos','Romanos','1 Coríntios','2 Coríntios','Gálatas','Efésios','Filipenses','Colossenses','1 Tessalonicenses','2 Tessalonicenses','1 Timóteo','2 Timóteo','Tito','Filemom','Hebreus','Tiago','1 Pedro','2 Pedro','1 João','2 João','3 João','Judas','Apocalipse'];
+
+let bibData = null;
+let bibLevel = 'livros'; // 'livros' | 'caps' | 'vers' | 'busca'
+let bibLivroIdx = 0, bibCapIdx = 0;
+let bibMarcados = JSON.parse(localStorage.getItem('bib_marcados') || '{}');
+let bibBuscaTimer = null;
+
+function salvarPos(){ localStorage.setItem('bib_pos', JSON.stringify({l:bibLivroIdx,c:bibCapIdx})); }
+function carregarPos(){ const p=JSON.parse(localStorage.getItem('bib_pos')||'null'); if(p){ bibLivroIdx=p.l; bibCapIdx=p.c; } }
+
+async function iniciarBiblia(){
+  if(bibData){ bibMostrarLivros(); return; }
+  document.getElementById('bib-body').innerHTML = '<div class="bib-loading"><div class="bib-spinner"></div><span>Carregando Bíblia...</span></div>';
+  document.getElementById('bib-search-wrap').style.display = 'none';
+  document.getElementById('bib-pos-bar').style.display = 'none';
+  try{
+    const r = await fetch('/biblia.json');
+    bibData = await r.json();
+    bibMostrarLivros();
+  } catch(e){
+    document.getElementById('bib-body').innerHTML = '<div class="bib-loading"><span style="color:var(--red)">Erro ao carregar. Verifique a conexão.</span></div>';
+  }
+}
+
+function bibVoltar(){
+  if(bibLevel === 'caps'){ bibMostrarLivros(); return; }
+  if(bibLevel === 'vers'){ bibMostrarCaps(bibLivroIdx); return; }
+  if(bibLevel === 'busca'){ bibMostrarLivros(); return; }
+  // estava em livros → voltar pra home
+  document.getElementById('tela-biblia').classList.remove('ativa');
+  document.getElementById('home').classList.add('ativa');
+  renderHome();
+}
+
+function bibSetHeader(titulo, bread, posBar, posLabel, search){
+  document.getElementById('bib-titulo').textContent = titulo;
+  document.getElementById('bib-bread').textContent = bread||'';
+  document.getElementById('bib-pos-bar').style.display = posBar ? 'flex' : 'none';
+  document.getElementById('bib-pos-txt').textContent = posLabel||'';
+  document.getElementById('bib-search-wrap').style.display = search ? 'block' : 'none';
+  document.getElementById('bib-search').value = '';
+}
+
+function bibMostrarLivros(){
+  bibLevel = 'livros';
+  bibSetHeader('Bíblia — Almeida Atualizada', '66 livros', false, '', true);
+  carregarPos();
+
+  const posKey = `${bibLivroIdx}_${bibCapIdx}`;
+  let html = `<div class="bib-secao">Antigo Testamento — 39 livros</div>`;
+  bibData.forEach((liv, idx) => {
+    const isLast = (idx === bibLivroIdx);
+    const nomeDisplay = liv.name || NOMES_AT[idx] || NOMES_NT[idx-AT_TOTAL] || liv.abbrev;
+    const abbrev = liv.abbrev.substring(0,3).toUpperCase();
+    html += `<div class="bib-livro" onclick="bibMostrarCaps(${idx})">
+      <div class="bib-livro-abbrev">${abbrev}</div>
+      <div class="bib-livro-nome">${nomeDisplay}</div>
+      ${isLast ? `<span class="bib-last-tag">última leitura</span>` : `<span class="bib-livro-caps">${liv.chapters.length} cap</span>`}
+      <span class="bib-livro-arr">›</span>
+    </div>`;
+    if(idx === AT_TOTAL - 1){
+      html += `<div class="bib-secao" style="margin-top:8px">Novo Testamento — 27 livros</div>`;
+    }
+  });
+  document.getElementById('bib-body').innerHTML = html;
+}
+
+function bibMostrarCaps(livIdx){
+  bibLevel = 'caps';
+  bibLivroIdx = livIdx;
+  const liv = bibData[livIdx];
+  const nome = liv.name || (livIdx < AT_TOTAL ? NOMES_AT[livIdx] : NOMES_NT[livIdx-AT_TOTAL]);
+  bibSetHeader(nome, 'Selecione o capítulo', false, '', false);
+
+  let html = `<div class="bib-caps-grid">`;
+  liv.chapters.forEach((_,ci) => {
+    const marcado = bibMarcados[`${livIdx}_${ci}`];
+    html += `<div class="bib-cap ${marcado?'lido':''}" onclick="bibMostrarVers(${livIdx},${ci})">${ci+1}</div>`;
+  });
+  html += '</div>';
+  document.getElementById('bib-body').innerHTML = html;
+}
+
+function bibMostrarVers(livIdx, capIdx){
+  bibLevel = 'vers';
+  bibLivroIdx = livIdx;
+  bibCapIdx = capIdx;
+  salvarPos();
+  bibMarcados[`${livIdx}_${capIdx}`] = true;
+  localStorage.setItem('bib_marcados', JSON.stringify(bibMarcados));
+
+  const liv = bibData[livIdx];
+  const nome = liv.name || (livIdx < AT_TOTAL ? NOMES_AT[livIdx] : NOMES_NT[livIdx-AT_TOTAL]);
+  const cap = liv.chapters[capIdx];
+  const totalCaps = liv.chapters.length;
+
+  bibSetHeader(nome, `Capítulo ${capIdx+1} de ${totalCaps}`, true, `${nome} ${capIdx+1}`, false);
+
+  let html = '<div class="bib-vers-wrap">';
+  cap.forEach((v,vi) => {
+    const mk = bibMarcados[`v_${livIdx}_${capIdx}_${vi}`];
+    html += `<div class="bib-verso ${mk?'marcado':''}" onclick="toggleVers(${livIdx},${capIdx},${vi},this)">
+      <span class="bib-vers-num">${vi+1}</span>
+      <span class="bib-vers-txt">${v}</span>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('bib-body').innerHTML = html;
+  document.getElementById('bib-body').scrollTop = 0;
+}
+
+function toggleVers(li,ci,vi,el){
+  const k = `v_${li}_${ci}_${vi}`;
+  if(bibMarcados[k]){ delete bibMarcados[k]; el.classList.remove('marcado'); }
+  else { bibMarcados[k]=true; el.classList.add('marcado'); }
+  localStorage.setItem('bib_marcados', JSON.stringify(bibMarcados));
+}
+
+function bibCapAnterior(){
+  const liv = bibData[bibLivroIdx];
+  if(bibCapIdx > 0){ bibMostrarVers(bibLivroIdx, bibCapIdx-1); return; }
+  if(bibLivroIdx > 0){
+    const prevLiv = bibData[bibLivroIdx-1];
+    bibMostrarVers(bibLivroIdx-1, prevLiv.chapters.length-1);
+  }
+}
+function bibCapProximo(){
+  const liv = bibData[bibLivroIdx];
+  if(bibCapIdx < liv.chapters.length-1){ bibMostrarVers(bibLivroIdx, bibCapIdx+1); return; }
+  if(bibLivroIdx < bibData.length-1){ bibMostrarVers(bibLivroIdx+1, 0); }
+}
+
+// Busca
+function bibBuscar(){
+  clearTimeout(bibBuscaTimer);
+  const q = document.getElementById('bib-search').value.trim();
+  if(!q){ bibMostrarLivros(); return; }
+
+  // Detecta referência: "Jo 3.16" ou "Gn 1.1"
+  const refMatch = q.match(/^(\w+)\s+(\d+)\.(\d+)$/i);
+  if(refMatch){
+    const abbrev = refMatch[1].toLowerCase();
+    const ci = parseInt(refMatch[2]) - 1;
+    const vi = parseInt(refMatch[3]) - 1;
+    const livIdx = bibData.findIndex(l => l.abbrev.toLowerCase().startsWith(abbrev) || (l.name||'').toLowerCase().startsWith(refMatch[1].toLowerCase()));
+    if(livIdx >= 0 && bibData[livIdx].chapters[ci] && bibData[livIdx].chapters[ci][vi] !== undefined){
+      bibBuscaTimer = setTimeout(()=>bibMostrarVers(livIdx, ci), 300);
+      return;
+    }
+  }
+
+  bibBuscaTimer = setTimeout(()=>{
+    bibLevel = 'busca';
+    bibSetHeader('Busca', `"${q}"`, false, '', true);
+    document.getElementById('bib-search').value = q;
+
+    const qLow = q.toLowerCase();
+    let resultados = [], total = 0;
+    for(let li=0; li<bibData.length && total<120; li++){
+      const liv = bibData[li];
+      const nome = liv.name || '';
+      for(let ci=0; ci<liv.chapters.length && total<120; ci++){
+        for(let vi=0; vi<liv.chapters[ci].length && total<120; vi++){
+          const txt = liv.chapters[ci][vi];
+          if(txt.toLowerCase().includes(qLow)){
+            resultados.push({li,ci,vi,nome,txt});
+            total++;
+          }
+        }
+      }
+    }
+
+    if(!resultados.length){
+      document.getElementById('bib-body').innerHTML = `<div class="bib-loading"><span style="color:var(--sub)">Nenhum resultado para "${q}"</span></div>`;
+      return;
+    }
+
+    const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    let html = '';
+    resultados.forEach(r => {
+      const destaque = r.txt.replace(re, m=>`<em>${m}</em>`);
+      html += `<div class="bib-result" onclick="bibMostrarVers(${r.li},${r.ci})">
+        <div class="bib-result-ref">${r.nome} ${r.ci+1}.${r.vi+1}</div>
+        <div class="bib-result-txt">${destaque}</div>
+      </div>`;
+    });
+    if(total === 120) html += `<div class="bib-result" style="color:var(--sub);font-size:12px;text-align:center">Mostrando os primeiros 120 resultados</div>`;
+    document.getElementById('bib-body').innerHTML = html;
+  }, 500);
+}
+
+// ══ 5 TOQUES NO LOGO ══════════════════════════════
 let tapCount=0, tapTimer=null;
 function tapLogo(){
   tapCount++;
@@ -400,16 +625,9 @@ function tapLogo(){
   tapTimer=setTimeout(()=>tapCount=0, 1500);
 }
 
-// ══ PLACEHOLDERS ══════════════════════════════════
 function irBusca(){ alert('Busca global — em breve'); }
 function irRecentes(){ alert('Recentes — em breve'); }
 
-// ══ MODAL FECHAR AO TOCAR FORA ════════════════════
-document.getElementById('modal').addEventListener('click', e => {
-  if(e.target === document.getElementById('modal')) fecharModal();
-});
-
-// ══ PWA ═══════════════════════════════════════════
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 </script>
 </body>
