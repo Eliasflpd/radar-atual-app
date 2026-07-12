@@ -1,5 +1,36 @@
 import mammoth, os, re
 
+# ── Padrão de referências bíblicas ──────────────────────────────────────────
+_BOOKS = (
+    r'(?:'
+    # NT numerados primeiro (para "1Jo" não bater em "Jo")
+    r'[123]\s*Jo|[12]\s*Co|[12]\s*Ts|[12]\s*Tm|[12]\s*Pe|[12]\s*Sm|[12]\s*Rs|[12]\s*Cr|'
+    # NT sem número
+    r'At|Mt|Mc|Lc|Jo|Rm|Gl|Ef|Fp|Cl|Tt|Fm|Hb|Tg|Jd|Ap|'
+    # AT sem número
+    r'Gn|Ex|Lv|Nm|Dt|Js|Jz|Rt|Ed|Ne|Et|Jó|Sl|Pv|Ec|Ct|'
+    r'Is|Jr|Lm|Ez|Dn|Os|Jl|Am|Ob|Jn|Mq|Na|Hc|Sf|Ag|Zc|Ml'
+    r')'
+)
+_VREF  = r'\d+[.]\d+(?:[,\-]\d+)?'
+_REF_RE = re.compile(
+    r'(?<!\w)(' + _BOOKS + r'\s+' + _VREF
+    + r'(?:\s*;\s*(?:' + _BOOKS + r'\s+)?' + _VREF + r')*)',
+    re.UNICODE
+)
+
+def linkify_refs(html):
+    """Envolve referências bíblicas em <span class="bref"> sem tocar nas tags HTML."""
+    parts = re.split(r'(<[^>]+>)', html)
+    for i in range(0, len(parts), 2):  # índices pares = texto puro
+        parts[i] = _REF_RE.sub(
+            lambda m: '<span class="bref" data-ref="'
+                      + m.group(0).replace('"', '&quot;')
+                      + '">' + m.group(0) + '</span>',
+            parts[i]
+        )
+    return ''.join(parts)
+
 BASE = "D:/RADAR-APP/public/ebd/adulto"
 OUT  = BASE + "/html"
 os.makedirs(OUT, exist_ok=True)
@@ -46,6 +77,9 @@ li{margin-bottom:8px;text-align:justify}
 
 /* Label embutido */
 .lbl-inline{font-weight:900;color:#7b0000;text-transform:uppercase;letter-spacing:.5px}
+
+/* Referência bíblica clicável */
+.bref{color:#1d4ed8;font-weight:700;text-decoration:underline dotted;cursor:pointer}
 """
 
 STYLE_MAP = """
@@ -146,14 +180,22 @@ def post_process(body):
     return body
 
 
+REF_JS = """<script>
+document.addEventListener('click',function(e){
+  var el=e.target.closest('.bref');
+  if(el) window.parent.postMessage({type:'ebd-ref',ref:el.dataset.ref},'*');
+});
+</script>"""
+
 def convert(src, dst):
     with open(src, 'rb') as f:
         result = mammoth.convert_to_html(f, style_map=STYLE_MAP)
     body = post_process(result.value)
+    body = linkify_refs(body)
     full = (f"<!DOCTYPE html><html><head>"
             f"<meta charset='utf-8'>"
             f"<meta name='viewport' content='width=device-width,initial-scale=1'>"
-            f"<style>{CSS}</style></head><body>{body}</body></html>")
+            f"<style>{CSS}</style></head><body>{body}{REF_JS}</body></html>")
     with open(dst, 'w', encoding='utf-8') as f:
         f.write(full)
     print(f"  OK {dst}")

@@ -1160,6 +1160,86 @@ function irBusca(){alert('Busca global — em breve');}
 function irRecentes(){alert('Recentes — em breve');}
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+
+// ── BIBLE REF SHEET ──────────────────────────────────────
+const BREF_MAP={
+  'At':'atos','Mt':'mt','Mc':'mc','Lc':'lc','Jo':'jo','Rm':'rm',
+  '1Co':'1co','2Co':'2co','Gl':'gl','Ef':'ef','Fp':'fp','Cl':'cl',
+  '1Ts':'1ts','2Ts':'2ts','1Tm':'1tm','2Tm':'2tm','Tt':'tt','Fm':'fm',
+  'Hb':'hb','Tg':'tg','1Pe':'1pe','2Pe':'2pe','1Jo':'1jo','2Jo':'2jo',
+  '3Jo':'3jo','Jd':'jd','Ap':'ap','Gn':'gn','Ex':'ex','Lv':'lv',
+  'Nm':'nm','Dt':'dt','Js':'js','Jz':'jz','Rt':'rt','1Sm':'1sm',
+  '2Sm':'2sm','1Rs':'1rs','2Rs':'2rs','1Cr':'1cr','2Cr':'2cr',
+  'Ed':'ed','Ne':'ne','Et':'et','Jó':'jó','Sl':'sl','Pv':'pv',
+  'Ec':'ec','Ct':'ct','Is':'is','Jr':'jr','Lm':'lm','Ez':'ez',
+  'Dn':'dn','Os':'os','Jl':'jl','Am':'am','Ob':'ob','Jn':'jn',
+  'Mq':'mq','Na':'na','Hc':'hc','Sf':'sf','Ag':'ag','Zc':'zc','Ml':'ml'
+};
+let _brefData=null;
+
+function fecharRefSheet(){
+  document.getElementById('ref-sheet').style.display='none';
+  document.getElementById('ref-overlay').style.display='none';
+}
+
+function _parseSingleRef(token, lastBook){
+  const t=token.trim();
+  const mBook=t.match(/^((?:[123]\s*)?[A-ZÀ-ÚJó][a-záàâãéêíóôõúü]{0,5})\s+(\d+)[.](\d+)(?:[,\-](\d+))?/);
+  const mOnly=t.match(/^(\d+)[.](\d+)(?:[,\-](\d+))?/);
+  let bookRaw,cap,v1s,v2s;
+  if(mBook){bookRaw=mBook[1].replace(/\s/g,'');cap=+mBook[2];v1s=mBook[3];v2s=mBook[4]||null;}
+  else if(mOnly&&lastBook){bookRaw=lastBook;cap=+mOnly[1];v1s=mOnly[2];v2s=mOnly[3]||null;}
+  else return null;
+  const abbrev=BREF_MAP[bookRaw];
+  if(!abbrev||!_brefData) return null;
+  const livro=_brefData.find(x=>x.abbrev===abbrev);
+  if(!livro) return null;
+  const chapter=livro.chapters[cap-1];
+  if(!chapter) return null;
+  const v1=+v1s-1, v2=v2s?+v2s-1:v1;
+  const isRange=t.includes('-')&&!t.includes(',');
+  const verses=[];
+  if(isRange){for(let i=v1;i<=Math.min(v2,chapter.length-1);i++){if(chapter[i])verses.push({n:i+1,t:chapter[i]});}}
+  else{if(chapter[v1])verses.push({n:v1+1,t:chapter[v1]});if(v2!==v1&&chapter[v2])verses.push({n:v2+1,t:chapter[v2]});}
+  return{label:livro.name+' '+cap,verses,bookRaw};
+}
+
+function mostrarRefSheet(refStr){
+  const tokens=refStr.split(/;\s*/);
+  let html='',lastBook=null;
+  for(const tok of tokens){
+    const r=_parseSingleRef(tok,lastBook);
+    if(!r)continue;
+    lastBook=r.bookRaw;
+    html+=`<div style="margin-bottom:18px"><p style="font-weight:900;color:#1d3a8a;margin:0 0 8px;font-size:13px;letter-spacing:.5px">${r.label}</p>`;
+    for(const v of r.verses){
+      html+=`<p style="margin:0 0 8px;text-align:justify;font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#1a1a1a"><sup style="color:#c9a14a;font-weight:900;font-size:10px">${v.n}</sup> ${v.t}</p>`;
+    }
+    html+='</div>';
+  }
+  if(!html)return;
+  document.getElementById('ref-sheet-titulo').textContent=tokens.length>1?'Referências':'Referência';
+  document.getElementById('ref-sheet-body').innerHTML=html;
+  document.getElementById('ref-sheet').style.display='block';
+  document.getElementById('ref-overlay').style.display='block';
+}
+
+window.addEventListener('message',function(e){
+  if(!e.data||e.data.type!=='ebd-ref')return;
+  const ref=e.data.ref;
+  if(_brefData){mostrarRefSheet(ref);return;}
+  fetch('/biblia.json').then(r=>r.json()).then(d=>{_brefData=d;mostrarRefSheet(ref);});
+});
 </script>
+
+<!-- REF SHEET -->
+<div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>
+<div id="ref-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:901;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -4px 32px rgba(0,0,0,.2);max-height:65vh;overflow-y:auto">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px 8px;border-bottom:1px solid #eee">
+    <span id="ref-sheet-titulo" style="font-weight:900;color:#1d3a8a;font-size:13px;letter-spacing:1.5px;text-transform:uppercase"></span>
+    <button onclick="fecharRefSheet()" style="background:none;border:none;font-size:22px;color:#888;padding:0;line-height:1;cursor:pointer">✕</button>
+  </div>
+  <div id="ref-sheet-body" style="padding:16px 18px 36px"></div>
+</div>
 </body>
 </html>
