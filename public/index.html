@@ -52,7 +52,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .tile-share:active{background:rgba(201,161,74,.18);color:var(--gold);border-color:var(--gold)}
 
 /* ══ HEADER PADRÃO ══ */
-.std-header{display:flex;align-items:center;gap:12px;padding:max(env(safe-area-inset-top),14px) 14px 14px;background:var(--card);border-bottom:1px solid var(--line);flex-shrink:0}
+.std-header{display:flex;align-items:center;gap:12px;padding:max(env(safe-area-inset-top),36px) 14px 14px;background:var(--card);border-bottom:1px solid var(--line);flex-shrink:0}
 .std-back{background:rgba(255,255,255,.07);border:none;color:var(--txt);width:36px;height:36px;border-radius:10px;font-size:20px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
 .std-back:active{opacity:.6}
 .std-hinfo{flex:1;min-width:0}
@@ -571,6 +571,20 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <div class="ppt-nav ppt-nav-prev" onclick="pptSlide(-1)">‹</div>
     <div class="ppt-nav ppt-nav-next" onclick="pptSlide(1)">›</div>
     <div class="ppt-counter-bar" id="ppt-counter">1 / 1</div>
+  </div>
+</div>
+
+<!-- VIDEO -->
+<div class="tela" id="tela-ebd-video">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharVideo()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="video-titulo">RESUMO EM VÍDEO</div>
+      <div class="std-sub" id="video-sub"></div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden">
+    <video id="ebd-video" controls playsinline style="width:100%;max-height:100%;outline:none"></video>
   </div>
 </div>
 
@@ -1353,7 +1367,7 @@ function abrirLicaoDetalhe(idx){
      tap:lic.n>0 && ebdTurmaAtual==='adulto'?`abrirReader(${idx},'subsidio')`:null},
     {num:'6',icon:'🎬',nome:'RESUMO EM VÍDEO',
      ativo:!!lic.video,
-     tap:lic.video?`abrirVideo('${lic.video||''}')`:null}
+     tap:lic.video?`abrirVideo('${lic.video||''}',${JSON.stringify(lic.titulo)})`:null}
   ];
   document.getElementById('ebd-det-body').innerHTML=itens.map(it=>{
     const tappable=it.ativo&&it.tap;
@@ -1424,9 +1438,21 @@ function fecharPptViewer(){
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
 }
 
-function abrirVideo(url){
+function abrirVideo(url,titulo){
   if(!url) return;
-  window.open(url, '_blank', 'noopener,noreferrer');
+  document.getElementById('video-sub').textContent=titulo||'';
+  const v=document.getElementById('ebd-video');
+  v.src=url;
+  ocultarTodas();
+  document.getElementById('tela-ebd-video').classList.add('ativa');
+}
+
+function fecharVideo(){
+  const v=document.getElementById('ebd-video');
+  v.pause();
+  v.src='';
+  ocultarTodas();
+  document.getElementById('tela-ebd-detalhe').classList.add('ativa');
 }
 
 // ══ UTILS ═════════════════════════════════════════
