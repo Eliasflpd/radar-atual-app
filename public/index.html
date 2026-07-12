@@ -589,7 +589,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:3px">EBD · ESCOLA BÍBLICA</div>
     </div>
     <div class="cad-titulo">Criar conta</div>
-    <div class="cad-sub">Preencha seus dados para acessar<br>as lições da Escola Bíblica Dominical.</div>
+    <div class="cad-sub">Preencha seus dados para acessar<br>as lições da Escola Bíblica Dominical.<br>Acesso imediato após o cadastro.</div>
     <div class="cad-field">
       <label>Seu nome completo</label>
       <input id="cad-nome" type="text" placeholder="Ex: João da Silva" autocomplete="name">
@@ -613,7 +613,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <label>WhatsApp (com DDD)</label>
       <input id="cad-fone" type="tel" placeholder="(99) 99999-9999" autocomplete="tel" oninput="mascaraFone(this)" inputmode="numeric">
     </div>
-    <button class="btn-cad" id="btn-cad-enviar" onclick="submitCadastro()">RECEBER CÓDIGO NO WHATSAPP</button>
+    <button class="btn-cad" id="btn-cad-enviar" onclick="submitCadastro()">ACESSAR O APP</button>
     <div id="cad-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
   </div>
 </div>
@@ -697,20 +697,10 @@ async function submitCadastro(){
   if(!cargo){err.textContent='Selecione seu cargo na igreja.';err.style.display='block';return;}
   if(fone.length<10){err.textContent='WhatsApp inválido. Ex: (99) 99999-9999';err.style.display='block';document.getElementById('cad-fone').focus();return;}
   const btn=document.getElementById('btn-cad-enviar');
-  btn.textContent='Enviando...';btn.disabled=true;
-  try{
-    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,cargo,phone:fone})});
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.error||'Erro ao enviar');
-    _cadPendente={nome,cargo,fone,token:data.token};
-    document.getElementById('otp-fone-display').textContent=`(${fone.slice(0,2)}) ${fone.slice(2,7)}-${fone.slice(7)}`;
-    ocultarTodas();document.getElementById('tela-otp').classList.add('ativa');
-    setTimeout(()=>document.getElementById('otp-digits').children[0].focus(),350);
-  }catch(e){
-    err.textContent=e.message;err.style.display='block';
-  }finally{
-    btn.textContent='RECEBER CÓDIGO NO WHATSAPP';btn.disabled=false;
-  }
+  btn.textContent='Entrando...';btn.disabled=true;
+  const uid='u_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  saveUser({nome,cargo,whatsapp:fone,id:uid});
+  irHome();
 }
 
 function voltarCadastro(){
