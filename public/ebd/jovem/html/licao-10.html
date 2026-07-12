@@ -1,32 +1,200 @@
 <!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><style>
-body{margin:0;padding:20px 20px 64px;background:#fff;font-family:Georgia,serif;font-size:16px;line-height:1.75;color:#1a1a1a;text-align:justify}
+body{margin:0;padding:20px 20px 64px;background:#fff;font-family:Georgia,serif;
+  font-size:16px;line-height:1.75;color:#1a1a1a;text-align:justify}
 p{margin:0 0 12px}
 strong{font-weight:900}
 ul,ol{margin:4px 0 14px 0;padding:0 0 0 20px}
 li{margin-bottom:8px;text-align:justify}
 
-.titulo{text-align:center;color:#1d3a8a;font-size:19px;font-weight:900;line-height:1.3;margin:10px 0 2px;padding:0 4px;font-family:Georgia,serif}
-.data{text-align:center;font-size:12px;color:#888;font-weight:600;letter-spacing:.5px;margin-bottom:18px}
+.titulo{text-align:center;color:#1d3a8a;font-size:19px;font-weight:900;
+  line-height:1.3;margin:10px 0 2px;padding:0 4px;font-family:Georgia,serif}
+.subtitulo{text-align:center;color:#3a3a6a;font-size:15px;font-weight:700;
+  margin:0 0 4px}
+.data{text-align:center;font-size:12px;color:#888;font-weight:600;
+  letter-spacing:.5px;margin-bottom:18px}
 
-/* TEXTO ÁUREO */
-.box-aureo{background:#fffaf0;border-radius:8px;padding:0 16px 14px;margin:14px 0;font-style:italic;color:#5a3a00;text-align:justify;overflow:hidden}
-.box-aureo .lbl{display:block;font-style:normal;font-size:10px;font-weight:900;color:#7a4e00;letter-spacing:2.5px;text-transform:uppercase;margin:0 -16px 12px;padding:6px 16px;text-align:center;background:rgba(201,161,74,.22);border-bottom:1px solid rgba(201,161,74,.35)}
+.box-aureo{background:#fffaf0;border-radius:8px;padding:0 16px 14px;margin:14px 0;
+  font-style:italic;color:#5a3a00;text-align:justify;overflow:hidden}
+.box-aureo .lbl{display:block;font-style:normal;font-size:10px;font-weight:900;
+  color:#7a4e00;letter-spacing:2.5px;text-transform:uppercase;margin:0 -16px 12px;
+  padding:6px 16px;text-align:center;background:rgba(201,161,74,.22);
+  border-bottom:1px solid rgba(201,161,74,.35)}
 
-/* VERDADE PRÁTICA */
-.box-pratica{background:#f0faf5;border-radius:8px;padding:0 16px 14px;margin:14px 0;color:#1a3a2a;text-align:justify;overflow:hidden}
-.box-pratica .lbl{display:block;font-size:10px;font-weight:900;color:#14532d;letter-spacing:2.5px;text-transform:uppercase;margin:0 -16px 12px;padding:6px 16px;text-align:center;background:rgba(22,163,74,.15);border-bottom:1px solid rgba(22,163,74,.3)}
+.box-pratica{background:#f0faf5;border-radius:8px;padding:0 16px 14px;margin:14px 0;
+  color:#1a3a2a;text-align:justify;overflow:hidden}
+.box-pratica .lbl{display:block;font-size:10px;font-weight:900;color:#14532d;
+  letter-spacing:2.5px;text-transform:uppercase;margin:0 -16px 12px;padding:6px 16px;
+  text-align:center;background:rgba(22,163,74,.15);border-bottom:1px solid rgba(22,163,74,.3)}
 
-.sec-head{text-align:center;font-size:13px;font-weight:900;color:#1d3a8a;letter-spacing:1.5px;margin:24px 0 10px;padding:10px 0 0;border-top:1px solid #eaeaea}
+.box-subsidio{background:#f0f4ff;border-radius:8px;padding:0 16px 14px;margin:14px 0;
+  color:#1d3a8a;overflow:hidden}
+.box-subsidio .lbl{display:block;font-size:10px;font-weight:900;color:#1d3a8a;
+  letter-spacing:2.5px;text-transform:uppercase;margin:0 -16px 12px;padding:6px 16px;
+  text-align:center;background:rgba(29,58,138,.1);border-bottom:1px solid rgba(29,58,138,.2)}
+.box-subsidio p{color:#1a1a1a;font-style:italic;margin-bottom:8px}
+.box-subsidio .ref-bib{font-size:12px;color:#555;font-style:normal;
+  border-top:1px solid rgba(29,58,138,.15);padding-top:6px;margin-top:8px}
+
+.box-resumo{background:#fdf8f0;border-radius:8px;padding:0 16px 14px;margin:14px 0;
+  color:#3a1a00;overflow:hidden}
+.box-resumo .lbl{display:block;font-size:10px;font-weight:900;color:#7a4e00;
+  letter-spacing:2.5px;text-transform:uppercase;margin:0 -16px 12px;padding:6px 16px;
+  text-align:center;background:rgba(201,130,44,.15);border-bottom:1px solid rgba(201,130,44,.25)}
+
+.sec-head{text-align:center;font-size:13px;font-weight:900;color:#1d3a8a;
+  letter-spacing:1.5px;margin:24px 0 10px;padding:10px 0 0;border-top:1px solid #eaeaea}
 .bible-ref{text-align:center;font-weight:900;color:#1d3a8a;margin:0 0 14px;font-size:14px}
-.bible-passage{margin-bottom:18px}
+.bible-passage{margin-bottom:18px;color:#1a1a1a}
 .verso{margin-bottom:10px;text-align:justify}
-.verso-num{font-weight:900;color:#c9a14a;font-size:10px;vertical-align:super;line-height:0;margin-right:2px}
-.roman-head{font-weight:900;color:#1d3a8a;font-size:15px;margin:26px 0 6px;padding:10px 12px;background:#f0f4ff;border-left:4px solid #1d3a8a;border-radius:0 6px 6px 0;text-align:left}
+.verso-num{font-weight:900;color:#c9a14a;font-size:10px;vertical-align:super;
+  line-height:0;margin-right:2px}
+.roman-head{font-weight:900;color:#1d3a8a;font-size:15px;margin:26px 0 6px;
+  padding:10px 12px;background:#f0f4ff;border-left:4px solid #1d3a8a;
+  border-radius:0 6px 6px 0;text-align:left}
 .subpoint{text-align:justify;margin-bottom:12px}
 .subpoint strong:first-child{color:#1d3a8a}
+.revisao-q{font-weight:700;color:#1d3a8a;margin-bottom:2px}
+.revisao-r{color:#333;margin-bottom:10px;padding-left:12px;
+  border-left:3px solid #c9a14a}
 .lbl-inline{font-weight:900;color:#1d3a8a;text-transform:uppercase;letter-spacing:.5px}
-.bref{color:#1d4ed8;font-weight:700;text-decoration:underline dotted;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-</style></head><body><p class="titulo">LIÇÃO 10</p><p><strong>Sansão: Entre Vitórias e Derrotas</strong></p><p>., i.;:..i,.</p><p>-J E DERROTAS</p><p>&quot;Então, Sansão clamou ao Senhor e disse: Senhor Jeová, peço-te que te lembres de mim</p><p>e esforça-me agora, só esta vez, ó Deus, pâra que de uma vez me vingue dos filisteus, pelos meus dois olhos. &quot; (<span class="bref" data-ref="Jz 16.28">Jz 16.28</span>)</p><p>RESUMO DA LI</p><p>Entre vitórias e derrotas, o cristão aprende que a obediência fortalece, mas o pecado enfraquece.</p><p>..i:);::</p><p>:</p><p>,</p><p><strong>TEXTO PRINCIPÀL</strong></p><p><strong>LEITURA SEMANAL</strong></p><p>SEGUNDA - G[ ô.1,2 Cuidando do irmão</p><p>TERÇA - <span class="bref" data-ref="Jo 7.3788">Jo 7.3788</span> ' Jes us, água da vida AUARTA-ICo6, l8, tg Fuja da prostituição</p><p>AUINTA - Pv 4.â3 Cuidado com as confidêncías</p><p>SEXTA - Pv t6.t8</p><p>, A sobe rba precede a ruína</p><p>SABADO - <span class="bref" data-ref="Rm 8.37-39">Rm 8.37-39</span> Mais gue vencedores</p><p>lovENS 69</p><p class="sec-head">OBJETIVOS</p><p>? i+ RECONHECER que Sansão venceu inimigos, mas tambem lutou contra compatriotas:</p><p>i'r,, REFLETIR como escothas relacionais equivocadas podem comprometer a vida espiritual e o proposito de Deus para o cristão;</p><p>*+ COMPREENDER que, mesmo em meio a quedas e Limitações, Deus pode conceder vitorias que glorificam seu nome.</p><p>TNTERAÇÃO Prezado(a) professor(a), Sansão foi um homem de muitas vitorias, mas tambem de muitos fracassos. Nesta Lição, seguiremos estudando a etapa finaL da sua biografia, marcada pelo desejo carnal. Dentre seus relacionamentos amorosos, destaca-se o que teve com Da[i[a, que lembra um fiLme com enredo de poder, sexo e dinheiro, E preciso concordar com Lawrence Richards quando diz acerca desse casal: &quot;Da[i[a estava tão ansiosa para obter o dinheiro, quanto Sansão estava para obtê-l, a! Nenhum dos principais personagens desta historia merece admiraÇão. Cada um deLes exibe fraquezas, das quais você e eu devemos nos guardar'.</p><p>oRIENTAÇÃO PEDAcOctCA Prezado(a) professor(a), desenhe no quadro o esquema a seguir e incentive seus alunos a identificarem as vitorias e derrotas de Sansão, assim como as respectivas causas. Peça aos atunos que reftitam sobre como escolhas pessoais e a dependência de Deus influenciaram o sucesso ou a queda na vida de Sansão, promovendo uma discussão e a aplicação pratica a vida cristã,</p><p>Pontos fortes e êxitos: ' Dedicado a Deus desde seu nascimento como nazireu.. Conhecido por suas demonstrações de força. ' Listado na galeria dos Herois da Fe em Hebreus u. ' Deu início a libertação de lsrae[ da opressão fil.isteia.</p><p>Fraquezas e erros: 'Violou seu voto e as leis de Deus em muitas ocasiões.. Era controlado peta sensual, idade.. Confiava nas pessoas erradas. ' Usava seus dons e habil, idade imprudentemente,</p><p>Extroído de BÍblio de Estudo Aplicação Pessool. C4AD, p. 341.</p><p>70 IovENS</p><p>TEXTO B BLICO</p><p>Juízes LS.t-4i L6.7.-4, z8-3o</p><p>Juízes r5 L E aconteceu, depois de alguns dias, que na sega do trigo Sansão visitou a sua mulher com um cabrito e disse: Entrarei na câmara a minha mulher. Porem o pai dela não o deixou entrar, z Porque disse seu pai: Por certo dizia eu que de todo a aborrecias; de sorte que a dei ao teu companheiro; porem</p><p>náo e sua irmã mais nova mais formosa do que eta? Toma-a, pois, em seu lugar. 3 Então, Sansão disse acerca deles: Inocente sou esta vez para com os filisteus, quando lhes fizer olgum mal 4 E foi Sansão, e tomou trezentas rapo-</p><p>sas, e, tomando tições, as virou cauda a cauda, e lhes pôs um tição no meio de cada duas caudas,</p><p>Juízes 16 t E foi-se Sansão a Gaza, e viu ali uma mulher prostituta, e entrou a eta, z E foidifo aos gazitas: Sansão entrou aqui, Foram, pois, em roda e toda a noite lhe puseram espias a porta da cidade; porem toda a noite estiveram sossegados, dizendo: Ate a luz da manhá esperoremos: então, o mataremos,</p><p>INTRO</p><p>Nesta [ição, exploraremos a etaPa</p><p>final da trajetoria conturbada de Sansão,</p><p>reÍIetindo sobre suas vitorias e derrotas, tanto nos confrontos com os inimigos de lsrael quanto na batalha contra suas proprias fraquezas, Sua vida nos alerta para os perigos dos retacionamentos destrutivos, das esco[has impulsivas e</p><p>da sedução do pecado. Sansão foi um</p><p>l.i bertador extraordi nariamente forte,</p><p>capaz de derrubar seus adversarios com facilidade, mas permanecia cativo da concupiscência, Ainda assim, veremos</p><p>3 Porem Sansão deitou-se ate a meia-noite, e a meia-noite se levantou, e travou das portas da entrada da cidade com ambas as umbreiras, ejuntamente com a tranca as tomou, pondo-as sobre os ombros; e levou-as para cima, ate ao cume do monte que está defronte de Hebrom. 4 E, depois disto, aconteceu que se afei-</p><p>Çoou a uma mulher do vale de Soreque, cujo nome ero Datila.</p><p>z8 Então, Sansão clamou ao Senhor e disse: Senhor Jeova, peço-te que te lembres de mim e esforça-me agora, so esta vez, o Deus, para que de uma vez me vingue dos filisteus, pelos meus dois othos.</p><p>zg AbraÇou-se, pois, Sansão com as duas colunas do meio, em que se sustinha a casa, e arrimou-se sobre e[as, com a sua mão direita numa e com a sua esquerda na outra.</p><p>30 E disse Sansão: Morra eu com os fiListeus! E inctinou-se com força, e a casa caiu sobre os príncipes e sobre todo o povo que nela havia; e foram mais os mortos que matou na sua morte do que os que matara na sua vida.</p><p>como, apesar de tudo, Deus preserva</p><p>sua soberania e graÇa, manifestando- -se poderosamente ate o fim da vida deste 1uiz. Que tenhamos uma boa e abençoada auta!</p><p class="roman-head">I - VENCENDO INIMIGOS E</p><p>LUTANDO CONTRA OS COM-</p><p>PATRIOTAS t. Casamento arruinado. Devido a confusão durante o banquete do casamento e ao desaparecimento de Sansão, o pai da noiva deu-a ao companheiro de honra para preservar</p><p>lovENS 71</p><p>a reputaÇão da famíLiaUzL4.zeD, Sem saber, depois de algum tempo, Sansão retornou para visitar a mu[her e consumar o casamento. Com boa intenção, levou um cabrito como sinal de paz e reconcil.iação. O pai da mu[her explica o ocorrido e propõe que Sansão se case com a sua fil.ha mais nova. Sansão não quis saber e, tomado de ira, declarou-se inocente do que faria a seguir U215.1-3).</p><p>Era uma forma de justificar os seus atos, quando, na verdade, era o resultado de suas ações anteriores (Pv tç.tz).</p><p>z. lncendiando os campos.Sansão pegou trezentas raposas e as soltou nas searas dos filisteus com fogo em suas caudas, destruindo suas plantações Uz</p><p>rS.+-B). Essa e uma façanha inexpticavel do ponto de vista humano. Seja como for, isso gerou um grande prejuízo para a economia e subsistência filisteia. Daí em diante foi retaliação atras de reta- [iação, pois violência gera violência. Os filisteus, em vingança, mataram a mulher da cidade de Timna e seu pai. Tambem em vinganÇa, Sansão deu uma surra e matou os homens filisteus, fugindo depois para habitar no cume da rocha de Etã, região de Judá. Como se nota, Sansão e o comandante de si mesmo. Diferente de outrosjuízes, ele age sozinho, seguindo seus proprios objetivos.</p><p class="subpoint"><strong>3. Lutando contra compatriotas.</strong></p><p>Quando os fiListeus se acamparam no territorio de Juda, os judaítas procuraram saber o motivo, Ao descobrirem que buscavam Sansão, em vez de protegê-l.o como compatriota, enviaram três mil homens para prendê-Lo e entregá-l.o Uz t1, g-13). A mesma tribo que recebeu a incumbência divina para tomar a frente das conquistas de Canaã, apos a morte de Josue Uzt.t),</p><p>T2pvENS</p><p>com início promissor, agora se acovardou. Preferiram viver dominados. Não perceberam que Deus estava agindo naquele contexto. Prometem não matar Sansão, mas somente entregá-l.o amarrado aos inimigos. Há um alerta aqui: mesmo quando não ferimos diretamente, podemos nos tornar cumplices do inimigo ao enfraquecer, limitar ou trair um irmão. O chamado bíbLico e para proteger, sustentar e interceder uns pelos outros (G[ 6.r,2', Ef.zg:3z), jamais para entregar a[guem as mãos do adversario.</p><p class="subpoint"><strong>4. Uma arma diferente. Amarrado</strong></p><p>e entregue aos filisteus, o Espírito do Senhor se apoderou de Sansão. Com força sobrenatural, rompeu as cordas como se fossem fios queimados e, tomando uma queixada dejumento como arma, matou mit homens do exercito filisteu. Depois da vitoria, esgotado, Sansão teve uma grande sede, Então, pela primeiravez, ele ctama ao Senhor, pedindo ajuda Uz$l4-19). Não importa qual seja a força de uma pessoa, ela sempre sera carente de Deus. Embora não tenha sido uma oração humitde, Deus atende o seu pedido, Com um mitagre, E[e abriu uma fenda na caverna e dela saiu água, E chamou-a: 'A fonte do que c[ama&quot;. lsso não lembra Jesus, que sacia a sede espiritual de forma definitiva Uo l, gl,38)?</p><p class="roman-head">II - SANSÃO E SEUS RELACIO-</p><p>NAMENTOS DESTRUTIVOS</p><p class="subpoint"><strong>1. O desejo carnat. Sansão era</strong></p><p>fisicamente forte, mas moralmente fraco, fragiLizado pe[o desejo carnal. Seu impulso pela sexualidade irresponsavel sempre cotocava sua vida em risco Uz 16.r-$. Na cidade de Gaza</p><p>ele se relaciona com uma prostituta,</p><p>e consegue escapar de seus inimigos durante a noite com mais uma façanha de força incomum. Paulo advertiu: 1Fugi</p><p>da prostituição.&quot; (Leia: r Co ô, r8, rg).</p><p>z. Datila: suborno e mentiras. Depois,</p><p>ele se apaixona por uma mulher chamada</p><p>Da[il&quot;a, do vale de Soreque Uzt6.+-r7).O texto não diz se ela era israe[ita ou fiListeia.</p><p>Seu nome e de origem semita e significa &quot;débi[, sujeita a desejos ou abatida&quot;. Que</p><p>casall Como veremos, sera um relacionamento destrutivo e baseado no interesse de ambos os Lados. Subornada pelos</p><p>chefes fiListeus, Dalila fará de tudo para</p><p>descobrir o segredo da força de Sansão,</p><p>E[e por sua vez, brincando com o perigo</p><p>e com o pecado, ingressa em uma serie de mentiras. Depois de se enganarem mutuamente, e Sansãojá cansado de ser importunado por sua mulher, finatmente revela o seu segredo. Ete abre o seu</p><p>coração e diz que a sua força estava no cumprimento do seu nazireado. Se seus cabelos fossem cortados, ele seria um homem qualquer, Tome cuidado com quem você confidencia seus segredos mais íntimos (Pv q.z3; Pv zg, tl,</p><p>g, A traição e a escravidão. Depois,</p><p>Dalil.a consuma sua traição Uzt6, t3-zt).</p><p>E[a, então, avisa aos chefes dos filisteus que lhe pagam o suborno prometido. As-</p><p>sim que Sansão adormece, Datila chama um homem para raspar o seu cabeto. Acordado aos gritos, Sansão pensou: &quot;Sairei ainda esta vez como dantes e me</p><p>livrarei.&quot; (Jzr6.zo). Uma passagem triste: ele acreditava que ainda tinha a mesma força, mas não sabia que o Senhorja o havia deixado. A força de Sansão não estava no seu cabelo, mas no poder de</p><p>Deus. Quando alguem resiste a graÇa e</p><p>persiste no pecado, a presenÇa manifesta</p><p>do Espírito se afasta e sobra apenas o homem caído. O resuttado e tragico. Os</p><p>filisteus o prenderam, furaram seus olhos, levaram-no para Gaza e o colocaram a girar um moinho na prisáo Uz r6,2il, O Libertador de lsrael tornou-se escravo, cego e sem forças. Assim e a condição do pecador afastado de Deus e sem a presença do seu Espírito.</p><p>SUBSíDIo.ffi &quot;O ultimo ato de Sansão como urn homem Livre foi causado por seu re[acionamento com uma mulher charnada</p><p>Datila, [, ] Quando os chefes dos filisteus ouviram que Sansão fora fazer uma visita, ofereceram a Datita uma quantia de dinheiro recompensadora. [..,] Se Dalita descobrisse o misterio e o revetasse, cada um de[es lhe daria um mil e cem moedas de prata (S). Como os príncipes dos filisteus eram cinco (r Sm 6.4), e se moedas em questão fossem o sicto (ou</p><p>shekel), o preço para atrair Sansão seria de pelo menos US$ 3.3oo, oo, um valor significativo para aquela epoca. Dal&quot;ila consentiu prontamente e tomou providências para extrair o segredo de seu amante, t...1 A historia de Sansão alcança seu clímax nos vv 15 azl, onde vemos o resultado da 'fascinaÇão fatal do peca-</p><p>do', (r) Foi um homem de grande força física; €) Teve uma mente fértil; (3) Era</p><p>mora Lmente fraco; Q) Er a espi ritualmente</p><p>infiet; (5) O Senhor se tinha retirado de[e]'</p><p>LtVl NGSTON, George Hebert Et aü. Comentário Bíbüco Beacon: Génesis o Deuteronomr'o, Río de Janeiro: CPAD, zo7z, p. t4z, UA).</p><p class="roman-head">III - A MORTE DE SANSÃO E</p><p>SUA ULNMAVITORIA r. Entretendo os filisteus. Os fil'isteus ce[ebram a vitoria sobre Sansão,</p><p>lovENS 73</p><p>oferecendo grande festa a seus deuses e zombando do heroi de lsrael Uz t6,23-25), ELes se reunem no templo de Dagom, alegrando-se por terem capturado o libertador de lsrael. Para humi[ha-lo ainda mais, colocam Sansão para servir de divertimento para e[es, O antigo campeão havia perdido a liberdade, a dignidade e a visão, Essa e</p><p>a consequência da queda daquele que confia em si mesmo e se esquece do poder devastador do pecado (<span class="bref" data-ref="Pv 16.18">Pv 16.18</span>). z, Avitoria final. Cego e preso, Sansão clamou ao Senhor pedindo força uma ultima vezUzt6, z6-ail, Há aqui o reconhecimento de sua insuficiência e necessidade da intervenção de Jeova, Foi humithado ate o po e enxergou sua fraqueza. No entanto, o desejo de vingança ainda movia o seu coração (v, z8), Mas Deus estava conduzindo o curso da historia, a fim de trazer juízo</p><p>sobre os inimigos de lsrael Posicionado entre as colunas do templo dos filisteus,</p><p>Sansão empurra-as com todo seu vigor, derrubando a estrutura e causando a morte de mil.hares de fil.isteus, inc[usive a dele mesmo. Na sua morte, Sansão matou mais homens do que em toda a sua vida (v,3o), A maioria dos teologos entende que Sansão não cometeu suicídio deliberado, mas morreu na Luta contra o inimigo de seu paÍs.</p><p class="subpoint"><strong>3. Heroi da fé, pela graça, Apesar</strong></p><p>de suas muitas falhas, Sansão e mencionado na galeria dos herois da fé (Hb tt3z), entre aqueles que, da fraqueza, tiraram força (Hb nSO, Certamente, ele não é um modelo de conduta ou piedade, mas o desfecho de sua vida aponta para a redenção que procede de Deus, servindo como uma sombra de Cristo, que se entregou em sacri-</p><p>T4pvENS</p><p>fício pelo mundo (Ef S, z). NE[e, somos mais que vencedores (Rm 8.aZ-Sg), lsso e graça!</p><p>@ PENSE! Em que consiste a verdadeira vitaria na vida crfstâ?</p><p>§ PONTO IMPORTANTE!</p><p>Na vida crfstã, a verdadeira vitoria não está em conqufstar a mundo, mas em permanecer</p><p>ftel a Crisfo até o fim.</p><p>SUBSíDWW Professor(a), a vida de Sansão foi marcada por vitorias e derrotas. &quot;Embora</p><p>fosse abençoado com pais piedosos, um corpo forte e as vantagens de ser criado com o nazireu dedicado ao Senhor, Sansão era escravo de suas paixÕes - um homem sem autocontro-</p><p>[e. Deus Lhe deu tudo o que precisava para completar sua missão de libertar os israelitas de seus inimigos, mas Sansão confiava em si mesmo e não no Espírito do Senhor, o que acabou levando-o a ruína.</p><p>t.,.1 Apesar dos muitos fracassos de Sansão, ele e Lembrado como juiz de lsraet e defensor da fé (Hb tt.3z-34), O sofrimento tevou-o ao ponto de chamar a Deus em busca de força para executar uma sentenÇa final e definitiva sobre os inimigos de lsrael: Deus não abandonou Sansão, nem nos abandonou em nossos sofrimentos. Deus sempre perdoa o coraÇão arrependido.&quot; Finalize este topico mostrando aos alunos que o &quot;quebrantamento aprofunda nossa fé e leva a dependência do Satvador&quot;. ffi&quot;daptado de BíbtiaAtém do safrimento, Rio de Janeira: CPAD, zoza, p. S6Z)</p><p>ESTANTE DO PROFESSOR</p><p>CESAR, Marcelino. O Enigma de Sansão: Lições de vida de um líCer controverso, Rio de Janeiro: CPAD, 2a1&quot;4.</p><p>OHoRADAREvIsÃo t. Quantas raposas Sansão soltou nas searas dos filisteus com fogo em suas caudas? Trezentas raposas z. QuaL aterta extraímos do fato da tribo de Judá ter Prometido não matar Sansão, mas somente entregá-l.o amarrado aos inimigos?</p><p>Mesnro quando não ferimos diretarnente, podenros nos tornar curnplices do ininrigo ao enfraquecer, limitar ou trair um irmão,</p><p class="subpoint"><strong>3. Qua[ é a origem e o significado do</strong></p><p>nome Datila estudado na tição? Seu nome e de crigem semita e significa &quot;débiL, sujeita a desejcs ou abatida&quot;</p><p class="subpoint"><strong>4. Apos prenderem sansão, o que o</strong></p><p>obrigam a fazer?</p><p>Para humiLha-Lo ainda rnais, colocam</p><p>Sansão para servir de divertinnento para eles</p><p class="subpoint"><strong>5. Sansão cometeu suicídio?</strong></p><p>A maiorra dos teologos entende que Sansão não cometeu suicíciio detiberado. mas rnorreu na luta contra o inimigo de seu País.</p><p>0coNcLUSÃo</p><p>A historia de Sansão, embora marcada</p><p>por vitorias impressionantes e derrotas</p><p>dotorosas, nos lernbra que a verdadeira</p><p>força não está na capacidade física</p><p>nem nos tatentos pessoâis, mas na</p><p>dependência constante de Deus, §eu</p><p>percurso reveta corno a autossuficiên-</p><p>cia e o fterte com o pecado eonduzem</p><p>à quedâ, enquanto a humitdade e o</p><p>clamor ao Senhor abrem espaÇo Para que a graÇa se manifeste- mesmo nos</p><p>momentos finais. Sansãa não foi um</p><p>exempto de santidade, mas sua vida</p><p>e morte testificam que Deus Pode transformar fraqueza ern instrurnento</p><p>de juízo e redenÇão.</p><p>ANOTAÇors</p><p>lovENS 75</p><script>
+.bref{color:#1d4ed8;font-weight:700;text-decoration:underline dotted;cursor:pointer;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+</style></head><body><p class="titulo">LIÇÃO 10</p>
+<p class="subtitulo">Sansão: Entre Vitórias E Derrotas</p>
+<p class="sec-head">-J E DERROTAS</p>
+<p>&quot;Então, Sansão clamou ao Senhor e disse: Senhor Jeová, peço-te que te lembres de mim</p>
+<p>e esforça-me agora, só esta vez, ó Deus, pâra que de uma vez me vingue dos filisteus, pelos meus dois olhos. &quot; (<span class="bref" data-ref="Jz 16.28">Jz 16.28</span>)</p>
+<p class="sec-head">RESUMO DA LI</p>
+<p>Entre vitórias e derrotas, o cristão aprende que a obediência fortalece, mas o pecado enfraquece.</p>
+<p>:</p>
+<p>,</p>
+<p class="sec-head">TEXTO PRINCIPÀL</p>
+<p class="sec-head">LEITURA SEMANAL</p>
+<p>SEGUNDA - G[ ô.1,2 Cuidando do irmão</p>
+<p>TERÇA - <span class="bref" data-ref="Jo 7.3788">Jo 7.3788</span> ' Jes us, água da vida AUARTA-ICo6, l8, tg Fuja da prostituição</p>
+<p>AUINTA - Pv 4.â3 Cuidado com as confidêncías</p>
+<p>SEXTA - Pv t6.t8</p>
+<p>, A sobe rba precede a ruína</p>
+<p>SABADO - <span class="bref" data-ref="Rm 8.37-39">Rm 8.37-39</span> Mais gue vencedores</p>
+<p class="sec-head">OBJETIVOS</p>
+<p>? i+ RECONHECER que Sansão venceu inimigos, mas tambem lutou contra compatriotas:</p>
+<p>i'r,, REFLETIR como escothas relacionais equivocadas podem comprometer a vida espiritual e o proposito de Deus para o cristão;</p>
+<p>*+ COMPREENDER que, mesmo em meio a quedas e Limitações, Deus pode conceder vitorias que glorificam seu nome.</p>
+<p>TNTERAÇÃO Prezado(a) professor(a), Sansão foi um homem de muitas vitorias, mas tambem de muitos fracassos. Nesta Lição, seguiremos estudando a etapa final da sua biografia, marcada pelo desejo carnal. Dentre seus relacionamentos amorosos, destaca-se o que teve com Dalila, que lembra um fiLme com enredo de poder, sexo e dinheiro, E preciso concordar com Lawrence Richards quando diz acerca desse casal: &quot;Dalila estava tão ansiosa para obter o dinheiro, quanto Sansão estava para obtê-l, a! Nenhum dos principais personagens desta historia merece admiraÇão. Cada um deLes exibe fraquezas, das quais você e eu devemos nos guardar'.</p>
+<p>oRIENTAÇÃO PEDAcOctCA Prezado(a) professor(a), desenhe no quadro o esquema a seguir e incentive seus alunos a identificarem as vitorias e derrotas de Sansão, assim como as respectivas causas. Peça aos atunos que reftitam sobre como escolhas pessoais e a dependência de Deus influenciaram o sucesso ou a queda na vida de Sansão, promovendo uma discussão e a aplicação pratica a vida cristã,</p>
+<p>Pontos fortes e êxitos: ' Dedicado a Deus desde seu nascimento como nazireu.. Conhecido por suas demonstrações de força. ' Listado na galeria dos Herois da Fe em Hebreus u. ' Deu início a libertação de lsrael da opressão filisteia.</p>
+<p>Fraquezas e erros: 'Violou seu voto e as leis de Deus em muitas ocasiões.. Era controlado peta sensual, idade.. Confiava nas pessoas erradas. ' Usava seus dons e habil, idade imprudentemente,</p>
+<p>Extroído de BÍblio de Estudo Aplicação Pessool. C4AD, p. 341.</p>
+<p class="sec-head">TEXTO BÍBLICO</p>
+<p>Juízes r5 L E aconteceu, depois de alguns dias, que na sega do trigo Sansão visitou a sua mulher com um cabrito e disse: Entrarei na câmara a minha mulher. Porem o pai dela não o deixou entrar, z Porque disse seu pai: Por certo dizia eu que de todo a aborrecias; de sorte que a dei ao teu companheiro; porem</p>
+<p>náo e sua irmã mais nova mais formosa do que eta? Toma-a, pois, em seu lugar. 3 Então, Sansão disse acerca deles: Inocente sou esta vez para com os filisteus, quando lhes fizer olgum mal 4 E foi Sansão, e tomou trezentas rapo-</p>
+<p>sas, e, tomando tições, as virou cauda a cauda, e lhes pôs um tição no meio de cada duas caudas,</p>
+<p>Juízes 16 t E foi-se Sansão a Gaza, e viu ali uma mulher prostituta, e entrou a eta, z E foidifo aos gazitas: Sansão entrou aqui, Foram, pois, em roda e toda a noite lhe puseram espias a porta da cidade; porem toda a noite estiveram sossegados, dizendo: Ate a luz da manhá esperoremos: então, o mataremos,</p>
+<p class="sec-head">INTRO</p>
+<p>Nesta lição, exploraremos a etaPa</p>
+<p>final da trajetoria conturbada de Sansão,</p>
+<p>reÍIetindo sobre suas vitorias e derrotas, tanto nos confrontos com os inimigos de Israel quanto na batalha contra suas proprias fraquezas, Sua vida nos alerta para os perigos dos relacionamentos destrutivos, das escolhas impulsivas e</p>
+<p>da sedução do pecado. Sansão foi um</p>
+<p>l.i bertador extraordi nariamente forte,</p>
+<p>capaz de derrubar seus adversarios com facilidade, mas permanecia cativo da concupiscência, Ainda assim, veremos</p>
+<p>3 Porem Sansão deitou-se ate a meia-noite, e a meia-noite se levantou, e travou das portas da entrada da cidade com ambas as umbreiras, ejuntamente com a tranca as tomou, pondo-as sobre os ombros; e levou-as para cima, ate ao cume do monte que está defronte de Hebrom. 4 E, depois disto, aconteceu que se afei-</p>
+<p>Çoou a uma mulher do vale de Soreque, cujo nome ero Datila.</p>
+<p>z8 Então, Sansão clamou ao Senhor e disse: Senhor Jeova, peço-te que te lembres de mim e esforça-me agora, so esta vez, o Deus, para que de uma vez me vingue dos filisteus, pelos meus dois othos.</p>
+<p>zg AbraÇou-se, pois, Sansão com as duas colunas do meio, em que se sustinha a casa, e arrimou-se sobre elas, com a sua mão direita numa e com a sua esquerda na outra.</p>
+<p>30 E disse Sansão: Morra eu com os fiListeus! E inctinou-se com força, e a casa caiu sobre os príncipes e sobre todo o povo que nela havia; e foram mais os mortos que matou na sua morte do que os que matara na sua vida.</p>
+<p>como, apesar de tudo, Deus preserva</p>
+<p>sua soberania e graÇa, manifestando- -se poderosamente ate o fim da vida deste 1uiz. Que tenhamos uma boa e abençoada auta!</p>
+<p class="roman-head">I - VENCENDO INIMIGOS E</p>
+<p class="sec-head">LUTANDO CONTRA OS COM-</p>
+<p>PATRIOTAS t. Casamento arruinado. Devido a confusão durante o banquete do casamento e ao desaparecimento de Sansão, o pai da noiva deu-a ao companheiro de honra para preservar</p>
+<p>a reputaÇão da famíLiaUzL4.zeD, Sem saber, depois de algum tempo, Sansão retornou para visitar a mulher e consumar o casamento. Com boa intenção, levou um cabrito como sinal de paz e reconciliação. O pai da mulher explica o ocorrido e propõe que Sansão se case com a sua fil.ha mais nova. Sansão não quis saber e, tomado de ira, declarou-se inocente do que faria a seguir U215.1-3).</p>
+<p>Era uma forma de justificar os seus atos, quando, na verdade, era o resultado de suas ações anteriores (Pv tç.tz).</p>
+<p>z. lncendiando os campos.Sansão pegou trezentas raposas e as soltou nas searas dos filisteus com fogo em suas caudas, destruindo suas plantações Uz</p>
+<p>rS.+-B). Essa e uma façanha inexpticavel do ponto de vista humano. Seja como for, isso gerou um grande prejuízo para a economia e subsistência filisteia. Daí em diante foi retaliação atras de reta- liação, pois violência gera violência. Os filisteus, em vingança, mataram a mulher da cidade de Timna e seu pai. Tambem em vinganÇa, Sansão deu uma surra e matou os homens filisteus, fugindo depois para habitar no cume da rocha de Etã, região de Judá. Como se nota, Sansão e o comandante de si mesmo. Diferente de outrosjuízes, ele age sozinho, seguindo seus proprios objetivos.</p>
+<p class="subpoint"><strong>3. Lutando contra compatriotas.</strong></p>
+<p>Quando os fiListeus se acamparam no territorio de Juda, os judaítas procuraram saber o motivo, Ao descobrirem que buscavam Sansão, em vez de protegê-l.o como compatriota, enviaram três mil homens para prendê-Lo e entregá-l.o Uz t1, g-13). A mesma tribo que recebeu a incumbência divina para tomar a frente das conquistas de Canaã, apos a morte de Josue Uzt.t),</p>
+<p>T2pvENS</p>
+<p>com início promissor, agora se acovardou. Preferiram viver dominados. Não perceberam que Deus estava agindo naquele contexto. Prometem não matar Sansão, mas somente entregá-l.o amarrado aos inimigos. Há um alerta aqui: mesmo quando não ferimos diretamente, podemos nos tornar cumplices do inimigo ao enfraquecer, limitar ou trair um irmão. O chamado bíbLico e para proteger, sustentar e interceder uns pelos outros (G[ 6.r,2', Ef.zg:3z), jamais para entregar alguem as mãos do adversario.</p>
+<p class="subpoint"><strong>4. Uma arma diferente. Amarrado</strong></p>
+<p>e entregue aos filisteus, o Espírito do Senhor se apoderou de Sansão. Com força sobrenatural, rompeu as cordas como se fossem fios queimados e, tomando uma queixada dejumento como arma, matou mit homens do exercito filisteu. Depois da vitoria, esgotado, Sansão teve uma grande sede, Então, pela primeiravez, ele ctama ao Senhor, pedindo ajuda Uz$l4-19). Não importa qual seja a força de uma pessoa, ela sempre sera carente de Deus. Embora não tenha sido uma oração humitde, Deus atende o seu pedido, Com um mitagre, Ele abriu uma fenda na caverna e dela saiu água, E chamou-a: 'A fonte do que clama&quot;. lsso não lembra Jesus, que sacia a sede espiritual de forma definitiva Uo l, gl,38)?</p>
+<p class="roman-head">II - SANSÃO E SEUS RELACIO-</p>
+<p class="sec-head">NAMENTOS DESTRUTIVOS</p>
+<p class="subpoint"><strong>1. O desejo carnat. Sansão era</strong></p>
+<p>fisicamente forte, mas moralmente fraco, fragiLizado pelo desejo carnal. Seu impulso pela sexualidade irresponsavel sempre cotocava sua vida em risco Uz 16.r-$. Na cidade de Gaza</p>
+<p>ele se relaciona com uma prostituta,</p>
+<p>e consegue escapar de seus inimigos durante a noite com mais uma façanha de força incomum. Paulo advertiu: 1Fugi</p>
+<p>da prostituição.&quot; (Leia: r Co ô, r8, rg).</p>
+<p>z. Datila: suborno e mentiras. Depois,</p>
+<p>ele se apaixona por uma mulher chamada</p>
+<p>Dalil&quot;a, do vale de Soreque Uzt6.+-r7).O texto não diz se ela era israelita ou fiListeia.</p>
+<p>Seu nome e de origem semita e significa &quot;débil, sujeita a desejos ou abatida&quot;. Que</p>
+<p>casall Como veremos, sera um relacionamento destrutivo e baseado no interesse de ambos os Lados. Subornada pelos</p>
+<p>chefes fiListeus, Dalila fará de tudo para</p>
+<p>descobrir o segredo da força de Sansão,</p>
+<p>Ele por sua vez, brincando com o perigo</p>
+<p>e com o pecado, ingressa em uma serie de mentiras. Depois de se enganarem mutuamente, e Sansãojá cansado de ser importunado por sua mulher, finatmente revela o seu segredo. Ete abre o seu</p>
+<p>coração e diz que a sua força estava no cumprimento do seu nazireado. Se seus cabelos fossem cortados, ele seria um homem qualquer, Tome cuidado com quem você confidencia seus segredos mais íntimos (Pv q.z3; Pv zg, tl,</p>
+<p>g, A traição e a escravidão. Depois,</p>
+<p>Dalil.a consuma sua traição Uzt6, t3-zt).</p>
+<p>Ela, então, avisa aos chefes dos filisteus que lhe pagam o suborno prometido. As-</p>
+<p>sim que Sansão adormece, Datila chama um homem para raspar o seu cabeto. Acordado aos gritos, Sansão pensou: &quot;Sairei ainda esta vez como dantes e me</p>
+<p>livrarei.&quot; (Jzr6.zo). Uma passagem triste: ele acreditava que ainda tinha a mesma força, mas não sabia que o Senhorja o havia deixado. A força de Sansão não estava no seu cabelo, mas no poder de</p>
+<p>Deus. Quando alguem resiste a graÇa e</p>
+<p>persiste no pecado, a presenÇa manifesta</p>
+<p>do Espírito se afasta e sobra apenas o homem caído. O resuttado e tragico. Os</p>
+<p>filisteus o prenderam, furaram seus olhos, levaram-no para Gaza e o colocaram a girar um moinho na prisáo Uz r6,2il, O Libertador de Israel tornou-se escravo, cego e sem forças. Assim e a condição do pecador afastado de Deus e sem a presença do seu Espírito.</p>
+<p>SUBSíDIoffi &quot;O ultimo ato de Sansão como urn homem Livre foi causado por seu relacionamento com uma mulher charnada</p>
+<p>Datila, [, ] Quando os chefes dos filisteus ouviram que Sansão fora fazer uma visita, ofereceram a Datita uma quantia de dinheiro recompensadora. [..,] Se Dalita descobrisse o misterio e o revetasse, cada um deles lhe daria um mil e cem moedas de prata (S). Como os príncipes dos filisteus eram cinco (r Sm 6.4), e se moedas em questão fossem o sicto (ou</p>
+<p>shekel), o preço para atrair Sansão seria de pelo menos US$ 3.3oo, oo, um valor significativo para aquela epoca. Dal&quot;ila consentiu prontamente e tomou providências para extrair o segredo de seu amante, t...1 A historia de Sansão alcança seu clímax nos vv 15 azl, onde vemos o resultado da 'fascinaÇão fatal do peca-</p>
+<p>do', (r) Foi um homem de grande força física; €) Teve uma mente fértil; (3) Era</p>
+<p>mora Lmente fraco; Q) Er a espi ritualmente</p>
+<p>infiel; (5) O Senhor se tinha retirado dele]'</p>
+<p>LtVl NGSTON, George Hebert Et aü. Comentário Bíbüco Beacon: Génesis o Deuteronomr'o, Río de Janeiro: CPAD, zo7z, p. t4z, UA).</p>
+<p class="roman-head">III - A MORTE DE SANSÃO E</p>
+<p>SUA ULNMAVITORIA r. Entretendo os filisteus. Os fil'isteus celebram a vitoria sobre Sansão,</p>
+<p>oferecendo grande festa a seus deuses e zombando do heroi de Israel Uz t6,23-25), ELes se reunem no templo de Dagom, alegrando-se por terem capturado o libertador de Israel. Para humilha-lo ainda mais, colocam Sansão para servir de divertimento para eles, O antigo campeão havia perdido a liberdade, a dignidade e a visão, Essa e</p>
+<p>a consequência da queda daquele que confia em si mesmo e se esquece do poder devastador do pecado (<span class="bref" data-ref="Pv 16.18">Pv 16.18</span>). z, Avitoria final. Cego e preso, Sansão clamou ao Senhor pedindo força uma ultima vezUzt6, z6-ail, Há aqui o reconhecimento de sua insuficiência e necessidade da intervenção de Jeova, Foi humithado ate o po e enxergou sua fraqueza. No entanto, o desejo de vingança ainda movia o seu coração (v, z8), Mas Deus estava conduzindo o curso da historia, a fim de trazer juízo</p>
+<p>sobre os inimigos de Israel Posicionado entre as colunas do templo dos filisteus,</p>
+<p>Sansão empurra-as com todo seu vigor, derrubando a estrutura e causando a morte de milhares de filisteus, inclusive a dele mesmo. Na sua morte, Sansão matou mais homens do que em toda a sua vida (v,3o), A maioria dos teologos entende que Sansão não cometeu suicídio deliberado, mas morreu na Luta contra o inimigo de seu paÍs.</p>
+<p class="subpoint"><strong>3. Heroi da fé, pela graça, Apesar</strong></p>
+<p>de suas muitas falhas, Sansão e mencionado na galeria dos herois da fé (Hb tt3z), entre aqueles que, da fraqueza, tiraram força (Hb nSO, Certamente, ele não é um modelo de conduta ou piedade, mas o desfecho de sua vida aponta para a redenção que procede de Deus, servindo como uma sombra de Cristo, que se entregou em sacri-</p>
+<p>T4pvENS</p>
+<p>fício pelo mundo (Ef S, z). NEle, somos mais que vencedores (Rm 8.aZ-Sg), lsso e graça!</p>
+<p>@ PENSE! Em que consiste a verdadeira vitaria na vida crfstâ?</p>
+<p class="sec-head">§ PONTO IMPORTANTE!</p>
+<p>Na vida crfstã, a verdadeira vitoria não está em conqufstar a mundo, mas em permanecer</p>
+<p>ftel a Crisfo até o fim.</p>
+<p>SUBSíDWW Professor(a), a vida de Sansão foi marcada por vitorias e derrotas. &quot;Embora</p>
+<p>fosse abençoado com pais piedosos, um corpo forte e as vantagens de ser criado com o nazireu dedicado ao Senhor, Sansão era escravo de suas paixÕes - um homem sem autocontro-</p>
+<p>le. Deus Lhe deu tudo o que precisava para completar sua missão de libertar os israelitas de seus inimigos, mas Sansão confiava em si mesmo e não no Espírito do Senhor, o que acabou levando-o a ruína.</p>
+<p>t.,.1 Apesar dos muitos fracassos de Sansão, ele e Lembrado como juiz de Israel e defensor da fé (Hb tt.3z-34), O sofrimento tevou-o ao ponto de chamar a Deus em busca de força para executar uma sentenÇa final e definitiva sobre os inimigos de Israel: Deus não abandonou Sansão, nem nos abandonou em nossos sofrimentos. Deus sempre perdoa o coraÇão arrependido.&quot; Finalize este topico mostrando aos alunos que o &quot;quebrantamento aprofunda nossa fé e leva a dependência do Satvador&quot;. ffi&quot;daptado de BíbtiaAtém do safrimento, Rio de Janeira: CPAD, zoza, p. S6Z)</p>
+<p>CESAR, Marcelino. O Enigma de Sansão: Lições de vida de um líCer controverso, Rio de Janeiro: CPAD, 2a1&quot;4.</p>
+<p>OHoRADAREvIsÃo t. Quantas raposas Sansão soltou nas searas dos filisteus com fogo em suas caudas? Trezentas raposas z. Qual aterta extraímos do fato da tribo de Judá ter Prometido não matar Sansão, mas somente entregá-l.o amarrado aos inimigos?</p>
+<p>Mesnro quando não ferimos diretarnente, podenros nos tornar curnplices do ininrigo ao enfraquecer, limitar ou trair um irmão,</p>
+<p class="subpoint"><strong>3. Qual é a origem e o significado do</strong></p>
+<p>nome Datila estudado na tição? Seu nome e de crigem semita e significa &quot;débil, sujeita a desejcs ou abatida&quot;</p>
+<p class="subpoint"><strong>4. Apos prenderem sansão, o que o</strong></p>
+<p>obrigam a fazer?</p>
+<p>Para humiLha-Lo ainda rnais, colocam</p>
+<p>Sansão para servir de divertinnento para eles</p>
+<p class="subpoint"><strong>5. Sansão cometeu suicídio?</strong></p>
+<p>A maiorra dos teologos entende que Sansão não cometeu suicíciio detiberado. mas rnorreu na luta contra o inimigo de seu País.</p>
+<p>0coNcLUSÃo</p>
+<p>A historia de Sansão, embora marcada</p>
+<p>por vitorias impressionantes e derrotas</p>
+<p>dotorosas, nos lernbra que a verdadeira</p>
+<p>força não está na capacidade física</p>
+<p>nem nos tatentos pessoâis, mas na</p>
+<p>dependência constante de Deus, §eu</p>
+<p>percurso reveta corno a autossuficiên-</p>
+<p>cia e o fterte com o pecado eonduzem</p>
+<p>à quedâ, enquanto a humitdade e o</p>
+<p>clamor ao Senhor abrem espaÇo Para que a graÇa se manifeste- mesmo nos</p>
+<p>momentos finais. Sansãa não foi um</p>
+<p>exempto de santidade, mas sua vida</p>
+<p>e morte testificam que Deus Pode transformar fraqueza ern instrurnento</p>
+<p>de juízo e redenÇão.</p>
+<p>ANOTAÇors</p><script>
 document.addEventListener('touchstart',function(e){
   if(e.target.closest('.bref')) e.preventDefault();
 },{passive:false});
