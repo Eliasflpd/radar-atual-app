@@ -1632,7 +1632,7 @@ function renderNotAba(){
     ];
     list.innerHTML=`<div style="font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.6;padding:6px 2px 8px">Canais Recomendados</div>`+
     CANAIS.map(v=>{
-      return`<div class="not-video-card" onclick="window.open('${v.ytUrl}','_blank')">
+      return`<div class="not-video-card" onclick="location.href='${v.ytUrl}'">
         <div style="width:100px;height:58px;flex-shrink:0;background:${v.cor}22;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px">${v.emoji}</div>
         <div class="not-video-info">
           <div class="not-video-titulo">${_esc(v.nome)}</div>
