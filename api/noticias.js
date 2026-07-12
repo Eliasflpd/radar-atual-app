@@ -37,7 +37,7 @@ export default async function handler(req) {
       const r = await fetch('https://api.openai.com/v1/chat/completions', {
         method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+apiKey},
         body: JSON.stringify({ model:'gpt-4o-mini', messages:[{role:'user',content:prompt}], max_tokens:600, temperature:0.1 }),
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(7000),
       });
       const d = await r.json();
       const raw = (d.choices&&d.choices[0]&&d.choices[0].message ? d.choices[0].message.content : '').trim();
