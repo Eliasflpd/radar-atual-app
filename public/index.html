@@ -1562,6 +1562,21 @@ function fecharVideo(){
 
 // ══ NOTÍCIAS DE ISRAEL ════════════════════════════
 const NOT_CORES={Profecia:'#f5a623',Arqueologia:'#a78bfa',Política:'#4f8ef7','Povo Judeu':'#34c77b',Conflito:'#f75f5f',Sociedade:'#38bdf8'};
+const NOT_ART={
+  Profecia:   {bg:'linear-gradient(150deg,#1c0d00 0%,#3d1f00 45%,#1a0900 100%)',em:'🕊️'},
+  Arqueologia:{bg:'linear-gradient(150deg,#0d0020 0%,#2a0060 45%,#0a001a 100%)',em:'🏺'},
+  Conflito:   {bg:'linear-gradient(150deg,#200000 0%,#4a0000 45%,#1a0000 100%)',em:'⚔️'},
+  'Povo Judeu':{bg:'linear-gradient(150deg,#001a0a 0%,#00442a 45%,#000e05 100%)',em:'✡️'},
+  Política:   {bg:'linear-gradient(150deg,#000a1a 0%,#001a44 45%,#00051a 100%)',em:'⚖️'},
+  Sociedade:  {bg:'linear-gradient(150deg,#001a22 0%,#003344 45%,#000d11 100%)',em:'🌍'},
+};
+function catArt(cat,cor){
+  const a=NOT_ART[cat]||{bg:'linear-gradient(150deg,#0a1020 0%,#0f2040 100%)',em:'📰'};
+  return`<div class="not-img-ph" style="background:${a.bg};flex-direction:column;gap:5px">
+    <span style="font-size:58px;line-height:1;filter:drop-shadow(0 0 18px ${cor}99)">${a.em}</span>
+    <span style="font-size:9px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:${cor};opacity:.8">${cat||'Israel'}</span>
+  </div>`;
+}
 let _notCache=null,_notAba='news',_notIdx=0,_notItens=[],_notYtId=null;
 
 function abrirNoticias(){
@@ -1608,11 +1623,10 @@ function renderNotAba(){
     if(!_notItens.length){list.innerHTML='<div class="not-loading"><div style="font-size:36px">📰</div><div style="font-size:13px">Nenhuma notícia ainda.</div></div>';return;}
     list.innerHTML=_notItens.map((n,i)=>{
       const cor=NOT_CORES[n.categoria]||'#C9A14A';
-      const ph=n.emoji||'🌍';
       const imgHtml=n.img
-        ?`<img class="not-img" src="${n.img}" alt="" loading="lazy" onerror="this.parentElement.querySelector('.not-img-ph').style.display='flex';this.remove()">`+
-         `<div class="not-img-ph" style="display:none">${ph}</div>`
-        :`<div class="not-img-ph">${ph}</div>`;
+        ?`<img class="not-img" src="${n.img}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`+
+         `<div style="display:none">${catArt(n.categoria,cor)}</div>`
+        :catArt(n.categoria,cor);
       return`<div class="not-card" onclick="abrirLeitor(${i})">
         ${imgHtml}
         <div class="not-body">
