@@ -1001,7 +1001,34 @@ const EBD_LICOES = {
      licao:null, ppt:{folder:'extra',slides:15},
      apoio:null, mapa:null}
   ],
-  jovem:[]
+  jovem:[
+    {n:1,  titulo:'O LIVRO DE JUÍZES: QUANDO CADA UM FAZIA O QUE PARECIA CERTO',
+     licao:'/ebd/jovem/licoes/licao-1.docx', ppt:null, apoio:null, mapa:null},
+    {n:2,  titulo:'FIDELIDADE A DEUS: UMA QUESTÃO DE ESCOLHA',
+     licao:'/ebd/jovem/licoes/licao-2.docx', ppt:null, apoio:null, mapa:null},
+    {n:3,  titulo:'CLAMOR E LIBERTAÇÃO: A LIDERANÇA DE OTNIEL',
+     licao:'/ebd/jovem/licoes/licao-3.docx', ppt:null, apoio:null, mapa:null},
+    {n:4,  titulo:'EÚDE E SANGAR: DEUS USA OS IMPROVÁVEIS',
+     licao:'/ebd/jovem/licoes/licao-4.docx', ppt:null, apoio:null, mapa:null},
+    {n:5,  titulo:'DÉBORA E BARAQUE: UNIÃO PARA FAZER A OBRA DE DEUS',
+     licao:'/ebd/jovem/licoes/licao-5.docx', ppt:null, apoio:null, mapa:null},
+    {n:6,  titulo:'GIDEÃO: DEUS TRANSFORMA A INSEGURANÇA EM CORAGEM',
+     licao:'/ebd/jovem/licoes/licao-6.docx', ppt:null, apoio:null, mapa:null},
+    {n:7,  titulo:'O FIM DA LIDERANÇA DE GIDEÃO E O GOVERNO DE ABIMELEQUE',
+     licao:'/ebd/jovem/licoes/licao-7.docx', ppt:null, apoio:null, mapa:null},
+    {n:8,  titulo:'JEFTÉ: DE REJEITADO A LIBERTADOR',
+     licao:'/ebd/jovem/licoes/licao-8.docx', ppt:null, apoio:null, mapa:null},
+    {n:9,  titulo:'SANSÃO: A FORÇA E A FRAQUEZA DE UM JOVEM',
+     licao:'/ebd/jovem/licoes/licao-9.docx', ppt:null, apoio:null, mapa:null},
+    {n:10, titulo:'SANSÃO: ENTRE VITÓRIAS E DERROTAS',
+     licao:'/ebd/jovem/licoes/licao-10.docx',ppt:null, apoio:null, mapa:null},
+    {n:11, titulo:'CRISE ESPIRITUAL E FALSA RELIGIOSIDADE',
+     licao:'/ebd/jovem/licoes/licao-11.docx',ppt:null, apoio:null, mapa:null},
+    {n:12, titulo:'TEMPOS DE DECADÊNCIA MORAL E MALDADE',
+     licao:'/ebd/jovem/licoes/licao-12.docx',ppt:null, apoio:null, mapa:null},
+    {n:13, titulo:'ESPERANÇA EM MEIO AO CAOS: AGUARDANDO A VINDA DO REI',
+     licao:'/ebd/jovem/licoes/licao-13.docx',ppt:null, apoio:null, mapa:null},
+  ]
 };
 
 let ebdTurmaAtual='adulto', pptLicao=null, pptIdx=0, _pptTx=0;
@@ -1080,8 +1107,8 @@ function abrirLicaoDetalhe(idx){
     {num:'4',icon:'🧠',nome:'MAPA MENTAL',
      ativo:false,tap:null},
     {num:'5',icon:'📰',nome:'REVISTA CRISTÃO ALERTA',
-     ativo:lic.n>0,
-     tap:lic.n>0?`abrirReader(${idx},'subsidio')`:null}
+     ativo:lic.n>0 && ebdTurmaAtual==='adulto',
+     tap:lic.n>0 && ebdTurmaAtual==='adulto'?`abrirReader(${idx},'subsidio')`:null}
   ];
   document.getElementById('ebd-det-body').innerHTML=itens.map(it=>{
     const tappable=it.ativo&&it.tap;
