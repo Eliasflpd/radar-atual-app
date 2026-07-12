@@ -79,7 +79,7 @@ li{margin-bottom:8px;text-align:justify}
 .lbl-inline{font-weight:900;color:#7b0000;text-transform:uppercase;letter-spacing:.5px}
 
 /* Referência bíblica clicável */
-.bref{color:#1d4ed8;font-weight:700;text-decoration:underline dotted;cursor:pointer}
+.bref{color:#1d4ed8;font-weight:700;text-decoration:underline dotted;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 """
 
 STYLE_MAP = """
@@ -181,6 +181,13 @@ def post_process(body):
 
 
 REF_JS = """<script>
+document.addEventListener('touchstart',function(e){
+  if(e.target.closest('.bref')) e.preventDefault();
+},{passive:false});
+document.addEventListener('touchend',function(e){
+  var el=e.target.closest('.bref');
+  if(el){e.preventDefault();window.parent.postMessage({type:'ebd-ref',ref:el.dataset.ref},'*');}
+},{passive:false});
 document.addEventListener('click',function(e){
   var el=e.target.closest('.bref');
   if(el) window.parent.postMessage({type:'ebd-ref',ref:el.dataset.ref},'*');
