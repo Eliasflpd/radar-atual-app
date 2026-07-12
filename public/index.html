@@ -1604,10 +1604,11 @@ function renderNotAba(){
     if(!_notItens.length){list.innerHTML='<div class="not-loading"><div style="font-size:36px">📰</div><div style="font-size:13px">Nenhuma notícia ainda.</div></div>';return;}
     list.innerHTML=_notItens.map((n,i)=>{
       const cor=NOT_CORES[n.categoria]||'#C9A14A';
+      const ph=n.emoji||'🌍';
       const imgHtml=n.img
         ?`<img class="not-img" src="${n.img}" alt="" loading="lazy" onerror="this.parentElement.querySelector('.not-img-ph').style.display='flex';this.remove()">`+
-         `<div class="not-img-ph" style="display:none">🌍</div>`
-        :`<div class="not-img-ph">🌍</div>`;
+         `<div class="not-img-ph" style="display:none">${ph}</div>`
+        :`<div class="not-img-ph">${ph}</div>`;
       return`<div class="not-card" onclick="abrirLeitor(${i})">
         ${imgHtml}
         <div class="not-body">
