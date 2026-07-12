@@ -178,6 +178,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .ebd-badge-drive{font-size:10px;font-weight:700;color:var(--gold);background:rgba(201,161,74,.1);border:1px solid var(--line);border-radius:8px;padding:5px 8px;flex-shrink:0;white-space:nowrap;text-align:center;line-height:1.3}
 .ebd-vazio{opacity:.45}
 .ebd-vazio .bh-tile-nome{color:var(--sub)}
+.ebd-lic-num{font-size:13px;font-weight:900;color:var(--gold);width:26px;flex-shrink:0;text-align:center;line-height:1}
+.ebd-det-num{font-size:12px;font-weight:900;color:var(--gold);background:rgba(201,161,74,.12);border-radius:6px;width:22px;height:22px;display:grid;place-items:center;flex-shrink:0}
+.ebd-btn-ppt{background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.35);color:#f5a623;width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:15px;cursor:pointer;flex-shrink:0}
+.ebd-btn-ppt:active{opacity:.7}
+.ebd-em-breve{font-size:10px;color:var(--sub);flex-shrink:0;white-space:nowrap;padding:4px 8px;background:var(--card);border:1px solid var(--line);border-radius:6px}
+.ebd-item-em-breve{opacity:.45}
 /* PPT VIEWER */
 #tela-ebd-ppt{background:#111}
 .ppt-viewer{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#111}
@@ -453,84 +459,52 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <span style="font-size:22px">🏫</span>
   </div>
   <div class="bh-scroll">
-
-    <div class="bh-secao">Lição Adulto</div>
+    <div class="bh-secao">Selecione a turma</div>
     <div class="bh-tiles">
-      <div class="bh-tile" style="--tc:#34c77b" onclick="abrirEbdLista('adulto','licoes')">
-        <div class="bh-tile-icon">📝</div>
+      <div class="bh-tile" style="--tc:#34c77b" onclick="abrirEbdTurma('adulto')">
+        <div class="bh-tile-icon">👨</div>
         <div class="bh-tile-info">
-          <div class="bh-tile-nome">LIÇÕES</div>
-          <div class="bh-tile-desc">13 lições — texto completo</div>
+          <div class="bh-tile-nome">LIÇÃO ADULTO</div>
+          <div class="bh-tile-desc">13 lições — Atos dos Apóstolos</div>
         </div>
         <span class="bh-tile-count" style="background:rgba(52,199,123,.12);color:#34c77b">13</span>
         <span class="bh-tile-arr">›</span>
       </div>
-      <div class="bh-tile" style="--tc:#f5a623" onclick="abrirEbdLista('adulto','ppt')">
-        <div class="bh-tile-icon">📊</div>
+      <div class="bh-tile ebd-vazio" style="--tc:#f5a623" onclick="abrirEbdTurma('jovem')">
+        <div class="bh-tile-icon">🧑</div>
         <div class="bh-tile-info">
-          <div class="bh-tile-nome">PPT</div>
-          <div class="bh-tile-desc">13 apresentações — requer Drive</div>
-        </div>
-        <span class="bh-tile-count" style="background:rgba(245,166,35,.12);color:#f5a623">13</span>
-        <span class="bh-tile-arr">›</span>
-      </div>
-      <div class="bh-tile" style="--tc:#4f8ef7" onclick="abrirEbdLista('adulto','apoio')">
-        <div class="bh-tile-icon">📁</div>
-        <div class="bh-tile-info">
-          <div class="bh-tile-nome">APOIO</div>
-          <div class="bh-tile-desc">13 capítulos — material de apoio</div>
-        </div>
-        <span class="bh-tile-count" style="background:rgba(79,142,247,.12);color:#4f8ef7">13</span>
-        <span class="bh-tile-arr">›</span>
-      </div>
-      <div class="bh-tile ebd-vazio" style="--tc:#a78bfa" onclick="abrirEbdLista('adulto','mapa')">
-        <div class="bh-tile-icon">🧠</div>
-        <div class="bh-tile-info">
-          <div class="bh-tile-nome">MAPA MENTAL</div>
+          <div class="bh-tile-nome">LIÇÃO JOVEM</div>
           <div class="bh-tile-desc">Em breve</div>
         </div>
         <span class="bh-tile-arr">›</span>
       </div>
     </div>
-
-    <div class="bh-secao">Lição Jovem</div>
-    <div class="bh-tiles">
-      <div class="bh-tile ebd-vazio" style="--tc:#34c77b" onclick="abrirEbdLista('jovem','licoes')">
-        <div class="bh-tile-icon">📝</div>
-        <div class="bh-tile-info"><div class="bh-tile-nome">LIÇÕES</div><div class="bh-tile-desc">Em breve</div></div>
-        <span class="bh-tile-arr">›</span>
-      </div>
-      <div class="bh-tile ebd-vazio" style="--tc:#f5a623" onclick="abrirEbdLista('jovem','ppt')">
-        <div class="bh-tile-icon">📊</div>
-        <div class="bh-tile-info"><div class="bh-tile-nome">PPT</div><div class="bh-tile-desc">Em breve</div></div>
-        <span class="bh-tile-arr">›</span>
-      </div>
-      <div class="bh-tile ebd-vazio" style="--tc:#4f8ef7" onclick="abrirEbdLista('jovem','apoio')">
-        <div class="bh-tile-icon">📁</div>
-        <div class="bh-tile-info"><div class="bh-tile-nome">APOIO</div><div class="bh-tile-desc">Em breve</div></div>
-        <span class="bh-tile-arr">›</span>
-      </div>
-      <div class="bh-tile ebd-vazio" style="--tc:#a78bfa" onclick="abrirEbdLista('jovem','mapa')">
-        <div class="bh-tile-icon">🧠</div>
-        <div class="bh-tile-info"><div class="bh-tile-nome">MAPA MENTAL</div><div class="bh-tile-desc">Em breve</div></div>
-        <span class="bh-tile-arr">›</span>
-      </div>
-    </div>
-
   </div>
 </div>
 
-<!-- EBD LISTA -->
-<div class="tela" id="tela-ebd-lista">
+<!-- EBD TURMA — lista de lições -->
+<div class="tela" id="tela-ebd-turma">
   <div class="std-header">
-    <button class="std-back" onclick="fecharEbdLista()">‹</button>
+    <button class="std-back" onclick="fecharEbdTurma()">‹</button>
     <div class="std-hinfo">
-      <div class="std-titulo" id="ebd-lista-titulo">LIÇÕES</div>
-      <div class="std-sub" id="ebd-lista-sub">Adulto</div>
+      <div class="std-titulo" id="ebd-turma-titulo">LIÇÃO ADULTO</div>
+      <div class="std-sub" id="ebd-turma-sub">13 lições</div>
     </div>
-    <span id="ebd-lista-icon" style="font-size:22px">📝</span>
+    <span id="ebd-turma-icon" style="font-size:22px">👨</span>
   </div>
-  <div class="ebd-lista-scroll" id="ebd-lista-body"></div>
+  <div class="ebd-lista-scroll" id="ebd-turma-body"></div>
+</div>
+
+<!-- EBD DETALHE — materiais de uma lição -->
+<div class="tela" id="tela-ebd-detalhe">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharLicaoDetalhe()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="ebd-det-titulo">LIÇÃO 01</div>
+      <div class="std-sub" id="ebd-det-sub"></div>
+    </div>
+  </div>
+  <div class="ebd-lista-scroll" id="ebd-det-body"></div>
 </div>
 
 <!-- EBD PPT VIEWER -->
@@ -962,123 +936,148 @@ function hinoProximo(){
 // ══════════════════════════════════════════════════
 // ══ EBD ═══════════════════════════════════════════
 // ══════════════════════════════════════════════════
-const EBD_SECOES = {
-  licoes:{nome:'LIÇÕES',    icon:'📝', cor:'#34c77b'},
-  ppt:   {nome:'PPT',       icon:'📊', cor:'#f5a623'},
-  apoio: {nome:'APOIO',     icon:'📁', cor:'#4f8ef7'},
-  mapa:  {nome:'MAPA MENTAL',icon:'🧠',cor:'#a78bfa'}
+
+const EBD_LICOES = {
+  adulto:[
+    {n:1,  titulo:'O CHAMADO PARA OS GENTIOS',
+     licao:'/ebd/adulto/licoes/licao-1.docx',  ppt:null,
+     apoio:'/ebd/adulto/apoio/apoio-1.docx',   mapa:null},
+    {n:2,  titulo:'A PORTA DA FÉ SE ABRE ENTRE OS GENTIOS',
+     licao:'/ebd/adulto/licoes/licao-2.docx',  ppt:{folder:'licao-02',slides:21},
+     apoio:'/ebd/adulto/apoio/apoio-2.docx',   mapa:null},
+    {n:3,  titulo:'A GRAÇA QUE ALCANÇA TODAS AS NAÇÕES',
+     licao:'/ebd/adulto/licoes/licao-3.docx',  ppt:{folder:'licao-03',slides:12},
+     apoio:'/ebd/adulto/apoio/apoio-3.docx',   mapa:null},
+    {n:4,  titulo:'O ESPÍRITO QUE NOS GUIA PARA ALÉM DAS FRONTEIRAS',
+     licao:'/ebd/adulto/licoes/licao-4.docx',  ppt:{folder:'licao-04',slides:12},
+     apoio:'/ebd/adulto/apoio/apoio-4.docx',   mapa:null},
+    {n:5,  titulo:'CRISTO ENTRE OS FILÓSOFOS — O DEUS DESCONHECIDO SE REVELA',
+     licao:'/ebd/adulto/licoes/licao-5.docx',  ppt:{folder:'licao-05',slides:14},
+     apoio:'/ebd/adulto/apoio/apoio-5.docx',   mapa:null},
+    {n:6,  titulo:'A SUFICIÊNCIA DA GRAÇA NA CIDADE DE CORINTO',
+     licao:'/ebd/adulto/licoes/licao-6.docx',  ppt:{folder:'licao-06',slides:15},
+     apoio:'/ebd/adulto/apoio/apoio-6.docx',   mapa:null},
+    {n:7,  titulo:'QUANDO O ESPÍRITO SOPRA EM ÉFESO',
+     licao:'/ebd/adulto/licoes/licao-7.docx',  ppt:{folder:'licao-07',slides:14},
+     apoio:'/ebd/adulto/apoio/apoio-7.docx',   mapa:null},
+    {n:8,  titulo:'DESPEDIDA EM ÉFESO ENTRE LÁGRIMAS E ALERTAS',
+     licao:'/ebd/adulto/licoes/licao-8.docx',  ppt:{folder:'licao-08',slides:16},
+     apoio:'/ebd/adulto/apoio/apoio-8.docx',   mapa:null},
+    {n:9,  titulo:'CORAGEM PARA TESTEMUNHAR — PAULO DIANTE DA MULTIDÃO',
+     licao:'/ebd/adulto/licoes/licao-9.docx',  ppt:{folder:'licao-09',slides:15},
+     apoio:'/ebd/adulto/apoio/apoio-9.docx',   mapa:null},
+    {n:10, titulo:'UMA ESPERANÇA INABALÁVEL PERANTE OS PODEROSOS',
+     licao:'/ebd/adulto/licoes/licao-10.docx', ppt:{folder:'licao-10',slides:12},
+     apoio:'/ebd/adulto/apoio/apoio-10.docx',  mapa:null},
+    {n:11, titulo:'ENTRE TEMPESTADES E PROMESSAS',
+     licao:'/ebd/adulto/licoes/licao-11.docx', ppt:{folder:'licao-11',slides:13},
+     apoio:'/ebd/adulto/apoio/apoio-11.docx',  mapa:null},
+    {n:12, titulo:'O EVANGELHO CHEGA AO CORAÇÃO DO IMPÉRIO',
+     licao:'/ebd/adulto/licoes/licao-12.docx', ppt:{folder:'licao-12',slides:13},
+     apoio:'/ebd/adulto/apoio/apoio-12.docx',  mapa:null},
+    {n:13, titulo:'A MISSÃO CONTINUA EM NÓS',
+     licao:'/ebd/adulto/licoes/licao-13.docx', ppt:{folder:'licao-13',slides:15},
+     apoio:'/ebd/adulto/apoio/apoio-13.docx',  mapa:null},
+    {n:0,  titulo:'CARTOGRAFIA DO ESPÍRITO SANTO',
+     licao:null, ppt:{folder:'extra',slides:15},
+     apoio:null, mapa:null}
+  ],
+  jovem:[]
 };
 
-const EBD_DATA = {
-  adulto:{
-    licoes:[
-      {n:1,  titulo:'O CHAMADO PARA OS GENTIOS',                               url:'/ebd/adulto/licoes/licao-1.docx'},
-      {n:2,  titulo:'A PORTA DA FÉ SE ABRE ENTRE OS GENTIOS',                  url:'/ebd/adulto/licoes/licao-2.docx'},
-      {n:3,  titulo:'A GRAÇA QUE ALCANÇA TODAS AS NAÇÕES',                     url:'/ebd/adulto/licoes/licao-3.docx'},
-      {n:4,  titulo:'O ESPÍRITO QUE NOS GUIA PARA ALÉM DAS FRONTEIRAS',        url:'/ebd/adulto/licoes/licao-4.docx'},
-      {n:5,  titulo:'CRISTO ENTRE OS FILÓSOFOS — O DEUS DESCONHECIDO SE REVELA',url:'/ebd/adulto/licoes/licao-5.docx'},
-      {n:6,  titulo:'A SUFICIÊNCIA DA GRAÇA NA CIDADE DE CORINTO',              url:'/ebd/adulto/licoes/licao-6.docx'},
-      {n:7,  titulo:'QUANDO O ESPÍRITO SOPRA EM ÉFESO',                        url:'/ebd/adulto/licoes/licao-7.docx'},
-      {n:8,  titulo:'DESPEDIDA EM ÉFESO ENTRE LÁGRIMAS E ALERTAS',             url:'/ebd/adulto/licoes/licao-8.docx'},
-      {n:9,  titulo:'CORAGEM PARA TESTEMUNHAR — PAULO DIANTE DA MULTIDÃO',     url:'/ebd/adulto/licoes/licao-9.docx'},
-      {n:10, titulo:'UMA ESPERANÇA INABALÁVEL PERANTE OS PODEROSOS',            url:'/ebd/adulto/licoes/licao-10.docx'},
-      {n:11, titulo:'ENTRE TEMPESTADES E PROMESSAS',                            url:'/ebd/adulto/licoes/licao-11.docx'},
-      {n:12, titulo:'O EVANGELHO CHEGA AO CORAÇÃO DO IMPÉRIO',                 url:'/ebd/adulto/licoes/licao-12.docx'},
-      {n:13, titulo:'A MISSÃO CONTINUA EM NÓS',                                url:'/ebd/adulto/licoes/licao-13.docx'}
-    ],
-    ppt:[
-      {n:0,  titulo:'CARTOGRAFIA DO ESPÍRITO SANTO', folder:'extra',    slides:15},
-      {n:2,  titulo:'LIÇÃO 2',  folder:'licao-02', slides:21},
-      {n:3,  titulo:'LIÇÃO 3',  folder:'licao-03', slides:12},
-      {n:4,  titulo:'LIÇÃO 4',  folder:'licao-04', slides:12},
-      {n:5,  titulo:'LIÇÃO 5',  folder:'licao-05', slides:14},
-      {n:6,  titulo:'LIÇÃO 6',  folder:'licao-06', slides:15},
-      {n:7,  titulo:'LIÇÃO 7',  folder:'licao-07', slides:14},
-      {n:8,  titulo:'LIÇÃO 8',  folder:'licao-08', slides:16},
-      {n:9,  titulo:'LIÇÃO 9',  folder:'licao-09', slides:15},
-      {n:10, titulo:'LIÇÃO 10', folder:'licao-10', slides:12},
-      {n:11, titulo:'LIÇÃO 11', folder:'licao-11', slides:13},
-      {n:12, titulo:'LIÇÃO 12', folder:'licao-12', slides:13},
-      {n:13, titulo:'LIÇÃO 13', folder:'licao-13', slides:15}
-    ],
-    apoio:[
-      {n:1,  titulo:'Capítulo 1',  url:'/ebd/adulto/apoio/apoio-1.docx'},
-      {n:2,  titulo:'Capítulo 2',  url:'/ebd/adulto/apoio/apoio-2.docx'},
-      {n:3,  titulo:'Capítulo 3',  url:'/ebd/adulto/apoio/apoio-3.docx'},
-      {n:4,  titulo:'Capítulo 4',  url:'/ebd/adulto/apoio/apoio-4.docx'},
-      {n:5,  titulo:'Capítulo 5',  url:'/ebd/adulto/apoio/apoio-5.docx'},
-      {n:6,  titulo:'Capítulo 6',  url:'/ebd/adulto/apoio/apoio-6.docx'},
-      {n:7,  titulo:'Capítulo 7',  url:'/ebd/adulto/apoio/apoio-7.docx'},
-      {n:8,  titulo:'Capítulo 8',  url:'/ebd/adulto/apoio/apoio-8.docx'},
-      {n:9,  titulo:'Capítulo 9',  url:'/ebd/adulto/apoio/apoio-9.docx'},
-      {n:10, titulo:'Capítulo 10', url:'/ebd/adulto/apoio/apoio-10.docx'},
-      {n:11, titulo:'Capítulo 11', url:'/ebd/adulto/apoio/apoio-11.docx'},
-      {n:12, titulo:'Capítulo 12', url:'/ebd/adulto/apoio/apoio-12.docx'},
-      {n:13, titulo:'Capítulo 13', url:'/ebd/adulto/apoio/apoio-13.docx'}
-    ],
-    mapa:[]
-  },
-  jovem:{licoes:[], ppt:[], apoio:[], mapa:[]}
-};
-
-let ebdTurma='adulto', ebdSecao='licoes';
+let ebdTurmaAtual='adulto', pptLicao=null, pptIdx=0, _pptTx=0;
 
 function abrirEbd(){
   ocultarTodas();
   document.getElementById('tela-ebd').classList.add('ativa');
 }
 
-function abrirEbdLista(turma, secao){
-  ebdTurma=turma; ebdSecao=secao;
-  const s=EBD_SECOES[secao];
-  const label=turma==='adulto'?'Adulto':'Jovem';
-  document.getElementById('ebd-lista-titulo').textContent=s.nome;
-  document.getElementById('ebd-lista-sub').textContent='Lição '+label;
-  document.getElementById('ebd-lista-icon').textContent=s.icon;
-  const items=EBD_DATA[turma][secao];
-  const body=document.getElementById('ebd-lista-body');
-  if(!items.length){
-    body.innerHTML=`<div class="mod-empty"><div class="mod-empty-icon">${s.icon}</div><div class="mod-empty-txt">Em breve</div></div>`;
+function abrirEbdTurma(turma){
+  ebdTurmaAtual=turma;
+  const lics=EBD_LICOES[turma];
+  const label=turma==='adulto'?'LIÇÃO ADULTO':'LIÇÃO JOVEM';
+  const icon=turma==='adulto'?'👨':'🧑';
+  document.getElementById('ebd-turma-titulo').textContent=label;
+  document.getElementById('ebd-turma-icon').textContent=icon;
+  const body=document.getElementById('ebd-turma-body');
+  if(!lics.length){
+    body.innerHTML=`<div class="mod-empty"><div class="mod-empty-icon">${icon}</div><div class="mod-empty-txt">Em breve</div></div>`;
+    document.getElementById('ebd-turma-sub').textContent='Em breve';
   } else {
-    body.innerHTML=items.map((item,idx)=>{
-      const numLabel=item.n>0?`<span class="ebd-item-n">LIÇÃO ${String(item.n).padStart(2,'0')}</span>`:'<span class="ebd-item-n">EXTRA</span>';
-      if(secao==='ppt'&&item.folder){
-        return `<div class="ebd-item ppt-item" onclick="abrirPptViewer(${idx})">
-          <div class="ebd-item-icon">${s.icon}</div>
-          <div class="ebd-item-info">
-            ${numLabel}
-            <div class="ebd-item-titulo">${item.titulo}</div>
-            <div class="ebd-item-meta">${item.slides} slides</div>
-          </div>
-          <span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>
-        </div>`;
-      }
-      const acao=item.url
-        ?`<a class="ebd-btn-dl" href="${item.url}" download target="_blank">↓</a>`
-        :`<div class="ebd-badge-drive">📤 Drive</div>`;
-      return `<div class="ebd-item">
-        <div class="ebd-item-icon">${s.icon}</div>
+    const main=lics.filter(l=>l.n>0);
+    const extra=lics.filter(l=>l.n===0);
+    document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
+    body.innerHTML=main.map(lic=>{
+      const idx=lics.indexOf(lic);
+      const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
+      return `<div class="ebd-item ppt-item" onclick="abrirLicaoDetalhe(${idx})">
+        <div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
         <div class="ebd-item-info">
-          ${secao==='licoes'?numLabel:''}
-          <div class="ebd-item-titulo">${item.titulo}</div>
+          <div class="ebd-item-titulo">${lic.titulo}</div>
+          <div class="ebd-item-meta">${tags}</div>
         </div>
-        ${acao}
+        <span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>
       </div>`;
-    }).join('');
+    }).join('')+
+    (extra.length?`<div style="padding:8px 0 4px"><div class="bh-secao" style="margin:0">Extra</div></div>`+
+    extra.map(lic=>{
+      const idx=lics.indexOf(lic);
+      return `<div class="ebd-item ppt-item" onclick="abrirLicaoDetalhe(${idx})">
+        <div class="ebd-lic-num" style="font-size:10px">EXT</div>
+        <div class="ebd-item-info">
+          <div class="ebd-item-titulo">${lic.titulo}</div>
+          <div class="ebd-item-meta">${lic.ppt?'PPT · '+lic.ppt.slides+' slides':''}</div>
+        </div>
+        <span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>
+      </div>`;
+    }).join(''):'');
   }
   ocultarTodas();
-  document.getElementById('tela-ebd-lista').classList.add('ativa');
+  document.getElementById('tela-ebd-turma').classList.add('ativa');
 }
 
-function fecharEbdLista(){
+function fecharEbdTurma(){
   ocultarTodas();
   document.getElementById('tela-ebd').classList.add('ativa');
 }
 
-let pptItem=null,pptIdx=0,_pptTx=0;
+function abrirLicaoDetalhe(idx){
+  const lic=EBD_LICOES[ebdTurmaAtual][idx];
+  const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
+  document.getElementById('ebd-det-titulo').textContent=nLabel;
+  document.getElementById('ebd-det-sub').textContent=lic.titulo;
+  const itens=[
+    {num:'1',icon:'📝',nome:'LIÇÃO',
+     ativo:!!lic.licao,
+     acao:lic.licao?`<a class="ebd-btn-dl" href="${lic.licao}" download target="_blank">↓</a>`:`<span class="ebd-em-breve">Em breve</span>`},
+    {num:'2',icon:'📊',nome:'PPT',
+     ativo:!!lic.ppt,
+     acao:lic.ppt?`<button class="ebd-btn-ppt" onclick="abrirPptViewer(${idx})">▶</button>`:`<span class="ebd-em-breve">Em breve</span>`},
+    {num:'3',icon:'📁',nome:'APOIO',
+     ativo:!!lic.apoio,
+     acao:lic.apoio?`<a class="ebd-btn-dl" href="${lic.apoio}" download target="_blank">↓</a>`:`<span class="ebd-em-breve">Em breve</span>`},
+    {num:'4',icon:'🧠',nome:'MAPA MENTAL',
+     ativo:false,
+     acao:`<span class="ebd-em-breve">Em breve</span>`}
+  ];
+  document.getElementById('ebd-det-body').innerHTML=itens.map(it=>`
+    <div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}">
+      <div class="ebd-det-num">${it.num}</div>
+      <div class="ebd-item-icon">${it.icon}</div>
+      <div class="ebd-item-info"><div class="ebd-item-titulo">${it.nome}</div></div>
+      ${it.acao}
+    </div>`).join('');
+  ocultarTodas();
+  document.getElementById('tela-ebd-detalhe').classList.add('ativa');
+}
+
+function fecharLicaoDetalhe(){
+  ocultarTodas();
+  document.getElementById('tela-ebd-turma').classList.add('ativa');
+}
 
 function abrirPptViewer(idx){
-  pptItem=EBD_DATA[ebdTurma].ppt[idx];
+  pptLicao=EBD_LICOES[ebdTurmaAtual][idx];
   pptIdx=0;
   _pptRender();
   const v=document.getElementById('ppt-viewer');
@@ -1092,21 +1091,21 @@ function abrirPptViewer(idx){
 }
 
 function _pptRender(){
-  const {titulo,folder,slides,n}=pptItem;
-  document.getElementById('ppt-titulo').textContent=titulo;
-  document.getElementById('ppt-sub').textContent='Lição '+(ebdTurma==='adulto'?'Adulto':'Jovem');
-  document.getElementById('ppt-counter').textContent=(pptIdx+1)+' / '+slides;
-  document.getElementById('ppt-slide-img').src='/ebd/'+ebdTurma+'/ppt/'+folder+'/slide-'+String(pptIdx+1).padStart(3,'0')+'.jpg';
+  const {titulo,ppt,n}=pptLicao;
+  document.getElementById('ppt-titulo').textContent=n>0?`LIÇÃO ${String(n).padStart(2,'0')}`:'EXTRA';
+  document.getElementById('ppt-sub').textContent=titulo;
+  document.getElementById('ppt-counter').textContent=(pptIdx+1)+' / '+ppt.slides;
+  document.getElementById('ppt-slide-img').src='/ebd/'+ebdTurmaAtual+'/ppt/'+ppt.folder+'/slide-'+String(pptIdx+1).padStart(3,'0')+'.jpg';
 }
 
 function pptSlide(dir){
-  pptIdx=Math.max(0,Math.min(pptItem.slides-1,pptIdx+dir));
+  pptIdx=Math.max(0,Math.min(pptLicao.ppt.slides-1,pptIdx+dir));
   _pptRender();
 }
 
 function fecharPptViewer(){
   ocultarTodas();
-  document.getElementById('tela-ebd-lista').classList.add('ativa');
+  document.getElementById('tela-ebd-detalhe').classList.add('ativa');
 }
 
 // ══ UTILS ═════════════════════════════════════════
