@@ -184,6 +184,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .ebd-btn-ppt:active{opacity:.7}
 .ebd-em-breve{font-size:10px;color:var(--sub);flex-shrink:0;white-space:nowrap;padding:4px 8px;background:var(--card);border:1px solid var(--line);border-radius:6px}
 .ebd-item-em-breve{opacity:.45}
+/* EBD READER */
+#tela-ebd-reader{background:#fff}
+#tela-ebd-reader .std-header{background:#f2f2f2;border-bottom:1px solid #ddd}
+#tela-ebd-reader .std-back{color:#333;border-color:#ccc}
+#tela-ebd-reader .std-titulo{color:#111;font-size:14px}
+#tela-ebd-reader .std-sub{color:#555}
+.reader-frame{flex:1;border:none;background:#fff;display:block;width:100%}
 /* PPT VIEWER */
 #tela-ebd-ppt{background:#111}
 .ppt-viewer{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#111}
@@ -505,6 +512,18 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     </div>
   </div>
   <div class="ebd-lista-scroll" id="ebd-det-body"></div>
+</div>
+
+<!-- EBD READER — lição ou apoio inline -->
+<div class="tela" id="tela-ebd-reader">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharReader()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="reader-titulo">LIÇÃO</div>
+      <div class="std-sub" id="reader-sub"></div>
+    </div>
+  </div>
+  <iframe class="reader-frame" id="reader-frame" src="" allowfullscreen></iframe>
 </div>
 
 <!-- EBD PPT VIEWER -->
@@ -1046,27 +1065,49 @@ function abrirLicaoDetalhe(idx){
   const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
   document.getElementById('ebd-det-titulo').textContent=nLabel;
   document.getElementById('ebd-det-sub').textContent=lic.titulo;
+  const n=String(lic.n>0?lic.n:0).padStart(2,'0');
   const itens=[
     {num:'1',icon:'📝',nome:'LIÇÃO',
      ativo:!!lic.licao,
-     acao:lic.licao?`<a class="ebd-btn-dl" href="https://docs.google.com/viewer?url=${encodeURIComponent('https://radar-atual.vercel.app'+lic.licao)}" target="_blank">↓</a>`:`<span class="ebd-em-breve">Em breve</span>`},
+     tap:lic.licao?`abrirReader(${idx},'licao',this)`:null},
     {num:'2',icon:'📊',nome:'PPT',
      ativo:!!lic.ppt,
-     acao:lic.ppt?`<button class="ebd-btn-ppt" onclick="abrirPptViewer(${idx})">▶</button>`:`<span class="ebd-em-breve">Em breve</span>`},
+     tap:null,
+     btn:lic.ppt?`<button class="ebd-btn-ppt" onclick="event.stopPropagation();abrirPptViewer(${idx})">▶</button>`:`<span class="ebd-em-breve">Em breve</span>`},
     {num:'3',icon:'📁',nome:'APOIO',
      ativo:!!lic.apoio,
-     acao:lic.apoio?`<a class="ebd-btn-dl" href="https://docs.google.com/viewer?url=${encodeURIComponent('https://radar-atual.vercel.app'+lic.apoio)}" target="_blank">↓</a>`:`<span class="ebd-em-breve">Em breve</span>`},
+     tap:lic.apoio?`abrirReader(${idx},'apoio',this)`:null},
     {num:'4',icon:'🧠',nome:'MAPA MENTAL',
-     ativo:false,
-     acao:`<span class="ebd-em-breve">Em breve</span>`}
+     ativo:false,tap:null}
   ];
-  document.getElementById('ebd-det-body').innerHTML=itens.map(it=>`
-    <div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}">
+  document.getElementById('ebd-det-body').innerHTML=itens.map(it=>{
+    const tappable=it.ativo&&it.tap;
+    const action=it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`);
+    return `<div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}${tappable?' ppt-item':''}"${tappable?` onclick="${it.tap}"`:''}>
       <div class="ebd-det-num">${it.num}</div>
       <div class="ebd-item-icon">${it.icon}</div>
       <div class="ebd-item-info"><div class="ebd-item-titulo">${it.nome}</div></div>
-      ${it.acao}
-    </div>`).join('');
+      ${action}
+    </div>`;
+  }).join('');
+  ocultarTodas();
+  document.getElementById('tela-ebd-detalhe').classList.add('ativa');
+}
+
+function abrirReader(idx,tipo){
+  const lic=EBD_LICOES[ebdTurmaAtual][idx];
+  const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
+  const tipoLabel=tipo==='licao'?'LIÇÃO':'APOIO';
+  document.getElementById('reader-titulo').textContent=tipoLabel+' — '+nLabel;
+  document.getElementById('reader-sub').textContent=lic.titulo;
+  const n=String(lic.n).padStart(2,'0');
+  document.getElementById('reader-frame').src=`/ebd/${ebdTurmaAtual}/html/${tipo}-${n}.html`;
+  ocultarTodas();
+  document.getElementById('tela-ebd-reader').classList.add('ativa');
+}
+
+function fecharReader(){
+  document.getElementById('reader-frame').src='';
   ocultarTodas();
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
 }
