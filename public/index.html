@@ -1049,13 +1049,13 @@ function abrirLicaoDetalhe(idx){
   const itens=[
     {num:'1',icon:'📝',nome:'LIÇÃO',
      ativo:!!lic.licao,
-     acao:lic.licao?`<a class="ebd-btn-dl" href="${lic.licao}" target="_blank">↓</a>`:`<span class="ebd-em-breve">Em breve</span>`},
+     acao:lic.licao?`<a class="ebd-btn-dl" href="https://docs.google.com/viewer?url=${encodeURIComponent('https://radar-atual.vercel.app'+lic.licao)}" target="_blank">↓</a>`:`<span class="ebd-em-breve">Em breve</span>`},
     {num:'2',icon:'📊',nome:'PPT',
      ativo:!!lic.ppt,
      acao:lic.ppt?`<button class="ebd-btn-ppt" onclick="abrirPptViewer(${idx})">▶</button>`:`<span class="ebd-em-breve">Em breve</span>`},
     {num:'3',icon:'📁',nome:'APOIO',
      ativo:!!lic.apoio,
-     acao:lic.apoio?`<a class="ebd-btn-dl" href="${lic.apoio}" target="_blank">↓</a>`:`<span class="ebd-em-breve">Em breve</span>`},
+     acao:lic.apoio?`<a class="ebd-btn-dl" href="https://docs.google.com/viewer?url=${encodeURIComponent('https://radar-atual.vercel.app'+lic.apoio)}" target="_blank">↓</a>`:`<span class="ebd-em-breve">Em breve</span>`},
     {num:'4',icon:'🧠',nome:'MAPA MENTAL',
      ativo:false,
      acao:`<span class="ebd-em-breve">Em breve</span>`}
