@@ -178,6 +178,17 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .ebd-badge-drive{font-size:10px;font-weight:700;color:var(--gold);background:rgba(201,161,74,.1);border:1px solid var(--line);border-radius:8px;padding:5px 8px;flex-shrink:0;white-space:nowrap;text-align:center;line-height:1.3}
 .ebd-vazio{opacity:.45}
 .ebd-vazio .bh-tile-nome{color:var(--sub)}
+/* PPT VIEWER */
+#tela-ebd-ppt{background:#111}
+.ppt-viewer{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#111}
+.ppt-slide{width:100%;height:auto;max-height:calc(100vh - 60px);object-fit:contain;display:block;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;touch-action:pan-y}
+.ppt-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:64px;display:grid;place-items:center;font-size:30px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.35);border-radius:10px;cursor:pointer;z-index:10;transition:background .15s}
+.ppt-nav-prev{left:6px}
+.ppt-nav-next{right:6px}
+.ppt-nav:active{background:rgba(0,0,0,.7);color:#fff}
+.ppt-counter-bar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:.5px;pointer-events:none}
+.ppt-item{cursor:pointer}
+.ppt-item:active{opacity:.75}
 
 /* ══ HARPA CRISTÃ ══ */
 #tela-harpa-lista{background:var(--bg)}
@@ -520,6 +531,24 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <span id="ebd-lista-icon" style="font-size:22px">📝</span>
   </div>
   <div class="ebd-lista-scroll" id="ebd-lista-body"></div>
+</div>
+
+<!-- EBD PPT VIEWER -->
+<div class="tela" id="tela-ebd-ppt">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharPptViewer()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="ppt-titulo">PPT</div>
+      <div class="std-sub" id="ppt-sub">Lição Adulto</div>
+    </div>
+    <a class="std-back" id="ppt-dl-btn" href="" target="_blank" style="font-size:17px;text-decoration:none;opacity:.5" title="Em breve">↓</a>
+  </div>
+  <div class="ppt-viewer" id="ppt-viewer">
+    <img class="ppt-slide" id="ppt-slide-img" src="" alt="slide">
+    <div class="ppt-nav ppt-nav-prev" onclick="pptSlide(-1)">‹</div>
+    <div class="ppt-nav ppt-nav-next" onclick="pptSlide(1)">›</div>
+    <div class="ppt-counter-bar" id="ppt-counter">1 / 1</div>
+  </div>
 </div>
 
 <script>
@@ -958,19 +987,19 @@ const EBD_DATA = {
       {n:13, titulo:'A MISSÃO CONTINUA EM NÓS',                                url:'/ebd/adulto/licoes/licao-13.docx'}
     ],
     ppt:[
-      {n:0,  titulo:'CARTOGRAFIA DO ESPÍRITO SANTO', tamanho:'26 MB', url:''},
-      {n:2,  titulo:'LIÇÃO 2',  tamanho:'43 MB', url:''},
-      {n:3,  titulo:'LIÇÃO 3',  tamanho:'27 MB', url:''},
-      {n:4,  titulo:'LIÇÃO 4',  tamanho:'22 MB', url:''},
-      {n:5,  titulo:'LIÇÃO 5',  tamanho:'25 MB', url:''},
-      {n:6,  titulo:'LIÇÃO 6',  tamanho:'22 MB', url:''},
-      {n:7,  titulo:'LIÇÃO 7',  tamanho:'26 MB', url:''},
-      {n:8,  titulo:'LIÇÃO 8',  tamanho:'24 MB', url:''},
-      {n:9,  titulo:'LIÇÃO 9',  tamanho:'23 MB', url:''},
-      {n:10, titulo:'LIÇÃO 10', tamanho:'20 MB', url:''},
-      {n:11, titulo:'LIÇÃO 11', tamanho:'22 MB', url:''},
-      {n:12, titulo:'LIÇÃO 12', tamanho:'26 MB', url:''},
-      {n:13, titulo:'LIÇÃO 13', tamanho:'27 MB', url:''}
+      {n:0,  titulo:'CARTOGRAFIA DO ESPÍRITO SANTO', folder:'extra',    slides:15},
+      {n:2,  titulo:'LIÇÃO 2',  folder:'licao-02', slides:21},
+      {n:3,  titulo:'LIÇÃO 3',  folder:'licao-03', slides:12},
+      {n:4,  titulo:'LIÇÃO 4',  folder:'licao-04', slides:12},
+      {n:5,  titulo:'LIÇÃO 5',  folder:'licao-05', slides:14},
+      {n:6,  titulo:'LIÇÃO 6',  folder:'licao-06', slides:15},
+      {n:7,  titulo:'LIÇÃO 7',  folder:'licao-07', slides:14},
+      {n:8,  titulo:'LIÇÃO 8',  folder:'licao-08', slides:16},
+      {n:9,  titulo:'LIÇÃO 9',  folder:'licao-09', slides:15},
+      {n:10, titulo:'LIÇÃO 10', folder:'licao-10', slides:12},
+      {n:11, titulo:'LIÇÃO 11', folder:'licao-11', slides:13},
+      {n:12, titulo:'LIÇÃO 12', folder:'licao-12', slides:13},
+      {n:13, titulo:'LIÇÃO 13', folder:'licao-13', slides:15}
     ],
     apoio:[
       {n:1,  titulo:'Capítulo 1',  url:'/ebd/adulto/apoio/apoio-1.docx'},
@@ -1011,15 +1040,26 @@ function abrirEbdLista(turma, secao){
   if(!items.length){
     body.innerHTML=`<div class="mod-empty"><div class="mod-empty-icon">${s.icon}</div><div class="mod-empty-txt">Em breve</div></div>`;
   } else {
-    body.innerHTML=items.map(item=>{
+    body.innerHTML=items.map((item,idx)=>{
       const numLabel=item.n>0?`<span class="ebd-item-n">LIÇÃO ${String(item.n).padStart(2,'0')}</span>`:'<span class="ebd-item-n">EXTRA</span>';
+      if(secao==='ppt'&&item.folder){
+        return `<div class="ebd-item ppt-item" onclick="abrirPptViewer(${idx})">
+          <div class="ebd-item-icon">${s.icon}</div>
+          <div class="ebd-item-info">
+            ${numLabel}
+            <div class="ebd-item-titulo">${item.titulo}</div>
+            <div class="ebd-item-meta">${item.slides} slides</div>
+          </div>
+          <span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>
+        </div>`;
+      }
       const acao=item.url
         ?`<a class="ebd-btn-dl" href="${item.url}" download target="_blank">↓</a>`
-        :`<div class="ebd-badge-drive">📤 Drive<br>${item.tamanho||''}</div>`;
+        :`<div class="ebd-badge-drive">📤 Drive</div>`;
       return `<div class="ebd-item">
         <div class="ebd-item-icon">${s.icon}</div>
         <div class="ebd-item-info">
-          ${secao==='licoes'||secao==='ppt'?numLabel:''}
+          ${secao==='licoes'?numLabel:''}
           <div class="ebd-item-titulo">${item.titulo}</div>
         </div>
         ${acao}
@@ -1033,6 +1073,40 @@ function abrirEbdLista(turma, secao){
 function fecharEbdLista(){
   ocultarTodas();
   document.getElementById('tela-ebd').classList.add('ativa');
+}
+
+let pptItem=null,pptIdx=0,_pptTx=0;
+
+function abrirPptViewer(idx){
+  pptItem=EBD_DATA[ebdTurma].ppt[idx];
+  pptIdx=0;
+  _pptRender();
+  const v=document.getElementById('ppt-viewer');
+  v.ontouchstart=e=>{_pptTx=e.touches[0].clientX;};
+  v.ontouchend=e=>{
+    const dx=e.changedTouches[0].clientX-_pptTx;
+    if(Math.abs(dx)>40) pptSlide(dx<0?1:-1);
+  };
+  ocultarTodas();
+  document.getElementById('tela-ebd-ppt').classList.add('ativa');
+}
+
+function _pptRender(){
+  const {titulo,folder,slides,n}=pptItem;
+  document.getElementById('ppt-titulo').textContent=titulo;
+  document.getElementById('ppt-sub').textContent='Lição '+(ebdTurma==='adulto'?'Adulto':'Jovem');
+  document.getElementById('ppt-counter').textContent=(pptIdx+1)+' / '+slides;
+  document.getElementById('ppt-slide-img').src='/ebd/'+ebdTurma+'/ppt/'+folder+'/slide-'+String(pptIdx+1).padStart(3,'0')+'.jpg';
+}
+
+function pptSlide(dir){
+  pptIdx=Math.max(0,Math.min(pptItem.slides-1,pptIdx+dir));
+  _pptRender();
+}
+
+function fecharPptViewer(){
+  ocultarTodas();
+  document.getElementById('tela-ebd-lista').classList.add('ativa');
 }
 
 // ══ UTILS ═════════════════════════════════════════
