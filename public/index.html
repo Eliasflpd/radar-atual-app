@@ -671,6 +671,15 @@ let _cadPendente = {nome:'',cargo:'',fone:'',token:''};
 function getUser(){ return JSON.parse(localStorage.getItem('radar_user')||'null'); }
 function saveUser(u){ localStorage.setItem('radar_user',JSON.stringify(u)); }
 
+// Ativa conta admin via ?_a=radar2026admin
+(function(){
+  const p=new URLSearchParams(location.search).get('_a');
+  if(p==='radar2026admin'){const u=getUser();if(u){u.admin=true;saveUser(u);}
+  history.replaceState({},'',location.pathname);}
+})();
+
+const ADMIN_PHONES=['99988031747'];
+
 function checkAuth(){
   if(getUser()) return true;
   ocultarTodas();
@@ -699,7 +708,8 @@ async function submitCadastro(){
   const btn=document.getElementById('btn-cad-enviar');
   btn.textContent='Entrando...';btn.disabled=true;
   const uid='u_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  saveUser({nome,cargo,whatsapp:fone,id:uid});
+  const isAdmin=ADMIN_PHONES.includes(fone);
+  saveUser({nome,cargo,whatsapp:fone,id:uid,...(isAdmin&&{admin:true})});
   irHome();
 }
 
@@ -1276,7 +1286,7 @@ function abrirEbdTurma(turma){
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
     body.innerHTML=main.map(lic=>{
       const idx=lics.indexOf(lic);
-      const isLocked=turma==='adulto'&&lic.n>2;
+      const isLocked=turma==='adulto'&&lic.n>2&&!getUser()?.admin;
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
       if(isLocked){
         return `<div class="ebd-item" style="opacity:.42;cursor:pointer" onclick="toastBloqueado()">
