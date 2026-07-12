@@ -162,6 +162,23 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .bib-spinner{width:36px;height:36px;border:3px solid rgba(201,161,74,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ══ EBD ══ */
+#tela-ebd{background:var(--bg)}
+#tela-ebd-lista{background:var(--bg)}
+.ebd-lista-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 14px 90px}
+.ebd-lista-scroll::-webkit-scrollbar{display:none}
+.ebd-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:8px}
+.ebd-item-icon{font-size:20px;flex-shrink:0;width:36px;text-align:center}
+.ebd-item-info{flex:1;min-width:0}
+.ebd-item-n{font-size:10px;font-weight:900;color:var(--gold);letter-spacing:1px;display:block;margin-bottom:3px}
+.ebd-item-titulo{font-size:13px;font-weight:700;line-height:1.35;color:var(--txt)}
+.ebd-item-meta{font-size:10px;color:var(--sub);margin-top:3px}
+.ebd-btn-dl{background:rgba(52,199,123,.15);border:1px solid rgba(52,199,123,.3);color:#34c77b;width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:17px;text-decoration:none;flex-shrink:0}
+.ebd-btn-dl:active{opacity:.7}
+.ebd-badge-drive{font-size:10px;font-weight:700;color:var(--gold);background:rgba(201,161,74,.1);border:1px solid var(--line);border-radius:8px;padding:5px 8px;flex-shrink:0;white-space:nowrap;text-align:center;line-height:1.3}
+.ebd-vazio{opacity:.45}
+.ebd-vazio .bh-tile-nome{color:var(--sub)}
+
 /* ══ HARPA CRISTÃ ══ */
 #tela-harpa-lista{background:var(--bg)}
 #tela-harpa-hino{background:var(--bg)}
@@ -414,6 +431,97 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   </div>
 </div>
 
+<!-- EBD LANDING -->
+<div class="tela" id="tela-ebd">
+  <div class="std-header">
+    <button class="std-back" onclick="irHome()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">EBD</div>
+      <div class="std-sub">Escola Bíblica Dominical</div>
+    </div>
+    <span style="font-size:22px">🏫</span>
+  </div>
+  <div class="bh-scroll">
+
+    <div class="bh-secao">Lição Adulto</div>
+    <div class="bh-tiles">
+      <div class="bh-tile" style="--tc:#34c77b" onclick="abrirEbdLista('adulto','licoes')">
+        <div class="bh-tile-icon">📝</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">LIÇÕES</div>
+          <div class="bh-tile-desc">13 lições — texto completo</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(52,199,123,.12);color:#34c77b">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile" style="--tc:#f5a623" onclick="abrirEbdLista('adulto','ppt')">
+        <div class="bh-tile-icon">📊</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">PPT</div>
+          <div class="bh-tile-desc">13 apresentações — requer Drive</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(245,166,35,.12);color:#f5a623">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile" style="--tc:#4f8ef7" onclick="abrirEbdLista('adulto','apoio')">
+        <div class="bh-tile-icon">📁</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">APOIO</div>
+          <div class="bh-tile-desc">13 capítulos — material de apoio</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(79,142,247,.12);color:#4f8ef7">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile ebd-vazio" style="--tc:#a78bfa" onclick="abrirEbdLista('adulto','mapa')">
+        <div class="bh-tile-icon">🧠</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">MAPA MENTAL</div>
+          <div class="bh-tile-desc">Em breve</div>
+        </div>
+        <span class="bh-tile-arr">›</span>
+      </div>
+    </div>
+
+    <div class="bh-secao">Lição Jovem</div>
+    <div class="bh-tiles">
+      <div class="bh-tile ebd-vazio" style="--tc:#34c77b" onclick="abrirEbdLista('jovem','licoes')">
+        <div class="bh-tile-icon">📝</div>
+        <div class="bh-tile-info"><div class="bh-tile-nome">LIÇÕES</div><div class="bh-tile-desc">Em breve</div></div>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile ebd-vazio" style="--tc:#f5a623" onclick="abrirEbdLista('jovem','ppt')">
+        <div class="bh-tile-icon">📊</div>
+        <div class="bh-tile-info"><div class="bh-tile-nome">PPT</div><div class="bh-tile-desc">Em breve</div></div>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile ebd-vazio" style="--tc:#4f8ef7" onclick="abrirEbdLista('jovem','apoio')">
+        <div class="bh-tile-icon">📁</div>
+        <div class="bh-tile-info"><div class="bh-tile-nome">APOIO</div><div class="bh-tile-desc">Em breve</div></div>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile ebd-vazio" style="--tc:#a78bfa" onclick="abrirEbdLista('jovem','mapa')">
+        <div class="bh-tile-icon">🧠</div>
+        <div class="bh-tile-info"><div class="bh-tile-nome">MAPA MENTAL</div><div class="bh-tile-desc">Em breve</div></div>
+        <span class="bh-tile-arr">›</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EBD LISTA -->
+<div class="tela" id="tela-ebd-lista">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharEbdLista()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="ebd-lista-titulo">LIÇÕES</div>
+      <div class="std-sub" id="ebd-lista-sub">Adulto</div>
+    </div>
+    <span id="ebd-lista-icon" style="font-size:22px">📝</span>
+  </div>
+  <div class="ebd-lista-scroll" id="ebd-lista-body"></div>
+</div>
+
 <script>
 // ══ MÓDULOS ═══════════════════════════════════════
 const MODS = [
@@ -481,6 +589,10 @@ function abrirMod(id){
   ocultarTodas();
   if(id==='biblia'){
     document.getElementById('tela-bh-landing').classList.add('ativa');
+    return;
+  }
+  if(id==='ebd'){
+    document.getElementById('tela-ebd').classList.add('ativa');
     return;
   }
   modAtual=id;
@@ -816,6 +928,111 @@ function hinoAnterior(){
 }
 function hinoProximo(){
   if(harpaHinoIdx<harpaData.length-1){harpaHinoIdx++;renderHino(harpaHinoIdx);document.getElementById('harpa-hino-scroll').scrollTop=0;}
+}
+
+// ══════════════════════════════════════════════════
+// ══ EBD ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+const EBD_SECOES = {
+  licoes:{nome:'LIÇÕES',    icon:'📝', cor:'#34c77b'},
+  ppt:   {nome:'PPT',       icon:'📊', cor:'#f5a623'},
+  apoio: {nome:'APOIO',     icon:'📁', cor:'#4f8ef7'},
+  mapa:  {nome:'MAPA MENTAL',icon:'🧠',cor:'#a78bfa'}
+};
+
+const EBD_DATA = {
+  adulto:{
+    licoes:[
+      {n:1,  titulo:'O CHAMADO PARA OS GENTIOS',                               url:'/ebd/adulto/licoes/licao-1.docx'},
+      {n:2,  titulo:'A PORTA DA FÉ SE ABRE ENTRE OS GENTIOS',                  url:'/ebd/adulto/licoes/licao-2.docx'},
+      {n:3,  titulo:'A GRAÇA QUE ALCANÇA TODAS AS NAÇÕES',                     url:'/ebd/adulto/licoes/licao-3.docx'},
+      {n:4,  titulo:'O ESPÍRITO QUE NOS GUIA PARA ALÉM DAS FRONTEIRAS',        url:'/ebd/adulto/licoes/licao-4.docx'},
+      {n:5,  titulo:'CRISTO ENTRE OS FILÓSOFOS — O DEUS DESCONHECIDO SE REVELA',url:'/ebd/adulto/licoes/licao-5.docx'},
+      {n:6,  titulo:'A SUFICIÊNCIA DA GRAÇA NA CIDADE DE CORINTO',              url:'/ebd/adulto/licoes/licao-6.docx'},
+      {n:7,  titulo:'QUANDO O ESPÍRITO SOPRA EM ÉFESO',                        url:'/ebd/adulto/licoes/licao-7.docx'},
+      {n:8,  titulo:'DESPEDIDA EM ÉFESO ENTRE LÁGRIMAS E ALERTAS',             url:'/ebd/adulto/licoes/licao-8.docx'},
+      {n:9,  titulo:'CORAGEM PARA TESTEMUNHAR — PAULO DIANTE DA MULTIDÃO',     url:'/ebd/adulto/licoes/licao-9.docx'},
+      {n:10, titulo:'UMA ESPERANÇA INABALÁVEL PERANTE OS PODEROSOS',            url:'/ebd/adulto/licoes/licao-10.docx'},
+      {n:11, titulo:'ENTRE TEMPESTADES E PROMESSAS',                            url:'/ebd/adulto/licoes/licao-11.docx'},
+      {n:12, titulo:'O EVANGELHO CHEGA AO CORAÇÃO DO IMPÉRIO',                 url:'/ebd/adulto/licoes/licao-12.docx'},
+      {n:13, titulo:'A MISSÃO CONTINUA EM NÓS',                                url:'/ebd/adulto/licoes/licao-13.docx'}
+    ],
+    ppt:[
+      {n:0,  titulo:'CARTOGRAFIA DO ESPÍRITO SANTO', tamanho:'26 MB', url:''},
+      {n:2,  titulo:'LIÇÃO 2',  tamanho:'43 MB', url:''},
+      {n:3,  titulo:'LIÇÃO 3',  tamanho:'27 MB', url:''},
+      {n:4,  titulo:'LIÇÃO 4',  tamanho:'22 MB', url:''},
+      {n:5,  titulo:'LIÇÃO 5',  tamanho:'25 MB', url:''},
+      {n:6,  titulo:'LIÇÃO 6',  tamanho:'22 MB', url:''},
+      {n:7,  titulo:'LIÇÃO 7',  tamanho:'26 MB', url:''},
+      {n:8,  titulo:'LIÇÃO 8',  tamanho:'24 MB', url:''},
+      {n:9,  titulo:'LIÇÃO 9',  tamanho:'23 MB', url:''},
+      {n:10, titulo:'LIÇÃO 10', tamanho:'20 MB', url:''},
+      {n:11, titulo:'LIÇÃO 11', tamanho:'22 MB', url:''},
+      {n:12, titulo:'LIÇÃO 12', tamanho:'26 MB', url:''},
+      {n:13, titulo:'LIÇÃO 13', tamanho:'27 MB', url:''}
+    ],
+    apoio:[
+      {n:1,  titulo:'Capítulo 1',  url:'/ebd/adulto/apoio/apoio-1.docx'},
+      {n:2,  titulo:'Capítulo 2',  url:'/ebd/adulto/apoio/apoio-2.docx'},
+      {n:3,  titulo:'Capítulo 3',  url:'/ebd/adulto/apoio/apoio-3.docx'},
+      {n:4,  titulo:'Capítulo 4',  url:'/ebd/adulto/apoio/apoio-4.docx'},
+      {n:5,  titulo:'Capítulo 5',  url:'/ebd/adulto/apoio/apoio-5.docx'},
+      {n:6,  titulo:'Capítulo 6',  url:'/ebd/adulto/apoio/apoio-6.docx'},
+      {n:7,  titulo:'Capítulo 7',  url:'/ebd/adulto/apoio/apoio-7.docx'},
+      {n:8,  titulo:'Capítulo 8',  url:'/ebd/adulto/apoio/apoio-8.docx'},
+      {n:9,  titulo:'Capítulo 9',  url:'/ebd/adulto/apoio/apoio-9.docx'},
+      {n:10, titulo:'Capítulo 10', url:'/ebd/adulto/apoio/apoio-10.docx'},
+      {n:11, titulo:'Capítulo 11', url:'/ebd/adulto/apoio/apoio-11.docx'},
+      {n:12, titulo:'Capítulo 12', url:'/ebd/adulto/apoio/apoio-12.docx'},
+      {n:13, titulo:'Capítulo 13', url:'/ebd/adulto/apoio/apoio-13.docx'}
+    ],
+    mapa:[]
+  },
+  jovem:{licoes:[], ppt:[], apoio:[], mapa:[]}
+};
+
+let ebdTurma='adulto', ebdSecao='licoes';
+
+function abrirEbd(){
+  ocultarTodas();
+  document.getElementById('tela-ebd').classList.add('ativa');
+}
+
+function abrirEbdLista(turma, secao){
+  ebdTurma=turma; ebdSecao=secao;
+  const s=EBD_SECOES[secao];
+  const label=turma==='adulto'?'Adulto':'Jovem';
+  document.getElementById('ebd-lista-titulo').textContent=s.nome;
+  document.getElementById('ebd-lista-sub').textContent='Lição '+label;
+  document.getElementById('ebd-lista-icon').textContent=s.icon;
+  const items=EBD_DATA[turma][secao];
+  const body=document.getElementById('ebd-lista-body');
+  if(!items.length){
+    body.innerHTML=`<div class="mod-empty"><div class="mod-empty-icon">${s.icon}</div><div class="mod-empty-txt">Em breve</div></div>`;
+  } else {
+    body.innerHTML=items.map(item=>{
+      const numLabel=item.n>0?`<span class="ebd-item-n">LIÇÃO ${String(item.n).padStart(2,'0')}</span>`:'<span class="ebd-item-n">EXTRA</span>';
+      const acao=item.url
+        ?`<a class="ebd-btn-dl" href="${item.url}" download target="_blank">↓</a>`
+        :`<div class="ebd-badge-drive">📤 Drive<br>${item.tamanho||''}</div>`;
+      return `<div class="ebd-item">
+        <div class="ebd-item-icon">${s.icon}</div>
+        <div class="ebd-item-info">
+          ${secao==='licoes'||secao==='ppt'?numLabel:''}
+          <div class="ebd-item-titulo">${item.titulo}</div>
+        </div>
+        ${acao}
+      </div>`;
+    }).join('');
+  }
+  ocultarTodas();
+  document.getElementById('tela-ebd-lista').classList.add('ativa');
+}
+
+function fecharEbdLista(){
+  ocultarTodas();
+  document.getElementById('tela-ebd').classList.add('ativa');
 }
 
 // ══ UTILS ═════════════════════════════════════════
