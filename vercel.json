@@ -9,5 +9,9 @@
       "source": "/index.html",
       "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
     }
+  ],
+  "crons": [
+    { "path": "/api/noticias?cron=1", "schedule": "0 11 * * *" },
+    { "path": "/api/noticias?cron=1", "schedule": "0 23 * * *" }
   ]
 }

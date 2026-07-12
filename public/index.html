@@ -203,6 +203,44 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .ppt-item{cursor:pointer}
 .ppt-item:active{opacity:.75}
 
+/* ══ NOTÍCIAS DE ISRAEL ══ */
+#tela-noticias{background:var(--bg)}
+.not-tabs{display:flex;gap:8px;padding:10px 14px 0;flex-shrink:0}
+.not-tab{flex:1;padding:9px 0;text-align:center;font-size:12px;font-weight:800;letter-spacing:.5px;border:none;background:var(--card);color:var(--sub);cursor:pointer;border-radius:10px 10px 0 0;transition:all .2s;font-family:inherit}
+.not-tab.on{background:rgba(79,142,247,.14);color:#4f8ef7;border-bottom:2px solid #4f8ef7}
+.not-list{flex:1;overflow-y:auto;padding:8px 14px 90px;-webkit-overflow-scrolling:touch}
+.not-list::-webkit-scrollbar{display:none}
+.not-loading{display:flex;align-items:center;justify-content:center;flex:1;flex-direction:column;gap:14px;color:var(--sub);padding:40px 0}
+.not-spin{width:32px;height:32px;border:3px solid rgba(79,142,247,.2);border-top-color:#4f8ef7;border-radius:50%;animation:spin .8s linear infinite}
+.not-card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:12px;cursor:pointer}
+.not-card:active{border-color:#4f8ef7;background:var(--card2)}
+.not-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#0a1020}
+.not-img-ph{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#0a1020 0%,#0f1830 60%,#0a1020 100%);display:flex;align-items:center;justify-content:center;font-size:36px}
+.not-body{padding:12px 13px 13px}
+.not-badge{display:inline-block;font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;border-radius:5px;padding:2px 7px;margin-bottom:8px}
+.not-titulo{font-size:15px;font-weight:800;line-height:1.35;margin-bottom:6px;color:var(--txt)}
+.not-ancora{font-size:11px;color:var(--gold);opacity:.8}
+.not-fonte{font-size:10px;color:var(--sub);margin-top:4px}
+#tela-noticia-leitor{background:var(--bg)}
+.not-leitor-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;flex-shrink:0}
+.not-leitor-body{flex:1;overflow-y:auto;padding:18px 16px 90px;-webkit-overflow-scrolling:touch}
+.not-leitor-body::-webkit-scrollbar{display:none}
+.not-ancora-block{background:rgba(201,161,74,.08);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:16px}
+.not-ancora-label{font-size:9px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:4px}
+.not-ancora-val{font-size:14px;color:var(--gold);font-style:italic;line-height:1.4}
+.not-resumo{font-size:15px;line-height:1.8;color:rgba(255,255,255,.85);margin-bottom:20px}
+.not-btn-link{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--sub);font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;margin-bottom:8px;width:100%;box-sizing:border-box}
+.not-btn-link:active{border-color:#4f8ef7;color:#4f8ef7}
+#tela-yt-player{background:#000}
+.yt-frame-wrap{flex:1;position:relative;background:#000;display:flex;align-items:center}
+.yt-frame{width:100%;height:100%;border:none;display:block}
+.not-video-card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px}
+.not-video-card:active{border-color:#f75f5f;background:var(--card2)}
+.not-video-thumb{width:100px;height:58px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#0a1020}
+.not-video-info{flex:1;min-width:0}
+.not-video-titulo{font-size:13px;font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.not-video-canal{font-size:10px;color:var(--sub);margin-top:3px}
+
 /* ══ CADASTRO / OTP ══ */
 #tela-cadastro,#tela-otp{background:var(--bg)}
 .cad-wrap{flex:1;overflow-y:auto;padding:32px 22px 48px;-webkit-overflow-scrolling:touch}
@@ -588,6 +626,67 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   </div>
 </div>
 
+<!-- NOTÍCIAS DE ISRAEL -->
+<div class="tela" id="tela-noticias">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharNoticias()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">📰 Notícias de Israel</div>
+      <div class="std-sub" id="not-sub">Mundo Bíblico em tempo real</div>
+    </div>
+    <button onclick="carregarNoticias(true)" style="background:rgba(255,255,255,.07);border:none;color:var(--sub);width:34px;height:34px;border-radius:10px;font-size:17px;display:grid;place-items:center;cursor:pointer">↺</button>
+  </div>
+  <div class="not-tabs">
+    <button class="not-tab on" id="not-tab-news" onclick="mudarAba('news')">📰 Notícias</button>
+    <button class="not-tab" id="not-tab-videos" onclick="mudarAba('videos')">▶️ Vídeos</button>
+  </div>
+  <div class="not-list" id="not-list"></div>
+</div>
+
+<!-- LEITOR DE NOTÍCIA -->
+<div class="tela" id="tela-noticia-leitor">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharLeitor()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="leitor-titulo-h">Notícia</div>
+      <div class="std-sub" id="leitor-fonte-h"></div>
+    </div>
+  </div>
+  <img class="not-leitor-img" id="leitor-img" src="" alt="" style="display:none">
+  <div class="not-leitor-body">
+    <span class="not-badge" id="leitor-badge" style="display:none;margin-bottom:10px"></span>
+    <div style="font-size:18px;font-weight:900;line-height:1.35;margin-bottom:8px" id="leitor-titulo"></div>
+    <div style="font-size:11px;color:var(--sub);margin-bottom:14px" id="leitor-meta"></div>
+    <div class="not-ancora-block" id="leitor-ancora-block" style="display:none">
+      <span class="not-ancora-label">📖 Âncora Bíblica</span>
+      <div class="not-ancora-val" id="leitor-ancora"></div>
+    </div>
+    <div class="not-resumo" id="leitor-resumo"></div>
+    <a class="not-btn-link" id="leitor-link" href="#" target="_blank">
+      <span>🔗</span><span>Ver notícia original</span>
+    </a>
+    <button class="not-btn-link" id="leitor-yt-btn" style="display:none;background:rgba(247,95,95,.1);border-color:rgba(247,95,95,.3);border:1px solid rgba(247,95,95,.3)">
+      <span>▶️</span><span style="color:#f75f5f">Ver vídeo relacionado</span>
+    </button>
+  </div>
+</div>
+
+<!-- PLAYER YOUTUBE IN-APP -->
+<div class="tela" id="tela-yt-player">
+  <div class="std-header" style="background:#111;border-color:#222">
+    <button class="std-back" onclick="fecharYT()" style="background:rgba(255,255,255,.1)">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="yt-titulo-h">Vídeo</div>
+      <div class="std-sub" id="yt-canal-h"></div>
+    </div>
+  </div>
+  <div class="yt-frame-wrap">
+    <iframe class="yt-frame" id="yt-iframe" src=""
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen></iframe>
+  </div>
+</div>
+
 <!-- CADASTRO -->
 <div class="tela" id="tela-cadastro">
   <div class="cad-wrap">
@@ -860,6 +959,10 @@ function abrirMod(id){
   }
   if(id==='ebd'){
     document.getElementById('tela-ebd').classList.add('ativa');
+    return;
+  }
+  if(id==='israel'){
+    abrirNoticias();
     return;
   }
   modAtual=id;
@@ -1455,6 +1558,127 @@ function fecharVideo(){
   v.src='';
   ocultarTodas();
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
+}
+
+// ══ NOTÍCIAS DE ISRAEL ════════════════════════════
+const NOT_CORES={Profecia:'#f5a623',Arqueologia:'#a78bfa',Política:'#4f8ef7','Povo Judeu':'#34c77b',Conflito:'#f75f5f',Sociedade:'#38bdf8'};
+let _notCache=null,_notAba='news',_notIdx=0,_notItens=[],_notYtId=null;
+
+function abrirNoticias(){
+  ocultarTodas();
+  document.getElementById('tela-noticias').classList.add('ativa');
+  if(!_notCache) carregarNoticias(false);
+  else renderNotAba();
+}
+function fecharNoticias(){
+  ocultarTodas();
+  document.getElementById('home').classList.add('ativa');
+  renderHome();
+}
+function mudarAba(aba){
+  _notAba=aba;
+  document.getElementById('not-tab-news').classList.toggle('on',aba==='news');
+  document.getElementById('not-tab-videos').classList.toggle('on',aba==='videos');
+  renderNotAba();
+}
+async function carregarNoticias(force){
+  const list=document.getElementById('not-list');
+  list.innerHTML=`<div class="not-loading"><div class="not-spin"></div><div style="font-size:13px">Carregando notícias...</div></div>`;
+  try{
+    const url='/api/noticias'+(force?'?_t='+Date.now():'');
+    const res=await fetch(url,{cache:force?'no-store':'default'});
+    const data=await res.json();
+    if(!data.ok) throw new Error(data.error||'Erro');
+    _notCache=data;
+    _notItens=data.items||[];
+    const ts=data.ts?new Date(data.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+    document.getElementById('not-sub').textContent=_notItens.length+' notícias'+(ts?' · '+ts:'');
+    renderNotAba();
+  }catch(e){
+    list.innerHTML=`<div class="not-loading"><div style="font-size:36px">📡</div><div style="font-size:13px;text-align:center">Sem conexão.<br>Verifique a internet.</div><button onclick="carregarNoticias(true)" style="margin-top:12px;padding:10px 24px;background:#4f8ef7;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Tentar novamente</button></div>`;
+  }
+}
+function renderNotAba(){
+  const list=document.getElementById('not-list');
+  if(_notAba==='news'){
+    if(!_notItens.length){list.innerHTML='<div class="not-loading"><div style="font-size:36px">📰</div><div style="font-size:13px">Nenhuma notícia ainda.</div></div>';return;}
+    list.innerHTML=_notItens.map((n,i)=>{
+      const cor=NOT_CORES[n.categoria]||'#C9A14A';
+      const imgHtml=n.img
+        ?`<img class="not-img" src="${n.img}" alt="" loading="lazy" onerror="this.parentElement.querySelector('.not-img-ph').style.display='flex';this.remove()">`+
+         `<div class="not-img-ph" style="display:none">🌍</div>`
+        :`<div class="not-img-ph">🌍</div>`;
+      return`<div class="not-card" onclick="abrirLeitor(${i})">
+        ${imgHtml}
+        <div class="not-body">
+          ${n.categoria?`<span class="not-badge" style="background:${cor}22;color:${cor}">${n.categoria}</span>`:''}
+          <div class="not-titulo">${_esc(n.titulo_pt||n.title)}</div>
+          ${n.ancora?`<div class="not-ancora">📖 ${_esc(n.ancora)}</div>`:''}
+          <div class="not-fonte">${_esc(n.fonte||'')}${n.ytId?' · ▶️ tem vídeo':''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    const vids=_notItens.filter(n=>n.ytId);
+    if(!vids.length){list.innerHTML=`<div class="not-loading"><div style="font-size:36px">▶️</div><div style="font-size:13px;text-align:center">Os vídeos aparecem<br>quando as notícias chegam.</div></div>`;return;}
+    list.innerHTML=vids.map(v=>{
+      const thumb=`https://img.youtube.com/vi/${v.ytId}/hqdefault.jpg`;
+      const titulo=v.titulo_pt||v.title;
+      return`<div class="not-video-card" onclick="abrirYT('${v.ytId}','${titulo.replace(/'/g,"\\'").replace(/"/g,'\\"')}','${(v.fonte||'').replace(/'/g,"\\'")}')">
+        <img class="not-video-thumb" src="${thumb}" alt="" onerror="this.style.display='none'" loading="lazy">
+        <div class="not-video-info">
+          <div class="not-video-titulo">${_esc(titulo)}</div>
+          <div class="not-video-canal">${_esc(v.fonte||'Israel News')}</div>
+        </div>
+        <span style="font-size:22px;flex-shrink:0;color:#f75f5f;opacity:.8">▶</span>
+      </div>`;
+    }).join('');
+  }
+}
+function _esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function abrirLeitor(idx){
+  _notIdx=idx;
+  const n=_notItens[idx];
+  if(!n) return;
+  const cor=NOT_CORES[n.categoria]||'#C9A14A';
+  document.getElementById('leitor-titulo-h').textContent=n.titulo_pt||n.title;
+  document.getElementById('leitor-fonte-h').textContent=n.fonte||'';
+  const img=document.getElementById('leitor-img');
+  if(n.img){img.src=n.img;img.style.display='block';img.onerror=()=>img.style.display='none';}
+  else img.style.display='none';
+  const badge=document.getElementById('leitor-badge');
+  if(n.categoria){badge.textContent=n.categoria;badge.style.cssText=`display:inline-block;margin-bottom:10px;font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;border-radius:5px;padding:2px 7px;background:${cor}22;color:${cor}`;}
+  else badge.style.display='none';
+  document.getElementById('leitor-titulo').textContent=n.titulo_pt||n.title;
+  let metaParts=[n.fonte||''];
+  if(n.pubDate){try{metaParts.push(new Date(n.pubDate).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}));}catch{}}
+  document.getElementById('leitor-meta').textContent=metaParts.filter(Boolean).join(' · ');
+  if(n.ancora){document.getElementById('leitor-ancora-block').style.display='block';document.getElementById('leitor-ancora').textContent=n.ancora;}
+  else document.getElementById('leitor-ancora-block').style.display='none';
+  document.getElementById('leitor-resumo').textContent=n.resumo_pt||n.description||n.title||'';
+  document.getElementById('leitor-link').href=n.link||'#';
+  const ytBtn=document.getElementById('leitor-yt-btn');
+  _notYtId=n.ytId||null;
+  if(n.ytId){ytBtn.style.display='flex';ytBtn.onclick=()=>abrirYT(n.ytId,n.titulo_pt||n.title,n.fonte||'');}
+  else ytBtn.style.display='none';
+  ocultarTodas();
+  document.getElementById('tela-noticia-leitor').classList.add('ativa');
+}
+function fecharLeitor(){
+  ocultarTodas();
+  document.getElementById('tela-noticias').classList.add('ativa');
+}
+function abrirYT(videoId,titulo,canal){
+  document.getElementById('yt-titulo-h').textContent=titulo||'Vídeo';
+  document.getElementById('yt-canal-h').textContent=canal||'';
+  document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0&modestbranding=1';
+  ocultarTodas();
+  document.getElementById('tela-yt-player').classList.add('ativa');
+}
+function fecharYT(){
+  document.getElementById('yt-iframe').src='';
+  ocultarTodas();
+  document.getElementById('tela-noticias').classList.add('ativa');
 }
 
 // ══ UTILS ═════════════════════════════════════════
