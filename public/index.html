@@ -1625,21 +1625,15 @@ function renderNotAba(){
     }).join('');
   } else {
     const CANAIS=[
-      {nome:'i24 NEWS — Israel ao Vivo',canal:'i24NEWS',emoji:'📡',cor:'#4f8ef7',ytId:'L5wq-5x3d4Y'},
-      {nome:'Israel Hoje — Profecia Bíblica',canal:'Profecia',emoji:'📖',cor:'#f5a623',ytId:'bfXYlGbJ3iE'},
-      {nome:'Jerusalem Post — Notícias',canal:'Jerusalem Post',emoji:'🗞️',cor:'#34c77b',ytId:'iZzRY5P2kpM'},
-      {nome:'Descobertas Arqueológicas',canal:'Arqueologia',emoji:'🏺',cor:'#a78bfa',ytId:'_hn5xpPhsMI'},
+      {nome:'i24 NEWS — Israel ao Vivo',canal:'i24NEWS',emoji:'📡',cor:'#4f8ef7',ytUrl:'https://www.youtube.com/@i24NEWS/live'},
+      {nome:'Israel em Profecia Bíblica',canal:'Profecia',emoji:'📖',cor:'#f5a623',ytUrl:'https://www.youtube.com/results?search_query=israel+profecia+biblica+hoje'},
+      {nome:'Jerusalem Post — Notícias',canal:'Jerusalem Post',emoji:'🗞️',cor:'#34c77b',ytUrl:'https://www.youtube.com/@JerusalemPost'},
+      {nome:'Descobertas Arqueológicas',canal:'Arqueologia',emoji:'🏺',cor:'#a78bfa',ytUrl:'https://www.youtube.com/results?search_query=arqueologia+biblica+israel+descoberta'},
     ];
-    const vidsFromNews=_notItens.filter(n=>n.ytId);
-    const allVids=[...vidsFromNews.map(v=>({nome:v.titulo_pt||v.title,canal:v.fonte||'Israel News',emoji:v.emoji||'🌍',cor:'#4f8ef7',ytId:v.ytId})),...CANAIS];
     list.innerHTML=`<div style="font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.6;padding:6px 2px 8px">Canais Recomendados</div>`+
-    allVids.map(v=>{
-      const thumb=`https://img.youtube.com/vi/${v.ytId}/hqdefault.jpg`;
-      return`<div class="not-video-card" onclick="abrirYT('${v.ytId}','${v.nome.replace(/'/g,"\\'").replace(/"/g,'\\"')}','${v.canal.replace(/'/g,"\\'")}')">
-        <div style="position:relative;width:100px;height:58px;flex-shrink:0">
-          <img class="not-video-thumb" src="${thumb}" alt="" style="position:absolute;inset:0" onerror="this.style.display='none'" loading="lazy">
-          <div style="position:absolute;inset:0;background:${v.cor}22;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px">${v.emoji}</div>
-        </div>
+    CANAIS.map(v=>{
+      return`<div class="not-video-card" onclick="window.open('${v.ytUrl}','_blank')">
+        <div style="width:100px;height:58px;flex-shrink:0;background:${v.cor}22;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px">${v.emoji}</div>
         <div class="not-video-info">
           <div class="not-video-titulo">${_esc(v.nome)}</div>
           <div class="not-video-canal">${_esc(v.canal)}</div>
