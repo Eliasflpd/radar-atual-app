@@ -1276,7 +1276,7 @@ const EBD_LICOES = {
   ]
 };
 
-let ebdTurmaAtual='adulto', pptLicao=null, pptIdx=0, _pptTx=0;
+let ebdTurmaAtual='adulto', ebdDetalheIdx=0, pptLicao=null, pptIdx=0, _pptTx=0;
 
 function abrirEbd(){
   ocultarTodas();
@@ -1344,6 +1344,7 @@ function fecharEbdTurma(){
 }
 
 function abrirLicaoDetalhe(idx){
+  ebdDetalheIdx=idx;
   const lic=EBD_LICOES[ebdTurmaAtual][idx];
   const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
   document.getElementById('ebd-det-titulo').textContent=nLabel;
@@ -1367,7 +1368,7 @@ function abrirLicaoDetalhe(idx){
      tap:lic.n>0 && ebdTurmaAtual==='adulto'?`abrirReader(${idx},'subsidio')`:null},
     {num:'6',icon:'🎬',nome:'RESUMO EM VÍDEO',
      ativo:!!lic.video,
-     tap:lic.video?`abrirVideo('${lic.video||''}',${JSON.stringify(lic.titulo)})`:null}
+     tap:lic.video?`abrirVideo('${lic.video||''}')`:null}
   ];
   document.getElementById('ebd-det-body').innerHTML=itens.map(it=>{
     const tappable=it.ativo&&it.tap;
@@ -1438,9 +1439,10 @@ function fecharPptViewer(){
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
 }
 
-function abrirVideo(url,titulo){
+function abrirVideo(url){
   if(!url) return;
-  document.getElementById('video-sub').textContent=titulo||'';
+  const lic=EBD_LICOES[ebdTurmaAtual][ebdDetalheIdx];
+  document.getElementById('video-sub').textContent=lic?lic.titulo:'';
   const v=document.getElementById('ebd-video');
   v.src=url;
   ocultarTodas();
