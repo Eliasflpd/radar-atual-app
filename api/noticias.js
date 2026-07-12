@@ -32,11 +32,11 @@ export default async function handler(req) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (apiKey) {
     const titles = arts.map((a,i) => (i+1)+'. '+a.title).join(' | ');
-    const prompt = 'PT-BR + versículo bíblico. Responda SOMENTE JSON array com ' + arts.length + ' objetos: {"t":"título PT","a":"Livro cap:v","c":"Categoria","e":"emoji"} Categorias: Profecia|Arqueologia|Política|Povo Judeu|Conflito|Sociedade. Títulos: ' + titles;
+    const prompt = 'Traduza cada título para PORTUGUÊS DO BRASIL e adicione versículo bíblico relacionado. Retorne SOMENTE um JSON array com ' + arts.length + ' objetos no formato: [{"t":"TITULO EM PORTUGUES","a":"Livro cap:v","c":"Categoria","e":"emoji"},...] Categorias válidas: Profecia|Arqueologia|Política|Povo Judeu|Conflito|Sociedade. IMPORTANTE: campo "t" deve ser o título TRADUZIDO para português, NÃO o original em inglês. Títulos: ' + titles;
     try {
       const r = await fetch('https://api.openai.com/v1/chat/completions', {
         method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+apiKey},
-        body: JSON.stringify({ model:'gpt-4o-mini', messages:[{role:'user',content:prompt}], max_tokens:600, temperature:0.1 }),
+        body: JSON.stringify({ model:'gpt-4o-mini', messages:[{role:'user',content:prompt}], max_tokens:800, temperature:0.1 }),
         signal: AbortSignal.timeout(7000),
       });
       const d = await r.json();
