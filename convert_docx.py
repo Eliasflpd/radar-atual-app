@@ -31,11 +31,11 @@ li{margin-bottom:8px;text-align:justify}
 /* Referência bíblica */
 .bible-ref{text-align:center;font-weight:900;color:#1d3a8a;margin:0 0 14px;font-size:14px}
 
-/* Versículos empilhados */
+/* Versículos — número inline como superscript */
 .bible-passage{margin-bottom:18px}
-.verso{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
-.verso-num{font-weight:900;color:#c9a14a;font-size:12px;min-width:24px;text-align:right;padding-top:3px;flex-shrink:0;line-height:1.5}
-.verso-txt{flex:1;text-align:justify}
+.verso{margin-bottom:10px;text-align:justify}
+.verso-num{font-weight:900;color:#c9a14a;font-size:10px;vertical-align:super;line-height:0;margin-right:2px}
+.verso-txt{}
 
 /* Cabeçalho de capítulo romano */
 .roman-head{font-weight:900;color:#1d3a8a;font-size:15px;margin:26px 0 6px;padding:10px 12px;background:#f0f4ff;border-left:4px solid #1d3a8a;border-radius:0 6px 6px 0;text-align:left}
@@ -73,10 +73,10 @@ def post_process(body):
         while i < len(parts):
             num = parts[i]
             txt = parts[i+1].strip() if i+1 < len(parts) else ''
-            out += (f'\n<div class="verso">'
+            out += (f'\n<p class="verso">'
                     f'<span class="verso-num">{num}</span>'
-                    f'<span class="verso-txt">{txt}</span>'
-                    f'</div>')
+                    f'{txt}'
+                    f'</p>')
             i += 2
         return out + '\n</div>'
 

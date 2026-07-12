@@ -25,11 +25,11 @@ li{margin-bottom:8px;text-align:justify}
 /* Referência bíblica */
 .bible-ref{text-align:center;font-weight:900;color:#1d3a8a;margin:0 0 14px;font-size:14px}
 
-/* Versículos empilhados */
+/* Versículos — número inline como superscript */
 .bible-passage{margin-bottom:18px}
-.verso{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
-.verso-num{font-weight:900;color:#c9a14a;font-size:12px;min-width:24px;text-align:right;padding-top:3px;flex-shrink:0;line-height:1.5}
-.verso-txt{flex:1;text-align:justify}
+.verso{margin-bottom:10px;text-align:justify}
+.verso-num{font-weight:900;color:#c9a14a;font-size:10px;vertical-align:super;line-height:0;margin-right:2px}
+.verso-txt{}
 
 /* Cabeçalho de capítulo romano */
 .roman-head{font-weight:900;color:#1d3a8a;font-size:15px;margin:26px 0 6px;padding:10px 12px;background:#f0f4ff;border-left:4px solid #1d3a8a;border-radius:0 6px 6px 0;text-align:left}
@@ -44,17 +44,17 @@ li{margin-bottom:8px;text-align:justify}
 <p class="data">19 de Julho de 2026</p><div class="box-aureo"><span class="lbl">Texto Áureo</span>“Porque pela graça sois salvos, por meio da fé; e isso não vem de vós; é dom de Deus.” (Ef 2.8)</div><div class="box-pratica"><span class="lbl">Verdade Prática</span>É pela graça que somos alcançados, perdoados e reconciliados com Deus.,</div><p class="sec-head">LEITURA DIÁRIA</p><ul><li><strong>Segunda - At 15.11:</strong> A salvação é afirmada como obra exclusiva da graça do Senhor Jesus</li><li><strong>Terça - At 10.44-48:</strong> Deus não faz distinção entre pessoas</li><li><strong>Quarta - Ef 2.8,9:</strong> A salvação é um dom gratuito de Deus</li><li><strong>Quinta - Tt 2.11,12:</strong> A graça de Deus se manifestou trazendo salvação a todos</li><li><strong>Sexta - Hb 4.16:</strong> O trono da graça está aberto para o crente</li><li><strong>Sábado - 2 Pe 3.18:</strong> Crescendo em graça e conhecimento de Jesus Cristo</li></ul><p class="sec-head"><strong>LEITURA BÍBLICA EM CLASSE</strong></p>
 <p class="bible-ref"><strong>Atos 15.1-5, 28,29, 36-39</strong></p>
 <div class="bible-passage">
-<div class="verso"><span class="verso-num">1</span><span class="verso-txt">Então, alguns que tinham descido da Judeia ensinavam assim os irmãos: Se vos não circuncidardes, conforme o uso de Moisés, não podeis salvar-vos.</span></div>
-<div class="verso"><span class="verso-num">2</span><span class="verso-txt">Tendo tido Paulo e Barnabé não pequena discussão e contenda contra eles, resolveu-se que Paulo, Barnabé e alguns dentre eles subissem a Jerusalém aos apóstolos e aos anciãos sobre aquela questão.,</span></div>
-<div class="verso"><span class="verso-num">3</span><span class="verso-txt">E eles, sendo acompanhados pela igreja, passaram pela Fenícia e por Samaria, contando a conversão dos gentios, e davam grande alegria a todos os irmãos.</span></div>
-<div class="verso"><span class="verso-num">4</span><span class="verso-txt">Quando chegaram a Jerusalém, foram recebidos pela igreja e pelos apóstolos e anciãos e lhes anunciaram quão grandes coisas Deus tinha feito com eles.</span></div>
-<div class="verso"><span class="verso-num">5</span><span class="verso-txt">Alguns, porém, da seita dos fariseus que tinham crido se levantaram, dizendo que era mister circuncidá-los e mandar-lhes que guardassem a lei de Moisés.</span></div>
-<div class="verso"><span class="verso-num">28</span><span class="verso-txt">Na verdade, pareceu bem ao Espírito Santo e a nós não vos impor mais encargo algum, senão estas coisas necessárias:</span></div>
-<div class="verso"><span class="verso-num">29</span><span class="verso-txt">Que vos abstenhais das coisas sacrificadas aos ídolos, e do sangue, e da carne sufocada, e da fornicação; destas coisas fareis bem se vos guardardes. Bem vos vá.,</span></div>
-<div class="verso"><span class="verso-num">36</span><span class="verso-txt">Alguns dias depois, disse Paulo a Barnabé: Tornemos a visitar nossos irmãos por todas as cidades em que já anunciamos a palavra do Senhor, para ver como estão.</span></div>
-<div class="verso"><span class="verso-num">37</span><span class="verso-txt">E Barnabé aconselhava que tomassem consigo a João, chamado Marcos.</span></div>
-<div class="verso"><span class="verso-num">38</span><span class="verso-txt">Mas a Paulo parecia razoável que não tomassem consigo aquele que desde a Panfília se tinha apartado deles e não os acompanhou naquela obra.,</span></div>
-<div class="verso"><span class="verso-num">39</span><span class="verso-txt">E tal contenda houve entre eles, que se apartaram um do outro. Barnabé, levando consigo a Marcos, navegou para Chipre.</span></div>
+<p class="verso"><span class="verso-num">1</span>Então, alguns que tinham descido da Judeia ensinavam assim os irmãos: Se vos não circuncidardes, conforme o uso de Moisés, não podeis salvar-vos.</p>
+<p class="verso"><span class="verso-num">2</span>Tendo tido Paulo e Barnabé não pequena discussão e contenda contra eles, resolveu-se que Paulo, Barnabé e alguns dentre eles subissem a Jerusalém aos apóstolos e aos anciãos sobre aquela questão.,</p>
+<p class="verso"><span class="verso-num">3</span>E eles, sendo acompanhados pela igreja, passaram pela Fenícia e por Samaria, contando a conversão dos gentios, e davam grande alegria a todos os irmãos.</p>
+<p class="verso"><span class="verso-num">4</span>Quando chegaram a Jerusalém, foram recebidos pela igreja e pelos apóstolos e anciãos e lhes anunciaram quão grandes coisas Deus tinha feito com eles.</p>
+<p class="verso"><span class="verso-num">5</span>Alguns, porém, da seita dos fariseus que tinham crido se levantaram, dizendo que era mister circuncidá-los e mandar-lhes que guardassem a lei de Moisés.</p>
+<p class="verso"><span class="verso-num">28</span>Na verdade, pareceu bem ao Espírito Santo e a nós não vos impor mais encargo algum, senão estas coisas necessárias:</p>
+<p class="verso"><span class="verso-num">29</span>Que vos abstenhais das coisas sacrificadas aos ídolos, e do sangue, e da carne sufocada, e da fornicação; destas coisas fareis bem se vos guardardes. Bem vos vá.,</p>
+<p class="verso"><span class="verso-num">36</span>Alguns dias depois, disse Paulo a Barnabé: Tornemos a visitar nossos irmãos por todas as cidades em que já anunciamos a palavra do Senhor, para ver como estão.</p>
+<p class="verso"><span class="verso-num">37</span>E Barnabé aconselhava que tomassem consigo a João, chamado Marcos.</p>
+<p class="verso"><span class="verso-num">38</span>Mas a Paulo parecia razoável que não tomassem consigo aquele que desde a Panfília se tinha apartado deles e não os acompanhou naquela obra.,</p>
+<p class="verso"><span class="verso-num">39</span>E tal contenda houve entre eles, que se apartaram um do outro. Barnabé, levando consigo a Marcos, navegou para Chipre.</p>
 </div><p class="sec-head">COMENTÁRIO</p><p><span class="lbl-inline">Introdução</span> A expansão do Evangelho entre os gentios trouxe grande alegria à Igreja, mas também revelou um dos primeiros desafios doutrinários do Cristianismo. Com o retorno de Paulo e Barnabé a Antioquia da Síria, após a evangelização da Ásia Menor, surgiu uma controvérsia que ameaçava a unidade da fé: a salvação estaria condicionada à observância da Lei de Moisés? Cristãos oriundos do farisaísmo passaram a exigir a circuncisão dos gentios convertidos, provocando um debate decisivo sobre a natureza da graça., Diante dessa crise, a Igreja buscou discernimento espiritual e fidelidade às Escrituras, culminando numa decisão importante, no Concílio de Jerusalém, que mostrou que a Graça de Deus alcança todas as nações.</p><p class="roman-head">I - QUANDO A GRAÇA PRESERVA A UNIDADE DA IGREJA</p>
 <p class="subpoint"><strong>1. O Concílio de Jerusalém.</strong> Realizado entre 48 e 50 d.C., o Concílio reuniu apóstolos, presbíteros e a igreja para tratar da controvérsia levantada pelos judaizantes, que defendiam a circuncisão como requisito para a salvação (At 15.1,5). Contudo, tal exigência contrariava o ensino bíblico, pois a circuncisão nunca foi meio de justificação (Rm 2.25-29). Sob a liderança de Tiago e a direção do Espírito Santo, a Igreja reconheceu que a salvação alcança todas as nações pela graça.</p>
 <p class="subpoint"><strong>2. O relatório de Pedro (vv.7-11).</strong> Pedro relembra de sua experiência na casa de Cornélio, mostrando que Deus concedeu o Espírito Santo aos gentios mediante a fé, e não por obras da Lei (At 10.44-46; Gl 3.2). Sem fazer distinção entre judeus e gentios, Deus purificou seus corações pela fé (At 10.34-48). Assim, Pedro questiona a imposição do jugo da Lei e afirma que todos são salvos pela graça do Senhor Jesus Cristo (At 15.11).</p>

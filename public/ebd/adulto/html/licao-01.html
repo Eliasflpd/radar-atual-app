@@ -25,11 +25,11 @@ li{margin-bottom:8px;text-align:justify}
 /* Referência bíblica */
 .bible-ref{text-align:center;font-weight:900;color:#1d3a8a;margin:0 0 14px;font-size:14px}
 
-/* Versículos empilhados */
+/* Versículos — número inline como superscript */
 .bible-passage{margin-bottom:18px}
-.verso{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
-.verso-num{font-weight:900;color:#c9a14a;font-size:12px;min-width:24px;text-align:right;padding-top:3px;flex-shrink:0;line-height:1.5}
-.verso-txt{flex:1;text-align:justify}
+.verso{margin-bottom:10px;text-align:justify}
+.verso-num{font-weight:900;color:#c9a14a;font-size:10px;vertical-align:super;line-height:0;margin-right:2px}
+.verso-txt{}
 
 /* Cabeçalho de capítulo romano */
 .roman-head{font-weight:900;color:#1d3a8a;font-size:15px;margin:26px 0 6px;padding:10px 12px;background:#f0f4ff;border-left:4px solid #1d3a8a;border-radius:0 6px 6px 0;text-align:left}
@@ -44,18 +44,18 @@ li{margin-bottom:8px;text-align:justify}
 <p class="data">5 de Julho de 2026</p><div class="box-aureo"><span class="lbl">Texto Áureo</span>“E, servindo eles ao Senhor e jejuando, disse o Espírito Santo: Apartai-me a Barnabé e a Saulo para a obra a que os tenho chamado.” (At 13.2)</div><div class="box-pratica"><span class="lbl">Verdade Prática</span>Quando a igreja ouve o Espírito, o Evangelho avança e vidas são alcançadas para a glória de Deus.</div><p class="sec-head">LEITURA DIÁRIA</p><ul><li><strong>Segunda - At 1.8:</strong> O ministério de Jesus começou pela unção do Espírito</li><li><strong>Terça - At 11.26:</strong> A identidade e a missão caminham juntas</li><li><strong>Quarta - Mt 6.16-18:</strong> O jejum fortalece nossa sensibilidade espiritual</li><li><strong>Quinta - Is 61.1:</strong> Sem o Espírito Santo não há missão verdadeira</li><li><strong>Sexta - At 4.31:</strong> A Igreja Primitiva avançava porque estava cheia do Espírito</li><li><strong>Sábado - Rm 10.14,15:</strong> Como ouvirão, se não há quem pregue?</li></ul><p class="sec-head"><strong>LEITURA BÍBLICA EM CLASSE</strong></p>
 <p class="bible-ref"><strong>Atos 13.1-12</strong></p>
 <div class="bible-passage">
-<div class="verso"><span class="verso-num">1</span><span class="verso-txt">Na igreja que estava em Antioquia havia alguns profetas e doutores, a saber: Barnabé, e Simeão, chamado Níger, e Lúcio, cireneu, e Manaém, que fora criado com Herodes, o tetrarca, e Saulo.</span></div>
-<div class="verso"><span class="verso-num">2</span><span class="verso-txt">E, servindo eles ao Senhor e jejuando, disse o Espírito Santo: Apartai-me a Barnabé e a Saulo para a obra a que os tenho chamado.</span></div>
-<div class="verso"><span class="verso-num">3</span><span class="verso-txt">Então, jejuando, e orando, e pondo sobre eles as mãos, os despediram.</span></div>
-<div class="verso"><span class="verso-num">4</span><span class="verso-txt">E assim estes, enviados pelo Espírito Santo, desceram a Selêucia e dali navegaram para Chipre.</span></div>
-<div class="verso"><span class="verso-num">5</span><span class="verso-txt">E, chegados a Salamina, anunciavam a palavra de Deus nas sinagogas dos judeus; e tinham também a João como cooperador.</span></div>
-<div class="verso"><span class="verso-num">6</span><span class="verso-txt">E, havendo atravessado a ilha até Pafos, acharam um certo judeu, mágico, falso profeta, chamado Barjesus,</span></div>
-<div class="verso"><span class="verso-num">7</span><span class="verso-txt">o qual estava com o procônsul Sérgio Paulo, varão prudente. Este, chamando a si Barnabé e Saulo, procurava muito ouvir a palavra de Deus.</span></div>
-<div class="verso"><span class="verso-num">8</span><span class="verso-txt">Mas resistia-lhes Elimas, o encantador (porque assim se interpreta o seu nome), procurando apartar da fé o procônsul.</span></div>
-<div class="verso"><span class="verso-num">9</span><span class="verso-txt">Todavia, Saulo, que também se chama Paulo, cheio do Espírito Santo e fixando os olhos nele, disse:</span></div>
-<div class="verso"><span class="verso-num">10</span><span class="verso-txt">Ó filho do diabo, cheio de todo o engano e de toda a malícia, inimigo de toda a justiça, não cessarás de perturbar os retos caminhos do Senhor?</span></div>
-<div class="verso"><span class="verso-num">11</span><span class="verso-txt">Eis aí, pois, agora, contra ti a mão do Senhor, e ficarás cego, sem ver o sol por algum tempo. No mesmo instante, a escuridão e as trevas caíram sobre ele, e, andando à roda, buscava a quem o guiasse pela mão.</span></div>
-<div class="verso"><span class="verso-num">12</span><span class="verso-txt">Então, o procônsul, vendo o que havia acontecido, creu, maravilhado da doutrina do Senhor.</span></div>
+<p class="verso"><span class="verso-num">1</span>Na igreja que estava em Antioquia havia alguns profetas e doutores, a saber: Barnabé, e Simeão, chamado Níger, e Lúcio, cireneu, e Manaém, que fora criado com Herodes, o tetrarca, e Saulo.</p>
+<p class="verso"><span class="verso-num">2</span>E, servindo eles ao Senhor e jejuando, disse o Espírito Santo: Apartai-me a Barnabé e a Saulo para a obra a que os tenho chamado.</p>
+<p class="verso"><span class="verso-num">3</span>Então, jejuando, e orando, e pondo sobre eles as mãos, os despediram.</p>
+<p class="verso"><span class="verso-num">4</span>E assim estes, enviados pelo Espírito Santo, desceram a Selêucia e dali navegaram para Chipre.</p>
+<p class="verso"><span class="verso-num">5</span>E, chegados a Salamina, anunciavam a palavra de Deus nas sinagogas dos judeus; e tinham também a João como cooperador.</p>
+<p class="verso"><span class="verso-num">6</span>E, havendo atravessado a ilha até Pafos, acharam um certo judeu, mágico, falso profeta, chamado Barjesus,</p>
+<p class="verso"><span class="verso-num">7</span>o qual estava com o procônsul Sérgio Paulo, varão prudente. Este, chamando a si Barnabé e Saulo, procurava muito ouvir a palavra de Deus.</p>
+<p class="verso"><span class="verso-num">8</span>Mas resistia-lhes Elimas, o encantador (porque assim se interpreta o seu nome), procurando apartar da fé o procônsul.</p>
+<p class="verso"><span class="verso-num">9</span>Todavia, Saulo, que também se chama Paulo, cheio do Espírito Santo e fixando os olhos nele, disse:</p>
+<p class="verso"><span class="verso-num">10</span>Ó filho do diabo, cheio de todo o engano e de toda a malícia, inimigo de toda a justiça, não cessarás de perturbar os retos caminhos do Senhor?</p>
+<p class="verso"><span class="verso-num">11</span>Eis aí, pois, agora, contra ti a mão do Senhor, e ficarás cego, sem ver o sol por algum tempo. No mesmo instante, a escuridão e as trevas caíram sobre ele, e, andando à roda, buscava a quem o guiasse pela mão.</p>
+<p class="verso"><span class="verso-num">12</span>Então, o procônsul, vendo o que havia acontecido, creu, maravilhado da doutrina do Senhor.</p>
 </div><p class="sec-head">COMENTÁRIO</p><p><span class="lbl-inline">Introdução</span> Lucas registra o cumprimento progressivo da promessa de Jesus em Atos 1.8: o Evangelho alcançaria Jerusalém, Judeia, Samaria e chegaria aos confins da terra. Os capítulos 13 a 28 marcam a grande virada da narrativa, quando o foco deixa de ser Jerusalém e passa a Antioquia. É dessa igreja, caracterizada por diversidade, sensibilidade espiritual e prática missionária madura, que o Espírito Santo convoca Paulo e Barnabé para a evangelização dos gentios. A partir desse ponto, o ministério de Paulo torna-se central, e o Espírito é mostrado como o verdadeiro condutor da expansão cristã. A Missão Gentílica nasce, portanto, não como estratégia humana, mas como resposta ao chamado direto do Espírito para alcançar as nações.</p><p class="roman-head">I - O NASCIMENTO DA MISSÃO GENTÍLICA</p>
 <p class="subpoint"><strong>1. Antioquia: um centro escolhido por Deus (v.1).</strong> Fundada por Seleuco Nicátor em 300 a.C., Antioquia da Síria tornou-se a terceira maior cidade do Império Romano, atrás apenas de Roma e Alexandria. Culturalmente greco-helenista, abrigava significativa população judaica e exercia forte influência intelectual e comercial, contando com o porto de Selêucia (At 13.4). Foi ali que os discípulos foram chamados “cristãos” pela primeira vez (At 11.26). Não por acaso, Deus escolheu Antioquia como base da missão gentílica, transformando aquela igreja em um centro de envio para as nações — uma verdadeira base missionária de envio às nações.</p>
 <p class="subpoint"><strong>2. Profetas e doutores servindo ao Senhor (vv.1,2).</strong> A liderança local reunia profetas e doutores (mestres), ministérios que, após o período apostólico, tornaram-se pilares da edificação da igreja (1 Co 12.28). Os profetas exortavam mediante inspiração direta; os mestres instruíam com base nas Escrituras e na tradição dos ensinos de Jesus. Durante o serviço ao Senhor, marcado por oração e jejum, o Espírito falou. A disposição desses líderes em buscar a vontade divina revela uma comunidade madura, centrada em Deus e apta a discernir o propósito do Espírito para além das necessidades locais.</p>

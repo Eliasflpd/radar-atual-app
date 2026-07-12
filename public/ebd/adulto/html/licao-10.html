@@ -25,11 +25,11 @@ li{margin-bottom:8px;text-align:justify}
 /* Referência bíblica */
 .bible-ref{text-align:center;font-weight:900;color:#1d3a8a;margin:0 0 14px;font-size:14px}
 
-/* Versículos empilhados */
+/* Versículos — número inline como superscript */
 .bible-passage{margin-bottom:18px}
-.verso{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
-.verso-num{font-weight:900;color:#c9a14a;font-size:12px;min-width:24px;text-align:right;padding-top:3px;flex-shrink:0;line-height:1.5}
-.verso-txt{flex:1;text-align:justify}
+.verso{margin-bottom:10px;text-align:justify}
+.verso-num{font-weight:900;color:#c9a14a;font-size:10px;vertical-align:super;line-height:0;margin-right:2px}
+.verso-txt{}
 
 /* Cabeçalho de capítulo romano */
 .roman-head{font-weight:900;color:#1d3a8a;font-size:15px;margin:26px 0 6px;padding:10px 12px;background:#f0f4ff;border-left:4px solid #1d3a8a;border-radius:0 6px 6px 0;text-align:left}
@@ -44,19 +44,19 @@ li{margin-bottom:8px;text-align:justify}
 <p class="data">6 de Setembro de 2026</p><div class="box-aureo"><span class="lbl">Texto Áureo</span>“E, por isso, procuro sempre ter uma consciência sem ofensa, tanto para com Deus como para com os homens.” (At 24.16)</div><div class="box-pratica"><span class="lbl">Verdade Prática</span>A fidelidade ao Evangelho se expressa em uma consciência irrepreensível diante de Deus e dos homens.</div><p class="sec-head">LEITURA DIÁRIA</p><ul><li><strong>Segunda - At 24.4,5:</strong> A fidelidade ao Evangelho pode gerar acusações injustas</li><li><strong>Terça - At 24.10-13:</strong> Uma vida íntegra é a melhor defesa diante de acusações humanas</li><li><strong>Quarta - At 24.14-16:</strong> A consciência limpa diante de Deus e dos homens sustenta o testemunho cristão</li><li><strong>Quinta - 1 Pe 3.15,16:</strong> A boa consciência permite defender a fé com mansidão e firmeza</li><li><strong>Sexta - At 24.24,25:</strong> A Palavra confronta consciências e chama ao arrependimento</li><li><strong>Sábado - Hb 10.35,36:</strong> A esperança em Deus fortalece o crente a perseverar</li></ul><p class="sec-head"><strong>LEITURA BÍBLICA EM CLASSE</strong></p>
 <p class="bible-ref"><strong>Atos 24.1-6, 10-16</strong></p>
 <div class="bible-passage">
-<div class="verso"><span class="verso-num">1</span><span class="verso-txt">Cinco dias depois, o sumo sacerdote, Ananias, desceu com os anciãos e um certo Tértulo, orador, os quais compareceram perante o governador contra Paulo.</span></div>
-<div class="verso"><span class="verso-num">2</span><span class="verso-txt">E, sendo chamado, Tértulo começou a acusá-lo, dizendo:</span></div>
-<div class="verso"><span class="verso-num">3</span><span class="verso-txt">Visto como, por ti, temos tanta paz, e, por tua prudência, se fazem a este povo muitos e louváveis serviços, sempre e em todo lugar, ó potentíssimo Félix, com todo o agradecimento o queremos reconhecer.</span></div>
-<div class="verso"><span class="verso-num">4</span><span class="verso-txt">Mas, para que te não detenha muito, rogo-te que, conforme a tua equidade, nos ouças por pouco tempo.</span></div>
-<div class="verso"><span class="verso-num">5</span><span class="verso-txt">Temos achado que este homem é uma peste e promotor de sedições entre todos os judeus, por todo o mundo, e o principal defensor da seita dos nazarenos;</span></div>
-<div class="verso"><span class="verso-num">6</span><span class="verso-txt">o qual intentou também profanar o templo; e, por isso, o prendemos e, conforme a nossa lei, o quisemos julgar.</span></div>
-<div class="verso"><span class="verso-num">10</span><span class="verso-txt">Paulo, porém, fazendo-lhe o governador sinal que falasse, respondeu: Porque sei que já vai para muitos anos que desta nação és juiz, com tanto melhor ânimo respondo por mim.</span></div>
-<div class="verso"><span class="verso-num">11</span><span class="verso-txt">Pois bem podes saber que não há mais de doze dias que subi a Jerusalém a adorar;</span></div>
-<div class="verso"><span class="verso-num">12</span><span class="verso-txt">e não me acharam no templo falando com alguém, nem amotinando o povo nas sinagogas, nem na cidade;</span></div>
-<div class="verso"><span class="verso-num">13</span><span class="verso-txt">nem tampouco podem provar as coisas de que agora me acusam.</span></div>
-<div class="verso"><span class="verso-num">14</span><span class="verso-txt">Mas confesso-te que, conforme aquele Caminho, a que chamam seita, assim sirvo ao Deus de nossos pais, crendo tudo quanto está escrito na Lei e nos Profetas.</span></div>
-<div class="verso"><span class="verso-num">15</span><span class="verso-txt">Tendo esperança em Deus, como estes mesmos também esperam, de que há de haver ressurreição de mortos, tanto dos justos como dos injustos.</span></div>
-<div class="verso"><span class="verso-num">16</span><span class="verso-txt">E, por isso, procuro sempre ter uma consciência sem ofensa, tanto para com Deus como para com os homens.</span></div>
+<p class="verso"><span class="verso-num">1</span>Cinco dias depois, o sumo sacerdote, Ananias, desceu com os anciãos e um certo Tértulo, orador, os quais compareceram perante o governador contra Paulo.</p>
+<p class="verso"><span class="verso-num">2</span>E, sendo chamado, Tértulo começou a acusá-lo, dizendo:</p>
+<p class="verso"><span class="verso-num">3</span>Visto como, por ti, temos tanta paz, e, por tua prudência, se fazem a este povo muitos e louváveis serviços, sempre e em todo lugar, ó potentíssimo Félix, com todo o agradecimento o queremos reconhecer.</p>
+<p class="verso"><span class="verso-num">4</span>Mas, para que te não detenha muito, rogo-te que, conforme a tua equidade, nos ouças por pouco tempo.</p>
+<p class="verso"><span class="verso-num">5</span>Temos achado que este homem é uma peste e promotor de sedições entre todos os judeus, por todo o mundo, e o principal defensor da seita dos nazarenos;</p>
+<p class="verso"><span class="verso-num">6</span>o qual intentou também profanar o templo; e, por isso, o prendemos e, conforme a nossa lei, o quisemos julgar.</p>
+<p class="verso"><span class="verso-num">10</span>Paulo, porém, fazendo-lhe o governador sinal que falasse, respondeu: Porque sei que já vai para muitos anos que desta nação és juiz, com tanto melhor ânimo respondo por mim.</p>
+<p class="verso"><span class="verso-num">11</span>Pois bem podes saber que não há mais de doze dias que subi a Jerusalém a adorar;</p>
+<p class="verso"><span class="verso-num">12</span>e não me acharam no templo falando com alguém, nem amotinando o povo nas sinagogas, nem na cidade;</p>
+<p class="verso"><span class="verso-num">13</span>nem tampouco podem provar as coisas de que agora me acusam.</p>
+<p class="verso"><span class="verso-num">14</span>Mas confesso-te que, conforme aquele Caminho, a que chamam seita, assim sirvo ao Deus de nossos pais, crendo tudo quanto está escrito na Lei e nos Profetas.</p>
+<p class="verso"><span class="verso-num">15</span>Tendo esperança em Deus, como estes mesmos também esperam, de que há de haver ressurreição de mortos, tanto dos justos como dos injustos.</p>
+<p class="verso"><span class="verso-num">16</span>E, por isso, procuro sempre ter uma consciência sem ofensa, tanto para com Deus como para com os homens.</p>
 </div><p class="sec-head">COMENTÁRIO</p><p><span class="lbl-inline">Introdução</span> Em Atos 24, acompanhamos o julgamento de Paulo diante do governador Félix. Cinco dias após sua prisão, líderes judeus, conduzidos pelo sumo sacerdote Ananias e representados pelo orador Tértulo, apresentam acusações falsas contra o apóstolo. Mesmo diante de injustiça, interesses políticos e corrupção, Paulo mantém uma fé firme, testificando do “Caminho” e da ressurreição. O episódio revela que nenhuma autoridade humana é capaz de abalar a fé de quem confia plenamente em Deus.</p><p class="roman-head">I - A ACUSAÇÃO INJUSTA</p>
 <p class="subpoint"><strong>1. A conspiração judaica contra Paulo (vv.1,2).</strong> A presença do sumo sacerdote Ananias, de alguns anciãos e do orador profissional Tértulo diante do governador Félix revela uma articulação cuidadosamente planejada para condenar Paulo. Não se tratava de buscar justiça, mas de silenciar a voz do Evangelho. A união dessas lideranças religiosas demonstra como interesses políticos e religiosos podem se associar para combater a verdade (At 24.1). Paulo não era acusado por crimes reais, mas por anunciar Cristo e a esperança da ressurreição, o que sempre despertou oposição (At 23.12; Mt 5.11-12).</p>
 <p class="subpoint"><strong>2. O discurso bajulador de Tértulo diante do poder (vv.2-4).</strong> Tértulo inicia sua acusação com palavras exageradas de elogio ao governador Félix, tentando conquistar sua simpatia por meio da bajulação. Embora a administração de Félix fosse marcada por corrupção e violência, o orador recorre a um discurso vazio de verdade, usando a adulação como estratégia para influenciar a decisão judicial (At 24.2-4). Em seguida, apresenta Paulo como uma ameaça pública, chamando-o de “peste” e líder de uma seita perigosa (At 24.5).</p>
