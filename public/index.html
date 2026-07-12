@@ -1565,6 +1565,10 @@ const NOT_CORES={Profecia:'#f5a623',Arqueologia:'#a78bfa',Política:'#4f8ef7','P
 let _notCache=null,_notAba='news',_notIdx=0,_notItens=[],_notYtId=null;
 
 function abrirNoticias(){
+  // sempre abre na aba Notícias
+  _notAba='news';
+  document.getElementById('not-tab-news').classList.add('on');
+  document.getElementById('not-tab-videos').classList.remove('on');
   ocultarTodas();
   document.getElementById('tela-noticias').classList.add('ativa');
   if(!_notCache) carregarNoticias(false);
@@ -1620,18 +1624,27 @@ function renderNotAba(){
       </div>`;
     }).join('');
   } else {
-    const vids=_notItens.filter(n=>n.ytId);
-    if(!vids.length){list.innerHTML=`<div class="not-loading"><div style="font-size:36px">▶️</div><div style="font-size:13px;text-align:center">Os vídeos aparecem<br>quando as notícias chegam.</div></div>`;return;}
-    list.innerHTML=vids.map(v=>{
+    const CANAIS=[
+      {nome:'i24 NEWS — Israel ao Vivo',canal:'i24NEWS',emoji:'📡',cor:'#4f8ef7',ytId:'L5wq-5x3d4Y'},
+      {nome:'Israel Hoje — Profecia Bíblica',canal:'Profecia',emoji:'📖',cor:'#f5a623',ytId:'bfXYlGbJ3iE'},
+      {nome:'Jerusalem Post — Notícias',canal:'Jerusalem Post',emoji:'🗞️',cor:'#34c77b',ytId:'iZzRY5P2kpM'},
+      {nome:'Descobertas Arqueológicas',canal:'Arqueologia',emoji:'🏺',cor:'#a78bfa',ytId:'_hn5xpPhsMI'},
+    ];
+    const vidsFromNews=_notItens.filter(n=>n.ytId);
+    const allVids=[...vidsFromNews.map(v=>({nome:v.titulo_pt||v.title,canal:v.fonte||'Israel News',emoji:v.emoji||'🌍',cor:'#4f8ef7',ytId:v.ytId})),...CANAIS];
+    list.innerHTML=`<div style="font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.6;padding:6px 2px 8px">Canais Recomendados</div>`+
+    allVids.map(v=>{
       const thumb=`https://img.youtube.com/vi/${v.ytId}/hqdefault.jpg`;
-      const titulo=v.titulo_pt||v.title;
-      return`<div class="not-video-card" onclick="abrirYT('${v.ytId}','${titulo.replace(/'/g,"\\'").replace(/"/g,'\\"')}','${(v.fonte||'').replace(/'/g,"\\'")}')">
-        <img class="not-video-thumb" src="${thumb}" alt="" onerror="this.style.display='none'" loading="lazy">
-        <div class="not-video-info">
-          <div class="not-video-titulo">${_esc(titulo)}</div>
-          <div class="not-video-canal">${_esc(v.fonte||'Israel News')}</div>
+      return`<div class="not-video-card" onclick="abrirYT('${v.ytId}','${v.nome.replace(/'/g,"\\'").replace(/"/g,'\\"')}','${v.canal.replace(/'/g,"\\'")}')">
+        <div style="position:relative;width:100px;height:58px;flex-shrink:0">
+          <img class="not-video-thumb" src="${thumb}" alt="" style="position:absolute;inset:0" onerror="this.style.display='none'" loading="lazy">
+          <div style="position:absolute;inset:0;background:${v.cor}22;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px">${v.emoji}</div>
         </div>
-        <span style="font-size:22px;flex-shrink:0;color:#f75f5f;opacity:.8">▶</span>
+        <div class="not-video-info">
+          <div class="not-video-titulo">${_esc(v.nome)}</div>
+          <div class="not-video-canal">${_esc(v.canal)}</div>
+        </div>
+        <span style="font-size:20px;flex-shrink:0;color:#f75f5f;opacity:.8">▶</span>
       </div>`;
     }).join('');
   }
