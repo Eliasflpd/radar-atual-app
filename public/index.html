@@ -48,6 +48,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .tile-desc{font-size:11px;color:var(--sub);margin-top:2px}
 .tile-count{font-size:11px;font-weight:800;color:var(--tile-color,var(--gold));background:rgba(255,255,255,.06);border-radius:20px;padding:3px 9px;flex-shrink:0}
 .tile-arr{color:var(--sub);font-size:18px;flex-shrink:0}
+.tile-share{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--sub);width:30px;height:30px;border-radius:8px;display:grid;place-items:center;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s}
+.tile-share:active{background:rgba(201,161,74,.18);color:var(--gold);border-color:var(--gold)}
 
 /* ══ HEADER PADRÃO ══ */
 .std-header{display:flex;align-items:center;gap:12px;padding:max(env(safe-area-inset-top),14px) 14px 14px;background:var(--card);border-bottom:1px solid var(--line);flex-shrink:0}
@@ -437,6 +439,8 @@ function irHome(){
   ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
+  const p = new URLSearchParams(location.search).get('mod');
+  if(p) abrirMod(p);
 }
 
 // ══ HOME ══════════════════════════════════════════
@@ -448,8 +452,29 @@ function renderHome(){
         <div class="tile-nome">${m.nome}</div>
         <div class="tile-desc">${m.desc}</div>
       </div>
+      <button class="tile-share" onclick="compartilhar(event,'${m.id}','${m.nome}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+          <polyline points="16 6 12 2 8 6"/>
+          <line x1="12" y1="2" x2="12" y2="15"/>
+        </svg>
+      </button>
       <div class="tile-arr">›</div>
     </div>`).join('');
+}
+
+function compartilhar(e, id, nome){
+  e.stopPropagation();
+  const url = location.origin + '?mod=' + id;
+  if(navigator.share){
+    navigator.share({title:'RADAR ATUAL — ' + nome, text: nome, url});
+  } else {
+    navigator.clipboard.writeText(url).then(()=>{
+      const btn = e.currentTarget;
+      btn.style.color='var(--gold)';
+      setTimeout(()=>btn.style.color='',1200);
+    });
+  }
 }
 
 function abrirMod(id){
