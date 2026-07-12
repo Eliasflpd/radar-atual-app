@@ -1,10 +1,10 @@
 import mammoth, os, re, glob
 
-# ── Bible ref linkifier ────────────────────────────────────────────────────────
+# ── Bible ref linkifier ───────────────────────────────────────────────────────
 _BOOKS = (r'(?:[123]\s*Jo|[12]\s*Co|[12]\s*Ts|[12]\s*Tm|[12]\s*Pe|[12]\s*Sm|'
           r'[12]\s*Rs|[12]\s*Cr|At|Mt|Mc|Lc|Jo|Rm|Gl|Ef|Fp|Cl|Tt|Fm|Hb|Tg|Jd|Ap|'
           r'Gn|Ex|Lv|Nm|Dt|Js|Jz|Rt|Ed|Ne|Et|Jó|Sl|Pv|Ec|Ct|Is|Jr|Lm|Ez|Dn|Os|'
-          r'Jl|Am|Ob|Jn|Mq|Na|Hc|Sf|Ag|Zc|Ml)')
+          r'Jl|Am|Ob|Jn|Mq|Na|Hc|Sf|Ag|Zc|Ml|G[lG]|Ef|Cl)')
 _VREF   = r'\d+[.]\d+(?:[,\-]\d+)?'
 _REF_RE = re.compile(
     r'(?<!\w)(' + _BOOKS + r'\s+' + _VREF
@@ -19,7 +19,7 @@ def linkify(html):
             parts[i])
     return ''.join(parts)
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
+# ── Paths ────────────────────────────────────────────────────────────────────
 SRC = "D:/RADAR ATUAL/EBD/LIÇÃO JOVEM/LIÇÕES"
 OUT = "D:/RADAR-APP/public/ebd/jovem/html"
 os.makedirs(OUT, exist_ok=True)
@@ -40,7 +40,7 @@ LESSONS = [
     (13, "ESPERANÇA EM MEIO AO CAOS: AGUARDANDO A VINDA DO REI"),
 ]
 
-# ── CSS ───────────────────────────────────────────────────────────────────────
+# ── CSS ──────────────────────────────────────────────────────────────────────
 CSS = """
 body{margin:0;padding:20px 20px 64px;background:#fff;font-family:Georgia,serif;
   font-size:16px;line-height:1.75;color:#1a1a1a;text-align:justify}
@@ -56,6 +56,7 @@ li{margin-bottom:8px;text-align:justify}
 .data{text-align:center;font-size:12px;color:#888;font-weight:600;
   letter-spacing:.5px;margin-bottom:18px}
 
+/* Lesson verse/quote box — same visual as Texto Áureo */
 .box-aureo{background:#fffaf0;border-radius:8px;padding:0 16px 14px;margin:14px 0;
   font-style:italic;color:#5a3a00;text-align:justify;overflow:hidden}
 .box-aureo .lbl{display:block;font-style:normal;font-size:10px;font-weight:900;
@@ -63,12 +64,14 @@ li{margin-bottom:8px;text-align:justify}
   padding:6px 16px;text-align:center;background:rgba(201,161,74,.22);
   border-bottom:1px solid rgba(201,161,74,.35)}
 
+/* Verdade Prática */
 .box-pratica{background:#f0faf5;border-radius:8px;padding:0 16px 14px;margin:14px 0;
   color:#1a3a2a;text-align:justify;overflow:hidden}
 .box-pratica .lbl{display:block;font-size:10px;font-weight:900;color:#14532d;
   letter-spacing:2.5px;text-transform:uppercase;margin:0 -16px 12px;padding:6px 16px;
   text-align:center;background:rgba(22,163,74,.15);border-bottom:1px solid rgba(22,163,74,.3)}
 
+/* Subsídio */
 .box-subsidio{background:#f0f4ff;border-radius:8px;padding:0 16px 14px;margin:14px 0;
   color:#1d3a8a;overflow:hidden}
 .box-subsidio .lbl{display:block;font-size:10px;font-weight:900;color:#1d3a8a;
@@ -78,6 +81,7 @@ li{margin-bottom:8px;text-align:justify}
 .box-subsidio .ref-bib{font-size:12px;color:#555;font-style:normal;
   border-top:1px solid rgba(29,58,138,.15);padding-top:6px;margin-top:8px}
 
+/* Resumo da Lição */
 .box-resumo{background:#fdf8f0;border-radius:8px;padding:0 16px 14px;margin:14px 0;
   color:#3a1a00;overflow:hidden}
 .box-resumo .lbl{display:block;font-size:10px;font-weight:900;color:#7a4e00;
@@ -96,9 +100,6 @@ li{margin-bottom:8px;text-align:justify}
   border-radius:0 6px 6px 0;text-align:left}
 .subpoint{text-align:justify;margin-bottom:12px}
 .subpoint strong:first-child{color:#1d3a8a}
-.revisao-q{font-weight:700;color:#1d3a8a;margin-bottom:2px}
-.revisao-r{color:#333;margin-bottom:10px;padding-left:12px;
-  border-left:3px solid #c9a14a}
 .lbl-inline{font-weight:900;color:#1d3a8a;text-transform:uppercase;letter-spacing:.5px}
 .bref{color:#1d4ed8;font-weight:700;text-decoration:underline dotted;cursor:pointer;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -120,12 +121,9 @@ document.addEventListener('click',function(e){
 });
 </script>"""
 
-# ── OCR / font-error fix ──────────────────────────────────────────────────────
-# Word-level OCR dictionary (common corruptions in CPAD youth docx)
+# ── OCR / font-error fix ─────────────────────────────────────────────────────
 _WORD_FIXES = {
-    # fidelidade variants
     'fidetidade': 'fidelidade', 'fidetidades': 'fidelidades',
-    # common OCR errors
     'batatha': 'batalha', 'reftetem': 'refletem',
     'retacionamento': 'relacionamento', 'possibitidade': 'possibilidade',
     'possibitidades': 'possibilidades',
@@ -137,81 +135,98 @@ _WORD_FIXES = {
     'Exp[ique': 'Explique', 'exp[ique': 'explique',
     'oprender': 'aprender', 'idolotria': 'idolatria', 'idolotrio': 'idolatria',
     'recompens a': 'recompensa',
-    'inctuindo': 'incluindo', 'ptan': 'plan',
-    'mititar': 'militar', 'mititar': 'militar',
+    'inctuindo': 'incluindo',
+    'mititar': 'militar',
     'fithos': 'filhos', 'fitho': 'filho',
     'tivro': 'livro', 'tivros': 'livros',
     'tatbem': 'também',
+    'tatho': 'talho', 'tathar': 'talhar',
+    'vitoria': 'vitória', 'vitorias': 'vitórias',
+    'cotoca': 'coloca', 'cotocam': 'colocam',
+    'rea[': 'real',
+    'ULNMAVITORIA': 'ÚLTIMA VITÓRIA',
+    'ULNTMAVITORIA': 'ÚLTIMA VITÓRIA',
 }
 
 def fix_ocr(txt):
-    # 1. '[' used as 'l' (ell) — most impactful
     txt = re.sub(r'(?<=[A-Za-zÀ-ÿ])\[(?=[A-Za-zÀ-ÿ])', 'l', txt)
     txt = re.sub(r'(?<=\s)\[(?=[a-záéíóúàâêôãõç])', 'l', txt)
-    txt = re.sub(r'(?<=^)\[(?=[a-záéíóúàâêôãõç])', 'l', txt)
-
-    # 2. '^lll...' garbage prefix before actual words
+    txt = re.sub(r'^\[(?=[a-záéíóúàâêôãõç])', 'l', txt)
     txt = re.sub(r'^\^lll+', '', txt)
     txt = re.sub(r'\^\^l+', '', txt)
-
-    # 3. Israel variants
-    txt = re.sub(r'\blsrael[t]?\b', 'Israel', txt)
+    txt = re.sub(r'\blsrael[tL]?\b', 'Israel', txt)
     txt = re.sub(r'\blsraeL\b', 'Israel', txt)
     txt = re.sub(r'\blsroel\b', 'Israel', txt)
     txt = re.sub(r'\blsraet\b', 'Israel', txt)
-
-    # 4. Comma/period INSIDE word only (no surrounding space): "fidel,idade" → "fidelidade"
     txt = re.sub(r'(?<=[A-Za-zÀ-ÿ])[,.](?=[a-záéíóúàâêôãõç]{3,})', '', txt)
-    # "l, e" glued-word pattern only for known short joins (dEl, e → dEle)
     txt = re.sub(r'\b(d?El),\s(e|es)\b', r'\1\2', txt)
-
-    # 5. Capital L at word-end acting as lowercase l
     txt = re.sub(r'([aeiouáéíóúâêô])L(?=\b)', lambda m: m.group(1)+'l', txt)
-
-    # 6. TEXTO BÍBLICO
     txt = re.sub(r'TEXTO\s+B[ÍI]?\s*BLICO', 'TEXTO BÍBLICO', txt)
-
-    # 7. Yahweh variants
     txt = re.sub(r'Y[aohsh]{1,3}hweh', 'Yahweh', txt)
-
-    # 8. '[' at END of word before space/punctuation (e.g. "Baa[" → "Baal")
     txt = re.sub(r'(?<=[A-Za-zÀ-ÿ]{2})\[(?=[\s,;.:!?)\-]|$)', 'l', txt)
-
-    # 9. fidel, idade → fidelidade (comma+space variant)
     txt = re.sub(r'\bfidel,\s+idade\b', 'fidelidade', txt)
     txt = re.sub(r'\bfidel\s+idade\b', 'fidelidade', txt)
-
-    # 10. Word-level dictionary (simple string replace, ordered longest first)
     for bad, good in sorted(_WORD_FIXES.items(), key=lambda x: -len(x[0])):
         txt = txt.replace(bad, good)
-
     return txt
 
-# ── Junk paragraph detection ──────────────────────────────────────────────────
+# ── Junk detection ───────────────────────────────────────────────────────────
 _JUNK_EXACT = {
-    't', 'L', 'r', '# E', 'IOVENS', 'JOVENS', 'ANOTAÇÕrs', 'oRTENTAÇÃO PEDAGOGTCA',
-    'OQIENTAÇÃO PEDAGOGTCA', 'ORIENTAÇÃO PEDAGÓGICA', 'ESTANTE DO PROFESSOR',
-    'ANOTAÇÕES', 'ANOTAÇOeS',
+    't', 'L', 'r', '# E', 'IOVENS', 'JOVENS', 'ANOTAÇÕrs',
+    'ANOTAÇors', 'ANOTAÇÕES', 'ANOTAÇOeS', 'w', ':', ',', '.', ';',
+    'DÂ', 'DÁ', 'DÃ', 'DA', 'I I LI', 'I I',
 }
 _JUNK_RE = [
-    re.compile(r'^(JOVENS|IOVENS|IOVfNS|lovENS)\s*\d+$', re.I),
-    re.compile(r'^\d+\s*(lovENS|JOVENS|IOVENS)', re.I),
-    re.compile(r'^[A-Z]{1,3}\s+[A-Z0-9]{1,6}TAO\s+DE\b'),    # "H AUESTAO DE ESCOLHA"
-    re.compile(r'^[a-záéíóú][ÇÃçã]{1,3}[a-záãõ]{0,3}$'),     # "uÇÃoã"
-    re.compile(r"^['\-\*]\s*[a-z\-']\s*[\-:]"),                # "'t -j i-::"
-    re.compile(r'^=[\'"\.\-\*]'),                                # "='.-*=o-" or "=.-"
-    re.compile(r'^sUBSÍD[pP]\s'),                               # garbled SUBSÍDIO prefix
-    re.compile(r'^SUBSíD[pP]\s'),
-    re.compile(r'^ff"'),                                        # garbled bibliography
-    re.compile(r'^\{[A-Z][a-z]'),                              # {Biblia de ...} bib ref
-    re.compile(r'^ffi\s*["\-]'),
-    re.compile(r'^\{[A-ZÀ-Ÿa-z]'),                            # "{Bíblia de..." bib ref
-    re.compile(r'^[A-Z]{2,8},\s+[A-Z][a-z]+\s+[A-Z]'),       # "MERRIL, Eugene H." bib
-    re.compile(r'^ffi\s*_'),                                   # "ffi _-1,, M"
-    re.compile(r"^[,;]\s*[a-z',;]"),       # ", i, REFLETIR..." garbled bullets
-    re.compile(r"^,,"),                      # ",,' DESTACAR..." garbled bullets
-    re.compile(r'^\*\s+[A-Z]'),             # "* CONHECER" bullet noise (handled elsewhere)
+    re.compile(r'^ANOTA[CÇ]', re.I),                                    # ANOTAÇÕES / ANOTAÇors
+    re.compile(r'^(JOVENS|IOVENS|IOVfNS|lovENS|T\d[pP][vV]ENS|pvENS)\s*\d*$', re.I),
+    re.compile(r'^\d+\s*(lovENS|JOVENS|IOVENS|pvENS)', re.I),
+    re.compile(r'^[A-Z]{1,3}\s+[A-Z0-9]{1,6}TAO\s+DE\b'),
+    re.compile(r'^[a-záéíóú][ÇÃçã]{1,3}[a-záãõ]{0,3}$'),
+    re.compile(r"^['\-\*]\s*[a-z\-']\s*[\-:]"),
+    re.compile(r'^=[\'"\.\-\*]'),
+    re.compile(r'^sUBSÍD[pP]\s'), re.compile(r'^SUBSíD[pP]\s'),
+    re.compile(r'^ff"'), re.compile(r'^\{[A-Z][a-z]'),
+    re.compile(r'^ffi\s*["\-_]'),
+    re.compile(r'^\{[A-ZÀ-Ÿa-z]'),
+    re.compile(r"^,,"),
+    # garbled decorative page header e.g. "-J E DERROTAS", "., i.;:..i,."
+    re.compile(r'^[.\-,;]+\s*[a-z]'),
+    re.compile(r'^-[A-Z]\s+[A-Z]'),
+    # page/section markers ending in digits with junk
+    re.compile(r'^[A-Z][A-Z\s]{2,12}\s*\d{1,3}$'),
 ]
+
+# Teacher-block detection for PLAIN paragraphs (not inside <strong>)
+_TEACHER_RE = [
+    re.compile(r'^[TO]NTERA[CÇ]', re.I),
+    re.compile(r'^INTERA[CÇ][AÃ]O\s', re.I),
+    re.compile(r'^oRIENTA', re.I),
+    re.compile(r'^ORIENTA[CÇ][AÃ]O\s+PEDAG', re.I),
+    re.compile(r'^Prezado\(a\)\s+professor', re.I),
+    re.compile(r'^Pontos\s+fortes\s+e', re.I),
+    re.compile(r'^Fraquezas\s+e\s+erros', re.I),
+    re.compile(r'^Extro[íi]do\s+de', re.I),
+    re.compile(r'^[A-Z]{2,8},\s+[A-Z][a-z]+'),   # bibliography "CESAR, Marcelino..."
+    re.compile(r'CPAD,\s*p\.\s*\d'),              # CPAD bibliography ref
+    re.compile(r'LIVINGSTON|RIDALL|PFEIFER|BEACON|WYCLIFFE', re.I),
+]
+
+def is_hora_da_revisao(plain):
+    """Detect garbled 'O HORA DA REVISÃO' in any OCR corruption variant."""
+    p = plain[:35].upper().replace(' ', '').replace('-', '')
+    if not p.startswith('O'):
+        return False
+    has_hora = 'HORA' in p or 'NORA' in p or 'HORA' in p
+    # n=H corruption: O-N-O-R-A
+    if not has_hora:
+        has_hora = bool(re.match(r'^O[A-Z]{0,3}ORA', p))
+    has_revis = bool(re.search(r'RE(?:V|B)[ITS]|REVI|NEVL|NEVS', p))
+    return has_hora and has_revis
+
+def hora_rest(plain):
+    """Extract content after the garbled HORA DA REVISÃO header (if inline)."""
+    rest = re.sub(r'^[O0].{1,25}[AaÃã][oO]\s*', '', plain).strip()
+    return rest
 
 def is_junk(txt):
     t = re.sub(r'<[^>]+>', '', txt).strip()
@@ -220,33 +235,44 @@ def is_junk(txt):
     for p in _JUNK_RE:
         if p.search(t):
             return True
-    # High non-alpha ratio in short lines
     alpha = sum(1 for c in t if c.isalpha())
     if len(t) < 50 and alpha / max(len(t), 1) < 0.45 and len(t) > 3:
         return True
     return False
 
-# ── Garbled section head normalization ───────────────────────────────────────
+def is_teacher(txt):
+    """Detect teacher-only content that should be skipped."""
+    for p in _TEACHER_RE:
+        if p.search(txt):
+            return True
+    return False
+
+# ── Section head normalization ───────────────────────────────────────────────
 _HEAD_MAP = [
-    (re.compile(r'RESUMO\s+DA\s+LI[CÇ]', re.I),   'RESUMO DA LIÇÃO'),
+    (re.compile(r'RESUMO\s+DA\s+LI',      re.I),   'RESUMO DA LIÇÃO'),
     (re.compile(r'TEXTO\s+BÍBLICO',        re.I),   'TEXTO BÍBLICO'),
-    (re.compile(r'TEXTO\s+PRINCIPAL',      re.I),   'TEXTO PRINCIPAL'),
+    (re.compile(r'TEXTO\s+B[ÍI]?\s*BLICO', re.I),  'TEXTO BÍBLICO'),
     (re.compile(r'LEITURA\s+SEMANAL',      re.I),   'LEITURA SEMANAL'),
     (re.compile(r'LEITURA\s+DIÁRIA',       re.I),   'LEITURA DIÁRIA'),
-    (re.compile(r'OBJETIVOS',              re.I),   'OBJETIVOS'),
+    (re.compile(r'OBJETIVOS?',             re.I),   'OBJETIVOS'),
+    (re.compile(r'OBJET[\'"]?IVO',         re.I),   'OBJETIVOS'),
     (re.compile(r'INTERA[CÇ][AÃ]O',       re.I),   'INTERAÇÃO'),
-    (re.compile(r'INTRODU[CÇ]?[AÃ]?O?',    re.I),   'INTRODUÇÃO'),
-    (re.compile(r'CONCLUS[AÃ]O',          re.I),   'CONCLUSÃO'),
-    (re.compile(r'HORA\s+DA\s+REVIS',     re.I),   'HORA DA REVISÃO'),
-    (re.compile(r'(O\s*)?HoRA\s*DA\s*REV', re.I),  'HORA DA REVISÃO'),
-    (re.compile(r'O\s*no\s*RA\s*DA\s*REV', re.I),  'HORA DA REVISÃO'),
-    (re.compile(r'coNCLU',                re.I),   'CONCLUSÃO'),
-    (re.compile(r'ANOTA[CÇ][OÕ]',        re.I),   '__REMOVE__'),
-    (re.compile(r'ESTANTE\s+DO',          re.I),   '__REMOVE__'),
-    (re.compile(r'SUBSÍDIO',              re.I),   '__SUBSIDIO__'),
-    (re.compile(r'SUBSíDIO',             re.I),   '__SUBSIDIO__'),
-    (re.compile(r'ORIENT',               re.I),   '__REMOVE__'),
-    (re.compile(r'PEDAGOG',             re.I),   '__REMOVE__'),
+    (re.compile(r'TNTERA[CÇ]',            re.I),   'INTERAÇÃO'),
+    (re.compile(r'INTRODU[CÇ]|^INTRO$',   re.I),   'INTRODUÇÃO'),
+    (re.compile(r'\bINTRO\b',             re.I),   'INTRODUÇÃO'),
+    (re.compile(r'CONCLUS[AÃ]O',         re.I),   'CONCLUSÃO'),
+    (re.compile(r'^0coNCLU|^ocoNCLU',    re.I),   'CONCLUSÃO'),
+    (re.compile(r'coNCLU',               re.I),   'CONCLUSÃO'),
+    (re.compile(r'HORA\s+DA\s+REVIS',    re.I),   'HORA DA REVISÃO'),
+    (re.compile(r'(O\s*)?HoRA\s*DA\s*REV', re.I), 'HORA DA REVISÃO'),
+    (re.compile(r'OHoRADAREvI',          re.I),   'HORA DA REVISÃO'),
+    (re.compile(r'TEXTO\s+PRINCIPAL',    re.I),   '__REMOVE__'),
+    (re.compile(r'TEXTO\s+PRINCIP',      re.I),   '__REMOVE__'),
+    (re.compile(r'ANOTA[CÇ][OÕ]',       re.I),   '__REMOVE__'),
+    (re.compile(r'ESTANTE\s+DO',         re.I),   '__REMOVE__'),
+    (re.compile(r'SUBSÍDIO',             re.I),   '__SUBSIDIO__'),
+    (re.compile(r'SUBSíDIO',            re.I),   '__SUBSIDIO__'),
+    (re.compile(r'ORIENT|PEDAGOG',       re.I),   '__REMOVE__'),
 ]
 
 def normalize_head(raw):
@@ -255,17 +281,67 @@ def normalize_head(raw):
             return fixed
     return raw
 
-# ── Main post-processor ───────────────────────────────────────────────────────
+# OBJETIVOS: strip garbled bullet prefix, keep verb + rest
+_OBJ_RE = re.compile(
+    r'(?:^|(?:[^A-Za-zÀ-ÿ]+))'
+    r'(COMPREENDER|IDENTIFICAR|APLICAR|RECONHECER|REFLETIR|DESTACAR|'
+    r'ANALISAR|PERCEBER|ENTENDER|DISCUTIR|RELACIONAR|CITAR|AVALIAR|MOSTRAR)(.+)',
+    re.I | re.DOTALL)
+
+def extract_objetivo(plain):
+    m = _OBJ_RE.search(plain)
+    if m:
+        return (m.group(1).capitalize() + m.group(2)).strip()
+    return None
+
+# Daily reading line pattern: SEGUNDA, TERÇA etc.
+_DAILY_RE = re.compile(
+    r'(SEGUNDA|TERÇA|AU?ARTA|AU?INTA|QUINTA|SEXTA|S[AÁ]BADO)\s*[-–*]\s*(.+?)(?=(?:SEGUNDA|TERÇA|AU?ARTA|AU?INTA|QUINTA|SEXTA|S[AÁ]BADO)|$)',
+    re.I)
+
+# ── Main post-processor ──────────────────────────────────────────────────────
 def post_process(body, num, titulo):
-    # Split into <p> blocks
     paras = re.split(r'(?=<p[ >])', body)
     out_parts = [f'<p class="titulo">LIÇÃO {num}</p>',
                  f'<p class="subtitulo">{titulo.title()}</p>']
 
     i = 0
-    subsídio_buf = []
-    in_texto_biblico = False
-    skip_until_next_head = False  # used to skip INTERAÇÃO (teacher block)
+    skip_until_next_head = False
+    in_objetivos     = False
+    obj_items        = []
+    in_resumo        = False
+    resumo_buf       = []
+    in_quote         = False
+    quote_parts      = []
+    pending_roman    = None  # accumulating split roman head
+    conclusao_buf    = []
+    in_conclusao     = False
+
+    def flush_objetivos():
+        if obj_items:
+            out_parts.append('<ul>' + ''.join(obj_items) + '</ul>')
+        obj_items.clear()
+
+    def flush_resumo():
+        if resumo_buf:
+            content = ' '.join(resumo_buf)
+            out_parts.append(
+                f'<div class="box-resumo"><span class="lbl">Resumo da Lição</span>'
+                f'<p>{fix_ocr(content)}</p></div>')
+        resumo_buf.clear()
+
+    def flush_quote():
+        if quote_parts:
+            out_parts.append(
+                f'<div class="box-aureo"><span class="lbl">Versículo da Lição</span>'
+                f'<p>{fix_ocr(" ".join(quote_parts))}</p></div>')
+        quote_parts.clear()
+
+    def flush_conclusao():
+        if conclusao_buf:
+            content = ' '.join(conclusao_buf)
+            out_parts.append(f'<p>{fix_ocr(content)}</p>')
+        conclusao_buf.clear()
 
     while i < len(paras):
         raw = paras[i].strip()
@@ -273,68 +349,240 @@ def post_process(body, num, titulo):
         if not raw:
             continue
 
-        # Extract inner HTML from <p>...</p>
         m_p = re.match(r'<p(?:[^>]*)>(.*?)</p>\s*$', raw, re.DOTALL)
         if not m_p:
             out_parts.append(raw)
             continue
         inner = m_p.group(1).strip()
-
-        # Plain text version for detection
         plain = re.sub(r'<[^>]+>', '', inner).strip()
-        plain_fixed = fix_ocr(plain)
 
-        # Skip the lição title/subtitle (already added above)
-        if re.match(r'^LIÇÃO\s+\d+', plain, re.I):
+        # Skip lesson title/subtitle (already added)
+        if re.match(r'^LIÇÃO\s+\d+\s*$', plain, re.I):
             continue
-        if plain == titulo or plain.lower() == titulo.lower():
+        if plain.lower() == titulo.lower() or plain.lower() == titulo.title().lower():
             continue
 
-        # Skip junk lines
+        # Junk
         if is_junk(plain):
             continue
 
-        # If we're skipping the INTERAÇÃO teacher block, skip until next strong ALL-CAPS head
+        # Teacher block detection (plain paragraph)
+        if is_teacher(plain):
+            # Bibliography lines (AUTHOR, Name...) skip just themselves
+            # Full teacher blocks (TNTERAÇÃO, ORIENTAÇÃO etc.) start a skip block
+            is_bib = bool(re.match(r'^[A-Z]{2,8},\s+[A-Z][a-z]+', plain) or
+                          re.search(r'CPAD,\s*p\.\s*\d', plain))
+            if not is_bib:
+                skip_until_next_head = True
+            continue
+
+        # PENSE! / PONTO IMPORTANTE! teacher callouts
+        if re.match(r'^[@§@]\s*PENSE|^§\s*PONTO', plain, re.I):
+            skip_until_next_head = True
+            continue
+
+        # While skipping teacher block, check if we've hit a new section
         if skip_until_next_head:
-            is_head = (re.match(r'^<strong>[A-ZÁÉÍÓÚ\s\-–—IVX]+</strong>$', inner) and
-                       len(re.sub(r'<[^>]+>', '', inner).strip()) > 2)
-            all_caps_p = (plain and plain.upper() == plain and len(plain) > 3)
-            if is_head or all_caps_p:
+            head_plain = re.sub(r'<[^>]+>', '', inner).strip()
+            is_new_head = (
+                (head_plain and head_plain.upper() == head_plain and len(head_plain) > 4 and not re.search(r'\d', head_plain[:5]))
+            )
+            is_roman = re.match(r'^[IVX]+\s*[-–]', head_plain)
+            # Also detect garbled HORA DA REVISÃO, CONCLUSÃO even if mixed-case
+            is_garbled_section = bool(
+                is_hora_da_revisao(head_plain) or
+                re.match(r'^[0O]?\s*coNCLU', head_plain, re.I) or
+                re.match(r'^coNCLU', head_plain, re.I) or
+                re.search(r'(?<![A-Za-z])[O0]\s*coNCLU', head_plain, re.I)
+            )
+            if is_new_head or is_roman or is_garbled_section:
                 skip_until_next_head = False
-                # fall through to process this head normally
+                # fall through
             else:
                 continue
 
-        # Check for SUBSÍDIO start (garbled prefix + quote)
+        # ── Strong-only paragraphs (section heads / roman heads) ──────────────
+        strong_m = re.match(r'^<strong>(.*?)</strong>$', inner)
+        if strong_m:
+            head_raw  = strong_m.group(1)
+            head_plain = re.sub(r'<[^>]+>', '', head_raw).strip()
+            head_fixed = fix_ocr(head_plain)
+            norm = normalize_head(head_fixed)
+
+            # Accumulate split roman heads
+            if pending_roman is not None:
+                if head_fixed.upper() == head_fixed or re.match(r'^[A-ZÁÉÍÓÚ\s\-–]+$', head_fixed):
+                    pending_roman += ' ' + head_fixed
+                    continue
+                else:
+                    # flush pending
+                    out_parts.append(f'<p class="roman-head">{fix_ocr(pending_roman)}</p>')
+                    pending_roman = None
+
+            # Roman numeral heading
+            if re.match(r'^[IVX]+\s*[-–]', head_fixed):
+                flush_objetivos()
+                in_objetivos = False
+                # Incomplete if ends with hyphen or a dangling conjunction/preposition
+                _incomplete = re.search(r'[-–]\s*$|\b(E|A|OU|DE|DO|DA|EM|COM|OS|AS|O)\s*$', head_fixed)
+                if _incomplete or len(head_fixed.split()) <= 3:
+                    pending_roman = head_fixed
+                else:
+                    out_parts.append(f'<p class="roman-head">{head_fixed}</p>')
+                continue
+
+            if norm == '__REMOVE__':
+                continue
+            if norm == '__SUBSIDIO__':
+                continue  # handled below
+            if norm == 'INTERAÇÃO':
+                skip_until_next_head = True
+                continue
+
+            # Known section heads
+            _KNOWN = ('TEXTO BÍBLICO','HORA DA REVISÃO','CONCLUSÃO','RESUMO DA LIÇÃO',
+                      'OBJETIVOS','LEITURA SEMANAL','LEITURA DIÁRIA','INTRODUÇÃO')
+
+            if norm in _KNOWN:
+                flush_objetivos(); in_objetivos = False
+                flush_resumo();    in_resumo = False
+                flush_quote();     in_quote = False
+                if in_conclusao:   flush_conclusao(); in_conclusao = False
+
+                if norm == 'OBJETIVOS':
+                    in_objetivos = True
+                    out_parts.append(f'<p class="sec-head">OBJETIVOS</p>')
+                elif norm == 'RESUMO DA LIÇÃO':
+                    in_resumo = True
+                elif norm == 'CONCLUSÃO':
+                    in_conclusao = True
+                    out_parts.append(f'<p class="sec-head">CONCLUSÃO</p>')
+                elif norm == 'HORA DA REVISÃO':
+                    in_conclusao = False
+                    out_parts.append(f'<p class="sec-head">HORA DA REVISÃO</p>')
+                else:
+                    out_parts.append(f'<p class="sec-head">{norm}</p>')
+                continue
+
+            # Numbered subpoint (1., 2., 3. ...)
+            if re.match(r'^\d+\.', head_fixed):
+                flush_objetivos(); in_objetivos = False
+                if in_resumo: flush_resumo(); in_resumo = False
+                out_parts.append(f'<p class="subpoint"><strong>{fix_ocr(head_raw)}</strong></p>')
+                continue
+
+            # ALL-CAPS fallback
+            if head_plain.upper() == head_plain and len(head_plain) > 4:
+                norm2 = normalize_head(head_plain)
+                if norm2 in ('__REMOVE__', '__SUBSIDIO__'):
+                    continue
+                flush_objetivos(); in_objetivos = False
+                out_parts.append(f'<p class="sec-head">{norm2 if norm2 != head_plain else head_fixed}</p>')
+                continue
+
+            out_parts.append(f'<p class="subtitulo">{fix_ocr(head_raw)}</p>')
+            continue
+
+        # ── Flush pending roman head if next is not a continuation ────────────
+        if pending_roman is not None:
+            # Plain ALL-CAPS paragraph? Full continuation of split heading
+            if plain and plain.upper() == plain and not re.search(r'\d', plain) and len(plain) < 60:
+                if pending_roman.rstrip().endswith('-'):
+                    pending_roman = pending_roman.rstrip()[:-1] + plain
+                else:
+                    pending_roman += ' ' + plain
+                continue
+            # Mixed-case: extract ALL leading uppercase words as title continuation
+            # Handles e.g. "III - A MORTE DE SANSÃO E" + "SUA ULNMAVITORIA r. Entretendo..."
+            words = plain.split()
+            head_extra = []
+            body_start = 0
+            for j, w in enumerate(words):
+                alpha_only = re.sub(r'[^A-ZÁÉÍÓÚÂÊÔÃÕÇ]', '', w)
+                if alpha_only and alpha_only == alpha_only.upper() and not re.search(r'\d', w):
+                    head_extra.append(w)
+                    body_start = j + 1
+                else:
+                    break
+            if head_extra:
+                extra_str = fix_ocr(' '.join(head_extra))
+                if pending_roman.rstrip().endswith('-'):
+                    pending_roman = pending_roman.rstrip()[:-1] + extra_str
+                else:
+                    pending_roman += ' ' + extra_str
+                plain = ' '.join(words[body_start:])
+                inner = plain
+            out_parts.append(f'<p class="roman-head">{fix_ocr(pending_roman.rstrip("-").strip())}</p>')
+            pending_roman = None
+
+        plain_fixed = fix_ocr(plain)
+
+        # ── All-CAPS plain paragraph → section head ───────────────────────────
+        if plain and plain.upper() == plain and len(plain) > 3 and not re.search(r'\d', plain):
+            norm = normalize_head(fix_ocr(plain))
+            if norm in ('__REMOVE__', '__SUBSIDIO__'):
+                continue
+            if norm == 'INTERAÇÃO':
+                skip_until_next_head = True
+                continue
+
+            flush_objetivos(); in_objetivos = False
+            flush_resumo();    in_resumo = False
+            flush_quote();     in_quote = False
+            if in_conclusao:   flush_conclusao(); in_conclusao = False
+
+            _KNOWN2 = ('TEXTO BÍBLICO','HORA DA REVISÃO','CONCLUSÃO','RESUMO DA LIÇÃO',
+                       'OBJETIVOS','LEITURA SEMANAL','LEITURA DIÁRIA','INTRODUÇÃO')
+            if norm in _KNOWN2:
+                if norm == 'OBJETIVOS':
+                    in_objetivos = True
+                    out_parts.append(f'<p class="sec-head">OBJETIVOS</p>')
+                elif norm == 'RESUMO DA LIÇÃO':
+                    in_resumo = True
+                elif norm == 'CONCLUSÃO':
+                    in_conclusao = True
+                    out_parts.append(f'<p class="sec-head">CONCLUSÃO</p>')
+                elif norm == 'HORA DA REVISÃO':
+                    out_parts.append(f'<p class="sec-head">HORA DA REVISÃO</p>')
+                else:
+                    out_parts.append(f'<p class="sec-head">{norm}</p>')
+            else:
+                out_parts.append(f'<p class="sec-head">{norm}</p>')
+            continue
+
+        # ── SUBSÍDIO start detection ───────────────────────────────────────────
         subsídio_start = re.match(
-            r'^(?:sUBSÍD[pP]|SUBSíD[pP]|SUBSÍDIO|SUBSíDIO)\s*(?:ffi\s*)?"(.+)',
+            r'^(?:sUBSÍD[pP][oO]?|SUBSíDI[oO]|SUBSÍDIO|SUBSíDWW\s+Professor[^"]*|'
+            r'SUBSíDI[oO]\.ffi)\s*(?:["\'"]+\s*|ffi\s*)?(.+)',
             plain, re.I | re.DOTALL)
         if subsídio_start:
-            # Start of a subsídio block — collect quote text
+            flush_objetivos(); in_objetivos = False
             quote = fix_ocr(subsídio_start.group(1))
             subsídio_buf = [quote]
-            # Look ahead for bibliography line
+            # Collect continuation and optional bibliography
             while i < len(paras):
                 nxt_raw = paras[i].strip()
                 nxt_m = re.match(r'<p(?:[^>]*)>(.*?)</p>', nxt_raw, re.DOTALL)
-                nxt_plain = re.sub(r'<[^>]+>', '', nxt_m.group(1) if nxt_m else nxt_raw).strip() if nxt_raw else ''
-                # bibliography lines are short, italic, garbled
-                if nxt_plain and (re.match(r'^(?:ff|{|\()', nxt_plain) or
-                                  re.search(r'CPAD|Rio de Janeiro|\.p\.\s*\d', nxt_plain)):
-                    # Clean up bibliography
-                    bib = fix_ocr(re.sub(r'^ff"[^,]*,\s*', '', nxt_plain))
-                    bib = re.sub(r'^[^A-ZÁÉÍÓÚ]+', '', bib)
+                nxt_plain = re.sub(r'<[^>]+>', '', nxt_m.group(1) if nxt_m else nxt_raw).strip()
+                norm_nxt = normalize_head(nxt_plain)
+                if norm_nxt in ('__REMOVE__','__SUBSIDIO__') or is_junk(nxt_plain):
+                    i += 1; continue
+                if re.search(r'CPAD|Rio de Janeiro|\.p\.\s*\d|LIVINGSTON|RIDALL|CESAR|PFEIFER', nxt_plain):
+                    bib = fix_ocr(re.sub(r'^[^A-ZÁÉÍÓÚ]+', '', nxt_plain))
                     subsídio_buf.append(f'__BIB__{bib}')
-                    i += 1
+                    i += 1; break
+                # Check if it's a "professor" note after subsídio
+                if re.match(r'^(?:sUBSÍD|SUBSíD)', nxt_plain, re.I) or norm_nxt in ('HORA DA REVISÃO','CONCLUSÃO','__REMOVE__'):
                     break
-                elif is_junk(nxt_plain):
-                    i += 1
-                else:
+                if is_teacher(nxt_plain):
                     break
-            # Render subsídio block
-            quote_html = subsídio_buf[0] if subsídio_buf else ''
+                subsídio_buf.append(fix_ocr(nxt_plain))
+                i += 1
+                if len(subsídio_buf) > 6:
+                    break
+            quote_html = ' '.join(x for x in subsídio_buf if not x.startswith('__BIB__'))
             bib_html = ''
-            for x in subsídio_buf[1:]:
+            for x in subsídio_buf:
                 if x.startswith('__BIB__'):
                     bib_html = f'<p class="ref-bib">{x[7:]}</p>'
             out_parts.append(
@@ -342,107 +590,132 @@ def post_process(body, num, titulo):
                 f'<p>"{quote_html}"</p>{bib_html}</div>')
             continue
 
-        # Strong-only paragraphs → potential section heads
-        strong_m = re.match(r'^<strong>(.*?)</strong>$', inner)
-        if strong_m:
-            head_plain = re.sub(r'<[^>]+>', '', strong_m.group(1)).strip()
-            head_plain = fix_ocr(head_plain)
-            norm = normalize_head(head_plain)
-
-            if norm == '__REMOVE__':
-                # Skip this and following paragraph(s) until next strong head
-                continue
-            if norm == '__SUBSIDIO__':
-                continue  # handled above
-            if norm == 'TEXTO BÍBLICO':
-                in_texto_biblico = True
-                out_parts.append(f'<p class="sec-head">TEXTO BÍBLICO</p>')
-                continue
-            if norm == 'INTERAÇÃO':
-                # Teacher-only block — skip content until next section head
-                skip_until_next_head = True
-                continue
-            if norm in ('HORA DA REVISÃO',):
-                in_texto_biblico = False
-                skip_until_next_head = False
-                out_parts.append(f'<p class="sec-head">{norm}</p>')
-                continue
-            if norm in ('CONCLUSÃO',):
-                in_texto_biblico = False
-                skip_until_next_head = False
-                out_parts.append(f'<p class="sec-head">{norm}</p>')
-                continue
-            if norm != head_plain and norm not in ('__REMOVE__', '__SUBSIDIO__'):
-                # Known section → sec-head
-                in_texto_biblico = (norm == 'TEXTO BÍBLICO')
-                out_parts.append(f'<p class="sec-head">{norm}</p>')
-                continue
-
-            # Roman numeral heading (I - ..., II - ..., III - ...)
-            if re.match(r'^[IVX]+\s*[-–]', head_plain):
-                in_texto_biblico = False
-                out_parts.append(f'<p class="roman-head">{fix_ocr(strong_m.group(1))}</p>')
-                continue
-
-            # Numbered subpoint head (1., 2., 3. ...)
-            if re.match(r'^\d+\.', head_plain):
-                out_parts.append(f'<p class="subpoint"><strong>{fix_ocr(strong_m.group(1))}</strong></p>')
-                continue
-
-            # Fallback: render as section head
-            if head_plain.isupper() and len(head_plain) > 4:
-                norm2 = normalize_head(head_plain)
-                if norm2 == '__REMOVE__':
-                    continue
-                out_parts.append(f'<p class="sec-head">{norm2 if norm2 not in ("__REMOVE__","__SUBSIDIO__") else head_plain}</p>')
-                continue
-
-            # Bold subtitle (mixed case)
-            out_parts.append(f'<p class="subtitulo">{fix_ocr(inner)}</p>')
+        # ── RESUMO: collect next paragraphs into box ───────────────────────────
+        if in_resumo:
+            if plain_fixed:
+                resumo_buf.append(plain_fixed)
+            # Stop collecting after one substantive paragraph
+            if len(resumo_buf) >= 1 and len(plain_fixed) > 20:
+                flush_resumo()
+                in_resumo = False
             continue
 
-        # Plain ALL-CAPS paragraph → check section heads
-        if plain and plain.upper() == plain and len(plain) > 3 and not re.search(r'\d', plain):
-            norm = normalize_head(fix_ocr(plain))
-            if norm == '__REMOVE__':
-                continue
-            if norm == '__SUBSIDIO__':
-                continue
-            if norm in ('TEXTO BÍBLICO', 'HORA DA REVISÃO', 'CONCLUSÃO', 'RESUMO DA LIÇÃO',
-                        'OBJETIVOS', 'INTERAÇÃO', 'LEITURA SEMANAL', 'TEXTO PRINCIPAL',
-                        'LEITURA DIÁRIA', 'INTRODUÇÃO'):
-                in_texto_biblico = (norm == 'TEXTO BÍBLICO')
-                out_parts.append(f'<p class="sec-head">{norm}</p>')
-                continue
-            if len(plain) < 80:
-                out_parts.append(f'<p class="sec-head">{fix_ocr(plain)}</p>')
-                continue
-
-        # TEXTO ÁUREO / VERDADE PRÁTICA
-        strong_first = re.match(r'^<strong>(TEXTO ÁUREO|VERDADE PRÁTICA)</strong>(.*)', inner, re.DOTALL)
-        if strong_first:
-            key = strong_first.group(1)
-            rest = fix_ocr(strong_first.group(2).strip())
-            if key == 'TEXTO ÁUREO':
-                out_parts.append(f'<div class="box-aureo"><span class="lbl">Texto Áureo</span>{rest}</div>')
+        # ── Quote/verse box: detect "..." paragraph as lesson verse ───────────
+        # inner may have &quot; entity before stripping — check both
+        starts_quote = (re.match(r'^["""\'"]', plain) or
+                        inner.lstrip().startswith('&quot;') or
+                        re.match(r'^&[ql]', inner.lstrip()))
+        if starts_quote and not in_quote:
+            in_quote = True
+            clean = re.sub(r'^["""\'"\s&quot;]+', '', plain).lstrip()
+            quote_parts = [clean]
+            continue
+        if in_quote:
+            # End quote when we see a source reference (Jz 16.28) etc.
+            if re.match(r'^\(', plain) and re.search(r'[A-Z][a-z]?\s*\d+', plain):
+                src = plain.strip('()')
+                quote_parts.append(f'({src})')
+                flush_quote()
+                in_quote = False
+            elif inner.strip().endswith(')') and re.search(r'[A-Z][a-z]?\s*\d+', plain):
+                quote_parts.append(plain)
+                flush_quote()
+                in_quote = False
+            elif is_junk(plain):
+                pass  # skip junk inside quote
             else:
-                out_parts.append(f'<div class="box-pratica"><span class="lbl">Verdade Prática</span>{rest}</div>')
+                quote_parts.append(plain)
             continue
 
-        # RESUMO DA LIÇÃO as special box
-        if re.match(r'^RESUMO\s+DA\s+LI[CÇ]', plain, re.I):
-            out_parts.append('<p class="sec-head">RESUMO DA LIÇÃO</p>')
+        # ── OBJETIVOS items ───────────────────────────────────────────────────
+        if in_objetivos:
+            obj = extract_objetivo(plain_fixed)
+            if obj:
+                obj_items.append(f'<li>{fix_ocr(obj)}</li>')
+                continue
+            # Non-objective paragraph: flush and fall through
+            flush_objetivos()
+            in_objetivos = False
+
+        # ── CONCLUSÃO: join small fragments ──────────────────────────────────
+        if in_conclusao:
+            # Stop collecting at teacher blocks, HORA DA REVISÃO (all OCR variants), or end markers
+            stop_conclusao = (
+                is_teacher(plain_fixed) or
+                is_hora_da_revisao(plain_fixed) or
+                re.match(r'HORA\s+DA\s+REVIS', plain_fixed, re.I) or
+                re.match(r'ANOTA[CÇ][OÕ]', plain_fixed, re.I) or
+                re.match(r'^[0O]?\s*coNCLU', plain_fixed, re.I) or  # nested / garbled duplicate
+                re.search(r'(?<![A-Za-z])[O0]\s*coNCLU', plain_fixed, re.I)
+            )
+            if stop_conclusao:
+                flush_conclusao(); in_conclusao = False
+                # If we stopped because of HORA, fall through to HORA detection below
+                # For other stop triggers, skip the line
+                if not is_hora_da_revisao(plain_fixed):
+                    continue
+            elif plain_fixed:
+                conclusao_buf.append(plain_fixed)
+                continue
+
+        # ── Daily readings ────────────────────────────────────────────────────
+        if re.search(r'(SEGUNDA|TERÇA|QUARTA|AUINTA|QUINTA|SEXTA|S[AÁ]BADO)\s*[-–*]', plain, re.I):
+            # AUINTA is garbled QUINTA (OCR Q→AU)
+            plain_d = re.sub(r'\bAUINTA\b', 'QUINTA', plain, flags=re.I)
+            plain_d = re.sub(r'\bAUARTA\b', 'QUARTA', plain_d, flags=re.I)
+            items = []
+            for m in _DAILY_RE.finditer(plain_d):
+                day = m.group(1).capitalize()
+                desc = fix_ocr(m.group(2).strip().rstrip(',;'))
+                items.append(f'<li><strong>{day}:</strong> {desc}</li>')
+            if not items:
+                items.append(f'<li>{fix_ocr(plain_fixed)}</li>')
+            if items:
+                out_parts.append('<ul>' + ''.join(items) + '</ul>')
             continue
 
-        # Regular numbered subpoints (1. Text, 2. Text, ...)
-        if re.match(r'^\d+\.', plain):
+        # ── Numbered subpoints ────────────────────────────────────────────────
+        if re.match(r'^\d+\.', plain_fixed):
             out_parts.append(f'<p class="subpoint">{fix_ocr(inner)}</p>')
             continue
 
-        # Regular paragraph
+        # ── Letter subpoints A. B. C. ─────────────────────────────────────────
+        if re.match(r'^[A-CaA]\.\s+[A-ZÁÉÍÓÚ]', plain_fixed):
+            out_parts.append(f'<p class="subpoint">{fix_ocr(inner)}</p>')
+            continue
+
+        # ── Garbled CONCLUSÃO detection (plain, mixed-case) ─────────────────
+        # Handles: "0coNcLUSÃo", "O coNCLUsÃo", "'.-*=o- O coNcLUSÃo"
+        if (re.match(r'^[0O]?\s*coNCLU|^coNCLU|^0coN', plain, re.I) or
+                re.search(r'(?<![A-Za-z])[O0]\s*coNCLU', plain, re.I)):
+            flush_objetivos(); in_objetivos = False
+            if in_conclusao: flush_conclusao()
+            in_conclusao = True
+            out_parts.append(f'<p class="sec-head">CONCLUSÃO</p>')
+            continue
+
+        # ── HORA DA REVISÃO detection (all OCR variants, inline or standalone) ──
+        if is_hora_da_revisao(plain):
+            if in_conclusao: flush_conclusao(); in_conclusao = False
+            out_parts.append(f'<p class="sec-head">HORA DA REVISÃO</p>')
+            rest = fix_ocr(hora_rest(plain))
+            if rest:
+                out_parts.append(f'<p>{rest}</p>')
+            continue
+
+        # ── Regular paragraph ─────────────────────────────────────────────────
         fixed_inner = fix_ocr(inner)
         if fixed_inner.strip():
             out_parts.append(f'<p>{fixed_inner}</p>')
+
+    # Flush any remaining buffers
+    flush_objetivos()
+    flush_resumo()
+    flush_quote()
+    if pending_roman:
+        out_parts.append(f'<p class="roman-head">{pending_roman}</p>')
+    if in_conclusao:
+        flush_conclusao()
 
     return '\n'.join(out_parts)
 
