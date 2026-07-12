@@ -203,6 +203,30 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .ppt-item{cursor:pointer}
 .ppt-item:active{opacity:.75}
 
+/* ══ CADASTRO / OTP ══ */
+#tela-cadastro,#tela-otp{background:var(--bg)}
+.cad-wrap{flex:1;overflow-y:auto;padding:32px 22px 48px;-webkit-overflow-scrolling:touch}
+.cad-wrap::-webkit-scrollbar{display:none}
+.cad-logo{text-align:center;margin-bottom:28px;padding-top:max(env(safe-area-inset-top),20px)}
+.cad-titulo{font-size:22px;font-weight:900;text-align:center;margin-bottom:10px}
+.cad-sub{font-size:13px;color:var(--sub);text-align:center;margin-bottom:24px;line-height:1.6}
+.cad-field{margin-bottom:16px}
+.cad-field label{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:7px}
+.cad-field input,.cad-field select{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;color:var(--txt);font-size:15px;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+.cad-field input:focus,.cad-field select:focus{border-color:var(--gold)}
+.cad-field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C9A14A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
+.btn-cad{width:100%;background:var(--gold);color:#080D1A;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:900;cursor:pointer;margin-top:6px;font-family:inherit;letter-spacing:.3px}
+.btn-cad:active{opacity:.85}
+.btn-cad:disabled{opacity:.5;cursor:default}
+.otp-phone-display{text-align:center;font-size:14px;color:var(--sub);margin-bottom:6px}
+.otp-phone-display b{color:var(--gold);font-weight:700}
+.otp-digits{display:flex;gap:8px;justify-content:center;margin:22px 0}
+.otp-digit{width:44px;height:56px;background:var(--card);border:2px solid var(--line);border-radius:12px;font-size:24px;font-weight:900;color:var(--txt);text-align:center;outline:none;font-family:inherit;-webkit-appearance:none;caret-color:var(--gold)}
+.otp-digit:focus{border-color:var(--gold)}
+.btn-reenviar{background:none;border:none;color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;padding:8px 0;font-family:inherit;opacity:.85}
+.ebd-share-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--sub);width:34px;height:34px;border-radius:10px;display:grid;place-items:center;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s}
+.ebd-share-btn:active{background:rgba(52,199,123,.2);color:#34c77b;border-color:#34c77b}
+
 /* ══ HARPA CRISTÃ ══ */
 #tela-harpa-lista{background:var(--bg)}
 #tela-harpa-hino{background:var(--bg)}
@@ -463,7 +487,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <div class="std-titulo">EBD</div>
       <div class="std-sub">Escola Bíblica Dominical</div>
     </div>
-    <span style="font-size:22px">🏫</span>
+    <button class="ebd-share-btn" onclick="compartilharEbd()" title="Compartilhar EBD">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+    </button>
   </div>
   <div class="bh-scroll">
     <div class="bh-secao">Selecione a turma</div>
@@ -477,12 +506,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
         <span class="bh-tile-count" style="background:rgba(52,199,123,.12);color:#34c77b">13</span>
         <span class="bh-tile-arr">›</span>
       </div>
-      <div class="bh-tile ebd-vazio" style="--tc:#f5a623" onclick="abrirEbdTurma('jovem')">
+      <div class="bh-tile" style="--tc:#f5a623" onclick="abrirEbdTurma('jovem')">
         <div class="bh-tile-icon">🧑</div>
         <div class="bh-tile-info">
           <div class="bh-tile-nome">LIÇÃO JOVEM</div>
-          <div class="bh-tile-desc">Em breve</div>
+          <div class="bh-tile-desc">13 lições — Livro de Juízes</div>
         </div>
+        <span class="bh-tile-count" style="background:rgba(245,166,35,.12);color:#f5a623">13</span>
         <span class="bh-tile-arr">›</span>
       </div>
     </div>
@@ -544,6 +574,78 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   </div>
 </div>
 
+<!-- CADASTRO -->
+<div class="tela" id="tela-cadastro">
+  <div class="cad-wrap">
+    <div class="cad-logo">
+      <svg width="60" height="60" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="18" stroke="#C9A14A" stroke-width="1.5" opacity=".4"/>
+        <circle cx="20" cy="20" r="12" stroke="#C9A14A" stroke-width="1.5" opacity=".6"/>
+        <circle cx="20" cy="20" r="6" stroke="#C9A14A" stroke-width="1.5"/>
+        <circle cx="20" cy="20" r="2" fill="#C9A14A"/>
+        <line x1="20" y1="20" x2="32" y2="8" stroke="#F5C842" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div style="font-size:19px;font-weight:900;color:var(--txt);margin-top:10px;letter-spacing:1px">RADAR ATUAL</div>
+      <div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:3px">EBD · ESCOLA BÍBLICA</div>
+    </div>
+    <div class="cad-titulo">Criar conta</div>
+    <div class="cad-sub">Preencha seus dados para acessar<br>as lições da Escola Bíblica Dominical.</div>
+    <div class="cad-field">
+      <label>Seu nome completo</label>
+      <input id="cad-nome" type="text" placeholder="Ex: João da Silva" autocomplete="name">
+    </div>
+    <div class="cad-field">
+      <label>Cargo na Igreja</label>
+      <select id="cad-cargo">
+        <option value="">Selecione...</option>
+        <option>Pastor</option>
+        <option>Diácono / Diaconisa</option>
+        <option>Obreiro / Obreira</option>
+        <option>Presbítero / Presbitera</option>
+        <option>Professor(a) de EBD</option>
+        <option>Líder de Jovens</option>
+        <option>Evangelista</option>
+        <option>Membro</option>
+        <option>Visitante</option>
+      </select>
+    </div>
+    <div class="cad-field">
+      <label>WhatsApp (com DDD)</label>
+      <input id="cad-fone" type="tel" placeholder="(99) 99999-9999" autocomplete="tel" oninput="mascaraFone(this)" inputmode="numeric">
+    </div>
+    <button class="btn-cad" id="btn-cad-enviar" onclick="submitCadastro()">RECEBER CÓDIGO NO WHATSAPP</button>
+    <div id="cad-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
+  </div>
+</div>
+
+<!-- OTP -->
+<div class="tela" id="tela-otp">
+  <div class="cad-wrap">
+    <div class="cad-logo">
+      <div style="font-size:52px">💬</div>
+      <div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:3px;margin-top:8px">VERIFICAÇÃO</div>
+    </div>
+    <div class="cad-titulo">Confirmar WhatsApp</div>
+    <div class="otp-phone-display">Código enviado para <b id="otp-fone-display">—</b></div>
+    <div class="cad-sub" style="margin-top:4px">Digite o código de 6 dígitos<br>que chegou no seu WhatsApp.</div>
+    <div class="otp-digits" id="otp-digits">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,0)" onkeydown="otpKey(event,0)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,1)" onkeydown="otpKey(event,1)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,2)" onkeydown="otpKey(event,2)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,3)" onkeydown="otpKey(event,3)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,4)" onkeydown="otpKey(event,4)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,5)" onkeydown="otpKey(event,5)">
+    </div>
+    <button class="btn-cad" id="btn-otp-verificar" onclick="submitOtp()">VERIFICAR</button>
+    <div style="text-align:center;margin-top:14px">
+      <button class="btn-reenviar" onclick="reenviarOtp()">Reenviar código</button>
+      &nbsp;·&nbsp;
+      <button class="btn-reenviar" onclick="voltarCadastro()" style="color:var(--sub)">Corrigir número</button>
+    </div>
+    <div id="otp-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
+  </div>
+</div>
+
 <script>
 // ══ MÓDULOS ═══════════════════════════════════════
 const MODS = [
@@ -563,9 +665,138 @@ function getData(id){ return JSON.parse(localStorage.getItem(chave(id))||'[]'); 
 function setData(id,arr){ localStorage.setItem(chave(id),JSON.stringify(arr)); }
 function ocultarTodas(){ document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa')); }
 
+// ══ AUTH ══════════════════════════════════════════
+let _cadPendente = {nome:'',cargo:'',fone:'',token:''};
+
+function getUser(){ return JSON.parse(localStorage.getItem('radar_user')||'null'); }
+function saveUser(u){ localStorage.setItem('radar_user',JSON.stringify(u)); }
+
+function checkAuth(){
+  if(getUser()) return true;
+  ocultarTodas();
+  document.getElementById('tela-cadastro').classList.add('ativa');
+  setTimeout(()=>document.getElementById('cad-nome').focus(),350);
+  return false;
+}
+
+function mascaraFone(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>11)v=v.slice(0,11);
+  if(v.length<=2)el.value=v.length?'('+v:v;
+  else if(v.length<=7)el.value='('+v.slice(0,2)+') '+v.slice(2);
+  else el.value='('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
+}
+
+async function submitCadastro(){
+  const nome=document.getElementById('cad-nome').value.trim();
+  const cargo=document.getElementById('cad-cargo').value;
+  const fone=document.getElementById('cad-fone').value.replace(/\D/g,'');
+  const err=document.getElementById('cad-erro');
+  err.style.display='none';
+  if(!nome){err.textContent='Digite seu nome.';err.style.display='block';document.getElementById('cad-nome').focus();return;}
+  if(!cargo){err.textContent='Selecione seu cargo na igreja.';err.style.display='block';return;}
+  if(fone.length<10){err.textContent='WhatsApp inválido. Ex: (99) 99999-9999';err.style.display='block';document.getElementById('cad-fone').focus();return;}
+  const btn=document.getElementById('btn-cad-enviar');
+  btn.textContent='Enviando...';btn.disabled=true;
+  try{
+    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,cargo,phone:fone})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Erro ao enviar');
+    _cadPendente={nome,cargo,fone,token:data.token};
+    document.getElementById('otp-fone-display').textContent=`(${fone.slice(0,2)}) ${fone.slice(2,7)}-${fone.slice(7)}`;
+    ocultarTodas();document.getElementById('tela-otp').classList.add('ativa');
+    setTimeout(()=>document.getElementById('otp-digits').children[0].focus(),350);
+  }catch(e){
+    err.textContent=e.message;err.style.display='block';
+  }finally{
+    btn.textContent='RECEBER CÓDIGO NO WHATSAPP';btn.disabled=false;
+  }
+}
+
+function voltarCadastro(){
+  document.getElementById('otp-erro').style.display='none';
+  Array.from(document.getElementById('otp-digits').children).forEach(d=>d.value='');
+  ocultarTodas();document.getElementById('tela-cadastro').classList.add('ativa');
+}
+
+async function reenviarOtp(){
+  const btn=document.querySelector('#tela-otp .btn-reenviar');
+  btn.textContent='Reenviando...';btn.disabled=true;
+  try{
+    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:_cadPendente.nome,cargo:_cadPendente.cargo,phone:_cadPendente.fone})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Erro');
+    _cadPendente.token=data.token;
+    Array.from(document.getElementById('otp-digits').children).forEach(d=>d.value='');
+    document.getElementById('otp-erro').style.display='none';
+    document.getElementById('otp-digits').children[0].focus();
+  }catch(e){
+    document.getElementById('otp-erro').textContent=e.message;document.getElementById('otp-erro').style.display='block';
+  }finally{
+    btn.textContent='Reenviar código';btn.disabled=false;
+  }
+}
+
+function otpInput(el,idx){
+  el.value=el.value.replace(/\D/g,'').slice(-1);
+  const d=document.getElementById('otp-digits').children;
+  if(el.value&&idx<5)d[idx+1].focus();
+  if(idx===5&&el.value){
+    const code=Array.from(d).map(x=>x.value).join('');
+    if(code.length===6)submitOtp();
+  }
+}
+function otpKey(e,idx){
+  if(e.key==='Backspace'&&!e.target.value&&idx>0)
+    document.getElementById('otp-digits').children[idx-1].focus();
+}
+
+async function submitOtp(){
+  const d=document.getElementById('otp-digits').children;
+  const code=Array.from(d).map(x=>x.value).join('');
+  const err=document.getElementById('otp-erro');
+  err.style.display='none';
+  if(code.length<6){err.textContent='Digite todos os 6 dígitos.';err.style.display='block';return;}
+  const btn=document.getElementById('btn-otp-verificar');
+  btn.textContent='Verificando...';btn.disabled=true;
+  try{
+    const res=await fetch('/api/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:_cadPendente.token,code})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Código inválido');
+    saveUser({nome:_cadPendente.nome,cargo:_cadPendente.cargo,whatsapp:_cadPendente.fone,id:data.uid});
+    irHome();
+  }catch(e){
+    err.textContent=e.message;err.style.display='block';
+    Array.from(d).forEach(x=>x.value='');
+    d[0].focus();
+  }finally{
+    btn.textContent='VERIFICAR';btn.disabled=false;
+  }
+}
+
+function compartilharEbd(){
+  const url=location.origin+'?mod=ebd';
+  if(navigator.share){navigator.share({title:'RADAR ATUAL — EBD',text:'Acesse as lições da EBD pelo app RADAR ATUAL',url});}
+  else{navigator.clipboard.writeText(url).then(()=>showToast('Link copiado!'));}
+}
+
+function showToast(msg){
+  let t=document.getElementById('_toast_geral');
+  if(t)t.remove();
+  t=document.createElement('div');t.id='_toast_geral';
+  t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(10,15,30,.97);color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:700;border:1px solid rgba(201,161,74,.3);z-index:999;pointer-events:none;white-space:nowrap';
+  t.textContent=msg;document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),320)},1800);
+}
+
+function toastBloqueado(){
+  showToast('🔒 Lição será liberada em breve');
+}
+
 // ══ SPLASH ════════════════════════════════════════
 setTimeout(irHome, 2200);
 function irHome(){
+  if(!checkAuth()) return;
   ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
@@ -1055,7 +1286,18 @@ function abrirEbdTurma(turma){
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
     body.innerHTML=main.map(lic=>{
       const idx=lics.indexOf(lic);
+      const isLocked=turma==='adulto'&&lic.n>2;
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
+      if(isLocked){
+        return `<div class="ebd-item" style="opacity:.42;cursor:pointer" onclick="toastBloqueado()">
+          <div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
+          <div class="ebd-item-info">
+            <div class="ebd-item-titulo">${lic.titulo}</div>
+            <div class="ebd-item-meta">Em breve</div>
+          </div>
+          <span style="font-size:18px;flex-shrink:0">🔒</span>
+        </div>`;
+      }
       return `<div class="ebd-item ppt-item" onclick="abrirLicaoDetalhe(${idx})">
         <div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
         <div class="ebd-item-info">
