@@ -210,6 +210,40 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .ebd-btn-ppt:active{opacity:.7}
 .ebd-em-breve{font-size:10px;color:var(--sub);flex-shrink:0;white-space:nowrap;padding:4px 8px;background:var(--card);border:1px solid var(--line);border-radius:6px}
 .ebd-item-em-breve{opacity:.45}
+/* EBD CRM ALUNOS */
+#tela-ebd-crm{background:var(--bg)}
+.ebd-crm-toolbar{padding:10px 14px 6px;flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+.ebd-crm-filters{display:flex;gap:6px;overflow-x:auto}
+.ebd-crm-filters::-webkit-scrollbar{display:none}
+.ebd-crm-chip{background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:20px;padding:5px 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit}
+.ebd-crm-chip.ativa{background:rgba(124,92,191,.18);border-color:#7c5cbf;color:#b39ddb}
+.ebd-crm-lista{flex:1;overflow-y:auto;padding:4px 14px 90px;-webkit-overflow-scrolling:touch}
+.ebd-crm-lista::-webkit-scrollbar{display:none}
+.ebd-crm-aluno{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.ebd-crm-aluno:active{border-color:#7c5cbf}
+.ebd-crm-info{flex:1;min-width:0}
+.ebd-crm-nome{font-size:14px;font-weight:700}
+.ebd-crm-meta{font-size:11px;color:var(--sub);margin-top:3px}
+.ebd-crm-badge{font-size:10px;font-weight:800;border-radius:10px;padding:2px 8px;display:inline-block;margin-right:4px}
+.ebd-crm-badge.adulto{background:rgba(52,199,123,.15);color:#34c77b}
+.ebd-crm-badge.jovem{background:rgba(245,166,35,.15);color:#f5a623}
+.ebd-crm-badge.crianca{background:rgba(79,142,247,.15);color:#4f8ef7}
+.ebd-crm-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:10px;color:var(--sub);font-size:13px;padding:40px 20px;text-align:center}
+.ebd-crm-fab{position:fixed;bottom:28px;right:20px;width:52px;height:52px;border-radius:50%;background:#7c5cbf;border:none;color:#fff;font-size:26px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 20px rgba(124,92,191,.5);z-index:100}
+.ebd-crm-fab:active{opacity:.8;transform:scale(.95)}
+#modal-aluno{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:200}
+#modal-aluno.open{display:flex}
+.mal-box{background:var(--card);border-radius:18px 18px 0 0;width:100%;max-height:86vh;overflow-y:auto;padding:20px 18px max(env(safe-area-inset-bottom),24px)}
+.mal-tit{font-size:13px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.mal-x{background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer;line-height:1;padding:0}
+.mal-field{margin-bottom:14px}
+.mal-field label{display:block;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.mal-field input,.mal-field select,.mal-field textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--txt);font-size:14px;font-family:inherit;outline:none}
+.mal-field select option{background:var(--bg)}
+.mal-field textarea{resize:none;height:72px}
+.mal-field input:focus,.mal-field select:focus,.mal-field textarea:focus{border-color:var(--gold)}
+.mal-save{width:100%;background:#7c5cbf;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px;font-family:inherit}
+.mal-save:active{opacity:.8}
 /* EBD READER */
 #tela-ebd-reader{background:#fff}
 #tela-ebd-reader .std-header{background:#f2f2f2;border-bottom:1px solid #ddd}
@@ -581,7 +615,41 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
         <span class="bh-tile-arr">›</span>
       </div>
     </div>
+    <div class="bh-secao" style="margin-top:14px">Administração</div>
+    <div class="bh-tiles">
+      <div class="bh-tile" style="--tc:#7c5cbf" onclick="abrirEbdCrm()">
+        <div class="bh-tile-icon">👥</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">ALUNOS</div>
+          <div class="bh-tile-desc">CRM — cadastro da turma</div>
+        </div>
+        <span class="bh-tile-count" id="cnt-ebd-alunos" style="background:rgba(124,92,191,.12);color:#7c5cbf"></span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- EBD CRM — alunos -->
+<div class="tela" id="tela-ebd-crm">
+  <div class="std-header">
+    <button class="std-back" onclick="ocultarTodas();document.getElementById('tela-ebd').classList.add('ativa')">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">Alunos EBD</div>
+      <div class="std-sub" id="ebd-crm-sub">0 alunos</div>
+    </div>
+  </div>
+  <div class="ebd-crm-toolbar">
+    <input class="mod-search" id="ebd-crm-busca" placeholder="Buscar aluno..." oninput="renderEbdCrm()">
+    <div class="ebd-crm-filters">
+      <button class="ebd-crm-chip ativa" data-turma="" onclick="filtroEbdCrm(this,'')">Todos</button>
+      <button class="ebd-crm-chip" data-turma="adulto" onclick="filtroEbdCrm(this,'adulto')">👨 Adulto</button>
+      <button class="ebd-crm-chip" data-turma="jovem" onclick="filtroEbdCrm(this,'jovem')">🧑 Jovem</button>
+      <button class="ebd-crm-chip" data-turma="crianca" onclick="filtroEbdCrm(this,'crianca')">👶 Criança</button>
+    </div>
+  </div>
+  <div class="ebd-crm-lista" id="ebd-crm-lista"></div>
+  <button class="ebd-crm-fab" onclick="abrirModalAluno(null)">+</button>
 </div>
 
 <!-- EBD TURMA — lista de lições -->
@@ -1452,7 +1520,113 @@ let ebdTurmaAtual='adulto', ebdDetalheIdx=0, pptLicao=null, pptIdx=0, _pptTx=0;
 function abrirEbd(){
   ocultarTodas();
   document.getElementById('tela-ebd').classList.add('ativa');
+  atualizarContadorEbdAlunos();
 }
+
+// ══ EBD CRM ═══════════════════════════════════════
+let ebdCrmFiltro='', ebdCrmEditId=null;
+function getAlunos(){ return JSON.parse(localStorage.getItem('ebd_alunos')||'[]'); }
+function setAlunos(arr){ localStorage.setItem('ebd_alunos',JSON.stringify(arr)); }
+
+function abrirEbdCrm(){
+  ocultarTodas();
+  document.getElementById('tela-ebd-crm').classList.add('ativa');
+  document.getElementById('ebd-crm-busca').value='';
+  ebdCrmFiltro='';
+  document.querySelectorAll('.ebd-crm-chip').forEach(c=>c.classList.toggle('ativa',c.dataset.turma===''));
+  renderEbdCrm();
+}
+
+function filtroEbdCrm(el,turma){
+  ebdCrmFiltro=turma;
+  document.querySelectorAll('.ebd-crm-chip').forEach(c=>c.classList.remove('ativa'));
+  el.classList.add('ativa');
+  renderEbdCrm();
+}
+
+function renderEbdCrm(){
+  const alunos=getAlunos();
+  const busca=document.getElementById('ebd-crm-busca').value.toLowerCase().trim();
+  let filtrado=ebdCrmFiltro?alunos.filter(a=>a.turma===ebdCrmFiltro):alunos;
+  if(busca) filtrado=filtrado.filter(a=>a.nome.toLowerCase().includes(busca)||(a.fone||'').includes(busca)||(a.obs||'').toLowerCase().includes(busca));
+  document.getElementById('ebd-crm-sub').textContent=`${alunos.length} aluno${alunos.length!==1?'s':''}`;
+  atualizarContadorEbdAlunos();
+  const el=document.getElementById('ebd-crm-lista');
+  if(!filtrado.length){
+    el.innerHTML=`<div class="ebd-crm-empty"><div style="font-size:40px">👥</div><div>${busca||ebdCrmFiltro?'Nenhum aluno encontrado.':'Nenhum aluno cadastrado.<br>Toque em + para adicionar.'}</div></div>`;
+    return;
+  }
+  const lbl={adulto:'Adulto',jovem:'Jovem',crianca:'Criança'};
+  el.innerHTML=filtrado.map(a=>`
+    <div class="ebd-crm-aluno">
+      <div class="ebd-crm-info">
+        <div class="ebd-crm-nome">${a.nome}</div>
+        <div class="ebd-crm-meta">
+          <span class="ebd-crm-badge ${a.turma}">${lbl[a.turma]||a.turma}</span>${a.fone?` 📞 ${a.fone}`:''}
+        </div>
+        ${a.obs?`<div class="item-obs" style="margin-top:4px">${a.obs}</div>`:''}
+      </div>
+      <div class="item-acts">
+        <button class="btn-sm btn-ed" onclick="abrirModalAluno('${a.id}')">✏️</button>
+        <button class="btn-sm btn-dl" onclick="deletarAluno('${a.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function atualizarContadorEbdAlunos(){
+  const el=document.getElementById('cnt-ebd-alunos');
+  if(!el)return;
+  const n=getAlunos().length;
+  el.textContent=n?n:'';
+}
+
+function abrirModalAluno(id){
+  ebdCrmEditId=id||null;
+  document.getElementById('mal-label').textContent=id?'Editar Aluno':'Novo Aluno';
+  if(id){
+    const a=getAlunos().find(x=>x.id===id)||{};
+    document.getElementById('mal-nome').value=a.nome||'';
+    document.getElementById('mal-turma').value=a.turma||'adulto';
+    document.getElementById('mal-fone').value=a.fone||'';
+    document.getElementById('mal-obs').value=a.obs||'';
+  } else {
+    document.getElementById('mal-nome').value='';
+    document.getElementById('mal-turma').value='adulto';
+    document.getElementById('mal-fone').value='';
+    document.getElementById('mal-obs').value='';
+  }
+  document.getElementById('modal-aluno').classList.add('open');
+  setTimeout(()=>document.getElementById('mal-nome').focus(),120);
+}
+
+function fecharModalAluno(){
+  document.getElementById('modal-aluno').classList.remove('open');
+}
+
+function salvarAluno(){
+  const nome=document.getElementById('mal-nome').value.trim();
+  if(!nome){document.getElementById('mal-nome').focus();return;}
+  const obj={
+    id:ebdCrmEditId||Date.now().toString(),
+    nome,
+    turma:document.getElementById('mal-turma').value,
+    fone:document.getElementById('mal-fone').value.trim(),
+    obs:document.getElementById('mal-obs').value.trim()
+  };
+  const arr=getAlunos();
+  if(ebdCrmEditId){const i=arr.findIndex(x=>x.id===ebdCrmEditId);if(i>=0)arr[i]=obj;else arr.unshift(obj);}
+  else arr.unshift(obj);
+  setAlunos(arr);
+  fecharModalAluno();
+  renderEbdCrm();
+}
+
+function deletarAluno(id){
+  if(!confirm('Excluir este aluno?'))return;
+  setAlunos(getAlunos().filter(x=>x.id!==id));
+  renderEbdCrm();
+}
+// ══ FIM EBD CRM ═══════════════════════════════════
 
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
@@ -1862,6 +2036,36 @@ window.addEventListener('message',function(e){
     <button onclick="fecharRefSheet()" style="background:none;border:none;font-size:22px;color:#888;padding:0;line-height:1;cursor:pointer">✕</button>
   </div>
   <div id="ref-sheet-body" style="padding:16px 18px 36px"></div>
+</div>
+<!-- MODAL ALUNO EBD -->
+<div id="modal-aluno" onclick="if(event.target===this)fecharModalAluno()">
+  <div class="mal-box">
+    <div class="mal-tit">
+      <span id="mal-label">Novo Aluno</span>
+      <button class="mal-x" onclick="fecharModalAluno()">✕</button>
+    </div>
+    <div class="mal-field">
+      <label>Nome</label>
+      <input id="mal-nome" type="text" placeholder="Nome completo" autocomplete="off">
+    </div>
+    <div class="mal-field">
+      <label>Turma</label>
+      <select id="mal-turma">
+        <option value="adulto">👨 Adulto</option>
+        <option value="jovem">🧑 Jovem</option>
+        <option value="crianca">👶 Criança</option>
+      </select>
+    </div>
+    <div class="mal-field">
+      <label>Telefone (opcional)</label>
+      <input id="mal-fone" type="tel" placeholder="(99) 99999-9999" inputmode="numeric" oninput="mascaraFone(this)">
+    </div>
+    <div class="mal-field">
+      <label>Observações (opcional)</label>
+      <textarea id="mal-obs" placeholder="Anotações sobre o aluno..."></textarea>
+    </div>
+    <button class="mal-save" onclick="salvarAluno()">SALVAR ALUNO</button>
+  </div>
 </div>
 </body>
 </html>
