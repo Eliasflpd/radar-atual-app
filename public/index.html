@@ -244,6 +244,37 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .mal-field input:focus,.mal-field select:focus,.mal-field textarea:focus{border-color:var(--gold)}
 .mal-save{width:100%;background:#7c5cbf;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px;font-family:inherit}
 .mal-save:active{opacity:.8}
+/* ══ EVENTOS ══ */
+#tela-eventos{background:var(--bg)}
+.ev-lista{flex:1;overflow-y:auto;padding:4px 14px 90px;-webkit-overflow-scrolling:touch}
+.ev-lista::-webkit-scrollbar{display:none}
+.ev-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.ev-card:active{border-color:var(--gold)}
+.ev-icone{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.05);display:grid;place-items:center;font-size:22px;flex-shrink:0}
+.ev-info{flex:1;min-width:0}
+.ev-titulo{font-size:14px;font-weight:700}
+.ev-meta{font-size:11px;color:var(--sub);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ev-badge{font-size:10px;font-weight:800;border-radius:10px;padding:2px 8px;background:rgba(201,161,74,.15);color:var(--gold)}
+.ev-badge.ebd{background:rgba(52,199,123,.15);color:#34c77b}
+.ev-badge.biblia{background:rgba(201,161,74,.15);color:var(--gold)}
+.ev-badge.harpa{background:rgba(240,176,96,.15);color:#F0B060}
+.ev-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:10px;color:var(--sub);font-size:13px;padding:40px 20px;text-align:center}
+.ev-fab{position:fixed;bottom:28px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--gold);border:none;color:#080D1A;font-size:26px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 20px rgba(201,161,74,.45);z-index:100;font-weight:900}
+.ev-fab:active{opacity:.8;transform:scale(.95)}
+#modal-evento{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:200}
+#modal-evento.open{display:flex}
+.mev-box{background:var(--card);border-radius:18px 18px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:20px 18px max(env(safe-area-inset-bottom),24px)}
+.mev-tit{font-size:13px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.mev-x{background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer;line-height:1;padding:0}
+.mev-field{margin-bottom:13px}
+.mev-field label{display:block;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.mev-field input,.mev-field select,.mev-field textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--txt);font-size:14px;font-family:inherit;outline:none}
+.mev-field select option{background:var(--bg)}
+.mev-field input:focus,.mev-field select:focus{border-color:var(--gold)}
+.mev-row{display:flex;gap:8px}
+.mev-row .mev-field{flex:1}
+.mev-save{width:100%;background:var(--gold);color:#080D1A;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px;font-family:inherit}
+.mev-save:active{opacity:.8}
 /* EBD READER */
 #tela-ebd-reader{background:#fff}
 #tela-ebd-reader .std-header{background:#f2f2f2;border-bottom:1px solid #ddd}
@@ -513,6 +544,28 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       </div>
     </div>
 
+    <div class="bh-secao" style="margin-top:14px">Administração</div>
+    <div class="bh-tiles">
+      <div class="bh-tile" style="--tc:var(--gold)" onclick="abrirEventos('biblia')">
+        <div class="bh-tile-icon">📅</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">EVENTOS BÍBLIA</div>
+          <div class="bh-tile-desc">Estudos, grupos e lembretes</div>
+        </div>
+        <span class="bh-tile-count" id="cnt-ev-biblia" style="background:rgba(201,161,74,.12);color:var(--gold)"></span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile" style="--tc:#F0B060" onclick="abrirEventos('harpa')">
+        <div class="bh-tile-icon">🎶</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">EVENTOS HARPA</div>
+          <div class="bh-tile-desc">Ensaios, apresentações e datas</div>
+        </div>
+        <span class="bh-tile-count" id="cnt-ev-harpa" style="background:rgba(240,176,96,.12);color:#F0B060"></span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -626,8 +679,35 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
         <span class="bh-tile-count" id="cnt-ebd-alunos" style="background:rgba(124,92,191,.12);color:#7c5cbf"></span>
         <span class="bh-tile-arr">›</span>
       </div>
+      <div class="bh-tile" style="--tc:var(--gold)" onclick="abrirEventos('ebd')">
+        <div class="bh-tile-icon">📅</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">EVENTOS</div>
+          <div class="bh-tile-desc">Agenda e lembretes da EBD</div>
+        </div>
+        <span class="bh-tile-count" id="cnt-ev-ebd" style="background:rgba(201,161,74,.12);color:var(--gold)"></span>
+        <span class="bh-tile-arr">›</span>
+      </div>
     </div>
   </div>
+</div>
+
+<!-- EVENTOS -->
+<div class="tela" id="tela-eventos">
+  <div class="std-header">
+    <button class="std-back" id="ev-back-btn" onclick="fecharEventos()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="ev-titulo">Eventos</div>
+      <div class="std-sub" id="ev-sub">0 eventos</div>
+    </div>
+    <div class="ebd-crm-filters" id="ev-filters" style="gap:6px;overflow-x:auto;max-width:160px">
+      <button class="ebd-crm-chip" data-mod="ebd" onclick="filtroEventos(this,'ebd')" style="display:none" id="ev-chip-ebd">EBD</button>
+      <button class="ebd-crm-chip" data-mod="biblia" onclick="filtroEventos(this,'biblia')" style="display:none" id="ev-chip-biblia">📖</button>
+      <button class="ebd-crm-chip" data-mod="harpa" onclick="filtroEventos(this,'harpa')" style="display:none" id="ev-chip-harpa">🎵</button>
+    </div>
+  </div>
+  <div class="ev-lista" id="ev-lista"></div>
+  <button class="ev-fab" onclick="abrirModalEvento(null)">+</button>
 </div>
 
 <!-- EBD CRM — alunos -->
@@ -1029,7 +1109,12 @@ function renderHome(){
     4:[{i:'🙏',t:'Reunião de Oração',s:'19h30'}],
     6:[{i:'✝️',t:'Culto de Jovens',s:'19h00'}]
   };
-  const itens = AGENDA[hoje.getDay()] || [];
+  const dataHoje=hoje.toISOString().split('T')[0];
+  const userEvHoje=getEventos().filter(ev=>
+    (ev.tipo==='fixo'&&ev.diaSemana===hoje.getDay())||
+    (ev.tipo==='data'&&ev.data===dataHoje)
+  ).map(ev=>({i:ev.icone||({ebd:'🏫',biblia:'📖',harpa:'🎵'}[ev.modulo])||'📅',t:ev.titulo,s:ev.hora||''}));
+  const itens=[...(AGENDA[hoje.getDay()]||[]),...userEvHoje];
   const itensPainel = itens.length
     ? itens.map(it=>`<div class="painel-item"><span class="painel-item-icone">${it.i}</span><div><div class="painel-item-txt">${it.t}</div><div class="painel-item-sub">${it.s}</div></div></div>`).join('')
     : `<div class="painel-item"><span class="painel-item-icone">📅</span><div><div class="painel-item-txt">Sem eventos hoje</div><div class="painel-item-sub">Fique atento aos avisos</div></div></div>`;
@@ -1091,6 +1176,7 @@ function abrirMod(id){
   ocultarTodas();
   if(id==='biblia'){
     document.getElementById('tela-bh-landing').classList.add('ativa');
+    atualizarContadoresEv();
     return;
   }
   if(id==='ebd'){
@@ -1521,6 +1607,7 @@ function abrirEbd(){
   ocultarTodas();
   document.getElementById('tela-ebd').classList.add('ativa');
   atualizarContadorEbdAlunos();
+  atualizarContadoresEv();
 }
 
 // ══ EBD CRM ═══════════════════════════════════════
@@ -1627,6 +1714,154 @@ function deletarAluno(id){
   renderEbdCrm();
 }
 // ══ FIM EBD CRM ═══════════════════════════════════
+
+// ══ EVENTOS ════════════════════════════════════════
+let evModuloAtual='', evEditId=null, evPaiTela='home';
+const EV_ICONES={ebd:'🏫',biblia:'📖',harpa:'🎵'};
+const EV_DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+function getEventos(){ return JSON.parse(localStorage.getItem('radar_eventos')||'[]'); }
+function setEventos(arr){ localStorage.setItem('radar_eventos',JSON.stringify(arr)); }
+
+function abrirEventos(modulo){
+  evModuloAtual=modulo;
+  // registrar de onde viemos
+  if(modulo==='ebd') evPaiTela='tela-ebd';
+  else evPaiTela='tela-bh-landing';
+  ocultarTodas();
+  document.getElementById('tela-eventos').classList.add('ativa');
+  const nomes={ebd:'Eventos EBD',biblia:'Eventos Bíblia',harpa:'Eventos Harpa'};
+  document.getElementById('ev-titulo').textContent=nomes[modulo]||'Eventos';
+  renderEventos();
+}
+
+function fecharEventos(){
+  ocultarTodas();
+  document.getElementById(evPaiTela||'home').classList.add('ativa');
+  if(evPaiTela==='home') renderHome();
+}
+
+function filtroEventos(el, mod){
+  evModuloAtual=mod;
+  document.querySelectorAll('#ev-filters .ebd-crm-chip').forEach(c=>c.classList.remove('ativa'));
+  el.classList.add('ativa');
+  renderEventos();
+}
+
+function renderEventos(){
+  const todos=getEventos();
+  const filtrado=evModuloAtual?todos.filter(e=>e.modulo===evModuloAtual):todos;
+  document.getElementById('ev-sub').textContent=`${filtrado.length} evento${filtrado.length!==1?'s':''}`;
+  atualizarContadoresEv();
+  const el=document.getElementById('ev-lista');
+  if(!filtrado.length){
+    el.innerHTML=`<div class="ev-empty"><div style="font-size:40px">📅</div><div>Nenhum evento cadastrado.<br>Toque em + para adicionar.</div></div>`;
+    return;
+  }
+  const hoje=new Date().toISOString().split('T')[0];
+  const sorted=[...filtrado].sort((a,b)=>{
+    const da=a.tipo==='data'?a.data:'9999-'+String(a.diaSemana||0).padStart(2,'0');
+    const db=b.tipo==='data'?b.data:'9999-'+String(b.diaSemana||0).padStart(2,'0');
+    return da<db?-1:1;
+  });
+  const nomesMod={ebd:'EBD',biblia:'Bíblia',harpa:'Harpa'};
+  el.innerHTML=sorted.map(ev=>{
+    const vencido=ev.tipo==='data'&&ev.data<hoje;
+    const quando=ev.tipo==='fixo'?`🔁 ${EV_DIAS[ev.diaSemana||0]}${ev.hora?' · '+ev.hora:''}`:
+      `📆 ${ev.data?ev.data.split('-').reverse().join('/'):''}${ev.hora?' · '+ev.hora:''}`;
+    return `<div class="ev-card" style="${vencido?'opacity:.45':''}">
+      <div class="ev-icone">${ev.icone||EV_ICONES[ev.modulo]||'📅'}</div>
+      <div class="ev-info">
+        <div class="ev-titulo">${ev.titulo}</div>
+        <div class="ev-meta">
+          <span class="ev-badge ${ev.modulo}">${nomesMod[ev.modulo]||ev.modulo}</span>
+          <span>${quando}</span>
+        </div>
+      </div>
+      <div class="item-acts">
+        <button class="btn-sm btn-ed" onclick="abrirModalEvento('${ev.id}')">✏️</button>
+        <button class="btn-sm btn-dl" onclick="deletarEvento('${ev.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function atualizarContadoresEv(){
+  const todos=getEventos();
+  ['ebd','biblia','harpa'].forEach(m=>{
+    const el=document.getElementById('cnt-ev-'+m);
+    if(!el)return;
+    const n=todos.filter(e=>e.modulo===m).length;
+    el.textContent=n?n:'';
+  });
+}
+
+function toggleEvTipo(){
+  const t=document.getElementById('mev-tipo').value;
+  document.getElementById('mev-dia-wrap').style.display=t==='fixo'?'':'none';
+  document.getElementById('mev-data-wrap').style.display=t==='data'?'':'none';
+}
+
+function abrirModalEvento(id){
+  evEditId=id||null;
+  document.getElementById('mev-label').textContent=id?'Editar Evento':'Novo Evento';
+  if(id){
+    const ev=getEventos().find(x=>x.id===id)||{};
+    document.getElementById('mev-titulo').value=ev.titulo||'';
+    document.getElementById('mev-modulo').value=ev.modulo||evModuloAtual||'ebd';
+    document.getElementById('mev-icone').value=ev.icone||'';
+    document.getElementById('mev-tipo').value=ev.tipo||'fixo';
+    document.getElementById('mev-dia').value=ev.diaSemana||0;
+    document.getElementById('mev-data').value=ev.data||'';
+    document.getElementById('mev-hora').value=ev.hora||'';
+  } else {
+    document.getElementById('mev-titulo').value='';
+    document.getElementById('mev-modulo').value=evModuloAtual||'ebd';
+    document.getElementById('mev-icone').value='';
+    document.getElementById('mev-tipo').value='fixo';
+    document.getElementById('mev-dia').value=new Date().getDay();
+    document.getElementById('mev-data').value='';
+    document.getElementById('mev-hora').value='';
+  }
+  toggleEvTipo();
+  document.getElementById('modal-evento').classList.add('open');
+  setTimeout(()=>document.getElementById('mev-titulo').focus(),120);
+}
+
+function fecharModalEvento(){
+  document.getElementById('modal-evento').classList.remove('open');
+}
+
+function salvarEvento(){
+  const titulo=document.getElementById('mev-titulo').value.trim();
+  if(!titulo){document.getElementById('mev-titulo').focus();return;}
+  const tipo=document.getElementById('mev-tipo').value;
+  const obj={
+    id:evEditId||Date.now().toString(),
+    titulo,
+    modulo:document.getElementById('mev-modulo').value,
+    icone:document.getElementById('mev-icone').value.trim(),
+    tipo,
+    diaSemana:tipo==='fixo'?parseInt(document.getElementById('mev-dia').value):null,
+    data:tipo==='data'?document.getElementById('mev-data').value:null,
+    hora:document.getElementById('mev-hora').value
+  };
+  const arr=getEventos();
+  if(evEditId){const i=arr.findIndex(x=>x.id===evEditId);if(i>=0)arr[i]=obj;else arr.unshift(obj);}
+  else arr.unshift(obj);
+  setEventos(arr);
+  fecharModalEvento();
+  renderEventos();
+  renderHome();
+}
+
+function deletarEvento(id){
+  if(!confirm('Excluir este evento?'))return;
+  setEventos(getEventos().filter(x=>x.id!==id));
+  renderEventos();
+  renderHome();
+}
+// ══ FIM EVENTOS ════════════════════════════════════
 
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
@@ -2037,6 +2272,62 @@ window.addEventListener('message',function(e){
   </div>
   <div id="ref-sheet-body" style="padding:16px 18px 36px"></div>
 </div>
+<!-- MODAL EVENTO -->
+<div id="modal-evento" onclick="if(event.target===this)fecharModalEvento()">
+  <div class="mev-box">
+    <div class="mev-tit">
+      <span id="mev-label">Novo Evento</span>
+      <button class="mev-x" onclick="fecharModalEvento()">✕</button>
+    </div>
+    <div class="mev-field">
+      <label>Título</label>
+      <input id="mev-titulo" type="text" placeholder="Ex: Estudo bíblico, Ensaio coral..." autocomplete="off">
+    </div>
+    <div class="mev-row">
+      <div class="mev-field">
+        <label>Módulo</label>
+        <select id="mev-modulo">
+          <option value="ebd">🏫 EBD</option>
+          <option value="biblia">📖 Bíblia</option>
+          <option value="harpa">🎵 Harpa</option>
+        </select>
+      </div>
+      <div class="mev-field">
+        <label>Ícone</label>
+        <input id="mev-icone" type="text" placeholder="📅" maxlength="2" style="text-align:center;font-size:20px">
+      </div>
+    </div>
+    <div class="mev-field">
+      <label>Tipo</label>
+      <select id="mev-tipo" onchange="toggleEvTipo()">
+        <option value="fixo">🔁 Semanal (toda semana)</option>
+        <option value="data">📆 Data específica</option>
+      </select>
+    </div>
+    <div class="mev-field" id="mev-dia-wrap">
+      <label>Dia da semana</label>
+      <select id="mev-dia">
+        <option value="0">Domingo</option>
+        <option value="1">Segunda-feira</option>
+        <option value="2">Terça-feira</option>
+        <option value="3">Quarta-feira</option>
+        <option value="4">Quinta-feira</option>
+        <option value="5">Sexta-feira</option>
+        <option value="6">Sábado</option>
+      </select>
+    </div>
+    <div class="mev-field" id="mev-data-wrap" style="display:none">
+      <label>Data</label>
+      <input id="mev-data" type="date">
+    </div>
+    <div class="mev-field">
+      <label>Horário (opcional)</label>
+      <input id="mev-hora" type="time">
+    </div>
+    <button class="mev-save" onclick="salvarEvento()">SALVAR EVENTO</button>
+  </div>
+</div>
+
 <!-- MODAL ALUNO EBD -->
 <div id="modal-aluno" onclick="if(event.target===this)fecharModalAluno()">
   <div class="mal-box">
