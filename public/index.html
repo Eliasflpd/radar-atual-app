@@ -105,6 +105,32 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .nav-btn .ni{font-size:20px}
 .nav-btn .nl{font-size:9px;font-weight:700;letter-spacing:.5px;color:var(--sub);text-transform:uppercase}
 .nav-btn.on .nl{color:var(--gold)}
+/* ══ HOME REDESIGN ════════════════════════════════════ */
+.home-greeting{padding:max(env(safe-area-inset-top),16px) 16px 0;display:flex;align-items:flex-start;justify-content:space-between}
+.greet-bom{font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.5px;margin-bottom:2px}
+.greet-nome{font-size:22px;font-weight:900;color:var(--txt);line-height:1.1}
+.greet-cargo{font-size:11px;color:var(--gold);opacity:.85;font-weight:700;margin-top:3px;letter-spacing:.3px}
+.greet-avatar{width:40px;height:40px;border-radius:50%;background:var(--card2);border:1.5px solid rgba(201,161,74,.4);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0}
+.home-search{padding:12px 14px 0}
+.home-search-inner{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.home-search-inner input{flex:1;background:none;border:none;outline:none;font-size:14px;color:var(--txt);font-family:inherit}
+.home-search-inner input::placeholder{color:var(--sub)}
+.home-divider{height:1px;background:var(--line);margin:14px 14px 0;opacity:.5}
+.painel-hoje{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.painel-hoje-topo{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px}
+.painel-hoje-label{font-size:9px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.7}
+.painel-hoje-data{font-size:10px;color:var(--sub)}
+.painel-item{display:flex;align-items:center;gap:12px;padding:9px 14px;border-top:1px solid var(--line)}
+.painel-item-icone{font-size:18px;flex-shrink:0;width:24px;text-align:center}
+.painel-item-txt{font-size:13px;font-weight:700;color:var(--txt)}
+.painel-item-sub{font-size:11px;color:var(--sub);margin-top:1px}
+.continuar-card{background:linear-gradient(135deg,rgba(201,161,74,.1) 0%,rgba(201,161,74,.04) 100%);border:1px solid rgba(201,161,74,.2);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.continuar-card:active{opacity:.8}
+.continuar-icone{font-size:26px;flex-shrink:0}
+.continuar-info{flex:1;min-width:0}
+.continuar-rotulo{font-size:9px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.7}
+.continuar-nome{font-size:14px;font-weight:700;color:var(--txt);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.continuar-arr{font-size:22px;color:var(--gold);opacity:.5;flex-shrink:0}
 
 /* ══ BH LANDING ══ */
 #tela-bh-landing{background:var(--bg)}
@@ -355,31 +381,32 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
 <!-- HOME -->
 <div class="tela" id="home">
-  <div class="home-header">
-    <div class="home-logo" id="logo-tap" onclick="tapLogo()">
-      <svg class="logo-icon" viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="18" stroke="#C9A14A" stroke-width="1.5" opacity=".4"/>
-        <circle cx="20" cy="20" r="12" stroke="#C9A14A" stroke-width="1.5" opacity=".6"/>
-        <circle cx="20" cy="20" r="6" stroke="#C9A14A" stroke-width="1.5"/>
-        <circle cx="20" cy="20" r="2" fill="#C9A14A"/>
-        <line x1="20" y1="20" x2="32" y2="8" stroke="#F5C842" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <div class="logo-txt">
-        <span class="logo-radar">RADAR</span>
-        <span class="logo-atual">ATUAL</span>
-      </div>
+  <div class="home-greeting">
+    <div>
+      <div class="greet-bom" id="greet-bom">Bom dia ☀️</div>
+      <div class="greet-nome" id="greet-nome">Visitante</div>
+      <div class="greet-cargo" id="greet-cargo">RADAR ATUAL</div>
     </div>
-    <div class="home-sub">Informação em tempo real. Clareza para decidir.</div>
-    <div class="divider"></div>
+    <div class="greet-avatar" id="logo-tap" onclick="tapLogo()">⚙️</div>
   </div>
+  <div class="home-search">
+    <div class="home-search-inner">
+      <span style="font-size:16px;opacity:.4">🔍</span>
+      <input id="home-busca" placeholder="Buscar na Bíblia, hinos, lições..." oninput="buscaGlobal(this.value)">
+    </div>
+  </div>
+  <div class="home-divider"></div>
   <div class="home-scroll">
-    <div class="sec-label">Módulos</div>
+    <div id="painel-hoje-wrap"></div>
+    <div id="continuar-wrap"></div>
+    <div class="sec-label" style="margin-top:16px">Seus módulos</div>
     <div class="modulos" id="modulos"></div>
   </div>
   <nav class="nav-bottom">
-    <button class="nav-btn on"><span class="ni">🏠</span><span class="nl">Início</span></button>
-    <button class="nav-btn" onclick="irBusca()"><span class="ni">🔍</span><span class="nl">Buscar</span></button>
-    <button class="nav-btn" onclick="irRecentes()"><span class="ni">🕐</span><span class="nl">Recentes</span></button>
+    <button class="nav-btn on" id="nav-inicio"><span class="ni">🏠</span><span class="nl">Início</span></button>
+    <button class="nav-btn" onclick="focusBusca()" id="nav-buscar"><span class="ni">🔍</span><span class="nl">Buscar</span></button>
+    <button class="nav-btn" onclick="irFavoritos()" id="nav-fav"><span class="ni">⭐</span><span class="nl">Favoritos</span></button>
+    <button class="nav-btn" onclick="irPerfil()" id="nav-perfil"><span class="ni">👤</span><span class="nl">Perfil</span></button>
   </nav>
 </div>
 
@@ -916,22 +943,65 @@ function irHome(){
 
 // ══ HOME ══════════════════════════════════════════
 function renderHome(){
-  document.getElementById('modulos').innerHTML = MODS.map(m => `
+  const u = getUser();
+  // Saudação dinâmica
+  const h = new Date().getHours();
+  const [saud, icone] = h < 12 ? ['Bom dia','☀️'] : h < 18 ? ['Boa tarde','🌤️'] : ['Boa noite','🌙'];
+  document.getElementById('greet-bom').textContent = saud + ' ' + icone;
+  document.getElementById('greet-nome').textContent = u ? (u.nome||'Visitante') : 'Visitante';
+  document.getElementById('greet-cargo').textContent = u ? (u.cargo||'RADAR ATUAL') : 'RADAR ATUAL';
+
+  // Painel Hoje
+  const hoje = new Date();
+  const DIAS = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const dataStr = DIAS[hoje.getDay()] + ', ' + hoje.getDate() + ' de ' + MESES[hoje.getMonth()];
+  const AGENDA = {
+    0:[{i:'⛪',t:'Escola Dominical',s:'09h00'},{i:'⛪',t:'Culto da Manhã',s:'10h00'},{i:'⛪',t:'Culto da Noite',s:'19h00'}],
+    4:[{i:'🙏',t:'Reunião de Oração',s:'19h30'}],
+    6:[{i:'✝️',t:'Culto de Jovens',s:'19h00'}]
+  };
+  const itens = AGENDA[hoje.getDay()] || [];
+  const itensPainel = itens.length
+    ? itens.map(it=>`<div class="painel-item"><span class="painel-item-icone">${it.i}</span><div><div class="painel-item-txt">${it.t}</div><div class="painel-item-sub">${it.s}</div></div></div>`).join('')
+    : `<div class="painel-item"><span class="painel-item-icone">📅</span><div><div class="painel-item-txt">Sem eventos hoje</div><div class="painel-item-sub">Fique atento aos avisos</div></div></div>`;
+  document.getElementById('painel-hoje-wrap').innerHTML =
+    `<div class="painel-hoje"><div class="painel-hoje-topo"><span class="painel-hoje-label">Hoje</span><span class="painel-hoje-data">${dataStr}</span></div>${itensPainel}</div>`;
+
+  // Continuar acessando
+  const ultimo = localStorage.getItem('radar_ultimo_mod');
+  const ultimoMod = ultimo ? MODS.find(m=>m.id===ultimo) : null;
+  document.getElementById('continuar-wrap').innerHTML = ultimoMod
+    ? `<div class="continuar-card" onclick="abrirMod('${ultimoMod.id}')"><span class="continuar-icone">${ultimoMod.icon}</span><div class="continuar-info"><div class="continuar-rotulo">Continuar acessando</div><div class="continuar-nome">${ultimoMod.nome}</div></div><span class="continuar-arr">›</span></div>`
+    : '';
+
+  // Módulos (sem botão de compartilhar, menor)
+  document.getElementById('modulos').innerHTML = MODS.map(m=>`
     <div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')">
       <div class="tile-icon">${m.icon}</div>
       <div class="tile-info">
         <div class="tile-nome">${m.nome}</div>
         <div class="tile-desc">${m.desc}</div>
       </div>
-      <button class="tile-share" onclick="compartilhar(event,'${m.id}','${m.nome}')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-          <polyline points="16 6 12 2 8 6"/>
-          <line x1="12" y1="2" x2="12" y2="15"/>
-        </svg>
-      </button>
       <div class="tile-arr">›</div>
     </div>`).join('');
+}
+function buscaGlobal(q){
+  const v = q.trim().toLowerCase();
+  document.getElementById('painel-hoje-wrap').innerHTML = '';
+  document.getElementById('continuar-wrap').innerHTML = '';
+  if(!v){renderHome();return;}
+  const mf = MODS.filter(m=>m.nome.toLowerCase().includes(v)||m.desc.toLowerCase().includes(v));
+  document.getElementById('modulos').innerHTML = mf.length
+    ? mf.map(m=>`<div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')"><div class="tile-icon">${m.icon}</div><div class="tile-info"><div class="tile-nome">${m.nome}</div><div class="tile-desc">${m.desc}</div></div><div class="tile-arr">›</div></div>`).join('')
+    : '<div style="text-align:center;padding:32px 0;color:var(--sub);font-size:13px">Nenhum resultado</div>';
+}
+function focusBusca(){ document.getElementById('home-busca').focus(); }
+function irFavoritos(){ alert('Favoritos — em breve'); }
+function irPerfil(){
+  const u=getUser();
+  if(!u){alert('Nenhum usuário cadastrado.');return;}
+  alert('👤 '+u.nome+'\n🏷️ '+u.cargo+'\n📱 '+u.whatsapp);
 }
 
 function compartilhar(e, id, nome){
@@ -949,6 +1019,7 @@ function compartilhar(e, id, nome){
 }
 
 function abrirMod(id){
+  localStorage.setItem('radar_ultimo_mod', id);
   ocultarTodas();
   if(id==='biblia'){
     document.getElementById('tela-bh-landing').classList.add('ativa');
