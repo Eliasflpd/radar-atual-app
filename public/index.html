@@ -435,6 +435,90 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   white-space:pre-line;
   font-style:italic
 }
+
+/* ══ PAINEL ADMINISTRATIVO — MENU PRINCIPAL ══ */
+#tela-painel-adm{background:var(--bg)}
+.adm-scroll{flex:1;overflow-y:auto;padding:12px 14px 90px;-webkit-overflow-scrolling:touch}
+.adm-scroll::-webkit-scrollbar{display:none}
+.adm-nivel-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(201,161,74,.15);border:1px solid rgba(201,161,74,.3);border-radius:20px;padding:3px 10px;font-size:10px;font-weight:800;color:var(--gold);margin-top:4px}
+.adm-section-label{font-size:10px;font-weight:900;letter-spacing:2px;color:var(--gold);opacity:.6;margin:16px 0 8px;text-transform:uppercase}
+.adm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.adm-tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 14px 14px;cursor:pointer;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;transition:border-color .15s}
+.adm-tile:active{border-color:var(--gold);background:var(--card2)}
+.adm-tile-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0;background:var(--tc,var(--gold))}
+.adm-tile-icon{font-size:24px}
+.adm-tile-nome{font-size:13px;font-weight:800;line-height:1.2}
+.adm-tile-cnt{font-size:11px;color:var(--sub);margin-top:1px}
+
+/* ══ PAINEL ADM — DASHBOARD ══ */
+#tela-adm-dashboard{background:var(--bg)}
+.dash-scroll{flex:1;overflow-y:auto;padding:12px 14px 90px;-webkit-overflow-scrolling:touch}
+.dash-scroll::-webkit-scrollbar{display:none}
+.dash-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.dash-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.dash-card.full{grid-column:1/-1}
+.dash-card-icon{font-size:18px;margin-bottom:6px}
+.dash-card-num{font-size:26px;font-weight:900;color:var(--gold)}
+.dash-card-lbl{font-size:11px;color:var(--sub);margin-top:2px;line-height:1.3}
+.dash-card.alerta{background:rgba(247,95,95,.08);border-color:rgba(247,95,95,.25)}
+.dash-card.alerta .dash-card-num{color:var(--red)}
+.dash-card.verde .dash-card-num{color:var(--green)}
+.dash-rank{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.dash-rank-item{display:flex;align-items:center;gap:8px;font-size:12px}
+.dash-rank-bar-wrap{flex:1;background:rgba(255,255,255,.07);border-radius:4px;height:5px}
+.dash-rank-bar{height:5px;border-radius:4px;background:var(--gold);transition:width .4s}
+.dash-rank-val{font-size:10px;color:var(--sub);width:26px;text-align:right}
+.dash-log{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.dash-log-item{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px}
+.dash-log-ico{font-size:14px;flex-shrink:0;margin-top:1px}
+.dash-log-body{flex:1;min-width:0}
+.dash-log-txt{font-size:12px;font-weight:600}
+.dash-log-when{font-size:10px;color:var(--sub);margin-top:1px}
+
+/* ══ VISITANTES CRM ══ */
+#tela-adm-visitantes{background:var(--bg)}
+.vis-toolbar{padding:10px 14px 6px;flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+.vis-filters{display:flex;gap:6px;overflow-x:auto}
+.vis-filters::-webkit-scrollbar{display:none}
+.vis-chip{background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:20px;padding:5px 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s}
+.vis-chip.ativa{background:rgba(201,161,74,.18);border-color:var(--gold);color:var(--gold)}
+.vis-lista{flex:1;overflow-y:auto;padding:4px 14px 90px;-webkit-overflow-scrolling:touch}
+.vis-lista::-webkit-scrollbar{display:none}
+.vis-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.vis-card:active{border-color:var(--gold)}
+.vis-avatar{width:42px;height:42px;border-radius:50%;background:rgba(201,161,74,.12);display:grid;place-items:center;font-size:18px;flex-shrink:0;font-weight:900;color:var(--gold)}
+.vis-info{flex:1;min-width:0}
+.vis-nome{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vis-meta{font-size:11px;color:var(--sub);margin-top:2px}
+.vis-status{font-size:10px;font-weight:800;border-radius:10px;padding:2px 8px;display:inline-block;margin-top:5px}
+.vis-status.ativo{background:rgba(52,199,123,.15);color:#34c77b}
+.vis-status.retornou{background:rgba(79,142,247,.15);color:#4f8ef7}
+.vis-status.sem_contato{background:rgba(247,95,95,.15);color:var(--red)}
+.vis-status.arquivado{background:rgba(255,255,255,.07);color:var(--sub)}
+.vis-acts{display:flex;gap:6px;flex-shrink:0}
+.vis-fab{position:fixed;bottom:28px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--gold);border:none;color:#080D1A;font-size:26px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 20px rgba(201,161,74,.4);z-index:100}
+.vis-fab:active{opacity:.8;transform:scale(.95)}
+.vis-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:10px;color:var(--sub);font-size:13px;padding:40px 20px;text-align:center}
+#modal-visitante{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:200}
+#modal-visitante.open{display:flex}
+.mvis-box{background:var(--card);border-radius:18px 18px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:20px 18px max(env(safe-area-inset-bottom),28px)}
+.mvis-tit{font-size:12px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.mvis-field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.mvis-label{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub)}
+.mvis-input,.mvis-select,.mvis-textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font-size:14px;outline:none;font-family:inherit;width:100%}
+.mvis-input:focus,.mvis-select:focus,.mvis-textarea:focus{border-color:var(--gold)}
+.mvis-textarea{resize:none;min-height:72px}
+.mvis-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mvis-btn{width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;margin-top:8px;font-family:inherit}
+.mvis-btn.save{background:var(--gold);color:#080D1A}
+.mvis-btn.del{background:rgba(247,95,95,.12);color:var(--red);border:1px solid rgba(247,95,95,.2);font-size:14px}
+.mvis-btn.wpp{background:rgba(52,199,123,.12);color:#34c77b;border:1px solid rgba(52,199,123,.2);font-size:14px}
+
+/* ══ TELAS ADM PLACEHOLDER ══ */
+.adm-em-breve{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--sub);padding:40px 20px;text-align:center}
+.adm-em-breve .adm-icon{font-size:52px;opacity:.35}
+.adm-em-breve .adm-txt{font-size:14px;font-weight:700;color:rgba(255,255,255,.35)}
+.adm-em-breve .adm-sub{font-size:12px;color:var(--sub);max-width:240px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -2163,11 +2247,277 @@ function fecharYT(){
 let tapCount=0,tapTimer=null;
 function tapLogo(){
   tapCount++;clearTimeout(tapTimer);
-  if(tapCount>=5){tapCount=0;alert('🔐 CRM em breve');return;}
+  if(tapCount>=5){tapCount=0;abrirPainelAdm();return;}
   tapTimer=setTimeout(()=>tapCount=0,1500);
 }
 function irBusca(){alert('Busca global — em breve');}
 function irRecentes(){alert('Recentes — em breve');}
+
+// ══════════════════════════════════════════════════════════
+// PAINEL ADMINISTRATIVO — NAVEGAÇÃO E LÓGICA
+// ══════════════════════════════════════════════════════════
+
+function abrirPainelAdm(){
+  const u=JSON.parse(localStorage.getItem('radar_user')||'{}');
+  document.getElementById('adm-user-nome').textContent=u.nome||'Administrador';
+  // contadores
+  const vis=getVisitantes();
+  const alunos=JSON.parse(localStorage.getItem('ebd_alunos')||'[]');
+  const evs=JSON.parse(localStorage.getItem('radar_eventos')||'[]');
+  document.getElementById('adm-cnt-visitantes').textContent=vis.length+' cadastrado'+(vis.length!==1?'s':'');
+  document.getElementById('adm-cnt-alunos').textContent=alunos.length+' cadastrado'+(alunos.length!==1?'s':'');
+  document.getElementById('adm-cnt-eventos').textContent=evs.length+' programado'+(evs.length!==1?'s':'');
+  abrirTelaAdm('tela-painel-adm');
+}
+
+function abrirTelaAdm(telaId){
+  ocultarTodas();
+  const el=document.getElementById(telaId);
+  if(el) el.classList.add('ativa');
+}
+
+function abrirAdm(modulo){
+  trackVisit('admin_'+modulo);
+  switch(modulo){
+    case 'dashboard':   renderAdmDashboard(); abrirTelaAdm('tela-adm-dashboard'); break;
+    case 'visitantes':  renderVisitantes();    abrirTelaAdm('tela-adm-visitantes'); break;
+    case 'alunos':      abrirTelaAdm('tela-adm-alunos'); break;
+    case 'turmas':      abrirTelaAdm('tela-adm-turmas'); break;
+    case 'presenca':    abrirTelaAdm('tela-adm-presenca'); break;
+    case 'licoes':      abrirTelaAdm('tela-adm-licoes'); break;
+    case 'eventos-adm': abrirTelaAdm('tela-adm-eventos-adm'); break;
+    case 'conteudos':   abrirTelaAdm('tela-adm-conteudos'); break;
+    case 'comunicacao': abrirTelaAdm('tela-adm-comunicacao'); break;
+    case 'relatorios':  abrirTelaAdm('tela-adm-relatorios'); break;
+    case 'usuarios':    abrirTelaAdm('tela-adm-usuarios'); break;
+    case 'config':      abrirTelaAdm('tela-adm-config'); break;
+  }
+}
+
+// ── ANALYTICS / TRACKING ──────────────────────────────────
+function trackVisit(modulo){
+  try{
+    const visits=JSON.parse(localStorage.getItem('radar_visits')||'[]');
+    visits.push({m:modulo,t:Date.now()});
+    // manter só 500 mais recentes
+    if(visits.length>500)visits.splice(0,visits.length-500);
+    localStorage.setItem('radar_visits',JSON.stringify(visits));
+  }catch(e){}
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function renderAdmDashboard(){
+  const vis=getVisitantes();
+  const alunos=JSON.parse(localStorage.getItem('ebd_alunos')||'[]');
+  const evs=JSON.parse(localStorage.getItem('radar_eventos')||'[]');
+  const visits=JSON.parse(localStorage.getItem('radar_visits')||'[]');
+
+  const semContato=vis.filter(v=>v.status==='sem_contato').length;
+  const retornaram=vis.filter(v=>v.status==='retornou').length;
+  const ativos=vis.filter(v=>v.status==='ativo').length;
+
+  // top módulos
+  const contagem={};
+  visits.forEach(v=>{if(!v.m.startsWith('admin_'))contagem[v.m]=(contagem[v.m]||0)+1;});
+  const top=Object.entries(contagem).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxTop=top[0]?top[0][1]:1;
+
+  const nomeModulo=m=>({
+    biblia:'Bíblia',harpa:'Harpa Cristã',ebd:'EBD',eventos:'Eventos',
+    noticias:'Notícias','yt-player':'Vídeos',cadastro:'Cadastro'
+  }[m]||m);
+
+  // log de atividade recente
+  const recentes=visits.slice(-10).reverse();
+  const logHTML=recentes.length?recentes.map(v=>{
+    const d=new Date(v.t);
+    const hora=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+    return `<div class="dash-log-item"><div class="dash-log-ico">📱</div><div class="dash-log-body"><div class="dash-log-txt">${nomeModulo(v.m)}</div><div class="dash-log-when">${hora}</div></div></div>`;
+  }).join(''):'<div style="color:var(--sub);font-size:12px;padding:8px 0">Nenhuma atividade registrada ainda.</div>';
+
+  const topHTML=top.length?top.map(([m,c])=>`
+    <div class="dash-rank-item">
+      <span style="font-size:12px;width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nomeModulo(m)}</span>
+      <div class="dash-rank-bar-wrap"><div class="dash-rank-bar" style="width:${Math.round(c/maxTop*100)}%"></div></div>
+      <span class="dash-rank-val">${c}</span>
+    </div>`).join(''):'<div style="color:var(--sub);font-size:12px">Ainda sem dados</div>';
+
+  const evsFut=evs.filter(e=>new Date(e.data)>=new Date());
+
+  document.getElementById('dash-scroll-content').innerHTML=`
+    <div class="dash-row">
+      <div class="dash-card verde">
+        <div class="dash-card-icon">👤</div>
+        <div class="dash-card-num">${vis.length}</div>
+        <div class="dash-card-lbl">Total visitantes</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-icon">🔄</div>
+        <div class="dash-card-num">${retornaram}</div>
+        <div class="dash-card-lbl">Retornaram</div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card ${semContato>0?'alerta':''}">
+        <div class="dash-card-icon">⚠️</div>
+        <div class="dash-card-num">${semContato}</div>
+        <div class="dash-card-lbl">Sem contato</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-icon">🎯</div>
+        <div class="dash-card-num">${ativos}</div>
+        <div class="dash-card-lbl">Em acompanhamento</div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card">
+        <div class="dash-card-icon">👥</div>
+        <div class="dash-card-num">${alunos.length}</div>
+        <div class="dash-card-lbl">Alunos EBD</div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-icon">📅</div>
+        <div class="dash-card-num">${evsFut.length}</div>
+        <div class="dash-card-lbl">Eventos futuros</div>
+      </div>
+    </div>
+    <div class="dash-card full" style="margin-bottom:8px">
+      <div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:8px">📊 Módulos mais acessados</div>
+      <div class="dash-rank">${topHTML}</div>
+    </div>
+    <div class="dash-card full" style="margin-bottom:8px">
+      <div style="font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:8px">⏱️ Atividade recente</div>
+      <div class="dash-log">${logHTML}</div>
+    </div>
+    <div style="text-align:center;font-size:10px;color:var(--sub);padding:8px 0 16px">Dados salvos localmente · ${visits.length} eventos registrados</div>
+  `;
+}
+
+// ══ VISITANTES CRUD ═══════════════════════════════════════
+
+let _visFiltroCurrent='todos';
+let _visEditId=null;
+
+function getVisitantes(){
+  return JSON.parse(localStorage.getItem('radar_visitantes')||'[]');
+}
+function setVisitantes(arr){
+  localStorage.setItem('radar_visitantes',JSON.stringify(arr));
+}
+
+function filtrarVisitantes(btn){
+  document.querySelectorAll('.vis-chip').forEach(c=>c.classList.remove('ativa'));
+  btn.classList.add('ativa');
+  _visFiltroCurrent=btn.dataset.status;
+  renderVisitantes();
+}
+
+function renderVisitantes(){
+  const lista=document.getElementById('vis-lista');
+  const busca=(document.getElementById('vis-search')?.value||'').toLowerCase();
+  let vis=getVisitantes();
+  if(_visFiltroCurrent!=='todos') vis=vis.filter(v=>v.status===_visFiltroCurrent);
+  if(busca) vis=vis.filter(v=>(v.nome||'').toLowerCase().includes(busca)||(v.fone||'').includes(busca));
+
+  if(!vis.length){
+    lista.innerHTML=`<div class="vis-empty"><div style="font-size:40px;opacity:.3">👤</div><div>${_visFiltroCurrent==='todos'&&!busca?'Nenhum visitante cadastrado ainda.':'Nenhum resultado encontrado.'}</div></div>`;
+    return;
+  }
+
+  const statusLabel={ativo:'Em acompanhamento',retornou:'Retornou',sem_contato:'Sem contato',arquivado:'Arquivado'};
+  lista.innerHTML=vis.map(v=>`
+    <div class="vis-card" onclick="editarVisitante('${v.id}')">
+      <div class="vis-avatar">${(v.nome||'?')[0].toUpperCase()}</div>
+      <div class="vis-info">
+        <div class="vis-nome">${v.nome||'—'}</div>
+        <div class="vis-meta">${v.fone||'Sem telefone'}${v.responsavel?' · '+v.responsavel:''}</div>
+        <span class="vis-status ${v.status||'ativo'}">${statusLabel[v.status]||'Ativo'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function abrirModalVisitante(){
+  _visEditId=null;
+  document.getElementById('mvis-label').textContent='Novo Visitante';
+  document.getElementById('mvis-nome').value='';
+  document.getElementById('mvis-fone').value='';
+  document.getElementById('mvis-data').value=new Date().toISOString().split('T')[0];
+  document.getElementById('mvis-origem').value='';
+  document.getElementById('mvis-status').value='ativo';
+  document.getElementById('mvis-responsavel').value='';
+  document.getElementById('mvis-obs').value='';
+  document.getElementById('mvis-btn-del').style.display='none';
+  document.getElementById('mvis-btn-wpp').style.display='none';
+  document.getElementById('modal-visitante').classList.add('open');
+}
+
+function editarVisitante(id){
+  const vis=getVisitantes();
+  const v=vis.find(x=>x.id===id);
+  if(!v)return;
+  _visEditId=id;
+  document.getElementById('mvis-label').textContent='Editar Visitante';
+  document.getElementById('mvis-nome').value=v.nome||'';
+  document.getElementById('mvis-fone').value=v.fone||'';
+  document.getElementById('mvis-data').value=v.dataVisita||'';
+  document.getElementById('mvis-origem').value=v.origem||'';
+  document.getElementById('mvis-status').value=v.status||'ativo';
+  document.getElementById('mvis-responsavel').value=v.responsavel||'';
+  document.getElementById('mvis-obs').value=v.obs||'';
+  document.getElementById('mvis-btn-del').style.display='block';
+  document.getElementById('mvis-btn-wpp').style.display=v.fone?'block':'none';
+  document.getElementById('modal-visitante').classList.add('open');
+}
+
+function fecharModalVisitante(){
+  document.getElementById('modal-visitante').classList.remove('open');
+  _visEditId=null;
+}
+
+function salvarVisitante(){
+  const nome=document.getElementById('mvis-nome').value.trim();
+  if(!nome){document.getElementById('mvis-nome').focus();return;}
+  const vis=getVisitantes();
+  const obj={
+    id:_visEditId||(Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
+    nome,
+    fone:document.getElementById('mvis-fone').value.trim(),
+    dataVisita:document.getElementById('mvis-data').value,
+    origem:document.getElementById('mvis-origem').value,
+    status:document.getElementById('mvis-status').value,
+    responsavel:document.getElementById('mvis-responsavel').value.trim(),
+    obs:document.getElementById('mvis-obs').value.trim(),
+    updatedAt:Date.now()
+  };
+  if(_visEditId){
+    const idx=vis.findIndex(x=>x.id===_visEditId);
+    if(idx>=0)vis[idx]=obj;
+  }else{
+    obj.createdAt=Date.now();
+    vis.push(obj);
+  }
+  setVisitantes(vis);
+  fecharModalVisitante();
+  renderVisitantes();
+  // atualizar contador no menu
+  document.getElementById('adm-cnt-visitantes').textContent=vis.length+' cadastrado'+(vis.length!==1?'s':'');
+}
+
+function deletarVisitante(){
+  if(!_visEditId)return;
+  if(!confirm('Excluir este visitante?'))return;
+  const vis=getVisitantes().filter(x=>x.id!==_visEditId);
+  setVisitantes(vis);
+  fecharModalVisitante();
+  renderVisitantes();
+  document.getElementById('adm-cnt-visitantes').textContent=vis.length+' cadastrado'+(vis.length!==1?'s':'');
+}
+
+function whatsappVisitante(){
+  const fone=document.getElementById('mvis-fone').value.trim().replace(/\D/g,'');
+  if(fone) window.open('https://wa.me/55'+fone,'_blank');
+}
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 
@@ -2251,6 +2601,350 @@ window.addEventListener('message',function(e){
   </div>
   <div id="ref-sheet-body" style="padding:16px 18px 36px"></div>
 </div>
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAINEL ADMINISTRATIVO — MENU PRINCIPAL       -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="tela" id="tela-painel-adm">
+  <div class="top-bar">
+    <button class="back-btn" onclick="irHome()">←</button>
+    <span class="top-title">Painel Administrativo</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-scroll">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800" id="adm-user-nome">—</div>
+        <div class="adm-nivel-badge" id="adm-nivel-badge">⚙️ ADMIN</div>
+      </div>
+      <div style="font-size:24px">⚙️</div>
+    </div>
+
+    <div class="adm-section-label">Pessoas</div>
+    <div class="adm-grid">
+      <div class="adm-tile" style="--tc:#4f8ef7" onclick="abrirAdm('visitantes')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">👤</div>
+        <div class="adm-tile-nome">Visitantes</div>
+        <div class="adm-tile-cnt" id="adm-cnt-visitantes">0 cadastrados</div>
+      </div>
+      <div class="adm-tile" style="--tc:#34c77b" onclick="abrirAdm('alunos')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">👥</div>
+        <div class="adm-tile-nome">Alunos EBD</div>
+        <div class="adm-tile-cnt" id="adm-cnt-alunos">0 cadastrados</div>
+      </div>
+      <div class="adm-tile" style="--tc:#a78bfa" onclick="abrirAdm('turmas')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">🏫</div>
+        <div class="adm-tile-nome">Turmas</div>
+        <div class="adm-tile-cnt" id="adm-cnt-turmas">0 turmas</div>
+      </div>
+      <div class="adm-tile" style="--tc:#f59e0b" onclick="abrirAdm('presenca')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">✅</div>
+        <div class="adm-tile-nome">Presença</div>
+        <div class="adm-tile-cnt">Chamada EBD</div>
+      </div>
+    </div>
+
+    <div class="adm-section-label">Conteúdo</div>
+    <div class="adm-grid">
+      <div class="adm-tile" style="--tc:#f97316" onclick="abrirAdm('licoes')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">📝</div>
+        <div class="adm-tile-nome">Lições</div>
+        <div class="adm-tile-cnt">Gestão de lições</div>
+      </div>
+      <div class="adm-tile" style="--tc:#06b6d4" onclick="abrirAdm('eventos-adm')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">📅</div>
+        <div class="adm-tile-nome">Eventos</div>
+        <div class="adm-tile-cnt" id="adm-cnt-eventos">0 programados</div>
+      </div>
+      <div class="adm-tile" style="--tc:#ec4899" onclick="abrirAdm('conteudos')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">🗂️</div>
+        <div class="adm-tile-nome">Conteúdos</div>
+        <div class="adm-tile-cnt">Avisos · Banners</div>
+      </div>
+      <div class="adm-tile" style="--tc:#10b981" onclick="abrirAdm('comunicacao')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">💬</div>
+        <div class="adm-tile-nome">Comunicação</div>
+        <div class="adm-tile-cnt">Avisos · Notif.</div>
+      </div>
+    </div>
+
+    <div class="adm-section-label">Gestão</div>
+    <div class="adm-grid">
+      <div class="adm-tile" style="--tc:var(--gold);grid-column:1/-1" onclick="abrirAdm('dashboard')">
+        <div class="adm-tile-bar"></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="adm-tile-icon">📊</div>
+          <div>
+            <div class="adm-tile-nome">Dashboard</div>
+            <div class="adm-tile-cnt">Visão geral da igreja</div>
+          </div>
+        </div>
+      </div>
+      <div class="adm-tile" style="--tc:#818cf8" onclick="abrirAdm('relatorios')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">📈</div>
+        <div class="adm-tile-nome">Relatórios</div>
+        <div class="adm-tile-cnt">Exportar dados</div>
+      </div>
+      <div class="adm-tile" style="--tc:#f43f5e" onclick="abrirAdm('usuarios')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">👑</div>
+        <div class="adm-tile-nome">Usuários</div>
+        <div class="adm-tile-cnt">Níveis de acesso</div>
+      </div>
+      <div class="adm-tile" style="--tc:var(--sub)" onclick="abrirAdm('config')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">⚙️</div>
+        <div class="adm-tile-nome">Configurações</div>
+        <div class="adm-tile-cnt">App · Igreja</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADM: DASHBOARD ══ -->
+<div class="tela" id="tela-adm-dashboard">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Dashboard</span>
+    <button style="background:none;border:none;color:var(--gold);font-size:13px;padding:0;cursor:pointer;font-family:inherit" onclick="renderAdmDashboard()">↻</button>
+  </div>
+  <div class="dash-scroll" id="dash-scroll-content">
+    <!-- preenchido por renderAdmDashboard() -->
+  </div>
+</div>
+
+<!-- ══ ADM: VISITANTES CRM ══ -->
+<div class="tela" id="tela-adm-visitantes">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Visitantes</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="vis-toolbar">
+    <input type="search" id="vis-search" placeholder="🔍 Buscar visitante..." autocomplete="off"
+      style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--txt);font-size:14px;outline:none;font-family:inherit;width:100%"
+      oninput="renderVisitantes()">
+    <div class="vis-filters">
+      <button class="vis-chip ativa" data-status="todos" onclick="filtrarVisitantes(this)">Todos</button>
+      <button class="vis-chip" data-status="ativo" onclick="filtrarVisitantes(this)">Ativos</button>
+      <button class="vis-chip" data-status="retornou" onclick="filtrarVisitantes(this)">Retornaram</button>
+      <button class="vis-chip" data-status="sem_contato" onclick="filtrarVisitantes(this)">Sem contato</button>
+      <button class="vis-chip" data-status="arquivado" onclick="filtrarVisitantes(this)">Arquivados</button>
+    </div>
+  </div>
+  <div class="vis-lista" id="vis-lista">
+    <!-- preenchido por renderVisitantes() -->
+  </div>
+  <button class="vis-fab" onclick="abrirModalVisitante()">＋</button>
+</div>
+
+<!-- ══ ADM: ALUNOS (placeholder) ══ -->
+<div class="tela" id="tela-adm-alunos">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Alunos EBD</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">👥</div>
+    <div class="adm-txt">Alunos EBD</div>
+    <div class="adm-sub">Cadastro completo, histórico de turmas e frequência. Em breve.</div>
+    <button style="margin-top:12px;background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:10px;padding:10px 20px;font-family:inherit;font-size:13px;cursor:pointer" onclick="irTela('tela-ebd-crm')">Ver lista atual (EBD)</button>
+  </div>
+</div>
+
+<!-- ══ ADM: TURMAS (placeholder) ══ -->
+<div class="tela" id="tela-adm-turmas">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Turmas</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">🏫</div>
+    <div class="adm-txt">Gestão de Turmas</div>
+    <div class="adm-sub">Criar turmas, adicionar professores e alunos, transferências coletivas. Em breve.</div>
+  </div>
+</div>
+
+<!-- ══ ADM: PRESENÇA (placeholder) ══ -->
+<div class="tela" id="tela-adm-presenca">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Presença</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">✅</div>
+    <div class="adm-txt">Chamada EBD</div>
+    <div class="adm-sub">Chamada por turma, histórico individual e alertas de faltas consecutivas. Em breve.</div>
+  </div>
+</div>
+
+<!-- ══ ADM: LIÇÕES (placeholder) ══ -->
+<div class="tela" id="tela-adm-licoes">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Gestão de Lições</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">📝</div>
+    <div class="adm-txt">Gestão de Lições</div>
+    <div class="adm-sub">Criar, editar, programar publicação, rascunhos, PPT e mapas mentais. Em breve.</div>
+  </div>
+</div>
+
+<!-- ══ ADM: EVENTOS ADMIN (placeholder) ══ -->
+<div class="tela" id="tela-adm-eventos-adm">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Eventos (Admin)</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">📅</div>
+    <div class="adm-txt">Gestão de Eventos</div>
+    <div class="adm-sub">Criar eventos, lista de participantes, inscrições e check-in. Em breve.</div>
+    <button style="margin-top:12px;background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:10px;padding:10px 20px;font-family:inherit;font-size:13px;cursor:pointer" onclick="irTela('tela-eventos')">Ver eventos públicos</button>
+  </div>
+</div>
+
+<!-- ══ ADM: CONTEÚDOS (placeholder) ══ -->
+<div class="tela" id="tela-adm-conteudos">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Conteúdos</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">🗂️</div>
+    <div class="adm-txt">Gestão de Conteúdos</div>
+    <div class="adm-sub">Avisos, banners, destaques, versículo do dia e notificações. Em breve.</div>
+  </div>
+</div>
+
+<!-- ══ ADM: COMUNICAÇÃO (placeholder) ══ -->
+<div class="tela" id="tela-adm-comunicacao">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Comunicação</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">💬</div>
+    <div class="adm-txt">Central de Comunicação</div>
+    <div class="adm-sub">Avisos gerais, notificação push, WhatsApp em massa por turma ou perfil. Em breve.</div>
+  </div>
+</div>
+
+<!-- ══ ADM: RELATÓRIOS (placeholder) ══ -->
+<div class="tela" id="tela-adm-relatorios">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Relatórios</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">📈</div>
+    <div class="adm-txt">Relatórios</div>
+    <div class="adm-sub">Visitantes, frequência, conversões, crescimento mensal. Exportar PDF, Excel e WhatsApp. Em breve.</div>
+  </div>
+</div>
+
+<!-- ══ ADM: USUÁRIOS (placeholder) ══ -->
+<div class="tela" id="tela-adm-usuarios">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Usuários</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">👑</div>
+    <div class="adm-txt">Níveis de Acesso</div>
+    <div class="adm-sub">Admin · Editor · Professor · Secretaria · Público. Convidar e gerenciar membros. Em breve.</div>
+  </div>
+</div>
+
+<!-- ══ ADM: CONFIGURAÇÕES (placeholder) ══ -->
+<div class="tela" id="tela-adm-config">
+  <div class="top-bar">
+    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <span class="top-title">Configurações</span>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-em-breve">
+    <div class="adm-icon">⚙️</div>
+    <div class="adm-txt">Configurações do App</div>
+    <div class="adm-sub">Nome da igreja, logo, módulos ativos, integrações, backup e restauração. Em breve.</div>
+  </div>
+</div>
+
+<!-- ══ MODAL VISITANTE ══ -->
+<div id="modal-visitante" onclick="if(event.target===this)fecharModalVisitante()">
+  <div class="mvis-box">
+    <div class="mvis-tit">
+      <span id="mvis-label">Novo Visitante</span>
+      <button onclick="fecharModalVisitante()" style="background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer;line-height:1;padding:0">✕</button>
+    </div>
+    <div class="mvis-field">
+      <div class="mvis-label">Nome completo *</div>
+      <input class="mvis-input" id="mvis-nome" type="text" placeholder="Ex: Maria da Silva" autocomplete="off">
+    </div>
+    <div class="mvis-row2">
+      <div class="mvis-field">
+        <div class="mvis-label">Telefone / WhatsApp</div>
+        <input class="mvis-input" id="mvis-fone" type="tel" placeholder="(99) 99999-9999" autocomplete="off">
+      </div>
+      <div class="mvis-field">
+        <div class="mvis-label">Data da 1ª visita</div>
+        <input class="mvis-input" id="mvis-data" type="date">
+      </div>
+    </div>
+    <div class="mvis-row2">
+      <div class="mvis-field">
+        <div class="mvis-label">Origem</div>
+        <select class="mvis-select" id="mvis-origem">
+          <option value="">Selecione</option>
+          <option>Convite de membro</option>
+          <option>Redes sociais</option>
+          <option>Passou em frente</option>
+          <option>Evento especial</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="mvis-field">
+        <div class="mvis-label">Status</div>
+        <select class="mvis-select" id="mvis-status">
+          <option value="ativo">Ativo (acompanhar)</option>
+          <option value="retornou">Retornou</option>
+          <option value="sem_contato">Sem contato</option>
+          <option value="arquivado">Arquivado</option>
+        </select>
+      </div>
+    </div>
+    <div class="mvis-field">
+      <div class="mvis-label">Responsável pelo acompanhamento</div>
+      <input class="mvis-input" id="mvis-responsavel" type="text" placeholder="Nome do responsável" autocomplete="off">
+    </div>
+    <div class="mvis-field">
+      <div class="mvis-label">Observações</div>
+      <textarea class="mvis-textarea" id="mvis-obs" placeholder="Histórico de contatos, pedidos de oração, etc."></textarea>
+    </div>
+    <button class="mvis-btn save" onclick="salvarVisitante()">Salvar</button>
+    <button class="mvis-btn wpp" id="mvis-btn-wpp" style="display:none" onclick="whatsappVisitante()">📱 Abrir WhatsApp</button>
+    <button class="mvis-btn del" id="mvis-btn-del" style="display:none" onclick="deletarVisitante()">Excluir visitante</button>
+  </div>
+</div>
+
 <!-- MODAL EVENTO -->
 <div id="modal-evento" onclick="if(event.target===this)fecharModalEvento()">
   <div class="mev-box">
