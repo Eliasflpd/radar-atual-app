@@ -2257,6 +2257,30 @@ function irRecentes(){alert('Recentes — em breve');}
 // PAINEL ADMINISTRATIVO — NAVEGAÇÃO E LÓGICA
 // ══════════════════════════════════════════════════════════
 
+// ── HARDWARE BACK BUTTON (Android/iOS) ───────────────────
+// Empurra um estado no history quando entra no admin.
+// Quando o usuário pressiona o botão voltar do celular,
+// o popstate navega dentro do app em vez de sair para 404.
+history.replaceState({admTela:'home'},'');
+window.addEventListener('popstate',function(e){
+  const tela=document.querySelector('.tela.ativa');
+  const id=tela?tela.id:'';
+  // sub-tela admin → volta pro menu admin
+  if(id&&id.startsWith('tela-adm-')){
+    history.pushState({admTela:'tela-painel-adm'},'');
+    ocultarTodas();
+    document.getElementById('tela-painel-adm').classList.add('ativa');
+  } else if(id==='tela-painel-adm'){
+    // menu admin → home
+    history.pushState({admTela:'home'},'');
+    irHome();
+  } else {
+    // qualquer outra tela → home (comportamento padrão seguro)
+    history.pushState({admTela:'home'},'');
+    irHome();
+  }
+});
+
 function abrirPainelAdm(){
   const u=JSON.parse(localStorage.getItem('radar_user')||'{}');
   document.getElementById('adm-user-nome').textContent=u.nome||'Administrador';
@@ -2267,10 +2291,12 @@ function abrirPainelAdm(){
   document.getElementById('adm-cnt-visitantes').textContent=vis.length+' cadastrado'+(vis.length!==1?'s':'');
   document.getElementById('adm-cnt-alunos').textContent=alunos.length+' cadastrado'+(alunos.length!==1?'s':'');
   document.getElementById('adm-cnt-eventos').textContent=evs.length+' programado'+(evs.length!==1?'s':'');
+  history.pushState({admTela:'home'},''); // base de segurança
   abrirTelaAdm('tela-painel-adm');
 }
 
 function abrirTelaAdm(telaId){
+  history.pushState({admTela:telaId},'');
   ocultarTodas();
   const el=document.getElementById(telaId);
   if(el) el.classList.add('ativa');
@@ -2605,9 +2631,9 @@ window.addEventListener('message',function(e){
 <!-- PAINEL ADMINISTRATIVO — MENU PRINCIPAL       -->
 <!-- ══════════════════════════════════════════════ -->
 <div class="tela" id="tela-painel-adm">
-  <div class="top-bar">
-    <button class="back-btn" onclick="irHome()">←</button>
-    <span class="top-title">Painel Administrativo</span>
+  <div class="std-header">
+    <button class="std-back" onclick="irHome()">←</button>
+    <div class="std-hinfo"><div class="std-titulo">⚙️ Painel Adm.</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-scroll">
@@ -2711,10 +2737,10 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: DASHBOARD ══ -->
 <div class="tela" id="tela-adm-dashboard">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Dashboard</span>
-    <button style="background:none;border:none;color:var(--gold);font-size:13px;padding:0;cursor:pointer;font-family:inherit" onclick="renderAdmDashboard()">↻</button>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📊 Dashboard</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:20px;padding:0;cursor:pointer;font-family:inherit;line-height:1" onclick="renderAdmDashboard()">↻</button>
   </div>
   <div class="dash-scroll" id="dash-scroll-content">
     <!-- preenchido por renderAdmDashboard() -->
@@ -2723,9 +2749,9 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: VISITANTES CRM ══ -->
 <div class="tela" id="tela-adm-visitantes">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Visitantes</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">👤 Visitantes</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="vis-toolbar">
@@ -2748,24 +2774,24 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: ALUNOS (placeholder) ══ -->
 <div class="tela" id="tela-adm-alunos">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Alunos EBD</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">👥 Alunos EBD</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
     <div class="adm-icon">👥</div>
     <div class="adm-txt">Alunos EBD</div>
     <div class="adm-sub">Cadastro completo, histórico de turmas e frequência. Em breve.</div>
-    <button style="margin-top:12px;background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:10px;padding:10px 20px;font-family:inherit;font-size:13px;cursor:pointer" onclick="irTela('tela-ebd-crm')">Ver lista atual (EBD)</button>
+    <button style="margin-top:12px;background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:10px;padding:10px 20px;font-family:inherit;font-size:13px;cursor:pointer" onclick="ocultarTodas();document.getElementById('tela-ebd-crm').classList.add('ativa')">Ver lista atual (EBD)</button>
   </div>
 </div>
 
 <!-- ══ ADM: TURMAS (placeholder) ══ -->
 <div class="tela" id="tela-adm-turmas">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Turmas</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">🏫 Turmas</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
@@ -2777,9 +2803,9 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: PRESENÇA (placeholder) ══ -->
 <div class="tela" id="tela-adm-presenca">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Presença</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">✅ Presença</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
@@ -2791,9 +2817,9 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: LIÇÕES (placeholder) ══ -->
 <div class="tela" id="tela-adm-licoes">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Gestão de Lições</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📝 Lições</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
@@ -2805,24 +2831,24 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: EVENTOS ADMIN (placeholder) ══ -->
 <div class="tela" id="tela-adm-eventos-adm">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Eventos (Admin)</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📅 Eventos</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
     <div class="adm-icon">📅</div>
     <div class="adm-txt">Gestão de Eventos</div>
     <div class="adm-sub">Criar eventos, lista de participantes, inscrições e check-in. Em breve.</div>
-    <button style="margin-top:12px;background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:10px;padding:10px 20px;font-family:inherit;font-size:13px;cursor:pointer" onclick="irTela('tela-eventos')">Ver eventos públicos</button>
+    <button style="margin-top:12px;background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:10px;padding:10px 20px;font-family:inherit;font-size:13px;cursor:pointer" onclick="ocultarTodas();document.getElementById('tela-eventos').classList.add('ativa')">Ver eventos públicos</button>
   </div>
 </div>
 
 <!-- ══ ADM: CONTEÚDOS (placeholder) ══ -->
 <div class="tela" id="tela-adm-conteudos">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Conteúdos</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">🗂️ Conteúdos</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
@@ -2834,9 +2860,9 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: COMUNICAÇÃO (placeholder) ══ -->
 <div class="tela" id="tela-adm-comunicacao">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Comunicação</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">💬 Comunicação</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
@@ -2848,9 +2874,9 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: RELATÓRIOS (placeholder) ══ -->
 <div class="tela" id="tela-adm-relatorios">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Relatórios</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📈 Relatórios</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
@@ -2862,9 +2888,9 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: USUÁRIOS (placeholder) ══ -->
 <div class="tela" id="tela-adm-usuarios">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Usuários</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">👑 Usuários</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
@@ -2876,9 +2902,9 @@ window.addEventListener('message',function(e){
 
 <!-- ══ ADM: CONFIGURAÇÕES (placeholder) ══ -->
 <div class="tela" id="tela-adm-config">
-  <div class="top-bar">
-    <button class="back-btn" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <span class="top-title">Configurações</span>
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">⚙️ Configurações</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="adm-em-breve">
