@@ -541,22 +541,49 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .c-dot.on{width:18px;background:var(--gold)}
 .carousel-empty{display:flex;flex-direction:column;align-items:center;padding:20px;color:var(--sub);font-size:12px;text-align:center;gap:5px;border:1.5px dashed rgba(255,255,255,.08);border-radius:12px;margin:8px 14px}
 
-/* ══ CONFIGURAÇÕES — CARD MANAGER ══ */
-.cfg-scroll{flex:1;overflow-y:auto;padding:12px 14px 100px;-webkit-overflow-scrolling:touch}
+/* ══ CONFIGURAÇÕES — EDITOR VISUAL DE CARDS ══ */
+.cfg-scroll{flex:1;overflow-y:auto;padding:0 0 100px;-webkit-overflow-scrolling:touch}
 .cfg-scroll::-webkit-scrollbar{display:none}
-.cfg-section{font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.6;margin:14px 0 8px}
-.cfg-card-item{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden;display:flex;gap:0;align-items:stretch}
-.cfg-card-thumb{width:72px;flex-shrink:0;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden}
-.cfg-card-thumb img{width:100%;height:100%;object-fit:cover}
-.cfg-card-body{flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px}
-.cfg-card-titulo{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cfg-card-tipo{font-size:10px;color:var(--sub)}
-.cfg-card-acts{display:flex;gap:4px;padding:8px 10px 8px 0;flex-direction:column;justify-content:center}
-.cfg-act{width:30px;height:30px;border:1px solid var(--line);background:var(--bg);border-radius:8px;display:grid;place-items:center;font-size:13px;cursor:pointer;color:var(--txt)}
-.cfg-act:active{opacity:.6}
-.cfg-inactive{opacity:.4}
-.cfg-add-btn{width:100%;border:1.5px dashed rgba(201,161,74,.35);background:transparent;border-radius:12px;padding:15px;color:var(--gold);font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.cfg-topo{padding:10px 14px 4px;display:flex;align-items:center;justify-content:space-between}
+.cfg-total{font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub)}
+/* Prévia strip horizontal */
+.cfg-strip{display:flex;gap:6px;padding:8px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
+.cfg-strip::-webkit-scrollbar{display:none}
+.cfg-strip-thumb{width:52px;height:34px;border-radius:6px;overflow:hidden;flex-shrink:0;border:2px solid transparent;cursor:pointer;transition:border-color .15s;background:rgba(255,255,255,.06)}
+.cfg-strip-thumb.ativo-strip{border-color:var(--gold)}
+.cfg-strip-thumb img{width:100%;height:100%;object-fit:cover}
+.cfg-strip-txt{width:52px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+/* Divisor */
+.cfg-divider{height:1px;background:var(--line);margin:6px 14px 12px}
+/* Card visual */
+.cfg-vc-wrap{padding:0 14px;margin-bottom:14px}
+.cfg-vc{border-radius:14px;overflow:hidden;border:2px solid transparent;transition:border-color .2s;background:var(--card)}
+.cfg-vc.selecionado{border-color:var(--gold)}
+.cfg-vc.inativo{opacity:.4}
+/* Prévia do card — igual ao carousel */
+.cfg-vc-prev{width:100%;position:relative;cursor:pointer;display:block}
+.cfg-vc-prev-img{width:100%;height:155px;object-fit:cover;display:block}
+.cfg-vc-prev-video{height:155px;background:#000;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.cfg-vc-prev-video img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.7}
+.cfg-vc-prev-video .cfg-play{position:relative;width:46px;height:46px;border-radius:50%;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;font-size:19px;border:2px solid rgba(255,255,255,.45);color:#fff}
+.cfg-vc-prev-txt{min-height:110px;padding:18px 16px;display:flex;flex-direction:column;justify-content:center}
+.cfg-vc-prev-txt .pv-tit{font-size:15px;font-weight:900;line-height:1.25;margin-bottom:6px}
+.cfg-vc-prev-txt .pv-body{font-size:12px;line-height:1.6;opacity:.82;white-space:pre-line}
+.cfg-vc-overlay{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(transparent,rgba(0,0,0,.6));pointer-events:none}
+.cfg-vc-overlay-tit{font-size:12px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+/* Barra de ações */
+.cfg-vc-bar{display:flex;border-top:1px solid var(--line);background:var(--card)}
+.cfg-vc-btn{flex:1;border:none;background:none;padding:10px 4px;font-size:11px;font-weight:800;color:var(--sub);cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s;line-height:1}
+.cfg-vc-btn:active{opacity:.55}
+.cfg-vc-btn .bi{font-size:15px}
+.cfg-vc-btn.editar{color:var(--gold)}
+.cfg-vc-btn.oculto{color:rgba(255,255,255,.2)}
+.cfg-vc-sep{width:1px;background:var(--line);flex-shrink:0}
+/* Botão adicionar */
+.cfg-add-wrap{padding:0 14px}
+.cfg-add-btn{width:100%;border:1.5px dashed rgba(201,161,74,.35);background:transparent;border-radius:14px;padding:16px;color:var(--gold);font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
 .cfg-add-btn:active{opacity:.7}
+.cfg-empty-msg{text-align:center;padding:32px 20px;color:var(--sub);font-size:13px}
 
 /* Modal editor de card */
 #modal-cfg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-end;z-index:210}
@@ -2722,31 +2749,96 @@ let _cfgCorSel='#0F1525';
 
 function renderCfgCards(){
   const lista=document.getElementById('cfg-lista');
+  const strip=document.getElementById('cfg-strip');
+  const totalEl=document.getElementById('cfg-total');
   if(!lista)return;
   const cards=getCarouselCards();
-  if(!cards.length){
-    lista.innerHTML='<div style="text-align:center;color:var(--sub);font-size:12px;padding:20px 0">Nenhum card ainda.</div>';
+  const n=cards.length;
+  if(totalEl) totalEl.textContent=n===0?'Nenhum card':(n===1?'1 card':n+' cards');
+
+  // Tira de prévia (strip horizontal)
+  if(strip){
+    if(!n){strip.innerHTML='';} else {
+      strip.innerHTML=cards.map((c,i)=>{
+        const ativo=c.ativo!==false;
+        if(c.tipo==='imagem'&&c.imagem)
+          return `<div class="cfg-strip-thumb${ativo?' ativo-strip':''}" onclick="rolarParaCard(${i})" title="${c.titulo||''}"><img src="${c.imagem}" onerror="this.parentElement.innerHTML='🖼️'"></div>`;
+        if(c.tipo==='video'&&c.video){
+          const th=ytThumbUrl(c.video)||'';
+          return `<div class="cfg-strip-thumb${ativo?' ativo-strip':''}" onclick="rolarParaCard(${i})"><img src="${th}" onerror="this.parentElement.innerHTML='▶️'"></div>`;
+        }
+        return `<div class="cfg-strip-txt${ativo?' ativo-strip':''}" style="background:${c.cor||'var(--card)'};" onclick="rolarParaCard(${i})"><span style="font-size:8px;font-weight:900;color:#fff;opacity:.8;text-align:center;line-height:1.2">${c.titulo||'Texto'}</span></div>`;
+      }).join('');
+    }
+  }
+
+  // Cards visuais
+  if(!n){
+    lista.innerHTML='<div class="cfg-empty-msg">Nenhum card ainda.<br><span style="font-size:11px;opacity:.5">Toque em "+ Novo card" para começar.</span></div>';
     return;
   }
-  const tipoIcon={imagem:'🖼️',video:'▶️',texto:'📝'};
+
   lista.innerHTML=cards.map((c,i)=>{
-    const thumb=c.tipo==='imagem'&&c.imagem
-      ?`<img src="${c.imagem}" onerror="this.style.display='none'">`
-      :(c.tipo==='video'&&c.video?`<img src="${ytThumbUrl(c.video)||''}" onerror="this.style.display='none'">`
-      :`<span>${tipoIcon[c.tipo]||'📄'}</span>`);
-    return `<div class="cfg-card-item${c.ativo===false?' cfg-inactive':''}">
-      <div class="cfg-card-thumb">${thumb}</div>
-      <div class="cfg-card-body">
-        <div class="cfg-card-titulo">${c.titulo||'(sem título)'}</div>
-        <div class="cfg-card-tipo">${tipoIcon[c.tipo]||''} ${c.tipo||''}${c.ativo===false?' · inativo':''}</div>
-      </div>
-      <div class="cfg-card-acts">
-        ${i>0?`<button class="cfg-act" onclick="moverCard('${c.id}',-1)" title="Subir">↑</button>`:'<div style="width:30px"></div>'}
-        ${i<cards.length-1?`<button class="cfg-act" onclick="moverCard('${c.id}',1)" title="Descer">↓</button>`:'<div style="width:30px"></div>'}
-        <button class="cfg-act" onclick="editarCard('${c.id}')" title="Editar">✏️</button>
+    const ativo=c.ativo!==false;
+    let preview='';
+    if(c.tipo==='imagem'){
+      preview=`<div class="cfg-vc-prev">
+        <img class="cfg-vc-prev-img" src="${c.imagem||''}" onerror="this.style.display='none'">
+        ${c.titulo?`<div class="cfg-vc-overlay"><div class="cfg-vc-overlay-tit">${c.titulo}</div></div>`:''}
+      </div>`;
+    } else if(c.tipo==='video'){
+      const th=ytThumbUrl(c.video||'')||'';
+      preview=`<div class="cfg-vc-prev">
+        <div class="cfg-vc-prev-video">
+          ${th?`<img src="${th}" onerror="this.style.display='none'">`:''}
+          <div class="cfg-play">▶</div>
+        </div>
+        ${c.titulo?`<div class="cfg-vc-overlay"><div class="cfg-vc-overlay-tit">${c.titulo}</div></div>`:''}
+      </div>`;
+    } else {
+      preview=`<div class="cfg-vc-prev">
+        <div class="cfg-vc-prev-txt" style="background:${c.cor||'var(--card)'}">
+          ${c.titulo?`<div class="pv-tit">${c.titulo}</div>`:''}
+          ${c.texto?`<div class="pv-body">${c.texto}</div>`:''}
+        </div>
+      </div>`;
+    }
+
+    const btnSubir=i>0
+      ?`<button class="cfg-vc-btn" onclick="moverCard('${c.id}',-1)"><span class="bi">↑</span><span>Subir</span></button><div class="cfg-vc-sep"></div>`
+      :'';
+    const btnDescer=i<n-1
+      ?`<div class="cfg-vc-sep"></div><button class="cfg-vc-btn" onclick="moverCard('${c.id}',1)"><span class="bi">↓</span><span>Descer</span></button>`
+      :'';
+
+    return `<div class="cfg-vc-wrap" id="cfg-vc-${i}">
+      <div class="cfg-vc${ativo?'':' inativo'}">
+        ${preview}
+        <div class="cfg-vc-bar">
+          ${btnSubir}
+          <button class="cfg-vc-btn editar" onclick="editarCard('${c.id}')"><span class="bi">✏️</span><span>Editar</span></button>
+          <div class="cfg-vc-sep"></div>
+          <button class="cfg-vc-btn${ativo?'':' oculto'}" onclick="toggleAtivoCard('${c.id}')"><span class="bi">${ativo?'👁':'🚫'}</span><span>${ativo?'Visível':'Oculto'}</span></button>
+          ${btnDescer}
+        </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function rolarParaCard(i){
+  const el=document.getElementById('cfg-vc-'+i);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function toggleAtivoCard(id){
+  const cards=getCarouselCards();
+  const c=cards.find(x=>x.id===id);
+  if(!c)return;
+  c.ativo=c.ativo===false?true:false;
+  setCarouselCards(cards);
+  renderCfgCards();
+  renderCarousel();
 }
 
 function abrirModalCfg(id){
@@ -3227,9 +3319,15 @@ window.addEventListener('message',function(e){
     <div style="width:36px"></div>
   </div>
   <div class="cfg-scroll">
-    <div class="cfg-section">Cards do Carousel</div>
+    <div class="cfg-topo">
+      <span class="cfg-total" id="cfg-total">0 cards</span>
+    </div>
+    <div class="cfg-strip" id="cfg-strip"></div>
+    <div class="cfg-divider"></div>
     <div id="cfg-lista"></div>
-    <button class="cfg-add-btn" onclick="abrirModalCfg()">＋ Adicionar card</button>
+    <div class="cfg-add-wrap">
+      <button class="cfg-add-btn" onclick="abrirModalCfg()">＋ Novo card</button>
+    </div>
   </div>
 </div>
 
