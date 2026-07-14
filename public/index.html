@@ -519,6 +519,56 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .adm-em-breve .adm-icon{font-size:52px;opacity:.35}
 .adm-em-breve .adm-txt{font-size:14px;font-weight:700;color:rgba(255,255,255,.35)}
 .adm-em-breve .adm-sub{font-size:12px;color:var(--sub);max-width:240px;line-height:1.5}
+/* ══ CRM COMPARTILHADO ══ */
+.crm-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.crm-toolbar{display:flex;gap:8px;padding:10px 14px;background:var(--bg);flex-shrink:0}
+.crm-search{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--txt);font-size:13px;font-family:inherit;outline:none}
+.crm-chips{display:flex;gap:6px;padding:0 14px 10px;flex-wrap:wrap;flex-shrink:0}
+.crm-chip{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;border:1px solid var(--line);background:transparent;color:var(--sub);cursor:pointer;font-family:inherit;transition:all .15s}
+.crm-chip.ativo{background:var(--gold);border-color:var(--gold);color:#080D1A}
+.crm-list{flex:1;overflow-y:auto;padding:0 14px 80px}
+.crm-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s;position:relative}
+.crm-item:active{border-color:var(--gold)}
+.crm-item-icon{width:40px;height:40px;border-radius:10px;background:rgba(201,161,74,.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.crm-item-body{flex:1;min-width:0}
+.crm-item-nome{font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crm-item-sub{font-size:11px;color:var(--sub);margin-top:2px}
+.crm-item-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;flex-shrink:0}
+.badge-ativo{background:rgba(0,200,100,.12);color:#00c864;border:1px solid rgba(0,200,100,.2)}
+.badge-inativo{background:rgba(255,255,255,.06);color:var(--sub);border:1px solid var(--line)}
+.badge-turma{background:rgba(201,161,74,.12);color:var(--gold);border:1px solid rgba(201,161,74,.2)}
+.badge-presente{background:rgba(0,200,100,.12);color:#00c864}
+.badge-ausente{background:rgba(220,50,50,.12);color:#ff4444}
+.badge-justif{background:rgba(100,140,255,.12);color:#6496ff}
+.crm-empty{text-align:center;padding:40px 20px;color:var(--sub);font-size:13px}
+.crm-fab{position:fixed;bottom:80px;right:18px;width:52px;height:52px;border-radius:50%;background:var(--gold);border:none;font-size:24px;color:#080D1A;cursor:pointer;box-shadow:0 4px 18px rgba(201,161,74,.35);z-index:50;display:flex;align-items:center;justify-content:center;font-weight:900}
+/* CRM MODAL */
+.crm-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:flex-end;justify-content:center}
+.crm-modal-bg.open{display:flex}
+.crm-modal{background:#0F1525;border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:20px 18px 34px;max-height:88vh;overflow-y:auto}
+.crm-modal-title{font-size:15px;font-weight:900;color:var(--txt);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.crm-modal-close{background:rgba(255,255,255,.07);border:none;border-radius:8px;width:32px;height:32px;color:var(--sub);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.crm-field{margin-bottom:14px}
+.crm-label{font-size:11px;font-weight:800;color:var(--sub);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;display:block}
+.crm-input,.crm-select,.crm-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font-size:14px;font-family:inherit;outline:none;box-sizing:border-box}
+.crm-textarea{resize:none;min-height:72px}
+.crm-select option{background:#0F1525}
+.crm-modal-btns{display:flex;gap:10px;margin-top:18px}
+.crm-btn-salvar{flex:1;background:var(--gold);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:900;color:#080D1A;cursor:pointer;font-family:inherit}
+.crm-btn-del{background:rgba(220,50,50,.12);border:1px solid rgba(220,50,50,.2);border-radius:12px;padding:13px 16px;font-size:14px;color:#ff4444;cursor:pointer;font-family:inherit}
+.crm-btn-wpp{background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.2);border-radius:12px;padding:13px 16px;font-size:18px;cursor:pointer}
+.crm-section-title{font-size:11px;font-weight:800;color:var(--sub);letter-spacing:1px;text-transform:uppercase;padding:10px 0 6px;margin-bottom:4px}
+/* Presença toggle */
+.pres-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:6px}
+.pres-nome{flex:1;font-size:13px;font-weight:700}
+.pres-toggle{display:flex;gap:4px}
+.pres-btn{border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit}
+.pres-btn.p{background:rgba(0,200,100,.15);color:#00c864}
+.pres-btn.p.sel{background:#00c864;color:#080D1A}
+.pres-btn.a{background:rgba(220,50,50,.1);color:#ff4444}
+.pres-btn.a.sel{background:#ff4444;color:#fff}
+.pres-btn.j{background:rgba(100,140,255,.1);color:#6496ff}
+.pres-btn.j.sel{background:#6496ff;color:#fff}
 
 /* ══ CAROUSEL HOME ══ */
 .home-carousel{position:relative;margin:0 0 6px;flex-shrink:0;touch-action:pan-y}
@@ -2394,6 +2444,8 @@ function abrirTelaAdm(telaId){
   ocultarTodas();
   const el=document.getElementById(telaId);
   if(el) el.classList.add('ativa');
+  // inicializa CRM ao abrir tela
+  if(typeof _crmInitMap!=='undefined' && _crmInitMap[telaId]) _crmInitMap[telaId]();
 }
 
 function abrirAdm(modulo){
@@ -3027,6 +3079,720 @@ window.addEventListener('message',function(e){
   if(_brefData){mostrarRefSheet(ref);return;}
   fetch('/biblia.json').then(r=>r.json()).then(d=>{_brefData=d;mostrarRefSheet(ref);});
 });
+
+// ══════════════════════════════════════════════════════
+// CRM 1 — ALUNOS EBD (admin)
+// FLUXO: Lista → busca/filtro → item → modal → salvar/deletar/wpp
+// STORAGE: ebd_alunos
+// ══════════════════════════════════════════════════════
+let _admAlunoFiltro = '';
+function getAdmAlunos(){ return JSON.parse(localStorage.getItem('ebd_alunos')||'[]'); }
+function setAdmAlunos(d){ localStorage.setItem('ebd_alunos', JSON.stringify(d)); }
+
+function renderAdmAlunos(){
+  const q = (document.getElementById('admAluno-busca')||{value:''}).value.toLowerCase();
+  const lista = getAdmAlunos().filter(a=>{
+    const matchQ = !q || a.nome.toLowerCase().includes(q) || (a.fone||'').includes(q);
+    const matchT = !_admAlunoFiltro || a.turma===_admAlunoFiltro;
+    return matchQ && matchT;
+  });
+  const el = document.getElementById('admAluno-lista');
+  if(!el) return;
+  if(!lista.length){ el.innerHTML='<div class="crm-empty">Nenhum aluno encontrado</div>'; return; }
+  el.innerHTML = lista.map(a=>`
+    <div class="crm-item" onclick="abrirModalAdmAluno('${a.id}')">
+      <div class="crm-item-icon">👤</div>
+      <div class="crm-item-body">
+        <div class="crm-item-nome">${a.nome}</div>
+        <div class="crm-item-sub">${a.turma||'Sem turma'}${a.fone?' · '+a.fone:''}</div>
+      </div>
+      <span class="crm-item-badge ${a.status==='ativo'?'badge-ativo':'badge-inativo'}">${a.status==='ativo'?'Ativo':'Inativo'}</span>
+    </div>`).join('');
+}
+
+function filtrarAdmAluno(el, turma){
+  _admAlunoFiltro = turma;
+  document.querySelectorAll('#admAluno-chips .crm-chip').forEach(c=>c.classList.remove('ativo'));
+  el.classList.add('ativo');
+  renderAdmAlunos();
+}
+
+function abrirModalAdmAluno(id){
+  const all = getAdmAlunos();
+  const a = id ? all.find(x=>x.id===id) : null;
+  document.getElementById('modal-admAluno-titulo').textContent = a ? 'Editar Aluno' : 'Novo Aluno';
+  document.getElementById('admAluno-id').value = a?.id||'';
+  document.getElementById('admAluno-nome').value = a?.nome||'';
+  document.getElementById('admAluno-turma').value = a?.turma||'';
+  document.getElementById('admAluno-fone').value = a?.fone||'';
+  document.getElementById('admAluno-nasc').value = a?.nasc||'';
+  document.getElementById('admAluno-resp').value = a?.resp||'';
+  document.getElementById('admAluno-obs').value = a?.obs||'';
+  document.getElementById('admAluno-status').value = a?.status||'ativo';
+  document.getElementById('admAluno-btn-del').style.display = a ? '' : 'none';
+  document.getElementById('admAluno-btn-wpp').style.display = a?.fone ? '' : 'none';
+  document.getElementById('modal-admAluno-bg').classList.add('open');
+}
+
+function fecharModalAdmAluno(){
+  document.getElementById('modal-admAluno-bg').classList.remove('open');
+}
+
+function salvarAdmAluno(){
+  const nome = document.getElementById('admAluno-nome').value.trim();
+  if(!nome){ alert('Informe o nome do aluno'); return; }
+  const all = getAdmAlunos();
+  const id = document.getElementById('admAluno-id').value;
+  const obj = {
+    id: id || 'a'+Date.now(),
+    nome,
+    turma: document.getElementById('admAluno-turma').value,
+    fone: document.getElementById('admAluno-fone').value.trim(),
+    nasc: document.getElementById('admAluno-nasc').value,
+    resp: document.getElementById('admAluno-resp').value.trim(),
+    obs: document.getElementById('admAluno-obs').value.trim(),
+    status: document.getElementById('admAluno-status').value,
+    criado: id ? (all.find(x=>x.id===id)||{}).criado : new Date().toISOString()
+  };
+  const idx = all.findIndex(x=>x.id===id);
+  if(idx>=0) all[idx]=obj; else all.push(obj);
+  setAdmAlunos(all);
+  fecharModalAdmAluno();
+  renderAdmAlunos();
+}
+
+function deletarAdmAluno(){
+  const id = document.getElementById('admAluno-id').value;
+  if(!id || !confirm('Excluir este aluno?')) return;
+  setAdmAlunos(getAdmAlunos().filter(x=>x.id!==id));
+  fecharModalAdmAluno();
+  renderAdmAlunos();
+}
+
+function whatsappAdmAluno(){
+  const fone = document.getElementById('admAluno-fone').value.replace(/\D/g,'');
+  if(fone) window.open('https://wa.me/55'+fone);
+}
+
+// ══════════════════════════════════════════════════════
+// CRM 2 — TURMAS
+// FLUXO: Lista → clica → modal (nome/faixa/professor/sala/horário) → salvar/deletar
+// STORAGE: radar_turmas
+// ══════════════════════════════════════════════════════
+function getTurmas(){ return JSON.parse(localStorage.getItem('radar_turmas')||'[]'); }
+function setTurmas(d){ localStorage.setItem('radar_turmas', JSON.stringify(d)); }
+
+function renderTurmas(){
+  const lista = getTurmas();
+  const el = document.getElementById('turma-lista');
+  if(!el) return;
+  if(!lista.length){ el.innerHTML='<div class="crm-empty">Nenhuma turma cadastrada</div>'; return; }
+  el.innerHTML = lista.map(t=>{
+    const alunos = getAdmAlunos().filter(a=>a.turma===t.nome).length;
+    return `<div class="crm-item" onclick="abrirModalTurma('${t.id}')">
+      <div class="crm-item-icon">🏫</div>
+      <div class="crm-item-body">
+        <div class="crm-item-nome">${t.nome}</div>
+        <div class="crm-item-sub">${t.professor||'Sem professor'} · ${t.horario||''}</div>
+      </div>
+      <span class="crm-item-badge badge-turma">${alunos} alunos</span>
+    </div>`;
+  }).join('');
+}
+
+function abrirModalTurma(id){
+  const all = getTurmas();
+  const t = id ? all.find(x=>x.id===id) : null;
+  document.getElementById('modal-turma-titulo').textContent = t ? 'Editar Turma' : 'Nova Turma';
+  document.getElementById('turma-id').value = t?.id||'';
+  document.getElementById('turma-nome').value = t?.nome||'';
+  document.getElementById('turma-faixa').value = t?.faixa||'';
+  document.getElementById('turma-professor').value = t?.professor||'';
+  document.getElementById('turma-sala').value = t?.sala||'';
+  document.getElementById('turma-horario').value = t?.horario||'';
+  document.getElementById('turma-btn-del').style.display = t ? '' : 'none';
+  document.getElementById('modal-turma-bg').classList.add('open');
+}
+
+function fecharModalTurma(){
+  document.getElementById('modal-turma-bg').classList.remove('open');
+}
+
+function salvarTurma(){
+  const nome = document.getElementById('turma-nome').value.trim();
+  if(!nome){ alert('Informe o nome da turma'); return; }
+  const all = getTurmas();
+  const id = document.getElementById('turma-id').value;
+  const obj = {
+    id: id || 't'+Date.now(),
+    nome,
+    faixa: document.getElementById('turma-faixa').value.trim(),
+    professor: document.getElementById('turma-professor').value.trim(),
+    sala: document.getElementById('turma-sala').value.trim(),
+    horario: document.getElementById('turma-horario').value.trim()
+  };
+  const idx = all.findIndex(x=>x.id===id);
+  if(idx>=0) all[idx]=obj; else all.push(obj);
+  setTurmas(all);
+  fecharModalTurma();
+  renderTurmas();
+}
+
+function deletarTurma(){
+  const id = document.getElementById('turma-id').value;
+  if(!id || !confirm('Excluir esta turma?')) return;
+  setTurmas(getTurmas().filter(x=>x.id!==id));
+  fecharModalTurma();
+  renderTurmas();
+}
+
+// ══════════════════════════════════════════════════════
+// CRM 3 — PRESENÇA
+// FLUXO: Seleciona turma → seleciona data → lista alunos com toggle P/A/J → Salvar
+// STORAGE: radar_presenca
+// ══════════════════════════════════════════════════════
+let _presencaMap = {};
+
+function getPresenca(){ return JSON.parse(localStorage.getItem('radar_presenca')||'[]'); }
+function setPresenca(d){ localStorage.setItem('radar_presenca', JSON.stringify(d)); }
+
+function initPresenca(){
+  const sel = document.getElementById('pres-turma-sel');
+  if(!sel) return;
+  const turmas = ['Adulto','Jovem','Adolescente','Infantil','Berçário'];
+  sel.innerHTML = '<option value="">Selecionar turma...</option>' +
+    turmas.map(t=>`<option>${t}</option>`).join('');
+  const hoje = new Date().toISOString().slice(0,10);
+  document.getElementById('pres-data').value = hoje;
+}
+
+function carregarChamada(){
+  const turma = document.getElementById('pres-turma-sel').value;
+  const data = document.getElementById('pres-data').value;
+  const el = document.getElementById('pres-lista');
+  const resumo = document.getElementById('pres-resumo');
+  const salvarWrap = document.getElementById('pres-salvar-wrap');
+  if(!turma || !data){ el.innerHTML='<div class="crm-empty">Selecione turma e data</div>'; resumo.textContent=''; return; }
+
+  const alunos = getAdmAlunos().filter(a=>a.turma===turma && a.status==='ativo');
+  if(!alunos.length){ el.innerHTML='<div class="crm-empty">Nenhum aluno ativo nesta turma</div>'; return; }
+
+  // Carrega chamada salva se existir
+  const registros = getPresenca();
+  const chamadaSalva = registros.find(r=>r.turma===turma && r.data===data);
+  _presencaMap = {};
+  if(chamadaSalva) chamadaSalva.chamada.forEach(c=>{ _presencaMap[c.aluno_id]=c.status; });
+
+  el.innerHTML = alunos.map(a=>{
+    const st = _presencaMap[a.id]||'';
+    return `<div class="pres-item">
+      <div class="pres-nome">${a.nome}</div>
+      <div class="pres-toggle">
+        <button class="pres-btn p ${st==='P'?'sel':''}" onclick="setPres('${a.id}','P',this)">P</button>
+        <button class="pres-btn a ${st==='A'?'sel':''}" onclick="setPres('${a.id}','A',this)">A</button>
+        <button class="pres-btn j ${st==='J'?'sel':''}" onclick="setPres('${a.id}','J',this)">J</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  atualizarResumoPres(alunos.length);
+  salvarWrap.style.display='';
+}
+
+function setPres(id, status, btn){
+  _presencaMap[id] = status;
+  const item = btn.closest('.pres-item');
+  item.querySelectorAll('.pres-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  const total = document.querySelectorAll('.pres-item').length;
+  atualizarResumoPres(total);
+}
+
+function atualizarResumoPres(total){
+  const p = Object.values(_presencaMap).filter(v=>v==='P').length;
+  const a = Object.values(_presencaMap).filter(v=>v==='A').length;
+  const j = Object.values(_presencaMap).filter(v=>v==='J').length;
+  const resumo = document.getElementById('pres-resumo');
+  if(resumo) resumo.textContent = `Total: ${total} · ✅ ${p} presentes · ❌ ${a} ausentes · 📋 ${j} justificados`;
+}
+
+function salvarChamada(){
+  const turma = document.getElementById('pres-turma-sel').value;
+  const data = document.getElementById('pres-data').value;
+  if(!turma || !data) return;
+  const alunos = getAdmAlunos().filter(a=>a.turma===turma && a.status==='ativo');
+  const chamada = alunos.map(a=>({ aluno_id:a.id, nome:a.nome, status:_presencaMap[a.id]||'A' }));
+  const registros = getPresenca().filter(r=>!(r.turma===turma && r.data===data));
+  registros.push({ id:'p'+Date.now(), turma, data, chamada, salvo: new Date().toISOString() });
+  setPresenca(registros);
+  alert('✅ Chamada salva com sucesso!');
+}
+
+// ══════════════════════════════════════════════════════
+// CRM 4 — LIÇÕES
+// FLUXO: Lista → filtro status → modal → publicar/rascunho/deletar
+// STORAGE: radar_licoes
+// ══════════════════════════════════════════════════════
+let _licaoFiltro = '';
+function getLicoes(){ return JSON.parse(localStorage.getItem('radar_licoes')||'[]'); }
+function setLicoes(d){ localStorage.setItem('radar_licoes', JSON.stringify(d)); }
+
+function renderLicoes(){
+  const lista = getLicoes().filter(l=> !_licaoFiltro || l.status===_licaoFiltro)
+    .sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  const el = document.getElementById('licao-lista');
+  if(!el) return;
+  if(!lista.length){ el.innerHTML='<div class="crm-empty">Nenhuma lição encontrada</div>'; return; }
+  el.innerHTML = lista.map(l=>`
+    <div class="crm-item" onclick="abrirModalLicao('${l.id}')">
+      <div class="crm-item-icon">📝</div>
+      <div class="crm-item-body">
+        <div class="crm-item-nome">${l.titulo}</div>
+        <div class="crm-item-sub">${l.turma||'Geral'} · ${l.data||'sem data'}</div>
+      </div>
+      <span class="crm-item-badge ${l.status==='publicado'?'badge-ativo':'badge-inativo'}">${l.status==='publicado'?'Publicado':'Rascunho'}</span>
+    </div>`).join('');
+}
+
+function filtrarLicao(el, status){
+  _licaoFiltro = status;
+  document.querySelectorAll('#licao-chips .crm-chip').forEach(c=>c.classList.remove('ativo'));
+  el.classList.add('ativo');
+  renderLicoes();
+}
+
+function abrirModalLicao(id){
+  const all = getLicoes();
+  const l = id ? all.find(x=>x.id===id) : null;
+  document.getElementById('modal-licao-titulo').textContent = l ? 'Editar Lição' : 'Nova Lição';
+  document.getElementById('licao-id').value = l?.id||'';
+  document.getElementById('licao-titulo').value = l?.titulo||'';
+  document.getElementById('licao-turma').value = l?.turma||'Geral';
+  document.getElementById('licao-data').value = l?.data||'';
+  document.getElementById('licao-link').value = l?.link||'';
+  document.getElementById('licao-ppt').value = l?.ppt||'';
+  document.getElementById('licao-apoio').value = l?.apoio||'';
+  document.getElementById('licao-status').value = l?.status||'rascunho';
+  document.getElementById('licao-btn-del').style.display = l ? '' : 'none';
+  document.getElementById('modal-licao-bg').classList.add('open');
+}
+
+function fecharModalLicao(){
+  document.getElementById('modal-licao-bg').classList.remove('open');
+}
+
+function salvarLicao(){
+  const titulo = document.getElementById('licao-titulo').value.trim();
+  if(!titulo){ alert('Informe o título da lição'); return; }
+  const all = getLicoes();
+  const id = document.getElementById('licao-id').value;
+  const obj = {
+    id: id || 'l'+Date.now(),
+    titulo,
+    turma: document.getElementById('licao-turma').value,
+    data: document.getElementById('licao-data').value,
+    link: document.getElementById('licao-link').value.trim(),
+    ppt: document.getElementById('licao-ppt').value.trim(),
+    apoio: document.getElementById('licao-apoio').value.trim(),
+    status: document.getElementById('licao-status').value
+  };
+  const idx = all.findIndex(x=>x.id===id);
+  if(idx>=0) all[idx]=obj; else all.push(obj);
+  setLicoes(all);
+  fecharModalLicao();
+  renderLicoes();
+}
+
+function deletarLicao(){
+  const id = document.getElementById('licao-id').value;
+  if(!id || !confirm('Excluir esta lição?')) return;
+  setLicoes(getLicoes().filter(x=>x.id!==id));
+  fecharModalLicao();
+  renderLicoes();
+}
+
+// ══════════════════════════════════════════════════════
+// CRM 5 — EVENTOS ADMIN
+// FLUXO: Lista → modal → salvar/deletar/wpp lembrete
+// STORAGE: radar_eventos (chave já existente)
+// ══════════════════════════════════════════════════════
+let _evAdmFiltro = '';
+function getEvAdm(){ return JSON.parse(localStorage.getItem('radar_eventos')||'[]'); }
+function setEvAdm(d){ localStorage.setItem('radar_eventos', JSON.stringify(d)); }
+
+function renderEvAdm(){
+  const lista = getEvAdm()
+    .filter(e=> !_evAdmFiltro || e.tipo===_evAdmFiltro)
+    .sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+  const el = document.getElementById('evadm-lista');
+  if(!el) return;
+  if(!lista.length){ el.innerHTML='<div class="crm-empty">Nenhum evento cadastrado</div>'; return; }
+  const hoje = new Date().toISOString().slice(0,10);
+  el.innerHTML = lista.map(e=>{
+    const passado = e.data && e.data < hoje;
+    return `<div class="crm-item" onclick="abrirModalEvAdm('${e.id}')">
+      <div class="crm-item-icon">📅</div>
+      <div class="crm-item-body">
+        <div class="crm-item-nome">${e.titulo||e.nome||'Evento'}</div>
+        <div class="crm-item-sub">${e.data||'sem data'}${e.hora?' '+e.hora:''} · ${e.local||''}</div>
+      </div>
+      <span class="crm-item-badge ${passado?'badge-inativo':'badge-ativo'}">${passado?'Encerrado':'Próximo'}</span>
+    </div>`;
+  }).join('');
+}
+
+function filtrarEvAdm(el, tipo){
+  _evAdmFiltro = tipo;
+  document.querySelectorAll('#tela-adm-eventos-adm .crm-chips .crm-chip').forEach(c=>c.classList.remove('ativo'));
+  el.classList.add('ativo');
+  renderEvAdm();
+}
+
+function abrirModalEvAdm(id){
+  const all = getEvAdm();
+  const e = id ? all.find(x=>x.id===id) : null;
+  document.getElementById('modal-evadm-titulo').textContent = e ? 'Editar Evento' : 'Novo Evento';
+  document.getElementById('evadm-id').value = e?.id||'';
+  document.getElementById('evadm-titulo').value = e?.titulo||e?.nome||'';
+  document.getElementById('evadm-data').value = e?.data||'';
+  document.getElementById('evadm-hora').value = e?.hora||'';
+  document.getElementById('evadm-local').value = e?.local||'';
+  document.getElementById('evadm-tipo').value = e?.tipo||'culto';
+  document.getElementById('evadm-desc').value = e?.desc||e?.descricao||'';
+  document.getElementById('evadm-btn-del').style.display = e ? '' : 'none';
+  document.getElementById('modal-evadm-bg').classList.add('open');
+}
+
+function fecharModalEvAdm(){
+  document.getElementById('modal-evadm-bg').classList.remove('open');
+}
+
+function salvarEvAdm(){
+  const titulo = document.getElementById('evadm-titulo').value.trim();
+  if(!titulo){ alert('Informe o título do evento'); return; }
+  const all = getEvAdm();
+  const id = document.getElementById('evadm-id').value;
+  const obj = {
+    id: id || 'e'+Date.now(),
+    titulo,
+    nome: titulo,
+    data: document.getElementById('evadm-data').value,
+    hora: document.getElementById('evadm-hora').value,
+    local: document.getElementById('evadm-local').value.trim(),
+    tipo: document.getElementById('evadm-tipo').value,
+    desc: document.getElementById('evadm-desc').value.trim()
+  };
+  const idx = all.findIndex(x=>x.id===id);
+  if(idx>=0) all[idx]=obj; else all.push(obj);
+  setEvAdm(all);
+  fecharModalEvAdm();
+  renderEvAdm();
+}
+
+function deletarEvAdm(){
+  const id = document.getElementById('evadm-id').value;
+  if(!id || !confirm('Excluir este evento?')) return;
+  setEvAdm(getEvAdm().filter(x=>x.id!==id));
+  fecharModalEvAdm();
+  renderEvAdm();
+}
+
+function whatsappEvAdm(){
+  const titulo = document.getElementById('evadm-titulo').value;
+  const data = document.getElementById('evadm-data').value;
+  const hora = document.getElementById('evadm-hora').value;
+  const local = document.getElementById('evadm-local').value;
+  const desc = document.getElementById('evadm-desc').value;
+  const txt = `📅 *${titulo}*\n📆 Data: ${data}${hora?' às '+hora:''}\n📍 Local: ${local}\n\n${desc}`.trim();
+  window.open('https://wa.me/?text='+encodeURIComponent(txt));
+}
+
+// ══════════════════════════════════════════════════════
+// CRM 6 — CONTEÚDOS
+// FLUXO: Lista por tipo → modal → toggle ativo/deletar
+// STORAGE: radar_conteudos
+// ══════════════════════════════════════════════════════
+let _conteudoFiltro = '';
+function getConteudos(){ return JSON.parse(localStorage.getItem('radar_conteudos')||'[]'); }
+function setConteudos(d){ localStorage.setItem('radar_conteudos', JSON.stringify(d)); }
+
+const _tipoIcone = {aviso:'📢',versiculo:'📖',banner:'🖼️',outro:'📌'};
+
+function renderConteudos(){
+  const lista = getConteudos().filter(c=> !_conteudoFiltro || c.tipo===_conteudoFiltro);
+  const el = document.getElementById('conteudo-lista');
+  if(!el) return;
+  if(!lista.length){ el.innerHTML='<div class="crm-empty">Nenhum conteúdo encontrado</div>'; return; }
+  el.innerHTML = lista.map(c=>`
+    <div class="crm-item" onclick="abrirModalConteudo('${c.id}')">
+      <div class="crm-item-icon">${_tipoIcone[c.tipo]||'📌'}</div>
+      <div class="crm-item-body">
+        <div class="crm-item-nome">${c.titulo||'Sem título'}</div>
+        <div class="crm-item-sub">${c.texto?c.texto.slice(0,60)+'...':''}</div>
+      </div>
+      <span class="crm-item-badge ${c.ativo?'badge-ativo':'badge-inativo'}">${c.ativo?'Ativo':'Inativo'}</span>
+    </div>`).join('');
+}
+
+function filtrarConteudo(el, tipo){
+  _conteudoFiltro = tipo;
+  document.querySelectorAll('#tela-adm-conteudos .crm-chips .crm-chip').forEach(c=>c.classList.remove('ativo'));
+  el.classList.add('ativo');
+  renderConteudos();
+}
+
+function abrirModalConteudo(id){
+  const all = getConteudos();
+  const c = id ? all.find(x=>x.id===id) : null;
+  document.getElementById('modal-conteudo-titulo').textContent = c ? 'Editar Conteúdo' : 'Novo Conteúdo';
+  document.getElementById('conteudo-id').value = c?.id||'';
+  document.getElementById('conteudo-tipo').value = c?.tipo||'aviso';
+  document.getElementById('conteudo-titulo-inp').value = c?.titulo||'';
+  document.getElementById('conteudo-texto').value = c?.texto||'';
+  document.getElementById('conteudo-link').value = c?.link||'';
+  document.getElementById('conteudo-ativo').value = c?.ativo ? '1' : '0';
+  document.getElementById('conteudo-btn-del').style.display = c ? '' : 'none';
+  document.getElementById('modal-conteudo-bg').classList.add('open');
+}
+
+function fecharModalConteudo(){
+  document.getElementById('modal-conteudo-bg').classList.remove('open');
+}
+
+function salvarConteudo(){
+  const titulo = document.getElementById('conteudo-titulo-inp').value.trim();
+  if(!titulo){ alert('Informe o título'); return; }
+  const all = getConteudos();
+  const id = document.getElementById('conteudo-id').value;
+  const obj = {
+    id: id || 'c'+Date.now(),
+    tipo: document.getElementById('conteudo-tipo').value,
+    titulo,
+    texto: document.getElementById('conteudo-texto').value.trim(),
+    link: document.getElementById('conteudo-link').value.trim(),
+    ativo: document.getElementById('conteudo-ativo').value==='1'
+  };
+  const idx = all.findIndex(x=>x.id===id);
+  if(idx>=0) all[idx]=obj; else all.push(obj);
+  setConteudos(all);
+  fecharModalConteudo();
+  renderConteudos();
+}
+
+function deletarConteudo(){
+  const id = document.getElementById('conteudo-id').value;
+  if(!id || !confirm('Excluir este conteúdo?')) return;
+  setConteudos(getConteudos().filter(x=>x.id!==id));
+  fecharModalConteudo();
+  renderConteudos();
+}
+
+// ══════════════════════════════════════════════════════
+// CRM 7 — COMUNICAÇÃO
+// FLUXO: escolhe destino → compõe → preview → copiar/wpp
+// SEM STORAGE (ferramenta de envio)
+// ══════════════════════════════════════════════════════
+function atualizarPreviewCom(){
+  const dest = document.querySelector('input[name="com-dest"]:checked');
+  const turma = document.getElementById('com-turma-sel').value;
+  const msg = document.getElementById('com-mensagem').value.trim();
+  const preview = document.getElementById('com-preview');
+  if(!preview) return;
+
+  let destinatarios = [];
+  if(dest?.value==='todos') destinatarios = getAdmAlunos().filter(a=>a.status==='ativo').map(a=>a.nome);
+  else if(dest?.value==='turma' && turma) destinatarios = getAdmAlunos().filter(a=>a.turma===turma && a.status==='ativo').map(a=>a.nome);
+  else if(dest?.value==='visitantes') destinatarios = (JSON.parse(localStorage.getItem('radar_visitantes')||'[]')).filter(v=>v.status==='ativo').map(v=>v.nome);
+
+  if(!dest || !msg){ preview.textContent='Preencha os campos acima para ver o preview.'; return; }
+
+  const texto = `${msg}\n\n👥 Para: ${destinatarios.length} ${dest.value==='visitantes'?'visitantes':'alunos'}${turma?' ('+turma+')':''}\n📋 Lista: ${destinatarios.slice(0,5).join(', ')}${destinatarios.length>5?' e mais '+( destinatarios.length-5):''}`;
+  preview.textContent = texto;
+}
+
+function copiarMensagemCom(){
+  const msg = document.getElementById('com-mensagem').value.trim();
+  if(!msg){ alert('Escreva uma mensagem primeiro'); return; }
+  navigator.clipboard.writeText(msg).then(()=>alert('✅ Mensagem copiada!')).catch(()=>{
+    const el=document.createElement('textarea');el.value=msg;document.body.appendChild(el);el.select();document.execCommand('copy');el.remove();alert('✅ Copiado!');
+  });
+}
+
+function enviarWppCom(){
+  const msg = document.getElementById('com-mensagem').value.trim();
+  if(!msg){ alert('Escreva uma mensagem primeiro'); return; }
+  window.open('https://wa.me/?text='+encodeURIComponent(msg));
+}
+
+// ══════════════════════════════════════════════════════
+// CRM 8 — RELATÓRIOS
+// FLUXO: Cards de resumo (lê todos os dados) → copiar seção
+// SEM STORAGE (lê dados existentes)
+// ══════════════════════════════════════════════════════
+function renderRelatorios(){
+  const el = document.getElementById('relatorios-corpo');
+  if(!el) return;
+
+  const alunos = getAdmAlunos();
+  const visitantes = JSON.parse(localStorage.getItem('radar_visitantes')||'[]');
+  const presenca = getPresenca();
+  const eventos = getEvAdm();
+  const licoes = getLicoes();
+
+  const hoje = new Date().toISOString().slice(0,10);
+  const evProximos = eventos.filter(e=>e.data>=hoje).length;
+
+  // Frequência última chamada
+  const ultimaChamada = presenca.sort((a,b)=>b.data.localeCompare(a.data))[0];
+  let freqStr = 'Sem registros';
+  if(ultimaChamada){
+    const p = ultimaChamada.chamada.filter(c=>c.status==='P').length;
+    const tot = ultimaChamada.chamada.length;
+    freqStr = `${p}/${tot} (${Math.round(p/tot*100)||0}%) em ${ultimaChamada.turma} — ${ultimaChamada.data}`;
+  }
+
+  // Turmas
+  const turmasAtivas = [...new Set(alunos.map(a=>a.turma).filter(Boolean))];
+
+  el.innerHTML = `
+    <div class="crm-section-title">ALUNOS EBD</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      ${card('👥','Total',''+alunos.length,'alunos')}
+      ${card('✅','Ativos',''+alunos.filter(a=>a.status==='ativo').length,'alunos')}
+      ${card('🏫','Turmas',''+turmasAtivas.length,'ativas')}
+      ${card('❌','Inativos',''+alunos.filter(a=>a.status!=='ativo').length,'alunos')}
+    </div>
+
+    <div class="crm-section-title">VISITANTES</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      ${card('🙋','Total',''+visitantes.length,'visitantes')}
+      ${card('🔥','Acompanhar',''+visitantes.filter(v=>v.status==='ativo').length,'em acomp.')}
+      ${card('✨','Retornaram',''+visitantes.filter(v=>v.status==='retornou').length,'convertidos')}
+    </div>
+
+    <div class="crm-section-title">ÚLTIMA FREQUÊNCIA</div>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--txt)">${freqStr}</div>
+
+    <div class="crm-section-title">AGENDA</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      ${card('📅','Próximos',''+evProximos,'eventos')}
+      ${card('📝','Lições',''+licoes.filter(l=>l.status==='publicado').length,'publicadas')}
+    </div>
+
+    <button onclick="copiarRelatorio()" style="width:100%;background:rgba(201,161,74,.12);border:1px solid rgba(201,161,74,.3);border-radius:12px;padding:13px;font-size:13px;font-weight:800;color:var(--gold);cursor:pointer;font-family:inherit">📋 Copiar resumo para WhatsApp</button>
+  `;
+
+  function card(icon,label,val,sub){
+    return `<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:22px;margin-bottom:4px">${icon}</div>
+      <div style="font-size:20px;font-weight:900;color:var(--gold)">${val}</div>
+      <div style="font-size:10px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.5px">${label}</div>
+      <div style="font-size:10px;color:var(--sub)">${sub}</div>
+    </div>`;
+  }
+}
+
+function copiarRelatorio(){
+  const alunos = getAdmAlunos();
+  const visitantes = JSON.parse(localStorage.getItem('radar_visitantes')||'[]');
+  const txt = `📊 *RELATÓRIO RADAR*\n\n` +
+    `👥 Alunos EBD: ${alunos.filter(a=>a.status==='ativo').length} ativos / ${alunos.length} total\n` +
+    `🙋 Visitantes: ${visitantes.filter(v=>v.status==='ativo').length} em acompanhamento\n` +
+    `📅 Data: ${new Date().toLocaleDateString('pt-BR')}`;
+  navigator.clipboard.writeText(txt).then(()=>alert('✅ Copiado!')).catch(()=>{
+    const el=document.createElement('textarea');el.value=txt;document.body.appendChild(el);el.select();document.execCommand('copy');el.remove();alert('✅ Copiado!');
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// CRM 9 — USUÁRIOS
+// FLUXO: Lista por nível → modal (nome/contato/nível/status) → salvar/deletar
+// STORAGE: radar_usuarios
+// ══════════════════════════════════════════════════════
+let _usuarioFiltro = '';
+function getUsuarios(){ return JSON.parse(localStorage.getItem('radar_usuarios')||'[]'); }
+function setUsuarios(d){ localStorage.setItem('radar_usuarios', JSON.stringify(d)); }
+
+const _nivelIcon = {admin:'👑',editor:'✏️',professor:'🎓',secretaria:'📋'};
+
+function renderUsuarios(){
+  const lista = getUsuarios().filter(u=> !_usuarioFiltro || u.nivel===_usuarioFiltro);
+  const el = document.getElementById('usuario-lista');
+  if(!el) return;
+  if(!lista.length){ el.innerHTML='<div class="crm-empty">Nenhum usuário cadastrado</div>'; return; }
+  el.innerHTML = lista.map(u=>`
+    <div class="crm-item" onclick="abrirModalUsuario('${u.id}')">
+      <div class="crm-item-icon">${_nivelIcon[u.nivel]||'👤'}</div>
+      <div class="crm-item-body">
+        <div class="crm-item-nome">${u.nome}</div>
+        <div class="crm-item-sub">${u.contato||''} · ${u.nivel||''}</div>
+      </div>
+      <span class="crm-item-badge ${u.status==='ativo'?'badge-ativo':'badge-inativo'}">${u.status==='ativo'?'Ativo':'Inativo'}</span>
+    </div>`).join('');
+}
+
+function filtrarUsuario(el, nivel){
+  _usuarioFiltro = nivel;
+  document.querySelectorAll('#tela-adm-usuarios .crm-chips .crm-chip').forEach(c=>c.classList.remove('ativo'));
+  el.classList.add('ativo');
+  renderUsuarios();
+}
+
+function abrirModalUsuario(id){
+  const all = getUsuarios();
+  const u = id ? all.find(x=>x.id===id) : null;
+  document.getElementById('modal-usuario-titulo').textContent = u ? 'Editar Usuário' : 'Novo Usuário';
+  document.getElementById('usuario-id').value = u?.id||'';
+  document.getElementById('usuario-nome').value = u?.nome||'';
+  document.getElementById('usuario-contato').value = u?.contato||'';
+  document.getElementById('usuario-nivel').value = u?.nivel||'professor';
+  document.getElementById('usuario-status').value = u?.status||'ativo';
+  document.getElementById('usuario-btn-del').style.display = u ? '' : 'none';
+  document.getElementById('modal-usuario-bg').classList.add('open');
+}
+
+function fecharModalUsuario(){
+  document.getElementById('modal-usuario-bg').classList.remove('open');
+}
+
+function salvarUsuario(){
+  const nome = document.getElementById('usuario-nome').value.trim();
+  if(!nome){ alert('Informe o nome'); return; }
+  const all = getUsuarios();
+  const id = document.getElementById('usuario-id').value;
+  const obj = {
+    id: id || 'u'+Date.now(),
+    nome,
+    contato: document.getElementById('usuario-contato').value.trim(),
+    nivel: document.getElementById('usuario-nivel').value,
+    status: document.getElementById('usuario-status').value
+  };
+  const idx = all.findIndex(x=>x.id===id);
+  if(idx>=0) all[idx]=obj; else all.push(obj);
+  setUsuarios(all);
+  fecharModalUsuario();
+  renderUsuarios();
+}
+
+function deletarUsuario(){
+  const id = document.getElementById('usuario-id').value;
+  if(!id || !confirm('Excluir este usuário?')) return;
+  setUsuarios(getUsuarios().filter(x=>x.id!==id));
+  fecharModalUsuario();
+  renderUsuarios();
+}
+
+// ══ HOOK DE INIT — chama render ao entrar em cada tela CRM ══
+const _crmInitMap = {
+  'tela-adm-alunos': ()=>renderAdmAlunos(),
+  'tela-adm-turmas': ()=>renderTurmas(),
+  'tela-adm-presenca': ()=>initPresenca(),
+  'tela-adm-licoes': ()=>renderLicoes(),
+  'tela-adm-eventos-adm': ()=>renderEvAdm(),
+  'tela-adm-conteudos': ()=>renderConteudos(),
+  'tela-adm-relatorios': ()=>renderRelatorios(),
+  'tela-adm-usuarios': ()=>renderUsuarios(),
+};
 </script>
 
 <!-- REF SHEET -->
@@ -3183,131 +3949,392 @@ window.addEventListener('message',function(e){
   <button class="vis-fab" onclick="abrirModalVisitante()">＋</button>
 </div>
 
-<!-- ══ ADM: ALUNOS (placeholder) ══ -->
+<!-- ══════════════════════════════════════════
+     CRM 1 — ALUNOS EBD
+     FLUXO: Lista → busca/filtro turma → clica item
+            → modal editar (nome/turma/fone/nasc/resp/obs)
+            → salvar | deletar | WhatsApp
+     STORAGE: ebd_alunos
+══════════════════════════════════════════ -->
 <div class="tela" id="tela-adm-alunos">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
     <div class="std-hinfo"><div class="std-titulo">👥 Alunos EBD</div></div>
-    <div style="width:36px"></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalAdmAluno()">＋</button>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">👥</div>
-    <div class="adm-txt">Alunos EBD</div>
-    <div class="adm-sub">Cadastro completo, histórico de turmas e frequência. Em breve.</div>
-    <button style="margin-top:12px;background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:10px;padding:10px 20px;font-family:inherit;font-size:13px;cursor:pointer" onclick="ocultarTodas();document.getElementById('tela-ebd-crm').classList.add('ativa')">Ver lista atual (EBD)</button>
+  <div class="crm-wrap">
+    <div class="crm-toolbar">
+      <input class="crm-search" id="admAluno-busca" placeholder="🔍 Buscar aluno..." oninput="renderAdmAlunos()">
+    </div>
+    <div class="crm-chips" id="admAluno-chips">
+      <button class="crm-chip ativo" onclick="filtrarAdmAluno(this,'')">Todos</button>
+      <button class="crm-chip" onclick="filtrarAdmAluno(this,'Adulto')">Adulto</button>
+      <button class="crm-chip" onclick="filtrarAdmAluno(this,'Jovem')">Jovem</button>
+      <button class="crm-chip" onclick="filtrarAdmAluno(this,'Adolescente')">Adolescente</button>
+      <button class="crm-chip" onclick="filtrarAdmAluno(this,'Infantil')">Infantil</button>
+    </div>
+    <div class="crm-list" id="admAluno-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalAdmAluno()">＋</button>
+  <!-- MODAL ALUNO ADM -->
+  <div class="crm-modal-bg" id="modal-admAluno-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-admAluno-titulo">Novo Aluno</span>
+        <button class="crm-modal-close" onclick="fecharModalAdmAluno()">✕</button>
+      </div>
+      <input type="hidden" id="admAluno-id">
+      <div class="crm-field"><label class="crm-label">Nome completo</label><input class="crm-input" id="admAluno-nome" placeholder="Nome do aluno"></div>
+      <div class="crm-field"><label class="crm-label">Turma</label>
+        <select class="crm-select" id="admAluno-turma">
+          <option value="">Selecione...</option>
+          <option>Adulto</option><option>Jovem</option><option>Adolescente</option><option>Infantil</option><option>Berçário</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Telefone / WhatsApp</label><input class="crm-input" id="admAluno-fone" placeholder="(99) 99999-9999" type="tel"></div>
+      <div class="crm-field"><label class="crm-label">Data de nascimento</label><input class="crm-input" id="admAluno-nasc" type="date"></div>
+      <div class="crm-field"><label class="crm-label">Responsável</label><input class="crm-input" id="admAluno-resp" placeholder="Nome do responsável (se menor)"></div>
+      <div class="crm-field"><label class="crm-label">Observações</label><textarea class="crm-textarea" id="admAluno-obs" placeholder="Anotações livres..."></textarea></div>
+      <div class="crm-field"><label class="crm-label">Status</label>
+        <select class="crm-select" id="admAluno-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
+      </div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-wpp" id="admAluno-btn-wpp" onclick="whatsappAdmAluno()" title="WhatsApp">💬</button>
+        <button class="crm-btn-del" id="admAluno-btn-del" onclick="deletarAdmAluno()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarAdmAluno()">Salvar</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ══ ADM: TURMAS (placeholder) ══ -->
+<!-- ══════════════════════════════════════════
+     CRM 2 — TURMAS
+     FLUXO: Lista de turmas → clica → modal
+            (nome/faixa/professor/sala/horário)
+            → salvar | deletar | ver alunos
+     STORAGE: radar_turmas
+══════════════════════════════════════════ -->
 <div class="tela" id="tela-adm-turmas">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
     <div class="std-hinfo"><div class="std-titulo">🏫 Turmas</div></div>
-    <div style="width:36px"></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalTurma()">＋</button>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">🏫</div>
-    <div class="adm-txt">Gestão de Turmas</div>
-    <div class="adm-sub">Criar turmas, adicionar professores e alunos, transferências coletivas. Em breve.</div>
+  <div class="crm-wrap">
+    <div class="crm-list" style="padding-top:10px" id="turma-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalTurma()">＋</button>
+  <!-- MODAL TURMA -->
+  <div class="crm-modal-bg" id="modal-turma-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-turma-titulo">Nova Turma</span>
+        <button class="crm-modal-close" onclick="fecharModalTurma()">✕</button>
+      </div>
+      <input type="hidden" id="turma-id">
+      <div class="crm-field"><label class="crm-label">Nome da turma</label><input class="crm-input" id="turma-nome" placeholder="Ex: Adulto A, Jovem 1..."></div>
+      <div class="crm-field"><label class="crm-label">Faixa etária</label><input class="crm-input" id="turma-faixa" placeholder="Ex: 18 a 35 anos"></div>
+      <div class="crm-field"><label class="crm-label">Professor(a)</label><input class="crm-input" id="turma-professor" placeholder="Nome do professor"></div>
+      <div class="crm-field"><label class="crm-label">Sala</label><input class="crm-input" id="turma-sala" placeholder="Ex: Sala 3, Templo principal..."></div>
+      <div class="crm-field"><label class="crm-label">Horário</label><input class="crm-input" id="turma-horario" placeholder="Ex: Domingo 9h30"></div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-del" id="turma-btn-del" onclick="deletarTurma()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarTurma()">Salvar</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ══ ADM: PRESENÇA (placeholder) ══ -->
+<!-- ══════════════════════════════════════════
+     CRM 3 — PRESENÇA
+     FLUXO: Seleciona turma → seleciona data
+            → lista de alunos com toggle P/A/J
+            → botão "Salvar Chamada"
+     STORAGE: radar_presenca
+══════════════════════════════════════════ -->
 <div class="tela" id="tela-adm-presenca">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <div class="std-hinfo"><div class="std-titulo">✅ Presença</div></div>
+    <div class="std-hinfo"><div class="std-titulo">✅ Chamada EBD</div></div>
     <div style="width:36px"></div>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">✅</div>
-    <div class="adm-txt">Chamada EBD</div>
-    <div class="adm-sub">Chamada por turma, histórico individual e alertas de faltas consecutivas. Em breve.</div>
+  <div class="crm-wrap">
+    <div style="padding:12px 14px;display:flex;gap:10px;flex-shrink:0">
+      <select class="crm-select" id="pres-turma-sel" onchange="carregarChamada()" style="flex:1">
+        <option value="">Selecionar turma...</option>
+      </select>
+      <input type="date" class="crm-input" id="pres-data" onchange="carregarChamada()" style="width:140px">
+    </div>
+    <div id="pres-resumo" style="padding:0 14px 8px;font-size:12px;color:var(--sub);flex-shrink:0"></div>
+    <div class="crm-list" id="pres-lista" style="padding-bottom:100px"></div>
+    <div style="padding:12px 14px;flex-shrink:0" id="pres-salvar-wrap" style="display:none">
+      <button onclick="salvarChamada()" style="width:100%;background:var(--gold);border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:900;color:#080D1A;cursor:pointer;font-family:inherit">✅ Salvar Chamada</button>
+    </div>
   </div>
 </div>
 
-<!-- ══ ADM: LIÇÕES (placeholder) ══ -->
+<!-- ══════════════════════════════════════════
+     CRM 4 — LIÇÕES
+     FLUXO: Lista → filtro turma/status
+            → modal (título/turma/data/links)
+            → publicar | rascunho | deletar
+     STORAGE: radar_licoes
+══════════════════════════════════════════ -->
 <div class="tela" id="tela-adm-licoes">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
     <div class="std-hinfo"><div class="std-titulo">📝 Lições</div></div>
-    <div style="width:36px"></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalLicao()">＋</button>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">📝</div>
-    <div class="adm-txt">Gestão de Lições</div>
-    <div class="adm-sub">Criar, editar, programar publicação, rascunhos, PPT e mapas mentais. Em breve.</div>
+  <div class="crm-wrap">
+    <div class="crm-chips" id="licao-chips" style="padding-top:10px">
+      <button class="crm-chip ativo" onclick="filtrarLicao(this,'')">Todas</button>
+      <button class="crm-chip" onclick="filtrarLicao(this,'publicado')">Publicadas</button>
+      <button class="crm-chip" onclick="filtrarLicao(this,'rascunho')">Rascunho</button>
+    </div>
+    <div class="crm-list" id="licao-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalLicao()">＋</button>
+  <!-- MODAL LIÇÃO -->
+  <div class="crm-modal-bg" id="modal-licao-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-licao-titulo">Nova Lição</span>
+        <button class="crm-modal-close" onclick="fecharModalLicao()">✕</button>
+      </div>
+      <input type="hidden" id="licao-id">
+      <div class="crm-field"><label class="crm-label">Título da lição</label><input class="crm-input" id="licao-titulo" placeholder="Ex: A Parábola do Filho Pródigo"></div>
+      <div class="crm-field"><label class="crm-label">Turma</label>
+        <select class="crm-select" id="licao-turma">
+          <option value="Geral">Geral (todas)</option>
+          <option>Adulto</option><option>Jovem</option><option>Adolescente</option><option>Infantil</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Data de publicação</label><input class="crm-input" id="licao-data" type="date"></div>
+      <div class="crm-field"><label class="crm-label">Link da Lição (PDF/Drive)</label><input class="crm-input" id="licao-link" placeholder="https://..."></div>
+      <div class="crm-field"><label class="crm-label">Link do PPT</label><input class="crm-input" id="licao-ppt" placeholder="https://..."></div>
+      <div class="crm-field"><label class="crm-label">Link de Apoio</label><input class="crm-input" id="licao-apoio" placeholder="https://..."></div>
+      <div class="crm-field"><label class="crm-label">Status</label>
+        <select class="crm-select" id="licao-status"><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option></select>
+      </div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-del" id="licao-btn-del" onclick="deletarLicao()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarLicao()">Salvar</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ══ ADM: EVENTOS ADMIN (placeholder) ══ -->
+<!-- ══════════════════════════════════════════
+     CRM 5 — EVENTOS ADMIN
+     FLUXO: Lista → modal (título/data/hora/
+            local/tipo/descrição)
+            → salvar | deletar | WhatsApp lembrete
+     STORAGE: radar_eventos (já existe)
+══════════════════════════════════════════ -->
 <div class="tela" id="tela-adm-eventos-adm">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
     <div class="std-hinfo"><div class="std-titulo">📅 Eventos</div></div>
-    <div style="width:36px"></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalEvAdm()">＋</button>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">📅</div>
-    <div class="adm-txt">Gestão de Eventos</div>
-    <div class="adm-sub">Criar eventos, lista de participantes, inscrições e check-in. Em breve.</div>
-    <button style="margin-top:12px;background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:10px;padding:10px 20px;font-family:inherit;font-size:13px;cursor:pointer" onclick="ocultarTodas();document.getElementById('tela-eventos').classList.add('ativa')">Ver eventos públicos</button>
+  <div class="crm-wrap">
+    <div class="crm-chips" style="padding-top:10px">
+      <button class="crm-chip ativo" onclick="filtrarEvAdm(this,'')">Todos</button>
+      <button class="crm-chip" onclick="filtrarEvAdm(this,'culto')">Culto</button>
+      <button class="crm-chip" onclick="filtrarEvAdm(this,'ebd')">EBD</button>
+      <button class="crm-chip" onclick="filtrarEvAdm(this,'especial')">Especial</button>
+    </div>
+    <div class="crm-list" id="evadm-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalEvAdm()">＋</button>
+  <!-- MODAL EVENTO -->
+  <div class="crm-modal-bg" id="modal-evadm-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-evadm-titulo">Novo Evento</span>
+        <button class="crm-modal-close" onclick="fecharModalEvAdm()">✕</button>
+      </div>
+      <input type="hidden" id="evadm-id">
+      <div class="crm-field"><label class="crm-label">Título</label><input class="crm-input" id="evadm-titulo" placeholder="Ex: Culto de Oração"></div>
+      <div style="display:flex;gap:10px">
+        <div class="crm-field" style="flex:1"><label class="crm-label">Data</label><input class="crm-input" id="evadm-data" type="date"></div>
+        <div class="crm-field" style="width:100px"><label class="crm-label">Hora</label><input class="crm-input" id="evadm-hora" type="time"></div>
+      </div>
+      <div class="crm-field"><label class="crm-label">Local</label><input class="crm-input" id="evadm-local" placeholder="Ex: Templo Central"></div>
+      <div class="crm-field"><label class="crm-label">Tipo</label>
+        <select class="crm-select" id="evadm-tipo">
+          <option value="culto">Culto</option><option value="ebd">EBD</option><option value="especial">Especial</option><option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Descrição</label><textarea class="crm-textarea" id="evadm-desc" placeholder="Detalhes do evento..."></textarea></div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-wpp" onclick="whatsappEvAdm()" title="Divulgar no WhatsApp">💬</button>
+        <button class="crm-btn-del" id="evadm-btn-del" onclick="deletarEvAdm()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarEvAdm()">Salvar</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ══ ADM: CONTEÚDOS (placeholder) ══ -->
+<!-- ══════════════════════════════════════════
+     CRM 6 — CONTEÚDOS
+     FLUXO: Lista por tipo (aviso/versículo/banner)
+            → modal (tipo/título/texto/link/ativo)
+            → toggle ativo | editar | deletar
+     STORAGE: radar_conteudos
+══════════════════════════════════════════ -->
 <div class="tela" id="tela-adm-conteudos">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
     <div class="std-hinfo"><div class="std-titulo">🗂️ Conteúdos</div></div>
-    <div style="width:36px"></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalConteudo()">＋</button>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">🗂️</div>
-    <div class="adm-txt">Gestão de Conteúdos</div>
-    <div class="adm-sub">Avisos, banners, destaques, versículo do dia e notificações. Em breve.</div>
+  <div class="crm-wrap">
+    <div class="crm-chips" style="padding-top:10px">
+      <button class="crm-chip ativo" onclick="filtrarConteudo(this,'')">Todos</button>
+      <button class="crm-chip" onclick="filtrarConteudo(this,'aviso')">📢 Aviso</button>
+      <button class="crm-chip" onclick="filtrarConteudo(this,'versiculo')">📖 Versículo</button>
+      <button class="crm-chip" onclick="filtrarConteudo(this,'banner')">🖼️ Banner</button>
+    </div>
+    <div class="crm-list" id="conteudo-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalConteudo()">＋</button>
+  <!-- MODAL CONTEÚDO -->
+  <div class="crm-modal-bg" id="modal-conteudo-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-conteudo-titulo">Novo Conteúdo</span>
+        <button class="crm-modal-close" onclick="fecharModalConteudo()">✕</button>
+      </div>
+      <input type="hidden" id="conteudo-id">
+      <div class="crm-field"><label class="crm-label">Tipo</label>
+        <select class="crm-select" id="conteudo-tipo">
+          <option value="aviso">📢 Aviso</option><option value="versiculo">📖 Versículo</option><option value="banner">🖼️ Banner</option><option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Título</label><input class="crm-input" id="conteudo-titulo-inp" placeholder="Título do conteúdo"></div>
+      <div class="crm-field"><label class="crm-label">Texto / Mensagem</label><textarea class="crm-textarea" id="conteudo-texto" placeholder="Escreva aqui..."></textarea></div>
+      <div class="crm-field"><label class="crm-label">Link (opcional)</label><input class="crm-input" id="conteudo-link" placeholder="https://..."></div>
+      <div class="crm-field"><label class="crm-label">Status</label>
+        <select class="crm-select" id="conteudo-ativo"><option value="1">✅ Ativo</option><option value="0">🚫 Inativo</option></select>
+      </div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-del" id="conteudo-btn-del" onclick="deletarConteudo()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarConteudo()">Salvar</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ══ ADM: COMUNICAÇÃO (placeholder) ══ -->
+<!-- ══════════════════════════════════════════
+     CRM 7 — COMUNICAÇÃO
+     FLUXO: Escolhe destino (todos/turma/visitantes)
+            → compõe mensagem
+            → preview do texto
+            → "Copiar mensagem" ou abre WhatsApp
+     SEM STORAGE (ferramenta de envio)
+══════════════════════════════════════════ -->
 <div class="tela" id="tela-adm-comunicacao">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
     <div class="std-hinfo"><div class="std-titulo">💬 Comunicação</div></div>
     <div style="width:36px"></div>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">💬</div>
-    <div class="adm-txt">Central de Comunicação</div>
-    <div class="adm-sub">Avisos gerais, notificação push, WhatsApp em massa por turma ou perfil. Em breve.</div>
+  <div class="crm-wrap" style="overflow-y:auto;padding:14px">
+    <div class="crm-section-title">1. Destinatário</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer">
+        <input type="radio" name="com-dest" value="todos" onchange="atualizarPreviewCom()" style="accent-color:var(--gold)"> <span style="font-size:13px;font-weight:700">👥 Todos os alunos</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer">
+        <input type="radio" name="com-dest" value="turma" onchange="atualizarPreviewCom()"> <span style="font-size:13px;font-weight:700">🏫 Por turma:</span>
+        <select class="crm-select" id="com-turma-sel" style="flex:1;padding:4px 8px" onchange="atualizarPreviewCom()">
+          <option value="">Selecione...</option>
+          <option>Adulto</option><option>Jovem</option><option>Adolescente</option><option>Infantil</option>
+        </select>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer">
+        <input type="radio" name="com-dest" value="visitantes" onchange="atualizarPreviewCom()"> <span style="font-size:13px;font-weight:700">🙋 Todos os visitantes</span>
+      </label>
+    </div>
+    <div class="crm-section-title">2. Mensagem</div>
+    <textarea class="crm-textarea" id="com-mensagem" rows="5" placeholder="Digite a mensagem aqui..." oninput="atualizarPreviewCom()" style="margin-bottom:12px;min-height:100px"></textarea>
+    <div class="crm-section-title">3. Preview</div>
+    <div id="com-preview" style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px;line-height:1.6;color:var(--sub);margin-bottom:16px;white-space:pre-wrap">Preencha os campos acima para ver o preview.</div>
+    <div style="display:flex;gap:10px">
+      <button onclick="copiarMensagemCom()" style="flex:1;background:rgba(201,161,74,.12);border:1px solid rgba(201,161,74,.3);border-radius:12px;padding:13px;font-size:13px;font-weight:800;color:var(--gold);cursor:pointer;font-family:inherit">📋 Copiar</button>
+      <button onclick="enviarWppCom()" style="flex:1;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.25);border-radius:12px;padding:13px;font-size:13px;font-weight:800;color:#25d366;cursor:pointer;font-family:inherit">💬 WhatsApp</button>
+    </div>
   </div>
 </div>
 
-<!-- ══ ADM: RELATÓRIOS (placeholder) ══ -->
+<!-- ══════════════════════════════════════════
+     CRM 8 — RELATÓRIOS
+     FLUXO: Cards de resumo (visitantes/alunos/
+            presença/eventos) → "Copiar relatório
+            para WhatsApp" por seção
+     SEM STORAGE (lê dados existentes)
+══════════════════════════════════════════ -->
 <div class="tela" id="tela-adm-relatorios">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
     <div class="std-hinfo"><div class="std-titulo">📈 Relatórios</div></div>
-    <div style="width:36px"></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:13px;font-weight:800;cursor:pointer;padding:4px 8px" onclick="renderRelatorios()">↻</button>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">📈</div>
-    <div class="adm-txt">Relatórios</div>
-    <div class="adm-sub">Visitantes, frequência, conversões, crescimento mensal. Exportar PDF, Excel e WhatsApp. Em breve.</div>
-  </div>
+  <div class="crm-wrap" style="overflow-y:auto;padding:14px 14px 40px" id="relatorios-corpo"></div>
 </div>
 
-<!-- ══ ADM: USUÁRIOS (placeholder) ══ -->
+<!-- ══════════════════════════════════════════
+     CRM 9 — USUÁRIOS
+     FLUXO: Lista por nível → modal (nome/
+            contato/nível/ativo)
+            → salvar | deletar
+     STORAGE: radar_usuarios
+══════════════════════════════════════════ -->
 <div class="tela" id="tela-adm-usuarios">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
     <div class="std-hinfo"><div class="std-titulo">👑 Usuários</div></div>
-    <div style="width:36px"></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalUsuario()">＋</button>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">👑</div>
-    <div class="adm-txt">Níveis de Acesso</div>
-    <div class="adm-sub">Admin · Editor · Professor · Secretaria · Público. Convidar e gerenciar membros. Em breve.</div>
+  <div class="crm-wrap">
+    <div class="crm-chips" style="padding-top:10px">
+      <button class="crm-chip ativo" onclick="filtrarUsuario(this,'')">Todos</button>
+      <button class="crm-chip" onclick="filtrarUsuario(this,'admin')">👑 Admin</button>
+      <button class="crm-chip" onclick="filtrarUsuario(this,'editor')">✏️ Editor</button>
+      <button class="crm-chip" onclick="filtrarUsuario(this,'professor')">🎓 Prof.</button>
+      <button class="crm-chip" onclick="filtrarUsuario(this,'secretaria')">📋 Secr.</button>
+    </div>
+    <div class="crm-list" id="usuario-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalUsuario()">＋</button>
+  <!-- MODAL USUÁRIO -->
+  <div class="crm-modal-bg" id="modal-usuario-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-usuario-titulo">Novo Usuário</span>
+        <button class="crm-modal-close" onclick="fecharModalUsuario()">✕</button>
+      </div>
+      <input type="hidden" id="usuario-id">
+      <div class="crm-field"><label class="crm-label">Nome</label><input class="crm-input" id="usuario-nome" placeholder="Nome completo"></div>
+      <div class="crm-field"><label class="crm-label">Contato (fone ou email)</label><input class="crm-input" id="usuario-contato" placeholder="(99) 99999-9999 ou email@..."></div>
+      <div class="crm-field"><label class="crm-label">Nível de acesso</label>
+        <select class="crm-select" id="usuario-nivel">
+          <option value="admin">👑 Administrador — acesso total</option>
+          <option value="editor">✏️ Editor — lições e conteúdos</option>
+          <option value="professor">🎓 Professor — sua turma</option>
+          <option value="secretaria">📋 Secretaria — alunos e presença</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Status</label>
+        <select class="crm-select" id="usuario-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
+      </div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-del" id="usuario-btn-del" onclick="deletarUsuario()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarUsuario()">Salvar</button>
+      </div>
+    </div>
   </div>
 </div>
 
