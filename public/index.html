@@ -519,6 +519,69 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .adm-em-breve .adm-icon{font-size:52px;opacity:.35}
 .adm-em-breve .adm-txt{font-size:14px;font-weight:700;color:rgba(255,255,255,.35)}
 .adm-em-breve .adm-sub{font-size:12px;color:var(--sub);max-width:240px;line-height:1.5}
+
+/* ══ CAROUSEL HOME ══ */
+.home-carousel{position:relative;margin:0 0 6px;flex-shrink:0;touch-action:pan-y}
+.carousel-wrap{overflow:hidden;border-radius:0}
+.carousel-track{display:flex;will-change:transform;transition:transform .32s cubic-bezier(.4,0,.2,1)}
+.carousel-track.no-anim{transition:none}
+.carousel-slide{min-width:100%;position:relative;overflow:hidden;user-select:none}
+.cs-img{width:100%;height:190px;object-fit:cover;display:block;pointer-events:none}
+.cs-video-thumb{width:100%;height:190px;position:relative;background:#000;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cs-video-thumb img{width:100%;height:100%;object-fit:cover;opacity:.75}
+.cs-video-play{position:absolute;width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;border:2px solid rgba(255,255,255,.5)}
+.cs-video-frame{width:100%;height:190px;border:none;display:block;background:#000}
+.cs-txt{min-height:140px;display:flex;flex-direction:column;justify-content:center;padding:22px 20px 18px;background:var(--tc,var(--card))}
+.cs-txt .cs-titulo{font-size:17px;font-weight:900;line-height:1.25;margin-bottom:7px}
+.cs-txt .cs-body{font-size:13px;line-height:1.65;color:rgba(255,255,255,.82);white-space:pre-line}
+.cs-overlay{position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:linear-gradient(transparent,rgba(0,0,0,.55));pointer-events:none}
+.cs-overlay-titulo{font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.carousel-dots{display:flex;justify-content:center;gap:5px;padding:7px 0 2px}
+.c-dot{width:6px;height:6px;border-radius:3px;background:rgba(255,255,255,.2);transition:all .25s;cursor:pointer;border:none;padding:0}
+.c-dot.on{width:18px;background:var(--gold)}
+.carousel-empty{display:flex;flex-direction:column;align-items:center;padding:20px;color:var(--sub);font-size:12px;text-align:center;gap:5px;border:1.5px dashed rgba(255,255,255,.08);border-radius:12px;margin:8px 14px}
+
+/* ══ CONFIGURAÇÕES — CARD MANAGER ══ */
+.cfg-scroll{flex:1;overflow-y:auto;padding:12px 14px 100px;-webkit-overflow-scrolling:touch}
+.cfg-scroll::-webkit-scrollbar{display:none}
+.cfg-section{font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.6;margin:14px 0 8px}
+.cfg-card-item{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden;display:flex;gap:0;align-items:stretch}
+.cfg-card-thumb{width:72px;flex-shrink:0;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden}
+.cfg-card-thumb img{width:100%;height:100%;object-fit:cover}
+.cfg-card-body{flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.cfg-card-titulo{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cfg-card-tipo{font-size:10px;color:var(--sub)}
+.cfg-card-acts{display:flex;gap:4px;padding:8px 10px 8px 0;flex-direction:column;justify-content:center}
+.cfg-act{width:30px;height:30px;border:1px solid var(--line);background:var(--bg);border-radius:8px;display:grid;place-items:center;font-size:13px;cursor:pointer;color:var(--txt)}
+.cfg-act:active{opacity:.6}
+.cfg-inactive{opacity:.4}
+.cfg-add-btn{width:100%;border:1.5px dashed rgba(201,161,74,.35);background:transparent;border-radius:12px;padding:15px;color:var(--gold);font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.cfg-add-btn:active{opacity:.7}
+
+/* Modal editor de card */
+#modal-cfg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-end;z-index:210}
+#modal-cfg.open{display:flex}
+.mcfg-box{background:var(--card);border-radius:18px 18px 0 0;width:100%;max-height:91vh;overflow-y:auto;padding:20px 18px max(env(safe-area-inset-bottom),28px)}
+.mcfg-box::-webkit-scrollbar{display:none}
+.mcfg-tit{font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.mcfg-tipos{display:flex;gap:7px;margin-bottom:14px}
+.mcfg-tipo{flex:1;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 4px;font-size:11px;font-weight:800;color:var(--sub);cursor:pointer;font-family:inherit;text-align:center;transition:all .15s}
+.mcfg-tipo.sel{background:rgba(201,161,74,.15);border-color:var(--gold);color:var(--gold)}
+.mcfg-field{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+.mcfg-lbl{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--sub)}
+.mcfg-inp,.mcfg-ta{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--txt);font-size:14px;outline:none;font-family:inherit;width:100%;box-sizing:border-box}
+.mcfg-inp:focus,.mcfg-ta:focus{border-color:var(--gold)}
+.mcfg-ta{resize:none;min-height:90px}
+.mcfg-cores{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}
+.mcfg-cor{width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0}
+.mcfg-cor.sel{border-color:var(--gold);transform:scale(1.15)}
+.mcfg-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line);margin-top:6px}
+.mcfg-tgl{width:44px;height:24px;border-radius:12px;background:rgba(255,255,255,.12);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.mcfg-tgl.on{background:var(--green)}
+.mcfg-tgl::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}
+.mcfg-tgl.on::after{left:23px}
+.mcfg-save{width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;margin-top:12px;font-family:inherit;background:var(--gold);color:#080D1A}
+.mcfg-del{width:100%;border:1px solid rgba(247,95,95,.2);border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;background:rgba(247,95,95,.08);color:var(--red);display:none}
 </style>
 </head>
 <body>
@@ -545,6 +608,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     </div>
   </div>
   <div class="home-divider"></div>
+  <div id="home-carousel" class="home-carousel"></div>
   <div class="home-scroll">
     <div id="painel-hoje-wrap"></div>
     <div id="continuar-wrap"></div>
@@ -1161,6 +1225,9 @@ function renderHome(){
   document.getElementById('greet-bom').textContent = saud + ' ' + icone;
   document.getElementById('greet-nome').textContent = u ? (u.nome||'Visitante') : 'Visitante';
   document.getElementById('greet-cargo').textContent = u ? (u.cargo||'RADAR ATUAL') : 'RADAR ATUAL';
+
+  // Carousel
+  renderCarousel();
 
   // Painel Hoje
   const hoje = new Date();
@@ -2316,7 +2383,7 @@ function abrirAdm(modulo){
     case 'comunicacao': abrirTelaAdm('tela-adm-comunicacao'); break;
     case 'relatorios':  abrirTelaAdm('tela-adm-relatorios'); break;
     case 'usuarios':    abrirTelaAdm('tela-adm-usuarios'); break;
-    case 'config':      abrirTelaAdm('tela-adm-config'); break;
+    case 'config':      abrirTelaAdm('tela-adm-config'); setTimeout(renderCfgCards,50); break;
   }
 }
 
@@ -2546,6 +2613,258 @@ function whatsappVisitante(){
 }
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+
+// ══════════════════════════════════════════════════════════
+// CAROUSEL HOME
+// ══════════════════════════════════════════════════════════
+
+function getCarouselCards(){
+  return JSON.parse(localStorage.getItem('radar_carousel')||'[]');
+}
+function setCarouselCards(arr){
+  localStorage.setItem('radar_carousel',JSON.stringify(arr));
+}
+
+let _carIdx=0;
+let _carTimer=null;
+let _carTouchX=null;
+
+function ytEmbedUrl(url){
+  // extrai ID do YouTube e retorna embed URL
+  const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return m?'https://www.youtube.com/embed/'+m[1]+'?autoplay=1&rel=0':null;
+}
+function ytThumbUrl(url){
+  const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return m?'https://img.youtube.com/vi/'+m[1]+'/hqdefault.jpg':null;
+}
+
+function renderCarousel(){
+  const wrap=document.getElementById('home-carousel');
+  if(!wrap)return;
+  const cards=getCarouselCards().filter(c=>c.ativo!==false);
+  if(!cards.length){
+    wrap.innerHTML='<div class="carousel-empty"><div style="font-size:28px;opacity:.3">🖼️</div><div>Nenhum card no carousel</div><div style="font-size:10px;opacity:.6">Adicione em Admin → Configurações</div></div>';
+    return;
+  }
+  _carIdx=Math.min(_carIdx,cards.length-1);
+  const slides=cards.map((c,i)=>{
+    let inner='';
+    if(c.tipo==='imagem'){
+      inner=`<img class="cs-img" src="${c.imagem||''}" alt="${c.titulo||''}" onerror="this.style.display='none'">`;
+      if(c.titulo) inner+=`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`;
+    } else if(c.tipo==='video'){
+      const thumb=ytThumbUrl(c.video||'');
+      inner=`<div class="cs-video-thumb" onclick="abrirVideoCard(${i})">
+        ${thumb?`<img src="${thumb}" alt="">`:''}<div class="cs-video-play">▶</div></div>`;
+      if(c.titulo) inner+=`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`;
+    } else {
+      inner=`<div class="cs-txt" style="--tc:${c.cor||'var(--card)'}">
+        ${c.titulo?`<div class="cs-titulo">${c.titulo}</div>`:''}
+        ${c.texto?`<div class="cs-body">${c.texto}</div>`:''}
+      </div>`;
+    }
+    const link=c.link?`onclick="window.open('${c.link}','_blank')" style="cursor:pointer"`:
+      (c.tipo!=='video'?'onclick="void(0)"':'');
+    return `<div class="carousel-slide" ${link}>${inner}</div>`;
+  }).join('');
+
+  const dots=cards.map((_,i)=>`<button class="c-dot${i===_carIdx?' on':''}" onclick="irSlide(${i})"></button>`).join('');
+
+  wrap.innerHTML=`<div class="carousel-wrap">
+    <div class="carousel-track" id="car-track" style="transform:translateX(-${_carIdx*100}%)">${slides}</div>
+  </div>${cards.length>1?`<div class="carousel-dots" id="car-dots">${dots}</div>`:''}`;
+
+  // touch swipe
+  const track=document.getElementById('car-track');
+  track.addEventListener('touchstart',e=>{_carTouchX=e.touches[0].clientX;},{ passive:true });
+  track.addEventListener('touchend',e=>{
+    if(_carTouchX===null)return;
+    const dx=e.changedTouches[0].clientX-_carTouchX;
+    _carTouchX=null;
+    if(Math.abs(dx)<40)return;
+    dx<0?irSlide(_carIdx+1):irSlide(_carIdx-1);
+  },{ passive:true });
+
+  // auto-advance
+  clearInterval(_carTimer);
+  if(cards.length>1) _carTimer=setInterval(()=>irSlide((_carIdx+1)%cards.length),5000);
+}
+
+function irSlide(idx){
+  const cards=getCarouselCards().filter(c=>c.ativo!==false);
+  if(!cards.length)return;
+  _carIdx=((idx%cards.length)+cards.length)%cards.length;
+  const track=document.getElementById('car-track');
+  if(track) track.style.transform=`translateX(-${_carIdx*100}%)`;
+  document.querySelectorAll('.c-dot').forEach((d,i)=>d.classList.toggle('on',i===_carIdx));
+}
+
+function abrirVideoCard(idx){
+  const cards=getCarouselCards().filter(c=>c.ativo!==false);
+  const c=cards[idx];
+  if(!c||c.tipo!=='video')return;
+  const embed=ytEmbedUrl(c.video||'');
+  if(embed){
+    const slide=document.querySelectorAll('.carousel-slide')[idx];
+    if(slide) slide.innerHTML=`<iframe class="cs-video-frame" src="${embed}" allow="autoplay;encrypted-media" allowfullscreen></iframe>`;
+  } else if(c.video){
+    window.open(c.video,'_blank');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// CONFIGURAÇÕES — CRUD DE CARDS
+// ══════════════════════════════════════════════════════════
+
+let _cfgEditId=null;
+let _cfgCorSel='#0F1525';
+
+function renderCfgCards(){
+  const lista=document.getElementById('cfg-lista');
+  if(!lista)return;
+  const cards=getCarouselCards();
+  if(!cards.length){
+    lista.innerHTML='<div style="text-align:center;color:var(--sub);font-size:12px;padding:20px 0">Nenhum card ainda.</div>';
+    return;
+  }
+  const tipoIcon={imagem:'🖼️',video:'▶️',texto:'📝'};
+  lista.innerHTML=cards.map((c,i)=>{
+    const thumb=c.tipo==='imagem'&&c.imagem
+      ?`<img src="${c.imagem}" onerror="this.style.display='none'">`
+      :(c.tipo==='video'&&c.video?`<img src="${ytThumbUrl(c.video)||''}" onerror="this.style.display='none'">`
+      :`<span>${tipoIcon[c.tipo]||'📄'}</span>`);
+    return `<div class="cfg-card-item${c.ativo===false?' cfg-inactive':''}">
+      <div class="cfg-card-thumb">${thumb}</div>
+      <div class="cfg-card-body">
+        <div class="cfg-card-titulo">${c.titulo||'(sem título)'}</div>
+        <div class="cfg-card-tipo">${tipoIcon[c.tipo]||''} ${c.tipo||''}${c.ativo===false?' · inativo':''}</div>
+      </div>
+      <div class="cfg-card-acts">
+        ${i>0?`<button class="cfg-act" onclick="moverCard('${c.id}',-1)" title="Subir">↑</button>`:'<div style="width:30px"></div>'}
+        ${i<cards.length-1?`<button class="cfg-act" onclick="moverCard('${c.id}',1)" title="Descer">↓</button>`:'<div style="width:30px"></div>'}
+        <button class="cfg-act" onclick="editarCard('${c.id}')" title="Editar">✏️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirModalCfg(id){
+  _cfgEditId=id||null;
+  // reset form
+  document.getElementById('mcfg-label').textContent=id?'Editar Card':'Novo Card';
+  document.getElementById('mcfg-titulo').value='';
+  document.getElementById('mcfg-imagem').value='';
+  document.getElementById('mcfg-video').value='';
+  document.getElementById('mcfg-texto').value='';
+  document.getElementById('mcfg-link').value='';
+  document.getElementById('mcfg-ativo').classList.add('on');
+  document.getElementById('mcfg-del-btn').style.display=id?'block':'none';
+  _cfgCorSel='#0F1525';
+  document.querySelectorAll('.mcfg-cor').forEach(c=>c.classList.toggle('sel',c.dataset.cor===_cfgCorSel));
+
+  if(id){
+    const c=getCarouselCards().find(x=>x.id===id);
+    if(c){
+      document.getElementById('mcfg-titulo').value=c.titulo||'';
+      document.getElementById('mcfg-imagem').value=c.imagem||'';
+      document.getElementById('mcfg-video').value=c.video||'';
+      document.getElementById('mcfg-texto').value=c.texto||'';
+      document.getElementById('mcfg-link').value=c.link||'';
+      if(c.ativo===false) document.getElementById('mcfg-ativo').classList.remove('on');
+      if(c.cor){ _cfgCorSel=c.cor; document.querySelectorAll('.mcfg-cor').forEach(x=>x.classList.toggle('sel',x.dataset.cor===c.cor)); }
+      // selecionar tipo
+      document.querySelectorAll('.mcfg-tipo').forEach(b=>{
+        b.classList.toggle('sel',b.dataset.tipo===c.tipo);
+      });
+      mostrarCamposCfg(c.tipo||'imagem');
+    }
+  } else {
+    document.querySelectorAll('.mcfg-tipo').forEach((b,i)=>b.classList.toggle('sel',i===0));
+    mostrarCamposCfg('imagem');
+  }
+  document.getElementById('modal-cfg').classList.add('open');
+}
+
+function editarCard(id){ abrirModalCfg(id); }
+
+function fecharModalCfg(){
+  document.getElementById('modal-cfg').classList.remove('open');
+  _cfgEditId=null;
+}
+
+function selecionarTipoCfg(btn){
+  document.querySelectorAll('.mcfg-tipo').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  mostrarCamposCfg(btn.dataset.tipo);
+}
+
+function mostrarCamposCfg(tipo){
+  document.getElementById('mcfg-f-imagem').style.display=tipo==='imagem'?'flex':'none';
+  document.getElementById('mcfg-f-video').style.display=tipo==='video'?'flex':'none';
+  document.getElementById('mcfg-f-texto').style.display=tipo==='texto'?'flex':'none';
+}
+
+function selecionarCor(el){
+  document.querySelectorAll('.mcfg-cor').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  _cfgCorSel=el.dataset.cor;
+}
+
+function salvarCardCfg(){
+  const tipoSel=document.querySelector('.mcfg-tipo.sel');
+  const tipo=tipoSel?tipoSel.dataset.tipo:'imagem';
+  const titulo=document.getElementById('mcfg-titulo').value.trim();
+  const imagem=document.getElementById('mcfg-imagem').value.trim();
+  const video=document.getElementById('mcfg-video').value.trim();
+  const texto=document.getElementById('mcfg-texto').value.trim();
+  const link=document.getElementById('mcfg-link').value.trim();
+  const ativo=document.getElementById('mcfg-ativo').classList.contains('on');
+
+  if(tipo==='imagem'&&!imagem&&!titulo){ document.getElementById('mcfg-imagem').focus(); return; }
+  if(tipo==='video'&&!video){ document.getElementById('mcfg-video').focus(); return; }
+  if(tipo==='texto'&&!texto&&!titulo){ document.getElementById('mcfg-texto').focus(); return; }
+
+  const cards=getCarouselCards();
+  const obj={
+    id:_cfgEditId||(Date.now().toString(36)+Math.random().toString(36).slice(2,5)),
+    tipo,titulo,imagem,video,texto,link,cor:_cfgCorSel,ativo,
+    updatedAt:Date.now()
+  };
+  if(_cfgEditId){
+    const idx=cards.findIndex(x=>x.id===_cfgEditId);
+    if(idx>=0) cards[idx]=obj; else cards.push(obj);
+  } else {
+    obj.createdAt=Date.now();
+    cards.push(obj);
+  }
+  setCarouselCards(cards);
+  fecharModalCfg();
+  renderCfgCards();
+  renderCarousel();
+}
+
+function deletarCardCfg(){
+  if(!_cfgEditId)return;
+  if(!confirm('Excluir este card?'))return;
+  const cards=getCarouselCards().filter(x=>x.id!==_cfgEditId);
+  setCarouselCards(cards);
+  fecharModalCfg();
+  renderCfgCards();
+  renderCarousel();
+}
+
+function moverCard(id,dir){
+  const cards=getCarouselCards();
+  const idx=cards.findIndex(x=>x.id===id);
+  if(idx<0)return;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=cards.length)return;
+  [cards[idx],cards[newIdx]]=[cards[newIdx],cards[idx]];
+  setCarouselCards(cards);
+  renderCfgCards();
+  renderCarousel();
+}
 
 // ── BIBLE REF SHEET ──────────────────────────────────────
 const BREF_MAP={
@@ -2900,17 +3219,69 @@ window.addEventListener('message',function(e){
   </div>
 </div>
 
-<!-- ══ ADM: CONFIGURAÇÕES (placeholder) ══ -->
+<!-- ══ ADM: CONFIGURAÇÕES — CARD MANAGER ══ -->
 <div class="tela" id="tela-adm-config">
   <div class="std-header">
-    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">‹</button>
     <div class="std-hinfo"><div class="std-titulo">⚙️ Configurações</div></div>
     <div style="width:36px"></div>
   </div>
-  <div class="adm-em-breve">
-    <div class="adm-icon">⚙️</div>
-    <div class="adm-txt">Configurações do App</div>
-    <div class="adm-sub">Nome da igreja, logo, módulos ativos, integrações, backup e restauração. Em breve.</div>
+  <div class="cfg-scroll">
+    <div class="cfg-section">Cards do Carousel</div>
+    <div id="cfg-lista"></div>
+    <button class="cfg-add-btn" onclick="abrirModalCfg()">＋ Adicionar card</button>
+  </div>
+</div>
+
+<!-- MODAL EDITOR DE CARD -->
+<div id="modal-cfg" onclick="if(event.target===this)fecharModalCfg()">
+  <div class="mcfg-box">
+    <div class="mcfg-tit">
+      <span id="mcfg-label">Novo Card</span>
+      <button onclick="fecharModalCfg()" style="background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer;line-height:1;padding:0">✕</button>
+    </div>
+    <div class="mcfg-tipos">
+      <button class="mcfg-tipo sel" data-tipo="imagem" onclick="selecionarTipoCfg(this)">🖼️ Imagem</button>
+      <button class="mcfg-tipo" data-tipo="video" onclick="selecionarTipoCfg(this)">▶️ Vídeo</button>
+      <button class="mcfg-tipo" data-tipo="texto" onclick="selecionarTipoCfg(this)">📝 Texto</button>
+    </div>
+    <div class="mcfg-field">
+      <div class="mcfg-lbl">Título (aparece sobre o card)</div>
+      <input class="mcfg-inp" id="mcfg-titulo" placeholder="Ex: Bem-vindos ao RADAR ATUAL" autocomplete="off">
+    </div>
+    <div class="mcfg-field" id="mcfg-f-imagem">
+      <div class="mcfg-lbl">URL da Imagem</div>
+      <input class="mcfg-inp" id="mcfg-imagem" type="url" placeholder="https://... (cole o link da imagem)">
+    </div>
+    <div class="mcfg-field" id="mcfg-f-video" style="display:none">
+      <div class="mcfg-lbl">URL do Vídeo (YouTube, etc.)</div>
+      <input class="mcfg-inp" id="mcfg-video" type="url" placeholder="https://youtube.com/watch?v=...">
+    </div>
+    <div class="mcfg-field" id="mcfg-f-texto" style="display:none">
+      <div class="mcfg-lbl">Texto / Conteúdo</div>
+      <textarea class="mcfg-ta" id="mcfg-texto" placeholder="Cole ou escreva o texto que aparece no card..."></textarea>
+      <div class="mcfg-lbl" style="margin-top:10px">Cor de fundo</div>
+      <div class="mcfg-cores" id="mcfg-cores">
+        <div class="mcfg-cor sel" data-cor="#0F1525" style="background:#0F1525" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#1a2a1a" style="background:#1a2a1a" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#1a1a2e" style="background:#1a1a2e" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#2a1a1a" style="background:#2a1a1a" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#0d2137" style="background:#0d2137" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#1c1400" style="background:#1c1400" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#C9A14A" style="background:#C9A14A" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#2d5a27" style="background:#2d5a27" onclick="selecionarCor(this)"></div>
+      </div>
+    </div>
+    <div class="mcfg-field">
+      <div class="mcfg-lbl">Link ao tocar (opcional)</div>
+      <input class="mcfg-inp" id="mcfg-link" type="url" placeholder="https://...">
+    </div>
+    <div class="mcfg-toggle-row">
+      <span style="font-size:13px;font-weight:700">Card ativo (aparece no carousel)</span>
+      <button class="mcfg-tgl on" id="mcfg-ativo" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <button class="mcfg-save" onclick="salvarCardCfg()">Salvar Card</button>
+    <button class="mcfg-del" id="mcfg-del-btn" onclick="deletarCardCfg()">Excluir card</button>
   </div>
 </div>
 
