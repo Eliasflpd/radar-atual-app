@@ -1442,12 +1442,9 @@ function renderHome(){
   document.getElementById('greet-nome').textContent = 'RADAR SEMANAL';
   document.getElementById('greet-cargo').textContent = 'Avisos e agenda da igreja';
 
-  // Carousel
-  seedVideoInicio();
-  seedVideoMonteCarmelo();
-  seedVideoLeitura();    // 🎬 vídeo Leitura Bíblica em Classe
-  seedCartaz910();
-  cleanupMissoes();      // 🗑️ tira os cartazes de missões (culto já passou)
+  // Carousel — SOMENTE o vídeo da Leitura Bíblica em Classe (segunda-feira)
+  seedVideoLeitura();
+  soLeitura();           // deixa SÓ o vídeo da leitura; tira vídeos e cartazes antigos
   renderCarousel();
   seedAgendaCeadema();   // agenda CEADEMA (avisos até o fim do ano)
   checkNovidade();       // 🔔 avisa "NOVIDADE" (apito + banner) se saiu conteúdo novo
@@ -3071,14 +3068,14 @@ function seedCartaz910(){
   if(add.length){ base.unshift.apply(base, add); setCarouselCards(base); } // vão pro começo (9,10,...)
   localStorage.setItem('radar_seed_cartaz910_v1','1');
 }
-// 🗑️ remove os cartazes de MISSÕES (cartaz-1..8 = culto de missões de 19/jul, já passou). 1x só.
-function cleanupMissoes(){
-  if(localStorage.getItem('radar_cleanup_missoes_v1')) return;
-  var alvo={'cartaz-1':1,'cartaz-2':1,'cartaz-3':1,'cartaz-4':1,'cartaz-5':1,'cartaz-6':1,'cartaz-7':1,'cartaz-8':1};
+// 🗑️ deixa SÓ o vídeo da Leitura Bíblica em Classe no carrossel (tira vídeos e cartazes antigos). 1x só.
+function soLeitura(){
+  if(localStorage.getItem('radar_solo_leitura_v2')) return;
   var base=getCarouselCards();
-  var limpo=base.filter(function(c){ return !alvo[c.id]; });
+  var limpo=base.filter(function(c){ return c.id==='vid-leitura'; });
+  if(!limpo.length) limpo=[{id:'vid-leitura',tipo:'mp4',video:'/carousel/leitura-classe.mp4',titulo:'',ativo:true}];
   if(limpo.length!==base.length){ setCarouselCards(limpo); try{ localStorage.setItem('radar_novidade_sig', novidadeSig()); }catch(_){} } // não alarmar "novidade" por remoção
-  localStorage.setItem('radar_cleanup_missoes_v1','1');
+  localStorage.setItem('radar_solo_leitura_v2','1');
 }
 
 // 🔔 NOVIDADE — avisa (apito + banner) quando sai conteúdo novo (cartaz/vídeo/evento)
