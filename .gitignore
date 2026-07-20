@@ -2,3 +2,9 @@
 *.png
 *.PNG
 Configurações/
+
+# libera os PNGs de dentro de public/ (logos, ícones, capa) — só ignora os prints de teste da raiz
+!public/**/*.png
+!public/**/*.PNG
+!public/*.png
+!public/*.PNG
