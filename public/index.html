@@ -1421,7 +1421,8 @@ function toastBloqueado(){
 }
 
 // ══ SPLASH ════════════════════════════════════════
-setTimeout(irHome, 2200);
+// sem cadastro? vai DIRETO pro cadastro (logo no início). Já cadastrado? mostra o splash.
+if(getUser()){ setTimeout(irHome, 2200); } else { irHome(); }
 function irHome(){
   if(!checkAuth()) return;
   ocultarTodas();
@@ -1442,12 +1443,10 @@ function renderHome(){
   document.getElementById('greet-cargo').textContent = 'Avisos e agenda da igreja';
 
   // Carousel
-  seedCartazes();
   seedVideoInicio();
   seedVideoMonteCarmelo();
-  seedCartaz7();
-  seedCartaz8();
   seedCartaz910();
+  cleanupMissoes();      // 🗑️ tira os cartazes de missões (culto já passou)
   renderCarousel();
   seedAgendaCeadema();   // agenda CEADEMA (avisos até o fim do ano)
   checkNovidade();       // 🔔 avisa "NOVIDADE" (apito + banner) se saiu conteúdo novo
@@ -1537,6 +1536,52 @@ const AG_MURAL=["11 e 12/09 — Festa Cong. Lírio dos Vales", "26/09 — 1º En
 function mostrarTela(id){ ocultarTodas(); document.getElementById(id).classList.add('ativa'); }
 function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// ══ AUTO-EXPIRAÇÃO DE DATAS (remove avisos vencidos, deixa só de hoje em diante) ══
+function _hoje0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
+function _mesNum(s){
+  var m={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
+  s=(''+s).toLowerCase().slice(0,3);
+  if(s in m) return m[s];
+  var n=parseInt(s,10); return (n>=1&&n<=12)?n-1:-1;
+}
+// acha a ÚLTIMA data do texto (dd/mês ou dd/NN). Ex "30/07 a 01/08" -> 01/ago ; "08 a 10/07" -> 10/jul
+function _fimEvento(badge, mesDef, ano){
+  var re=/(\d{1,2})\s*\/\s*([a-zç]{3,}|\d{1,2})/gi, m, last=null;
+  while((m=re.exec(badge))){ var mn=_mesNum(m[2]); if(mn>=0) last=[parseInt(m[1],10),mn]; }
+  if(last) return new Date(ano, last[1], last[0], 23,59,59);
+  var dias=(badge.match(/\d{1,2}/g)||[]).map(Number).filter(function(d){return d>=1&&d<=31;});
+  if(!dias.length) return null;
+  return new Date(ano, (mesDef>=0?mesDef:0), Math.max.apply(null,dias), 23,59,59);
+}
+// true = ainda vale (hoje ou futuro). Se não achar data, mantém (não some por engano).
+function _agFuturo(badge, mesDef, ano){
+  var f=_fimEvento(badge, mesDef, ano);
+  if(!f) return true;
+  return f.getTime() >= _hoje0().getTime();
+}
+function _mesHeaderNum(hd){
+  var m={janeiro:0,fevereiro:1,marco:2,'março':2,abril:3,maio:4,junho:5,julho:6,agosto:7,setembro:8,outubro:9,novembro:10,dezembro:11};
+  var nm=(''+hd).toLowerCase().replace(/\s*\d{4}\s*/,'').trim();
+  return (nm in m)?m[nm]:-1;
+}
+function _anoHeader(hd){ var mm=(''+hd).match(/(20\d{2})/); return mm?parseInt(mm[1],10):2026; }
+// filtra agenda anual [ [MÊS,[ [badge,org,ev,loc],... ]], ... ] removendo eventos vencidos e meses vazios
+function _filtrarAgendaAnual(arr){
+  return arr.map(function(bloco){
+    var mi=_mesHeaderNum(bloco[0]), an=_anoHeader(bloco[0]);
+    var evs=bloco[1].filter(function(e){ return _agFuturo(e[0], mi, an); });
+    return [bloco[0], evs];
+  }).filter(function(b){ return b[1].length>0; });
+}
+// lição da semana: nº da lição do próximo domingo (3º trimestre 2026 — lição 1 = domingo 05/jul/2026)
+function licaoDaSemana(){
+  var start=new Date(2026,6,5); start.setHours(0,0,0,0);
+  var d=_hoje0(), dow=d.getDay();
+  var prox=new Date(d); if(dow!==0) prox.setDate(d.getDate()+(7-dow)); // se hoje=domingo, é hoje
+  var wk=Math.round((prox.getTime()-start.getTime())/(7*86400000));
+  return Math.max(1, wk+1);
+}
+
 function cardsMes(lista, tema){
   return lista.map(function(g){
     var mes=g[0], evs=g[1];
@@ -1561,7 +1606,7 @@ function abrirCeadema(qual){
 function renderCeadema(qual){
   var azul = qual==='estadual';
   var tema = azul?'azul':'verde';
-  var dados = azul?AG_ESTADUAL:AG_REGIONAL;
+  var dados = _filtrarAgendaAnual(azul?AG_ESTADUAL:AG_REGIONAL);
   var titTema = azul?'azul':'verde';
   var h='';
   h+='<div class="agv-brand azul"><img class="agv-logo" src="img/ceadema.png">'+
@@ -1584,7 +1629,9 @@ function renderTemplo(){
      '<div><div class="agv-bnome" style="font-size:16px">IEADET</div><div class="agv-bsub">Igreja Evangélica Assembleia de Deus · Templo Central · Tuntum - MA</div></div></div>';
   h+='<div class="agv-tit marrom"><b>Agenda Bimestral</b><span>Julho / Agosto de 2026</span></div>';
   h+='<div class="agv-lista">';
-  h+=cardsMes([['JULHO DE 2026', AG_TEMPLO_JUL_R()],['AGOSTO DE 2026', AG_TEMPLO_AGO_R()]],'marrom');
+  var _meses=[]; var _jul=AG_TEMPLO_JUL_R(); if(_jul.length)_meses.push(['JULHO DE 2026',_jul]);
+  var _ago=AG_TEMPLO_AGO_R(); if(_ago.length)_meses.push(['AGOSTO DE 2026',_ago]);
+  h+=cardsMes(_meses,'marrom');
   // cultos semanais
   h+='<div class="agv-secao">Agenda dos Cultos — Semanal</div>';
   h+=AG_SEMANAL.map(function(g){
@@ -1610,8 +1657,8 @@ function renderTemplo(){
   setTimeout(function(){_tb.scrollTop=0;},40);
 }
 // converte agendamentos [dia,data,ev,loc] -> [dataBadge,org,ev,loc]
-function AG_TEMPLO_JUL_R(){ return AG_TEMPLO_JUL.map(function(e){return [((e[0]?e[0]+' ':'')+e[1]), '', e[2], e[3]];}); }
-function AG_TEMPLO_AGO_R(){ return AG_TEMPLO_AGO.map(function(e){return [((e[0]?e[0]+' ':'')+e[1]), '', e[2], e[3]];}); }
+function AG_TEMPLO_JUL_R(){ return AG_TEMPLO_JUL.filter(function(e){return _agFuturo(e[1],6,2026);}).map(function(e){return [((e[0]?e[0]+' ':'')+e[1]), '', e[2], e[3]];}); }
+function AG_TEMPLO_AGO_R(){ return AG_TEMPLO_AGO.filter(function(e){return _agFuturo(e[1],7,2026);}).map(function(e){return [((e[0]?e[0]+' ':'')+e[1]), '', e[2], e[3]];}); }
 
 function abrirMod(id){
   localStorage.setItem('radar_ultimo_mod', id);
@@ -2350,7 +2397,7 @@ function abrirEbdTurma(turma){
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
     body.innerHTML=main.map(lic=>{
       const idx=lics.indexOf(lic);
-      const isLocked=turma==='adulto'&&lic.n>2&&!getUser()?.admin;
+      const isLocked=lic.n!==licaoDaSemana()&&!getUser()?.admin;
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
       if(isLocked){
         return `<div class="ebd-item" style="opacity:.42;cursor:pointer" onclick="toastBloqueado()">
@@ -3012,6 +3059,15 @@ function seedCartaz910(){
   if(!base.some(function(c){return c.id==='cartaz-10';})) add.push({id:'cartaz-10',tipo:'imagem',imagem:'/carousel/10.jpg',titulo:'',link:'',ativo:true});
   if(add.length){ base.unshift.apply(base, add); setCarouselCards(base); } // vão pro começo (9,10,...)
   localStorage.setItem('radar_seed_cartaz910_v1','1');
+}
+// 🗑️ remove os cartazes de MISSÕES (cartaz-1..8 = culto de missões de 19/jul, já passou). 1x só.
+function cleanupMissoes(){
+  if(localStorage.getItem('radar_cleanup_missoes_v1')) return;
+  var alvo={'cartaz-1':1,'cartaz-2':1,'cartaz-3':1,'cartaz-4':1,'cartaz-5':1,'cartaz-6':1,'cartaz-7':1,'cartaz-8':1};
+  var base=getCarouselCards();
+  var limpo=base.filter(function(c){ return !alvo[c.id]; });
+  if(limpo.length!==base.length){ setCarouselCards(limpo); try{ localStorage.setItem('radar_novidade_sig', novidadeSig()); }catch(_){} } // não alarmar "novidade" por remoção
+  localStorage.setItem('radar_cleanup_missoes_v1','1');
 }
 
 // 🔔 NOVIDADE — avisa (apito + banner) quando sai conteúdo novo (cartaz/vídeo/evento)
