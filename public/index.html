@@ -1445,6 +1445,7 @@ function renderHome(){
   // Carousel
   seedVideoInicio();
   seedVideoMonteCarmelo();
+  seedVideoLeitura();    // 🎬 vídeo Leitura Bíblica em Classe
   seedCartaz910();
   cleanupMissoes();      // 🗑️ tira os cartazes de missões (culto já passou)
   renderCarousel();
@@ -3029,6 +3030,16 @@ function seedVideoMonteCarmelo(){
     setCarouselCards(base);
   }
   localStorage.setItem('radar_seed_montecarmelo_v1','1');
+}
+// vídeo LEITURA BÍBLICA EM CLASSE no começo do carrossel (1x só, não apaga o resto)
+function seedVideoLeitura(){
+  if(localStorage.getItem('radar_seed_leitura_v1')) return;
+  var base=getCarouselCards();
+  if(!base.some(function(c){return c.id==='vid-leitura';})){
+    base.unshift({id:'vid-leitura',tipo:'mp4',video:'/carousel/leitura-classe.mp4',titulo:'',ativo:true}); // vai pro começo
+    setCarouselCards(base);
+  }
+  localStorage.setItem('radar_seed_leitura_v1','1');
 }
 // cartaz 7 no começo do carrossel (1x só, não apaga o resto)
 function seedCartaz7(){
