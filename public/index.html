@@ -812,6 +812,30 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <div class="prl-out" id="prl-out"></div>
   </div>
 </div>
+<!-- DESAFIO MATEUS (game) -->
+<div class="tela" id="tela-desafiomateus">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Desafio Mateus</div><div class="std-sub">A Jornada do Rei</div></div>
+    <span style="font-size:24px">👑</span></div>
+  <div class="agv-scroll" style="background:var(--bg)">
+    <div style="max-width:460px;margin:18px auto;padding:0 16px">
+      <div style="background:linear-gradient(160deg,#0c1e40,#0b1b3a 60%,#091531);border:1px solid rgba(217,182,90,.4);border-radius:22px;padding:28px 22px;text-align:center;box-shadow:0 16px 44px rgba(0,0,0,.45)">
+        <div style="font-size:56px;line-height:1;filter:drop-shadow(0 6px 16px rgba(217,182,90,.5))">👑</div>
+        <div style="font-family:'Playfair Display',Georgia,serif;font-size:25px;font-weight:800;letter-spacing:1px;margin-top:8px;background:linear-gradient(180deg,#fff,#f2d98a);-webkit-background-clip:text;background-clip:text;color:transparent">DESAFIO MATEUS</div>
+        <div style="font-size:11px;letter-spacing:4px;color:#d9b65a;text-transform:uppercase;font-weight:700;margin-top:5px">A Jornada do Rei</div>
+        <p style="color:#cdd8ee;font-size:15px;line-height:1.6;margin:18px 0 6px">Uma competição bíblica pelos <b style="color:#f2d98a">5 primeiros capítulos de Mateus</b>. Primeiro <b>leia ou ouça</b> os capítulos, depois responda o quiz e dispute a pontuação.</p>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:14px 0 20px;color:#9fb2d4;font-size:12.5px">
+          <span>📖 Leitura obrigatória</span><span>🔊 Narração em voz</span><span>⚔️ Quiz + ranking</span>
+        </div>
+        <a href="https://desafio-mateus.vercel.app" target="_blank" rel="noopener"
+           style="display:block;text-decoration:none;padding:16px;border-radius:14px;font-weight:800;font-size:17px;font-family:'Playfair Display',Georgia,serif;letter-spacing:.5px;color:#2a1e06;background:linear-gradient(90deg,#f2d98a,#d9b65a);box-shadow:0 10px 26px rgba(217,182,90,.35)">▶ Abrir o jogo</a>
+        <button onclick="compartilharJogo(event)"
+           style="width:100%;margin-top:12px;padding:15px;border-radius:14px;font-weight:800;font-size:16px;font-family:inherit;cursor:pointer;color:#eaf0fb;background:rgba(255,255,255,.08);border:1px solid rgba(217,182,90,.4)">📲 Compartilhar o link</button>
+        <div style="font-size:12px;color:#9fb2d4;margin-top:14px;letter-spacing:.5px">desafio-mateus.vercel.app</div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="tela" id="tela-silas">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Projeto Silas</div><div class="std-sub">Documentos e agendas</div></div>
@@ -1278,6 +1302,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 <script>
 // ══ MÓDULOS ═══════════════════════════════════════
 const MODS = [
+  {id:'desafiomateus', nome:'Desafio Mateus',      icon:'👑', cor:'#b8862b', desc:'Game bíblico — Mateus 1 a 5 · leia, ouça e jogue'},
   {id:'perolas', nome:'Descobrindo as Pérolas',   icon:'💎', cor:'#8b5cf6', desc:'Análise bíblica de qualquer assunto'},
   {id:'biblia',  nome:'Bíblia e Harpa Cristã',   icon:'📖', cor:'#C9A14A', desc:'Bíblia + 640 hinos'},
   {id:'ebd',     nome:'EBD',                      icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
@@ -1520,6 +1545,18 @@ function compartilhar(e, id, nome){
     });
   }
 }
+// compartilha o LINK DIRETO do jogo Desafio Mateus
+function compartilharJogo(e){
+  if(e) e.stopPropagation();
+  const url='https://desafio-mateus.vercel.app';
+  const texto='👑 Desafio Mateus — A Jornada do Rei\nEstude Mateus 1 a 5 jogando! Grátis, abre no celular:';
+  if(navigator.share){
+    navigator.share({title:'Desafio Mateus',text:texto,url}).catch(function(){});
+  } else {
+    navigator.clipboard.writeText(texto+'\n'+url).then(function(){ showToast('🔗 Link copiado!'); })
+      .catch(function(){ showToast(url); });
+  }
+}
 
 const AG_ESTADUAL=[["JANEIRO", [["16 e 17", "SEC", "4º SISLED – Simpósio Estadual de Superintendentes e líderes de EBD", "AD Pedreiras"], ["28 a 31", "SEDAC", "Formação de Formadores", "A definir"], ["31", "UNILIDER", "Seletivo do Festival Adora São Luís", "São Luís"]]], ["FEVEREIRO", [["05 a 08", "C. de Ingresso", "1ª Etapa do Treinamento de Ingresso", "AD Presidente Dutra"]]], ["MARÇO", [["01/03 a 15/08", "SEC", "4º Concurso Bíblico Estadual “Gosto de Ler a Bíblia” – Início das Inscrições", "Todas as ADs do MA"], ["18 a 20", "CEADEMA", "1ª AGE", "AD Santa Luzia do Paruá"], ["27 a 29", "UMAD", "Liderar Nordeste", "Fortaleza - CE"]]], ["ABRIL", [["03 a 05", "UFPMA", "16º Encontro da UFPMA", "AD Santa Inês"], ["10 a 12", "SEDAC", "Mentoriar KIDS", "A definir"], ["16 a 19", "C. de Ingresso", "2ª Etapa do Treinamento de Ingresso", "AD Sucupira do Norte"]]], ["MAIO", [["01 a 31", "SEC", "Mês da Família – Mob. Pró-Família · Tema: “Famílias que vencem em tempos difíceis”", "Todas as ADs do MA"], ["01 a 03", "SEMADEMA", "Imersão Missionária", "Caxias - MA"]]], ["JUNHO", [["04 a 06", "UMADENE", "Fórum de Missões do Nordeste", "Abreu Lima - PE"], ["07", "SECPAD", "1ª Edição Seminário “O Bom Samaritano”", "AD Barra do Corda"], ["11 a 14", "C. de Ingresso", "3ª Etapa do Treinamento de Ingresso", "AD Timbiras"], ["24 a 26", "CEADEMA", "2ª AGE", "AD São Mateus"]]], ["JULHO", [["01 a 31", "SEDAC", "Escola Bíblica de Férias", "Todas as ADs do MA"], ["05", "SEMADEMA", "Mobilização Missionária", "Todas as ADs do MA"], ["10 a 12", "FAMÍLIA", "ELFAD 2026 – Enc. de Líderes de Família da AD", "A definir"], ["22 a 24", "UNEOMAD", "42º Cong. Est. de Missionárias e Dirig. de C. Oração", "AD Santa Inês"], ["30/07 a 01/08", "UNILIDER", "SIMJAD", "AD Vitória do Mearim"]]], ["AGOSTO", [["07 a 09", "SENAMI/SEMADEMA", "Simpósio Nacional de Missões", "AD Lago da Pedra"], ["08", "UNILIDER", "Dia do Jovem Assembleiano", "Todas as ADs do MA"], ["12/08 a 12/09", "SEMADEMA/SEDAC", "31 Dias de Oração Pelo Nordeste", "Todas as ADs do MA"], ["14 a 16", "SEDAC", "Conferência de Discipulado e Mentoria", "A definir"], ["15", "SEC", "Final do 4º Conc. Bíblico Estadual “Gosto de Ler a Bíblia”", "AD Lago da Pedra"], ["20 a 22", "UMADENE/UMAD", "40ª AGO e EBO / Impactar Nordeste", "São Luís - MA"]]], ["SETEMBRO", [["12", "SEMADEMA/SEDAC", "Nordeste para Cristo · Nordeste para Cristo Kids - Impacto", "Todas as ADs do MA"], ["12 a 13", "CGADB", "Fórum Nacional da Juventude", "São Luís - MA"]]], ["OUTUBRO", [["01 a 15", "SEDAC", "Semana de Oração, Mobilização e Evangelização Infantojuvenil", "Todas as ADs do MA"], ["10 a 11", "UFPMA", "UFPMA em Missão", "AD Presidente Médice"]]], ["NOVEMBRO", [["14", "SECPAD", "2ª Edição Seminário “O Bom Samaritano”", "AD Tirirical / São Luís"]]], ["DEZEMBRO", [["05", "SEDAC", "Feira Bíblica Infantojuvenil", "Todas as ADs do MA"], ["14 a 18", "CEADEMA", "87ª Assembleia Geral Ordinária - AGO", "AD Barra do Corda"]]], ["JANEIRO 2027", [["21 a 23", "SEC", "8º CEEDC – Congresso Estadual de Escola Dominical da CEADEMA", "AD Bacabal"]]]];
 const AG_REGIONAL=[["MARÇO", [["20 a 22", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Barnabé", "AD Livramento - Peritoró"]]], ["ABRIL", [["10 a 11", "UNILIDER", "1º TILL", "AD Buriti Bravo"], ["17 a 19", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Trôade", "AD Brejinho - Caxias"]]], ["MAIO", [["15 a 17", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Silas", "AD Serrinha - Joselândia"]]], ["JUNHO", [["19 a 21", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Trôade", "AD Paiol do Centro - Parnarama"]]], ["JULHO", [["17 a 19", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Barnabé", "AD Morros dos Cabocos – Bernardo do Mearim"]]], ["AGOSTO", [["08", "SEC", "3ª CREDC – Conferência Regional de Escola Dominical da CEADEMA – Polo Metropolitano do Estado, Muniz e Lençóis Maranhenses · Projetos: Atos e Marcos", "AD Barreirinhas"], ["21 a 23", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Tito", "AD Brejo das Flores – Vitorino Freire"]]], ["SETEMBRO", [["18 a 20", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Atos", "AD Jussatuba - Icatu"]]], ["OUTUBRO", [["16 a 18", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Eliseu", "AD Conceição - Mirador"]]], ["NOVEMBRO", [["20 a 22", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto ENCOPAELO", "AD Maçaricó - Guimarães"], ["20 a 21", "UNILIDER", "2º TILL", "AD Bacabeira"]]], ["DEZEMBRO", [["12 a 13", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Eliseu", "AD São João da Mata – Governador Luiz Rocha"], ["19", "SEDAC", "Cantata de Natal", "Sede dos Polos"]]]];
@@ -1661,6 +1698,10 @@ function AG_TEMPLO_AGO_R(){ return AG_TEMPLO_AGO.filter(function(e){return _agFu
 function abrirMod(id){
   localStorage.setItem('radar_ultimo_mod', id);
   ocultarTodas();
+  if(id==='desafiomateus'){
+    document.getElementById('tela-desafiomateus').classList.add('ativa');
+    return;
+  }
   if(id==='perolas'){
     document.getElementById('tela-perolas').classList.add('ativa');
     return;
@@ -3185,6 +3226,18 @@ function seedCartazes(){
   });
   setCarouselCards(cards);
   localStorage.setItem('radar_seed_cartaz_v2','1');
+}
+function seedLouvores(){
+  if(localStorage.getItem('radar_seed_louvores_v1')) return;
+  var cards=getCarouselCards();
+  for(var n=1;n<=7;n++){
+    var id='louvor-'+n;
+    if(!cards.some(function(c){return c.id===id;})){
+      cards.push({id:id,tipo:'mp4',video:'/carousel/louvor'+n+'.mp4',titulo:'',link:'',ativo:true});
+    }
+  }
+  setCarouselCards(cards);
+  localStorage.setItem('radar_seed_louvores_v1','1');
 }
 function setCarouselCards(arr){
   localStorage.setItem('radar_carousel',JSON.stringify(arr));
