@@ -1467,9 +1467,9 @@ function renderHome(){
   document.getElementById('greet-nome').textContent = 'RADAR SEMANAL';
   document.getElementById('greet-cargo').textContent = 'Avisos e agenda da igreja';
 
-  // Carousel — SOMENTE o vídeo da Leitura Bíblica em Classe (segunda-feira)
+  // Carousel — vídeo da Leitura + vídeos de louvor
   seedVideoLeitura();
-  soLeitura();           // deixa SÓ o vídeo da leitura; tira vídeos e cartazes antigos
+  seedLouvores();        // 🎵 vídeos de louvor no slide inicial
   renderCarousel();
   seedAgendaCeadema();   // agenda CEADEMA (avisos até o fim do ano)
   checkNovidade();       // 🔔 avisa "NOVIDADE" (apito + banner) se saiu conteúdo novo
@@ -3117,6 +3117,19 @@ function soLeitura(){
   if(!limpo.length) limpo=[{id:'vid-leitura',tipo:'mp4',video:'/carousel/leitura-classe.mp4',titulo:'',ativo:true}];
   if(limpo.length!==base.length){ setCarouselCards(limpo); try{ localStorage.setItem('radar_novidade_sig', novidadeSig()); }catch(_){} } // não alarmar "novidade" por remoção
   localStorage.setItem('radar_solo_leitura_v2','1');
+}
+// 🎵 adiciona os 7 vídeos de louvor ao carrossel (1x só, sem duplicar)
+function seedLouvores(){
+  if(localStorage.getItem('radar_seed_louvores_v1')) return;
+  var base=getCarouselCards();
+  for(var n=1;n<=7;n++){
+    var id='louvor-'+n;
+    if(!base.some(function(c){return c.id===id;})){
+      base.push({id:id,tipo:'mp4',video:'/carousel/louvor'+n+'.mp4',titulo:'',ativo:true});
+    }
+  }
+  setCarouselCards(base);   // não mexe na sig: são conteúdos novos → dispara "NOVIDADE" de propósito
+  localStorage.setItem('radar_seed_louvores_v1','1');
 }
 
 // 🔔 NOVIDADE — avisa (apito + banner) quando sai conteúdo novo (cartaz/vídeo/evento)
