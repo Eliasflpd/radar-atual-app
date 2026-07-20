@@ -9,6 +9,8 @@
 <meta name="theme-color" content="#080D1A">
 <title>RADAR ATUAL</title>
 <link rel="manifest" href="/manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -42,7 +44,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .modulo-tile{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden}
 .modulo-tile::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tile-color,var(--gold));border-radius:3px 0 0 3px}
 .modulo-tile:active{border-color:var(--tile-color,var(--gold));background:var(--card2)}
-.tile-icon{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:20px;flex-shrink:0;background:rgba(255,255,255,.05)}
+.tile-icon{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:20px;flex-shrink:0;background:rgba(255,255,255,.05);overflow:hidden}
+.tile-icon-img{width:100%;height:100%;object-fit:contain;border-radius:9px;background:#fff;padding:2px}
+.cont-icone-img{width:36px;height:36px;object-fit:contain;border-radius:9px;background:#fff;padding:2px;display:block}
 .tile-info{flex:1;min-width:0}
 .tile-nome{font-size:15px;font-weight:700;color:var(--txt)}
 .tile-desc{font-size:11px;color:var(--sub);margin-top:2px}
@@ -572,11 +576,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
 /* ══ CAROUSEL HOME ══ */
 .home-carousel{position:relative;margin:0 0 6px;flex-shrink:0;touch-action:pan-y}
-.carousel-wrap{overflow:hidden;border-radius:0}
+.carousel-wrap{overflow:hidden;border-radius:14px}
 .carousel-track{display:flex;will-change:transform;transition:transform .32s cubic-bezier(.4,0,.2,1)}
 .carousel-track.no-anim{transition:none}
 .carousel-slide{min-width:100%;position:relative;overflow:hidden;user-select:none}
-.cs-img{width:100%;height:190px;object-fit:cover;display:block;pointer-events:none}
+.cs-img{width:100%;height:460px;object-fit:contain;display:block;pointer-events:none;background:#0b1020}
+.cs-mp4{width:100%;height:460px;object-fit:contain;display:block;background:#000}
 .cs-video-thumb{width:100%;height:190px;position:relative;background:#000;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .cs-video-thumb img{width:100%;height:100%;object-fit:cover;opacity:.75}
 .cs-video-play{position:absolute;width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;border:2px solid rgba(255,255,255,.5)}
@@ -659,6 +664,51 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .mcfg-tgl.on::after{left:23px}
 .mcfg-save{width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;margin-top:12px;font-family:inherit;background:var(--gold);color:#080D1A}
 .mcfg-del{width:100%;border:1px solid rgba(247,95,95,.2);border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;background:rgba(247,95,95,.08);color:var(--red);display:none}
+
+/* ===== AGENDAS (CEADEMA + Templo Central) ===== */
+.agv-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#eef3fa}
+.agv-scroll.creme{background:#f5efdf}
+.agv-brand{padding:15px 15px 13px;display:flex;align-items:center;gap:11px}
+.agv-brand.azul{background:linear-gradient(135deg,#0e2a63,#1a58b0)}
+.agv-brand.marrom{background:linear-gradient(135deg,#33301a,#5b5228)}
+.agv-logo{width:52px;height:52px;border-radius:50%;background:#fff;padding:3px;flex-shrink:0;object-fit:contain}
+.agv-bnome{font-size:21px;font-weight:900;letter-spacing:1.5px;color:#fff;line-height:1}
+.agv-bsub{font-size:8.7px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,.78);margin-top:4px;line-height:1.35}
+.agv-tit{color:#fff;text-align:center;padding:11px}
+.agv-tit.azul{background:#096f95}.agv-tit.verde{background:#2e8b40}.agv-tit.marrom{background:#6b5e2a}
+.agv-tit b{font-size:16px;font-weight:800}.agv-tit span{display:block;font-size:10.5px;color:rgba(255,255,255,.82);margin-top:2px}
+.agv-tabs{display:flex;padding:7px;gap:7px}
+.agv-tabs.azul{background:#dbeafc}
+.agv-tab{flex:1;text-align:center;padding:10px;border-radius:9px;font-size:13.5px;font-weight:800;cursor:pointer}
+.agv-tab.on-az{background:#096f95;color:#fff}.agv-tab.off-az{background:#fff;color:#0e6f95}
+.agv-tab.on-vd{background:#2e8b40;color:#fff}.agv-tab.off-vd{background:#fff;color:#2e7d32}
+.agv-lista{padding:11px 12px 30px}
+.agv-mes{font-size:13px;font-weight:900;letter-spacing:1.4px;margin:15px 4px 8px;display:flex;align-items:center;gap:8px}
+.agv-mes:before{content:"";width:5px;height:15px;border-radius:3px}
+.agv-mes.azul{color:#0e2a63}.agv-mes.azul:before{background:#096f95}
+.agv-mes.verde{color:#1b5e20}.agv-mes.verde:before{background:#2e8b40}
+.agv-mes.marrom{color:#4a4118}.agv-mes.marrom:before{background:#6b5e2a}
+.agv-card{background:#fff;border-radius:12px;padding:11px 12px;margin-bottom:8px;box-shadow:0 1px 4px rgba(20,60,120,.08)}
+.agv-card.azul{border-left:4px solid #096f95}.agv-card.verde{border-left:4px solid #2e8b40}.agv-card.marrom{border-left:4px solid #6b5e2a}
+.agv-ch{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap}
+.agv-data{font-size:12.5px;font-weight:800;padding:3px 9px;border-radius:7px}
+.agv-data.azul{background:#c9ecfa;color:#08496b}.agv-data.verde{background:#c1efc6;color:#1b5e20}.agv-data.marrom{background:#efe6c9;color:#5a4d18}
+.agv-org{font-size:10px;font-weight:700;color:#5b7897;background:#eef4fb;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.3px}
+.agv-ev{font-size:15px;font-weight:700;line-height:1.4;color:#14233a}
+.agv-loc{font-size:12.5px;color:#5b7897;margin-top:4px}
+.agv-secao{font-size:13.5px;font-weight:900;letter-spacing:1px;color:#4a4118;margin:22px 4px 9px;text-transform:uppercase}
+.agv-wk{background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:7px;border-left:4px solid #6b5e2a}
+.agv-wk-dia{font-size:12px;font-weight:900;color:#6b5e2a;letter-spacing:.5px;margin-bottom:3px}
+.agv-wk-item{font-size:14px;color:#2c2c2a;line-height:1.6}
+.agv-mural{background:#3a3618;border-radius:12px;padding:14px 15px;margin:8px 0 4px;color:#f5efdf;text-align:center}
+.agv-mural h4{font-size:15px;font-weight:900;letter-spacing:1px;margin-bottom:8px;color:#f0d878}
+.agv-mural div{font-size:13.5px;line-height:1.9}
+.agv-hub-card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:16px;margin:10px 14px;cursor:pointer}
+.agv-hub-ic{width:46px;height:46px;border-radius:12px;background:#0e2a63;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.agv-hub-ic.marrom{background:#5b5228}
+.agv-hub-nome{font-size:16px;font-weight:800;color:var(--ink)}
+.agv-hub-sub{font-size:12.5px;color:var(--ink2);margin-top:2px}
+
 </style>
 </head>
 <body>
@@ -685,8 +735,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     </div>
   </div>
   <div class="home-divider"></div>
-  <div id="home-carousel" class="home-carousel"></div>
   <div class="home-scroll">
+    <div id="home-carousel" class="home-carousel"></div>
     <div id="painel-hoje-wrap"></div>
     <div id="continuar-wrap"></div>
     <div class="sec-label" style="margin-top:16px">Seus módulos</div>
@@ -715,6 +765,93 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <button class="mod-add" onclick="abrirModal()">+ ADD</button>
   </div>
   <div class="mod-lista" id="mod-lista"></div>
+</div>
+
+<!-- SILAS HUB -->
+<!-- ESCAVADOR DE PÉROLAS BÍBLICAS -->
+<style>
+#tela-perolas .prl-scroll{height:calc(100% - 58px);overflow-y:auto;padding:16px 14px 96px;-webkit-overflow-scrolling:touch}
+.prl-intro{font-size:15px;line-height:1.55;color:var(--ink2,#c9d4e6);background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.4);border-radius:14px;padding:14px}
+.prl-input{width:100%;box-sizing:border-box;margin-top:14px;background:var(--card,#12213c);color:var(--ink,#eef3fb);border:1px solid rgba(217,182,90,.4);border-radius:14px;padding:14px;font-size:16px;resize:vertical;font-family:inherit;outline:none}
+.prl-input:focus{border-color:#8b5cf6}
+.prl-btn{width:100%;margin-top:10px;background:linear-gradient(90deg,#8b5cf6,#b79ad0);color:#fff;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(139,92,246,.4)}
+.prl-btn:disabled{opacity:.6}
+.prl-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.prl-chip{font-size:13px;font-weight:600;color:var(--ink2,#c9d4e6);background:rgba(255,255,255,.06);border:1px solid rgba(217,182,90,.3);border-radius:999px;padding:7px 13px;cursor:pointer}
+/* folha branca de leitura — texto justificado, fonte premium (Lora) */
+.prl-out{margin-top:18px;background:#fffdf9;border-radius:16px;padding:20px 18px;box-shadow:0 12px 34px rgba(0,0,0,.4);
+  color:#2a251d;font-family:'Lora',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.68;
+  text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto;overflow-wrap:break-word}
+.prl-out:empty{display:none}
+.prl-out h3{font-family:'Playfair Display',Georgia,serif;color:#6a3fb0;font-size:15.5px;font-weight:700;
+  margin:18px 0 5px;padding-bottom:5px;border-bottom:1.5px solid rgba(106,63,176,.18);line-height:1.25;
+  text-align:left;-webkit-hyphens:none;hyphens:none}
+.prl-out h3:first-child{margin-top:2px}
+.prl-out b,.prl-out strong{color:#5a2ea6;font-weight:700}
+.prl-out i,.prl-out em{color:#4a3f6b}
+.prl-out p{margin:9px 0}
+.prl-loading{color:#6a3fb0;font-weight:700;font-family:-apple-system,'Segoe UI',sans-serif;display:flex;align-items:center;gap:8px;text-align:left}
+.prl-cursor::after{content:'▍';color:#8b5cf6;animation:prlblink 1s steps(2) infinite}
+@keyframes prlblink{0%,100%{opacity:1}50%{opacity:0}}
+</style>
+<div class="tela" id="tela-perolas">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Descobrindo as Pérolas</div><div class="std-sub">Resposta sempre à luz da Bíblia</div></div>
+    <span style="font-size:24px">💎</span></div>
+  <div class="prl-scroll">
+    <div class="prl-intro">Digite <b>qualquer assunto</b> — bíblico ou não (ansiedade, dinheiro, Salmo 23, casamento, medo…). A resposta vem <b>sempre à luz da Bíblia</b>, em 13 camadas de profundidade. 💎</div>
+    <textarea id="prl-input" class="prl-input" rows="2" placeholder="Ex.: ansiedade, o dilúvio, Salmo 23, perdão…"></textarea>
+    <div class="prl-chips" id="prl-chips">
+      <span class="prl-chip" onclick="prlChip('Ansiedade')">Ansiedade</span>
+      <span class="prl-chip" onclick="prlChip('Salmo 23')">Salmo 23</span>
+      <span class="prl-chip" onclick="prlChip('Perdão')">Perdão</span>
+      <span class="prl-chip" onclick="prlChip('O dilúvio de Noé')">O dilúvio</span>
+      <span class="prl-chip" onclick="prlChip('Medo do futuro')">Medo</span>
+    </div>
+    <button class="prl-btn" id="prl-btn" onclick="escavarPerola()">💎 Escavar Pérola</button>
+    <div class="prl-out" id="prl-out"></div>
+  </div>
+</div>
+<div class="tela" id="tela-silas">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Projeto Silas</div><div class="std-sub">Documentos e agendas</div></div>
+    <img src="img/ceadema.png" style="width:32px;height:32px;object-fit:contain;border-radius:8px;background:#fff;padding:2px;flex-shrink:0"></div>
+  <div class="agv-scroll" style="background:var(--bg)">
+    <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
+    <div class="agv-hub-card" onclick="abrirCeadema('estadual')">
+      <div class="agv-hub-ic">📅</div>
+      <div><div class="agv-hub-nome">CRM CEADEMA</div><div class="agv-hub-sub">Agenda Estadual e Regional 2026</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+  </div>
+</div>
+<!-- CEADEMA AGENDA -->
+<div class="tela" id="tela-ceadema">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-silas')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">CRM CEADEMA</div><div class="std-sub">Agenda 2026</div></div>
+    <span style="font-size:24px">📅</span></div>
+  <div class="agv-scroll" id="ceadema-body"></div>
+</div>
+<!-- TEMPLO HUB -->
+<div class="tela" id="tela-templo">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Templo Central</div><div class="std-sub">Tuntum - MA</div></div>
+    <span style="font-size:24px">⛪</span></div>
+  <div class="agv-scroll" style="background:var(--bg)">
+    <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
+    <div class="agv-hub-card" onclick="abrirTemploAg()">
+      <div class="agv-hub-ic marrom">📅</div>
+      <div><div class="agv-hub-nome">Agenda Bimestral</div><div class="agv-hub-sub">Julho / Agosto 2026 · IEADET</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+  </div>
+</div>
+<!-- TEMPLO AGENDA -->
+<div class="tela" id="tela-templo-ag">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-templo')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Agenda Bimestral</div><div class="std-sub">Julho / Agosto 2026</div></div>
+    <span style="font-size:24px">📅</span></div>
+  <div class="agv-scroll creme" id="templo-body"></div>
 </div>
 
 <!-- MODAL -->
@@ -1141,9 +1278,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 <script>
 // ══ MÓDULOS ═══════════════════════════════════════
 const MODS = [
+  {id:'perolas', nome:'Descobrindo as Pérolas',   icon:'💎', cor:'#8b5cf6', desc:'Análise bíblica de qualquer assunto'},
   {id:'biblia',  nome:'Bíblia e Harpa Cristã',   icon:'📖', cor:'#C9A14A', desc:'Bíblia + 640 hinos'},
   {id:'ebd',     nome:'EBD',                      icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
-  {id:'silas',   nome:'Projeto Silas',            icon:'✝️', cor:'#38bdf8', desc:'Documentos, cartazes, vídeos'},
+  {id:'silas',   nome:'Projeto Silas',            icon:'✝️', img:'img/ceadema.png', cor:'#0e2a63', desc:'Documentos, cartazes, vídeos'},
   {id:'templo',  nome:'Templo Central Tuntum-MA', icon:'⛪', cor:'#f5a623', desc:'Sede central — Tuntum-MA'},
 ];
 
@@ -1300,11 +1438,19 @@ function renderHome(){
   const h = new Date().getHours();
   const [saud, icone] = h < 12 ? ['Bom dia','☀️'] : h < 18 ? ['Boa tarde','🌤️'] : ['Boa noite','🌙'];
   document.getElementById('greet-bom').textContent = saud + ' ' + icone;
-  document.getElementById('greet-nome').textContent = u ? (u.nome||'Visitante') : 'Visitante';
-  document.getElementById('greet-cargo').textContent = u ? (u.cargo||'RADAR ATUAL') : 'RADAR ATUAL';
+  document.getElementById('greet-nome').textContent = 'RADAR SEMANAL';
+  document.getElementById('greet-cargo').textContent = 'Avisos e agenda da igreja';
 
   // Carousel
+  seedCartazes();
+  seedVideoInicio();
+  seedVideoMonteCarmelo();
+  seedCartaz7();
+  seedCartaz8();
+  seedCartaz910();
   renderCarousel();
+  seedAgendaCeadema();   // agenda CEADEMA (avisos até o fim do ano)
+  checkNovidade();       // 🔔 avisa "NOVIDADE" (apito + banner) se saiu conteúdo novo
 
   // Painel Hoje
   const hoje = new Date();
@@ -1332,13 +1478,13 @@ function renderHome(){
   const ultimo = localStorage.getItem('radar_ultimo_mod');
   const ultimoMod = ultimo ? MODS.find(m=>m.id===ultimo) : null;
   document.getElementById('continuar-wrap').innerHTML = ultimoMod
-    ? `<div class="continuar-card" onclick="abrirMod('${ultimoMod.id}')"><span class="continuar-icone">${ultimoMod.icon}</span><div class="continuar-info"><div class="continuar-rotulo">Continuar acessando</div><div class="continuar-nome">${ultimoMod.nome}</div></div><span class="continuar-arr">›</span></div>`
+    ? `<div class="continuar-card" onclick="abrirMod('${ultimoMod.id}')"><span class="continuar-icone">${ultimoMod.img?`<img class="cont-icone-img" src="${ultimoMod.img}">`:ultimoMod.icon}</span><div class="continuar-info"><div class="continuar-rotulo">Continuar acessando</div><div class="continuar-nome">${ultimoMod.nome}</div></div><span class="continuar-arr">›</span></div>`
     : '';
 
   // Módulos (sem botão de compartilhar, menor)
   document.getElementById('modulos').innerHTML = MODS.map(m=>`
     <div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')">
-      <div class="tile-icon">${m.icon}</div>
+      <div class="tile-icon">${m.img?`<img class="tile-icon-img" src="${m.img}">`:m.icon}</div>
       <div class="tile-info">
         <div class="tile-nome">${m.nome}</div>
         <div class="tile-desc">${m.desc}</div>
@@ -1353,7 +1499,7 @@ function buscaGlobal(q){
   if(!v){renderHome();return;}
   const mf = MODS.filter(m=>m.nome.toLowerCase().includes(v)||m.desc.toLowerCase().includes(v));
   document.getElementById('modulos').innerHTML = mf.length
-    ? mf.map(m=>`<div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')"><div class="tile-icon">${m.icon}</div><div class="tile-info"><div class="tile-nome">${m.nome}</div><div class="tile-desc">${m.desc}</div></div><div class="tile-arr">›</div></div>`).join('')
+    ? mf.map(m=>`<div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')"><div class="tile-icon">${m.img?`<img class="tile-icon-img" src="${m.img}">`:m.icon}</div><div class="tile-info"><div class="tile-nome">${m.nome}</div><div class="tile-desc">${m.desc}</div></div><div class="tile-arr">›</div></div>`).join('')
     : '<div style="text-align:center;padding:32px 0;color:var(--sub);font-size:13px">Nenhum resultado</div>';
 }
 function focusBusca(){ document.getElementById('home-busca').focus(); }
@@ -1378,9 +1524,102 @@ function compartilhar(e, id, nome){
   }
 }
 
+const AG_ESTADUAL=[["JANEIRO", [["16 e 17", "SEC", "4º SISLED – Simpósio Estadual de Superintendentes e líderes de EBD", "AD Pedreiras"], ["28 a 31", "SEDAC", "Formação de Formadores", "A definir"], ["31", "UNILIDER", "Seletivo do Festival Adora São Luís", "São Luís"]]], ["FEVEREIRO", [["05 a 08", "C. de Ingresso", "1ª Etapa do Treinamento de Ingresso", "AD Presidente Dutra"]]], ["MARÇO", [["01/03 a 15/08", "SEC", "4º Concurso Bíblico Estadual “Gosto de Ler a Bíblia” – Início das Inscrições", "Todas as ADs do MA"], ["18 a 20", "CEADEMA", "1ª AGE", "AD Santa Luzia do Paruá"], ["27 a 29", "UMAD", "Liderar Nordeste", "Fortaleza - CE"]]], ["ABRIL", [["03 a 05", "UFPMA", "16º Encontro da UFPMA", "AD Santa Inês"], ["10 a 12", "SEDAC", "Mentoriar KIDS", "A definir"], ["16 a 19", "C. de Ingresso", "2ª Etapa do Treinamento de Ingresso", "AD Sucupira do Norte"]]], ["MAIO", [["01 a 31", "SEC", "Mês da Família – Mob. Pró-Família · Tema: “Famílias que vencem em tempos difíceis”", "Todas as ADs do MA"], ["01 a 03", "SEMADEMA", "Imersão Missionária", "Caxias - MA"]]], ["JUNHO", [["04 a 06", "UMADENE", "Fórum de Missões do Nordeste", "Abreu Lima - PE"], ["07", "SECPAD", "1ª Edição Seminário “O Bom Samaritano”", "AD Barra do Corda"], ["11 a 14", "C. de Ingresso", "3ª Etapa do Treinamento de Ingresso", "AD Timbiras"], ["24 a 26", "CEADEMA", "2ª AGE", "AD São Mateus"]]], ["JULHO", [["01 a 31", "SEDAC", "Escola Bíblica de Férias", "Todas as ADs do MA"], ["05", "SEMADEMA", "Mobilização Missionária", "Todas as ADs do MA"], ["10 a 12", "FAMÍLIA", "ELFAD 2026 – Enc. de Líderes de Família da AD", "A definir"], ["22 a 24", "UNEOMAD", "42º Cong. Est. de Missionárias e Dirig. de C. Oração", "AD Santa Inês"], ["30/07 a 01/08", "UNILIDER", "SIMJAD", "AD Vitória do Mearim"]]], ["AGOSTO", [["07 a 09", "SENAMI/SEMADEMA", "Simpósio Nacional de Missões", "AD Lago da Pedra"], ["08", "UNILIDER", "Dia do Jovem Assembleiano", "Todas as ADs do MA"], ["12/08 a 12/09", "SEMADEMA/SEDAC", "31 Dias de Oração Pelo Nordeste", "Todas as ADs do MA"], ["14 a 16", "SEDAC", "Conferência de Discipulado e Mentoria", "A definir"], ["15", "SEC", "Final do 4º Conc. Bíblico Estadual “Gosto de Ler a Bíblia”", "AD Lago da Pedra"], ["20 a 22", "UMADENE/UMAD", "40ª AGO e EBO / Impactar Nordeste", "São Luís - MA"]]], ["SETEMBRO", [["12", "SEMADEMA/SEDAC", "Nordeste para Cristo · Nordeste para Cristo Kids - Impacto", "Todas as ADs do MA"], ["12 a 13", "CGADB", "Fórum Nacional da Juventude", "São Luís - MA"]]], ["OUTUBRO", [["01 a 15", "SEDAC", "Semana de Oração, Mobilização e Evangelização Infantojuvenil", "Todas as ADs do MA"], ["10 a 11", "UFPMA", "UFPMA em Missão", "AD Presidente Médice"]]], ["NOVEMBRO", [["14", "SECPAD", "2ª Edição Seminário “O Bom Samaritano”", "AD Tirirical / São Luís"]]], ["DEZEMBRO", [["05", "SEDAC", "Feira Bíblica Infantojuvenil", "Todas as ADs do MA"], ["14 a 18", "CEADEMA", "87ª Assembleia Geral Ordinária - AGO", "AD Barra do Corda"]]], ["JANEIRO 2027", [["21 a 23", "SEC", "8º CEEDC – Congresso Estadual de Escola Dominical da CEADEMA", "AD Bacabal"]]]];
+const AG_REGIONAL=[["MARÇO", [["20 a 22", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Barnabé", "AD Livramento - Peritoró"]]], ["ABRIL", [["10 a 11", "UNILIDER", "1º TILL", "AD Buriti Bravo"], ["17 a 19", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Trôade", "AD Brejinho - Caxias"]]], ["MAIO", [["15 a 17", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Silas", "AD Serrinha - Joselândia"]]], ["JUNHO", [["19 a 21", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Trôade", "AD Paiol do Centro - Parnarama"]]], ["JULHO", [["17 a 19", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Barnabé", "AD Morros dos Cabocos – Bernardo do Mearim"]]], ["AGOSTO", [["08", "SEC", "3ª CREDC – Conferência Regional de Escola Dominical da CEADEMA – Polo Metropolitano do Estado, Muniz e Lençóis Maranhenses · Projetos: Atos e Marcos", "AD Barreirinhas"], ["21 a 23", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Tito", "AD Brejo das Flores – Vitorino Freire"]]], ["SETEMBRO", [["18 a 20", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Atos", "AD Jussatuba - Icatu"]]], ["OUTUBRO", [["16 a 18", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Eliseu", "AD Conceição - Mirador"]]], ["NOVEMBRO", [["20 a 22", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto ENCOPAELO", "AD Maçaricó - Guimarães"], ["20 a 21", "UNILIDER", "2º TILL", "AD Bacabeira"]]], ["DEZEMBRO", [["12 a 13", "Evangelismo", "Cruzada Evangelística CEADEMA – Projeto Eliseu", "AD São João da Mata – Governador Luiz Rocha"], ["19", "SEDAC", "Cantata de Natal", "Sede dos Polos"]]]];
+const AG_TEMPLO_JUL=[["QUI", "02/jul", "Vigília Geral", "Templo Central"], ["SÁB", "04/jul", "Café do Silas", "AD Santa Luzia"], ["SÁB", "04/jul", "6º Encontro UMADET", "Cong. Lírio dos Vales"], ["DOM", "05/jul", "Culto da Família", ""], ["SEG", "06/jul", "Culto Geral de Santa Ceia", ""], ["", "08 a 10/07", "2ª AGE CEADEMA", "AD São Mateus - MA"], ["QUA", "08/jul", "Encontro UFADET", "Cong. Monte das Oliveiras"], ["SÁB", "11/jul", "Culto Local UMADET", "Templo Sede e Congregações"], ["DOM", "12/jul", "Ceia nas Congregações do Campo", ""], ["", "13 a 18/07", "EBF 2026 - Jesus a Bordo", ""], ["DOM", "19/jul", "Culto Local de Missões · Mob. Missionária SEMADEMA 2026", ""], ["", "22 a 24/07", "42º UNEOMAD", "AD Santa Inês"], ["SÁB", "25/jul", "Culto Local UMADET", "Templo Sede e Congregações"], ["DOM", "26/jul", "Culto de Louvor e Adoração", ""], ["QUI", "30/jul", "Encontro UHADET", ""], ["", "30/07 a 01/08", "SIMJAD UNILIDER", "AD Vitorino Freire - MA"]];
+const AG_TEMPLO_AGO=[["SÁB", "01/ago", "2º Encontrão UMADEAS", "AD Vila São Paulo - Senador"], ["DOM", "02/ago", "Culto da Família", ""], ["SEG", "03/ago", "Culto Geral de Santa Ceia", ""], ["QUI", "06/ago", "Encontro UCADET / Vigília Geral", ""], ["", "07 a 09/08", "Simpósio Nacional de Missões SEMANI/SEMADEMA", "AD Lago da Pedra"], ["SÁB", "08/ago", "Culto de Ações de Graças · Aniversário do Pr. Domingos", ""], ["DOM", "09/ago", "Culto Local em Homenagem ao Dia dos Pais", ""], ["QUA", "12/ago", "Encontro da UFADET", "Cong. Moriá Arroz"], ["QUI", "13/ago", "Encontro Geral UHADET", ""], ["SÁB", "15/ago", "7º Encontro UMADET", "Cong. Monte das Oliveiras"], ["DOM", "16/ago", "Culto Local de Missões", "Templo Sede e Congregações"], ["QUI", "20/ago", "Cruzadas Tuntum para Cristo", "Cong. Canaã"], ["SEX", "21/ago", "Cruzadas Tuntum para Cristo", "Cong. Vila Bento"], ["SÁB", "22/ago", "1º Simpósio de Missões", "Templo Central"], ["DOM", "23/ago", "Culto de Santa Ceia nas Congregações", ""], ["QUI", "27/ago", "Cruzadas Tuntum para Cristo", "Cong. Vila Mata"], ["SEX", "28/ago", "Cruzadas Tuntum para Cristo", "Cong. Nova Aliança"], ["SÁB", "29/ago", "Culto Local UMADET", "Templo Sede e Congregações"], ["DOM", "30/ago", "Culto de Louvor e Adoração", ""]];
+const AG_SEMANAL=[["DOM", ["1º Domingo — Culto da Família", "2º Domingo — Culto Local de Missões", "3º e 4º Domingo — Culto de Louvor e Adoração"]], ["SEG", ["Culto de Assembleia Geral", "1ª Segunda do mês — Santa Ceia Geral"]], ["TER", ["Livre / Ensaio Orquestra"]], ["QUA", ["Consagração / Círculo de Oração", "2ª Quarta do mês — Encontro Geral UFADET"]], ["QUI", ["Culto de Crianças / Culto da UHADET", "2ª Quinta — Encontro Geral UCADET", "4ª Quinta — Encontro Geral UHADET"]], ["SEX", ["Culto de Oração e Ensino nas Congregações"]], ["SÁB", ["1º Sábado — Culto Geral de Jovens", "2º Sábado — Culto de Jovens no Setor", "3º Sábado — UMADET em Missão", "4º — Agendamento de Eventos"]]];
+const AG_TEMPLO_FIXO=[["Domingo", "EBD e cultos conforme cronograma"], ["Segunda", "Culto de Doutrina"], ["Terça", "Ensaio Orquestra"], ["Quarta", "Círculo de Oração"], ["Quinta", "UHADET / UCADET"], ["Sexta", "Culto de Oração"], ["Sábado", "Culto de Jovens"]];
+const AG_ENSAIOS=[["UMADET", "14h às 15h"], ["UCADET", "15h às 15h30"], ["Jovens e Adolescentes", "15h30 às 16h"], ["UFADET", "16h às 16h45"], ["UHADET", "16h45 às 17h30"]];
+const AG_MURAL=["11 e 12/09 — Festa Cong. Lírio dos Vales", "26/09 — 1º Encontrão UHADET", "31/10 a 01/11 — Conferência EBD"];
+
+// ===== AGENDAS (CEADEMA + Templo Central) =====
+function mostrarTela(id){ ocultarTodas(); document.getElementById(id).classList.add('ativa'); }
+function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function cardsMes(lista, tema){
+  return lista.map(function(g){
+    var mes=g[0], evs=g[1];
+    var cs=evs.map(function(e){
+      var data=e[0],org=e[1],ev=e[2],loc=e[3];
+      return '<div class="agv-card '+tema+'"><div class="agv-ch">'+
+        '<span class="agv-data '+tema+'">'+esc2(data)+'</span>'+
+        (org?'<span class="agv-org">'+esc2(org)+'</span>':'')+'</div>'+
+        '<div class="agv-ev">'+esc2(ev)+'</div>'+
+        (loc?'<div class="agv-loc">📍 '+esc2(loc)+'</div>':'')+'</div>';
+    }).join('');
+    return '<div class="agv-mes '+tema+'">'+esc2(mes)+'</div>'+cs;
+  }).join('');
+}
+
+function abrirSilas(){ mostrarTela('tela-silas'); }
+
+function abrirCeadema(qual){
+  mostrarTela('tela-ceadema');
+  renderCeadema(qual||'estadual');
+}
+function renderCeadema(qual){
+  var azul = qual==='estadual';
+  var tema = azul?'azul':'verde';
+  var dados = azul?AG_ESTADUAL:AG_REGIONAL;
+  var titTema = azul?'azul':'verde';
+  var h='';
+  h+='<div class="agv-brand azul"><img class="agv-logo" src="img/ceadema.png">'+
+     '<div><div class="agv-bnome">CEADEMA</div><div class="agv-bsub">Convenção Estadual das Igrejas Evangélicas · Assembleias de Deus no Maranhão</div></div></div>';
+  h+='<div class="agv-tit '+titTema+'"><b>Agenda '+(azul?'Estadual':'Regional')+' de 2026</b><span>'+(azul?'Eventos oficiais da Convenção':'Eventos regionais da Convenção')+'</span></div>';
+  h+='<div class="agv-tabs azul">'+
+     '<div class="agv-tab '+(azul?'on-az':'off-az')+'" onclick="renderCeadema(\'estadual\')">Estadual</div>'+
+     '<div class="agv-tab '+(!azul?'on-vd':'off-vd')+'" onclick="renderCeadema(\'regional\')">Regional</div></div>';
+  h+='<div class="agv-lista">'+cardsMes(dados,tema)+'</div>';
+  var _cb=document.getElementById('ceadema-body');
+  _cb.innerHTML=h; _cb.scrollTop=0;
+  setTimeout(function(){_cb.scrollTop=0;},40);
+}
+
+function abrirTemplo(){ mostrarTela('tela-templo'); }
+function abrirTemploAg(){ mostrarTela('tela-templo-ag'); renderTemplo(); }
+function renderTemplo(){
+  var h='';
+  h+='<div class="agv-brand marrom"><img class="agv-logo" src="img/ieadet.png">'+
+     '<div><div class="agv-bnome" style="font-size:16px">IEADET</div><div class="agv-bsub">Igreja Evangélica Assembleia de Deus · Templo Central · Tuntum - MA</div></div></div>';
+  h+='<div class="agv-tit marrom"><b>Agenda Bimestral</b><span>Julho / Agosto de 2026</span></div>';
+  h+='<div class="agv-lista">';
+  h+=cardsMes([['JULHO DE 2026', AG_TEMPLO_JUL_R()],['AGOSTO DE 2026', AG_TEMPLO_AGO_R()]],'marrom');
+  // cultos semanais
+  h+='<div class="agv-secao">Agenda dos Cultos — Semanal</div>';
+  h+=AG_SEMANAL.map(function(g){
+    return '<div class="agv-wk"><div class="agv-wk-dia">'+g[0]+'</div>'+
+      g[1].map(function(i){return '<div class="agv-wk-item">• '+esc2(i)+'</div>';}).join('')+'</div>';
+  }).join('');
+  // cultos fixos templo central
+  h+='<div class="agv-secao">Cultos do Templo Central</div>';
+  h+=AG_TEMPLO_FIXO.map(function(g){
+    return '<div class="agv-wk"><div class="agv-wk-dia">'+g[0].toUpperCase()+'</div><div class="agv-wk-item">'+esc2(g[1])+'</div></div>';
+  }).join('');
+  // ensaios
+  h+='<div class="agv-secao">Ensaios Gerais — Domingo</div>';
+  h+=AG_ENSAIOS.map(function(g){
+    return '<div class="agv-wk"><div class="agv-wk-item"><b>'+esc2(g[0])+'</b> — '+esc2(g[1])+'</div></div>';
+  }).join('');
+  // mural
+  h+='<div class="agv-mural"><h4>📌 Mural de Avisos — O que ainda vem!</h4>'+
+     AG_MURAL.map(function(m){return '<div>'+esc2(m)+'</div>';}).join('')+'</div>';
+  h+='</div>';
+  var _tb=document.getElementById('templo-body');
+  _tb.innerHTML=h; _tb.scrollTop=0;
+  setTimeout(function(){_tb.scrollTop=0;},40);
+}
+// converte agendamentos [dia,data,ev,loc] -> [dataBadge,org,ev,loc]
+function AG_TEMPLO_JUL_R(){ return AG_TEMPLO_JUL.map(function(e){return [((e[0]?e[0]+' ':'')+e[1]), '', e[2], e[3]];}); }
+function AG_TEMPLO_AGO_R(){ return AG_TEMPLO_AGO.map(function(e){return [((e[0]?e[0]+' ':'')+e[1]), '', e[2], e[3]];}); }
+
 function abrirMod(id){
   localStorage.setItem('radar_ultimo_mod', id);
   ocultarTodas();
+  if(id==='perolas'){
+    document.getElementById('tela-perolas').classList.add('ativa');
+    return;
+  }
   if(id==='biblia'){
     document.getElementById('tela-bh-landing').classList.add('ativa');
     atualizarContadoresEv();
@@ -1394,6 +1633,8 @@ function abrirMod(id){
     abrirNoticias();
     return;
   }
+  if(id==='silas'){ abrirSilas(); return; }
+  if(id==='templo'){ abrirTemplo(); return; }
   modAtual=id;
   const m=MODS.find(x=>x.id===id);
   document.getElementById('mod-titulo-h').textContent=m.nome;
@@ -1929,6 +2170,28 @@ const EV_DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
 
 function getEventos(){ return JSON.parse(localStorage.getItem('radar_eventos')||'[]'); }
 function setEventos(arr){ localStorage.setItem('radar_eventos',JSON.stringify(arr)); }
+
+// Agenda Regional CEADEMA 2026 — avisos até o fim do ano (fonte: PDF oficial CEADEMA)
+const AGENDA_CEADEMA_2026=[
+  {id:'cea-0717',data:'2026-07-17',icone:'📣',titulo:'Cruzada CEADEMA – Projeto Barnabé (17 a 19/07) · AD Morros dos Cabocos, Bernardo do Mearim'},
+  {id:'cea-0808',data:'2026-08-08',icone:'📖',titulo:'3ª CREDC – Conferência Regional de Escola Dominical (Projetos Atos e Marcos) · AD Barreirinhas'},
+  {id:'cea-0821',data:'2026-08-21',icone:'📣',titulo:'Cruzada CEADEMA – Projeto Tito (21 a 23/08) · AD Brejo das Flores, Vitorino Freire'},
+  {id:'cea-0918',data:'2026-09-18',icone:'📣',titulo:'Cruzada CEADEMA – Projeto Atos (18 a 20/09) · AD Jussatuba, Icatu'},
+  {id:'cea-1016',data:'2026-10-16',icone:'📣',titulo:'Cruzada CEADEMA – Projeto Eliseu (16 a 18/10) · AD Conceição, Mirador'},
+  {id:'cea-1120',data:'2026-11-20',icone:'📣',titulo:'Cruzada CEADEMA – Projeto ENCOPAELO (20 a 22/11) · AD Maçaricó, Guimarães'},
+  {id:'cea-1120t',data:'2026-11-20',icone:'👑',titulo:'2º TILL – UNILIDER (20 a 21/11) · AD Bacabeira'},
+  {id:'cea-1212',data:'2026-12-12',icone:'📣',titulo:'Cruzada CEADEMA – Projeto Eliseu (12 a 13/12) · AD São João da Mata, Governador Luiz Rocha'},
+  {id:'cea-1219',data:'2026-12-19',icone:'🎄',titulo:'Cantata de Natal · Sede dos Polos'},
+];
+// semeia a agenda CEADEMA 1 vez, sem apagar/duplicar eventos que já existam
+function seedAgendaCeadema(){
+  if(localStorage.getItem('radar_seed_agenda_ceadema_v1')) return;
+  const base=getEventos(); const ids=new Set(base.map(e=>e.id));
+  const novos=AGENDA_CEADEMA_2026.filter(e=>!ids.has(e.id))
+    .map(e=>({id:e.id,titulo:e.titulo,modulo:'ebd',icone:e.icone,tipo:'data',data:e.data,hora:''}));
+  if(novos.length) setEventos(base.concat(novos));
+  localStorage.setItem('radar_seed_agenda_ceadema_v1','1');
+}
 
 function abrirEventos(modulo){
   evModuloAtual=modulo;
@@ -2700,6 +2963,165 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 function getCarouselCards(){
   return JSON.parse(localStorage.getItem('radar_carousel')||'[]');
 }
+// semeia os 6 cartazes da EBD no carrossel — 1 vez só, sem apagar cards que já existam
+function seedVideoInicio(){
+  if(localStorage.getItem('radar_seed_vidinicio_v1')) return;
+  var base=getCarouselCards();
+  if(!base.some(function(c){return c.id==='vid-inicio';})){
+    base.unshift({id:'vid-inicio',tipo:'mp4',video:'/carousel/video-inicio.mp4',titulo:'',ativo:true}); // vai pro começo
+    setCarouselCards(base);
+  }
+  localStorage.setItem('radar_seed_vidinicio_v1','1');
+}
+// vídeo MONTE CARMELO no começo do carrossel (1x só, não apaga o resto)
+function seedVideoMonteCarmelo(){
+  if(localStorage.getItem('radar_seed_montecarmelo_v1')) return;
+  var base=getCarouselCards();
+  if(!base.some(function(c){return c.id==='vid-montecarmelo';})){
+    base.unshift({id:'vid-montecarmelo',tipo:'mp4',video:'/carousel/monte-carmelo.mp4',titulo:'',ativo:true}); // vai pro começo
+    setCarouselCards(base);
+  }
+  localStorage.setItem('radar_seed_montecarmelo_v1','1');
+}
+// cartaz 7 no começo do carrossel (1x só, não apaga o resto)
+function seedCartaz7(){
+  if(localStorage.getItem('radar_seed_cartaz7_v1')) return;
+  var base=getCarouselCards();
+  if(!base.some(function(c){return c.id==='cartaz-7';})){
+    base.unshift({id:'cartaz-7',tipo:'imagem',imagem:'/carousel/7.jpg',titulo:'',link:'',ativo:true}); // vai pro começo
+    setCarouselCards(base);
+  }
+  localStorage.setItem('radar_seed_cartaz7_v1','1');
+}
+// cartaz 8 no começo do carrossel (1x só, não apaga o resto)
+function seedCartaz8(){
+  if(localStorage.getItem('radar_seed_cartaz8_v1')) return;
+  var base=getCarouselCards();
+  if(!base.some(function(c){return c.id==='cartaz-8';})){
+    base.unshift({id:'cartaz-8',tipo:'imagem',imagem:'/carousel/8.jpg',titulo:'',link:'',ativo:true}); // vai pro começo
+    setCarouselCards(base);
+  }
+  localStorage.setItem('radar_seed_cartaz8_v1','1');
+}
+// cartazes 9 e 10 no começo do carrossel (1x só, não apaga o resto)
+function seedCartaz910(){
+  if(localStorage.getItem('radar_seed_cartaz910_v1')) return;
+  var base=getCarouselCards();
+  var add=[];
+  if(!base.some(function(c){return c.id==='cartaz-9';}))  add.push({id:'cartaz-9', tipo:'imagem',imagem:'/carousel/9.jpg', titulo:'',link:'',ativo:true});
+  if(!base.some(function(c){return c.id==='cartaz-10';})) add.push({id:'cartaz-10',tipo:'imagem',imagem:'/carousel/10.jpg',titulo:'',link:'',ativo:true});
+  if(add.length){ base.unshift.apply(base, add); setCarouselCards(base); } // vão pro começo (9,10,...)
+  localStorage.setItem('radar_seed_cartaz910_v1','1');
+}
+
+// 🔔 NOVIDADE — avisa (apito + banner) quando sai conteúdo novo (cartaz/vídeo/evento)
+function novidadeSig(){
+  var ids=getCarouselCards().map(function(c){return c.id;}).sort().join(',');
+  var ev=[]; try{ ev=(JSON.parse(localStorage.getItem('radar_eventos')||'[]')).map(function(e){return e.id;}).sort(); }catch(_){}
+  return ids+'||'+ev.join(',');
+}
+function apitarNovidade(){
+  try{ if(navigator.vibrate) navigator.vibrate([130,70,130]); }catch(_){}
+  var done=false;
+  function play(){ if(done) return; try{
+    var C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+    var ctx=new C();
+    [[880,0,.18],[1245,.20,.32]].forEach(function(s){
+      var o=ctx.createOscillator(),g=ctx.createGain(); o.type='triangle'; o.frequency.value=s[0];
+      o.connect(g); g.connect(ctx.destination); var t=ctx.currentTime+s[1];
+      g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.35,t+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,t+s[2]); o.start(t); o.stop(t+s[2]+.03);
+    });
+    done=true;
+  }catch(_){} }
+  play(); // tenta na hora
+  // se o navegador bloqueou o som sem toque, apita no 1º toque na tela
+  document.addEventListener('pointerdown',function h(){ document.removeEventListener('pointerdown',h); play(); },{once:true});
+}
+function mostrarNovidade(){
+  apitarNovidade();
+  if(!document.getElementById('nv-style')){
+    var st=document.createElement('style'); st.id='nv-style';
+    st.textContent='.nv-toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-160%);z-index:99999;display:flex;align-items:center;gap:12px;max-width:92%;padding:14px 16px;border-radius:16px;background:linear-gradient(90deg,#C8A24A,#F2D98A);color:#241a0a;box-shadow:0 14px 36px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}.nv-toast.show{transform:translate(-50%,0)}.nv-toast .nvic{font-size:28px;animation:nvring .7s ease-in-out 3}.nv-toast b{font-size:17px;font-weight:800;display:block;line-height:1.1}.nv-toast small{font-size:13px;font-weight:600;opacity:.85}.nv-toast .nvx{margin-left:6px;font-size:22px;font-weight:800;opacity:.55;cursor:pointer;padding:0 4px}@keyframes nvring{0%,100%{transform:rotate(0)}25%{transform:rotate(-20deg)}75%{transform:rotate(20deg)}}';
+    document.head.appendChild(st);
+  }
+  var b=document.createElement('div'); b.className='nv-toast';
+  b.innerHTML='<span class="nvic">🔔</span><div><b>NOVIDADE!</b><small>Tem coisa nova no app — toca pra conferir!</small></div><span class="nvx">×</span>';
+  document.body.appendChild(b);
+  requestAnimationFrame(function(){ b.classList.add('show'); });
+  b.querySelector('.nvx').onclick=function(){ b.classList.remove('show'); setTimeout(function(){b.remove();},450); };
+  setTimeout(function(){ b.classList.remove('show'); setTimeout(function(){b.remove();},450); }, 7000);
+}
+function checkNovidade(){
+  var sig=novidadeSig();
+  var last=localStorage.getItem('radar_novidade_sig');
+  if(last===null){ localStorage.setItem('radar_novidade_sig',sig); return; } // 1ª vez: só registra, não alarma
+  if(last!==sig){ localStorage.setItem('radar_novidade_sig',sig); mostrarNovidade(); }
+}
+
+// ══ ESCAVADOR DE PÉROLAS BÍBLICAS ══
+function prlChip(t){ var i=document.getElementById('prl-input'); i.value=t; escavarPerola(); }
+function mdPerola(t){
+  var esc=(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  esc=esc.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');      // **negrito**
+  esc=esc.replace(/\*([^*\n]+)\*/g,'<i>$1</i>');          // *itálico*
+  var secRe=/^\d{1,2}[\.\)]\s*[\u{1F000}-\u{1FAFF}☀-➿←-⇿⬀-⯿]/u;
+  var out=esc.split('\n').map(function(ln){
+    var s=ln.trim();
+    if(!s) return '';
+    if(/^#{1,6}\s+/.test(s)) return '<h3>'+s.replace(/^#{1,6}\s+/,'')+'</h3>';
+    // "1. 📖 TÍTULO — corpo do texto": separa o TÍTULO (vira cabeçalho) do CORPO (vira parágrafo justificado)
+    if(secRe.test(s)){
+      var m=s.match(/^([\s\S]*?)\s[—–:-]\s([\s\S]*)$/);
+      if(m) return '<h3>'+m[1].trim()+'</h3><p>'+m[2].trim()+'</p>';
+      return '<h3>'+s+'</h3>';
+    }
+    return '<p>'+s+'</p>';
+  }).join('');
+  return out;
+}
+async function escavarPerola(){
+  var inp=document.getElementById('prl-input'), out=document.getElementById('prl-out'), btn=document.getElementById('prl-btn');
+  var q=(inp.value||'').trim();
+  if(!q){ inp.focus(); return; }
+  inp.blur();
+  btn.disabled=true; var lbl=btn.textContent; btn.textContent='⛏️ Escavando…';
+  out.innerHTML='<div class="prl-loading">💎 Buscando pérolas nas Escrituras…</div>';
+  var box=document.querySelector('#tela-perolas .prl-scroll');
+  var acc='';
+  try{
+    var r=await fetch('/api/perolas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({passagem:q})});
+    if(!r.ok || !r.body){ var msg=await r.text().catch(function(){return'';}); throw new Error(msg||('erro '+r.status)); }
+    var reader=r.body.getReader(), dec=new TextDecoder();
+    out.innerHTML='';
+    while(true){
+      var chunk=await reader.read();
+      if(chunk.done) break;
+      acc+=dec.decode(chunk.value,{stream:true});
+      out.innerHTML=mdPerola(acc);
+      out.classList.add('prl-cursor');
+      if(box) box.scrollTop=box.scrollHeight;
+    }
+    out.classList.remove('prl-cursor');
+    if(!acc.trim()) out.innerHTML='<div class="prl-loading">Não consegui gerar agora. Tente de novo.</div>';
+  }catch(e){
+    out.classList.remove('prl-cursor');
+    out.innerHTML='<div class="prl-loading">⚠️ '+((e&&e.message)||'Não deu pra escavar agora.')+' Confira a internet e tente de novo.</div>';
+  }
+  btn.disabled=false; btn.textContent=lbl;
+}
+function seedCartazes(){
+  if(localStorage.getItem('radar_seed_cartaz_v2')) return;   // v2 = cartazes em alta qualidade (.jpg)
+  const cards=getCarouselCards();
+  [1,2,3,4,5,6].forEach(function(n){
+    const id='cartaz-'+n, path='/carousel/'+n+'.jpg';
+    const c=cards.find(function(x){return x.id===id;});
+    if(c){ c.imagem=path; c.tipo='imagem'; if(c.ativo===undefined)c.ativo=true; } // troca o antigo pelo novo
+    else { cards.push({id:id,tipo:'imagem',imagem:path,titulo:'',link:'',ativo:true}); } // novo aparelho
+  });
+  setCarouselCards(cards);
+  localStorage.setItem('radar_seed_cartaz_v2','1');
+}
 function setCarouselCards(arr){
   localStorage.setItem('radar_carousel',JSON.stringify(arr));
 }
@@ -2732,6 +3154,9 @@ function renderCarousel(){
     if(c.tipo==='imagem'){
       inner=`<img class="cs-img" src="${c.imagem||''}" alt="${c.titulo||''}" onerror="this.style.display='none'">`;
       if(c.titulo) inner+=`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`;
+    } else if(c.tipo==='mp4'){
+      inner=`<video class="cs-mp4" src="${c.video||''}" controls playsinline preload="metadata"></video>`;
+      if(c.titulo) inner+=`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`;
     } else if(c.tipo==='video'){
       const thumb=ytThumbUrl(c.video||'');
       inner=`<div class="cs-video-thumb" onclick="abrirVideoCard(${i})">
@@ -2744,7 +3169,7 @@ function renderCarousel(){
       </div>`;
     }
     const link=c.link?`onclick="window.open('${c.link}','_blank')" style="cursor:pointer"`:
-      (c.tipo!=='video'?'onclick="void(0)"':'');
+      ((c.tipo!=='video'&&c.tipo!=='mp4')?'onclick="void(0)"':'');
     return `<div class="carousel-slide" ${link}>${inner}</div>`;
   }).join('');
 
@@ -2765,9 +3190,26 @@ function renderCarousel(){
     dx<0?irSlide(_carIdx+1):irSlide(_carIdx-1);
   },{ passive:true });
 
-  // auto-advance
-  clearInterval(_carTimer);
-  if(cards.length>1) _carTimer=setInterval(()=>irSlide((_carIdx+1)%cards.length),5000);
+  // agenda inteligente do carrossel (slide normal = 5s; slide de vídeo = toca até acabar)
+  agendarSlide();
+}
+// decide quando passar o slide atual: vídeo toca sozinho e só avança ao terminar; os outros passam em 5s
+function agendarSlide(){
+  clearTimeout(_carTimer); clearInterval(_carTimer);
+  const cards=getCarouselCards().filter(c=>c.ativo!==false);
+  const slides=document.querySelectorAll('.carousel-slide');
+  slides.forEach((s,i)=>{ const v=s.querySelector('video.cs-mp4'); if(v && i!==_carIdx){ try{ v.pause(); v.currentTime=0; }catch(e){} } });
+  if(cards.length<2) return;
+  const cur=slides[_carIdx];
+  const vid=cur?cur.querySelector('video.cs-mp4'):null;
+  if(vid){
+    vid.muted=true;                                   // mudo → o navegador deixa tocar sozinho (toque no vídeo p/ ouvir)
+    try{ vid.currentTime=0; }catch(e){}
+    const p=vid.play(); if(p&&p.catch) p.catch(()=>{});
+    vid.onended=()=>irSlide(_carIdx+1);               // acabou o vídeo → passa pro próximo
+  } else {
+    _carTimer=setTimeout(()=>irSlide(_carIdx+1),5000); // slide normal passa em 5s
+  }
 }
 
 function irSlide(idx){
@@ -2777,6 +3219,7 @@ function irSlide(idx){
   const track=document.getElementById('car-track');
   if(track) track.style.transform=`translateX(-${_carIdx*100}%)`;
   document.querySelectorAll('.c-dot').forEach((d,i)=>d.classList.toggle('on',i===_carIdx));
+  agendarSlide();
 }
 
 function abrirVideoCard(idx){
