@@ -1326,7 +1326,7 @@ const MODS = [
   {id:'silas',   nome:'Projeto Silas',            icon:'✝️', img:'img/ceadema.png', cor:'#0e2a63', desc:'Documentos, cartazes, vídeos'},
   {id:'templo',  nome:'Templo Central Tuntum-MA', icon:'⛪', cor:'#f5a623', desc:'Sede central — Tuntum-MA'},
   {id:'igrejas', nome:'Igrejas Parceiras',        icon:'📣', cor:'#2563eb', desc:'Conheça igrejas · divulgue a sua'},
-  {id:'manuais', nome:'Manuais e Afins',          icon:'📚', cor:'#7c3aed', desc:'Livros e manuais do obreiro'},
+  {id:'manuais', nome:'Biblioteca',               icon:'📚', cor:'#7c3aed', desc:'Livros e manuais do obreiro'},
 ];
 
 // ══ STATE ═════════════════════════════════════════
@@ -1559,8 +1559,8 @@ function renderHome(){
   }).join('');
 }
 function compartilharManuais(){
-  var txt='📚 *Manuais e Afins* — livros e manuais do obreiro no app RADAR (Manual de Cerimônias e mais).\n\nAcesse aqui:\nhttps://radar-atual.vercel.app/?mod=manuais';
-  if(navigator.share){ navigator.share({title:'Manuais e Afins — RADAR',text:txt}).catch(function(){}); }
+  var txt='📚 *Biblioteca* — livros e manuais do obreiro no app RADAR (Manual de Cerimônias e mais).\n\nAcesse aqui:\nhttps://radar-atual.vercel.app/?mod=manuais';
+  if(navigator.share){ navigator.share({title:'Biblioteca — RADAR',text:txt}).catch(function(){}); }
   else { window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
 }
 function buscaGlobal(q){
@@ -5121,7 +5121,7 @@ const _crmInitMap = {
 <div class="tela" id="tela-manuais">
   <div class="std-header">
     <button class="std-back" onclick="irHome()">←</button>
-    <div class="std-hinfo"><div class="std-titulo">📚 Manuais e Afins</div><div class="std-sub">Livros e manuais do obreiro</div></div>
+    <div class="std-hinfo"><div class="std-titulo">📚 Biblioteca</div><div class="std-sub">Livros e manuais do obreiro</div></div>
     <div style="width:36px"></div>
   </div>
   <div class="dash-scroll" style="padding:14px" id="manuais-lista"></div>
