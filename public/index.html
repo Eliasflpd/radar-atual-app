@@ -1545,12 +1545,14 @@ function renderHome(){
       + `<div class="tile-info"><div class="tile-nome">${m.nome}</div><div class="tile-desc">${m.desc}</div></div>`
       + `<div class="tile-arr">›</div>`;
     if(m.id==='manuais'){
-      // botão de compartilhar ENCAIXADO DENTRO do card
-      return `<div class="modulo-tile" style="--tile-color:${m.cor};flex-direction:column;align-items:stretch;gap:0">
-        <div style="display:flex;align-items:center;gap:14px;cursor:pointer" onclick="abrirMod('manuais')">${linha}</div>
-        <div style="display:flex;justify-content:flex-end;margin-top:12px">
-          <button onclick="event.stopPropagation();compartilharManuais()" style="display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:999px;padding:8px 14px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 12px rgba(37,211,102,.3)">📤 Compartilhar Manuais e Afins</button>
+      // botão de compartilhar DENTRO do card, na MESMA LINHA (mantém a altura igual aos outros)
+      return `<div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('manuais')">
+        <div class="tile-icon">${m.img?`<img class="tile-icon-img" src="${m.img}">`:m.icon}</div>
+        <div class="tile-info" style="min-width:0">
+          <div class="tile-nome" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.nome}</div>
+          <div class="tile-desc" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.desc}</div>
         </div>
+        <button onclick="event.stopPropagation();compartilharManuais()" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer">📤 Compartilhar</button>
       </div>`;
     }
     return `<div class="modulo-tile" style="--tile-color:${m.cor}" onclick="abrirMod('${m.id}')">${linha}</div>`;
