@@ -49,6 +49,12 @@ module.exports = async (req, res) => {
       }
       const token = (req.query && req.query.token) || '';
       if (token !== process.env.RADAR_ADMIN_TOKEN) { res.status(401).json({ error: 'não autorizado' }); return; }
+      const del = ((req.query && req.query.del) || '').replace(/\D/g, ''); // admin apaga um cadastro pelo WhatsApp
+      if (del) {
+        const rd = await c.query('delete from radar_cadastros where regexp_replace(coalesce(whatsapp,\'\'),\'\\D\',\'\',\'g\') = $1', [del]);
+        res.json({ ok: true, apagados: rd.rowCount });
+        return;
+      }
       const r = await c.query('select nome,cargo,whatsapp,criado_em from radar_cadastros order by criado_em desc');
       res.json({ total: r.rows.length, cadastros: r.rows });
     }

@@ -2900,9 +2900,19 @@ async function renderCadastros(){
         +'<div style="font-size:12.5px;color:var(--gold);font-weight:600">'+(c.cargo||'')+'</div>'
         +'<div style="font-size:12.5px;color:var(--sub)">📱 '+foneFmt+'</div></div>'
         +(wa?'<a href="'+wa+'" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;font-size:13px;font-weight:800;padding:10px 14px;border-radius:999px;text-decoration:none">💬 Recado</a>':'')
+        +(fone?'<button onclick="apagarCadastro(\''+fone+'\',\''+(c.nome||'').replace(/\x27/g,"")+'\')" style="flex-shrink:0;background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.3);color:#ff6b6b;font-size:16px;padding:9px 11px;border-radius:999px;cursor:pointer;line-height:1">🗑️</button>':'')
         +'</div>';
     }).join('');
   }catch(e){ box.innerHTML='<div style="text-align:center;color:var(--red);padding:30px">Erro ao carregar. Tente de novo.</div>'; }
+}
+async function apagarCadastro(fone,nome){
+  if(!confirm('Apagar o cadastro de '+(nome||'esta pessoa')+'?\n\nEla não perde acesso agora, mas some da sua lista.')) return;
+  try{
+    var r=await fetch('/api/cadastros?token=radar-elias-2026&del='+encodeURIComponent(fone));
+    var d=await r.json();
+    if(d&&d.ok){ renderCadastros(); }
+    else alert('Não deu pra apagar. Tente de novo.');
+  }catch(e){ alert('Erro ao apagar.'); }
 }
 
 // ── ANALYTICS / TRACKING ──────────────────────────────────
