@@ -3168,36 +3168,34 @@ function mdParaHtml(md){
   md=md.replace(/^---[\s\S]*?---\s*/, '');
   var linhas=md.split(/\r?\n/);
   var out=[], toc=[], buf=[], nH=0;
-  function flush(){ if(buf.length){ out.push('<p style="margin:0 0 14px">'+esc(buf.join(' '))+'</p>'); buf=[]; } }
+  function flush(){ if(buf.length){ out.push('<p style="margin:0 0 15px;text-align:justify;-webkit-hyphens:auto;hyphens:auto">'+esc(buf.join(' '))+'</p>'); buf=[]; } }
   for(var i=0;i<linhas.length;i++){
     var L=linhas[i].trim();
     if(!L){ flush(); continue; }
-    // pula o índice bagunçado do PDF (linha com muitos pontinhos) e o título "índice"
     if(/\.{6,}/.test(L)){ flush(); continue; }
     var mH=L.match(/^(#{1,3})\s+(.*)$/);
     if(mH){
       flush();
       var nivel=mH[1].length, txt=mH[2].trim();
       if(/^r?índice$/i.test(txt)||/^cpc$/i.test(txt)){ continue; }
-      if(nivel<=2){
-        nH++; var aid='mh'+nH; toc.push({id:aid,txt:txt});
-        out.push('<h2 id="'+aid+'" style="font-family:\'Playfair Display\',serif;font-size:20px;color:var(--gold2);margin:26px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)">'+esc(txt)+'</h2>');
+      nH++; var aid='mh'+nH; toc.push({id:aid, txt:txt, sub:(nivel>=3)});
+      if(nivel>=3){
+        out.push('<h3 id="'+aid+'" style="font-family:Lora,Georgia,serif;font-size:17px;font-weight:700;color:#8a6a2f;margin:22px 0 8px">'+esc(txt)+'</h3>');
       } else {
-        out.push('<h3 style="font-family:\'Playfair Display\',serif;font-size:16px;color:var(--gold);margin:20px 0 8px">'+esc(txt)+'</h3>');
+        out.push('<h2 id="'+aid+'" style="font-family:Lora,Georgia,serif;font-size:21px;font-weight:800;color:#6b4a1e;margin:32px 0 13px;padding-bottom:8px;border-bottom:2px solid #e5dcc8">'+esc(txt)+'</h2>');
       }
       continue;
     }
-    if(/^[-•]\s+/.test(L)){ flush(); out.push('<div style="display:flex;gap:8px;margin:0 0 8px"><span style="color:var(--gold)">•</span><span>'+esc(L.replace(/^[-•]\s+/,''))+'</span></div>'); continue; }
+    if(/^[-•]\s+/.test(L)){ flush(); out.push('<div style="display:flex;gap:9px;margin:0 0 9px;text-align:left"><span style="color:#8a6a2f;font-weight:700">•</span><span>'+esc(L.replace(/^[-•]\s+/,''))+'</span></div>'); continue; }
     buf.push(L);
   }
   flush();
-  var tocHtml='';
-  if(toc.length>3){
-    tocHtml='<div style="background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:22px">'
-      +'<div style="font-family:\'Playfair Display\',serif;font-size:15px;color:var(--gold2);font-weight:700;margin-bottom:10px">📑 Índice</div>'
-      +toc.map(function(t){ var d=t.txt.length>44?(t.txt.slice(0,44).replace(/\s+\S*$/,'')+'…'):t.txt; return '<div onclick="irAncora(\''+t.id+'\')" style="font-size:13.5px;color:var(--txt);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">'+esc(d)+'</div>'; }).join('')
-      +'</div>';
-  }
+  var tocHtml='<div style="background:#fff;border:1px solid #e5dcc8;border-radius:12px;padding:16px 18px;margin-bottom:28px;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
+    +'<div style="font-family:Lora,Georgia,serif;font-size:18px;color:#6b4a1e;font-weight:800;margin-bottom:12px;text-align:center">📖 Índice</div>'
+    +toc.map(function(t){
+        return '<div onclick="irAncora(\''+t.id+'\')" style="cursor:pointer;color:'+(t.sub?'#6b5f4d':'#2b2620')+';font-size:'+(t.sub?'13px':'14.5px')+';font-weight:'+(t.sub?'400':'700')+';padding:'+(t.sub?'5px 0 5px 20px':'8px 0')+';border-bottom:1px solid #efe8d8">'+(t.sub?'– ':'')+esc(t.txt)+'</div>';
+      }).join('')
+    +'</div>';
   return tocHtml+out.join('\n');
 }
 function irAncora(id){
@@ -5133,14 +5131,14 @@ const _crmInitMap = {
     <div class="std-hinfo"><div class="std-titulo" id="man-titulo">Manual</div><div class="std-sub" id="man-autor"></div></div>
     <div style="width:36px"></div>
   </div>
-  <div class="dash-scroll" style="padding:0">
-    <div style="margin:14px 16px 0;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.28);border-radius:12px;padding:11px 13px;display:flex;gap:10px;align-items:flex-start">
-      <span style="font-size:17px">⚠️</span>
-      <div style="font-size:11.5px;color:#ffb3b3;line-height:1.45">Conteúdo protegido por <b>direitos autorais</b>. Leitura permitida somente dentro do app. <b>Pirataria é crime</b> — Lei 9.610/98. Proibida a cópia, download ou distribuição.</div>
+  <div class="dash-scroll" style="padding:0;background:#faf7f0">
+    <div style="background:#fdeeee;border-bottom:1px solid #f2cccc;padding:10px 18px;display:flex;gap:9px;align-items:flex-start">
+      <span style="font-size:15px">⚠️</span>
+      <div style="font-size:11px;color:#a33b3b;line-height:1.4"><b>Pirataria é crime</b> (Lei 9.610/98). Leitura permitida somente no app. Proibida a cópia, download ou distribuição.</div>
     </div>
-    <div id="manual-conteudo" oncontextmenu="return false" ondragstart="return false" oncopy="return false" style="padding:18px 16px;font-family:'Lora',serif;line-height:1.7;color:var(--txt);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none"></div>
-    <div style="padding:0 16px 30px">
-      <button onclick="document.getElementById('tela-manual-leitor').querySelector('.dash-scroll').scrollTo({top:0,behavior:'smooth'})" style="width:100%;background:var(--card2);color:var(--gold);border:1px solid var(--line);border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">↑ Voltar ao topo</button>
+    <div id="manual-conteudo" lang="pt" oncontextmenu="return false" ondragstart="return false" oncopy="return false" style="background:#faf7f0;padding:24px 22px;font-family:'Lora',Georgia,serif;font-size:16.5px;line-height:1.85;color:#2b2620;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none"></div>
+    <div style="padding:4px 22px 34px;background:#faf7f0">
+      <button onclick="document.getElementById('tela-manual-leitor').querySelector('.dash-scroll').scrollTo({top:0,behavior:'smooth'})" style="width:100%;background:#fff;color:#6b4a1e;border:1px solid #e5dcc8;border-radius:12px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">↑ Voltar ao topo</button>
     </div>
   </div>
 </div>
