@@ -1550,7 +1550,7 @@ function renderHome(){
       <div class="tile-arr">›</div>
     </div>`
     + (m.id==='manuais'
-      ? `<button onclick="event.stopPropagation();compartilharManuais()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:16px;padding:15px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:2px;box-shadow:0 6px 18px rgba(37,211,102,.28)">📤 Compartilhar Manuais e Afins</button>`
+      ? `<div style="display:flex;justify-content:flex-end;margin-top:8px"><button onclick="event.stopPropagation();compartilharManuais()" style="display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;border:none;border-radius:999px;padding:9px 15px;font-size:12.5px;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 12px rgba(37,211,102,.3)">📤 Compartilhar Manuais e Afins</button></div>`
       : '')
   ).join('');
 }
