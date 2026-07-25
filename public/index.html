@@ -1323,6 +1323,7 @@ const MODS = [
   {id:'silas',   nome:'Projeto Silas',            icon:'✝️', img:'img/ceadema.png', cor:'#0e2a63', desc:'Documentos, cartazes, vídeos'},
   {id:'templo',  nome:'Templo Central Tuntum-MA', icon:'⛪', cor:'#f5a623', desc:'Sede central — Tuntum-MA'},
   {id:'igrejas', nome:'Igrejas Parceiras',        icon:'📣', cor:'#2563eb', desc:'Conheça igrejas · divulgue a sua'},
+  {id:'manuais', nome:'Manuais e Afins',          icon:'📚', cor:'#7c3aed', desc:'Livros e manuais do obreiro'},
 ];
 
 // ══ STATE ═════════════════════════════════════════
@@ -1788,6 +1789,7 @@ function abrirMod(id){
   if(id==='silas'){ abrirSilas(); return; }
   if(id==='templo'){ abrirTemplo(); return; }
   if(id==='igrejas'){ abrirIgrejas(); return; }
+  if(id==='manuais'){ abrirManuais(); return; }
   modAtual=id;
   const m=MODS.find(x=>x.id===id);
   document.getElementById('mod-titulo-h').textContent=m.nome;
@@ -3119,6 +3121,94 @@ async function apagarIgreja(id,nome){
     if(d&&d.ok) renderIgrejasAdm(); else alert('Não deu pra apagar.');
   }catch(e){ alert('Erro ao apagar.'); }
 }
+
+// ══ MANUAIS E AFINS (estante de livros) ══════════════════════
+const MANUAIS = [
+  { id:'cerimonias', titulo:'Manual de Cerimônias', autor:'Temóteo Ramos de Oliveira',
+    emoji:'⛪', cor:'#7c3aed',
+    desc:'Roteiros para casamento, funeral, batismo, ceia, ordenação e todas as cerimônias do obreiro.',
+    arquivo:'/manuais/cerimonias.md' }
+];
+let _manualAtual = null;
+
+function abrirManuais(){ mostrarTela('tela-manuais'); renderManuais(); }
+function renderManuais(){
+  var box=document.getElementById('manuais-lista');
+  box.innerHTML=MANUAIS.map(function(m){
+    return '<div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px">'
+      +'<div onclick="abrirManual(\''+m.id+'\')" style="display:flex;gap:14px;align-items:center;cursor:pointer">'
+      +'<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,'+m.cor+',#5b21b6);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">'+m.emoji+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">'+m.titulo+'</div>'
+      +'<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">'+m.autor+'</div>'
+      +'<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">'+m.desc+'</div></div>'
+      +'<div style="color:var(--sub);font-size:20px">›</div></div>'
+      +'<button onclick="compartilharManual(\''+m.id+'\')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:11px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:14px">📤 Compartilhar</button>'
+      +'</div>';
+  }).join('');
+}
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function mdParaHtml(md){
+  // tira frontmatter
+  md=md.replace(/^---[\s\S]*?---\s*/, '');
+  var linhas=md.split(/\r?\n/);
+  var out=[], toc=[], buf=[], nH=0;
+  function flush(){ if(buf.length){ out.push('<p style="margin:0 0 14px">'+esc(buf.join(' '))+'</p>'); buf=[]; } }
+  for(var i=0;i<linhas.length;i++){
+    var L=linhas[i].trim();
+    if(!L){ flush(); continue; }
+    // pula o índice bagunçado do PDF (linha com muitos pontinhos) e o título "índice"
+    if(/\.{6,}/.test(L)){ flush(); continue; }
+    var mH=L.match(/^(#{1,3})\s+(.*)$/);
+    if(mH){
+      flush();
+      var nivel=mH[1].length, txt=mH[2].trim();
+      if(/^r?índice$/i.test(txt)||/^cpc$/i.test(txt)){ continue; }
+      if(nivel<=2){
+        nH++; var aid='mh'+nH; toc.push({id:aid,txt:txt});
+        out.push('<h2 id="'+aid+'" style="font-family:\'Playfair Display\',serif;font-size:20px;color:var(--gold2);margin:26px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)">'+esc(txt)+'</h2>');
+      } else {
+        out.push('<h3 style="font-family:\'Playfair Display\',serif;font-size:16px;color:var(--gold);margin:20px 0 8px">'+esc(txt)+'</h3>');
+      }
+      continue;
+    }
+    if(/^[-•]\s+/.test(L)){ flush(); out.push('<div style="display:flex;gap:8px;margin:0 0 8px"><span style="color:var(--gold)">•</span><span>'+esc(L.replace(/^[-•]\s+/,''))+'</span></div>'); continue; }
+    buf.push(L);
+  }
+  flush();
+  var tocHtml='';
+  if(toc.length>3){
+    tocHtml='<div style="background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:22px">'
+      +'<div style="font-family:\'Playfair Display\',serif;font-size:15px;color:var(--gold2);font-weight:700;margin-bottom:10px">📑 Índice</div>'
+      +toc.map(function(t){ return '<div onclick="irAncora(\''+t.id+'\')" style="font-size:13.5px;color:var(--txt);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">'+esc(t.txt)+'</div>'; }).join('')
+      +'</div>';
+  }
+  return tocHtml+out.join('\n');
+}
+function irAncora(id){
+  var el=document.getElementById(id); if(!el) return;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function abrirManual(id){
+  var m=MANUAIS.find(function(x){return x.id===id;}); if(!m) return;
+  _manualAtual=m;
+  document.getElementById('man-titulo').textContent=m.titulo;
+  document.getElementById('man-autor').textContent=m.autor;
+  var box=document.getElementById('manual-conteudo');
+  box.innerHTML='<div style="text-align:center;color:var(--sub);padding:40px">Abrindo o manual…</div>';
+  mostrarTela('tela-manual-leitor');
+  document.querySelector('#tela-manual-leitor .dash-scroll').scrollTop=0;
+  try{
+    var r=await fetch(m.arquivo); var t=await r.text();
+    box.innerHTML=mdParaHtml(t);
+  }catch(e){ box.innerHTML='<div style="text-align:center;color:#ff6b6b;padding:40px">Não deu pra abrir. Tente de novo.</div>'; }
+}
+function compartilharManual(id){
+  var m=MANUAIS.find(function(x){return x.id===id;}); if(!m) return;
+  var txt='📚 *'+m.titulo+'* — '+m.autor+'\n'+m.desc+'\n\nLeia no app RADAR:\nhttps://radar-atual.vercel.app';
+  if(navigator.share){ navigator.share({title:m.titulo,text:txt}).catch(function(){}); }
+  else { window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
+}
+function compartilharManualAtual(){ if(_manualAtual) compartilharManual(_manualAtual.id); }
 
 // ── ANALYTICS / TRACKING ──────────────────────────────────
 function trackVisit(modulo){
@@ -5006,6 +5096,32 @@ const _crmInitMap = {
     <button id="igr-btn-salvar" onclick="submitIgreja()" style="width:100%;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:8px">Publicar igreja</button>
     <div id="igr-form-msg" style="text-align:center;font-size:13px;margin-top:12px;color:var(--sub)"></div>
     <div style="height:24px"></div>
+  </div>
+</div>
+
+<!-- ══ MANUAIS E AFINS (estante) ══ -->
+<div class="tela" id="tela-manuais">
+  <div class="std-header">
+    <button class="std-back" onclick="irHome()">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📚 Manuais e Afins</div><div class="std-sub">Livros e manuais do obreiro</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="dash-scroll" style="padding:14px" id="manuais-lista"></div>
+</div>
+
+<!-- ══ MANUAL — LEITOR ══ -->
+<div class="tela" id="tela-manual-leitor">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirManuais()">←</button>
+    <div class="std-hinfo"><div class="std-titulo" id="man-titulo">Manual</div><div class="std-sub" id="man-autor"></div></div>
+    <button onclick="compartilharManualAtual()" style="background:none;border:none;color:var(--gold);font-size:19px;padding:0;cursor:pointer;line-height:1">↗</button>
+  </div>
+  <div class="dash-scroll" style="padding:0">
+    <div id="manual-conteudo" style="padding:18px 16px;font-family:'Lora',serif;line-height:1.7;color:var(--txt)"></div>
+    <div style="padding:0 16px 30px">
+      <button onclick="compartilharManualAtual()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer">📤 Compartilhar este manual</button>
+      <button onclick="document.getElementById('tela-manual-leitor').querySelector('.dash-scroll').scrollTo({top:0,behavior:'smooth'})" style="width:100%;background:var(--card2);color:var(--gold);border:1px solid var(--line);border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:10px">↑ Voltar ao topo</button>
+    </div>
   </div>
 </div>
 
