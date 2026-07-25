@@ -3136,7 +3136,7 @@ const MANUAIS = [
   { id:'cerimonias', titulo:'Manual de Cerimônias', autor:'Temóteo Ramos de Oliveira',
     emoji:'⛪', cor:'#7c3aed',
     desc:'Roteiros para casamento, funeral, batismo, ceia, ordenação e todas as cerimônias do obreiro.',
-    arquivo:'/manuais/cerimonias.md' }
+    arquivo:'/api/manual?id=cerimonias' }
 ];
 let _manualAtual = null;
 
@@ -3153,7 +3153,8 @@ function renderManuais(){
       +'<div style="color:var(--sub);font-size:20px">›</div></div>'
       +'<button onclick="compartilharManual(\''+m.id+'\')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:11px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:14px">📤 Compartilhar</button>'
       +'</div>';
-  }).join('');
+  }).join('')
+  + '<div style="background:rgba(255,80,80,.07);border:1px solid rgba(255,80,80,.25);border-radius:12px;padding:12px 14px;margin-top:6px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:17px">⚠️</span><div style="font-size:11.5px;color:#ffb3b3;line-height:1.45"><b>Pirataria é crime</b> (Lei 9.610/98). Este material é protegido por direitos autorais e só pode ser lido dentro do app. Proibida a cópia, download ou distribuição.</div></div>';
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function mdParaHtml(md){
@@ -5126,7 +5127,11 @@ const _crmInitMap = {
     <button onclick="compartilharManualAtual()" style="background:none;border:none;color:var(--gold);font-size:19px;padding:0;cursor:pointer;line-height:1">↗</button>
   </div>
   <div class="dash-scroll" style="padding:0">
-    <div id="manual-conteudo" style="padding:18px 16px;font-family:'Lora',serif;line-height:1.7;color:var(--txt)"></div>
+    <div style="margin:14px 16px 0;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.28);border-radius:12px;padding:11px 13px;display:flex;gap:10px;align-items:flex-start">
+      <span style="font-size:17px">⚠️</span>
+      <div style="font-size:11.5px;color:#ffb3b3;line-height:1.45">Conteúdo protegido por <b>direitos autorais</b>. Leitura permitida somente dentro do app. <b>Pirataria é crime</b> — Lei 9.610/98. Proibida a cópia, download ou distribuição.</div>
+    </div>
+    <div id="manual-conteudo" oncontextmenu="return false" ondragstart="return false" oncopy="return false" style="padding:18px 16px;font-family:'Lora',serif;line-height:1.7;color:var(--txt);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none"></div>
     <div style="padding:0 16px 30px">
       <button onclick="compartilharManualAtual()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer">📤 Compartilhar este manual</button>
       <button onclick="document.getElementById('tela-manual-leitor').querySelector('.dash-scroll').scrollTo({top:0,behavior:'smooth'})" style="width:100%;background:var(--card2);color:var(--gold);border:1px solid var(--line);border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:10px">↑ Voltar ao topo</button>
