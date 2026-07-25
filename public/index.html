@@ -1322,6 +1322,7 @@ const MODS = [
   {id:'ebd',     nome:'EBD',                      icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
   {id:'silas',   nome:'Projeto Silas',            icon:'✝️', img:'img/ceadema.png', cor:'#0e2a63', desc:'Documentos, cartazes, vídeos'},
   {id:'templo',  nome:'Templo Central Tuntum-MA', icon:'⛪', cor:'#f5a623', desc:'Sede central — Tuntum-MA'},
+  {id:'igrejas', nome:'Igrejas Parceiras',        icon:'📣', cor:'#2563eb', desc:'Conheça igrejas · divulgue a sua'},
 ];
 
 // ══ STATE ═════════════════════════════════════════
@@ -1786,6 +1787,7 @@ function abrirMod(id){
   }
   if(id==='silas'){ abrirSilas(); return; }
   if(id==='templo'){ abrirTemplo(); return; }
+  if(id==='igrejas'){ abrirIgrejas(); return; }
   modAtual=id;
   const m=MODS.find(x=>x.id===id);
   document.getElementById('mod-titulo-h').textContent=m.nome;
@@ -2878,6 +2880,7 @@ function abrirAdm(modulo){
     case 'usuarios':    abrirTelaAdm('tela-adm-usuarios'); break;
     case 'config':      abrirTelaAdm('tela-adm-config'); setTimeout(renderCfgCards,50); break;
     case 'cadastros':   abrirTelaAdm('tela-adm-cadastros'); renderCadastros(); break;
+    case 'igrejas':     abrirTelaAdm('tela-adm-igrejas'); renderIgrejasAdm(); break;
   }
 }
 // lista TODOS os cadastros (da nuvem) com botão de recado no WhatsApp
@@ -2912,6 +2915,208 @@ async function apagarCadastro(fone,nome){
     var d=await r.json();
     if(d&&d.ok){ renderCadastros(); }
     else alert('Não deu pra apagar. Tente de novo.');
+  }catch(e){ alert('Erro ao apagar.'); }
+}
+
+// ══ IGREJAS PARCEIRAS (CRM divulgação) ═══════════════════════
+let _igrejaForm = { id:null, capa:'', fotos:[], videos:[], avisos:[] };
+
+function comprimirImagem(file, max, cb){
+  var fr=new FileReader();
+  fr.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width, h=img.height, m=max||1000;
+      if(w>h && w>m){ h=Math.round(h*m/w); w=m; }
+      else if(h>=w && h>m){ w=Math.round(w*m/h); h=m; }
+      var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      cb(cv.toDataURL('image/jpeg',0.72));
+    };
+    img.src=e.target.result;
+  };
+  fr.readAsDataURL(file);
+}
+function igrejaSetCapa(input){
+  var f=input.files&&input.files[0]; if(!f) return;
+  comprimirImagem(f,1100,function(d){ _igrejaForm.capa=d; renderIgrejaCapaPrev(); });
+}
+function renderIgrejaCapaPrev(){
+  var el=document.getElementById('igr-capa-prev');
+  el.innerHTML=_igrejaForm.capa
+    ? '<div style="position:relative"><img src="'+_igrejaForm.capa+'" style="width:100%;height:150px;object-fit:cover;border-radius:14px"><button onclick="_igrejaForm.capa=\'\';renderIgrejaCapaPrev()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:15px">✕</button></div>'
+    : '';
+}
+function igrejaAddFoto(input){
+  var f=input.files&&input.files[0]; if(!f) return;
+  if(_igrejaForm.fotos.length>=8){ alert('Máximo de 8 fotos.'); input.value=''; return; }
+  comprimirImagem(f,1000,function(d){ _igrejaForm.fotos.push(d); renderIgrejaFotosPrev(); input.value=''; });
+}
+function renderIgrejaFotosPrev(){
+  document.getElementById('igr-fotos-prev').innerHTML=_igrejaForm.fotos.map(function(d,i){
+    return '<div style="position:relative;width:72px;height:72px"><img src="'+d+'" style="width:72px;height:72px;object-fit:cover;border-radius:10px"><button onclick="_igrejaForm.fotos.splice('+i+',1);renderIgrejaFotosPrev()" style="position:absolute;top:-6px;right:-6px;background:#ff5050;color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px;line-height:1">✕</button></div>';
+  }).join('');
+}
+function ytId(url){ var m=(url||'').match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/); return m?m[1]:''; }
+function igrejaAddVideo(){
+  var inp=document.getElementById('igr-video-in'); var u=inp.value.trim(); if(!u) return;
+  _igrejaForm.videos.push({ url:u }); inp.value=''; renderIgrejaVideos();
+}
+function renderIgrejaVideos(){
+  document.getElementById('igr-videos-lista').innerHTML=_igrejaForm.videos.map(function(v,i){
+    var id=ytId(v.url);
+    return '<div style="display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:6px">'
+      +(id?'<img src="https://img.youtube.com/vi/'+id+'/default.jpg" style="width:52px;height:38px;object-fit:cover;border-radius:6px">':'<div style="font-size:20px">🎬</div>')
+      +'<div style="flex:1;min-width:0;font-size:12px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+v.url+'</div>'
+      +'<button onclick="_igrejaForm.videos.splice('+i+',1);renderIgrejaVideos()" style="background:none;border:none;color:#ff5050;cursor:pointer;font-size:16px">✕</button></div>';
+  }).join('');
+}
+function igrejaAddAviso(){
+  var inp=document.getElementById('igr-aviso-in'); var t=inp.value.trim(); if(!t) return;
+  _igrejaForm.avisos.push({ texto:t }); inp.value=''; renderIgrejaAvisos();
+}
+function renderIgrejaAvisos(){
+  document.getElementById('igr-avisos-lista').innerHTML=_igrejaForm.avisos.map(function(a,i){
+    return '<div style="display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:6px">'
+      +'<span style="font-size:15px">📌</span><div style="flex:1;font-size:13px;color:var(--txt)">'+(a.texto||'')+'</div>'
+      +'<button onclick="_igrejaForm.avisos.splice('+i+',1);renderIgrejaAvisos()" style="background:none;border:none;color:#ff5050;cursor:pointer;font-size:16px">✕</button></div>';
+  }).join('');
+}
+function abrirCadastroIgreja(igreja){
+  _igrejaForm={ id:null, capa:'', fotos:[], videos:[], avisos:[] };
+  var g=igreja||{};
+  document.getElementById('igr-id').value=g.id||'';
+  document.getElementById('igr-nome').value=g.nome_igreja||'';
+  document.getElementById('igr-cidade').value=g.cidade||'';
+  document.getElementById('igr-endereco').value=g.endereco||'';
+  document.getElementById('igr-responsavel').value=g.responsavel||'';
+  document.getElementById('igr-whatsapp').value=g.whatsapp?('('+g.whatsapp.replace(/\D/g,'').replace(/^55/,'').slice(0,2)+') '+g.whatsapp.replace(/\D/g,'').replace(/^55/,'').slice(2)):'';
+  _igrejaForm.id=g.id||null;
+  _igrejaForm.capa=g.capa||'';
+  _igrejaForm.fotos=Array.isArray(g.fotos)?g.fotos.slice():[];
+  _igrejaForm.videos=Array.isArray(g.videos)?g.videos.slice():[];
+  _igrejaForm.avisos=Array.isArray(g.avisos)?g.avisos.slice():[];
+  document.getElementById('igr-form-titulo').textContent=g.id?'Editar igreja':'Divulgar igreja';
+  document.getElementById('igr-btn-salvar').textContent=g.id?'Salvar alterações':'Publicar igreja';
+  document.getElementById('igr-form-msg').textContent='';
+  renderIgrejaCapaPrev(); renderIgrejaFotosPrev(); renderIgrejaVideos(); renderIgrejaAvisos();
+  mostrarTela('tela-cadastro-igreja');
+}
+async function submitIgreja(){
+  var nome=document.getElementById('igr-nome').value.trim();
+  var msg=document.getElementById('igr-form-msg');
+  if(!nome){ msg.style.color='#ff6b6b'; msg.textContent='Escreva o nome da igreja.'; return; }
+  var btn=document.getElementById('igr-btn-salvar'); btn.disabled=true; var txt=btn.textContent; btn.textContent='Enviando…';
+  var payload={
+    id:_igrejaForm.id||undefined,
+    nome_igreja:nome,
+    cidade:document.getElementById('igr-cidade').value.trim(),
+    endereco:document.getElementById('igr-endereco').value.trim(),
+    responsavel:document.getElementById('igr-responsavel').value.trim(),
+    whatsapp:document.getElementById('igr-whatsapp').value.replace(/\D/g,''),
+    capa:_igrejaForm.capa, fotos:_igrejaForm.fotos, videos:_igrejaForm.videos, avisos:_igrejaForm.avisos
+  };
+  try{
+    var r=await fetch('/api/igrejas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var d=await r.json();
+    if(d&&d.ok){ msg.style.color='var(--gold)'; msg.textContent='✅ Igreja publicada!'; setTimeout(abrirIgrejas,700); }
+    else { msg.style.color='#ff6b6b'; msg.textContent='Não deu pra salvar. Tente de novo.'; }
+  }catch(e){ msg.style.color='#ff6b6b'; msg.textContent='Erro de conexão. Tente de novo.'; }
+  btn.disabled=false; btn.textContent=txt;
+}
+function abrirIgrejas(){ mostrarTela('tela-igrejas'); renderIgrejasPub(); }
+async function renderIgrejasPub(){
+  var box=document.getElementById('igrejas-lista');
+  box.innerHTML='<div style="text-align:center;color:var(--sub);padding:30px">Carregando…</div>';
+  try{
+    var r=await fetch('/api/igrejas'); var d=await r.json();
+    var lista=(d&&d.igrejas)||[];
+    if(!lista.length){ box.innerHTML='<div style="text-align:center;color:var(--sub);padding:36px">Nenhuma igreja ainda.<br>Seja o primeiro a divulgar! 🙏</div>'; return; }
+    box.innerHTML=lista.map(function(g){
+      var av=Array.isArray(g.avisos)?g.avisos.length:0;
+      return '<div onclick="abrirIgrejaDetalhe('+g.id+')" style="background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:14px;cursor:pointer">'
+        +(g.capa?'<img src="'+g.capa+'" style="width:100%;height:140px;object-fit:cover">':'<div style="height:90px;background:linear-gradient(135deg,#2563eb,#1e40af);display:flex;align-items:center;justify-content:center;font-size:34px">⛪</div>')
+        +'<div style="padding:14px"><div style="font-weight:800;font-size:16px;color:var(--txt)">'+(g.nome_igreja||'')+'</div>'
+        +(g.cidade?'<div style="font-size:12.5px;color:var(--gold);font-weight:600;margin-top:2px">📍 '+g.cidade+'</div>':'')
+        +(g.responsavel?'<div style="font-size:12.5px;color:var(--sub);margin-top:2px">'+g.responsavel+'</div>':'')
+        +(av?'<div style="display:inline-block;margin-top:8px;font-size:11.5px;background:rgba(37,99,235,.15);color:#7aa5f7;font-weight:700;padding:3px 10px;border-radius:999px">📌 '+av+' aviso'+(av!==1?'s':'')+'</div>':'')
+        +'</div></div>';
+    }).join('');
+  }catch(e){ box.innerHTML='<div style="text-align:center;color:#ff6b6b;padding:30px">Erro ao carregar.</div>'; }
+}
+async function abrirIgrejaDetalhe(id){
+  mostrarTela('tela-igreja-detalhe');
+  var box=document.getElementById('igreja-detalhe');
+  box.innerHTML='<div style="text-align:center;color:var(--sub);padding:40px">Carregando…</div>';
+  try{
+    var r=await fetch('/api/igrejas?id='+id); var d=await r.json(); var g=d&&d.igreja;
+    if(!g){ box.innerHTML='<div style="text-align:center;color:var(--sub);padding:40px">Igreja não encontrada.</div>'; return; }
+    document.getElementById('igr-det-titulo').textContent=g.nome_igreja||'Igreja';
+    document.getElementById('igr-det-cidade').textContent=g.cidade||'';
+    var fone=(g.whatsapp||'').replace(/\D/g,''); if(fone&&!fone.startsWith('55'))fone='55'+fone;
+    var fotos=Array.isArray(g.fotos)?g.fotos:[]; var videos=Array.isArray(g.videos)?g.videos:[]; var avisos=Array.isArray(g.avisos)?g.avisos:[];
+    var html='';
+    if(g.capa) html+='<img src="'+g.capa+'" style="width:100%;height:190px;object-fit:cover">';
+    html+='<div style="padding:16px">';
+    html+='<div style="font-weight:900;font-size:20px;color:var(--txt);font-family:\'Playfair Display\',serif">'+(g.nome_igreja||'')+'</div>';
+    if(g.cidade) html+='<div style="font-size:13px;color:var(--gold);font-weight:600;margin-top:4px">📍 '+g.cidade+'</div>';
+    if(g.endereco) html+='<div style="font-size:13px;color:var(--sub);margin-top:2px">'+g.endereco+'</div>';
+    if(g.responsavel) html+='<div style="font-size:13px;color:var(--sub);margin-top:6px">👤 '+g.responsavel+'</div>';
+    if(fone) html+='<a href="https://wa.me/'+fone+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;font-weight:800;padding:13px;border-radius:14px;text-decoration:none;margin-top:14px">💬 Falar no WhatsApp</a>';
+    if(avisos.length){
+      html+='<div style="margin-top:20px;font-weight:800;color:var(--txt);font-size:15px">📌 Avisos</div>';
+      html+=avisos.map(function(a){ return '<div style="background:var(--card2);border-left:3px solid var(--gold);border-radius:8px;padding:11px 12px;margin-top:8px;font-size:13.5px;color:var(--txt)">'+(a.texto||'')+'</div>'; }).join('');
+    }
+    if(videos.length){
+      html+='<div style="margin-top:20px;font-weight:800;color:var(--txt);font-size:15px">🎬 Vídeos</div>';
+      html+=videos.map(function(v){ var yid=ytId(v.url);
+        return yid?'<div style="position:relative;padding-bottom:56%;height:0;margin-top:10px;border-radius:12px;overflow:hidden"><iframe src="https://www.youtube.com/embed/'+yid+'" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allowfullscreen loading="lazy"></iframe></div>'
+          :'<a href="'+v.url+'" target="_blank" style="display:block;margin-top:10px;color:var(--gold);font-size:13px">▶ '+v.url+'</a>'; }).join('');
+    }
+    if(fotos.length){
+      html+='<div style="margin-top:20px;font-weight:800;color:var(--txt);font-size:15px">🖼️ Fotos</div>';
+      html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">'+fotos.map(function(f){ return '<img src="'+f+'" style="width:100%;height:120px;object-fit:cover;border-radius:10px">'; }).join('')+'</div>';
+    }
+    html+='<div style="height:24px"></div></div>';
+    box.innerHTML=html;
+  }catch(e){ box.innerHTML='<div style="text-align:center;color:#ff6b6b;padding:40px">Erro ao carregar.</div>'; }
+}
+async function renderIgrejasAdm(){
+  var box=document.getElementById('igr-adm-lista'); if(!box) return;
+  box.innerHTML='<div style="text-align:center;color:var(--sub);padding:30px">Carregando…</div>';
+  try{
+    var r=await fetch('/api/igrejas?token=radar-elias-2026'); var d=await r.json();
+    var lista=(d&&d.igrejas)||[];
+    document.getElementById('igr-adm-sub').textContent=lista.length+' igreja'+(lista.length!==1?'s':'');
+    box.innerHTML='<button onclick="abrirCadastroIgreja()" style="width:100%;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;border-radius:14px;padding:13px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:14px">➕ Nova igreja</button>';
+    if(!lista.length){ box.innerHTML+='<div style="text-align:center;color:var(--sub);padding:30px">Nenhuma igreja cadastrada.</div>'; return; }
+    box.innerHTML+=lista.map(function(g){
+      var fone=(g.whatsapp||'').replace(/\D/g,''); var wa=fone?('https://wa.me/55'+fone.replace(/^55/,'')):'';
+      var gj=JSON.stringify(g).replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+      return '<div style="background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px">'
+        +'<div style="display:flex;align-items:center;gap:12px">'
+        +(g.capa?'<img src="'+g.capa+'" style="width:48px;height:48px;object-fit:cover;border-radius:10px;flex-shrink:0">':'<div style="width:48px;height:48px;border-radius:10px;background:rgba(37,99,235,.18);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⛪</div>')
+        +'<div style="flex:1;min-width:0"><div style="font-weight:800;color:var(--txt);font-size:15px">'+(g.nome_igreja||'')+'</div>'
+        +'<div style="font-size:12px;color:var(--gold)">'+(g.cidade||'')+'</div>'
+        +'<div style="font-size:12px;color:var(--sub)">'+(g.responsavel||'')+'</div></div></div>'
+        +'<div style="display:flex;gap:8px;margin-top:12px">'
+        +(wa?'<a href="'+wa+'" target="_blank" style="flex:1;text-align:center;background:#25D366;color:#fff;font-size:13px;font-weight:800;padding:9px;border-radius:10px;text-decoration:none">💬 Recado</a>':'')
+        +'<button onclick=\'editarIgreja('+g.id+')\' style="flex:1;background:rgba(201,161,74,.15);border:1px solid var(--line);color:var(--gold);font-size:13px;font-weight:800;padding:9px;border-radius:10px;cursor:pointer;font-family:inherit">✏️ Editar</button>'
+        +'<button onclick="apagarIgreja('+g.id+',\''+((g.nome_igreja||'').replace(/\x27/g,''))+'\')" style="background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.3);color:#ff6b6b;font-size:15px;padding:9px 12px;border-radius:10px;cursor:pointer">🗑️</button>'
+        +'</div></div>';
+    }).join('');
+    window._igrejasCache=lista;
+  }catch(e){ box.innerHTML='<div style="text-align:center;color:#ff6b6b;padding:30px">Erro ao carregar.</div>'; }
+}
+function editarIgreja(id){
+  var g=(window._igrejasCache||[]).find(function(x){return x.id===id;});
+  if(g) abrirCadastroIgreja(g);
+}
+async function apagarIgreja(id,nome){
+  if(!confirm('Apagar a igreja '+(nome||'')+'?')) return;
+  try{
+    var r=await fetch('/api/igrejas?token=radar-elias-2026&del='+id); var d=await r.json();
+    if(d&&d.ok) renderIgrejasAdm(); else alert('Não deu pra apagar.');
   }catch(e){ alert('Erro ao apagar.'); }
 }
 
@@ -4626,6 +4831,12 @@ const _crmInitMap = {
         <div class="adm-tile-nome">Cadastros</div>
         <div class="adm-tile-cnt">Todos + WhatsApp</div>
       </div>
+      <div class="adm-tile" style="--tc:#2563eb" onclick="abrirAdm('igrejas')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">⛪</div>
+        <div class="adm-tile-nome">Igrejas (CRM)</div>
+        <div class="adm-tile-cnt" id="adm-cnt-igrejas">Divulgação</div>
+      </div>
       <div class="adm-tile" style="--tc:#4f8ef7" onclick="abrirAdm('visitantes')">
         <div class="adm-tile-bar"></div>
         <div class="adm-tile-icon">👤</div>
@@ -4722,6 +4933,90 @@ const _crmInitMap = {
     <button style="background:none;border:none;color:var(--gold);font-size:20px;padding:0;cursor:pointer;font-family:inherit;line-height:1" onclick="renderCadastros()">↻</button>
   </div>
   <div class="dash-scroll" style="padding:14px" id="cad-adm-lista"></div>
+</div>
+
+<!-- ══ IGREJAS PARCEIRAS (público) ══ -->
+<div class="tela" id="tela-igrejas">
+  <div class="std-header">
+    <button class="std-back" onclick="irHome()">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📣 Igrejas Parceiras</div><div class="std-sub">Conheça e divulgue</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="dash-scroll" style="padding:14px">
+    <button onclick="abrirCadastroIgreja()" style="width:100%;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:16px;box-shadow:0 6px 18px rgba(37,99,235,.35);display:flex;align-items:center;justify-content:center;gap:8px">📣 Divulgar minha igreja</button>
+    <div id="igrejas-lista"></div>
+  </div>
+</div>
+
+<!-- ══ IGREJA — DETALHE (público) ══ -->
+<div class="tela" id="tela-igreja-detalhe">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirIgrejas()">←</button>
+    <div class="std-hinfo"><div class="std-titulo" id="igr-det-titulo">Igreja</div><div class="std-sub" id="igr-det-cidade"></div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="dash-scroll" style="padding:0" id="igreja-detalhe"></div>
+</div>
+
+<!-- ══ CADASTRO / EDIÇÃO DE IGREJA ══ -->
+<div class="tela" id="tela-cadastro-igreja">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirIgrejas()">←</button>
+    <div class="std-hinfo"><div class="std-titulo" id="igr-form-titulo">Divulgar igreja</div><div class="std-sub">Preencha os dados da igreja</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="dash-scroll" style="padding:16px">
+    <input type="hidden" id="igr-id">
+    <div class="cad-field"><label>Nome da igreja *</label><input id="igr-nome" type="text" placeholder="Ex: Assembleia de Deus Central"></div>
+    <div class="cad-field"><label>Cidade / Estado</label><input id="igr-cidade" type="text" placeholder="Ex: Tuntum-MA"></div>
+    <div class="cad-field"><label>Endereço</label><input id="igr-endereco" type="text" placeholder="Rua, número, bairro"></div>
+    <div class="cad-field"><label>Responsável (quem divulga)</label><input id="igr-responsavel" type="text" placeholder="Ex: Pr. João da Silva"></div>
+    <div class="cad-field"><label>WhatsApp (com DDD)</label><input id="igr-whatsapp" type="tel" placeholder="(99) 99999-9999" oninput="mascaraFone(this)" inputmode="numeric"></div>
+
+    <div class="cad-field">
+      <label>Foto de capa</label>
+      <div id="igr-capa-prev" style="margin-bottom:8px"></div>
+      <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card2);border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--gold);font-weight:700;cursor:pointer;font-size:14px">📷 Escolher capa<input type="file" accept="image/*" style="display:none" onchange="igrejaSetCapa(this)"></label>
+    </div>
+
+    <div class="cad-field">
+      <label>Fotos / cards (até 8)</label>
+      <div id="igr-fotos-prev" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+      <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card2);border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--gold);font-weight:700;cursor:pointer;font-size:14px">🖼️ Adicionar foto<input type="file" accept="image/*" style="display:none" onchange="igrejaAddFoto(this)"></label>
+    </div>
+
+    <div class="cad-field">
+      <label>Vídeos (links do YouTube)</label>
+      <div id="igr-videos-lista" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="igr-video-in" type="text" placeholder="Cole o link do YouTube" style="flex:1">
+        <button onclick="igrejaAddVideo()" style="background:var(--gold);color:#000;border:none;border-radius:12px;padding:0 16px;font-weight:800;font-family:inherit;cursor:pointer">+</button>
+      </div>
+    </div>
+
+    <div class="cad-field">
+      <label>Avisos da igreja</label>
+      <div id="igr-avisos-lista" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="igr-aviso-in" type="text" placeholder="Ex: Culto de jovens sábado 19h" style="flex:1">
+        <button onclick="igrejaAddAviso()" style="background:var(--gold);color:#000;border:none;border-radius:12px;padding:0 16px;font-weight:800;font-family:inherit;cursor:pointer">+</button>
+      </div>
+    </div>
+
+    <button id="igr-btn-salvar" onclick="submitIgreja()" style="width:100%;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:8px">Publicar igreja</button>
+    <div id="igr-form-msg" style="text-align:center;font-size:13px;margin-top:12px;color:var(--sub)"></div>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<!-- ══ ADM: IGREJAS CRM ══ -->
+<div class="tela" id="tela-adm-igrejas">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">⛪ Igrejas (CRM)</div><div class="std-sub" id="igr-adm-sub">carregando…</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:20px;padding:0;cursor:pointer;font-family:inherit;line-height:1" onclick="renderIgrejasAdm()">↻</button>
+  </div>
+  <div class="dash-scroll" style="padding:14px" id="igr-adm-lista"></div>
 </div>
 
 <div class="tela" id="tela-adm-dashboard">
