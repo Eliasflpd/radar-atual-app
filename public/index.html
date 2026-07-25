@@ -1545,7 +1545,16 @@ function renderHome(){
         <div class="tile-desc">${m.desc}</div>
       </div>
       <div class="tile-arr">›</div>
-    </div>`).join('');
+    </div>`
+    + (m.id==='manuais'
+      ? `<button onclick="event.stopPropagation();compartilharApp()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;border-radius:16px;padding:15px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:2px;box-shadow:0 6px 18px rgba(37,211,102,.28)">📤 Compartilhar o app</button>`
+      : '')
+  ).join('');
+}
+function compartilharApp(){
+  var txt='📚 *RADAR* — avisos, agenda da igreja e manuais do obreiro na palma da mão.\n\nAcesse aqui:\nhttps://radar-atual.vercel.app';
+  if(navigator.share){ navigator.share({title:'RADAR',text:txt}).catch(function(){}); }
+  else { window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
 }
 function buscaGlobal(q){
   const v = q.trim().toLowerCase();
