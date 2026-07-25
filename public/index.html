@@ -582,6 +582,19 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .carousel-slide{min-width:100%;position:relative;overflow:hidden;user-select:none}
 .cs-img{width:100%;height:460px;object-fit:contain;display:block;pointer-events:none;background:#0b1020}
 .cs-mp4{width:100%;height:460px;object-fit:contain;display:block;background:#000}
+.cs-vbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;background:var(--card)}
+.cs-views{font-size:12.5px;color:var(--ink2);font-weight:600}
+.cs-views b{color:var(--ink)}
+.cs-acts{display:flex;gap:7px}
+.cs-abtn{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.06);border:1px solid var(--line2);border-radius:999px;padding:7px 13px;cursor:pointer}
+.cs-abtn:active{transform:scale(.96)}
+.cs-aviso{height:460px;display:flex;flex-direction:column;justify-content:center;padding:26px 22px;background:linear-gradient(160deg,#0e2a63,#1a58b0);color:#fff}
+.cs-av-fonte{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);padding:6px 13px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:16px}
+.cs-av-lbl{font-size:11.5px;font-weight:800;letter-spacing:1.5px;color:#cfe0ff;text-transform:uppercase}
+.cs-av-lbl b{color:#ffd97a}
+.cs-av-data{font-size:15px;font-weight:800;color:#ffd97a;margin:5px 0 12px;text-transform:capitalize}
+.cs-av-nome{font-size:23px;font-weight:900;line-height:1.22}
+.cs-av-local{font-size:15px;color:#dbe8ff;margin-top:14px}
 .cs-video-thumb{width:100%;height:190px;position:relative;background:#000;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .cs-video-thumb img{width:100%;height:100%;object-fit:cover;opacity:.75}
 .cs-video-play{position:absolute;width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;border:2px solid rgba(255,255,255,.5)}
@@ -1268,6 +1281,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     </div>
     <button class="btn-cad" id="btn-cad-enviar" onclick="submitCadastro()">ACESSAR O APP</button>
     <div id="cad-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
+    <div style="text-align:center;margin-top:18px;font-size:14px;color:var(--sub)">Já cadastrado? <a onclick="jaCadastrado()" style="color:var(--gold);font-weight:700;cursor:pointer;text-decoration:underline">Clique aqui</a></div>
   </div>
 </div>
 
@@ -1362,7 +1376,24 @@ async function submitCadastro(){
   const uid='u_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   const isAdmin=ADMIN_PHONES.includes(fone);
   saveUser({nome,cargo,whatsapp:fone,id:uid,...(isAdmin&&{admin:true})});
+  salvarNuvem(nome,cargo,fone);   // guarda na nuvem pro Elias ver todos
   irHome();
+}
+// salva o cadastro na nuvem (não trava o app se falhar)
+function salvarNuvem(nome,cargo,fone){
+  try{ fetch('/api/cadastros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:nome,cargo:cargo,whatsapp:fone})}).catch(function(){}); }catch(e){}
+}
+// "Já cadastrado?" — restaura pelo WhatsApp
+async function jaCadastrado(){
+  var fone=prompt('Digite seu WhatsApp (com DDD):'); if(!fone) return;
+  fone=fone.replace(/\D/g,''); if(fone.length<10){ alert('WhatsApp inválido. Ex: (99) 99999-9999'); return; }
+  try{
+    var r=await fetch('/api/cadastros?phone='+fone); var d=await r.json();
+    if(d && d.cadastro){
+      saveUser({nome:d.cadastro.nome,cargo:d.cadastro.cargo,whatsapp:fone,id:'u_'+Date.now().toString(36),...(ADMIN_PHONES.includes(fone)&&{admin:true})});
+      irHome();
+    } else { alert('Não encontramos esse WhatsApp. Faça o cadastro abaixo. 🙂'); }
+  }catch(e){ alert('Não consegui verificar agora. Tente de novo.'); }
 }
 
 function voltarCadastro(){
@@ -1467,9 +1498,9 @@ function renderHome(){
   document.getElementById('greet-nome').textContent = 'RADAR SEMANAL';
   document.getElementById('greet-cargo').textContent = 'Avisos e agenda da igreja';
 
-  // Carousel — vídeo da Leitura + vídeos de louvor
-  seedVideoLeitura();
-  seedLouvores();        // 🎵 vídeos de louvor no slide inicial
+  // Carousel — 7 louvores + 5 vídeos + 10 imagens
+  soLouvores();
+  seedMais5e10();
   renderCarousel();
   seedAgendaCeadema();   // agenda CEADEMA (avisos até o fim do ano)
   checkNovidade();       // 🔔 avisa "NOVIDADE" (apito + banner) se saiu conteúdo novo
@@ -1695,6 +1726,39 @@ function renderTemplo(){
 function AG_TEMPLO_JUL_R(){ return AG_TEMPLO_JUL.filter(function(e){return _agFuturo(e[1],6,2026);}).map(function(e){return [((e[0]?e[0]+' ':'')+e[1]), '', e[2], e[3]];}); }
 function AG_TEMPLO_AGO_R(){ return AG_TEMPLO_AGO.filter(function(e){return _agFuturo(e[1],7,2026);}).map(function(e){return [((e[0]?e[0]+' ':'')+e[1]), '', e[2], e[3]];}); }
 
+// aviso PREMIUM de direitos autorais ao abrir a EBD (padrão navy+dourado, Playfair/Lora)
+var _ebdAvisoVisto=false;   // 1x por abertura do app; não reaparece ao voltar de dentro da EBD
+function mostrarAvisoEBD(){
+  if(_ebdAvisoVisto) return;
+  if(document.getElementById('ebd-aviso-bg')) return;
+  _ebdAvisoVisto=true;
+  var it=function(t){ return `<div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid rgba(201,161,74,.14)">
+      <span style="width:23px;height:23px;flex-shrink:0;border-radius:50%;background:rgba(201,161,74,.18);display:flex;align-items:center;justify-content:center;color:#F5C842;font-size:12px;font-weight:900">✓</span>
+      <span style="font-size:15px;font-weight:600;color:#fff">${t}</span></div>`; };
+  var bg=document.createElement('div');
+  bg.id='ebd-aviso-bg';
+  bg.style.cssText='position:fixed;inset:0;z-index:3000;background:rgba(4,7,16,.82);display:flex;align-items:center;justify-content:center;padding:20px';
+  bg.innerHTML=`<style>@keyframes ebdUp{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}</style>
+  <div style="max-width:412px;width:100%;background:linear-gradient(165deg,#141C30,#0B1020);border:1px solid rgba(201,161,74,.34);border-radius:26px;overflow:hidden;box-shadow:0 26px 72px rgba(0,0,0,.62);animation:ebdUp .34s cubic-bezier(.2,.8,.2,1)">
+    <div style="height:4px;background:linear-gradient(90deg,#C9A14A,#F5C842,#C9A14A)"></div>
+    <div style="text-align:center;padding:26px 24px 4px">
+      <div style="width:76px;height:76px;margin:0 auto 15px;border-radius:50%;background:radial-gradient(circle at 50% 34%,#F5C842,#C9A14A);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(201,161,74,.5)">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0B1020" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a3 3 0 0 1 3 3v13a2.5 2.5 0 0 0-2.5-2.5H2z"/><path d="M22 4h-6a3 3 0 0 0-3 3v13a2.5 2.5 0 0 1 2.5-2.5H22z"/></svg>
+      </div>
+      <div style="font-family:'Playfair Display',Georgia,serif;font-size:25px;font-weight:800;color:#F5C842">Antes de acessar</div>
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:3px;color:rgba(201,161,74,.72);text-transform:uppercase;margin-top:6px">Direitos autorais · EBD</div>
+    </div>
+    <div style="padding:15px 26px 2px;text-align:center;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.78;color:rgba(255,255,255,.8)">
+      Todo cristão deve <b style="color:#fff">adquirir e pagar</b> o seu próprio material. Aqui ele fica apenas como <b style="color:#fff">apoio</b> ao seu estudo.
+    </div>
+    <div style="padding:16px 26px 6px">${it('Lições da EBD')}${it('Livros de apoio')}${it('Revista Cristã Alerta')}</div>
+    <div style="padding:6px 26px 0;text-align:center;font-family:'Lora',Georgia,serif;font-size:12.5px;font-style:italic;color:rgba(255,255,255,.44)">“Digno é o obreiro do seu salário.” — 1 Timóteo 5.18</div>
+    <div style="padding:18px 22px 24px">
+      <button onclick="document.getElementById('ebd-aviso-bg').remove()" style="width:100%;padding:15px;border:none;border-radius:999px;background:linear-gradient(90deg,#C9A14A,#F5C842);color:#0B1020;font-size:15.5px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(201,161,74,.4)">Entendi — acessar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+}
 function abrirMod(id){
   localStorage.setItem('radar_ultimo_mod', id);
   ocultarTodas();
@@ -1713,6 +1777,7 @@ function abrirMod(id){
   }
   if(id==='ebd'){
     document.getElementById('tela-ebd').classList.add('ativa');
+    mostrarAvisoEBD();
     return;
   }
   if(id==='israel'){
@@ -2812,7 +2877,32 @@ function abrirAdm(modulo){
     case 'relatorios':  abrirTelaAdm('tela-adm-relatorios'); break;
     case 'usuarios':    abrirTelaAdm('tela-adm-usuarios'); break;
     case 'config':      abrirTelaAdm('tela-adm-config'); setTimeout(renderCfgCards,50); break;
+    case 'cadastros':   abrirTelaAdm('tela-adm-cadastros'); renderCadastros(); break;
   }
+}
+// lista TODOS os cadastros (da nuvem) com botão de recado no WhatsApp
+async function renderCadastros(){
+  var box=document.getElementById('cad-adm-lista'); if(!box) return;
+  box.innerHTML='<div style="text-align:center;color:var(--sub);padding:30px">Carregando cadastros…</div>';
+  try{
+    var r=await fetch('/api/cadastros?token=radar-elias-2026');
+    var d=await r.json();
+    var lista=(d&&d.cadastros)||[];
+    document.getElementById('cad-adm-sub').textContent=lista.length+' cadastrado'+(lista.length!==1?'s':'');
+    if(!lista.length){ box.innerHTML='<div style="text-align:center;color:var(--sub);padding:40px">Ninguém cadastrado ainda.</div>'; return; }
+    box.innerHTML=lista.map(function(c){
+      var fone=(c.whatsapp||'').replace(/\D/g,'');
+      var wa=fone?('https://wa.me/55'+fone):'';
+      var foneFmt=fone?('('+fone.slice(0,2)+') '+fone.slice(2)):'sem WhatsApp';
+      return '<div style="display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px">'
+        +'<div style="width:44px;height:44px;border-radius:50%;background:rgba(201,161,74,.15);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--gold);flex-shrink:0">'+((c.nome||'?')[0].toUpperCase())+'</div>'
+        +'<div style="flex:1;min-width:0"><div style="font-weight:800;color:var(--txt);font-size:15px">'+(c.nome||'')+'</div>'
+        +'<div style="font-size:12.5px;color:var(--gold);font-weight:600">'+(c.cargo||'')+'</div>'
+        +'<div style="font-size:12.5px;color:var(--sub)">📱 '+foneFmt+'</div></div>'
+        +(wa?'<a href="'+wa+'" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;font-size:13px;font-weight:800;padding:10px 14px;border-radius:999px;text-decoration:none">💬 Recado</a>':'')
+        +'</div>';
+    }).join('');
+  }catch(e){ box.innerHTML='<div style="text-align:center;color:var(--red);padding:30px">Erro ao carregar. Tente de novo.</div>'; }
 }
 
 // ── ANALYTICS / TRACKING ──────────────────────────────────
@@ -3049,6 +3139,25 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 function getCarouselCards(){
   return JSON.parse(localStorage.getItem('radar_carousel')||'[]');
 }
+// ── VÍDEOS: visualizações + compartilhar + baixar ──
+function getViews(){ try{ return JSON.parse(localStorage.getItem('radar_views'))||{}; }catch(e){ return {}; } }
+var _viewedSession={};
+function bumpView(id){
+  if(!id || _viewedSession[id]) return;   // conta 1x por vídeo a cada abertura do app
+  _viewedSession[id]=1;
+  var v=getViews(); v[id]=(v[id]||0)+1;
+  try{ localStorage.setItem('radar_views', JSON.stringify(v)); }catch(e){}
+  var el=document.getElementById('views-'+id); if(el) el.textContent=v[id];
+}
+function shareVid(u){
+  var url=location.origin+u;
+  if(navigator.share){ navigator.share({title:'RADAR SEMANAL', text:'Olha esse vídeo 🙏', url:url}).catch(function(){}); }
+  else if(navigator.clipboard){ navigator.clipboard.writeText(url).then(function(){ alert('Link copiado ✓'); }); }
+}
+function baixarVid(u,nome){
+  var a=document.createElement('a'); a.href=u; a.download=nome||'video.mp4'; a.rel='noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+}
 // semeia os 6 cartazes da EBD no carrossel — 1 vez só, sem apagar cards que já existam
 function seedVideoInicio(){
   if(localStorage.getItem('radar_seed_vidinicio_v1')) return;
@@ -3117,6 +3226,25 @@ function soLeitura(){
   if(!limpo.length) limpo=[{id:'vid-leitura',tipo:'mp4',video:'/carousel/leitura-classe.mp4',titulo:'',ativo:true}];
   if(limpo.length!==base.length){ setCarouselCards(limpo); try{ localStorage.setItem('radar_novidade_sig', novidadeSig()); }catch(_){} } // não alarmar "novidade" por remoção
   localStorage.setItem('radar_solo_leitura_v2','1');
+}
+// 🎵 deixa SÓ os 7 vídeos de louvor no carrossel (apaga os antigos). 1x só.
+function soLouvores(){
+  if(localStorage.getItem('radar_solo_louvores_v1')) return;
+  var novos=[];
+  for(var n=1;n<=7;n++){ novos.push({id:'louvor-'+n,tipo:'mp4',video:'/carousel/louvor'+n+'.mp4',titulo:'',ativo:true}); }
+  setCarouselCards(novos);   // substitui tudo pelos 7 louvores
+  try{ localStorage.setItem('radar_novidade_sig', novidadeSig()); }catch(_){} // não alarmar "novidade" pela troca
+  localStorage.setItem('radar_solo_louvores_v1','1');
+}
+// ➕ adiciona 5 vídeos (louvor8..12) + 10 imagens (foto1..10) ao carrossel (1x só)
+function seedMais5e10(){
+  if(localStorage.getItem('radar_seed_mais_v1')) return;
+  var base=getCarouselCards();
+  var has=function(id){ return base.some(function(c){return c.id===id}); };
+  for(var v=8;v<=12;v++){ if(!has('louvor-'+v)) base.push({id:'louvor-'+v,tipo:'mp4',video:'/carousel/louvor'+v+'.mp4',titulo:'',ativo:true}); }
+  for(var f=1;f<=10;f++){ if(!has('foto-'+f)) base.push({id:'foto-'+f,tipo:'imagem',imagem:'/carousel/foto'+f+'.jpg',titulo:'',link:'',ativo:true}); }
+  setCarouselCards(base);
+  localStorage.setItem('radar_seed_mais_v1','1');
 }
 // 🎵 adiciona os 7 vídeos de louvor ao carrossel (1x só, sem duplicar)
 function seedLouvores(){
@@ -3295,10 +3423,50 @@ function ytThumbUrl(url){
   return m?'https://img.youtube.com/vi/'+m[1]+'/hqdefault.jpg':null;
 }
 
+// ── PRÓXIMO AVISO (automático): acha o evento mais próximo de hoje nas agendas CEADEMA + Templo ──
+var _MES_NUM={'JANEIRO':0,'FEVEREIRO':1,'MARÇO':2,'ABRIL':3,'MAIO':4,'JUNHO':5,'JULHO':6,'AGOSTO':7,'SETEMBRO':8,'OUTUBRO':9,'NOVEMBRO':10,'DEZEMBRO':11};
+var _MES_ABR={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
+function _parseData(data, mesGrupo, ano){
+  data=String(data||'');
+  var d=data.match(/\d{1,2}/); if(!d) return null;
+  var dia=parseInt(d[0],10), mes=mesGrupo;
+  var mm=data.match(/\/\s*(\d{1,2}|jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)/i);
+  if(mm){ var t=mm[1].toLowerCase(); mes=/^\d/.test(t)?(parseInt(t,10)-1):_MES_ABR[t.slice(0,3)]; }
+  if(mes==null||isNaN(dia)) return null;
+  return new Date(ano, mes, dia);
+}
+function proximoAviso(){
+  try{
+    var hoje=new Date(); hoje.setHours(0,0,0,0);
+    var lista=[];
+    function addMeses(ag, fonte){ if(!ag)return; ag.forEach(function(g){
+      var nome=g[0], ano=2026; if(/2027/.test(nome)){ano=2027;nome=nome.replace(/\s*2027/,'');}
+      var mesG=_MES_NUM[nome.trim()];
+      g[1].forEach(function(e){ var dt=_parseData(e[0],mesG,ano); if(dt) lista.push({dt:dt,data:e[0],ev:e[2],local:e[3],fonte:fonte}); });
+    }); }
+    function addTemplo(ag){ if(!ag)return; ag.forEach(function(e){ var dt=_parseData(e[1],null,2026); if(dt) lista.push({dt:dt,data:e[1],ev:e[2],local:e[3],fonte:'Templo Central'}); }); }
+    if(typeof AG_ESTADUAL!=='undefined') addMeses(AG_ESTADUAL,'CEADEMA Estadual');
+    if(typeof AG_REGIONAL!=='undefined') addMeses(AG_REGIONAL,'CEADEMA Regional');
+    if(typeof AG_TEMPLO_JUL!=='undefined') addTemplo(AG_TEMPLO_JUL);
+    if(typeof AG_TEMPLO_AGO!=='undefined') addTemplo(AG_TEMPLO_AGO);
+    var fut=lista.filter(function(x){return x.dt>=hoje;}).sort(function(a,b){return a.dt-b.dt;});
+    return fut[0]||null;
+  }catch(e){ return null; }
+}
+function avisoCard(){
+  var a=proximoAviso(); if(!a) return null;
+  var hoje=new Date(); hoje.setHours(0,0,0,0);
+  var dias=Math.round((a.dt-hoje)/86400000);
+  var quando = dias<=0?'HOJE': dias===1?'AMANHÃ':('EM '+dias+' DIAS');
+  var WD=['dom','seg','ter','qua','qui','sex','sáb'], MS=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  var dataTxt = WD[a.dt.getDay()]+', '+a.dt.getDate()+' de '+MS[a.dt.getMonth()];
+  return {id:'_aviso', tipo:'aviso', fonte:a.fonte, quando:quando, dataTxt:dataTxt, ev:a.ev, local:a.local};
+}
 function renderCarousel(){
   const wrap=document.getElementById('home-carousel');
   if(!wrap)return;
-  const cards=getCarouselCards().filter(c=>c.ativo!==false);
+  let cards=getCarouselCards().filter(c=>c.ativo!==false);
+  const _av=avisoCard(); if(_av) cards=[_av].concat(cards);   // próximo aviso automático no início
   if(!cards.length){
     wrap.innerHTML='<div class="carousel-empty"><div style="font-size:28px;opacity:.3">🖼️</div><div>Nenhum card no carousel</div><div style="font-size:10px;opacity:.6">Adicione em Admin → Configurações</div></div>';
     return;
@@ -3306,12 +3474,27 @@ function renderCarousel(){
   _carIdx=Math.min(_carIdx,cards.length-1);
   const slides=cards.map((c,i)=>{
     let inner='';
-    if(c.tipo==='imagem'){
+    if(c.tipo==='aviso'){
+      inner=`<div class="cs-aviso">
+        <span class="cs-av-fonte">📅 ${c.fonte}</span>
+        <div class="cs-av-lbl">Próximo aviso · <b>${c.quando}</b></div>
+        <div class="cs-av-data">${c.dataTxt}</div>
+        <div class="cs-av-nome">${c.ev}</div>
+        ${c.local?`<div class="cs-av-local">📍 ${c.local}</div>`:''}
+      </div>`;
+    } else if(c.tipo==='imagem'){
       inner=`<img class="cs-img" src="${c.imagem||''}" alt="${c.titulo||''}" onerror="this.style.display='none'">`;
       if(c.titulo) inner+=`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`;
     } else if(c.tipo==='mp4'){
-      inner=`<video class="cs-mp4" src="${c.video||''}" controls playsinline preload="metadata"></video>`;
-      if(c.titulo) inner+=`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`;
+      const _u=c.video||''; const _nome=(_u.split('/').pop()||'video.mp4'); const _vw=(getViews()[c.id]||0);
+      inner=`<video class="cs-mp4" src="${_u}" data-id="${c.id}" controls playsinline preload="metadata"></video>
+        <div class="cs-vbar">
+          <span class="cs-views">👁 <b id="views-${c.id}">${_vw}</b> visualizações</span>
+          <span class="cs-acts">
+            <button class="cs-abtn" onclick="event.stopPropagation();shareVid('${_u}')">↗ Compartilhar</button>
+            <button class="cs-abtn" onclick="event.stopPropagation();baixarVid('${_u}','${_nome}')">⬇ Baixar</button>
+          </span>
+        </div>`;
     } else if(c.tipo==='video'){
       const thumb=ytThumbUrl(c.video||'');
       inner=`<div class="cs-video-thumb" onclick="abrirVideoCard(${i})">
@@ -3344,6 +3527,11 @@ function renderCarousel(){
     if(Math.abs(dx)<40)return;
     dx<0?irSlide(_carIdx+1):irSlide(_carIdx-1);
   },{ passive:true });
+
+  // conta a visualização quando o vídeo começa a tocar (1x por vídeo por abertura)
+  wrap.querySelectorAll('video.cs-mp4').forEach(function(v){
+    v.addEventListener('play', function(){ bumpView(v.dataset.id); });
+  });
 
   // agenda inteligente do carrossel (slide normal = 5s; slide de vídeo = toca até acabar)
   agendarSlide();
@@ -4422,6 +4610,12 @@ const _crmInitMap = {
 
     <div class="adm-section-label">Pessoas</div>
     <div class="adm-grid">
+      <div class="adm-tile" style="--tc:#25D366" onclick="abrirAdm('cadastros')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">📇</div>
+        <div class="adm-tile-nome">Cadastros</div>
+        <div class="adm-tile-cnt">Todos + WhatsApp</div>
+      </div>
       <div class="adm-tile" style="--tc:#4f8ef7" onclick="abrirAdm('visitantes')">
         <div class="adm-tile-bar"></div>
         <div class="adm-tile-icon">👤</div>
@@ -4511,6 +4705,15 @@ const _crmInitMap = {
 </div>
 
 <!-- ══ ADM: DASHBOARD ══ -->
+<div class="tela" id="tela-adm-cadastros">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📇 Cadastros</div><div class="std-sub" id="cad-adm-sub">carregando…</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:20px;padding:0;cursor:pointer;font-family:inherit;line-height:1" onclick="renderCadastros()">↻</button>
+  </div>
+  <div class="dash-scroll" style="padding:14px" id="cad-adm-lista"></div>
+</div>
+
 <div class="tela" id="tela-adm-dashboard">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
