@@ -3210,11 +3210,20 @@ async function abrirManual(id){
   var box=document.getElementById('manual-conteudo');
   box.innerHTML='<div style="text-align:center;color:var(--sub);padding:40px">Abrindo o manual…</div>';
   mostrarTela('tela-manual-leitor');
-  document.querySelector('#tela-manual-leitor .dash-scroll').scrollTop=0;
+  var sc=document.querySelector('#tela-manual-leitor .dash-scroll');
+  sc.scrollTop=0;
+  var fab=document.getElementById('man-fab-top');
+  if(fab) fab.style.display='none';
+  sc.onscroll=function(){ if(!fab)return; fab.style.display = (sc.scrollTop > window.innerHeight*2.5) ? 'block' : 'none'; };
   try{
     var r=await fetch(m.arquivo); var t=await r.text();
     box.innerHTML=mdParaHtml(t);
   }catch(e){ box.innerHTML='<div style="text-align:center;color:#ff6b6b;padding:40px">Não deu pra abrir. Tente de novo.</div>'; }
+}
+function manualTopo(){
+  var sc=document.querySelector('#tela-manual-leitor .dash-scroll');
+  if(sc) sc.scrollTo({top:0,behavior:'smooth'});
+  var fab=document.getElementById('man-fab-top'); if(fab) fab.style.display='none';
 }
 function compartilharManual(id){
   var m=MANUAIS.find(function(x){return x.id===id;}); if(!m) return;
@@ -5138,9 +5147,10 @@ const _crmInitMap = {
     </div>
     <div id="manual-conteudo" lang="pt" oncontextmenu="return false" ondragstart="return false" oncopy="return false" style="background:#faf7f0;padding:24px 22px;font-family:'Lora',Georgia,serif;font-size:16.5px;line-height:1.85;color:#2b2620;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none"></div>
     <div style="padding:4px 22px 34px;background:#faf7f0">
-      <button onclick="document.getElementById('tela-manual-leitor').querySelector('.dash-scroll').scrollTo({top:0,behavior:'smooth'})" style="width:100%;background:#fff;color:#6b4a1e;border:1px solid #e5dcc8;border-radius:12px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">↑ Voltar ao topo</button>
+      <button onclick="manualTopo()" style="width:100%;background:#fff;color:#6b4a1e;border:1px solid #e5dcc8;border-radius:12px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">↑ Voltar ao topo</button>
     </div>
   </div>
+  <button id="man-fab-top" onclick="manualTopo()" style="display:none;position:fixed;right:16px;bottom:22px;width:50px;height:50px;border-radius:50%;background:#6b4a1e;color:#fff;border:2px solid rgba(255,255,255,.35);font-size:22px;font-weight:800;cursor:pointer;z-index:60;box-shadow:0 6px 18px rgba(0,0,0,.4);line-height:1">↑</button>
 </div>
 
 <!-- ══ ADM: IGREJAS CRM ══ -->
