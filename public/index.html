@@ -3179,7 +3179,7 @@ function mdParaHtml(md){
   if(toc.length>3){
     tocHtml='<div style="background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:22px">'
       +'<div style="font-family:\'Playfair Display\',serif;font-size:15px;color:var(--gold2);font-weight:700;margin-bottom:10px">📑 Índice</div>'
-      +toc.map(function(t){ return '<div onclick="irAncora(\''+t.id+'\')" style="font-size:13.5px;color:var(--txt);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">'+esc(t.txt)+'</div>'; }).join('')
+      +toc.map(function(t){ var d=t.txt.length>44?(t.txt.slice(0,44).replace(/\s+\S*$/,'')+'…'):t.txt; return '<div onclick="irAncora(\''+t.id+'\')" style="font-size:13.5px;color:var(--txt);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer">'+esc(d)+'</div>'; }).join('')
       +'</div>';
   }
   return tocHtml+out.join('\n');
