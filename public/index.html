@@ -3193,7 +3193,7 @@ function mdParaHtml(md){
   var tocHtml='<div style="background:#fff;border:1px solid #e5dcc8;border-radius:12px;padding:16px 18px;margin-bottom:28px;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
     +'<div style="font-family:Lora,Georgia,serif;font-size:18px;color:#6b4a1e;font-weight:800;margin-bottom:12px;text-align:center">📖 Índice</div>'
     +toc.map(function(t){
-        return '<div onclick="irAncora(\''+t.id+'\')" style="cursor:pointer;color:'+(t.sub?'#6b5f4d':'#2b2620')+';font-size:'+(t.sub?'13px':'14.5px')+';font-weight:'+(t.sub?'400':'700')+';padding:'+(t.sub?'5px 0 5px 20px':'8px 0')+';border-bottom:1px solid #efe8d8">'+(t.sub?'– ':'')+esc(t.txt)+'</div>';
+        return '<div onclick="irAncora(\''+t.id+'\')" style="cursor:pointer;color:#1d4ed8;text-decoration:underline;text-underline-offset:3px;font-size:'+(t.sub?'15px':'16.5px')+';font-weight:'+(t.sub?'500':'700')+';padding:'+(t.sub?'8px 0 8px 20px':'10px 0')+';border-bottom:1px solid #efe8d8;display:flex;align-items:center;gap:7px">'+(t.sub?'<span style="text-decoration:none;color:#9a8a6a">↳</span>':'<span style="text-decoration:none">🔗</span>')+'<span>'+esc(t.txt)+'</span></div>';
       }).join('')
     +'</div>';
   return tocHtml+out.join('\n');
