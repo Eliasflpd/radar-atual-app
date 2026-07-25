@@ -3145,7 +3145,7 @@ const MANUAIS = [
     desc:'Roteiros para casamento, funeral, batismo, ceia, ordenação e todas as cerimônias do obreiro.',
     arquivo:'/api/manual?id=cerimonias' }
 ];
-let _manualAtual = null;
+let _manualAtual = null, _manualToc = [], _manualSecoes = [], _manualIndiceHtml = '', _manualView = 'indice';
 
 function abrirManuais(){ mostrarTela('tela-manuais'); renderManuais(); }
 function renderManuais(){
@@ -3163,52 +3163,74 @@ function renderManuais(){
   + '<div style="background:rgba(255,80,80,.07);border:1px solid rgba(255,80,80,.25);border-radius:12px;padding:12px 14px;margin-top:6px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:17px">⚠️</span><div style="font-size:11.5px;color:#ffb3b3;line-height:1.45"><b>Pirataria é crime</b> (Lei 9.610/98). Este material é protegido por direitos autorais e só pode ser lido dentro do app. Proibida a cópia, download ou distribuição.</div></div>';
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function mdParaHtml(md){
-  // tira frontmatter
+function _pHtml(t){ return '<p style="margin:0 0 15px;text-align:justify;-webkit-hyphens:auto;hyphens:auto">'+esc(t)+'</p>'; }
+function _liHtml(t){ return '<div style="display:flex;gap:9px;margin:0 0 9px;text-align:left"><span style="color:#8a6a2f;font-weight:700">•</span><span>'+esc(t)+'</span></div>'; }
+function _headHtml(niv,txt){
+  if(niv>=3) return '<h3 style="font-family:Lora,Georgia,serif;font-size:18px;font-weight:700;color:#8a6a2f;margin:20px 0 10px">'+esc(txt)+'</h3>';
+  return '<h2 style="font-family:Lora,Georgia,serif;font-size:22px;font-weight:800;color:#6b4a1e;margin:4px 0 15px;padding-bottom:9px;border-bottom:2px solid #e5dcc8">'+esc(txt)+'</h2>';
+}
+function parseManual(md){
   md=md.replace(/^---[\s\S]*?---\s*/, '');
-  var linhas=md.split(/\r?\n/);
-  var out=[], toc=[], buf=[], nH=0;
-  function flush(){ if(buf.length){ out.push('<p style="margin:0 0 15px;text-align:justify;-webkit-hyphens:auto;hyphens:auto">'+esc(buf.join(' '))+'</p>'); buf=[]; } }
+  var linhas=md.split(/\r?\n/), itens=[], buf=[];
+  function flush(){ if(buf.length){ itens.push({k:'p',html:_pHtml(buf.join(' '))}); buf=[]; } }
   for(var i=0;i<linhas.length;i++){
     var L=linhas[i].trim();
     if(!L){ flush(); continue; }
     if(/\.{6,}/.test(L)){ flush(); continue; }
     var mH=L.match(/^(#{1,3})\s+(.*)$/);
-    if(mH){
-      flush();
-      var nivel=mH[1].length, txt=mH[2].trim();
-      if(/^r?índice$/i.test(txt)||/^cpc$/i.test(txt)){ continue; }
-      nH++; var aid='mh'+nH; toc.push({id:aid, txt:txt, sub:(nivel>=3)});
-      if(nivel>=3){
-        out.push('<h3 id="'+aid+'" style="font-family:Lora,Georgia,serif;font-size:17px;font-weight:700;color:#8a6a2f;margin:22px 0 8px">'+esc(txt)+'</h3>');
-      } else {
-        out.push('<h2 id="'+aid+'" style="font-family:Lora,Georgia,serif;font-size:21px;font-weight:800;color:#6b4a1e;margin:32px 0 13px;padding-bottom:8px;border-bottom:2px solid #e5dcc8">'+esc(txt)+'</h2>');
-      }
-      continue;
-    }
-    if(/^[-•]\s+/.test(L)){ flush(); out.push('<div style="display:flex;gap:9px;margin:0 0 9px;text-align:left"><span style="color:#8a6a2f;font-weight:700">•</span><span>'+esc(L.replace(/^[-•]\s+/,''))+'</span></div>'); continue; }
+    if(mH){ flush(); var niv=mH[1].length, txt=mH[2].trim();
+      if(/^r?índice$/i.test(txt)||/^cpc$/i.test(txt)) continue;
+      itens.push({k:'h',nivel:niv,txt:txt}); continue; }
+    if(/^[-•]\s+/.test(L)){ flush(); itens.push({k:'li',html:_liHtml(L.replace(/^[-•]\s+/,''))}); continue; }
     buf.push(L);
   }
   flush();
-  var tocHtml='<div style="background:#fff;border:1px solid #e5dcc8;border-radius:12px;padding:16px 18px;margin-bottom:28px;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
-    +'<div style="font-family:Lora,Georgia,serif;font-size:18px;color:#6b4a1e;font-weight:800;margin-bottom:12px;text-align:center">📖 Índice</div>'
-    +toc.map(function(t){
-        return '<div onclick="irAncora(\''+t.id+'\')" style="cursor:pointer;color:#1d4ed8;text-decoration:underline;text-underline-offset:3px;font-size:'+(t.sub?'15px':'16.5px')+';font-weight:'+(t.sub?'500':'700')+';padding:'+(t.sub?'8px 0 8px 20px':'10px 0')+';border-bottom:1px solid #efe8d8;display:flex;align-items:center;gap:7px">'+(t.sub?'<span style="text-decoration:none;color:#9a8a6a">↳</span>':'<span style="text-decoration:none">🔗</span>')+'<span>'+esc(t.txt)+'</span></div>';
+  var toc=[], secoes=[], hpos=[];
+  for(var j=0;j<itens.length;j++) if(itens[j].k==='h') hpos.push(j);
+  for(var a=0;a<hpos.length;a++){
+    var start=hpos[a], h=itens[start], end=itens.length;
+    for(var b=a+1;b<hpos.length;b++){ if(itens[hpos[b]].nivel<=h.nivel){ end=hpos[b]; break; } }
+    var parts=[ _headHtml(h.nivel,h.txt) ];
+    for(var c=start+1;c<end;c++){ var it=itens[c]; parts.push(it.k==='h'?_headHtml(it.nivel,it.txt):it.html); }
+    toc.push({txt:h.txt, sub:(h.nivel>=3)});
+    secoes.push(parts.join('\n'));
+  }
+  return {toc:toc, secoes:secoes};
+}
+function montarIndiceManual(){
+  return '<div style="background:#fff;border:1px solid #e5dcc8;border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,.05)">'
+    +'<div style="font-family:Lora,Georgia,serif;font-size:19px;color:#6b4a1e;font-weight:800;margin-bottom:6px;text-align:center">📖 Índice</div>'
+    +'<div style="text-align:center;color:#9a8a6a;font-size:12px;margin-bottom:14px">Toque no capítulo para ler</div>'
+    +_manualToc.map(function(t,k){
+        return '<div onclick="abrirCapitulo('+k+')" style="cursor:pointer;color:#1d4ed8;text-decoration:underline;text-underline-offset:3px;font-size:'+(t.sub?'15px':'16.5px')+';font-weight:'+(t.sub?'500':'700')+';padding:'+(t.sub?'9px 0 9px 20px':'11px 0')+';border-bottom:1px solid #efe8d8;display:flex;align-items:center;gap:8px">'+(t.sub?'<span style="text-decoration:none;color:#9a8a6a">↳</span>':'<span style="text-decoration:none">🔗</span>')+'<span>'+esc(t.txt)+'</span></div>';
       }).join('')
     +'</div>';
-  return tocHtml+out.join('\n');
 }
-function irAncora(id){
-  var el=document.getElementById(id); if(!el) return;
-  el.scrollIntoView({behavior:'smooth',block:'start'});
+function abrirCapitulo(k){
+  if(k<0||k>=_manualSecoes.length) return;
+  _manualView='capitulo';
+  var voltar='<button onclick="voltarIndiceManual()" style="display:inline-flex;align-items:center;gap:6px;background:#6b4a1e;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:18px">← Índice</button>';
+  var voltarBaixo='<div style="margin-top:24px"><button onclick="voltarIndiceManual()" style="width:100%;background:#fff;color:#6b4a1e;border:1px solid #e5dcc8;border-radius:12px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">← Voltar ao índice</button></div>';
+  document.getElementById('manual-conteudo').innerHTML=voltar+_manualSecoes[k]+voltarBaixo;
+  var sc=document.querySelector('#tela-manual-leitor .dash-scroll');
+  if(sc) sc.scrollTop=0;
+  var fab=document.getElementById('man-fab-top'); if(fab) fab.style.display='none';
 }
+function voltarIndiceManual(){
+  _manualView='indice';
+  document.getElementById('manual-conteudo').innerHTML=_manualIndiceHtml;
+  var sc=document.querySelector('#tela-manual-leitor .dash-scroll');
+  if(sc) sc.scrollTop=0;
+  var fab=document.getElementById('man-fab-top'); if(fab) fab.style.display='none';
+}
+function voltarLeitor(){ if(_manualView==='capitulo') voltarIndiceManual(); else abrirManuais(); }
 async function abrirManual(id){
   var m=MANUAIS.find(function(x){return x.id===id;}); if(!m) return;
   _manualAtual=m;
   document.getElementById('man-titulo').textContent=m.titulo;
   document.getElementById('man-autor').textContent=m.autor;
   var box=document.getElementById('manual-conteudo');
-  box.innerHTML='<div style="text-align:center;color:var(--sub);padding:40px">Abrindo o manual…</div>';
+  box.innerHTML='<div style="text-align:center;color:#9a8a6a;padding:40px">Abrindo o manual…</div>';
   mostrarTela('tela-manual-leitor');
   var sc=document.querySelector('#tela-manual-leitor .dash-scroll');
   sc.scrollTop=0;
@@ -3217,7 +3239,10 @@ async function abrirManual(id){
   sc.onscroll=function(){ if(!fab)return; fab.style.display = (sc.scrollTop > window.innerHeight*2.5) ? 'block' : 'none'; };
   try{
     var r=await fetch(m.arquivo); var t=await r.text();
-    box.innerHTML=mdParaHtml(t);
+    var d=parseManual(t);
+    _manualToc=d.toc; _manualSecoes=d.secoes;
+    _manualIndiceHtml=montarIndiceManual();
+    voltarIndiceManual();
   }catch(e){ box.innerHTML='<div style="text-align:center;color:#ff6b6b;padding:40px">Não deu pra abrir. Tente de novo.</div>'; }
 }
 function manualTopo(){
@@ -5136,7 +5161,7 @@ const _crmInitMap = {
 <!-- ══ MANUAL — LEITOR ══ -->
 <div class="tela" id="tela-manual-leitor">
   <div class="std-header">
-    <button class="std-back" onclick="abrirManuais()">←</button>
+    <button class="std-back" onclick="voltarLeitor()">←</button>
     <div class="std-hinfo"><div class="std-titulo" id="man-titulo">Manual</div><div class="std-sub" id="man-autor"></div></div>
     <div style="width:36px"></div>
   </div>
@@ -5146,9 +5171,7 @@ const _crmInitMap = {
       <div style="font-size:11px;color:#a33b3b;line-height:1.4"><b>Pirataria é crime</b> (Lei 9.610/98). Leitura permitida somente no app. Proibida a cópia, download ou distribuição.</div>
     </div>
     <div id="manual-conteudo" lang="pt" oncontextmenu="return false" ondragstart="return false" oncopy="return false" style="background:#faf7f0;padding:24px 22px;font-family:'Lora',Georgia,serif;font-size:16.5px;line-height:1.85;color:#2b2620;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none"></div>
-    <div style="padding:4px 22px 34px;background:#faf7f0">
-      <button onclick="manualTopo()" style="width:100%;background:#fff;color:#6b4a1e;border:1px solid #e5dcc8;border-radius:12px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">↑ Voltar ao topo</button>
-    </div>
+    <div style="height:34px;background:#faf7f0"></div>
   </div>
   <button id="man-fab-top" onclick="manualTopo()" style="display:none;position:fixed;right:16px;bottom:22px;width:50px;height:50px;border-radius:50%;background:#6b4a1e;color:#fff;border:2px solid rgba(255,255,255,.35);font-size:22px;font-weight:800;cursor:pointer;z-index:60;box-shadow:0 6px 18px rgba(0,0,0,.4);line-height:1">↑</button>
 </div>
