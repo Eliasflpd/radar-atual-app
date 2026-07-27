@@ -2521,7 +2521,7 @@ function abrirEbdTurma(turma){
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
     body.innerHTML=main.map(lic=>{
       const idx=lics.indexOf(lic);
-      const isLocked=lic.n!==licaoDaSemana()&&!getUser()?.admin;
+      const isLocked=false; /* TODAS as lições liberadas (pedido do Elias) */
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
       if(isLocked){
         return `<div class="ebd-item" style="opacity:.42;cursor:pointer" onclick="toastBloqueado()">
@@ -3160,6 +3160,12 @@ function renderManuais(){
       +'<div style="color:var(--sub);font-size:20px">›</div></div>'
       +'</div>';
   }).join('')
+  + '<div onclick="location.href=\'/biblioteca/sermoes/\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
+    + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#0f3d5c,#0f6d78);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">📜</div>'
+    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Sermões</div>'
+    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">Escavador de Pérolas Bíblicas</div>'
+    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Estudos profundos pra edificar — comece por “O Último Prego”.</div></div>'
+    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
   + '<div onclick="location.href=\'/biblioteca/saudacao-mateus24.html\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
     + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#9d1c1c,#dc2626);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">✝</div>'
     + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Saudação — O Princípio das Dores</div>'
