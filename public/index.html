@@ -3839,6 +3839,12 @@ function cultoCard(){
     if(hoje>fim) return null; }catch(e){}
   return {id:'_culto', tipo:'flyer', imagem:'/carousel/culto-geral.jpg'};
 }
+function daviCard(){
+  // Corrente de Oração pela vida de Davi Ximenes — no topo até 10/08/2026
+  try{ var fim=new Date(2026,7,10), hoje=new Date(); hoje.setHours(0,0,0,0);
+    if(hoje>fim) return null; }catch(e){}
+  return {id:'_davi', tipo:'flyer', imagem:'/carousel/davi-ximenes.jpg'};
+}
 function abrirNotaPesar(){
   mostrarTela('tela-nota-pesar');
   var sc=document.querySelector('#tela-nota-pesar .np-scroll'); if(sc) sc.scrollTop=0;
@@ -3850,6 +3856,7 @@ function renderCarousel(){
   const _av=avisoCard(); if(_av) cards=[_av].concat(cards);   // próximo aviso automático no início
   const _cg=cultoCard(); if(_cg) cards=[_cg].concat(cards);   // flyer do culto (enquanto vigente)
   const _np=notaPesarCard(); if(_np) cards=[_np].concat(cards); // nota de pesar (CEADEMA) — no topo enquanto vigente
+  const _dx=daviCard(); if(_dx) cards=[_dx].concat(cards);     // corrente de oração (Davi Ximenes) — 1º, emergência
   if(!cards.length){
     wrap.innerHTML='<div class="carousel-empty"><div style="font-size:28px;opacity:.3">🖼️</div><div>Nenhum card no carousel</div><div style="font-size:10px;opacity:.6">Adicione em Admin → Configurações</div></div>';
     return;
