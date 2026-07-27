@@ -3827,11 +3827,29 @@ function avisoCard(){
   var dataTxt = WD[a.dt.getDay()]+', '+a.dt.getDate()+' de '+MS[a.dt.getMonth()];
   return {id:'_aviso', tipo:'aviso', fonte:a.fonte, quando:quando, dataTxt:dataTxt, ev:a.ev, local:a.local, dia:a.dt.getDate(), mesAbr:MS[a.dt.getMonth()].toUpperCase()};
 }
+function notaPesarCard(){
+  // Nota de pesar CEADEMA — visível no topo do carrossel até 10 dias após (06/08/2026)
+  try{ var fim=new Date(2026,7,6), hoje=new Date(); hoje.setHours(0,0,0,0);
+    if(hoje>fim) return null; }catch(e){}
+  return {id:'_notapesar', tipo:'notapesar'};
+}
+function cultoCard(){
+  // Flyer do Culto de Assembleia Geral — some depois de 28/07/2026
+  try{ var fim=new Date(2026,6,28), hoje=new Date(); hoje.setHours(0,0,0,0);
+    if(hoje>fim) return null; }catch(e){}
+  return {id:'_culto', tipo:'flyer', imagem:'/carousel/culto-geral.jpg'};
+}
+function abrirNotaPesar(){
+  mostrarTela('tela-nota-pesar');
+  var sc=document.querySelector('#tela-nota-pesar .np-scroll'); if(sc) sc.scrollTop=0;
+}
 function renderCarousel(){
   const wrap=document.getElementById('home-carousel');
   if(!wrap)return;
   let cards=getCarouselCards().filter(c=>c.ativo!==false);
   const _av=avisoCard(); if(_av) cards=[_av].concat(cards);   // próximo aviso automático no início
+  const _cg=cultoCard(); if(_cg) cards=[_cg].concat(cards);   // flyer do culto (enquanto vigente)
+  const _np=notaPesarCard(); if(_np) cards=[_np].concat(cards); // nota de pesar (CEADEMA) — no topo enquanto vigente
   if(!cards.length){
     wrap.innerHTML='<div class="carousel-empty"><div style="font-size:28px;opacity:.3">🖼️</div><div>Nenhum card no carousel</div><div style="font-size:10px;opacity:.6">Adicione em Admin → Configurações</div></div>';
     return;
@@ -3839,7 +3857,18 @@ function renderCarousel(){
   _carIdx=Math.min(_carIdx,cards.length-1);
   const slides=cards.map((c,i)=>{
     let inner='';
-    if(c.tipo==='aviso'){
+    if(c.tipo==='flyer'){
+      inner=`<div style="height:460px;background:#0a1a3a;display:flex;align-items:center;justify-content:center"><img src="${c.imagem}" style="max-width:100%;max-height:100%;object-fit:contain" onerror="this.style.display='none'"></div>`;
+    } else if(c.tipo==='notapesar'){
+      inner=`<div style="height:460px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px 24px;background:linear-gradient(160deg,#112155,#3a78b5);color:#fff;position:relative">
+        <img src="img/ceadema.png" style="width:76px;height:76px;object-fit:contain;margin-bottom:12px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))">
+        <div style="font-size:11.5px;font-weight:800;letter-spacing:3px;color:#bfe3f5">CEADEMA</div>
+        <div style="width:42px;height:2px;background:#5dd8e3;margin:11px 0"></div>
+        <div style="font-family:'Playfair Display',serif;font-size:29px;font-weight:900;letter-spacing:1px">NOTA DE PESAR</div>
+        <div style="font-size:15px;margin-top:11px;color:#eaf2fb;line-height:1.4">Missionária<br><b style="font-size:17px">Maria Alves da Silva</b></div>
+        <div style="margin-top:20px;font-size:12.5px;color:#eaf2fb;border:1px solid rgba(255,255,255,.35);padding:8px 18px;border-radius:999px">🕊️ Toque para ler</div>
+      </div>`;
+    } else if(c.tipo==='aviso'){
       inner=`<div class="cs-aviso">
         <div class="cs-av-daycircle"><div class="cs-av-daynum">${c.dia}</div><div class="cs-av-daymon">${c.mesAbr}</div></div>
         <span class="cs-av-fonte">📅 ${c.fonte}</span>
@@ -3872,8 +3901,10 @@ function renderCarousel(){
         ${c.texto?`<div class="cs-body">${c.texto}</div>`:''}
       </div>`;
     }
-    const link=c.link?`onclick="window.open('${c.link}','_blank')" style="cursor:pointer"`:
-      ((c.tipo!=='video'&&c.tipo!=='mp4')?'onclick="void(0)"':'');
+    let link;
+    if(c.tipo==='notapesar') link='onclick="abrirNotaPesar()" style="cursor:pointer"';
+    else if(c.link) link=`onclick="window.open('${c.link}','_blank')" style="cursor:pointer"`;
+    else link=(c.tipo!=='video'&&c.tipo!=='mp4')?'onclick="void(0)"':'';
     return `<div class="carousel-slide" ${link}>${inner}</div>`;
   }).join('');
 
@@ -5186,6 +5217,46 @@ const _crmInitMap = {
     <div style="height:34px;background:#faf7f0"></div>
   </div>
   <button id="man-fab-top" onclick="manualTopo()" style="display:none;position:fixed;right:16px;bottom:22px;width:50px;height:50px;border-radius:50%;background:#6b4a1e;color:#fff;border:2px solid rgba(255,255,255,.35);font-size:22px;font-weight:800;cursor:pointer;z-index:60;box-shadow:0 6px 18px rgba(0,0,0,.4);line-height:1">↑</button>
+</div>
+
+<!-- ══ NOTA DE PESAR (CEADEMA) ══ -->
+<div class="tela" id="tela-nota-pesar">
+  <div class="std-header" style="background:#112155;border-bottom:1px solid rgba(255,255,255,.1)">
+    <button class="std-back" onclick="irHome()" style="color:#fff">←</button>
+    <div class="std-hinfo"><div class="std-titulo" style="color:#fff">Nota de Pesar</div><div class="std-sub" style="color:#bfe3f5">CEADEMA</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="np-scroll dash-scroll" style="padding:0;background:#fff">
+    <div style="background:linear-gradient(120deg,#112155,#3a78b5);padding:16px;display:flex;align-items:center;gap:12px">
+      <img src="img/ceadema.png" style="width:58px;height:58px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:50%;padding:3px">
+      <div style="color:#fff;min-width:0">
+        <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:21px;letter-spacing:2px">CEADEMA</div>
+        <div style="font-size:9.5px;font-weight:700;line-height:1.35;color:#dbe8fb">CONVENÇÃO ESTADUAL DAS IGREJAS EVANGÉLICAS ASSEMBLEIAS DE DEUS NO MARANHÃO</div>
+      </div>
+    </div>
+    <div style="height:4px;background:linear-gradient(90deg,#5dd8e3,#0857b3)"></div>
+    <div style="padding:22px 20px;border-left:5px solid #3a78b5;font-family:Georgia,'Lora',serif;color:#1a1a1a">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="font-size:24px">🕊️</div>
+        <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:#112155;letter-spacing:1px;margin-top:4px">NOTA DE PESAR</div>
+      </div>
+      <p style="text-align:justify;line-height:1.78;font-size:15.5px;margin:0 0 15px">A <b>Convenção Estadual das Igrejas Evangélicas Assembleias de Deus no Maranhão – CEADEMA</b>, na pessoa de seu presidente, pastor Francisco Soares Raposo Filho, juntamente com a Mesa Diretora e a União das Esposas de Obreiros – UNEOMAD na pessoa da missionária Albenisa Almeida Raposo, manifestam profundo sentimento pelo falecimento da mui digna missionária <b>MARIA ALVES DA SILVA</b>, viúva do saudoso pastor José Vieira da Silva.</p>
+      <p style="text-align:justify;line-height:1.78;font-size:15.5px;margin:0 0 15px">Rendemos a Deus toda honra e glória pela vida da serva do Senhor que aprouve a Ele chamá-la hoje ao descanso eterno. Que haja paz sobre sua memória e consolo divino à família enlutada.</p>
+      <div style="background:#eef5fb;border-left:4px solid #3a78b5;border-radius:8px;padding:14px 16px;margin:18px 0;font-style:italic;color:#243b66;line-height:1.7;font-size:15px">"Combati o bom combate, completei a carreira, guardei a fé. Desde agora, a coroa da justiça me está guardada, a qual o Senhor, justo Juiz, me dará naquele Dia; e não somente a mim, mas a todos os que amarem a sua vinda".<span style="display:block;text-align:right;font-style:normal;font-weight:700;color:#112155;margin-top:8px">2 Timóteo 4.7-8</span></div>
+      <p style="line-height:1.7;font-size:15.5px;margin:0 0 24px">No amor de Jesus Cristo, nossa viva esperança.</p>
+      <div style="text-align:right;font-size:14.5px;color:#333;margin-bottom:26px">São Luís – MA, 27 de julho de 2026.</div>
+      <div style="text-align:center">
+        <div style="width:190px;height:1px;background:#aaa;margin:0 auto 7px"></div>
+        <div style="font-weight:700;color:#112155;font-size:15px">Pr. Francisco Soares Raposo Filho</div>
+        <div style="font-size:13px;color:#555">Presidente da CEADEMA</div>
+      </div>
+    </div>
+    <div style="background:linear-gradient(120deg,#112155,#3a78b5);color:#dbe8fb;padding:16px 20px;font-size:11.5px;line-height:1.7">
+      <div>📍 Avenida Santos Dumont, 20-B, Anil, São Luís (MA) – CEP 65046-660</div>
+      <div>📞 (98) 3221-5954 &nbsp;·&nbsp; 🌐 www.ceadema.com</div>
+      <div>📷 @ceademaoficial &nbsp;·&nbsp; CNPJ: 07.510.878/0001-16</div>
+    </div>
+  </div>
 </div>
 
 <!-- ══ ADM: IGREJAS CRM ══ -->
