@@ -20,8 +20,8 @@
     margin:0;background:var(--branco);color:var(--texto);
     font-family:'Segoe UI',system-ui,Arial,sans-serif;
     line-height:1.72;
-    padding:22px 20px calc(60px + env(safe-area-inset-bottom));
-    max-width:760px;margin-left:auto;margin-right:auto;
+    padding:18px 13px calc(48px + env(safe-area-inset-bottom));
+    max-width:820px;margin-left:auto;margin-right:auto;
     -webkit-font-smoothing:antialiased;
   }
 
@@ -43,7 +43,7 @@
   }
   .linha{height:4px;width:70px;background:var(--dourado);border-radius:4px;margin:0 auto 26px}
 
-  p{font-size:1.42rem;margin:0 0 20px}
+  p{font-size:1.42rem;margin:0 0 20px;text-align:justify;text-justify:inter-word}
 
   /* palavras-chave que os olhos precisam pegar de longe */
   .key{color:var(--vinho);font-weight:800}
@@ -52,25 +52,25 @@
 
   /* caixa de escritura */
   .escritura{
-    background:#fbf6ea;border-left:8px solid var(--dourado);
-    border-radius:12px;padding:18px 20px;margin:6px 0 24px;
+    background:#fbf6ea;border:2px solid #ecd9ad;
+    border-radius:14px;padding:18px 18px;margin:6px 0 24px;
   }
   .escritura .v{
-    font-family:Georgia,serif;font-style:italic;
+    font-family:Georgia,serif;font-style:italic;text-align:justify;
     color:var(--navy);font-size:1.5rem;line-height:1.6;font-weight:600;
   }
-  .escritura .cit{display:block;text-align:right;color:var(--dourado);font-weight:800;font-size:1.1rem;margin-top:8px;font-style:normal}
+  .escritura .cit{display:block;text-align:center;color:var(--dourado);font-weight:800;font-size:1.15rem;margin-top:10px;font-style:normal}
 
   /* blocos dos sinais */
   .sinal{
-    background:#fff5f5;border:2px solid #f3c2c2;border-left:9px solid var(--vermelho);
+    background:#fff5f5;border:2px solid #f0b6b6;
     border-radius:14px;padding:16px 18px;margin:0 0 18px;
   }
   .sinal .titulo{
     color:var(--vermelho);font-weight:800;font-size:1.5rem;
-    font-family:Georgia,serif;margin-bottom:6px;display:flex;gap:8px;align-items:center;
+    font-family:Georgia,serif;margin-bottom:10px;text-align:center;
   }
-  .sinal p{font-size:1.34rem;margin:0}
+  .sinal p{font-size:1.34rem;margin:0;text-align:justify;text-justify:inter-word}
   .evento{color:var(--vinho);font-weight:800}
 
   /* destaque de chamado */
@@ -78,7 +78,7 @@
     background:#f3eefe;border:2px solid #d8c9f7;border-radius:14px;
     padding:18px 20px;margin:24px 0;
   }
-  .chamado p{margin:0;font-size:1.42rem}
+  .chamado p{margin:0;font-size:1.42rem;text-align:justify;text-justify:inter-word}
 
   .fecho{
     text-align:center;font-family:Georgia,serif;font-weight:800;
@@ -87,10 +87,10 @@
   .bencao{text-align:center;color:var(--navy);font-size:1.4rem;font-weight:700;margin-top:8px}
 
   .voltar{
-    position:fixed;left:14px;top:12px;
+    display:inline-block;margin:0 0 14px;
     background:#181826;color:#fff;border:none;border-radius:999px;
-    padding:9px 16px;font-size:1rem;font-weight:700;font-family:inherit;
-    box-shadow:0 3px 10px rgba(0,0,0,.25);z-index:10;cursor:pointer;
+    padding:10px 18px;font-size:1rem;font-weight:700;font-family:inherit;
+    box-shadow:0 3px 10px rgba(0,0,0,.2);cursor:pointer;
   }
 </style>
 </head>
