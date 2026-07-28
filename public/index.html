@@ -3845,6 +3845,12 @@ function daviCard(){
     if(hoje>fim) return null; }catch(e){}
   return {id:'_davi', tipo:'flyer', imagem:'/carousel/davi-ximenes.jpg'};
 }
+function parabensCard(){
+  // Parabéns Pr. Pedro Aldir Damasceno (Semadema/CEADEMA) — até 05/08/2026
+  try{ var fim=new Date(2026,7,5), hoje=new Date(); hoje.setHours(0,0,0,0);
+    if(hoje>fim) return null; }catch(e){}
+  return {id:'_parabens', tipo:'flyer', imagem:'/carousel/parabens-pedro.jpg'};
+}
 function abrirNotaPesar(){
   mostrarTela('tela-nota-pesar');
   var sc=document.querySelector('#tela-nota-pesar .np-scroll'); if(sc) sc.scrollTop=0;
@@ -3854,6 +3860,7 @@ function renderCarousel(){
   if(!wrap)return;
   let cards=getCarouselCards().filter(c=>c.ativo!==false);
   const _av=avisoCard(); if(_av) cards=[_av].concat(cards);   // próximo aviso automático no início
+  const _pb=parabensCard(); if(_pb) cards=[_pb].concat(cards); // parabéns Pr. Pedro (celebrativo)
   const _cg=cultoCard(); if(_cg) cards=[_cg].concat(cards);   // flyer do culto (enquanto vigente)
   const _np=notaPesarCard(); if(_np) cards=[_np].concat(cards); // nota de pesar (CEADEMA) — no topo enquanto vigente
   const _dx=daviCard(); if(_dx) cards=[_dx].concat(cards);     // corrente de oração (Davi Ximenes) — 1º, emergência
