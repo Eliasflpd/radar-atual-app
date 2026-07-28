@@ -1,0 +1,1306 @@
+{
+ "livro": "Marcos",
+ "total": 100,
+ "perguntas": [
+  {
+   "ref": "Mc 1:13",
+   "nivel": "media",
+   "pergunta": "No deserto, além de ser servido pelos anjos, Marcos diz que Jesus estava com o quê?",
+   "versiculo": "E esteve no deserto quarenta dias sentado tentado por Satanás; estava entre as feras, e os anjos o serviam.",
+   "alt": {
+    "A": "Com os discípulos",
+    "B": "Com as feras",
+    "C": "Com João Batista",
+    "D": "Sozinho"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:20",
+   "nivel": "dificil",
+   "pergunta": "Ao chamar Tiago e João, quem ficou no barco com o pai Zebedeu?",
+   "versiculo": "e logo os chamou; eles, deixando seu pai Zebedeu no barco com os empregados, o seguiram.",
+   "alt": {
+    "A": "Simão e André",
+    "B": "Os empregados (jornaleiros)",
+    "C": "A mãe deles",
+    "D": "Ninguém"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:19",
+   "nivel": "media",
+   "pergunta": "O que Tiago e João faziam no barco quando Jesus os chamou?",
+   "versiculo": "E ele, passando um pouco adiante, viu Tiago, filho de Zebedeu, e João, seu irmão, que estavam no barco, consertando as redes,",
+   "alt": {
+    "A": "Pescavam",
+    "B": "Consertavam as redes",
+    "C": "Dormiam",
+    "D": "Remavam"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:22",
+   "nivel": "media",
+   "pergunta": "Por que o povo se admirava do ensino de Jesus na sinagoga?",
+   "versiculo": "E maravilhavam-se da sua doutrina, porque os ensinava como tendo autoridade, e não como os escribas.",
+   "alt": {
+    "A": "Falava em parábolas",
+    "B": "Ensinava como quem tem autoridade, não como os escribas",
+    "C": "Lia a lei",
+    "D": "Curava enquanto ensinava"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:24",
+   "nivel": "media",
+   "pergunta": "Como o espírito imundo chamou Jesus na sinagoga de Cafarnaum?",
+   "versiculo": "Que temos nós contigo, Jesus, nazareno? Vieste destruir-nos? Bem sei quem és: o Santo de Deus.",
+   "alt": {
+    "A": "Filho de Davi",
+    "B": "O Santo de Deus",
+    "C": "Rei dos judeus",
+    "D": "Mestre"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:25",
+   "nivel": "media",
+   "pergunta": "O que Jesus ordenou ao espírito imundo?",
+   "versiculo": "Mas Jesus o repreendeu, dizendo: Cala-te, e sai dele.",
+   "alt": {
+    "A": "\"Vai em paz\"",
+    "B": "\"Cala-te, e sai dele\"",
+    "C": "\"Confessa quem sou\"",
+    "D": "\"Segue-me\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:31",
+   "nivel": "media",
+   "pergunta": "Depois de curada da febre, o que a sogra de Simão passou a fazer?",
+   "versiculo": "Então Jesus, chegando-se e tomando-a pela mão, a levantou; e a febre a deixou, e ela os servia.",
+   "alt": {
+    "A": "Chorou",
+    "B": "Passou a servi-los",
+    "C": "Saiu anunciando",
+    "D": "Adormeceu"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:32",
+   "nivel": "media",
+   "pergunta": "Em que momento do dia trouxeram a Jesus todos os enfermos e endemoninhados?",
+   "versiculo": "Sendo já tarde, tendo-se posto o sol, traziam-lhe todos os enfermos, e os endemoninhados;",
+   "alt": {
+    "A": "De manhã cedo",
+    "B": "Ao pôr do sol (ao anoitecer)",
+    "C": "Ao meio-dia",
+    "D": "À meia-noite"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:34",
+   "nivel": "dificil",
+   "pergunta": "Por que Jesus não deixava os demônios falarem?",
+   "versiculo": "e ele curou muitos doentes atacados de diversas moléstias, e expulsou muitos demônios; mas não permitia que os demônios falassem, porque o conheciam.",
+   "alt": {
+    "A": "Porque mentiam",
+    "B": "Porque o conheciam",
+    "C": "Porque gritavam",
+    "D": "Porque atrapalhavam"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:35",
+   "nivel": "media",
+   "pergunta": "Em que horário Jesus se levantou para orar num lugar deserto?",
+   "versiculo": "De madrugada, ainda bem escuro, levantou-se, saiu e foi a um lugar deserto, e ali orava.",
+   "alt": {
+    "A": "Ao meio-dia",
+    "B": "De madrugada, ainda escuro",
+    "C": "Ao entardecer",
+    "D": "Depois do jantar"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:37",
+   "nivel": "media",
+   "pergunta": "O que os discípulos disseram ao encontrar Jesus orando?",
+   "versiculo": "quando o encontraram, disseram-lhe: Todos te buscam.",
+   "alt": {
+    "A": "\"Manda-nos embora\"",
+    "B": "\"Todos te buscam\"",
+    "C": "\"A multidão foi embora\"",
+    "D": "\"Estás cansado\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:38",
+   "nivel": "dificil",
+   "pergunta": "O que Jesus respondeu ser a razão de ter vindo?",
+   "versiculo": "Respondeu-lhes Jesus: Vamos a outras partes, às povoações vizinhas, para que eu pregue ali também; pois para isso é que vim.",
+   "alt": {
+    "A": "Curar doentes",
+    "B": "Pregar também nas povoações vizinhas, pois para isso viera",
+    "C": "Expulsar demônios",
+    "D": "Ensinar no templo"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:40",
+   "nivel": "media",
+   "pergunta": "O que o leproso disse ao se ajoelhar diante de Jesus?",
+   "versiculo": "E veio a ele um leproso que, de joelhos, lhe rogava, dizendo: Se quiseres, bem podes tornar-me limpo.",
+   "alt": {
+    "A": "\"Tem misericórdia\"",
+    "B": "\"Se quiseres, podes tornar-me limpo\"",
+    "C": "\"Cura-me, Senhor\"",
+    "D": "\"Crê em mim\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:41",
+   "nivel": "dificil",
+   "pergunta": "Movido de quê, Jesus tocou o leproso?",
+   "versiculo": "Jesus, pois, compadecido dele, estendendo a mão, tocou-o e disse-lhe: Quero; sê limpo.",
+   "alt": {
+    "A": "De pressa",
+    "B": "De compaixão",
+    "C": "De temor",
+    "D": "De alegria"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:44",
+   "nivel": "dificil",
+   "pergunta": "O que Jesus mandou o leproso curado fazer?",
+   "versiculo": "dizendo-lhe: Olha, não digas nada a ninguém; mas vai, mostra-te ao sacerdote e oferece pela tua purificação o que Moisés determinou, para lhes servir de testemunho.",
+   "alt": {
+    "A": "Anunciar a todos",
+    "B": "Nada dizer e mostrar-se ao sacerdote",
+    "C": "Ir para casa",
+    "D": "Segui-lo"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:45",
+   "nivel": "dificil",
+   "pergunta": "Qual foi a consequência de o leproso sair divulgando o milagre?",
+   "versiculo": "Ele, porém, saindo dali, começou a publicar o caso por toda parte e a divulgá-lo, de modo que Jesus já não podia entrar abertamente numa cidade, mas conservava-se fora em lugares desertos; e de todos os lados iam ter com ele.",
+   "alt": {
+    "A": "Muitos creram",
+    "B": "Jesus já não podia entrar publicamente nas cidades",
+    "C": "Os sacerdotes creram",
+    "D": "O leproso foi preso"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:16",
+   "nivel": "facil",
+   "pergunta": "O que Simão e André faziam quando Jesus os chamou?",
+   "versiculo": "E, andando junto do mar da Galiléia, viu a Simão, e a André, irmão de Simão, os quais lançavam a rede ao mar, pois eram pescadores.",
+   "alt": {
+    "A": "Consertavam redes",
+    "B": "Lançavam a rede ao mar (eram pescadores)",
+    "C": "Vendiam peixe",
+    "D": "Navegavam"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:29",
+   "nivel": "media",
+   "pergunta": "Ao sair da sinagoga, para a casa de quem Jesus foi?",
+   "versiculo": "Em seguida, saiu da sinagoga e foi a casa de Simão e André com Tiago e João.",
+   "alt": {
+    "A": "De Tiago",
+    "B": "De Simão e André",
+    "C": "De João Batista",
+    "D": "De um escriba"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:33",
+   "nivel": "media",
+   "pergunta": "Quem Marcos diz que se ajuntou à porta da casa?",
+   "versiculo": "e toda a cidade estava reunida à porta;",
+   "alt": {
+    "A": "Alguns doentes",
+    "B": "Toda a cidade",
+    "C": "Os fariseus",
+    "D": "Os discípulos"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 1:9",
+   "nivel": "facil",
+   "pergunta": "De onde Jesus veio para ser batizado?",
+   "versiculo": "E aconteceu naqueles dias que veio Jesus de Nazaré da Galiléia, e foi batizado por João no Jordão.",
+   "alt": {
+    "A": "De Belém",
+    "B": "De Nazaré da Galileia",
+    "C": "De Jerusalém",
+    "D": "De Cafarnaum"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:2",
+   "nivel": "media",
+   "pergunta": "Quando Jesus voltou a Cafarnaum, como estava a casa?",
+   "versiculo": "Ajuntaram-se, pois, muitos, a ponta de não caberem nem mesmo diante da porta; e ele lhes anunciava a palavra.",
+   "alt": {
+    "A": "Vazia",
+    "B": "Cheia, sem lugar nem à porta",
+    "C": "Só com os discípulos",
+    "D": "Fechada"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:3",
+   "nivel": "media",
+   "pergunta": "Quantos homens carregavam o paralítico até Jesus?",
+   "versiculo": "Nisso vieram alguns a trazer-lhe um paralítico, carregado por quatro;",
+   "alt": {
+    "A": "Dois",
+    "B": "Quatro",
+    "C": "Três",
+    "D": "Cinco"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:4",
+   "nivel": "dificil",
+   "pergunta": "Como colocaram o paralítico diante de Jesus, já que a casa estava cheia?",
+   "versiculo": "e não podendo aproximar-se dele, por causa da multidão, descobriram o telhado onde estava e, fazendo uma abertura, baixaram o leito em que jazia o paralítico.",
+   "alt": {
+    "A": "Pela janela",
+    "B": "Descobriram o telhado e desceram o leito pela abertura",
+    "C": "Empurrando a multidão",
+    "D": "Pela porta dos fundos"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:5",
+   "nivel": "media",
+   "pergunta": "Vendo a fé deles, o que Jesus disse primeiro ao paralítico?",
+   "versiculo": "E Jesus, vendo-lhes a fé, disse ao paralítico: Filho, perdoados são os teus pecados.",
+   "alt": {
+    "A": "\"Levanta-te\"",
+    "B": "\"Filho, perdoados são os teus pecados\"",
+    "C": "\"A tua fé te salvou\"",
+    "D": "\"Vai em paz\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:7",
+   "nivel": "media",
+   "pergunta": "Por que os escribas acharam que Jesus blasfemava?",
+   "versiculo": "Por que fala assim este homem? Ele blasfema. Quem pode perdoar pecados senão um só, que é Deus?",
+   "alt": {
+    "A": "Curava no sábado",
+    "B": "Só Deus pode perdoar pecados",
+    "C": "Comia com pecadores",
+    "D": "Não jejuava"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:11",
+   "nivel": "facil",
+   "pergunta": "O que Jesus ordenou ao paralítico para provar que podia perdoar?",
+   "versiculo": "a ti te digo, levanta-te, toma o teu leito, e vai para tua casa.",
+   "alt": {
+    "A": "\"Estende a mão\"",
+    "B": "\"Levanta-te, toma o teu leito e vai para casa\"",
+    "C": "\"Lava-te no tanque\"",
+    "D": "\"Anda sobre a água\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:12",
+   "nivel": "media",
+   "pergunta": "Como o povo reagiu ao ver o paralítico curado sair?",
+   "versiculo": "Então ele se levantou e, tomando logo o leito, saiu à vista de todos; de modo que todos pasmavam e glorificavam a Deus, dizendo: Nunca vimos coisa semelhante.",
+   "alt": {
+    "A": "Ficaram indiferentes",
+    "B": "Glorificaram a Deus dizendo: \"Nunca vimos coisa assim\"",
+    "C": "Foram embora",
+    "D": "Prenderam Jesus"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:14",
+   "nivel": "dificil",
+   "pergunta": "Quem era Levi, chamado por Jesus na coletoria, filho de quem?",
+   "versiculo": "Quando ia passando, viu a Levi, filho de Alfeu, sentado na coletoria, e disse-lhe: Segue-me. E ele, levantando-se, o seguiu.",
+   "alt": {
+    "A": "Filho de Zebedeu",
+    "B": "Filho de Alfeu",
+    "C": "Filho de Jonas",
+    "D": "Filho de Simão"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:16",
+   "nivel": "media",
+   "pergunta": "Do que os escribas e fariseus reclamaram ao ver Jesus à mesa?",
+   "versiculo": "Vendo os escribas dos fariseus que comia com os publicanos e pecadores, perguntavam aos discípulos: Por que é que ele como com os publicanos e pecadores?",
+   "alt": {
+    "A": "Que curava no sábado",
+    "B": "Que comia com publicanos e pecadores",
+    "C": "Que não orava",
+    "D": "Que tocava leprosos"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:17",
+   "nivel": "media",
+   "pergunta": "O que Jesus respondeu sobre comer com pecadores?",
+   "versiculo": "Jesus, porém, ouvindo isso, disse-lhes: Não necessitam de médico os sãos, mas sim os enfermos; eu não vim chamar justos, mas pecadores.",
+   "alt": {
+    "A": "\"Deixai-os em paz\"",
+    "B": "\"Os sãos não precisam de médico, mas os doentes; vim chamar pecadores\"",
+    "C": "\"Todos são justos\"",
+    "D": "\"Não julgueis\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:19",
+   "nivel": "dificil",
+   "pergunta": "O que Jesus respondeu sobre os seus discípulos não jejuarem?",
+   "versiculo": "Respondeu-lhes Jesus: Podem, porventura, jejuar os convidados às núpcias, enquanto está com eles o noivo? Enquanto têm consigo o noivo não podem jejuar;",
+   "alt": {
+    "A": "Que jejum não importa",
+    "B": "Que os filhos das bodas não jejuam enquanto o esposo está com eles",
+    "C": "Que jejuariam depois da Páscoa",
+    "D": "Que jejum é da lei antiga"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:22",
+   "nivel": "media",
+   "pergunta": "Onde não se deve pôr vinho novo, segundo Jesus?",
+   "versiculo": "E ninguém deita vinho novo em odres velhos; do contrário, o vinho novo romperá os odres, e perder-se-á o vinho e também os odres; mas deita-se vinho novo em odres novos.",
+   "alt": {
+    "A": "Em copos velhos",
+    "B": "Em odres velhos",
+    "C": "Em jarras novas",
+    "D": "Em potes de barro"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:23",
+   "nivel": "media",
+   "pergunta": "O que os discípulos faziam ao passar pelas searas no sábado?",
+   "versiculo": "E sucedeu passar ele num dia de sábado pelas searas; e os seus discípulos, caminhando, começaram a colher espigas.",
+   "alt": {
+    "A": "Descansavam",
+    "B": "Colhiam (arrancavam) espigas",
+    "C": "Plantavam",
+    "D": "Oravam"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:25-26",
+   "nivel": "dificil",
+   "pergunta": "Que rei Jesus citou, que comeu os pães da proposição?",
+   "versiculo": "Respondeu-lhes ele: Acaso nunca lestes o que fez Davi quando se viu em necessidade e teve fome, ele e seus companheiros? Como entrou na casa de Deus, no tempo do sumo sacerdote Abiatar, e comeu dos pães da proposição, dos quais não era lícito comer senão aos sacerdotes, e deu também aos companheiros?",
+   "alt": {
+    "A": "Salomão",
+    "B": "Davi",
+    "C": "Saul",
+    "D": "Josias"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:26",
+   "nivel": "dificil",
+   "pergunta": "No tempo de qual sumo sacerdote Davi comeu os pães da proposição?",
+   "versiculo": "Como entrou na casa de Deus, no tempo do sumo sacerdote Abiatar, e comeu dos pães da proposição, dos quais não era lícito comer senão aos sacerdotes, e deu também aos companheiros?",
+   "alt": {
+    "A": "Eli",
+    "B": "Abiatar",
+    "C": "Anás",
+    "D": "Zacarias"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:27",
+   "nivel": "media",
+   "pergunta": "O que Jesus ensinou sobre o sábado e o homem?",
+   "versiculo": "E prosseguiu: O sábado foi feito por causa do homem, e não o homem por causa do sábado.",
+   "alt": {
+    "A": "O homem foi feito para o sábado",
+    "B": "O sábado foi feito por causa do homem, e não o homem por causa do sábado",
+    "C": "O sábado é o maior mandamento",
+    "D": "Ninguém deve trabalhar jamais"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:28",
+   "nivel": "media",
+   "pergunta": "De que Jesus disse ser Senhor?",
+   "versiculo": "Pelo que o Filho do homem até do sábado é Senhor.",
+   "alt": {
+    "A": "Do templo",
+    "B": "Até do sábado",
+    "C": "Da lei",
+    "D": "Dos profetas"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:15",
+   "nivel": "media",
+   "pergunta": "Na casa de quem Jesus estava à mesa com muitos publicanos?",
+   "versiculo": "Ora, estando Jesus à mesa em casa de Levi, estavam também ali reclinados com ele e seus discípulos muitos publicanos e pecadores; pois eram em grande número e o seguiam.",
+   "alt": {
+    "A": "De Simão",
+    "B": "De Levi",
+    "C": "De Jairo",
+    "D": "De Zaqueu"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:18",
+   "nivel": "dificil",
+   "pergunta": "Cujos discípulos jejuavam, gerando a pergunta a Jesus?",
+   "versiculo": "Ora, os discípulos de João e os fariseus estavam jejuando; e foram perguntar-lhe: Por que jejuam os discípulos de João e os dos fariseus, mas os teus discípulos não jejuam?",
+   "alt": {
+    "A": "Só os fariseus",
+    "B": "Os de João e os dos fariseus",
+    "C": "Os saduceus",
+    "D": "Os escribas"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 2:21",
+   "nivel": "media",
+   "pergunta": "O que acontece ao coser remendo de pano novo em roupa velha?",
+   "versiculo": "Ninguém cose remendo de pano novo em vestido velho; do contrário o remendo novo tira parte do velho, e torna-se maior a rotura.",
+   "alt": {
+    "A": "Fica mais forte",
+    "B": "O remendo novo rasga a roupa velha e a rotura fica pior",
+    "C": "Fica igual",
+    "D": "Não muda nada"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:1",
+   "nivel": "media",
+   "pergunta": "Que homem estava na sinagoga quando Jesus foi observado no sábado?",
+   "versiculo": "Outra vez entrou numa sinagoga, e estava ali um homem que tinha uma das mãos atrofiada.",
+   "alt": {
+    "A": "Um cego",
+    "B": "Um homem da mão ressequida (mirrada)",
+    "C": "Um leproso",
+    "D": "Um surdo"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:5",
+   "nivel": "dificil",
+   "pergunta": "Com que sentimento Jesus olhou para os que O vigiavam, antes de curar a mão?",
+   "versiculo": "E olhando em redor para eles com indignação, condoendo-se da dureza dos seus corações, disse ao homem: Estende a tua mão. Ele estendeu, e lhe foi restabelecida.",
+   "alt": {
+    "A": "Com alegria",
+    "B": "Com ira, condoído da dureza do coração deles",
+    "C": "Com medo",
+    "D": "Com indiferença"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:6",
+   "nivel": "dificil",
+   "pergunta": "Com quem os fariseus se juntaram para conspirar a morte de Jesus?",
+   "versiculo": "E os fariseus, saindo dali, entraram logo em conselho com os herodianos contra ele, para o matarem.",
+   "alt": {
+    "A": "Com os saduceus",
+    "B": "Com os herodianos",
+    "C": "Com os romanos",
+    "D": "Com os samaritanos"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:9",
+   "nivel": "media",
+   "pergunta": "O que Jesus pediu por causa da grande multidão?",
+   "versiculo": "Recomendou, pois, a seus discípulos que se lhe preparasse um barquinho, por causa da multidão, para que não o apertasse;",
+   "alt": {
+    "A": "Um lugar alto",
+    "B": "Um barquinho",
+    "C": "Silêncio",
+    "D": "Comida"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:11",
+   "nivel": "media",
+   "pergunta": "O que os espíritos imundos gritavam ao ver Jesus?",
+   "versiculo": "E os espíritos imundos, quando o viam, prostravam-se diante dele e clamavam, dizendo: Tu és o Filho de Deus.",
+   "alt": {
+    "A": "\"Rei de Israel\"",
+    "B": "\"Tu és o Filho de Deus\"",
+    "C": "\"Mestre bom\"",
+    "D": "\"Filho de Davi\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:14",
+   "nivel": "media",
+   "pergunta": "Quantos Jesus escolheu para estarem com Ele e pregar?",
+   "versiculo": "Então designou doze para que estivessem com ele, e os mandasse a pregar;",
+   "alt": {
+    "A": "Sete",
+    "B": "Doze",
+    "C": "Setenta",
+    "D": "Três"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:16",
+   "nivel": "media",
+   "pergunta": "Que novo nome Jesus deu a Simão?",
+   "versiculo": "Designou, pois, os doze, a saber: Simão, a quem pôs o nome de Pedro;",
+   "alt": {
+    "A": "Cefas apenas",
+    "B": "Pedro",
+    "C": "Boanerges",
+    "D": "André"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:17",
+   "nivel": "dificil",
+   "pergunta": "Que apelido Jesus deu a Tiago e João, que significa \"filhos do trovão\"?",
+   "versiculo": "Tiago, filho de Zebedeu, e João, irmão de Tiago, aos quais pôs o nome de Boanerges, que significa: Filhos do trovão;",
+   "alt": {
+    "A": "Cefas",
+    "B": "Boanerges",
+    "C": "Iscariotes",
+    "D": "Barjonas"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:19",
+   "nivel": "media",
+   "pergunta": "Qual dos doze é descrito como o que traiu Jesus?",
+   "versiculo": "e Judas Iscariotes, aquele que o traiu.",
+   "alt": {
+    "A": "Tomé",
+    "B": "Judas Iscariotes",
+    "C": "Simão o cananeu",
+    "D": "Tadeu"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:21",
+   "nivel": "dificil",
+   "pergunta": "O que os parentes de Jesus diziam, tentando detê-lo?",
+   "versiculo": "Quando os seus ouviram isso, saíram para o prender; porque diziam: Ele está fora de si.",
+   "alt": {
+    "A": "\"É um profeta\"",
+    "B": "\"Está fora de si\"",
+    "C": "\"É o Messias\"",
+    "D": "\"Está cansado\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:22",
+   "nivel": "dificil",
+   "pergunta": "De que os escribas de Jerusalém acusaram Jesus?",
+   "versiculo": "E os escribas que tinham descido de Jerusalém diziam: Ele está possesso de Belzebu; e: É pelo príncipe dos demônios que expulsa os demônios.",
+   "alt": {
+    "A": "De quebrar o sábado",
+    "B": "De expulsar demônios por Belzebu, o príncipe dos demônios",
+    "C": "De blasfêmia",
+    "D": "De ensinar contra o templo"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:24",
+   "nivel": "media",
+   "pergunta": "O que Jesus disse sobre um reino dividido contra si mesmo?",
+   "versiculo": "Pois, se um reino se dividir contra si mesmo, tal reino não pode subsistir;",
+   "alt": {
+    "A": "Fica mais forte",
+    "B": "Não pode subsistir",
+    "C": "Cresce",
+    "D": "Vence sempre"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:27",
+   "nivel": "dificil",
+   "pergunta": "O que é preciso fazer antes de saquear a casa do valente?",
+   "versiculo": "Pois ninguém pode entrar na casa do valente e roubar-lhe os bens, se primeiro não amarrar o valente; e então lhe saqueará a casa.",
+   "alt": {
+    "A": "Chamar ajuda",
+    "B": "Amarrá-lo primeiro",
+    "C": "Esperar a noite",
+    "D": "Convencê-lo"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:29",
+   "nivel": "dificil",
+   "pergunta": "Contra quem a blasfêmia não tem perdão eterno?",
+   "versiculo": "mas aquele que blasfemar contra o Espírito Santo, nunca mais terá perdão, mas será réu de pecado eterno.",
+   "alt": {
+    "A": "Contra Moisés",
+    "B": "Contra o Espírito Santo",
+    "C": "Contra os anjos",
+    "D": "Contra o templo"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:33",
+   "nivel": "media",
+   "pergunta": "O que Jesus perguntou quando disseram que sua mãe e irmãos O buscavam?",
+   "versiculo": "Respondeu-lhes Jesus, dizendo: Quem é minha mãe e meus irmãos!",
+   "alt": {
+    "A": "\"Onde estão?\"",
+    "B": "\"Quem é minha mãe e meus irmãos?\"",
+    "C": "\"Mandai-os entrar\"",
+    "D": "\"Já vou\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:35",
+   "nivel": "media",
+   "pergunta": "Quem Jesus disse ser seu irmão, irmã e mãe?",
+   "versiculo": "Pois aquele que fizer a vontade de Deus, esse é meu irmão, irmã e mãe.",
+   "alt": {
+    "A": "Os discípulos apenas",
+    "B": "Quem faz a vontade de Deus",
+    "C": "Os que creem em milagres",
+    "D": "Os que jejuam"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:8",
+   "nivel": "dificil",
+   "pergunta": "De regiões distantes como Tiro e Sidom, o que a multidão fez?",
+   "versiculo": "e de Jerusalém, da Iduméia e de além do Jordão, e das regiões de Tiro e de Sidom, grandes multidões, ouvindo falar de tudo quanto fazia, vieram ter com ele.",
+   "alt": {
+    "A": "Mandou cartas",
+    "B": "Veio a Jesus ao ouvir o que ele fazia",
+    "C": "Enviou presentes",
+    "D": "Ficou em casa"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:10",
+   "nivel": "media",
+   "pergunta": "Por que os enfermos se lançavam sobre Jesus?",
+   "versiculo": "porque tinha curado a muitos, de modo que todos quantos tinham algum mal arrojavam-se a ele para lhe tocarem.",
+   "alt": {
+    "A": "Para ouvi-lo",
+    "B": "Para tocá-lo e serem curados",
+    "C": "Para prendê-lo",
+    "D": "Para vê-lo de perto"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:12",
+   "nivel": "media",
+   "pergunta": "O que Jesus ordenava aos espíritos imundos que o proclamavam?",
+   "versiculo": "E ele lhes advertia com insistência que não o dessem a conhecer.",
+   "alt": {
+    "A": "Que falassem alto",
+    "B": "Que não o manifestassem",
+    "C": "Que saíssem em silêncio",
+    "D": "Que adorassem"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 3:4",
+   "nivel": "media",
+   "pergunta": "O que Jesus perguntou antes de curar no sábado?",
+   "versiculo": "Então lhes perguntou: É lícito no sábado fazer bem, ou fazer mal? salvar a vida ou matar? Eles, porém, se calaram.",
+   "alt": {
+    "A": "\"Quem tem fé?\"",
+    "B": "\"É lícito no sábado fazer o bem ou o mal, salvar ou matar?\"",
+    "C": "\"Quem quer ser curado?\"",
+    "D": "\"Onde estão os sacerdotes?\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:1",
+   "nivel": "media",
+   "pergunta": "De onde Jesus ensinou a multidão que estava na praia?",
+   "versiculo": "Outra vez começou a ensinar à beira do mar. E reuniu-se a ele tão grande multidão que ele entrou num barco e sentou-se nele, sobre o mar; e todo o povo estava em terra junto do mar.",
+   "alt": {
+    "A": "De um monte",
+    "B": "De dentro de um barco no mar",
+    "C": "Da sinagoga",
+    "D": "De uma casa"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:4",
+   "nivel": "media",
+   "pergunta": "Na parábola do semeador, o que aconteceu à semente que caiu à beira do caminho?",
+   "versiculo": "e aconteceu que, quando semeava, uma parte da semente caiu à beira do caminho, e vieram as aves e a comeram.",
+   "alt": {
+    "A": "Secou ao sol",
+    "B": "As aves a comeram",
+    "C": "Os espinhos a sufocaram",
+    "D": "Deu fruto"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:5-6",
+   "nivel": "media",
+   "pergunta": "Por que a semente no solo pedregoso secou?",
+   "versiculo": "Outra caiu no solo pedregoso, onde não havia muita terra: e logo nasceu, porque não tinha terra profunda; mas, saindo o sol, queimou-se; e, porque não tinha raiz, secou-se.",
+   "alt": {
+    "A": "Faltou água na terra funda",
+    "B": "Não tinha raiz profunda e o sol a queimou",
+    "C": "As aves a comeram",
+    "D": "Os espinhos a sufocaram"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:7",
+   "nivel": "media",
+   "pergunta": "O que sufocou a semente que caiu entre espinhos?",
+   "versiculo": "E outra caiu entre espinhos; e cresceram os espinhos, e a sufocaram; e não deu fruto.",
+   "alt": {
+    "A": "O sol",
+    "B": "Os espinhos, que cresceram e a sufocaram",
+    "C": "As aves",
+    "D": "A seca"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:8",
+   "nivel": "dificil",
+   "pergunta": "Quanto frutificou a semente que caiu em boa terra?",
+   "versiculo": "Mas outras caíram em boa terra e, vingando e crescendo, davam fruto; e um grão produzia trinta, outro sessenta, e outro cem.",
+   "alt": {
+    "A": "10, 20 e 40",
+    "B": "30, 60 e 100 por um",
+    "C": "7, 70 e 700",
+    "D": "O dobro"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:15",
+   "nivel": "dificil",
+   "pergunta": "Na explicação, quem tira a palavra semeada à beira do caminho?",
+   "versiculo": "E os que estão junto do caminho são aqueles em quem a palavra é semeada; mas, tendo-a eles ouvido, vem logo Satanás e tira a palavra que neles foi semeada.",
+   "alt": {
+    "A": "Os cuidados do mundo",
+    "B": "Satanás",
+    "C": "A tribulação",
+    "D": "As riquezas"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:19",
+   "nivel": "dificil",
+   "pergunta": "O que sufoca a palavra, representada pelos espinhos?",
+   "versiculo": "mas os cuidados do mundo, a sedução das riquezas e a cobiça doutras coisas, entrando, sufocam a palavra, e ela fica infrutífera.",
+   "alt": {
+    "A": "A perseguição",
+    "B": "Os cuidados do mundo, o engano das riquezas e outras cobiças",
+    "C": "A falta de raiz",
+    "D": "As aves"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:21",
+   "nivel": "media",
+   "pergunta": "Onde não se coloca a candeia acesa, segundo Jesus?",
+   "versiculo": "Disse-lhes mais: Vem porventura a candeia para se meter debaixo do alqueire, ou debaixo da cama? não é antes para se colocar no velador?",
+   "alt": {
+    "A": "No velador",
+    "B": "Debaixo do alqueire ou da cama",
+    "C": "Na janela",
+    "D": "Na porta"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:24",
+   "nivel": "media",
+   "pergunta": "Segundo Jesus, com que medida sereis medidos?",
+   "versiculo": "Também lhes disse: Atendei ao que ouvis. Com a medida com que medis vos medirão a vós, e ainda se vos acrescentará.",
+   "alt": {
+    "A": "Com a medida do templo",
+    "B": "Com a medida com que medirdes",
+    "C": "Com a medida da lei",
+    "D": "Sem medida"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:27",
+   "nivel": "dificil",
+   "pergunta": "Na parábola da semente que cresce, o que o homem faz enquanto ela brota?",
+   "versiculo": "e dormisse e se levantasse de noite e de dia, e a semente brotasse e crescesse, sem ele saber como.",
+   "alt": {
+    "A": "Rega todo dia",
+    "B": "Dorme e levanta, e a semente cresce sem ele saber como",
+    "C": "Fica vigiando",
+    "D": "Cava a terra"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:28",
+   "nivel": "dificil",
+   "pergunta": "Qual a ordem do crescimento da semente, segundo Marcos?",
+   "versiculo": "A terra por si mesma produz fruto, primeiro a erva, depois a espiga, e por último o grão cheio na espiga.",
+   "alt": {
+    "A": "Grão, espiga, erva",
+    "B": "Primeiro a erva, depois a espiga, depois o grão cheio",
+    "C": "Flor, folha, fruto",
+    "D": "Raiz, tronco, galho"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:31",
+   "nivel": "media",
+   "pergunta": "A que Jesus comparou o reino de Deus, sendo a menor das sementes?",
+   "versiculo": "É como um grão de mostarda que, quando se semeia, é a menor de todas as sementes que há na terra;",
+   "alt": {
+    "A": "Ao trigo",
+    "B": "Ao grão de mostarda",
+    "C": "À videira",
+    "D": "Ao fermento"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:32",
+   "nivel": "media",
+   "pergunta": "O que o grão de mostarda se torna ao crescer?",
+   "versiculo": "mas, tendo sido semeado, cresce e faz-se a maior de todas as hortaliças e cria grandes ramos, de tal modo que as aves do céu podem aninhar-se à sua sombra.",
+   "alt": {
+    "A": "Uma flor",
+    "B": "A maior das hortaliças, com grandes ramos onde as aves se aninham",
+    "C": "Uma pequena erva",
+    "D": "Uma árvore de frutos"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:34",
+   "nivel": "media",
+   "pergunta": "A quem Jesus explicava tudo em particular?",
+   "versiculo": "E sem parábola não lhes falava; mas em particular explicava tudo a seus discípulos.",
+   "alt": {
+    "A": "Aos fariseus",
+    "B": "Aos seus discípulos",
+    "C": "À multidão",
+    "D": "Aos escribas"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:35",
+   "nivel": "facil",
+   "pergunta": "O que Jesus disse aos discípulos ao cair a tarde?",
+   "versiculo": "Naquele dia, quando já era tarde, disse-lhes: Passemos para o outro lado.",
+   "alt": {
+    "A": "\"Fiquemos aqui\"",
+    "B": "\"Passemos para o outro lado\"",
+    "C": "\"Voltemos a Cafarnaum\"",
+    "D": "\"Descansemos\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:38",
+   "nivel": "dificil",
+   "pergunta": "Durante a tempestade, onde e como Jesus estava?",
+   "versiculo": "Ele, porém, estava na popa dormindo sobre a almofada; e despertaram-no, e lhe perguntaram: Mestre, não se te dá que pereçamos?",
+   "alt": {
+    "A": "Orando na proa",
+    "B": "Dormindo na popa, sobre uma almofada",
+    "C": "Remando",
+    "D": "Em pé no leme"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:38",
+   "nivel": "media",
+   "pergunta": "O que os discípulos disseram ao acordar Jesus na tempestade?",
+   "versiculo": "Ele, porém, estava na popa dormindo sobre a almofada; e despertaram-no, e lhe perguntaram: Mestre, não se te dá que pereçamos?",
+   "alt": {
+    "A": "\"Salva-nos, Senhor\"",
+    "B": "\"Mestre, não te importa que pereçamos?\"",
+    "C": "\"Acalma o mar\"",
+    "D": "\"Estamos perdidos\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:39",
+   "nivel": "dificil",
+   "pergunta": "Que palavras Jesus disse ao vento e ao mar?",
+   "versiculo": "E ele, levantando-se, repreendeu o vento, e disse ao mar: Cala-te, aquieta-te. E cessou o vento, e fez-se grande bonança.",
+   "alt": {
+    "A": "\"Paz a vós\"",
+    "B": "\"Cala-te, aquieta-te\"",
+    "C": "\"Levanta-te\"",
+    "D": "\"Sê manso\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:40",
+   "nivel": "media",
+   "pergunta": "O que Jesus perguntou aos discípulos após acalmar a tempestade?",
+   "versiculo": "Então lhes perguntou: Por que sois assim tímidos? Ainda não tendes fé?",
+   "alt": {
+    "A": "\"Estais cansados?\"",
+    "B": "\"Por que sois tão tímidos? Ainda não tendes fé?\"",
+    "C": "\"Quem me acordou?\"",
+    "D": "\"Onde vamos?\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 4:41",
+   "nivel": "media",
+   "pergunta": "O que os discípulos disseram, tomados de temor, após a bonança?",
+   "versiculo": "Encheram-se de grande temor, e diziam uns aos outros: Quem, porventura, é este, que até o vento e o mar lhe obedecem?",
+   "alt": {
+    "A": "\"É um anjo\"",
+    "B": "\"Quem é este, que até o vento e o mar lhe obedecem?\"",
+    "C": "\"Fujamos\"",
+    "D": "\"É o fim\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:1",
+   "nivel": "media",
+   "pergunta": "A que região Jesus chegou depois de acalmar a tempestade?",
+   "versiculo": "Chegaram então ao outro lado do mar, à terra dos gerasenos.",
+   "alt": {
+    "A": "Cafarnaum",
+    "B": "Terra dos gadarenos",
+    "C": "Nazaré",
+    "D": "Betsaida"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:3",
+   "nivel": "dificil",
+   "pergunta": "Onde morava o homem com espírito imundo?",
+   "versiculo": "o qual tinha a sua morada nos sepulcros; e nem ainda com cadeias podia alguém prendê-lo;",
+   "alt": {
+    "A": "Numa caverna no monte",
+    "B": "Nos sepulcros",
+    "C": "No deserto",
+    "D": "Numa casa abandonada"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:4",
+   "nivel": "dificil",
+   "pergunta": "Por que ninguém conseguia prender o endemoninhado?",
+   "versiculo": "porque, tendo sido muitas vezes preso com grilhões e cadeias, as cadeias foram por ele feitas em pedaços, e os grilhões em migalhas; e ninguém o podia domar;",
+   "alt": {
+    "A": "Ele fugia",
+    "B": "Ele quebrava as cadeias e os grilhões",
+    "C": "Ele se escondia",
+    "D": "Ele era forte demais para andar"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:5",
+   "nivel": "dificil",
+   "pergunta": "O que o homem fazia dia e noite entre os sepulcros?",
+   "versiculo": "e sempre, de dia e de noite, andava pelos sepulcros e pelos montes, gritando, e ferindo-se com pedras,",
+   "alt": {
+    "A": "Dormia",
+    "B": "Gritava e se feria com pedras",
+    "C": "Cantava",
+    "D": "Chorava calado"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:7",
+   "nivel": "media",
+   "pergunta": "Como o espírito chamou Jesus, ao correr e adorá-lo?",
+   "versiculo": "e, clamando com grande voz, disse: Que tenho eu contigo, Jesus, Filho do Deus Altíssimo? conjuro-te por Deus que não me atormentes.",
+   "alt": {
+    "A": "\"Mestre bom\"",
+    "B": "\"Jesus, Filho do Deus Altíssimo\"",
+    "C": "\"Rei dos judeus\"",
+    "D": "\"Filho de Davi\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:9",
+   "nivel": "media",
+   "pergunta": "Qual o nome que o espírito deu quando Jesus perguntou?",
+   "versiculo": "E perguntou-lhe: Qual é o teu nome? Respondeu-lhe ele: Legião é o meu nome, porque somos muitos.",
+   "alt": {
+    "A": "Belzebu",
+    "B": "Legião, porque somos muitos",
+    "C": "Apoliom",
+    "D": "Diabo"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:13",
+   "nivel": "dificil",
+   "pergunta": "Aproximadamente quantos porcos se precipitaram no mar?",
+   "versiculo": "E ele lho permitiu. Saindo, então, os espíritos imundos, entraram nos porcos; e precipitou-se a manada, que era de uns dois mil, pelo despenhadeiro no mar, onde todos se afogaram.",
+   "alt": {
+    "A": "Cerca de 500",
+    "B": "Cerca de 2.000",
+    "C": "Cerca de 1.000",
+    "D": "Cerca de 5.000"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:15",
+   "nivel": "media",
+   "pergunta": "Como encontraram o endemoninhado depois de curado?",
+   "versiculo": "Chegando-se a Jesus, viram o endemoninhado, o que tivera a legião, sentado, vestido, e em perfeito juízo; e temeram.",
+   "alt": {
+    "A": "Correndo",
+    "B": "Assentado, vestido e em perfeito juízo",
+    "C": "Dormindo",
+    "D": "Gritando ainda"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:17",
+   "nivel": "media",
+   "pergunta": "O que os moradores rogaram a Jesus depois do milagre dos porcos?",
+   "versiculo": "Então começaram a rogar-lhe que se retirasse dos seus termos.",
+   "alt": {
+    "A": "Que ficasse",
+    "B": "Que se retirasse dos termos deles",
+    "C": "Que curasse mais",
+    "D": "Que ensinasse"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:19",
+   "nivel": "media",
+   "pergunta": "O que Jesus mandou o homem curado fazer, em vez de segui-lo?",
+   "versiculo": "Jesus, porém, não lho permitiu, mas disse-lhe: Vai para tua casa, para os teus, e anuncia-lhes o quanto o Senhor te fez, e como teve misericórdia de ti.",
+   "alt": {
+    "A": "Guardar segredo",
+    "B": "Ir para casa e anunciar quanto o Senhor lhe fez",
+    "C": "Ir ao templo",
+    "D": "Ficar nos sepulcros"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:20",
+   "nivel": "dificil",
+   "pergunta": "Em que região o homem curado saiu proclamando o que Jesus fez?",
+   "versiculo": "Ele se retirou, pois, e começou a publicar em Decápolis tudo quanto lhe fizera Jesus; e todos se admiravam.",
+   "alt": {
+    "A": "Galileia",
+    "B": "Decápolis",
+    "C": "Judeia",
+    "D": "Samaria"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:22",
+   "nivel": "dificil",
+   "pergunta": "Qual o nome do chefe da sinagoga cuja filha estava à morte?",
+   "versiculo": "Chegou um dos chefes da sinagoga, chamado Jairo e, logo que viu a Jesus, lançou-se-lhe aos pés.",
+   "alt": {
+    "A": "Nicodemos",
+    "B": "Jairo",
+    "C": "Zaqueu",
+    "D": "Simão"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:23",
+   "nivel": "media",
+   "pergunta": "O que Jairo pediu a Jesus por sua filhinha?",
+   "versiculo": "e lhe rogava com instância, dizendo: Minha filhinha está nas últimas; rogo-te que venhas e lhe imponhas as mãos para que sare e viva.",
+   "alt": {
+    "A": "Que orasse de longe",
+    "B": "Que fosse impor as mãos para que ela sarasse e vivesse",
+    "C": "Que enviasse um discípulo",
+    "D": "Que a levasse ao templo"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:25",
+   "nivel": "media",
+   "pergunta": "Há quantos anos a mulher sofria do fluxo de sangue?",
+   "versiculo": "Ora, certa mulher, que havia doze anos padecia de uma hemorragia,",
+   "alt": {
+    "A": "Sete anos",
+    "B": "Doze anos",
+    "C": "Dezoito anos",
+    "D": "Trinta anos"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:26",
+   "nivel": "dificil",
+   "pergunta": "Como Marcos descreve o que a mulher passou com os médicos?",
+   "versiculo": "e que tinha sofrido bastante às mãos de muitos médicos, e despendido tudo quanto possuía sem nada aproveitar, antes indo a pior,",
+   "alt": {
+    "A": "Foi curada e voltou",
+    "B": "Sofreu muito, gastou tudo e piorava",
+    "C": "Recusou tratamento",
+    "D": "Melhorou aos poucos"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:28",
+   "nivel": "media",
+   "pergunta": "O que a mulher pensou consigo, para ser curada?",
+   "versiculo": "porque dizia: Se tão-somente tocar-lhe as vestes, ficaria curada.",
+   "alt": {
+    "A": "\"Se Ele me chamar\"",
+    "B": "\"Se tão-somente tocar as suas vestes, ficarei curada\"",
+    "C": "\"Se eu orar bastante\"",
+    "D": "\"Se eu jejuar\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:30",
+   "nivel": "dificil",
+   "pergunta": "O que Jesus percebeu ter saído dele quando a mulher tocou suas vestes?",
+   "versiculo": "E logo Jesus, percebendo em si mesmo que saíra dele poder, virou-se no meio da multidão e perguntou: Quem me tocou as vestes?",
+   "alt": {
+    "A": "Uma voz",
+    "B": "Virtude (poder)",
+    "C": "Um sinal",
+    "D": "Uma luz"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:34",
+   "nivel": "media",
+   "pergunta": "O que Jesus disse à mulher curada do fluxo de sangue?",
+   "versiculo": "Disse-lhe ele: Filha, a tua fé te salvou; vai-te em paz, e fica livre desse teu mal.",
+   "alt": {
+    "A": "\"Guarda segredo\"",
+    "B": "\"Filha, a tua fé te salvou; vai em paz\"",
+    "C": "\"Mostra-te ao sacerdote\"",
+    "D": "\"Segue-me\""
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:37",
+   "nivel": "dificil",
+   "pergunta": "Quais três discípulos Jesus deixou entrar na casa de Jairo?",
+   "versiculo": "E não permitiu que ninguém o acompanhasse, senão Pedro, Tiago, e João, irmão de Tiago.",
+   "alt": {
+    "A": "Pedro, André e Filipe",
+    "B": "Pedro, Tiago e João",
+    "C": "Tiago, João e Mateus",
+    "D": "Pedro, João e Judas"
+   },
+   "correta": "B"
+  },
+  {
+   "ref": "Mc 5:41",
+   "nivel": "dificil",
+   "pergunta": "Que palavras (em aramaico) Jesus disse à filha de Jairo?",
+   "versiculo": "E, tomando a mão da menina, disse-lhe: Talita cumi, que, traduzido, é: Menina, a ti te digo, levanta-te.",
+   "alt": {
+    "A": "\"Efatá\"",
+    "B": "\"Talita cumi\"",
+    "C": "\"Maranata\"",
+    "D": "\"Abba\""
+   },
+   "correta": "B"
+  }
+ ]
+}
