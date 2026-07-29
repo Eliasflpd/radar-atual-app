@@ -1484,13 +1484,17 @@ function toastBloqueado(){
 // ══ SPLASH ════════════════════════════════════════
 // sem cadastro? vai DIRETO pro cadastro (logo no início). Já cadastrado? mostra o splash.
 if(getUser()){ setTimeout(irHome, 2200); } else { irHome(); }
+var _deepLinkFeito=false;
 function irHome(){
   if(!checkAuth()) return;
   ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
-  const p = new URLSearchParams(location.search).get('mod');
-  if(p){ history.replaceState({},'',location.pathname); abrirMod(p); } // consome 1x, senão o voltar reabre o módulo
+  if(!_deepLinkFeito){                 // ?mod=... abre o módulo SÓ na 1ª carga; voltar nunca reabre
+    _deepLinkFeito=true;
+    const p = new URLSearchParams(location.search).get('mod');
+    if(p){ history.replaceState({},'',location.pathname); abrirMod(p); }
+  }
 }
 
 // ══ HOME ══════════════════════════════════════════
