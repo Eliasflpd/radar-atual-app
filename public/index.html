@@ -884,6 +884,41 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <div><div class="agv-hub-nome">Agenda Bimestral</div><div class="agv-hub-sub">Julho / Agosto 2026 · IEADET</div></div>
       <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
     </div>
+    <div class="agv-hub-card" onclick="abrirMonteCarmelo()">
+      <div class="agv-hub-ic marrom">⛪</div>
+      <div><div class="agv-hub-nome">Cong. Monte Carmelo</div><div class="agv-hub-sub">Ministérios da congregação</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONG. MONTE CARMELO (sub-hub) -->
+<div class="tela" id="tela-monte-carmelo">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-templo')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Cong. Monte Carmelo</div><div class="std-sub">Templo Central · Tuntum - MA</div></div>
+    <span style="font-size:24px">⛪</span></div>
+  <div class="agv-scroll" style="background:var(--bg)">
+    <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
+    <div class="agv-hub-card" onclick="abrirMcGrupo('jovem')">
+      <div class="agv-hub-ic marrom">🔥</div>
+      <div><div class="agv-hub-nome">Jovem em Busca de Mais Um</div><div class="agv-hub-sub">Ministério de Jovens</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+    <div class="agv-hub-card" onclick="abrirMcGrupo('vocal')">
+      <div class="agv-hub-ic marrom">🎙️</div>
+      <div><div class="agv-hub-nome">Vocal dos Homens</div><div class="agv-hub-sub">Ministério de Louvor</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- GRUPO Monte Carmelo (Jovem / Vocal) -->
+<div class="tela" id="tela-mc-grupo">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-monte-carmelo')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo" id="mc-grupo-nome">Grupo</div><div class="std-sub">Cong. Monte Carmelo</div></div>
+    <span style="font-size:24px" id="mc-grupo-ic">⛪</span></div>
+  <div class="agv-scroll" style="background:var(--bg);padding:16px 14px">
+    <div id="mc-grupo-conteudo"></div>
   </div>
 </div>
 <!-- TEMPLO AGENDA -->
@@ -1727,6 +1762,24 @@ function renderCeadema(qual){
 
 function abrirTemplo(){ mostrarTela('tela-templo'); }
 function abrirTemploAg(){ mostrarTela('tela-templo-ag'); renderTemplo(); }
+function abrirMonteCarmelo(){ mostrarTela('tela-monte-carmelo'); }
+var _MC_GRUPOS={
+  jovem:{nome:'Jovem em Busca de Mais Um', ic:'🔥', desc:'Ministério de Jovens'},
+  vocal:{nome:'Vocal dos Homens', ic:'🎙️', desc:'Ministério de Louvor'}
+};
+function abrirMcGrupo(t){
+  var g=_MC_GRUPOS[t]; if(!g) return;
+  document.getElementById('mc-grupo-nome').textContent=g.nome;
+  document.getElementById('mc-grupo-ic').textContent=g.ic;
+  document.getElementById('mc-grupo-conteudo').innerHTML=
+    '<div style="text-align:center;padding:24px 8px">'
+    +'<div style="font-size:52px">'+g.ic+'</div>'
+    +'<div style="font-family:\'Playfair Display\',serif;font-size:22px;font-weight:900;color:var(--txt);margin-top:10px">'+g.nome+'</div>'
+    +'<div style="font-size:13px;color:var(--gold);font-weight:600;margin-top:3px">'+g.desc+' · Cong. Monte Carmelo</div>'
+    +'<div style="background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:22px;text-align:left;color:var(--sub);font-size:13.5px;line-height:1.6">📋 <b style="color:var(--txt)">Espaço pronto pro grupo.</b><br>Aqui vão os <b>avisos</b>, a <b>agenda</b> e os <b>membros</b> do '+g.nome+'. Me mande o conteúdo que eu coloco.</div>'
+    +'</div>';
+  mostrarTela('tela-mc-grupo');
+}
 function renderTemplo(){
   var h='';
   h+='<div class="agv-brand marrom"><img class="agv-logo" src="img/ieadet.png">'+
