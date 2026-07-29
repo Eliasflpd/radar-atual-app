@@ -1599,13 +1599,13 @@ function compartilhar(e, id, nome){
     });
   }
 }
-// compartilha o LINK DIRETO do jogo Desafio Mateus
+// compartilha o LINK DIRETO do jogo Maratona de Marcos
 function compartilharJogo(e){
   if(e) e.stopPropagation();
-  const url='https://desafio-mateus.vercel.app';
-  const texto='👑 Desafio Mateus — A Jornada do Rei\nEstude Mateus 1 a 5 jogando! Grátis, abre no celular:';
+  const url='https://quiz-marcos.vercel.app';
+  const texto='🏆 Maratona de Marcos — Game bíblico\nEstude Marcos 1 a 5 jogando! 10 modos, grátis, abre no celular:';
   if(navigator.share){
-    navigator.share({title:'Desafio Mateus',text:texto,url}).catch(function(){});
+    navigator.share({title:'Maratona de Marcos',text:texto,url}).catch(function(){});
   } else {
     navigator.clipboard.writeText(texto+'\n'+url).then(function(){ showToast('🔗 Link copiado!'); })
       .catch(function(){ showToast(url); });
