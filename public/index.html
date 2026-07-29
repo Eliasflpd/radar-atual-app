@@ -3873,6 +3873,36 @@ function avisoCard(){
   var dataTxt = WD[a.dt.getDay()]+', '+a.dt.getDate()+' de '+MS[a.dt.getMonth()];
   return {id:'_aviso', tipo:'aviso', fonte:a.fonte, quando:quando, dataTxt:dataTxt, ev:a.ev, local:a.local, dia:a.dt.getDate(), mesAbr:MS[a.dt.getMonth()].toUpperCase()};
 }
+// Eventos da SEMANA (hoje até +7 dias) — Templo Central + Projeto Silas/CEADEMA
+function avisosSemana(){
+  try{
+    var hoje=new Date(); hoje.setHours(0,0,0,0);
+    var fim=new Date(hoje); fim.setDate(fim.getDate()+7);
+    var lista=[];
+    function addMeses(ag, fonte){ if(!ag)return; ag.forEach(function(g){
+      var nome=g[0], ano=2026; if(/2027/.test(nome)){ano=2027;nome=nome.replace(/\s*2027/,'');}
+      var mesG=_MES_NUM[nome.trim()];
+      g[1].forEach(function(e){ var dt=_parseData(e[0],mesG,ano); if(dt) lista.push({dt:dt,ev:e[2],local:e[3],fonte:fonte}); });
+    }); }
+    function addTemplo(ag){ if(!ag)return; ag.forEach(function(e){ var dt=_parseData(e[1],null,2026); if(dt) lista.push({dt:dt,ev:e[2],local:e[3],fonte:'Templo Central'}); }); }
+    if(typeof AG_TEMPLO_JUL!=='undefined') addTemplo(AG_TEMPLO_JUL);
+    if(typeof AG_TEMPLO_AGO!=='undefined') addTemplo(AG_TEMPLO_AGO);
+    if(typeof AG_ESTADUAL!=='undefined') addMeses(AG_ESTADUAL,'CEADEMA Estadual');
+    if(typeof AG_REGIONAL!=='undefined') addMeses(AG_REGIONAL,'CEADEMA Regional');
+    return lista.filter(function(x){return x.dt>=hoje && x.dt<=fim;}).sort(function(a,b){return a.dt-b.dt;});
+  }catch(e){ return []; }
+}
+function avisosSemanaCards(){
+  var evs=avisosSemana();
+  var hoje=new Date(); hoje.setHours(0,0,0,0);
+  var WD=['dom','seg','ter','qua','qui','sex','sáb'], MS=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return evs.slice(0,8).map(function(a,i){
+    var dias=Math.round((a.dt-hoje)/86400000);
+    var quando=dias<=0?'HOJE':dias===1?'AMANHÃ':('EM '+dias+' DIAS');
+    var dataTxt=WD[a.dt.getDay()]+', '+a.dt.getDate()+' de '+MS[a.dt.getMonth()];
+    return {id:'_aviso'+i, tipo:'aviso', fonte:a.fonte, quando:quando, dataTxt:dataTxt, ev:a.ev, local:a.local, dia:a.dt.getDate(), mesAbr:MS[a.dt.getMonth()].toUpperCase()};
+  });
+}
 var _cloudVideos=[];
 async function fetchCloudVideos(){
   try{ var r=await fetch('/api/videos'); var d=await r.json(); _cloudVideos=(d&&d.videos)||[]; renderCarousel(); }
@@ -3960,7 +3990,7 @@ function renderCarousel(){
     });
     cards=cv.concat(cards);
   }
-  const _av=avisoCard(); if(_av) cards=[_av].concat(cards);   // próximo aviso automático no início
+  var _sem=avisosSemanaCards(); if(_sem.length) cards=_sem.concat(cards);   // agenda da SEMANA toda (Templo + Silas/CEADEMA)
   // removidos do slide a pedido do Elias (28/07): Aniversário Pr. Pedro, Culto Assembleia Geral, Nota de Pesar
   // corrente de oração (Davi Ximenes) — REMOVIDO a pedido do Elias (28/07)
   if(!cards.length){
