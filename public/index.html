@@ -831,23 +831,23 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 <!-- DESAFIO MATEUS (game) -->
 <div class="tela" id="tela-desafiomateus">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
-    <div class="std-hinfo"><div class="std-titulo">Desafio Mateus</div><div class="std-sub">A Jornada do Rei</div></div>
-    <span style="font-size:24px">👑</span></div>
+    <div class="std-hinfo"><div class="std-titulo">Maratona de Marcos</div><div class="std-sub">Evangelho de Marcos</div></div>
+    <span style="font-size:24px">🏆</span></div>
   <div class="agv-scroll" style="background:var(--bg)">
     <div style="max-width:460px;margin:18px auto;padding:0 16px">
       <div style="background:linear-gradient(160deg,#0c1e40,#0b1b3a 60%,#091531);border:1px solid rgba(217,182,90,.4);border-radius:22px;padding:28px 22px;text-align:center;box-shadow:0 16px 44px rgba(0,0,0,.45)">
-        <div style="font-size:56px;line-height:1;filter:drop-shadow(0 6px 16px rgba(217,182,90,.5))">👑</div>
-        <div style="font-family:'Playfair Display',Georgia,serif;font-size:25px;font-weight:800;letter-spacing:1px;margin-top:8px;background:linear-gradient(180deg,#fff,#f2d98a);-webkit-background-clip:text;background-clip:text;color:transparent">DESAFIO MATEUS</div>
-        <div style="font-size:11px;letter-spacing:4px;color:#d9b65a;text-transform:uppercase;font-weight:700;margin-top:5px">A Jornada do Rei</div>
-        <p style="color:#cdd8ee;font-size:15px;line-height:1.6;margin:18px 0 6px">Uma competição bíblica pelos <b style="color:#f2d98a">5 primeiros capítulos de Mateus</b>. Primeiro <b>leia ou ouça</b> os capítulos, depois responda o quiz e dispute a pontuação.</p>
+        <div style="font-size:56px;line-height:1;filter:drop-shadow(0 6px 16px rgba(217,182,90,.5))">🏆</div>
+        <div style="font-family:'Playfair Display',Georgia,serif;font-size:25px;font-weight:800;letter-spacing:1px;margin-top:8px;background:linear-gradient(180deg,#fff,#f2d98a);-webkit-background-clip:text;background-clip:text;color:transparent">MARATONA DE MARCOS</div>
+        <div style="font-size:11px;letter-spacing:4px;color:#d9b65a;text-transform:uppercase;font-weight:700;margin-top:5px">Marcos 1 a 5 · 10 modos</div>
+        <p style="color:#cdd8ee;font-size:15px;line-height:1.6;margin:18px 0 6px">Uma competição bíblica pelos <b style="color:#f2d98a">5 primeiros capítulos de Marcos</b>. Primeiro <b>leia</b> os capítulos, depois enfrente <b>10 modos de jogo</b> (Show do Cristão, Batalha, Duelo e mais) e dispute a pontuação.</p>
         <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:14px 0 20px;color:#9fb2d4;font-size:12.5px">
           <span>📖 Leitura obrigatória</span><span>🔊 Narração em voz</span><span>⚔️ Quiz + ranking</span>
         </div>
-        <a href="https://desafio-mateus.vercel.app" target="_blank" rel="noopener"
+        <a href="https://quiz-marcos.vercel.app" target="_blank" rel="noopener"
            style="display:block;text-decoration:none;padding:16px;border-radius:14px;font-weight:800;font-size:17px;font-family:'Playfair Display',Georgia,serif;letter-spacing:.5px;color:#2a1e06;background:linear-gradient(90deg,#f2d98a,#d9b65a);box-shadow:0 10px 26px rgba(217,182,90,.35)">▶ Abrir o jogo</a>
         <button onclick="compartilharJogo(event)"
            style="width:100%;margin-top:12px;padding:15px;border-radius:14px;font-weight:800;font-size:16px;font-family:inherit;cursor:pointer;color:#eaf0fb;background:rgba(255,255,255,.08);border:1px solid rgba(217,182,90,.4)">📲 Compartilhar o link</button>
-        <div style="font-size:12px;color:#9fb2d4;margin-top:14px;letter-spacing:.5px">desafio-mateus.vercel.app</div>
+        <div style="font-size:12px;color:#9fb2d4;margin-top:14px;letter-spacing:.5px">quiz-marcos.vercel.app</div>
       </div>
     </div>
   </div>
@@ -1319,7 +1319,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 <script>
 // ══ MÓDULOS ═══════════════════════════════════════
 const MODS = [
-  {id:'desafiomateus', nome:'Desafio Mateus',      icon:'👑', cor:'#b8862b', desc:'Game bíblico — Mateus 1 a 5 · leia, ouça e jogue'},
+  {id:'desafiomateus', nome:'Maratona de Marcos',  icon:'🏆', cor:'#C9A14A', desc:'Game bíblico — Marcos 1 a 5 · leia, ouça e jogue'},
   {id:'perolas', nome:'Descobrindo as Pérolas',   icon:'💎', cor:'#8b5cf6', desc:'Análise bíblica de qualquer assunto'},
   {id:'biblia',  nome:'Bíblia e Harpa Cristã',   icon:'📖', cor:'#C9A14A', desc:'Bíblia + 640 hinos'},
   {id:'ebd',     nome:'EBD',                      icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
@@ -3916,7 +3916,7 @@ function abrirNotaPesar(){
 function renderCarousel(){
   const wrap=document.getElementById('home-carousel');
   if(!wrap)return;
-  let cards=getCarouselCards().filter(c=>c.ativo!==false);
+  let cards=getCarouselCards().filter(c=>c.ativo!==false && c.tipo!=='mp4'); // mp4 (louvores/filmes) fora do slide (pedido do Elias)
   // vídeos da nuvem (YouTube/Facebook add pelo Elias) — entram antes das louvores
   if(_cloudVideos && _cloudVideos.length){
     var cv=_cloudVideos.map(function(v){
@@ -3927,9 +3927,7 @@ function renderCarousel(){
     cards=cv.concat(cards);
   }
   const _av=avisoCard(); if(_av) cards=[_av].concat(cards);   // próximo aviso automático no início
-  const _pb=parabensCard(); if(_pb) cards=[_pb].concat(cards); // parabéns Pr. Pedro (celebrativo)
-  const _cg=cultoCard(); if(_cg) cards=[_cg].concat(cards);   // flyer do culto (enquanto vigente)
-  const _np=notaPesarCard(); if(_np) cards=[_np].concat(cards); // nota de pesar (CEADEMA) — no topo enquanto vigente
+  // removidos do slide a pedido do Elias (28/07): Aniversário Pr. Pedro, Culto Assembleia Geral, Nota de Pesar
   const _dx=daviCard(); if(_dx) cards=[_dx].concat(cards);     // corrente de oração (Davi Ximenes) — 1º, emergência
   if(!cards.length){
     wrap.innerHTML='<div class="carousel-empty"><div style="font-size:28px;opacity:.3">🖼️</div><div>Nenhum card no carousel</div><div style="font-size:10px;opacity:.6">Adicione em Admin → Configurações</div></div>';
