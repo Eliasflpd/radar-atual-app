@@ -1507,9 +1507,10 @@ function renderHome(){
   document.getElementById('greet-nome').textContent = 'RADAR SEMANAL';
   document.getElementById('greet-cargo').textContent = 'Avisos e agenda da igreja';
 
-  // Carousel — 7 louvores + 5 vídeos + 10 imagens
+  // Carousel — 7 louvores + 5 vídeos
   soLouvores();
   seedMais5e10();
+  limparLicaoDomingo();   // 🗑️ tira as imagens de lição/eventos que já passaram (foto1-10 + cartaz 1-10)
   renderCarousel();
   fetchCloudVideos();   // busca vídeos da nuvem (YouTube/Facebook do Elias) e re-renderiza
   seedAgendaCeadema();   // agenda CEADEMA (avisos até o fim do ano)
@@ -3636,6 +3637,25 @@ function seedMais5e10(){
   for(var f=1;f<=10;f++){ if(!has('foto-'+f)) base.push({id:'foto-'+f,tipo:'imagem',imagem:'/carousel/foto'+f+'.jpg',titulo:'',link:'',ativo:true}); }
   setCarouselCards(base);
   localStorage.setItem('radar_seed_mais_v1','1');
+}
+// 🗑️ remove as imagens de lição/eventos que já passaram (foto1-10 + cartaz 1-10). Roda sempre, idempotente.
+function limparLicaoDomingo(){
+  var rem={}; for(var f=1;f<=10;f++){ rem['foto-'+f]=1; rem['cartaz-'+f]=1; }
+  var base=getCarouselCards();
+  var limpo=base.filter(function(c){
+    if(rem[c.id]) return false;
+    if(/\/carousel\/(?:foto)?(?:[1-9]|10)\.jpg$/.test(c.imagem||'')) return false;
+    return true;
+  });
+  if(limpo.length!==base.length){
+    setCarouselCards(limpo);
+    try{ localStorage.setItem('radar_novidade_sig', novidadeSig()); }catch(_){}   // não alarmar "novidade" por remoção
+  }
+  // trava os seeds pra não readicionarem em aparelho novo
+  try{ localStorage.setItem('radar_seed_mais_v1','1');
+       localStorage.setItem('radar_seed_cartaz7_v1','1');
+       localStorage.setItem('radar_seed_cartaz8_v1','1');
+       localStorage.setItem('radar_seed_cartaz910_v1','1'); }catch(_){}
 }
 // 🎵 adiciona os 7 vídeos de louvor ao carrossel (1x só, sem duplicar)
 function seedLouvores(){
