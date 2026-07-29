@@ -1,7 +1,8 @@
 // Serve o conteúdo dos manuais SÓ pra dentro do app — bloqueia download direto/hotlink.
 // O .md não fica mais em /public (não é baixável). Aqui checa origem e proíbe cache/indexação.
 const MANUAIS = {
-  cerimonias: require('./_manuais/cerimonias.json')
+  cerimonias: require('./_manuais/cerimonias.json'),
+  'declaracao-fe': require('./_manuais/declaracao-fe.json')
 };
 
 module.exports = (req, res) => {
