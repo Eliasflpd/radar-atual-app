@@ -2594,7 +2594,7 @@ function abrirEbdTurma(turma){
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
     body.innerHTML=main.map(lic=>{
       const idx=lics.indexOf(lic);
-      const isLocked=false; /* TODAS as lições liberadas (pedido do Elias) */
+      const isLocked=(lic.n!==licaoDaSemana()); /* só a lição do domingo atual fica aberta (pedido do Elias) */
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
       if(isLocked){
         return `<div class="ebd-item" style="opacity:.42;cursor:pointer" onclick="toastBloqueado()">
@@ -2617,14 +2617,13 @@ function abrirEbdTurma(turma){
     }).join('')+
     (extra.length?`<div style="padding:8px 0 4px"><div class="bh-secao" style="margin:0">Extra</div></div>`+
     extra.map(lic=>{
-      const idx=lics.indexOf(lic);
-      return `<div class="ebd-item ppt-item" onclick="abrirLicaoDetalhe(${idx})">
+      return `<div class="ebd-item" style="opacity:.42;cursor:pointer" onclick="toastBloqueado()">
         <div class="ebd-lic-num" style="font-size:10px">EXT</div>
         <div class="ebd-item-info">
           <div class="ebd-item-titulo">${lic.titulo}</div>
-          <div class="ebd-item-meta">${lic.ppt?'PPT · '+lic.ppt.slides+' slides':''}</div>
+          <div class="ebd-item-meta">Em breve</div>
         </div>
-        <span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>
+        <span style="font-size:18px;flex-shrink:0">🔒</span>
       </div>`;
     }).join(''):'');
   }
@@ -2638,6 +2637,8 @@ function fecharEbdTurma(){
 }
 
 function abrirLicaoDetalhe(idx){
+  const _lc=EBD_LICOES[ebdTurmaAtual][idx];
+  if(_lc && _lc.n!==licaoDaSemana()){ toastBloqueado(); return; }  /* só a lição do domingo abre */
   ebdDetalheIdx=idx;
   const lic=EBD_LICOES[ebdTurmaAtual][idx];
   const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
