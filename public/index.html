@@ -4027,6 +4027,12 @@ function parabensCard(){
     if(hoje>fim) return null; }catch(e){}
   return {id:'_parabens', tipo:'flyer', imagem:'/carousel/parabens-pedro.jpg'};
 }
+function umadeasCard(){
+  // VII Congresso da UMADEAS (Josué e Milena) — no topo até 20/09/2026
+  try{ var fim=new Date(2026,8,20), hoje=new Date(); hoje.setHours(0,0,0,0);
+    if(hoje>fim) return null; }catch(e){}
+  return {id:'_umadeas', tipo:'flyer', imagem:'/carousel/umadeas.jpg'};
+}
 function abrirNotaPesar(){
   mostrarTela('tela-nota-pesar');
   var sc=document.querySelector('#tela-nota-pesar .np-scroll'); if(sc) sc.scrollTop=0;
@@ -4045,6 +4051,7 @@ function renderCarousel(){
     cards=cv.concat(cards);
   }
   var _sem=avisosSemanaCards(); if(_sem.length) cards=_sem.concat(cards);   // agenda da SEMANA toda (Templo + Silas/CEADEMA)
+  var _uma=umadeasCard(); if(_uma) cards=[_uma].concat(cards);   // VII Congresso UMADEAS — 1º card, até 20/09/2026
   // removidos do slide a pedido do Elias (28/07): Aniversário Pr. Pedro, Culto Assembleia Geral, Nota de Pesar
   // corrente de oração (Davi Ximenes) — REMOVIDO a pedido do Elias (28/07)
   if(!cards.length){
