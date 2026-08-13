@@ -927,7 +927,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   <div class="std-header" style="background:#0b4aa2;border:none">
     <button class="std-back" onclick="mostrarTela('tela-mc-grupo')" style="color:#fff">‹</button>
     <div class="std-hinfo"><div class="std-titulo" id="louvor-hdr" style="color:#fff">Louvor</div><div class="std-sub" style="color:#cfe0f7">Jovem em Busca de Mais Um</div></div>
-    <button onclick="compartilharLouvorAtual()" title="Compartilhar letra" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">📤</button>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="mudarFonteLouvor(-2)" title="Diminuir letra" style="background:rgba(255,255,255,.18);border:none;color:#fff;width:36px;height:34px;border-radius:9px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit">A−</button>
+      <button onclick="mudarFonteLouvor(2)" title="Aumentar letra" style="background:rgba(255,255,255,.18);border:none;color:#fff;width:36px;height:34px;border-radius:9px;font-size:19px;font-weight:800;cursor:pointer;font-family:inherit">A+</button>
+      <button onclick="compartilharLouvorAtual()" title="Compartilhar letra" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">📤</button>
+    </div>
   </div>
   <div class="agv-scroll" style="background:#fff">
     <div id="louvor-conteudo" style="max-width:820px;margin:0 auto;padding:24px 20px 70px"></div>
@@ -1831,11 +1835,18 @@ function renderLouvoresLista(q){
   var cc=document.getElementById('louvores-cont'); if(cc) cc.textContent=_LOUVORES.length+(_LOUVORES.length>1?' louvores':' louvor');
 }
 var _LOUVOR_ATUAL=0;
+var _louvorFont=parseInt(localStorage.getItem('louvor_font')||'21',10);
+if(!(_louvorFont>=14&&_louvorFont<=48)) _louvorFont=21;
+function mudarFonteLouvor(d){
+  _louvorFont=Math.max(14,Math.min(48,_louvorFont+d));
+  localStorage.setItem('louvor_font',_louvorFont);
+  [].forEach.call(document.querySelectorAll('#louvor-conteudo p.louvor-linha'),function(p){ p.style.fontSize=_louvorFont+'px'; });
+}
 function abrirLouvor(i){
   _LOUVOR_ATUAL=i; var s=_LOUVORES[i]; if(!s) return;
   var h='<h1 style="font-family:\'Playfair Display\',serif;color:#0b4aa2;font-size:30px;font-weight:900;text-align:center;margin:0 0 24px;line-height:1.2">'+s.t+'</h1>';
   s.l.forEach(function(st){
-    h+='<p style="color:#111;font-size:21px;line-height:1.5;font-weight:600;margin:0 0 20px;text-align:center">'+st.join('<br>')+'</p>';
+    h+='<p class="louvor-linha" style="color:#111;font-size:'+_louvorFont+'px;line-height:1.5;font-weight:600;margin:0 0 20px;text-align:center">'+st.join('<br>')+'</p>';
   });
   document.getElementById('louvor-conteudo').innerHTML=h;
   document.getElementById('louvor-hdr').textContent=s.t;
