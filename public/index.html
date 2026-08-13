@@ -1541,10 +1541,13 @@ function irHome(){
   ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
-  if(!_deepLinkFeito){                 // ?mod=... abre o módulo SÓ na 1ª carga; voltar nunca reabre
+  if(!_deepLinkFeito){                 // ?mod=... / ?ir=... abre direto SÓ na 1ª carga; voltar nunca reabre
     _deepLinkFeito=true;
-    const p = new URLSearchParams(location.search).get('mod');
+    const _qs = new URLSearchParams(location.search);
+    const p = _qs.get('mod');
+    const ir = _qs.get('ir');
     if(p){ history.replaceState({},'',location.pathname); abrirMod(p); }
+    else if(ir==='jovem'){ history.replaceState({},'',location.pathname); abrirMonteCarmelo(); abrirMcGrupo('jovem'); }
   }
 }
 
@@ -1854,7 +1857,7 @@ function abrirLouvor(i){
   mostrarTela('tela-louvor');
 }
 function compartilharJovem(){
-  var url='https://radar-atual.vercel.app';
+  var url='https://radar-atual.vercel.app/?ir=jovem';
   var txt='🔥 Jovem em Busca de Mais Um — Louvores e mais no app RADAR ATUAL';
   if(navigator.share){ navigator.share({title:'Jovem em Busca de Mais Um',text:txt,url:url}).catch(function(){}); }
   else { try{navigator.clipboard.writeText(url);}catch(e){} alert('Link copiado!\n'+url); }
