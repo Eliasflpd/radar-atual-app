@@ -2712,6 +2712,23 @@ function abrirEbdTurma(turma){
       const idx=lics.indexOf(lic);
       const isLocked=(lic.n!==licaoDaSemana()); /* só a lição do domingo atual fica aberta (pedido do Elias) */
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
+      if(ebdTurmaAtual==='adulto' && lic.n>=1 && lic.n<=13){
+        const nn=String(lic.n).padStart(2,'0');
+        const badge=isLocked
+          ?'<div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.62);color:#fff;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px">🔒 Em breve</div>'
+          :'<div style="position:absolute;top:10px;right:10px;background:#25D366;color:#fff;font-size:11px;font-weight:800;padding:5px 11px;border-radius:999px;letter-spacing:.5px">ESTA SEMANA</div>';
+        return `<div class="ebd-item ppt-item" style="display:block;padding:0;overflow:hidden;margin-bottom:12px${isLocked?';opacity:.9':''}" onclick="abrirLicaoDetalhe(${idx})">
+          <div style="position:relative">
+            <img src="/ebd/adulto/img/licao-${nn}.jpg" style="width:100%;display:block" onerror="this.style.display='none'">
+            ${badge}
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 14px">
+            <div style="background:var(--gold);color:#0a3a33;font-weight:900;border-radius:8px;padding:3px 10px;font-size:13px;flex-shrink:0">LIÇÃO ${nn}</div>
+            <div style="font-size:12px;color:var(--sub);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lic.titulo}</div>
+            <span style="margin-left:auto;color:var(--gold);font-size:22px;flex-shrink:0">›</span>
+          </div>
+        </div>`;
+      }
       if(isLocked){
         return `<div class="ebd-item" style="opacity:.42;cursor:pointer" onclick="toastBloqueado()">
           <div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
@@ -2720,17 +2737,6 @@ function abrirEbdTurma(turma){
             <div class="ebd-item-meta">Em breve</div>
           </div>
           <span style="font-size:18px;flex-shrink:0">🔒</span>
-        </div>`;
-      }
-      if(ebdTurmaAtual==='adulto' && lic.n>=1 && lic.n<=13){
-        const nn=String(lic.n).padStart(2,'0');
-        return `<div class="ebd-item ppt-item" style="display:block;padding:0;overflow:hidden" onclick="abrirLicaoDetalhe(${idx})">
-          <img src="/ebd/adulto/img/licao-${nn}.jpg" style="width:100%;display:block" onerror="this.style.display='none'">
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px">
-            <div style="background:var(--gold);color:#0a3a33;font-weight:900;border-radius:8px;padding:3px 10px;font-size:13px">LIÇÃO ${nn}</div>
-            <div style="font-size:12px;color:var(--sub)">${tags||'Toque para abrir'}</div>
-            <span style="margin-left:auto;color:var(--gold);font-size:22px">›</span>
-          </div>
         </div>`;
       }
       return `<div class="ebd-item ppt-item" onclick="abrirLicaoDetalhe(${idx})">
@@ -2765,7 +2771,7 @@ function fecharEbdTurma(){
 
 function abrirLicaoDetalhe(idx){
   const _lc=EBD_LICOES[ebdTurmaAtual][idx];
-  if(_lc && _lc.n!==licaoDaSemana()){ toastBloqueado(); return; }  /* só a lição do domingo abre */
+  const _detLocked=!!(_lc && _lc.n>0 && _lc.n!==licaoDaSemana());  /* lição futura: mostra a IMAGEM, conteúdo fica "Em breve" */
   ebdDetalheIdx=idx;
   const lic=EBD_LICOES[ebdTurmaAtual][idx];
   const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
@@ -2794,8 +2800,8 @@ function abrirLicaoDetalhe(idx){
      tap:lic.video?`abrirVideo('${lic.video||''}')`:null}
   ];
   document.getElementById('ebd-det-body').innerHTML=_licBanner+itens.map(it=>{
-    const tappable=it.ativo&&it.tap;
-    const action=it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`);
+    const tappable=it.ativo&&it.tap&&!_detLocked;
+    const action=_detLocked?`<span class="ebd-em-breve">🔒 Em breve</span>`:(it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`));
     return `<div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}${tappable?' ppt-item':''}"${tappable?` onclick="${it.tap}"`:''}>
       <div class="ebd-det-num">${it.num}</div>
       <div class="ebd-item-icon">${it.icon}</div>
