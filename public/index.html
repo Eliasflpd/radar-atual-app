@@ -4261,10 +4261,10 @@ function renderCarousel(){
         <div style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,.6);color:#fff;font-size:12.5px;font-weight:700;padding:6px 11px;border-radius:999px">👁 <b id="views-${c.id}">${_lvw}</b> acessos</div>
         ${c.titulo?`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`:''}</div>`;
     } else if(c.tipo==='licaobanner'){
-      inner=`<div onclick="abrirEbdAdultoLicao(${c.n})" style="height:460px;position:relative;background:linear-gradient(160deg,#0a3a33,#0e5347);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden">
-        <div style="position:absolute;top:16px;left:16px;z-index:2;background:linear-gradient(150deg,#f0d488,#c99a3a);color:#0a3a33;font-weight:900;font-size:12px;padding:6px 13px;border-radius:999px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(0,0,0,.35)">📖 LIÇÃO DA SEMANA</div>
-        <img src="${c.img}" style="width:100%;display:block" onerror="this.style.display='none'">
-        <div style="position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-size:13px;font-weight:700;opacity:.92;text-shadow:0 2px 8px rgba(0,0,0,.5)">Toque para abrir a lição ›</div>
+      inner=`<div onclick="abrirEbdAdultoLicao(${c.n})" style="height:460px;background:linear-gradient(160deg,#0a3a33,#0e5347);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;overflow:hidden">
+        <div style="background:linear-gradient(150deg,#f0d488,#c99a3a);color:#0a3a33;font-weight:900;font-size:12.5px;padding:7px 15px;border-radius:999px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(0,0,0,.35)">📖 LIÇÃO DA SEMANA</div>
+        <img src="${c.img}" style="width:100%;display:block;box-shadow:0 10px 26px rgba(0,0,0,.45)" onerror="this.style.display='none'">
+        <div style="color:#fff;font-size:13.5px;font-weight:800;opacity:.95">Toque para abrir a lição ›</div>
       </div>`;
     } else {
       inner=`<div class="cs-txt" style="--tc:${c.cor||'var(--card)'}">
