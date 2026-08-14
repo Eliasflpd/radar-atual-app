@@ -4168,6 +4168,7 @@ function renderCarousel(){
   }
   var _sem=avisosSemanaCards(); if(_sem.length) cards=_sem.concat(cards);   // agenda da SEMANA toda (Templo + Silas/CEADEMA)
   var _uma=umadeasCard(); if(_uma) cards=[_uma].concat(cards);   // VII Congresso UMADEAS — 1º card, até 20/09/2026
+  var _vloc=videosLocaisCards(); if(_vloc.length) cards=cards.concat(_vloc);   // 6 vídeos (Downloads) — tocam em TELA CHEIA + botão Sair
   // removidos do slide a pedido do Elias (28/07): Aniversário Pr. Pedro, Culto Assembleia Geral, Nota de Pesar
   // corrente de oração (Davi Ximenes) — REMOVIDO a pedido do Elias (28/07)
   if(!cards.length){
@@ -4225,6 +4226,13 @@ function renderCarousel(){
       inner=`<div class="cs-video-thumb" onclick="abrirVideoCard(${i})">
         ${thumb?`<img src="${thumb}" alt="">`:''}<div class="cs-video-play">▶</div></div>`;
       if(c.titulo) inner+=`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`;
+    } else if(c.tipo==='localvideo'){
+      const _lvw=(getViews()[c.id]||0);
+      inner=`<div onclick="abrirVideoTela('${c.video}','${(c.titulo||'').replace(/'/g,'’')}','${c.id}')" style="height:460px;position:relative;background:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden">
+        <video src="${c.video}#t=0.1" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18)"><div style="width:70px;height:70px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px">▶</div></div>
+        <div style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,.6);color:#fff;font-size:12.5px;font-weight:700;padding:6px 11px;border-radius:999px">👁 <b id="views-${c.id}">${_lvw}</b> acessos</div>
+        ${c.titulo?`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`:''}</div>`;
     } else {
       inner=`<div class="cs-txt" style="--tc:${c.cor||'var(--card)'}">
         ${c.titulo?`<div class="cs-titulo">${c.titulo}</div>`:''}
@@ -4234,7 +4242,7 @@ function renderCarousel(){
     let link;
     if(c.tipo==='notapesar') link='onclick="abrirNotaPesar()" style="cursor:pointer"';
     else if(c.link) link=`onclick="window.open('${c.link}','_blank')" style="cursor:pointer"`;
-    else link=(c.tipo!=='video'&&c.tipo!=='mp4')?'onclick="void(0)"':'';
+    else link=(c.tipo!=='video'&&c.tipo!=='mp4'&&c.tipo!=='localvideo')?'onclick="void(0)"':'';
     return `<div class="carousel-slide" ${link}>${inner}</div>`;
   }).join('');
 
@@ -4303,6 +4311,38 @@ function abrirVideoCard(idx){
   } else if(c.video){
     window.open(c.video,'_blank');
   }
+}
+
+// 6 vídeos locais (Downloads) — aparecem como slides e tocam em TELA CHEIA
+function videosLocaisCards(){
+  var r=[];
+  for(var i=1;i<=6;i++){ r.push({id:'lv'+i, tipo:'localvideo', video:'/videos/v'+i+'.mp4', titulo:'Vídeo '+i}); }
+  return r;
+}
+function abrirVideoTela(url, titulo, id){
+  try{ if(id) bumpView(id); }catch(e){}
+  try{ clearTimeout(_carTimer); clearInterval(_carTimer); }catch(e){}
+  var ov=document.getElementById('video-fs');
+  if(!ov){ ov=document.createElement('div'); ov.id='video-fs'; document.body.appendChild(ov); }
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#000;display:flex;flex-direction:column';
+  ov.innerHTML=''
+    +'<div style="position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;z-index:2;background:linear-gradient(rgba(0,0,0,.65),transparent);pointer-events:none">'
+      +'<div style="color:#fff;font-weight:800;font-size:15px;max-width:64%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(titulo||'')+'</div>'
+      +'<button onclick="fecharVideoTela()" style="pointer-events:auto;background:#e50914;color:#fff;border:none;border-radius:999px;padding:10px 20px;font-weight:800;font-size:15px;font-family:inherit;cursor:pointer">✕ Sair</button>'
+    +'</div>'
+    +'<video src="'+url+'" controls autoplay playsinline style="width:100%;height:100%;object-fit:contain;background:#000"></video>';
+  ov.style.display='flex';
+  try{ var fn=ov.requestFullscreen||ov.webkitRequestFullscreen||ov.msRequestFullscreen; if(fn) fn.call(ov); }catch(e){}
+  document.addEventListener('keydown', _escFecharVideo);
+}
+function _escFecharVideo(e){ if(e.key==='Escape') fecharVideoTela(); }
+function fecharVideoTela(){
+  var ov=document.getElementById('video-fs'); if(!ov) return;
+  var v=ov.querySelector('video'); if(v){ try{ v.pause(); }catch(e){} }
+  try{ if(document.fullscreenElement||document.webkitFullscreenElement) (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){}
+  document.removeEventListener('keydown', _escFecharVideo);
+  ov.style.display='none'; ov.innerHTML='';
+  try{ agendarSlide(); }catch(e){}
 }
 
 // ══════════════════════════════════════════════════════════
