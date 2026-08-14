@@ -598,6 +598,25 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .cs-av-data{font-size:15px;font-weight:800;color:#ffd97a;margin:4px 0 10px;text-transform:capitalize}
 .cs-av-nome{font-size:26px;font-weight:900;line-height:1.2;max-width:280px}
 .cs-av-local{font-size:14.5px;color:#dbe8ff;margin-top:14px;max-width:270px}
+/* ===== Card de aviso PREMIUM (cores da revista: teal/verde + dourado) ===== */
+.cs-avp{height:460px;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:26px 24px;color:#fff;background:linear-gradient(155deg,#0a3a33,#12695b);text-align:left}
+.cs-avp::after{content:'';position:absolute;inset:0;background:radial-gradient(120% 55% at 82% -5%,rgba(217,180,90,.22),transparent 60%);pointer-events:none}
+.cs-avp-wm{position:absolute;right:-18px;bottom:-40px;font-size:212px;line-height:1;opacity:.08;transform:rotate(-8deg);pointer-events:none;z-index:0}
+.cs-avp>*{position:relative;z-index:1}
+.cs-avp-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cs-avp-tag{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);border:1px solid rgba(240,226,184,.35);padding:6px 13px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.cs-avp-tag i{width:7px;height:7px;border-radius:50%;background:#d9b45a}
+.cs-avp-when{background:linear-gradient(150deg,#f0d488,#c99a3a);color:#20351f;padding:7px 15px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.5px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.cs-avp-mid{display:flex;align-items:center;gap:16px;margin:24px 0 18px}
+.cs-avp-date{width:112px;height:112px;border-radius:26px;background:linear-gradient(150deg,#fff,#f0dca0);color:#0a3a33;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 14px 34px rgba(0,0,0,.42);flex-shrink:0}
+.cs-avp-day{font-size:48px;font-weight:900;line-height:.92}
+.cs-avp-mon{font-size:14px;font-weight:900;letter-spacing:3px;margin-top:2px}
+.cs-avp-icon{width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(240,226,184,.4);display:flex;align-items:center;justify-content:center;font-size:33px}
+.cs-avp-nome{font-family:'Playfair Display',serif;font-size:27px;font-weight:900;line-height:1.16;text-shadow:0 2px 12px rgba(0,0,0,.4);max-width:94%}
+.cs-avp-rule{width:56px;height:3px;border-radius:2px;background:#d9b45a;margin:14px 0 10px}
+.cs-avp-quando2{font-size:15px;font-weight:800;color:#f0d488;text-transform:capitalize}
+.cs-avp-local{font-size:14px;color:#dff0e9;margin-top:8px;display:flex;align-items:flex-start;gap:5px;max-width:94%;line-height:1.35}
+.cs-avp-fonte{margin-top:auto;font-size:10.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.72)}
 .cs-video-thumb{width:100%;height:190px;position:relative;background:#000;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .cs-video-thumb img{width:100%;height:100%;object-fit:cover;opacity:.75}
 .cs-video-play{position:absolute;width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;border:2px solid rgba(255,255,255,.5)}
@@ -4062,6 +4081,21 @@ function avisosSemana(){
     return lista.filter(function(x){return x.dt>=hoje && x.dt<=fim;}).sort(function(a,b){return a.dt-b.dt;});
   }catch(e){ return []; }
 }
+// ícone + categoria do card premium, pelo nome do evento
+function _avisoTema(ev){
+  var s=(ev||'').toLowerCase();
+  function has(){for(var i=0;i<arguments.length;i++){if(s.indexOf(arguments[i])>=0)return true;}return false;}
+  if(has('cruzad','evangel')) return {ic:'🔥', tag:'Evangelismo'};
+  if(has('miss')) return {ic:'🌍', tag:'Missões'};
+  if(has('bíblic','biblic','concurso','conc.','lição','licao','ebd','discipulado','mentoria','seminár','simpós','simpos','uneomad','simjad')) return {ic:'📖', tag:'Ensino'};
+  if(has('vigília','vigilia','oração','oracao','círculo','circulo')) return {ic:'🕯️', tag:'Oração'};
+  if(has('encontro','encontrão','umadet','umadeas','ufadet','uhadet','ucadet','mocidade','jovens','juven','jovem','age ')) return {ic:'✨', tag:'Mocidade'};
+  if(has('santa ceia','ceia')) return {ic:'🍞', tag:'Santa Ceia'};
+  if(has('família','familia','pais','mães','maes')) return {ic:'👨‍👩‍👧', tag:'Família'};
+  if(has('aniversár','aniversar')) return {ic:'🎂', tag:'Aniversário'};
+  if(has('culto','adoração','adoracao','louvor')) return {ic:'⛪', tag:'Culto'};
+  return {ic:'📌', tag:'Evento'};
+}
 function avisosSemanaCards(){
   var evs=avisosSemana();
   var hoje=new Date(); hoje.setHours(0,0,0,0);
@@ -4200,13 +4234,19 @@ function renderCarousel(){
         <div style="margin-top:20px;font-size:12.5px;color:#eaf2fb;border:1px solid rgba(255,255,255,.35);padding:8px 18px;border-radius:999px">🕊️ Toque para ler</div>
       </div>`;
     } else if(c.tipo==='aviso'){
-      inner=`<div class="cs-aviso">
-        <div class="cs-av-daycircle"><div class="cs-av-daynum">${c.dia}</div><div class="cs-av-daymon">${c.mesAbr}</div></div>
-        <span class="cs-av-fonte">📅 ${c.fonte}</span>
-        <div class="cs-av-lbl">Próximo aviso · <b>${c.quando}</b></div>
-        <div class="cs-av-data">${c.dataTxt}</div>
-        <div class="cs-av-nome">${c.ev}</div>
-        ${c.local?`<div class="cs-av-local">📍 ${c.local}</div>`:''}
+      const _t=_avisoTema(c.ev);
+      inner=`<div class="cs-avp">
+        <div class="cs-avp-wm">${_t.ic}</div>
+        <div class="cs-avp-top"><span class="cs-avp-tag"><i></i>${_t.tag}</span><span class="cs-avp-when">${c.quando}</span></div>
+        <div class="cs-avp-mid">
+          <div class="cs-avp-date"><div class="cs-avp-day">${c.dia}</div><div class="cs-avp-mon">${c.mesAbr}</div></div>
+          <div class="cs-avp-icon">${_t.ic}</div>
+        </div>
+        <div class="cs-avp-nome">${c.ev}</div>
+        <div class="cs-avp-rule"></div>
+        <div class="cs-avp-quando2">${c.dataTxt}</div>
+        ${c.local?`<div class="cs-avp-local">📍 <span>${c.local}</span></div>`:''}
+        <div class="cs-avp-fonte">📅 ${c.fonte}</div>
       </div>`;
     } else if(c.tipo==='imagem'){
       inner=`<img class="cs-img" src="${c.imagem||''}" alt="${c.titulo||''}" onerror="this.style.display='none'">`;
