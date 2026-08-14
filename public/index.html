@@ -4238,6 +4238,18 @@ function abrirNotaPesar(){
   mostrarTela('tela-nota-pesar');
   var sc=document.querySelector('#tela-nota-pesar .np-scroll'); if(sc) sc.scrollTop=0;
 }
+/* FLYERS da igreja jogados via clipboard — cada um some sozinho na data 'fim' (YYYY-MM-DD) */
+var FLYERS_EXTRA=[
+  {img:'/carousel/iead-jubileu-1016.jpg', fim:'2026-08-16'}   // IEADCJ 60 anos · 10 a 16 de agosto
+];
+function flyersExtrasCards(){
+  var hoje=new Date(); hoje.setHours(0,0,0,0);
+  return FLYERS_EXTRA.filter(function(f){
+    if(!f.fim) return true;
+    var p=String(f.fim).split('-'); var d=new Date(+p[0],+p[1]-1,+p[2],23,59,59);
+    return d>=hoje;
+  }).map(function(f,i){ return {id:'fx'+i, tipo:'flyer', imagem:f.img}; });
+}
 function licaoSemanaCard(){
   var n=(typeof licaoDaSemana==='function')?licaoDaSemana():0;
   if(n<1||n>13) return null;
@@ -4268,6 +4280,7 @@ function renderCarousel(){
   var _sem=avisosSemanaCards(); if(_sem.length) cards=_sem.concat(cards);   // agenda da SEMANA toda (Templo + Silas/CEADEMA)
   var _uma=umadeasCard(); if(_uma) cards=[_uma].concat(cards);   // VII Congresso UMADEAS — 1º card, até 20/09/2026
   var _lsem=licaoSemanaCard(); if(_lsem) cards=[_lsem].concat(cards);   // LIÇÃO DA SEMANA (imagem real da revista) — 1º card, tocável
+  var _fx=flyersExtrasCards(); if(_fx.length) cards=_fx.concat(cards);   // FLYERS da igreja (clipboard) — 1os cards, somem sozinhos na data
   var _vloc=videosLocaisCards(); if(_vloc.length) cards=cards.concat(_vloc);   // 6 vídeos (Downloads) — tocam em TELA CHEIA + botão Sair
   // removidos do slide a pedido do Elias (28/07): Aniversário Pr. Pedro, Culto Assembleia Geral, Nota de Pesar
   // corrente de oração (Davi Ximenes) — REMOVIDO a pedido do Elias (28/07)
