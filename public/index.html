@@ -2722,6 +2722,17 @@ function abrirEbdTurma(turma){
           <span style="font-size:18px;flex-shrink:0">🔒</span>
         </div>`;
       }
+      if(ebdTurmaAtual==='adulto' && lic.n>=1 && lic.n<=13){
+        const nn=String(lic.n).padStart(2,'0');
+        return `<div class="ebd-item ppt-item" style="display:block;padding:0;overflow:hidden" onclick="abrirLicaoDetalhe(${idx})">
+          <img src="/ebd/adulto/img/licao-${nn}.jpg" style="width:100%;display:block" onerror="this.style.display='none'">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 14px">
+            <div style="background:var(--gold);color:#0a3a33;font-weight:900;border-radius:8px;padding:3px 10px;font-size:13px">LIÇÃO ${nn}</div>
+            <div style="font-size:12px;color:var(--sub)">${tags||'Toque para abrir'}</div>
+            <span style="margin-left:auto;color:var(--gold);font-size:22px">›</span>
+          </div>
+        </div>`;
+      }
       return `<div class="ebd-item ppt-item" onclick="abrirLicaoDetalhe(${idx})">
         <div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
         <div class="ebd-item-info">
@@ -2761,6 +2772,7 @@ function abrirLicaoDetalhe(idx){
   document.getElementById('ebd-det-titulo').textContent=nLabel;
   document.getElementById('ebd-det-sub').textContent=lic.titulo;
   const n=String(lic.n>0?lic.n:0).padStart(2,'0');
+  const _licBanner=(ebdTurmaAtual==='adulto'&&lic.n>=1&&lic.n<=13)?`<img src="/ebd/adulto/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`:'';
   const itens=[
     {num:'1',icon:'📝',nome:'LIÇÃO',
      ativo:!!lic.licao,
@@ -2781,7 +2793,7 @@ function abrirLicaoDetalhe(idx){
      ativo:!!lic.video,
      tap:lic.video?`abrirVideo('${lic.video||''}')`:null}
   ];
-  document.getElementById('ebd-det-body').innerHTML=itens.map(it=>{
+  document.getElementById('ebd-det-body').innerHTML=_licBanner+itens.map(it=>{
     const tappable=it.ativo&&it.tap;
     const action=it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`);
     return `<div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}${tappable?' ppt-item':''}"${tappable?` onclick="${it.tap}"`:''}>
@@ -4153,6 +4165,20 @@ function abrirNotaPesar(){
   mostrarTela('tela-nota-pesar');
   var sc=document.querySelector('#tela-nota-pesar .np-scroll'); if(sc) sc.scrollTop=0;
 }
+function licaoSemanaCard(){
+  var n=(typeof licaoDaSemana==='function')?licaoDaSemana():0;
+  if(n<1||n>13) return null;
+  var nn=('0'+n).slice(-2);
+  return {id:'_licsem', tipo:'licaobanner', img:'/ebd/adulto/img/licao-'+nn+'.jpg', n:n};
+}
+function abrirEbdAdultoLicao(n){
+  try{
+    abrirEbdTurma('adulto');
+    var lics=(typeof EBD_LICOES!=='undefined')?EBD_LICOES['adulto']:[];
+    var idx=-1; for(var i=0;i<lics.length;i++){ if(lics[i].n===n){ idx=i; break; } }
+    if(idx>=0) abrirLicaoDetalhe(idx);
+  }catch(e){}
+}
 function renderCarousel(){
   const wrap=document.getElementById('home-carousel');
   if(!wrap)return;
@@ -4168,6 +4194,7 @@ function renderCarousel(){
   }
   var _sem=avisosSemanaCards(); if(_sem.length) cards=_sem.concat(cards);   // agenda da SEMANA toda (Templo + Silas/CEADEMA)
   var _uma=umadeasCard(); if(_uma) cards=[_uma].concat(cards);   // VII Congresso UMADEAS — 1º card, até 20/09/2026
+  var _lsem=licaoSemanaCard(); if(_lsem) cards=[_lsem].concat(cards);   // LIÇÃO DA SEMANA (imagem real da revista) — 1º card, tocável
   var _vloc=videosLocaisCards(); if(_vloc.length) cards=cards.concat(_vloc);   // 6 vídeos (Downloads) — tocam em TELA CHEIA + botão Sair
   // removidos do slide a pedido do Elias (28/07): Aniversário Pr. Pedro, Culto Assembleia Geral, Nota de Pesar
   // corrente de oração (Davi Ximenes) — REMOVIDO a pedido do Elias (28/07)
@@ -4233,6 +4260,12 @@ function renderCarousel(){
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18)"><div style="width:70px;height:70px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px">▶</div></div>
         <div style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,.6);color:#fff;font-size:12.5px;font-weight:700;padding:6px 11px;border-radius:999px">👁 <b id="views-${c.id}">${_lvw}</b> acessos</div>
         ${c.titulo?`<div class="cs-overlay"><div class="cs-overlay-titulo">${c.titulo}</div></div>`:''}</div>`;
+    } else if(c.tipo==='licaobanner'){
+      inner=`<div onclick="abrirEbdAdultoLicao(${c.n})" style="height:460px;position:relative;background:linear-gradient(160deg,#0a3a33,#0e5347);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden">
+        <div style="position:absolute;top:16px;left:16px;z-index:2;background:linear-gradient(150deg,#f0d488,#c99a3a);color:#0a3a33;font-weight:900;font-size:12px;padding:6px 13px;border-radius:999px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(0,0,0,.35)">📖 LIÇÃO DA SEMANA</div>
+        <img src="${c.img}" style="width:100%;display:block" onerror="this.style.display='none'">
+        <div style="position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-size:13px;font-weight:700;opacity:.92;text-shadow:0 2px 8px rgba(0,0,0,.5)">Toque para abrir a lição ›</div>
+      </div>`;
     } else {
       inner=`<div class="cs-txt" style="--tc:${c.cor||'var(--card)'}">
         ${c.titulo?`<div class="cs-titulo">${c.titulo}</div>`:''}
@@ -4242,7 +4275,7 @@ function renderCarousel(){
     let link;
     if(c.tipo==='notapesar') link='onclick="abrirNotaPesar()" style="cursor:pointer"';
     else if(c.link) link=`onclick="window.open('${c.link}','_blank')" style="cursor:pointer"`;
-    else link=(c.tipo!=='video'&&c.tipo!=='mp4'&&c.tipo!=='localvideo')?'onclick="void(0)"':'';
+    else link=(c.tipo!=='video'&&c.tipo!=='mp4'&&c.tipo!=='localvideo'&&c.tipo!=='licaobanner')?'onclick="void(0)"':'';
     return `<div class="carousel-slide" ${link}>${inner}</div>`;
   }).join('');
 
