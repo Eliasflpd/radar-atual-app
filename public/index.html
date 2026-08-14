@@ -2451,21 +2451,29 @@ function abrirProximoTrimestre(){
   ov.innerHTML=''
    +'<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#0e2233;border-bottom:1px solid rgba(255,255,255,.08)">'
      +'<button onclick="fecharProximoTrimestre()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:36px;height:36px;border-radius:10px;font-size:20px;cursor:pointer">‹</button>'
-     +'<div><div style="color:#fff;font-weight:800;font-size:15px">Próximo Trimestre</div><div style="color:#9db4c4;font-size:11.5px">EBD · Adultos</div></div></div>'
+     +'<div><div style="color:#fff;font-weight:800;font-size:15px">Próximo Trimestre</div><div style="color:#9db4c4;font-size:11.5px">EBD · Adultos</div></div>'
+     +'<button onclick="compartilharProximoTrimestre()" title="Compartilhar" style="margin-left:auto;background:#25D366;border:none;color:#fff;padding:9px 14px;border-radius:999px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:inherit">📤</button></div>'
    +'<div style="flex:1;overflow-y:auto;padding:18px 16px 40px">'
      +'<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:18px">'
-       +'<img src="/ebd/adulto/img/proximo-4tri-aluno.jpg" style="width:118px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.5);flex-shrink:0" onerror="this.style.display=\'none\'">'
+       +'<img src="/ebd/adulto/img/proximo-4tri.jpg" style="width:118px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.5);flex-shrink:0" onerror="this.style.display=\'none\'">'
        +'<div><div style="display:inline-block;background:#c99a3a;color:#20160a;font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:999px;margin-bottom:6px">🔒 EM BREVE · OUT 2026</div>'
          +'<div style="font-family:\'Playfair Display\',serif;color:#fff;font-size:22px;font-weight:900;line-height:1.15">O Deus da Aliança</div>'
          +'<div style="color:#cfe0ea;font-size:12.5px;margin-top:4px;line-height:1.35">Advertências, Promessas e Bênçãos no Livro de Deuteronômio</div>'
          +'<div style="color:#9db4c4;font-size:11.5px;margin-top:5px">4º Trimestre 2026 · Comentarista Pr. Osiel Gomes</div></div></div>'
      +'<div style="color:#f0d488;font-weight:800;font-size:13px;margin:6px 2px 10px;letter-spacing:.5px">AS 13 LIÇÕES</div>'
      +lis
+     +'<button onclick="compartilharProximoTrimestre()" style="width:100%;margin-top:16px;padding:14px;border-radius:14px;border:none;background:#25D366;color:#fff;font-weight:800;font-size:15px;font-family:inherit;cursor:pointer">📤 Compartilhar nos grupos</button>'
      +'<div style="text-align:center;color:#7f97a8;font-size:12px;margin-top:14px;line-height:1.5">📖 Liberado automaticamente quando o trimestre começar.<br>As imagens de cada lição entram quando a revista sair.</div>'
    +'</div>';
   ov.style.display='flex';
 }
 function fecharProximoTrimestre(){ var ov=document.getElementById('prox-4tri-ov'); if(ov){ ov.style.display='none'; ov.innerHTML=''; } }
+function compartilharProximoTrimestre(){
+  var url='https://radar-atual.vercel.app/?mod=ebd';
+  var txt='🔜 PRÓXIMO TRIMESTRE da EBD (Adultos)\n\n📖 *O Deus da Aliança* — Advertências, Promessas e Bênçãos no Livro de Deuteronômio\n4º Trimestre 2026 · 13 lições · Pr. Osiel Gomes\n\nJá dá pra ver tudo no app RADAR ATUAL 👇\n'+url;
+  if(navigator.share){ navigator.share({title:'Próximo Trimestre — O Deus da Aliança',text:txt,url:url}).catch(function(){}); }
+  else { try{navigator.clipboard.writeText(txt);}catch(e){} alert('Copiado pra compartilhar!\n\n'+txt); }
+}
 function abrirEbd(){
   ocultarTodas();
   document.getElementById('tela-ebd').classList.add('ativa');
