@@ -1,0 +1,325 @@
+{
+"fontePentecostal": "Bíblia de Estudo Pentecostal (CPAD)",
+"biblias": [
+{
+"id": "pentecostal",
+"nome": "Pentecostal",
+"temNotas": true
+},
+{
+"id": "a-mensagem",
+"nome": "- A Mensagem",
+"temNotas": false
+},
+{
+"id": "antonio-gilberto",
+"nome": "- Antônio Gilberto",
+"temNotas": false
+},
+{
+"id": "luiz-sayao",
+"nome": "- Luiz Sayão",
+"temNotas": false
+},
+{
+"id": "ministerio-de-criancas",
+"nome": "- Ministério De Crianças",
+"temNotas": false
+},
+{
+"id": "pregadores-e-lideres",
+"nome": "- Pregadores E Líderes",
+"temNotas": false
+},
+{
+"id": "reflexoes-de-lutero",
+"nome": "- Reflexões De Lutero",
+"temNotas": false
+},
+{
+"id": "a-versao-missionaria-di-nelson",
+"nome": "A Bíblia Versão Missionaria Di Nelson",
+"temNotas": false
+},
+{
+"id": "almeida",
+"nome": "Almeida",
+"temNotas": false
+},
+{
+"id": "anotada-expandida",
+"nome": "Anotada Expandida",
+"temNotas": false
+},
+{
+"id": "aplicacao-pessoal",
+"nome": "Aplicação Pessoal",
+"temNotas": false
+},
+{
+"id": "de-estudo-apologetica-ampliada",
+"nome": "Apologética Ampliada",
+"temNotas": false
+},
+{
+"id": "arqueologica-nvi",
+"nome": "Arqueológica - Nvi",
+"temNotas": false
+},
+{
+"id": "charles-spurgeon",
+"nome": "Charles Spurgeon",
+"temNotas": false
+},
+{
+"id": "charles-spurgeon-1611",
+"nome": "Charles Spurgeon 1611",
+"temNotas": false
+},
+{
+"id": "chronos-di-nelson",
+"nome": "Chronos - Di Nelson",
+"temNotas": false
+},
+{
+"id": "cristo-em-toda-escritura",
+"nome": "Cristo Em Toda Escritura",
+"temNotas": false
+},
+{
+"id": "cronologica",
+"nome": "Cronológica",
+"temNotas": false
+},
+{
+"id": "da-fe-reformada",
+"nome": "Da Fé Reformada",
+"temNotas": false
+},
+{
+"id": "da-mulher",
+"nome": "Da Mulher",
+"temNotas": false
+},
+{
+"id": "da-reforma",
+"nome": "Da Reforma",
+"temNotas": false
+},
+{
+"id": "dake",
+"nome": "Dake",
+"temNotas": false
+},
+{
+"id": "desafio-de-todo-homem",
+"nome": "Desafio De Todo Homem",
+"temNotas": false
+},
+{
+"id": "do-discipulado",
+"nome": "Do Discipulado",
+"temNotas": false
+},
+{
+"id": "do-pregador-pentecostal",
+"nome": "Do Pregador Pentecostal",
+"temNotas": false
+},
+{
+"id": "escola-biblica",
+"nome": "Escola Bíblica",
+"temNotas": false
+},
+{
+"id": "explicada",
+"nome": "Explicada",
+"temNotas": false
+},
+{
+"id": "genebra-2-edicao",
+"nome": "Genebra 2° Edição",
+"temNotas": false
+},
+{
+"id": "genebra-2o-edicao-ampliada",
+"nome": "Genebra 2º Edição Ampliada",
+"temNotas": false
+},
+{
+"id": "heranca-reformada",
+"nome": "Herança Reformada",
+"temNotas": false
+},
+{
+"id": "holman",
+"nome": "Holman",
+"temNotas": false
+},
+{
+"id": "igreja-primitiva",
+"nome": "Igreja Primitiva",
+"temNotas": false
+},
+{
+"id": "indutiva",
+"nome": "Indutiva",
+"temNotas": false
+},
+{
+"id": "integrada",
+"nome": "Integrada",
+"temNotas": false
+},
+{
+"id": "jeffrey",
+"nome": "Jeffrey",
+"temNotas": false
+},
+{
+"id": "jerusalem",
+"nome": "Jerusalém",
+"temNotas": false
+},
+{
+"id": "john-macarthur",
+"nome": "John Macarthur",
+"temNotas": false
+},
+{
+"id": "john-wesley",
+"nome": "John Wesley",
+"temNotas": false
+},
+{
+"id": "king-james-1611",
+"nome": "King James 1611",
+"temNotas": false
+},
+{
+"id": "kja-atualizada",
+"nome": "Kja Atualizada",
+"temNotas": false
+},
+{
+"id": "lideranca-crista-2-o-edicao",
+"nome": "Liderança Cristã 2 º Edição",
+"temNotas": false
+},
+{
+"id": "ltt",
+"nome": "Ltt",
+"temNotas": false
+},
+{
+"id": "macarthur",
+"nome": "Macarthur",
+"temNotas": false
+},
+{
+"id": "matthew-henry",
+"nome": "Matthew Henry",
+"temNotas": false
+},
+{
+"id": "ministerial",
+"nome": "Ministerial",
+"temNotas": false
+},
+{
+"id": "naa",
+"nome": "Naa",
+"temNotas": false
+},
+{
+"id": "ntlh",
+"nome": "Ntlh",
+"temNotas": false
+},
+{
+"id": "nvi",
+"nome": "Nvi",
+"temNotas": false
+},
+{
+"id": "palavra-chave",
+"nome": "Palavra Chave",
+"temNotas": false
+},
+{
+"id": "pentecostal-global",
+"nome": "Pentecostal Global",
+"temNotas": false
+},
+{
+"id": "perguntas-e-respostas",
+"nome": "Perguntas E Respostas",
+"temNotas": false
+},
+{
+"id": "plaut",
+"nome": "Plaut",
+"temNotas": false
+},
+{
+"id": "plenitude",
+"nome": "Plenitude",
+"temNotas": false
+},
+{
+"id": "pregando-com-poder",
+"nome": "Pregando Com Poder",
+"temNotas": false
+},
+{
+"id": "pregacao-expositiva",
+"nome": "Pregação Expositiva",
+"temNotas": false
+},
+{
+"id": "profetica-tim-lahaye",
+"nome": "Profética Tim Lahaye",
+"temNotas": false
+},
+{
+"id": "restaurada-israelita",
+"nome": "Restaurada Israelita",
+"temNotas": false
+},
+{
+"id": "s-para-pequenos-grupos",
+"nome": "S Para Pequenos Grupos",
+"temNotas": false
+},
+{
+"id": "sabedoria-de-deus",
+"nome": "Sabedoria De Deus",
+"temNotas": false
+},
+{
+"id": "swindoll",
+"nome": "Swindoll",
+"temNotas": false
+},
+{
+"id": "teb",
+"nome": "Teb",
+"temNotas": false
+},
+{
+"id": "temas-em-concordancia",
+"nome": "Temas Em Concordância",
+"temNotas": false
+},
+{
+"id": "vida",
+"nome": "Vida",
+"temNotas": false
+},
+{
+"id": "wiersbe",
+"nome": "Wiersbe",
+"temNotas": false
+}
+]
+}

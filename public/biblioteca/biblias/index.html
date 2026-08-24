@@ -91,6 +91,25 @@
   .notebox .lem{color:var(--navy);font-family:'Playfair Display',serif;font-weight:700}
   .notebox .fnt{display:block;margin-top:9px;font-size:11.5px;color:var(--ouro);font-style:italic}
   .creditos{margin-top:26px;text-align:center;color:var(--tinta2);font-size:12px;font-style:italic}
+  /* escolha de bíblia */
+  .bcell{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--linha);border-radius:14px;padding:12px 14px;cursor:pointer;margin-bottom:9px}
+  .bcell:active{background:var(--papel2)}
+  .bcell .ic{width:42px;height:54px;border-radius:6px;flex-shrink:0;background:linear-gradient(150deg,#173c5a,#0a1c2c);display:flex;align-items:center;justify-content:center;color:#c9a54a;font-size:19px;box-shadow:inset 0 0 0 1px rgba(201,165,74,.35)}
+  .bcell .bnome{font-weight:600;font-size:15px;color:var(--tinta);line-height:1.25}
+  .bcell .btag{font-size:11.5px;margin-top:3px}
+  .bcell .btag.ok{color:#2c8a4a;font-weight:600}
+  .bcell .btag.no{color:var(--tinta2)}
+  /* painel da nota (bottom-sheet) */
+  #notaModal{position:fixed;inset:0;z-index:60;display:none;align-items:flex-end;justify-content:center;background:rgba(20,15,8,.5)}
+  #notaModal.on{display:flex}
+  .nota-card{width:100%;max-width:760px;max-height:82vh;background:var(--papel);border-radius:22px 22px 0 0;box-shadow:0 -12px 44px rgba(0,0,0,.4);display:flex;flex-direction:column;animation:sobe .22s ease}
+  @keyframes sobe{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .nota-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--linha)}
+  .nota-head #notaRef{font-family:'Playfair Display',serif;font-weight:800;color:var(--navy);font-size:17px}
+  .nota-x{border:none;background:var(--papel2);color:var(--tinta);width:40px;height:40px;border-radius:50%;font-size:17px;cursor:pointer;flex-shrink:0}
+  .nota-scroll{overflow-y:auto;padding:20px 20px 34px;font-size:17px;line-height:1.78;color:#332e26;text-align:left}
+  .nota-scroll .lem{color:var(--navy);font-family:'Playfair Display',serif;font-weight:700}
+  .nota-scroll .fnt{display:block;margin-top:16px;font-size:11.5px;color:var(--ouro);font-style:italic}
   .navcap .meio{flex:0 0 auto;color:var(--tinta2);font-size:13px}
 </style>
 </head>
@@ -112,8 +131,11 @@
     </div>
     <div class="nome-b">Almeida Revista e Corrigida</div>
     <div class="sub-b">66 livros · toque para abrir a leitura</div>
-    <button class="btn-abrir" onclick="irIndice()">Abrir a Bíblia</button>
+    <button class="btn-abrir" onclick="verBiblias()">Ver as Bíblias</button>
   </div>
+
+  <!-- ESCOLHER BÍBLIA -->
+  <div id="escolha" class="tela"></div>
 
   <!-- ÍNDICE DE LIVROS -->
   <div id="indice" class="tela"></div>
@@ -128,9 +150,17 @@
   <div id="leitura" class="tela"></div>
 </div>
 
+<!-- PAINEL DA NOTA (por cima, não move o texto) -->
+<div id="notaModal" onclick="if(event.target===this)fecharNota()">
+  <div class="nota-card">
+    <div class="nota-head"><span id="notaRef">Nota</span><button class="nota-x" onclick="fecharNota()">✕</button></div>
+    <div class="nota-scroll" id="notaScroll"><div id="notaCorpo"></div></div>
+  </div>
+</div>
+
 <script>
 const NOMES=["Gênesis","Êxodo","Levítico","Números","Deuteronômio","Josué","Juízes","Rute","1 Samuel","2 Samuel","1 Reis","2 Reis","1 Crônicas","2 Crônicas","Esdras","Neemias","Ester","Jó","Salmos","Provérbios","Eclesiastes","Cânticos","Isaías","Jeremias","Lamentações","Ezequiel","Daniel","Oseias","Joel","Amós","Obadias","Jonas","Miqueias","Naum","Habacuque","Sofonias","Ageu","Zacarias","Malaquias","Mateus","Marcos","Lucas","João","Atos","Romanos","1 Coríntios","2 Coríntios","Gálatas","Efésios","Filipenses","Colossenses","1 Tessalonicenses","2 Tessalonicenses","1 Timóteo","2 Timóteo","Tito","Filemom","Hebreus","Tiago","1 Pedro","2 Pedro","1 João","2 João","3 João","Judas","Apocalipse"];
-let BIB=null, NOTAS=null, liv=0, cap=0;
+let BIB=null, NOTAS=null, FONTE_NOTAS='', BIBLIAS=[], liv=0, cap=0;
 
 function mostrar(id){
   document.querySelectorAll('.tela').forEach(t=>t.classList.remove('on'));
@@ -143,8 +173,26 @@ function mostrar(id){
 async function garantir(){
   if(BIB) return BIB;
   const r=await fetch('/biblia.json'); BIB=await r.json();
-  try{ const rn=await fetch('/biblioteca/biblias/notas-pentecostal.json'); NOTAS=await rn.json(); }catch(e){ NOTAS={}; }
+  try{ const rb=await fetch('/biblioteca/biblias/bibles.json'); BIBLIAS=(await rb.json()).biblias||[]; }catch(e){ BIBLIAS=[]; }
   return BIB;
+}
+async function verBiblias(){ await garantir(); renderEscolha(); mostrar('escolha');
+  document.getElementById('topTit').innerHTML='Bíblias<small>escolha uma</small>'; }
+function renderEscolha(){
+  var box=document.getElementById('escolha');
+  box.innerHTML='<div class="test-tit">Bíblias de Estudo</div>'+BIBLIAS.map(function(b,i){
+    var nm=b.nome.replace(/^[\s\-]+/,'');
+    return '<div class="bcell" onclick="escolherBiblia('+i+')"><div class="ic">✝</div>'
+      +'<div style="flex:1;min-width:0"><div class="bnome">'+nm+'</div>'
+      +'<div class="btag '+(b.temNotas?'ok':'no')+'">'+(b.temNotas?'✦ com notas de estudo':'texto bíblico · notas em breve')+'</div></div>'
+      +'<div style="color:var(--tinta2);font-size:20px">›</div></div>';
+  }).join('');
+}
+async function escolherBiblia(i){
+  var b=BIBLIAS[i]; FONTE_NOTAS=b.temNotas?'Bíblia de Estudo Pentecostal · CPAD':''; NOTAS={};
+  if(b.temNotas){ try{ const rn=await fetch('/biblioteca/biblias/notas-'+b.id+'.json'); NOTAS=await rn.json(); }catch(e){ NOTAS={}; } }
+  window._bibleNome=b.nome.replace(/^[\s\-]+/,'');
+  irIndice();
 }
 function fmtNota(txt){
   // "1.1 NO PRINCÍPIO, CRIOU DEUS. corpo..." -> lema em destaque
@@ -152,12 +200,19 @@ function fmtNota(txt){
   if(m) return '<span class="lem">'+m[1]+'.</span> '+m[2];
   return txt.replace(/^\d+\.\d+\s+/,'');
 }
-function toggleNota(id){
-  var el=document.getElementById(id); if(el) el.classList.toggle('on');
+function abrirNota(chap,verse){
+  var ab=window._curAb;
+  var txt=(NOTAS&&NOTAS[ab]&&NOTAS[ab][chap]&&NOTAS[ab][chap][verse])||'';
+  if(!txt) return;
+  document.getElementById('notaRef').textContent=NOMES[liv]+' '+chap+'.'+verse;
+  document.getElementById('notaCorpo').innerHTML=fmtNota(txt)+'<span class="fnt">📖 '+(FONTE_NOTAS||'Notas de estudo')+'</span>';
+  document.getElementById('notaModal').classList.add('on');
+  document.getElementById('notaScroll').scrollTop=0;
 }
+function fecharNota(){ document.getElementById('notaModal').classList.remove('on'); }
 async function irIndice(){
   await garantir(); renderIndice(); mostrar('indice');
-  document.getElementById('topTit').innerHTML='Bíblia<small>Almeida R.C.</small>';
+  document.getElementById('topTit').innerHTML=(window._bibleNome||'Bíblia')+'<small>Almeida R.C.</small>';
 }
 function renderIndice(){
   const box=document.getElementById('indice');
@@ -186,13 +241,13 @@ function lerCap(c){
   const ab=BIB[liv].abbrev;
   const notasCap=(NOTAS&&NOTAS[ab]&&NOTAS[ab][c+1])||{};
   const temNotasLivro=!!(NOTAS&&NOTAS[ab]);
+  window._curAb=ab;
   let corpo='';
   for(let v=0;v<versos.length;v++){
     const vn=v+1;
     corpo+='<span class="v"><span class="vn">'+vn+'</span>'+versos[v];
-    if(notasCap[vn]) corpo+=' <span class="notemk" onclick="toggleNota(\'nb_'+(c+1)+'_'+vn+'\')">✦ nota</span>';
+    if(notasCap[vn]) corpo+=' <span class="notemk" onclick="abrirNota('+(c+1)+','+vn+')">✦ nota</span>';
     corpo+=' </span>';
-    if(notasCap[vn]) corpo+='<div class="notebox" id="nb_'+(c+1)+'_'+vn+'">'+fmtNota(notasCap[vn])+'<span class="fnt">📖 Bíblia de Estudo Pentecostal · CPAD</span></div>';
   }
   const total=BIB[liv].chapters.length;
   document.getElementById('leitura').innerHTML=
@@ -209,10 +264,15 @@ function lerCap(c){
   mostrar('leitura');
 }
 function voltar(){
+  if(document.getElementById('notaModal').classList.contains('on')){ fecharNota(); return; }
   const leOn=document.getElementById('leitura').classList.contains('on');
   const capOn=document.getElementById('caps').classList.contains('on');
+  const indOn=document.getElementById('indice').classList.contains('on');
+  const escOn=document.getElementById('escolha').classList.contains('on');
   if(leOn) abrirLivro(liv);
   else if(capOn) irIndice();
+  else if(indOn) verBiblias();
+  else if(escOn) mostrar('capa');
   else location.href='/?mod=manuais';
 }
 </script>
