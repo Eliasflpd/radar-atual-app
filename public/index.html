@@ -4520,6 +4520,7 @@ function abrirVideoCard(idx){
 // 6 vídeos locais (Downloads) — aparecem como slides e tocam em TELA CHEIA
 function videosLocaisCards(){
   var r=[];
+  r.push({id:'lv-jabez', tipo:'localvideo', video:'/videos/jabez.mp4', titulo:'Jabez'});
   for(var i=1;i<=6;i++){ r.push({id:'lv'+i, tipo:'localvideo', video:'/videos/v'+i+'.mp4', titulo:'Vídeo '+i}); }
   return r;
 }
