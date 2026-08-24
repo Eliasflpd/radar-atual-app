@@ -755,6 +755,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <div id="home-carousel" class="home-carousel"></div>
     <div id="painel-hoje-wrap"></div>
     <div id="continuar-wrap"></div>
+    <div id="hist-home" onclick="abrirHistorinhas()" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1b3a6b,#122a52);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;margin-top:14px;cursor:pointer">
+      <span style="font-size:30px">📖</span>
+      <div style="flex:1"><b style="font-size:16px">Historinhas Infantil</b><div style="font-size:12.5px;color:#9fb0bd;margin-top:2px">Videos biblicos pras criancas - assista e compartilhe</div></div>
+      <span style="font-size:22px;color:#9fb0bd">&rsaquo;</span>
+    </div>
     <div class="sec-label" style="margin-top:16px">Seus módulos</div>
     <div class="modulos" id="modulos"></div>
   </div>
@@ -781,6 +786,35 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <button class="mod-add" onclick="abrirModal()">+ ADD</button>
   </div>
   <div class="mod-lista" id="mod-lista"></div>
+</div>
+
+<style>
+#tela-historinhas .hist-item{display:flex;gap:12px;background:var(--card,#12213c);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px;margin-bottom:12px}
+#tela-historinhas .hist-thumb{width:76px;height:76px;border-radius:12px;background:linear-gradient(135deg,#2a4a80,#16305c);display:grid;place-items:center;font-size:30px;flex:none;cursor:pointer}
+#tela-historinhas .hist-body{flex:1;min-width:0}
+#tela-historinhas .hist-body b{font-size:16px;color:var(--txt,#eef3fb)}
+#tela-historinhas .hist-views{font-size:13px;color:#9fb0bd;margin:4px 0 8px}
+#tela-historinhas .hist-acts{display:flex;gap:8px}
+#tela-historinhas .hist-a{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--txt,#eef3fb);border-radius:10px;padding:9px;font-size:13.5px;font-weight:700;cursor:pointer}
+#tela-historinhas .hist-a.play{background:linear-gradient(90deg,#2f7d3a,#3aa34a);border:none;color:#fff}
+#tela-historinhas .hist-adm-toggle{width:100%;background:none;border:1px dashed rgba(255,255,255,.15);color:#9fb0bd;border-radius:12px;padding:12px;font-weight:700;margin-top:6px;cursor:pointer}
+#tela-historinhas .f-hist{width:100%;box-sizing:border-box;background:var(--card,#12213c);border:1px solid rgba(255,255,255,.15);color:var(--txt,#eef3fb);border-radius:12px;padding:12px;font-size:15px;margin-top:8px;outline:none}
+#tela-historinhas .hist-add-btn{width:100%;background:linear-gradient(90deg,#c8912e,#a9761b);color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;margin-top:10px;cursor:pointer}
+</style>
+<div class="tela" id="tela-historinhas">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
+    <div class="std-hinfo"><div class="std-titulo">📖 Historinhas Infantil</div><div class="std-sub" id="hist-sub">Videos pras criancas</div></div>
+    <span style="font-size:24px;flex-shrink:0">📖</span>
+  </div>
+  <div class="home-scroll" style="padding-top:12px">
+    <div id="hist-lista"></div>
+    <button class="hist-adm-toggle" onclick="toggleHistAdm()">&#9881; Adicionar video (admin)</button>
+    <div id="hist-adm" style="display:none">
+      <input class="f-hist" id="hTit" placeholder="Titulo (ex: A Oracao de Jabez)">
+      <input class="f-hist" id="hVid" placeholder="Link YouTube/Facebook OU /videos/arquivo.mp4">
+      <button class="hist-add-btn" onclick="addHistAdm()">+ Adicionar</button>
+    </div>
+  </div>
 </div>
 
 <!-- SILAS HUB -->
@@ -1614,6 +1648,7 @@ function irHome(){
     const ir = _qs.get('ir');
     if(p){ history.replaceState({},'',location.pathname); abrirMod(p); }
     else if(ir==='jovem'){ history.replaceState({},'',location.pathname); abrirMonteCarmelo(); abrirMcGrupo('jovem'); }
+    else if(_qs.get('hist')){ history.replaceState({},'',location.pathname); var _hid=parseInt(_qs.get('hist'),10); setTimeout(function(){ abrirHistorinhas().then(function(){ verHistorinha(_hid); }); },300); }
   }
 }
 
@@ -4518,6 +4553,20 @@ function abrirVideoCard(idx){
 }
 
 // 6 vídeos locais (Downloads) — aparecem como slides e tocam em TELA CHEIA
+// ===== Historinhas Infantil (compartilhavel + contador GLOBAL) =====
+var _HIST=[];
+function _htoast(m){ try{ var t=document.getElementById('_htoast'); if(!t){t=document.createElement('div');t.id='_htoast';t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(120px);background:#111;color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;font-size:14px;z-index:99999;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.3)';document.body.appendChild(t);} t.textContent=m;t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.transform='translateX(-50%) translateY(120px)';},2400);}catch(e){} }
+async function abrirHistorinhas(){ mostrarTela('tela-historinhas'); await fetchHist(); }
+async function fetchHist(){ try{ var r=await fetch('/api/hist'); var d=await r.json(); _HIST=(d&&d.historinhas)||[]; }catch(e){ _HIST=[]; } renderHist(); }
+function _histById(id){ return _HIST.find(function(x){return x.id==id;}); }
+function renderHist(){ var el=document.getElementById('hist-lista'); if(!el)return; var sub=document.getElementById('hist-sub'); if(sub)sub.textContent=_HIST.length+' video(s)';
+  if(!_HIST.length){ el.innerHTML='<div style="text-align:center;color:#9fb0bd;padding:40px 16px">Nenhuma historinha ainda.<br>Toque em engrenagem pra adicionar.</div>'; return; }
+  el.innerHTML=_HIST.map(function(h){ return '<div class="hist-item"><div class="hist-thumb" onclick="verHistorinha('+h.id+')">&#9654;&#65039;</div><div class="hist-body"><b>'+String(h.titulo||'Historinha').replace(/</g,'&lt;')+'</b><div class="hist-views">👁 <span id="hv-'+h.id+'">'+(h.views||0)+'</span> visualizacoes</div><div class="hist-acts"><button class="hist-a play" onclick="verHistorinha('+h.id+')">&#9654;&#65039; Assistir</button><button class="hist-a" onclick="shareHist('+h.id+')">&#8599;&#65039; Compartilhar</button></div></div></div>'; }).join(''); }
+function verHistorinha(id){ var h=_histById(id); if(!h)return; fetch('/api/hist?ver='+id).then(function(r){return r.json();}).then(function(d){ var sp=document.getElementById('hv-'+id); if(sp&&d&&d.views!=null)sp.textContent=d.views; }).catch(function(){}); var v=h.video||''; if((h.tipo=='mp4')||v.indexOf('.mp4')>=0||v.indexOf('/videos')===0){ abrirVideoTela(v, h.titulo||'Historinha', 'hist-'+id); } else { window.open(v,'_blank'); } }
+function shareHist(id){ var h=_histById(id); var url=location.origin+'/?hist='+id; var dados={title:(h&&h.titulo)||'Historinha Infantil', text:'Assista essa historinha no app RADAR:', url:url}; if(navigator.share){ navigator.share(dados).catch(function(){}); } else { navigator.clipboard.writeText(url).then(function(){_htoast('🔗 Link copiado!');}).catch(function(){_htoast(url);}); } }
+function toggleHistAdm(){ var a=document.getElementById('hist-adm'); a.style.display=a.style.display=='none'?'block':'none'; }
+async function addHistAdm(){ var titulo=document.getElementById('hTit').value.trim(); var video=document.getElementById('hVid').value.trim(); if(!video){ _htoast('Cole o link ou /videos/arquivo.mp4'); return; } try{ var r=await fetch('/api/hist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:'radar-elias-2026',titulo:titulo,video:video})}); var d=await r.json(); if(d&&d.ok){ document.getElementById('hTit').value='';document.getElementById('hVid').value=''; _htoast('Adicionado!'); fetchHist(); } else _htoast('Erro: '+((d&&d.error)||'')); }catch(e){ _htoast('Erro de conexao'); } }
+
 function videosLocaisCards(){
   var r=[];
   r.push({id:'lv-jabez', tipo:'localvideo', video:'/videos/jabez.mp4', titulo:'Jabez'});
