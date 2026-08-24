@@ -82,6 +82,15 @@
   .navcap button{flex:1;border:1px solid var(--linha);background:#fff;color:var(--navy);
     font-family:'Lora';font-weight:600;font-size:14px;padding:12px;border-radius:12px;cursor:pointer}
   .navcap button:disabled{opacity:.35}
+  .notemk{display:inline-block;margin-left:5px;color:#fff;background:var(--ouro);font-size:10.5px;font-weight:600;
+    padding:1px 8px;border-radius:10px;vertical-align:middle;cursor:pointer;font-family:'Lora';letter-spacing:.3px}
+  .notebox{display:none;margin:11px 0 18px;padding:14px 16px;background:#fff;border-left:3px solid var(--ouro);
+    border-radius:0 12px 12px 0;box-shadow:0 5px 16px rgba(0,0,0,.07);font-size:16px;line-height:1.72;
+    text-align:left;color:#3a352c}
+  .notebox.on{display:block}
+  .notebox .lem{color:var(--navy);font-family:'Playfair Display',serif;font-weight:700}
+  .notebox .fnt{display:block;margin-top:9px;font-size:11.5px;color:var(--ouro);font-style:italic}
+  .creditos{margin-top:26px;text-align:center;color:var(--tinta2);font-size:12px;font-style:italic}
   .navcap .meio{flex:0 0 auto;color:var(--tinta2);font-size:13px}
 </style>
 </head>
@@ -121,7 +130,7 @@
 
 <script>
 const NOMES=["Gênesis","Êxodo","Levítico","Números","Deuteronômio","Josué","Juízes","Rute","1 Samuel","2 Samuel","1 Reis","2 Reis","1 Crônicas","2 Crônicas","Esdras","Neemias","Ester","Jó","Salmos","Provérbios","Eclesiastes","Cânticos","Isaías","Jeremias","Lamentações","Ezequiel","Daniel","Oseias","Joel","Amós","Obadias","Jonas","Miqueias","Naum","Habacuque","Sofonias","Ageu","Zacarias","Malaquias","Mateus","Marcos","Lucas","João","Atos","Romanos","1 Coríntios","2 Coríntios","Gálatas","Efésios","Filipenses","Colossenses","1 Tessalonicenses","2 Tessalonicenses","1 Timóteo","2 Timóteo","Tito","Filemom","Hebreus","Tiago","1 Pedro","2 Pedro","1 João","2 João","3 João","Judas","Apocalipse"];
-let BIB=null, liv=0, cap=0;
+let BIB=null, NOTAS=null, liv=0, cap=0;
 
 function mostrar(id){
   document.querySelectorAll('.tela').forEach(t=>t.classList.remove('on'));
@@ -133,7 +142,18 @@ function mostrar(id){
 }
 async function garantir(){
   if(BIB) return BIB;
-  const r=await fetch('/biblia.json'); BIB=await r.json(); return BIB;
+  const r=await fetch('/biblia.json'); BIB=await r.json();
+  try{ const rn=await fetch('/biblioteca/biblias/notas-pentecostal.json'); NOTAS=await rn.json(); }catch(e){ NOTAS={}; }
+  return BIB;
+}
+function fmtNota(txt){
+  // "1.1 NO PRINCÍPIO, CRIOU DEUS. corpo..." -> lema em destaque
+  var m=txt.match(/^\d+\.\d+\s+(.+?)\.\s+([\s\S]+)$/);
+  if(m) return '<span class="lem">'+m[1]+'.</span> '+m[2];
+  return txt.replace(/^\d+\.\d+\s+/,'');
+}
+function toggleNota(id){
+  var el=document.getElementById(id); if(el) el.classList.toggle('on');
 }
 async function irIndice(){
   await garantir(); renderIndice(); mostrar('indice');
@@ -163,12 +183,22 @@ function abrirLivro(i){
 function lerCap(c){
   cap=c;
   const versos=BIB[liv].chapters[c];
+  const ab=BIB[liv].abbrev;
+  const notasCap=(NOTAS&&NOTAS[ab]&&NOTAS[ab][c+1])||{};
+  const temNotasLivro=!!(NOTAS&&NOTAS[ab]);
   let corpo='';
-  for(let v=0;v<versos.length;v++) corpo+='<span class="v"><span class="vn">'+(v+1)+'</span>'+versos[v]+' </span>';
+  for(let v=0;v<versos.length;v++){
+    const vn=v+1;
+    corpo+='<span class="v"><span class="vn">'+vn+'</span>'+versos[v];
+    if(notasCap[vn]) corpo+=' <span class="notemk" onclick="toggleNota(\'nb_'+(c+1)+'_'+vn+'\')">✦ nota</span>';
+    corpo+=' </span>';
+    if(notasCap[vn]) corpo+='<div class="notebox" id="nb_'+(c+1)+'_'+vn+'">'+fmtNota(notasCap[vn])+'<span class="fnt">📖 Bíblia de Estudo Pentecostal · CPAD</span></div>';
+  }
   const total=BIB[liv].chapters.length;
   document.getElementById('leitura').innerHTML=
     '<div class="cabec"><h2>'+NOMES[liv]+'</h2><div class="cap-n">Capítulo '+(c+1)+'</div><div class="orn">❦</div></div>'
     +'<div class="vtexto">'+corpo+'</div>'
+    +(temNotasLivro?'<div class="creditos">Notas de estudo: Bíblia de Estudo Pentecostal (CPAD) — toque em “✦ nota”</div>':'')
     +'<div class="navcap">'
     +'<button onclick="lerCap('+(c-1)+')" '+(c<=0?'disabled':'')+'>‹ Anterior</button>'
     +'<div class="meio">'+(c+1)+' / '+total+'</div>'
