@@ -42,6 +42,7 @@
   .livro-capa h1{font-family:'Playfair Display',serif;font-weight:900;font-size:30px;line-height:1.05;margin:0}
   .livro-capa p{margin:0;font-size:12px;letter-spacing:2px;color:#cddcea;text-transform:uppercase}
   .livro-capa .borda{position:absolute;inset:10px;border:1px solid rgba(201,165,74,.4);border-radius:6px;pointer-events:none}
+  .capa-img{width:236px;max-width:72vw;border-radius:16px;box-shadow:0 26px 60px rgba(10,25,40,.55);border:1px solid rgba(201,165,74,.4)}
   #capa .nome-b{margin:26px 0 4px;font-family:'Playfair Display',serif;font-weight:800;font-size:22px;color:var(--navy)}
   #capa .sub-b{margin:0 0 26px;color:var(--tinta2);font-size:14px}
   .btn-abrir{border:none;background:linear-gradient(135deg,var(--ouro2),var(--ouro));color:#2a2008;
@@ -123,14 +124,9 @@
 
   <!-- CAPA -->
   <div id="capa" class="on">
-    <div class="livro-capa">
-      <div class="borda"></div>
-      <div class="cruz">✝</div>
-      <h1>Bíblia<br>Sagrada</h1>
-      <p>Estudo</p>
-    </div>
-    <div class="nome-b">Almeida Revista e Corrigida</div>
-    <div class="sub-b">66 livros · toque para abrir a leitura</div>
+    <img src="/biblioteca/biblias/biblia-icone2.png" class="capa-img" alt="Bíblia Sagrada">
+    <div class="nome-b">Bíblias de Estudo</div>
+    <div class="sub-b">64 bíblias · toque para escolher e ler</div>
     <button class="btn-abrir" onclick="verBiblias()">Ver as Bíblias</button>
   </div>
 
