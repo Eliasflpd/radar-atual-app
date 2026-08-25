@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sermões — Escavador de Pérolas Bíblicas</title>
+<title>Mensagens para Pregar — Escavador de Pérolas Bíblicas</title>
 <style>
   :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c}
   *{box-sizing:border-box;-webkit-text-size-adjust:100%}
@@ -24,7 +24,7 @@
     box-shadow:0 2px 10px rgba(15,61,92,.06);cursor:pointer;
   }
   .card .top{display:flex;gap:13px;align-items:center}
-  .card .ic{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;font-size:27px;flex-shrink:0}
+  .card .ic{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#8a1c1c,var(--dourado));display:flex;align-items:center;justify-content:center;font-size:27px;flex-shrink:0}
   .card .tit{font-family:Georgia,serif;font-weight:800;font-size:1.18rem;color:var(--navy);line-height:1.25}
   .card .ref{color:var(--dourado);font-weight:800;font-size:.9rem;margin-top:2px}
   .card .desc{font-size:.98rem;color:#4b5563;margin-top:9px;text-align:justify;line-height:1.55}
@@ -35,54 +35,40 @@
 
   <button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
 
-  <div class="selo">✦ Escavador de Pérolas Bíblicas ✦</div>
-  <h1>Sermões</h1>
-  <div class="sub">Estudos profundos pra edificar a igreja</div>
+  <div class="selo">✦ Mensagens para Pregar ✦</div>
+  <h1>Mensagens para Pregar</h1>
+  <div class="sub">Sermões densos em prosa — revelação correndo como um rio</div>
   <div class="divisor"></div>
 
   <div id="lista"></div>
 
 <script>
-  // ── CRM de Sermões — pra postar um novo, é só adicionar aqui em cima ──
-  var SERMOES = [
+  // ── CRM de Mensagens — pra postar uma nova, é só adicionar aqui em cima ──
+  var MENSAGENS = [
     {
-      arquivo:'heroi-de-um-versiculo.html',
-      titulo:'O Herói de Um Só Versículo',
-      ref:'Juízes 3:31',
-      emoji:'🐂',
-      desc:'A subversão da tecnologia: Deus unge o que já está na sua mão. Uma aguilhada de boi contra 600 filisteus.'
-    },
-    {
-      arquivo:'contraria-a-logica-humana.html',
-      titulo:'Quando Deus Contraria a Lógica Humana',
-      ref:'5 Momentos em Que o Impossível Aconteceu',
-      emoji:'🌀',
-      desc:'Gideão, Sara, Moisés, Lázaro e a Cruz: quando o Autor edita o roteiro e o impossível vira o padrão do Reino.'
-    },
-    {
-      arquivo:'nada-dificil-para-o-senhor.html',
-      titulo:'Quando Deus Vai Além das Impossibilidades Humanas',
-      ref:'Gênesis 18:14 · Lucas 1:37',
-      emoji:'⚡',
-      desc:'Do carvalho de Manre ao ventre estéril: a impossibilidade humana é o solo da glória de Deus — e um retrato da Ressurreição.'
-    },
-    {
-      arquivo:'120-anos-de-noe.html',
+      arquivo:'o-ultimo-prego.html',
       titulo:'O Último Prego',
       ref:'Gênesis 6',
       emoji:'🔩',
-      desc:'A engenharia espiritual do período pré-diluviano: misericórdia, paciência e a Arca que prefigura Cristo.'
+      desc:'Enquanto o mundo apodrecia, um homem serrava cedro. A engenharia da misericórdia: kôfer, Matusalém e a porta que Deus mesmo fechou.'
+    },
+    {
+      arquivo:'olha-e-vive.html',
+      titulo:'Olha e Vive',
+      ref:'Números 21 · João 3',
+      emoji:'🐍',
+      desc:'O veneno erguido no poste, no metal do juízo. Do deserto ao Calvário: todo aquele que olha — vive.'
     }
   ];
 
   var box=document.getElementById('lista');
-  if(!SERMOES.length){
-    box.innerHTML='<div class="vazio">Nenhum sermão postado ainda.</div>';
+  if(!MENSAGENS.length){
+    box.innerHTML='<div class="vazio">Nenhuma mensagem postada ainda.</div>';
   } else {
-    box.innerHTML=SERMOES.map(function(s){
+    box.innerHTML=MENSAGENS.map(function(s){
       return '<a class="card" href="'+s.arquivo+'">'
         +'<div class="top">'
-        +'<div class="ic">'+(s.emoji||'📜')+'</div>'
+        +'<div class="ic">'+(s.emoji||'🔥')+'</div>'
         +'<div><div class="tit">'+s.titulo+'</div><div class="ref">'+s.ref+'</div></div>'
         +'</div>'
         +(s.desc?'<div class="desc">'+s.desc+'</div>':'')

@@ -828,6 +828,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .prl-btn:disabled{opacity:.6}
 .prl-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .prl-chip{font-size:13px;font-weight:600;color:var(--ink2,#c9d4e6);background:rgba(255,255,255,.06);border:1px solid rgba(217,182,90,.3);border-radius:999px;padding:7px 13px;cursor:pointer}
+/* seletor de MODO — Escavar Pérola x Mensagem pra Pregar */
+.prl-modes{display:flex;gap:8px;margin-top:14px}
+.prl-mode{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--card,#12213c);color:var(--ink2,#c9d4e6);border:1px solid rgba(217,182,90,.3);border-radius:14px;padding:11px 8px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;line-height:1.15;text-align:center}
+.prl-mode span{font-size:11px;font-weight:600;opacity:.7}
+.prl-mode.active{border-color:#d9b65a;background:linear-gradient(180deg,rgba(217,182,90,.22),rgba(217,182,90,.08));color:var(--ink,#eef3fb);box-shadow:0 6px 18px rgba(217,182,90,.22)}
 /* folha branca de leitura — texto justificado, fonte premium (Lora) */
 .prl-out{margin-top:18px;background:#fffdf9;border-radius:16px;padding:20px 18px;box-shadow:0 12px 34px rgba(0,0,0,.4);
   color:#2a251d;font-family:'Lora',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.68;
@@ -849,7 +854,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <div class="std-hinfo"><div class="std-titulo">Descobrindo as Pérolas</div><div class="std-sub">Resposta sempre à luz da Bíblia</div></div>
     <span style="font-size:24px">💎</span></div>
   <div class="prl-scroll">
-    <div class="prl-intro">Digite <b>qualquer assunto</b> — bíblico ou não (ansiedade, dinheiro, Salmo 23, casamento, medo…). A resposta vem <b>sempre à luz da Bíblia</b>, em 13 camadas de profundidade. 💎</div>
+    <div class="prl-intro">Digite <b>qualquer assunto</b> — bíblico ou não (ansiedade, dinheiro, Salmo 23, casamento, medo…). A resposta vem <b>sempre à luz da Bíblia</b>. 💎</div>
+    <div class="prl-modes" id="prl-modes">
+      <button type="button" class="prl-mode active" data-mode="perola" onclick="setPrlMode('perola')">💎 Escavar Pérola<span>estudo (13 camadas)</span></button>
+      <button type="button" class="prl-mode" data-mode="mensagem" onclick="setPrlMode('mensagem')">🔥 Mensagem pra Pregar<span>sermão em prosa</span></button>
+    </div>
     <textarea id="prl-input" class="prl-input" rows="2" placeholder="Ex.: ansiedade, o dilúvio, Salmo 23, perdão…"></textarea>
     <div class="prl-chips" id="prl-chips">
       <span class="prl-chip" onclick="prlChip('Ansiedade')">Ansiedade</span>
@@ -3549,6 +3558,12 @@ function renderManuais(){
     + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">Curso · Estudo profundo + Unção</div>'
     + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Aprenda a pregar passo a passo: método indutivo, esboço, unção e um montador de sermão. Interativo.</div></div>'
     + '<div style="color:var(--sub);font-size:20px">›</div></div>'
+  + '<div onclick="location.href=\'/biblioteca/mensagens/\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
+    + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#8a1c1c,#a9791c);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">🔥</div>'
+    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Mensagens para Pregar</div>'
+    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">Sermões densos em prosa</div>'
+    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Mensagens prontas pra pregar, revelação correndo como um rio — comece por “O Último Prego”.</div></div>'
+    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
   + '<div onclick="location.href=\'/biblioteca/saudacao-mateus24.html\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
     + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#9d1c1c,#dc2626);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">✝</div>'
     + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Saudação — O Princípio das Dores</div>'
@@ -4105,6 +4120,20 @@ function irParaNovidade(){
 
 // ══ ESCAVADOR DE PÉROLAS BÍBLICAS ══
 function prlChip(t){ var i=document.getElementById('prl-input'); i.value=t; escavarPerola(); }
+// ── MODO do Escavador: 'perola' (estudo) ou 'mensagem' (sermão) ──
+var PRL_MODES={
+  perola:  { ep:'/api/perolas',  btn:'💎 Escavar Pérola',      busy:'⛏️ Escavando…',   load:'💎 Buscando pérolas nas Escrituras…' },
+  mensagem:{ ep:'/api/mensagem', btn:'🔥 Gerar Mensagem',       busy:'🔥 Forjando…',     load:'🔥 Forjando a mensagem pra pregar…' }
+};
+function prlMode(){ var m=localStorage.getItem('prl_mode'); return PRL_MODES[m]?m:'perola'; }
+function setPrlMode(m){
+  if(!PRL_MODES[m]) m='perola';
+  localStorage.setItem('prl_mode',m);
+  var btns=document.querySelectorAll('#prl-modes .prl-mode');
+  for(var i=0;i<btns.length;i++){ btns[i].classList.toggle('active', btns[i].getAttribute('data-mode')===m); }
+  var b=document.getElementById('prl-btn'); if(b && !b.disabled) b.textContent=PRL_MODES[m].btn;
+}
+try{ setPrlMode(prlMode()); }catch(_){}
 function mdPerola(t){
   var esc=(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   esc=esc.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');      // **negrito**
@@ -4129,12 +4158,13 @@ async function escavarPerola(){
   var q=(inp.value||'').trim();
   if(!q){ inp.focus(); return; }
   inp.blur();
-  btn.disabled=true; var lbl=btn.textContent; btn.textContent='⛏️ Escavando…';
-  out.innerHTML='<div class="prl-loading">💎 Buscando pérolas nas Escrituras…</div>';
+  var mode=PRL_MODES[prlMode()];
+  btn.disabled=true; var lbl=mode.btn; btn.textContent=mode.busy;
+  out.innerHTML='<div class="prl-loading">'+mode.load+'</div>';
   var box=document.querySelector('#tela-perolas .prl-scroll');
   var acc='';
   try{
-    var r=await fetch('/api/perolas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({passagem:q})});
+    var r=await fetch(mode.ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({passagem:q})});
     if(!r.ok || !r.body){ var msg=await r.text().catch(function(){return'';}); throw new Error(msg||('erro '+r.status)); }
     var reader=r.body.getReader(), dec=new TextDecoder();
     out.innerHTML='';
