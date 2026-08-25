@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escola de Pregação Avivalista — Estudo e Unção</title>
+<style>
+  :root{
+    --branco:#ffffff;
+    --texto:#1c2230;
+    --navy:#0f3d5c;
+    --teal:#0f6d78;
+    --dourado:#a9791c;
+    --vinho:#8a1c1c;
+    --areia:#f2f7f8;
+    --areia2:#fbf6ea;
+    --linha:#e4e7ec;
+  }
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{
+    margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.7;
+    padding:16px 14px calc(50px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit}
+  .voltar{
+    display:inline-block;margin:0 0 14px;background:#1c2230;color:#fff;border:none;
+    border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;cursor:pointer;
+  }
+
+  /* cabeçalho */
+  .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+  h1{font-family:Georgia,'Times New Roman',serif;text-align:center;color:var(--navy);font-size:2rem;line-height:1.18;font-weight:800;margin:2px 0 4px}
+  .lema{text-align:center;color:#6b7280;font-size:1rem;margin-bottom:10px;font-style:italic}
+  .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 20px}
+
+  /* progresso */
+  .progresso-wrap{background:var(--areia);border:1px solid #d5e6e8;border-radius:14px;padding:14px 16px;margin-bottom:22px}
+  .progresso-topo{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .progresso-topo .lbl{font-weight:800;color:var(--navy);font-size:.95rem}
+  .progresso-topo .pct{font-weight:800;color:var(--dourado);font-size:1.05rem}
+  .barra{height:12px;background:#dfe8ea;border-radius:999px;overflow:hidden}
+  .barra > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--navy));border-radius:999px;transition:width .5s ease}
+
+  /* cards de módulo (índice) */
+  .card{
+    display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--linha);
+    border-radius:16px;padding:15px 16px;margin-bottom:13px;box-shadow:0 2px 10px rgba(15,61,92,.06);
+    cursor:pointer;width:100%;text-align:left;
+  }
+  .card:active{transform:scale(.997)}
+  .card .top{display:flex;gap:13px;align-items:center}
+  .card .ic{width:54px;height:54px;border-radius:14px;background:linear-gradient(135deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;color:#fff}
+  .card .ic.feito{background:linear-gradient(135deg,var(--dourado),#7a5a12)}
+  .card .tit{font-family:Georgia,serif;font-weight:800;font-size:1.1rem;color:var(--navy);line-height:1.22}
+  .card .ref{color:var(--dourado);font-weight:800;font-size:.82rem;margin-top:2px}
+  .card .desc{font-size:.94rem;color:#4b5563;margin-top:8px;text-align:justify;line-height:1.5}
+  .card .barrinha{height:6px;background:#eef2f4;border-radius:999px;overflow:hidden;margin-top:11px}
+  .card .barrinha > i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--navy));border-radius:999px}
+  .card .stat{font-size:.78rem;color:#8a94a3;margin-top:6px;font-weight:700}
+
+  /* leitura de módulo */
+  #tela-modulo{display:none}
+  .m-selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+  .m-titulo{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.7rem;line-height:1.22;font-weight:800;margin:2px 0 4px}
+  .m-sub{text-align:center;color:var(--dourado);font-weight:800;font-size:1rem;margin-bottom:6px}
+  .conteudo p{font-size:1.1rem;margin:0 0 15px;text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto}
+  .conteudo strong{color:var(--vinho);font-weight:800}
+  .conteudo em{color:var(--navy);font-style:italic}
+  h2.sec{font-family:Georgia,serif;color:var(--navy);font-size:1.24rem;font-weight:800;line-height:1.3;margin:28px 0 13px;padding-top:16px;border-top:1px solid #e8e8ee;display:flex;gap:9px;align-items:baseline}
+  h2.sec .n{display:inline-flex;align-items:center;justify-content:center;background:var(--navy);color:#fff;border-radius:50%;width:1.6em;height:1.6em;font-size:.78rem;flex-shrink:0}
+  h3.sub{font-family:Georgia,serif;color:var(--teal);font-size:1.06rem;font-weight:800;margin:20px 0 9px}
+  .conteudo ul{list-style:none;margin:0 0 16px;padding:0}
+  .conteudo ul li{position:relative;padding:0 0 0 22px;margin:0 0 9px;font-size:1.05rem;text-align:left}
+  .conteudo ul li::before{content:"◆";color:var(--dourado);position:absolute;left:2px;top:0;font-size:.85rem}
+  .verso{background:var(--areia);border-left:4px solid var(--teal);border-radius:0 12px 12px 0;padding:13px 16px;margin:0 0 18px;font-style:italic;color:var(--navy)}
+  .verso b{font-style:normal;color:var(--dourado);display:block;margin-top:5px;font-size:.85rem}
+  .destaque{background:var(--areia2);border:2px solid #ecd9ad;border-radius:16px;padding:16px 18px;margin:20px 0}
+  .destaque .rot{font-family:Georgia,serif;font-weight:800;color:var(--dourado);font-size:.82rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .destaque p{font-size:1.08rem;margin:0}
+  .aviso{background:#f7f2f2;border:1px solid #e6d3d3;border-radius:12px;padding:13px 15px;margin:18px 0;font-size:1rem;color:#5a2a2a}
+  .aviso b{color:var(--vinho)}
+
+  /* checklist */
+  .bloco{border:1px solid var(--linha);border-radius:16px;padding:16px;margin:26px 0 0;background:#fff}
+  .bloco > .cab{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.12rem;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .bloco > .cab-sub{font-size:.9rem;color:#6b7280;margin-bottom:12px}
+  .chk{display:flex;gap:11px;align-items:flex-start;padding:10px 0;border-top:1px solid #f0f0f4;cursor:pointer}
+  .chk:first-of-type{border-top:none}
+  .chk input{width:22px;height:22px;flex-shrink:0;margin:1px 0 0;accent-color:var(--teal);cursor:pointer}
+  .chk span{font-size:1.02rem;line-height:1.45}
+  .chk input:checked + span{color:#8a94a3;text-decoration:line-through}
+
+  /* exercícios */
+  .exerc{background:var(--areia);border:1px solid #d5e6e8;border-radius:16px;padding:16px;margin:20px 0 0}
+  .exerc .cab{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.12rem;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .exerc .cab-sub{font-size:.9rem;color:#6b7280;margin-bottom:12px}
+  .exerc .q{margin-bottom:14px}
+  .exerc .q .p{font-weight:700;color:var(--navy);margin-bottom:6px}
+  .exerc textarea{width:100%;border:1px solid #cfdde0;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:1rem;line-height:1.5;resize:vertical;min-height:70px;background:#fff;color:var(--texto)}
+  .exerc textarea:focus{outline:none;border-color:var(--teal)}
+  .salvo-tag{font-size:.8rem;color:var(--teal);font-weight:700;margin-top:5px;height:1em}
+
+  /* navegação módulos */
+  .nav-mod{display:flex;gap:10px;margin-top:28px}
+  .nav-mod button{flex:1;border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:12px;padding:13px 10px;font-weight:800;font-size:.95rem;cursor:pointer}
+  .nav-mod button.prox{background:var(--navy);color:#fff}
+  .nav-mod button:disabled{opacity:.3;cursor:default}
+
+  /* montador de sermão */
+  .wiz-passos{display:flex;gap:6px;margin:0 0 18px;flex-wrap:wrap;justify-content:center}
+  .wiz-passos .p{font-size:.72rem;font-weight:800;color:#8a94a3;background:#eef2f4;border-radius:999px;padding:5px 11px}
+  .wiz-passos .p.on{background:var(--navy);color:#fff}
+  .wiz-passos .p.ok{background:var(--dourado);color:#fff}
+  .campo{margin-bottom:16px}
+  .campo label{display:block;font-weight:800;color:var(--navy);margin-bottom:5px;font-size:1rem}
+  .campo .ajuda{font-size:.88rem;color:#6b7280;margin-bottom:8px;line-height:1.45}
+  .campo input,.campo textarea{width:100%;border:1px solid #cfdde0;border-radius:10px;padding:11px 13px;font-family:inherit;font-size:1rem;line-height:1.5;background:#fff;color:var(--texto)}
+  .campo textarea{resize:vertical;min-height:80px}
+  .campo input:focus,.campo textarea:focus{outline:none;border-color:var(--teal)}
+  .lista-rasc{margin:8px 0 0}
+  .rasc-item{display:flex;gap:10px;align-items:center;border:1px solid var(--linha);border-radius:12px;padding:11px 13px;margin-bottom:9px}
+  .rasc-item .info{flex:1;min-width:0;cursor:pointer}
+  .rasc-item .info .t{font-weight:800;color:var(--navy);font-family:Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rasc-item .info .d{font-size:.8rem;color:#8a94a3}
+  .rasc-item .del{background:none;border:none;color:var(--vinho);font-size:1.2rem;cursor:pointer;padding:4px 8px;flex-shrink:0}
+  .btn-linha{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .btn{border:none;border-radius:12px;padding:12px 18px;font-weight:800;font-size:.95rem;cursor:pointer}
+  .btn.pri{background:var(--navy);color:#fff}
+  .btn.sec{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+  .btn.ouro{background:var(--dourado);color:#fff}
+  .btn.perigo{background:#fff;color:var(--vinho);border:1px solid #e6bcbc}
+  .esqueleto{background:var(--areia2);border:2px solid #ecd9ad;border-radius:16px;padding:18px;margin-top:8px}
+  .esqueleto h3{font-family:Georgia,serif;color:var(--navy);text-align:center;font-size:1.3rem;margin:0 0 3px}
+  .esqueleto .grande{text-align:center;color:var(--dourado);font-weight:800;font-style:italic;margin-bottom:14px}
+  .esqueleto .rot{font-family:Georgia,serif;font-weight:800;color:var(--teal);font-size:.78rem;letter-spacing:2px;text-transform:uppercase;margin:16px 0 4px;border-top:1px solid #ecd9ad;padding-top:12px}
+  .esqueleto .rot:first-of-type{border-top:none;padding-top:0;margin-top:0}
+  .esqueleto .txt{white-space:pre-wrap;margin:0;font-size:1.02rem}
+  .vazio{text-align:center;color:#9aa1ad;padding:22px 0;font-size:.95rem}
+  .rodape{text-align:center;color:#b3b9c4;font-size:.8rem;margin-top:34px;line-height:1.5}
+  @media(min-width:760px){
+    html{font-size:18px}
+    .card .desc{font-size:.9rem}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ ÍNDICE (curso) ═══════════ -->
+<div id="tela-indice">
+  <button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
+
+  <div class="selo">✦ Escola de Pregação Avivalista ✦</div>
+  <h1>Como Pregar com Estudo e Unção</h1>
+  <div class="lema">"A unção não substitui o estudo, e o estudo não substitui a unção — os dois juntos incendeiam a igreja."</div>
+  <div class="divisor"></div>
+
+  <div class="progresso-wrap">
+    <div class="progresso-topo">
+      <span class="lbl">Seu progresso no curso</span>
+      <span class="pct" id="pct-geral">0%</span>
+    </div>
+    <div class="barra"><i id="barra-geral"></i></div>
+  </div>
+
+  <div id="lista-modulos"></div>
+
+  <div class="rodape">
+    Curso interativo · funciona sem internet · seu progresso e rascunhos ficam salvos neste aparelho.<br>
+    Escavador de Pérolas Bíblicas · RADAR
+  </div>
+</div>
+
+<!-- ═══════════ MÓDULO ABERTO ═══════════ -->
+<div id="tela-modulo">
+  <button class="voltar" onclick="irIndice()">← Todos os módulos</button>
+  <div id="mod-corpo"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ESCOLA DE PREGAÇÃO AVIVALISTA — conteúdo + interação (offline)
+   Doutrina Assembleia de Deus / pentecostal. Conteúdo original.
+   ═══════════════════════════════════════════════════════════════ */
+
+var LS_PROG = 'escola_preg_progresso_v1';   // checklists marcados
+var LS_EXER = 'escola_preg_exercicios_v1';  // respostas dos exercícios
+var LS_RASC = 'escola_preg_rascunhos_v1';   // rascunhos de sermão
+
+function loadJSON(k){ try{ return JSON.parse(localStorage.getItem(k)||'{}'); }catch(e){ return {}; } }
+function saveJSON(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ────────────────────── CONTEÚDO DOS MÓDULOS ────────────────────── */
+var MODULOS = [
+{
+  id:'m1', emoji:'🔥',
+  titulo:'O Preparo do Coração',
+  sub:'Onde a unção começa',
+  resumo:'Antes de qualquer estudo, o pregador é preparado por Deus. Oração, santidade, dependência e comunhão são o solo onde o Espírito acende o fogo.',
+  html:
+    '<div class="verso">"Mas recebereis a virtude do Espírito Santo, que há de vir sobre vós; e ser-me-eis testemunhas."<b>Atos 1:8</b></div>'+
+    '<p>Antes de o pregador abrir a Bíblia para estudar, Deus abre o pregador. O sermão não nasce primeiro no papel — nasce no <strong>joelho</strong>. Nenhuma técnica, por melhor que seja, produz o que só o Espírito Santo produz: convicção de pecado, quebrantamento e vida transformada. É por isso que começamos aqui, e não pela gramática do texto.</p>'+
+    '<p>Existe um equilíbrio que precisa ficar gravado no seu coração desde o primeiro dia: <strong>a unção não substitui o estudo, e o estudo não substitui a unção</strong>. Há quem estude muito e pregue seco, como quem lê uma bula de remédio. E há quem tenha fervor mas suba ao púlpito sem nada nas mãos, gritando sem alimentar o rebanho. O avivalista de verdade junta os dois: conhecimento profundo <em>e</em> fogo do céu.</p>'+
+
+    '<h2 class="sec"><span class="n">1</span>A oração vem antes do esboço</h2>'+
+    '<p>Todo grande pregador usado por Deus foi, antes de tudo, um homem de oração. A oração não é um item da preparação — é o ambiente dela. É orando que você recebe qual texto pregar, é orando que o texto deixa de ser informação e vira brasa dentro de você, e é orando que Deus prepara os corações que vão ouvir.</p>'+
+    '<ul>'+
+      '<li><strong>Ore pelo texto</strong> — peça que o Espírito, que inspirou a Palavra, ilumine você a entendê-la (1 Coríntios 2:10-12).</li>'+
+      '<li><strong>Ore por você</strong> — que a mensagem passe primeiro pela sua vida antes de sair pela sua boca.</li>'+
+      '<li><strong>Ore pelos ouvintes</strong> — pelos nomes, pelas lutas, pelos que ainda não se converteram.</li>'+
+    '</ul>'+
+
+    '<h2 class="sec"><span class="n">2</span>Dependência total do Espírito</h2>'+
+    '<p>O pregador pentecostal não confia na sua eloquência. Paulo, o maior teólogo do Novo Testamento, disse que pregou <em>"não com sabedoria de palavras... mas em demonstração de Espírito e de poder"</em> (1 Coríntios 2:4). Ele estudou como poucos — e ainda assim dependia do poder de Deus. Estudar a fundo e depender do Espírito não são inimigos; são as duas asas do mesmo pássaro.</p>'+
+    '<div class="destaque"><div class="rot">Guarde isto</div><p>Prepare-se como se tudo dependesse de você; pregue como se tudo dependesse de Deus. Porque, na verdade, tudo depende Dele.</p></div>'+
+
+    '<h2 class="sec"><span class="n">3</span>Santidade: o vaso limpo</h2>'+
+    '<p>"Purifique-se, pois, a si mesmo... e será vaso para honra, santificado e idôneo para uso do Senhor" (2 Timóteo 2:21). O Espírito Santo é <strong>santo</strong>. Ele flui livremente por vasos limpos. Pecado escondido, mágoa não perdoada, palavra suja — tudo isso entope o canal. A vida do pregador prega antes da boca. Você não leva a congregação para mais perto de Deus do que você mesmo está.</p>'+
+
+    '<h2 class="sec"><span class="n">4</span>Comunhão: viver na Palavra o ano inteiro</h2>'+
+    '<p>O melhor material de sermão não é achado na semana da pregação — é acumulado numa vida de comunhão diária com Deus. Quem lê a Bíblia todos os dias, ora todos os dias e anda com Deus todos os dias tem um "poço" de onde tirar. Quem só corre atrás na sexta-feira prega sempre raso. <strong>Encha o poço na semana; tire água no domingo.</strong></p>'+
+    '<div class="aviso"><b>Cuidado:</b> não troque a comunhão com Deus pela preparação de sermões. Dá para ficar tão ocupado <em>falando de Deus</em> que se esquece de <em>estar com Deus</em>. O primeiro alimento é seu; o segundo é do rebanho.</div>',
+  checklist:[
+    'Entendi que a pregação começa na oração, não no esboço.',
+    'Vou orar pelo texto, por mim e pelos ouvintes antes de pregar.',
+    'Reconheço minha dependência do Espírito Santo, mesmo estudando muito.',
+    'Vou cuidar da minha vida (santidade) como parte do preparo.',
+    'Tenho (ou vou começar) uma comunhão diária com Deus, não só na semana da pregação.'
+  ],
+  exercicios:[
+    { p:'Escreva uma oração curta, com suas palavras, pedindo que Deus prepare seu coração para pregar.' },
+    { p:'Onde está hoje o seu "poço"? Qual seu plano de leitura e oração diária para não pregar raso?' }
+  ]
+},
+{
+  id:'m2', emoji:'🔍',
+  titulo:'Como Estudar a Fundo',
+  sub:'O método indutivo',
+  resumo:'Observação → Interpretação → Aplicação. Ler o texto no contexto, descobrir o que o autor quis dizer e achar a GRANDE IDEIA antes de pregar qualquer coisa.',
+  html:
+    '<div class="verso">"Procura apresentar-te a Deus aprovado, como obreiro que não tem de que se envergonhar, que maneja bem a palavra da verdade."<b>2 Timóteo 2:15</b></div>'+
+    '<p>"Manejar bem" a Palavra é cortá-la reta, como um carpinteiro corta a madeira na medida certa. O oposto é forçar o texto a dizer o que ele não diz. O método mais seguro para isso é o <strong>estudo indutivo</strong>: em vez de chegar ao texto com a sua ideia pronta e procurar versículos que a confirmem, você deixa o texto falar e tira a mensagem <em>de dentro</em> dele.</p>'+
+    '<p>São três passos, sempre nesta ordem: <strong>Observação</strong> (o que o texto diz?), <strong>Interpretação</strong> (o que o texto significou?) e <strong>Aplicação</strong> (o que isso muda em nós hoje?). Pular a observação e ir direto para a aplicação é a raiz de quase toda pregação torta.</p>'+
+
+    '<h2 class="sec"><span class="n">1</span>Observação — o que o texto DIZ</h2>'+
+    '<p>Leia o texto muitas vezes, devagar, como um detetive. Ainda não é hora de interpretar; é hora de <em>enxergar</em>. Anote tudo que notar:</p>'+
+    '<ul>'+
+      '<li><strong>Quem</strong> são os personagens? Quem fala, quem ouve, quem age?</li>'+
+      '<li><strong>O quê</strong> está acontecendo? Quais os verbos, as ações?</li>'+
+      '<li><strong>Onde e quando</strong> acontece?</li>'+
+      '<li><strong>Palavras repetidas</strong> — quando a Bíblia repete uma palavra, está sublinhando algo (ex.: "santo, santo, santo").</li>'+
+      '<li><strong>Palavras de ligação</strong> — "portanto", "mas", "porque", "para que". Elas mostram a lógica do texto. Sempre pergunte: o "portanto" está aí por causa de quê?</li>'+
+      '<li><strong>Contrastes e comparações</strong> — luz e trevas, carne e Espírito, sábio e insensato.</li>'+
+    '</ul>'+
+
+    '<h2 class="sec"><span class="n">2</span>Interpretação — o que o texto SIGNIFICA</h2>'+
+    '<p>Aqui vale a regra de ouro: <strong>um texto nunca pode significar hoje o que nunca significou para quem o recebeu primeiro</strong>. Para descobrir isso, olhe o contexto em três camadas:</p>'+
+    '<h3 class="sub">Contexto histórico e cultural</h3>'+
+    '<p>Quem escreveu? Para quem? Por quê? O que estava acontecendo? Uma carta escrita a uma igreja perseguida se lê diferente de um salmo de louvor. Saber que Filipenses foi escrita da <em>prisão</em> muda o peso de "alegrai-vos sempre".</p>'+
+    '<h3 class="sub">Contexto literário</h3>'+
+    '<p>Leia o que vem <strong>antes</strong> e <strong>depois</strong>. O versículo isolado é a maior fonte de heresia. "Tudo posso naquele que me fortalece" (Fp 4:13) não é sobre ficar rico ou vencer no futebol — o contexto (v.11-12) mostra que Paulo fala de <em>contentamento</em> na fartura e na fome. Veja também o gênero: narrativa, poesia, profecia, parábola, carta e lei se leem de formas diferentes.</p>'+
+    '<h3 class="sub">Contexto de toda a Bíblia</h3>'+
+    '<p>A Escritura interpreta a Escritura. Um texto difícil é iluminado por textos claros. A Bíblia não se contradiz.</p>'+
+
+    '<h3 class="sub">Palavras-chave e línguas originais</h3>'+
+    '<p>O Antigo Testamento foi escrito em hebraico (e um pouco de aramaico) e o Novo em grego. Você não precisa ser especialista, mas ferramentas simples ajudam muito: uma <strong>Bíblia de estudo</strong>, uma <strong>concordância</strong> (que mostra onde a mesma palavra aparece) e dicionários bíblicos. Isso revela riquezas — por exemplo, o grego tem palavras diferentes para amor (<em>ágape</em>, <em>fileo</em>), e isso ilumina o diálogo de Jesus com Pedro em João 21.</p>'+
+    '<div class="aviso"><b>Nunca tire o texto do contexto.</b> "Texto fora do contexto vira pretexto." Se a sua interpretação depende de ignorar o versículo de cima e o de baixo, ela está errada.</div>'+
+
+    '<h2 class="sec"><span class="n">3</span>A GRANDE IDEIA do texto</h2>'+
+    '<p>Depois de observar e interpretar, faça a pergunta mais importante de toda a preparação: <strong>qual é a única frase que resume o que este texto ensina?</strong> Todo trecho da Bíblia tem uma ideia central. Se você não consegue dizer em uma frase clara do que o texto trata, você ainda não está pronto para pregá-lo.</p>'+
+    '<div class="destaque"><div class="rot">A regra do sermão de uma bala</div><p>Um sermão é uma bala, não um punhado de chumbo grosso. Uma ideia central, martelada de vários ângulos, marca mais que dez ideias soltas. Descubra a Grande Ideia — e todo o resto do sermão vai servir a ela.</p></div>'+
+
+    '<h2 class="sec"><span class="n">4</span>Aplicação — o que MUDA em nós hoje</h2>'+
+    '<p>Só depois de entender o que o texto significou é que perguntamos o que ele exige de nós agora. A aplicação nasce da mesma verdade eterna do texto, traduzida para a vida do ouvinte: o que crer, o que abandonar, o que obedecer, quem imitar, o que evitar. Sem aplicação, o sermão é aula. Com aplicação, ele vira Palavra viva.</p>',
+  checklist:[
+    'Vou ler o texto várias vezes ANTES de interpretar (observação).',
+    'Sei identificar quem escreveu, para quem e por quê.',
+    'Vou sempre ler o que vem antes e depois do texto (contexto literário).',
+    'Entendi que não posso tirar o versículo do contexto.',
+    'Consigo (ou vou treinar) resumir o texto numa única "Grande Ideia".',
+    'Sei que a aplicação vem DEPOIS da interpretação, nunca antes.'
+  ],
+  exercicios:[
+    { p:'Escolha um texto curto (ex.: Filipenses 4:11-13). Faça a observação: liste quem fala, palavras repetidas e palavras de ligação.' },
+    { p:'Agora escreva, em UMA frase, a Grande Ideia desse texto.' }
+  ]
+},
+{
+  id:'m3', emoji:'🏛️',
+  titulo:'Do Texto ao Sermão',
+  sub:'A exposição fiel',
+  resumo:'Da Grande Ideia ao esboço: tema central, tipos de sermão (com foco no expositivo), introdução que prende, corpo que flui, transições e clímax.',
+  html:
+    '<div class="verso">"Prega a palavra, insta a tempo e fora de tempo, redargui, repreende, exorta, com toda a longanimidade e doutrina."<b>2 Timóteo 4:2</b></div>'+
+    '<p>Agora vem a construção. Você tem a Grande Ideia do texto — falta dar a ela um corpo que a congregação consiga acompanhar, sentir e obedecer. Um bom esboço não é enfeite; é o esqueleto que sustenta a mensagem e impede que ela vire uma conversa sem rumo.</p>'+
+
+    '<h2 class="sec"><span class="n">1</span>Os três tipos de sermão</h2>'+
+    '<ul>'+
+      '<li><strong>Temático</strong> — parte de um tema (ex.: "o perdão") e reúne vários textos sobre ele. Útil, mas perigoso: é fácil impor a sua ideia à Bíblia.</li>'+
+      '<li><strong>Textual</strong> — usa um texto curto (um ou dois versículos) e tira dele os pontos do sermão.</li>'+
+      '<li><strong>Expositivo</strong> — pega uma passagem inteira e a explica versículo a versículo, deixando que a <em>estrutura do próprio texto</em> vire a estrutura do sermão. <strong>É o coração da pregação avivalista séria.</strong></li>'+
+    '</ul>'+
+    '<div class="destaque"><div class="rot">Por que o expositivo</div><p>Na pregação expositiva, o ponto do sermão é o ponto do texto. Você não sobe ao púlpito para dar a sua opinião, mas para abrir o que Deus já disse. Isso protege o pregador do erro e alimenta a igreja com a Palavra, não com histórias.</p></div>'+
+
+    '<h2 class="sec"><span class="n">2</span>O tema central e o objetivo</h2>'+
+    '<p>Transforme a Grande Ideia do texto na <strong>ideia central do sermão</strong> — uma frase que a congregação leva para casa. E defina o <strong>objetivo</strong>: o que você quer que aconteça no ouvinte? Que ele se converta? Perdoe alguém? Confie em Deus na crise? Todo o sermão empurra para esse alvo.</p>'+
+
+    '<h2 class="sec"><span class="n">3</span>A introdução que prende</h2>'+
+    '<p>Os primeiros dois minutos decidem se a congregação vai ouvir ou cochilar. A introdução tem três trabalhos: <strong>despertar interesse</strong>, <strong>criar necessidade</strong> ("isto é para mim") e <strong>apresentar o texto</strong>. Pode ser uma pergunta, um caso da vida real, uma tensão ("como um homem de Deus pode cair tão feio?"). Mas seja breve — a introdução serve a mensagem, não a si mesma.</p>'+
+
+    '<h2 class="sec"><span class="n">4</span>O corpo: pontos que fluem</h2>'+
+    '<p>Divida a mensagem em poucos pontos (2 a 4 é o ideal — a mente cansa depois disso). Cada ponto deve:</p>'+
+    '<ul>'+
+      '<li><strong>Nascer do texto</strong>, não ser colado por fora.</li>'+
+      '<li><strong>Explicar</strong> (o que o texto diz), <strong>ilustrar</strong> (mostrar) e <strong>aplicar</strong> (o que fazer).</li>'+
+      '<li><strong>Servir à ideia central</strong> — se um ponto lindo não serve à Grande Ideia, corte-o. Coragem de cortar é marca de bom pregador.</li>'+
+    '</ul>'+
+    '<h3 class="sub">Transições</h3>'+
+    '<p>São as pontes entre os pontos. Sem elas o sermão "pula" e o ouvinte se perde. Uma boa transição recapitula o que passou e anuncia o que vem: <em>"Se vimos que Deus chama, agora vejamos como Ele capacita..."</em></p>'+
+
+    '<h2 class="sec"><span class="n">5</span>O clímax</h2>'+
+    '<p>O sermão deve <strong>subir</strong>, não andar em linha reta e parar de repente. O clímax é o alto da montanha, onde toda a mensagem converge e o coração do ouvinte é confrontado com a verdade e chamado a responder. Guarde o seu golpe mais forte para o fim, não gaste tudo no começo.</p>'+
+    '<div class="aviso"><b>Erro comum:</b> um esboço bonito com pontos que não têm nada a ver com o texto. Beleza de estrutura não vale nada se trai a passagem. Fidelidade primeiro; elegância depois.</div>',
+  checklist:[
+    'Sei a diferença entre sermão temático, textual e expositivo.',
+    'Entendi por que o expositivo é o mais seguro e nutritivo.',
+    'Vou definir uma ideia central e um objetivo claro para cada sermão.',
+    'Sei que a introdução precisa prender e criar necessidade.',
+    'Vou usar poucos pontos (2 a 4), cada um nascido do texto.',
+    'Vou construir transições e um clímax que faz o sermão subir.'
+  ],
+  exercicios:[
+    { p:'Pegue o texto do módulo anterior. Escreva a ideia central do sermão e o objetivo (o que deve mudar no ouvinte).' },
+    { p:'Rascunhe 2 ou 3 pontos que nascem desse texto e sirvam à ideia central.' }
+  ]
+},
+{
+  id:'m4', emoji:'⚡',
+  titulo:'A Unção na Entrega',
+  sub:'Conhecimento + fogo',
+  resumo:'Depender do Espírito na hora de pregar, com sensibilidade, sem abandonar o texto. O equilíbrio que faz o ouvinte "sair do banco".',
+  html:
+    '<div class="verso">"E a minha palavra e a minha pregação não consistiram em palavras persuasivas de sabedoria humana, mas em demonstração de Espírito e de poder."<b>1 Coríntios 2:4</b></div>'+
+    '<p>Você estudou, orou e construiu o esboço. Agora o sermão precisa <strong>pegar fogo</strong>. Aquilo que faz o ouvinte sair do banco não é a beleza do esboço — é a unção do Espírito Santo sobre um homem preparado. Conhecimento sem fogo esfria; fogo sem conhecimento se descontrola. A pregação avivalista é o encontro dos dois.</p>'+
+
+    '<h2 class="sec"><span class="n">1</span>Depender do Espírito NA hora</h2>'+
+    '<p>A dependência do módulo 1 não termina no preparo — ela continua no púlpito. Muitas vezes, no meio da mensagem, o Espírito destaca uma verdade, traz um ênfase, aponta para uma necessidade que você não tinha planejado. O pregador ungido fica <strong>sensível</strong> a isso. O esboço é o mapa, mas o Espírito é o guia; se Ele mudar o caminho, siga.</p>'+
+
+    '<h2 class="sec"><span class="n">2</span>Seguir o Espírito SEM abandonar o texto</h2>'+
+    '<p>Aqui está o equilíbrio pentecostal maduro. "Ser guiado pelo Espírito" nunca significa largar a Bíblia e falar qualquer coisa. O mesmo Espírito que unge é o Espírito que <em>inspirou a Palavra</em> — Ele nunca contradiz o que Ele mesmo escreveu. Liberdade no Espírito e fidelidade ao texto andam de mãos dadas. Desconfie de qualquer "revelação" que o texto não sustenta.</p>'+
+    '<div class="destaque"><div class="rot">O equilíbrio</div><p>Sem estudo, o fogo vira fumaça — barulho sem substância. Sem unção, o estudo vira gelo — verdade sem vida. O avivalista prega com a Bíblia aberta e o coração em chamas.</p></div>'+
+
+    '<h2 class="sec"><span class="n">3</span>Convicção: pregar o que você viveu</h2>'+
+    '<p>A congregação sente quando o pregador acredita no que fala. A verdade que primeiro queimou <em>em você</em> queima <em>nos outros</em>. Por isso o texto precisa passar pela sua vida antes de passar pela sua boca. Unção não é gritar mais alto — é falar aquilo que Deus já fez em você com autoridade e amor.</p>'+
+
+    '<h2 class="sec"><span class="n">4</span>O que faz o ouvinte "sair do banco"</h2>'+
+    '<ul>'+
+      '<li><strong>Verdade que confronta</strong> — o Espírito usa a Palavra para tocar a consciência (Hebreus 4:12).</li>'+
+      '<li><strong>Amor genuíno</strong> — a dureza sem amor fere; a verdade com amor cura.</li>'+
+      '<li><strong>Expectativa de que Deus vai agir</strong> — pregue esperando que Deus salve, cure e transforme ali mesmo.</li>'+
+      '<li><strong>Um homem cheio do Espírito</strong> — não dá para dar o que não se tem. Encha-se antes de subir.</li>'+
+    '</ul>'+
+    '<div class="aviso"><b>Cuidado com o emocionalismo.</b> Emoção verdadeira é fruto do Espírito e da Palavra; emoção fabricada (gritaria, pressão, teatro) engana e não transforma. Fogo do céu não precisa de fumaça de fósforo.</div>',
+  checklist:[
+    'Vou continuar dependente do Espírito também na hora de pregar.',
+    'Entendi que seguir o Espírito nunca contradiz a Bíblia.',
+    'Só vou pregar com autoridade aquilo que passou pela minha vida.',
+    'Sei distinguir unção verdadeira de emocionalismo fabricado.',
+    'Vou pregar esperando que Deus aja na hora.'
+  ],
+  exercicios:[
+    { p:'Pense num sermão que te marcou. O que nele fez você "sair do banco"? Foi a técnica ou a unção — ou os dois?' },
+    { p:'Qual verdade do seu próximo sermão já queimou primeiro no seu coração?' }
+  ]
+},
+{
+  id:'m5', emoji:'🎤',
+  titulo:'Ilustrações, Voz e Presença',
+  sub:'Iluminar, não enfeitar',
+  resumo:'Ilustrar para abrir janelas de luz sobre a verdade; usar voz, pausas e ritmo; manter contato com a congregação.',
+  html:
+    '<div class="verso">"E ensinava-lhes muitas coisas por parábolas."<b>Marcos 4:2</b></div>'+
+    '<p>Jesus, o maior Pregador, usava histórias o tempo todo. A ilustração não é para enfeitar o sermão — é para <strong>iluminar</strong> a verdade, como uma janela deixa a luz entrar num quarto. Uma boa ilustração faz a congregação <em>ver</em> o que antes só ouviu.</p>'+
+
+    '<h2 class="sec"><span class="n">1</span>Ilustrar para iluminar</h2>'+
+    '<ul>'+
+      '<li><strong>Sirva à verdade</strong> — a ilustração aponta para o ponto, não para si mesma. Se a igreja lembra da história e esquece a verdade, a ilustração falhou.</li>'+
+      '<li><strong>Seja verdadeiro</strong> — não invente milagres nem exagere testemunhos. Mentira no púlpito é pecado, não recurso.</li>'+
+      '<li><strong>Use a vida real</strong> — Bíblia, natureza, cotidiano, história. Coisas que a congregação conhece.</li>'+
+      '<li><strong>Não abuse</strong> — sermão que é só história vira palestra. A ilustração serve à Palavra, não a substitui.</li>'+
+    '</ul>'+
+
+    '<h2 class="sec"><span class="n">2</span>A voz é um instrumento</h2>'+
+    '<p>Deus lhe deu a voz como um instrumento — aprenda a tocá-la. A monotonia mata o melhor conteúdo. Varie:</p>'+
+    '<ul>'+
+      '<li><strong>Volume</strong> — nem sempre gritando. Às vezes o sussurro toca mais fundo que o grito.</li>'+
+      '<li><strong>Velocidade</strong> — desacelere no que é importante; deixe a verdade pousar.</li>'+
+      '<li><strong>Pausa</strong> — o silêncio bem colocado é uma das armas mais poderosas do pregador. Depois de uma verdade forte, cale-se e deixe ela trabalhar.</li>'+
+    '</ul>'+
+
+    '<h2 class="sec"><span class="n">3</span>Presença e contato</h2>'+
+    '<p>Pregue para <em>pessoas</em>, não para o teto nem para as suas anotações. Olhe nos olhos. Fale <em>com</em> a congregação, não <em>para</em> ela. Gestos naturais ajudam; gestos ensaiados atrapalham. Sua expressão deve combinar com a mensagem — não anuncie o inferno sorrindo nem a graça de cara fechada.</p>'+
+    '<div class="destaque"><div class="rot">Naturalidade ungida</div><p>A melhor entrega é você mesmo, cheio do Espírito. Não imite outro pregador. Deus ungiu a sua voz, o seu jeito, a sua história. Seja fiel ao texto e verdadeiro consigo — o resto o Espírito acende.</p></div>'+
+    '<div class="aviso"><b>Evite:</b> cacoetes ("né?", "amém?" a cada frase), ler o sermão de cabeça baixa, e o "tom de púlpito" artificial. Fale como gente que ama gente e ama a Palavra.</div>',
+  checklist:[
+    'Vou usar ilustrações para iluminar a verdade, não para me exibir.',
+    'Nunca vou inventar ou exagerar histórias no púlpito.',
+    'Vou variar volume, velocidade e usar pausas de propósito.',
+    'Vou pregar olhando para as pessoas, com naturalidade.',
+    'Vou evitar cacoetes e o "tom de púlpito" artificial.'
+  ],
+  exercicios:[
+    { p:'Encontre uma ilustração (da vida, da natureza ou da Bíblia) para a Grande Ideia do seu sermão. Ela ilumina o ponto?' },
+    { p:'Marque no seu esboço um lugar para uma PAUSA proposital. O que você quer que a verdade faça naquele silêncio?' }
+  ]
+},
+{
+  id:'m6', emoji:'🙌',
+  titulo:'O Apelo e a Ministração',
+  sub:'Conduzir ao encontro com Deus',
+  resumo:'Levar o ouvinte à decisão e ao encontro com Deus sem manipular — um apelo que nasce da Palavra e do mover do Espírito.',
+  html:
+    '<div class="verso">"Rogamo-vos, pois, da parte de Cristo, que vos reconcilieis com Deus."<b>2 Coríntios 5:20</b></div>'+
+    '<p>Pregar não é só informar — é chamar à decisão. O sermão que só explica e não convida deixa a obra pela metade. O apelo é o momento em que a verdade pregada vira resposta ao ouvinte: converter-se, render-se, buscar cura, receber o batismo no Espírito, consagrar a vida. Na tradição avivalista, esse é um dos pontos altos do culto.</p>'+
+
+    '<h2 class="sec"><span class="n">1</span>O apelo nasce da Palavra</h2>'+
+    '<p>Um bom apelo não é um pedaço colado no fim — ele é a consequência natural da mensagem. Se você pregou sobre a cruz, o apelo é vir a Cristo. Se pregou sobre santidade, é consagração. A Palavra abre a ferida e o apelo oferece o remédio. <strong>O apelo deve fluir do texto, não da emoção do momento.</strong></p>'+
+
+    '<h2 class="sec"><span class="n">2</span>Conduzir sem manipular</h2>'+
+    '<p>Existe uma linha clara entre <em>persuadir pela verdade</em> e <em>manipular pela pressão</em>. O Espírito Santo convence (João 16:8); o pregador apenas coopera. Nunca force, envergonhe ou use truques emocionais para arrancar decisões. Uma decisão fabricada pela pressão não dura; uma decisão nascida da convicção do Espírito transforma.</p>'+
+    '<div class="destaque"><div class="rot">A régua do apelo honesto</div><p>Quem convence é o Espírito, não a sua voz alta. Ofereça Cristo com clareza e amor, chame com fé, e confie a resposta a Deus. Melhor uma decisão verdadeira do que cem levantadas de mão vazias.</p></div>'+
+
+    '<h2 class="sec"><span class="n">3</span>Como fazer um apelo claro</h2>'+
+    '<ul>'+
+      '<li><strong>Seja específico</strong> — diga exatamente o que a pessoa deve fazer (vir à frente, orar, entregar-se).</li>'+
+      '<li><strong>Baseie na Palavra</strong> — mostre a promessa de Deus para quem responder.</li>'+
+      '<li><strong>Dê espaço ao Espírito</strong> — não corra; deixe Deus trabalhar nos corações.</li>'+
+      '<li><strong>Ministre com fé</strong> — ore pelos que vierem esperando que Deus salve, cure e batize no Espírito Santo.</li>'+
+      '<li><strong>Encaminhe</strong> — o apelo não termina no altar; a pessoa precisa ser cuidada, discipulada, integrada.</li>'+
+    '</ul>'+
+    '<div class="aviso"><b>Evite:</b> apelos intermináveis que cansam, "chantagem espiritual" ("se você não vier, Deus vai...") e prometer o que a Bíblia não promete. Fidelidade também no apelo.</div>',
+  checklist:[
+    'Vou preparar o apelo como fruto natural da mensagem, não como enfeite.',
+    'Entendi que quem convence é o Espírito, não a minha pressão.',
+    'Nunca vou manipular, envergonhar ou forçar decisões.',
+    'Vou fazer apelos claros e específicos, baseados na Palavra.',
+    'Vou cuidar de encaminhar quem responder (discipulado).'
+  ],
+  exercicios:[
+    { p:'Escreva o apelo do seu próximo sermão. Ele nasce naturalmente da mensagem?' },
+    { p:'Confira: seu apelo persuade pela verdade ou pressiona pela emoção? Ajuste o que for preciso.' }
+  ]
+},
+{
+  id:'m7', emoji:'🛠️',
+  titulo:'Monte Seu Sermão',
+  sub:'Prática — o wizard',
+  resumo:'Passo a passo: escolha o texto, ache a Grande Ideia, monte o esboço (introdução, pontos, clímax), a aplicação e o apelo. No fim, veja o esqueleto pronto e salve.',
+  wizard:true,
+  html:'',
+  checklist:[],
+  exercicios:[]
+}
+];
+
+/* ────────────────────── ÍNDICE ────────────────────── */
+function progressoModulo(m){
+  if(m.wizard) return null; // não conta no percentual
+  var total = m.checklist.length;
+  if(!total) return {feitos:0,total:0};
+  var prog = loadJSON(LS_PROG);
+  var marc = prog[m.id]||{};
+  var feitos = 0;
+  for(var i=0;i<total;i++){ if(marc[i]) feitos++; }
+  return {feitos:feitos, total:total};
+}
+function progressoGeral(){
+  var f=0,t=0;
+  MODULOS.forEach(function(m){
+    var p=progressoModulo(m);
+    if(p){ f+=p.feitos; t+=p.total; }
+  });
+  return t? Math.round(f/t*100) : 0;
+}
+function renderIndice(){
+  var pct=progressoGeral();
+  document.getElementById('pct-geral').textContent=pct+'%';
+  document.getElementById('barra-geral').style.width=pct+'%';
+  var box=document.getElementById('lista-modulos');
+  box.innerHTML=MODULOS.map(function(m,idx){
+    var p=progressoModulo(m);
+    var feito = p && p.total>0 && p.feitos===p.total;
+    var barra='';
+    if(p && p.total>0){
+      var mp=Math.round(p.feitos/p.total*100);
+      barra='<div class="barrinha"><i style="width:'+mp+'%"></i></div>'
+        +'<div class="stat">'+(feito?'✓ concluído':(p.feitos+' de '+p.total+' marcados'))+'</div>';
+    } else if(m.wizard){
+      var qtd=(loadJSON(LS_RASC).lista||[]).length;
+      barra='<div class="stat" style="color:var(--dourado)">'+(qtd? qtd+' rascunho(s) salvo(s)':'monte seu 1º sermão aqui')+'</div>';
+    }
+    return '<button class="card" onclick="abrirModulo('+idx+')">'
+      +'<div class="top">'
+      +'<div class="ic'+(feito?' feito':'')+'">'+(feito?'✓':m.emoji)+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="tit">Módulo '+(idx+1)+' · '+esc(m.titulo)+'</div>'
+      +'<div class="ref">'+esc(m.sub)+'</div></div>'
+      +'</div>'
+      +'<div class="desc">'+esc(m.resumo)+'</div>'
+      +barra
+      +'</button>';
+  }).join('');
+}
+
+/* ────────────────────── ABRIR MÓDULO ────────────────────── */
+var _modAtual=0;
+function abrirModulo(idx){
+  _modAtual=idx;
+  var m=MODULOS[idx];
+  document.getElementById('tela-indice').style.display='none';
+  document.getElementById('tela-modulo').style.display='block';
+  var html='';
+  html+='<div class="m-selo">Módulo '+(idx+1)+' de '+MODULOS.length+'</div>';
+  html+='<h1 class="m-titulo">'+esc(m.titulo)+'</h1>';
+  html+='<div class="m-sub">'+esc(m.sub)+'</div>';
+  html+='<div class="divisor"></div>';
+
+  if(m.wizard){
+    html+='<div id="wiz"></div>';
+  } else {
+    html+='<div class="conteudo">'+m.html+'</div>';
+    // checklist
+    html+='<div class="bloco"><div class="cab">✓ Checklist do módulo</div>'
+      +'<div class="cab-sub">Marque o que você aprendeu e vai aplicar. Fica salvo neste aparelho.</div>';
+    var prog=loadJSON(LS_PROG); var marc=prog[m.id]||{};
+    m.checklist.forEach(function(item,i){
+      html+='<label class="chk"><input type="checkbox" '+(marc[i]?'checked':'')
+        +' onchange="marcarChk(\''+m.id+'\','+i+',this.checked)"><span>'+esc(item)+'</span></label>';
+    });
+    html+='</div>';
+    // exercícios
+    if(m.exercicios.length){
+      html+='<div class="exerc"><div class="cab">✎ Exercícios</div>'
+        +'<div class="cab-sub">Responda com suas palavras. Salva sozinho enquanto você digita.</div>';
+      var exd=loadJSON(LS_EXER); var resp=exd[m.id]||{};
+      m.exercicios.forEach(function(ex,i){
+        html+='<div class="q"><div class="p">'+(i+1)+'. '+esc(ex.p)+'</div>'
+          +'<textarea placeholder="Escreva aqui..." oninput="salvarExer(\''+m.id+'\','+i+',this.value,this)">'+esc(resp[i]||'')+'</textarea>'
+          +'<div class="salvo-tag" id="tag-'+m.id+'-'+i+'"></div></div>';
+      });
+      html+='</div>';
+    }
+  }
+
+  // navegação
+  html+='<div class="nav-mod">'
+    +'<button '+(idx===0?'disabled':'')+' onclick="abrirModulo('+(idx-1)+')">← Anterior</button>'
+    +'<button class="prox" '+(idx===MODULOS.length-1?'disabled':'')+' onclick="abrirModulo('+(idx+1)+')">Próximo →</button>'
+    +'</div>';
+
+  document.getElementById('mod-corpo').innerHTML=html;
+  if(m.wizard) renderWizard();
+  window.scrollTo(0,0);
+}
+function irIndice(){
+  document.getElementById('tela-modulo').style.display='none';
+  document.getElementById('tela-indice').style.display='block';
+  renderIndice();
+  window.scrollTo(0,0);
+}
+function marcarChk(mid,i,val){
+  var prog=loadJSON(LS_PROG); if(!prog[mid]) prog[mid]={}; prog[mid][i]=val; saveJSON(LS_PROG,prog);
+}
+var _exerTimer={};
+function salvarExer(mid,i,val,el){
+  var exd=loadJSON(LS_EXER); if(!exd[mid]) exd[mid]={}; exd[mid][i]=val; saveJSON(LS_EXER,exd);
+  var tag=document.getElementById('tag-'+mid+'-'+i);
+  if(tag){ tag.textContent='✓ salvo'; clearTimeout(_exerTimer[mid+i]); _exerTimer[mid+i]=setTimeout(function(){tag.textContent='';},1400); }
+}
+
+/* ────────────────────── MONTADOR DE SERMÃO (wizard) ────────────────────── */
+var WIZ_CAMPOS=[
+  {k:'titulo', label:'Título do sermão', ph:'Ex.: O Último Prego', ajuda:'Um título que resume e desperta interesse.', input:true},
+  {k:'texto', label:'Texto-base', ph:'Ex.: Gênesis 6:1-22', ajuda:'A passagem que você vai expor. De preferência um trecho inteiro (expositivo).', input:true},
+  {k:'grande', label:'A Grande Ideia', ph:'Em uma frase, do que o texto trata?', ajuda:'Módulo 2: resuma o texto numa única frase. Todo o sermão serve a ela.'},
+  {k:'objetivo', label:'Objetivo (o que deve mudar no ouvinte)', ph:'Ex.: Levar a igreja a confiar em Deus na demora.', ajuda:'Módulo 3: qual resposta você espera? Fé, arrependimento, consagração...'},
+  {k:'intro', label:'Introdução', ph:'Como você vai prender a atenção e apresentar o texto?', ajuda:'Módulo 3: desperte interesse, crie necessidade ("isto é para mim") e apresente o texto. Seja breve.'},
+  {k:'pontos', label:'Pontos do sermão', ph:'Ponto 1: ...\nPonto 2: ...\nPonto 3: ...', ajuda:'Módulo 3: 2 a 4 pontos, cada um nascido do texto (explica, ilustra, aplica). Um por linha.'},
+  {k:'ilustra', label:'Ilustração', ph:'Uma história/imagem que ilumina a Grande Ideia.', ajuda:'Módulo 5: ilustre para iluminar, não para enfeitar. Verdadeira e simples.'},
+  {k:'climax', label:'Clímax', ph:'O ponto mais alto, onde tudo converge.', ajuda:'Módulo 3: o sermão sobe até aqui. Guarde seu golpe mais forte para este momento.'},
+  {k:'aplica', label:'Aplicação', ph:'O que isso muda na vida da igreja hoje?', ajuda:'Módulo 2: o que crer, abandonar ou obedecer a partir do texto.'},
+  {k:'apelo', label:'Apelo', ph:'Como você vai chamar à decisão?', ajuda:'Módulo 6: nasce da mensagem, persuade pela verdade, sem manipular.'}
+];
+var _rascAtual=null; // id do rascunho em edição
+
+function rascStore(){ var d=loadJSON(LS_RASC); if(!d.lista) d.lista=[]; return d; }
+function rascSalvar(reg){
+  var d=rascStore();
+  var idx=d.lista.findIndex(function(r){return r.id===reg.id;});
+  if(idx>=0) d.lista[idx]=reg; else d.lista.unshift(reg);
+  saveJSON(LS_RASC,d);
+}
+function renderWizard(){
+  var box=document.getElementById('wiz');
+  if(!box) return;
+  var d=rascStore();
+  var html='';
+  // lista de rascunhos
+  html+='<div class="bloco"><div class="cab">📁 Meus rascunhos</div>'
+    +'<div class="cab-sub">Salvos neste aparelho. Toque para editar, ou crie um novo.</div>';
+  if(!d.lista.length){
+    html+='<div class="vazio">Nenhum rascunho ainda. Crie o seu primeiro sermão abaixo. ↓</div>';
+  } else {
+    html+='<div class="lista-rasc">';
+    d.lista.forEach(function(r){
+      var data=new Date(r.ts||Date.now()).toLocaleDateString('pt-BR');
+      html+='<div class="rasc-item">'
+        +'<div class="info" onclick="editarRasc(\''+r.id+'\')">'
+        +'<div class="t">'+esc(r.dados.titulo||'(sem título)')+'</div>'
+        +'<div class="d">'+esc(r.dados.texto||'sem texto-base')+' · '+data+'</div>'
+        +'</div>'
+        +'<button class="del" title="Apagar" onclick="apagarRasc(\''+r.id+'\')">🗑</button>'
+        +'</div>';
+    });
+    html+='</div>';
+  }
+  html+='<div class="btn-linha"><button class="btn ouro" onclick="novoRasc()">+ Novo sermão</button></div>';
+  html+='</div>';
+
+  // formulário do rascunho em edição
+  if(_rascAtual){
+    var reg=d.lista.find(function(r){return r.id===_rascAtual;});
+    if(reg){
+      html+='<div class="bloco" id="wiz-form"><div class="cab">🛠️ Montando: '+esc(reg.dados.titulo||'novo sermão')+'</div>'
+        +'<div class="cab-sub">Preencha o que já tiver — salva sozinho. As dicas apontam o módulo que ensina cada parte.</div>';
+      WIZ_CAMPOS.forEach(function(c){
+        html+='<div class="campo"><label>'+esc(c.label)+'</label>'
+          +'<div class="ajuda">'+esc(c.ajuda)+'</div>';
+        if(c.input){
+          html+='<input type="text" placeholder="'+esc(c.ph)+'" value="'+esc(reg.dados[c.k]||'')
+            +'" oninput="atualizarCampo(\''+c.k+'\',this.value)">';
+        } else {
+          html+='<textarea placeholder="'+esc(c.ph)+'" oninput="atualizarCampo(\''+c.k+'\',this.value)">'+esc(reg.dados[c.k]||'')+'</textarea>';
+        }
+        html+='</div>';
+      });
+      html+='<div class="btn-linha">'
+        +'<button class="btn pri" onclick="verEsqueleto()">Ver esqueleto pronto ✦</button>'
+        +'<button class="btn sec" onclick="fecharForm()">Fechar</button>'
+        +'</div>';
+      html+='<div id="esqueleto-out"></div>';
+      html+='</div>';
+    }
+  }
+  box.innerHTML=html;
+}
+function novoRasc(){
+  var id='s'+Date.now();
+  rascSalvar({id:id, ts:Date.now(), dados:{titulo:''}});
+  _rascAtual=id;
+  renderWizard();
+  setTimeout(function(){ var f=document.getElementById('wiz-form'); if(f) f.scrollIntoView({behavior:'smooth'}); },60);
+}
+function editarRasc(id){ _rascAtual=id; renderWizard(); setTimeout(function(){ var f=document.getElementById('wiz-form'); if(f) f.scrollIntoView({behavior:'smooth'}); },60); }
+function apagarRasc(id){
+  if(!confirm('Apagar este rascunho? Não dá pra desfazer.')) return;
+  var d=rascStore(); d.lista=d.lista.filter(function(r){return r.id!==id;}); saveJSON(LS_RASC,d);
+  if(_rascAtual===id) _rascAtual=null;
+  renderWizard();
+}
+function fecharForm(){ _rascAtual=null; renderWizard(); }
+var _wizTimer=null;
+function atualizarCampo(k,v){
+  var d=rascStore(); var reg=d.lista.find(function(r){return r.id===_rascAtual;});
+  if(!reg) return;
+  reg.dados[k]=v; reg.ts=Date.now();
+  saveJSON(LS_RASC,d);
+  if(k==='titulo'){ // atualiza o cabeçalho sem re-render pesado
+    var cab=document.querySelector('#wiz-form .cab');
+    if(cab) cab.textContent='🛠️ Montando: '+(v||'novo sermão');
+  }
+}
+function verEsqueleto(){
+  var d=rascStore(); var reg=d.lista.find(function(r){return r.id===_rascAtual;});
+  if(!reg) return;
+  var x=reg.dados;
+  function bloco(rot,val){ return val && val.trim()? '<div class="rot">'+esc(rot)+'</div><p class="txt">'+esc(val)+'</p>':''; }
+  var out='<div class="esqueleto">'
+    +'<h3>'+esc(x.titulo||'(sem título)')+'</h3>'
+    +'<div class="grande">'+esc(x.texto||'')+'</div>'
+    +bloco('Grande Ideia', x.grande)
+    +bloco('Objetivo', x.objetivo)
+    +bloco('Introdução', x.intro)
+    +bloco('Pontos', x.pontos)
+    +bloco('Ilustração', x.ilustra)
+    +bloco('Clímax', x.climax)
+    +bloco('Aplicação', x.aplica)
+    +bloco('Apelo', x.apelo)
+    +'<div class="btn-linha" style="margin-top:16px"><button class="btn sec" onclick="copiarEsqueleto()">Copiar tudo</button></div>'
+    +'</div>';
+  var el=document.getElementById('esqueleto-out');
+  el.innerHTML=out;
+  el.scrollIntoView({behavior:'smooth'});
+}
+function copiarEsqueleto(){
+  var d=rascStore(); var reg=d.lista.find(function(r){return r.id===_rascAtual;});
+  if(!reg) return;
+  var x=reg.dados;
+  function ln(rot,val){ return val && val.trim()? rot+':\n'+val+'\n\n':''; }
+  var txt=(x.titulo||'(sem título)')+'\n'+(x.texto||'')+'\n\n'
+    +ln('GRANDE IDEIA',x.grande)+ln('OBJETIVO',x.objetivo)+ln('INTRODUÇÃO',x.intro)
+    +ln('PONTOS',x.pontos)+ln('ILUSTRAÇÃO',x.ilustra)+ln('CLÍMAX',x.climax)
+    +ln('APLICAÇÃO',x.aplica)+ln('APELO',x.apelo);
+  var done=function(){ alert('Esqueleto copiado! É só colar onde quiser.'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, function(){ fallbackCopy(txt); done(); });
+  } else { fallbackCopy(txt); done(); }
+}
+function fallbackCopy(txt){
+  var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.top='-9999px';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ────────────────────── INÍCIO ────────────────────── */
+renderIndice();
+</script>
+</body>
+</html>
