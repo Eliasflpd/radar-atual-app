@@ -821,10 +821,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 <!-- ESCAVADOR DE PÉROLAS BÍBLICAS -->
 <style>
 #tela-perolas .prl-scroll{height:calc(100% - 58px);overflow-y:auto;padding:16px 14px 96px;-webkit-overflow-scrolling:touch}
-.prl-intro{font-size:15px;line-height:1.55;color:var(--ink2,#c9d4e6);background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.4);border-radius:14px;padding:14px}
+.prl-intro{font-size:15px;line-height:1.55;color:var(--ink2,#c9d4e6);background:rgba(201,161,74,.12);border:1px solid rgba(201,161,74,.38);border-radius:14px;padding:14px}
 .prl-input{width:100%;box-sizing:border-box;margin-top:14px;background:var(--card,#12213c);color:var(--ink,#eef3fb);border:1px solid rgba(217,182,90,.4);border-radius:14px;padding:14px;font-size:16px;resize:vertical;font-family:inherit;outline:none}
-.prl-input:focus{border-color:#8b5cf6}
-.prl-btn{width:100%;margin-top:10px;background:linear-gradient(90deg,#8b5cf6,#b79ad0);color:#fff;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(139,92,246,.4)}
+.prl-input:focus{border-color:#C9A14A}
+.prl-btn{width:100%;margin-top:10px;background:linear-gradient(90deg,#C9A14A,#F5C842);color:#080D1A;border:none;border-radius:14px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(201,161,74,.4)}
 .prl-btn:disabled{opacity:.6}
 .prl-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .prl-chip{font-size:13px;font-weight:600;color:var(--ink2,#c9d4e6);background:rgba(255,255,255,.06);border:1px solid rgba(217,182,90,.3);border-radius:999px;padding:7px 13px;cursor:pointer}
@@ -838,15 +838,15 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   color:#2a251d;font-family:'Lora',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.68;
   text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto;overflow-wrap:break-word}
 .prl-out:empty{display:none}
-.prl-out h3{font-family:'Playfair Display',Georgia,serif;color:#6a3fb0;font-size:15.5px;font-weight:700;
-  margin:18px 0 5px;padding-bottom:5px;border-bottom:1.5px solid rgba(106,63,176,.18);line-height:1.25;
+.prl-out h3{font-family:'Playfair Display',Georgia,serif;color:#1b3b6f;font-size:15.5px;font-weight:700;
+  margin:18px 0 5px;padding-bottom:5px;border-bottom:1.5px solid rgba(201,161,74,.35);line-height:1.25;
   text-align:left;-webkit-hyphens:none;hyphens:none}
 .prl-out h3:first-child{margin-top:2px}
-.prl-out b,.prl-out strong{color:#5a2ea6;font-weight:700}
-.prl-out i,.prl-out em{color:#4a3f6b}
+.prl-out b,.prl-out strong{color:#1b3b6f;font-weight:700}
+.prl-out i,.prl-out em{color:#6a5a3a}
 .prl-out p{margin:9px 0}
-.prl-loading{color:#6a3fb0;font-weight:700;font-family:-apple-system,'Segoe UI',sans-serif;display:flex;align-items:center;gap:8px;text-align:left}
-.prl-cursor::after{content:'▍';color:#8b5cf6;animation:prlblink 1s steps(2) infinite}
+.prl-loading{color:#a9761b;font-weight:700;font-family:-apple-system,'Segoe UI',sans-serif;display:flex;align-items:center;gap:8px;text-align:left}
+.prl-cursor::after{content:'▍';color:#C9A14A;animation:prlblink 1s steps(2) infinite}
 @keyframes prlblink{0%,100%{opacity:1}50%{opacity:0}}
 </style>
 <div class="tela" id="tela-perolas">
@@ -1480,13 +1480,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 // ══ MÓDULOS ═══════════════════════════════════════
 const MODS = [
   {id:'desafiomateus', nome:'Maratona de Marcos',  icon:'🏆', cor:'#C9A14A', desc:'Game bíblico — Marcos 1 a 5 · leia, ouça e jogue'},
-  {id:'perolas', nome:'Descobrindo as Pérolas',   icon:'💎', cor:'#8b5cf6', desc:'Análise bíblica de qualquer assunto'},
+  {id:'perolas', nome:'Descobrindo as Pérolas',   icon:'💎', cor:'#17a2a2', desc:'Análise bíblica de qualquer assunto'},
   {id:'biblia',  nome:'Bíblia e Harpa Cristã',   icon:'📖', cor:'#C9A14A', desc:'Bíblia + 640 hinos'},
   {id:'ebd',     nome:'EBD',                      icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
   {id:'silas',   nome:'Projeto Silas',            icon:'✝️', img:'img/ceadema.png', cor:'#0e2a63', desc:'Documentos, cartazes, vídeos'},
   {id:'templo',  nome:'Templo Central Tuntum-MA', icon:'⛪', cor:'#f5a623', desc:'Sede central — Tuntum-MA'},
   {id:'igrejas', nome:'Igrejas Parceiras',        icon:'📣', cor:'#2563eb', desc:'Conheça igrejas · divulgue a sua'},
-  {id:'manuais', nome:'Biblioteca',               icon:'📚', cor:'#7c3aed', desc:'Livros e manuais do obreiro'},
+  {id:'manuais', nome:'Biblioteca',               icon:'📚', cor:'#8b3a4a', desc:'Livros e manuais do obreiro'},
 ];
 
 // ══ STATE ═════════════════════════════════════════
@@ -3515,7 +3515,7 @@ async function apagarIgreja(id,nome){
 // ══ MANUAIS E AFINS (estante de livros) ══════════════════════
 const MANUAIS = [
   { id:'cerimonias', titulo:'Manual de Cerimônias', autor:'Temóteo Ramos de Oliveira',
-    emoji:'⛪', cor:'#7c3aed',
+    emoji:'⛪', cor:'#8b3a4a',
     desc:'Roteiros para casamento, funeral, batismo, ceia, ordenação e todas as cerimônias do obreiro.',
     arquivo:'/api/manual?id=cerimonias' },
   { id:'declaracao-fe', titulo:'Declaração de Fé', autor:'CPAD — Conselho de Doutrina',
@@ -3533,7 +3533,7 @@ function renderManuais(){
       +'<div onclick="abrirManual(\''+m.id+'\')" style="display:flex;gap:14px;align-items:center;cursor:pointer">'
       +(m.capa
         ? '<img src="'+m.capa+'" style="width:58px;height:78px;object-fit:cover;border-radius:8px;flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,.4)">'
-        : '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,'+m.cor+',#5b21b6);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">'+m.emoji+'</div>')
+        : '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,'+m.cor+',#4a1a24);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">'+m.emoji+'</div>')
       +'<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">'+m.titulo+'</div>'
       +'<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">'+m.autor+'</div>'
       +'<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">'+m.desc+'</div></div>'
