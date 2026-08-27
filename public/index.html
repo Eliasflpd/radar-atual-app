@@ -865,6 +865,77 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   </div>
 </div>
 
+<!-- PERFIL / AJUSTES -->
+<style>
+/* Controle de tamanho da letra na LEITURA (data-fs no <html>) */
+html[data-fs="2"] .bib-vers-txt{font-size:19px}
+html[data-fs="3"] .bib-vers-txt{font-size:22px}
+html[data-fs="2"] .dev-body,html[data-fs="2"] .dev-verse{font-size:18px}
+html[data-fs="3"] .dev-body,html[data-fs="3"] .dev-verse{font-size:21px}
+html[data-fs="2"] .dev-oracao{font-size:17.5px}
+html[data-fs="3"] .dev-oracao{font-size:20px}
+html[data-fs="2"] .prl-out{font-size:17.5px}
+html[data-fs="3"] .prl-out{font-size:20px}
+#tela-perfil .pf-scroll{flex:1;overflow-y:auto;padding:16px 14px 96px;-webkit-overflow-scrolling:touch}
+#tela-perfil .pf-scroll::-webkit-scrollbar{display:none}
+.pf-user{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#12213c,#0d1830);border:1px solid rgba(201,161,74,.28);border-radius:18px;padding:18px}
+.pf-avatar{width:58px;height:58px;border-radius:50%;background:rgba(201,161,74,.16);border:1.5px solid rgba(201,161,74,.5);display:grid;place-items:center;font-size:24px;font-weight:900;color:var(--gold);flex-shrink:0}
+.pf-user-info{flex:1;min-width:0}
+.pf-user-nome{font-size:19px;font-weight:900;color:var(--txt);line-height:1.15}
+.pf-user-cargo{font-size:13px;color:var(--gold);font-weight:700;margin-top:3px}
+.pf-user-fone{font-size:12.5px;color:var(--sub);margin-top:2px}
+.pf-sec{font-size:10px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.7;margin:24px 0 10px}
+.pf-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.pf-fs-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.pf-fs-tit{font-size:14.5px;font-weight:800;color:var(--txt)}
+.pf-fs-nivel{font-size:12px;font-weight:800;color:var(--gold);background:rgba(201,161,74,.12);border-radius:999px;padding:4px 11px}
+.pf-fs-ctrl{display:flex;align-items:center;gap:12px}
+.pf-fs-btn{width:56px;height:56px;border-radius:14px;border:1.5px solid rgba(201,161,74,.4);background:var(--card2);color:var(--gold);font-size:22px;font-weight:900;font-family:inherit;cursor:pointer;flex-shrink:0;display:grid;place-items:center}
+.pf-fs-btn:active{background:rgba(201,161,74,.18)}
+.pf-fs-btn:disabled{opacity:.35}
+.pf-fs-sample{flex:1;background:#fffdf9;border-radius:12px;padding:12px 14px;color:#2a251d;font-family:'Lora',Georgia,serif;line-height:1.55;text-align:center}
+.pf-btn-lg{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:10px}
+.pf-btn-share{background:#25D366;color:#fff}
+.pf-btn-lg:active{opacity:.85}
+.pf-foot{text-align:center;color:var(--sub);font-size:11.5px;margin-top:26px;line-height:1.6}
+</style>
+<div class="tela" id="tela-perfil">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
+    <div class="std-hinfo"><div class="std-titulo">Meu Perfil</div><div class="std-sub">Seus dados e ajustes do app</div></div>
+    <span style="font-size:24px;flex-shrink:0">👤</span></div>
+  <div class="pf-scroll">
+    <div class="pf-user">
+      <div class="pf-avatar" id="pf-avatar">?</div>
+      <div class="pf-user-info">
+        <div class="pf-user-nome" id="pf-nome">Visitante</div>
+        <div class="pf-user-cargo" id="pf-cargo">—</div>
+        <div class="pf-user-fone" id="pf-fone"></div>
+      </div>
+    </div>
+
+    <div class="pf-sec">Tamanho da letra na leitura</div>
+    <div class="pf-card">
+      <div class="pf-fs-top">
+        <span class="pf-fs-tit">Ajuste a fonte da Bíblia e devocionais</span>
+        <span class="pf-fs-nivel" id="pf-fs-nivel">Normal</span>
+      </div>
+      <div class="pf-fs-ctrl">
+        <button class="pf-fs-btn" id="pf-fs-menos" onclick="mudarFs(-1)">A−</button>
+        <div class="pf-fs-sample" id="pf-fs-sample">O Senhor é o meu pastor; nada me faltará.</div>
+        <button class="pf-fs-btn" id="pf-fs-mais" onclick="mudarFs(1)">A+</button>
+      </div>
+    </div>
+
+    <div class="pf-sec">Compartilhar</div>
+    <div class="pf-card">
+      <div style="font-size:13px;color:var(--sub);line-height:1.5">Convide um irmão para usar o RADAR. É grátis e cheio de conteúdo pra edificar.</div>
+      <button class="pf-btn-lg pf-btn-share" onclick="compartilharApp()">📤 Compartilhar o app RADAR</button>
+    </div>
+
+    <div class="pf-foot">RADAR ATUAL · App da igreja<br>Bíblia · Harpa · EBD · Devocionais e mais</div>
+  </div>
+</div>
+
 <!-- SILAS HUB -->
 <!-- ESCAVADOR DE PÉROLAS BÍBLICAS -->
 <style>
@@ -1954,9 +2025,47 @@ function focusBusca(){ document.getElementById('home-busca').focus(); }
 function irFavoritos(){ alert('Favoritos — em breve'); }
 function irPerfil(){
   const u=getUser();
-  if(!u){alert('Nenhum usuário cadastrado.');return;}
-  alert('👤 '+u.nome+'\n🏷️ '+u.cargo+'\n📱 '+u.whatsapp);
+  if(!u){ if(typeof checkAuth==='function'){checkAuth();} return; }
+  mostrarTela('tela-perfil');
+  renderPerfil();
 }
+function renderPerfil(){
+  const u=getUser()||{};
+  const nome=u.nome||'Visitante';
+  document.getElementById('pf-nome').textContent=nome;
+  document.getElementById('pf-cargo').textContent=u.cargo||'—';
+  const fone=u.whatsapp||'';
+  document.getElementById('pf-fone').textContent = fone ? ('📱 '+fone) : '';
+  const ini=(nome.trim()[0]||'?').toUpperCase();
+  document.getElementById('pf-avatar').textContent=ini;
+  atualizarFsUI();
+}
+// ── Tamanho da letra (leitura) ──
+function getFs(){ var n=parseInt(localStorage.getItem('radar_fs')||'1',10); return (n>=1&&n<=3)?n:1; }
+function aplicarFs(){ document.documentElement.setAttribute('data-fs', String(getFs())); }
+function mudarFs(delta){
+  var n=getFs()+delta;
+  if(n<1)n=1; if(n>3)n=3;
+  localStorage.setItem('radar_fs', String(n));
+  aplicarFs();
+  atualizarFsUI();
+}
+function atualizarFsUI(){
+  var n=getFs();
+  var nomes={1:'Normal',2:'Grande',3:'Enorme'};
+  var el=document.getElementById('pf-fs-nivel'); if(el) el.textContent=nomes[n];
+  var sample=document.getElementById('pf-fs-sample');
+  if(sample) sample.style.fontSize=({1:'15px',2:'18px',3:'21px'})[n];
+  var menos=document.getElementById('pf-fs-menos'), mais=document.getElementById('pf-fs-mais');
+  if(menos) menos.disabled=(n<=1);
+  if(mais) mais.disabled=(n>=3);
+}
+function compartilharApp(){
+  var txt='📱 *RADAR ATUAL* — o app da nossa igreja: Bíblia, Harpa Cristã, EBD, Devocional Diário e muito mais, tudo num lugar só.\n\nBaixe grátis aqui:\nhttps://radar-atual.vercel.app';
+  if(navigator.share){ navigator.share({title:'App RADAR ATUAL',text:txt}).catch(function(){}); }
+  else { window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
+}
+aplicarFs();
 
 function compartilhar(e, id, nome){
   e.stopPropagation();
