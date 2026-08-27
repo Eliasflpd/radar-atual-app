@@ -4219,13 +4219,23 @@ function compartilharManual(id){
 function compartilharManualAtual(){ if(_manualAtual) compartilharManual(_manualAtual.id); }
 
 // ── ANALYTICS / TRACKING ──────────────────────────────────
-function trackVisit(modulo){
+function trackVisit(modulo,grupo,rotulo){
   try{
     const visits=JSON.parse(localStorage.getItem('radar_visits')||'[]');
     visits.push({m:modulo,t:Date.now()});
     // manter só 500 mais recentes
     if(visits.length>500)visits.splice(0,visits.length-500);
     localStorage.setItem('radar_visits',JSON.stringify(visits));
+  }catch(e){}
+  // CONTAGEM GLOBAL (todos os usuários) — fire-and-forget, nunca trava o app; ignora ações de admin
+  try{
+    if(modulo && modulo.indexOf('admin_')!==0){
+      var u='/api/hit?k='+encodeURIComponent(modulo)
+        +(grupo?'&g='+encodeURIComponent(grupo):'')
+        +(rotulo?'&r='+encodeURIComponent(rotulo):'');
+      if(navigator.sendBeacon){ navigator.sendBeacon(u); }
+      else { fetch(u,{keepalive:true}).catch(function(){}); }
+    }
   }catch(e){}
 }
 
