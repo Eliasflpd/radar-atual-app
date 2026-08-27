@@ -2015,6 +2015,7 @@ function buscaGlobal(q){
   const v = q.trim().toLowerCase();
   document.getElementById('painel-hoje-wrap').innerHTML = '';
   document.getElementById('continuar-wrap').innerHTML = '';
+  const _dw=document.getElementById('devocional-home-wrap'); if(_dw) _dw.innerHTML='';
   if(!v){renderHome();return;}
   const mf = MODS.filter(m=>m.nome.toLowerCase().includes(v)||m.desc.toLowerCase().includes(v));
   document.getElementById('modulos').innerHTML = mf.length
