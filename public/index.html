@@ -936,6 +936,59 @@ html[data-fs="3"] .prl-out{font-size:20px}
   </div>
 </div>
 
+<!-- PLANO DE LEITURA DA BÍBLIA -->
+<style>
+#tela-plano .pl-scroll{flex:1;overflow-y:auto;padding:16px 14px 96px;-webkit-overflow-scrolling:touch}
+#tela-plano .pl-scroll::-webkit-scrollbar{display:none}
+.pl-intro{font-size:13.5px;line-height:1.55;color:var(--sub);margin-bottom:14px}
+.pl-plano-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:11px;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden}
+.pl-plano-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--pc,var(--gold))}
+.pl-plano-card:active{border-color:var(--pc,var(--gold));background:var(--card2)}
+.pl-plano-top{display:flex;align-items:center;gap:12px}
+.pl-plano-ico{width:44px;height:44px;border-radius:12px;background:rgba(201,161,74,.13);display:grid;place-items:center;font-size:22px;flex-shrink:0}
+.pl-plano-nome{font-size:16px;font-weight:800;color:var(--txt)}
+.pl-plano-desc{font-size:12px;color:var(--sub);margin-top:2px}
+.pl-plano-dias{font-size:11px;font-weight:800;color:var(--gold);background:rgba(201,161,74,.1);border-radius:999px;padding:4px 10px;flex-shrink:0;white-space:nowrap}
+.pl-mini{margin-top:11px}
+.pl-mini-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.pl-mini-fill{height:100%;background:linear-gradient(90deg,#C9A14A,#F5C842);border-radius:4px;transition:width .3s}
+.pl-mini-txt{font-size:11px;color:var(--sub);margin-top:5px}
+/* detalhe */
+.pl-head{background:linear-gradient(135deg,#12213c,#0d1830);border:1px solid rgba(201,161,74,.28);border-radius:18px;padding:17px}
+.pl-head-nome{font-size:19px;font-weight:900;color:var(--txt);font-family:'Playfair Display',serif}
+.pl-head-sub{font-size:12.5px;color:var(--gold);font-weight:700;margin-top:2px}
+.pl-bar{height:11px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:13px}
+.pl-fill{height:100%;background:linear-gradient(90deg,#C9A14A,#F5C842);border-radius:6px;transition:width .35s}
+.pl-bar-txt{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.pl-pct{font-size:22px;font-weight:900;color:var(--gold2)}
+.pl-conta{font-size:12.5px;color:var(--sub)}
+.pl-proxima{background:rgba(201,161,74,.1);border:1px solid rgba(201,161,74,.3);border-radius:12px;padding:12px 14px;margin-top:12px;display:flex;align-items:center;gap:10px}
+.pl-proxima b{color:var(--gold2);font-size:15px}
+.pl-sec{font-size:10px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.7;margin:20px 0 10px}
+.pl-dia{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.pl-dia.lido{border-color:rgba(52,199,123,.4);background:rgba(52,199,123,.06)}
+.pl-dia.hoje{border-color:var(--gold);box-shadow:0 0 0 1px rgba(201,161,74,.3)}
+.pl-check{width:30px;height:30px;border-radius:9px;border:2px solid rgba(255,255,255,.2);display:grid;place-items:center;font-size:16px;flex-shrink:0;color:transparent;transition:all .15s}
+.pl-dia.lido .pl-check{background:#34c77b;border-color:#34c77b;color:#fff}
+.pl-dia-info{flex:1;min-width:0}
+.pl-dia-num{font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.5px}
+.pl-dia-ref{font-size:15px;font-weight:700;color:var(--txt);margin-top:1px}
+.pl-dia.lido .pl-dia-ref{color:#8fd9b0}
+.pl-badge-hoje{font-size:9.5px;font-weight:900;color:#080D1A;background:var(--gold2);border-radius:5px;padding:2px 6px;letter-spacing:.5px;flex-shrink:0}
+.pl-acts{display:flex;gap:9px;margin-top:18px}
+.pl-act{flex:1;border:1px solid var(--line);border-radius:12px;padding:13px;font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer;background:var(--card);color:var(--sub)}
+.pl-act:active{opacity:.7}
+.pl-parabens{text-align:center;background:linear-gradient(135deg,rgba(201,161,74,.16),rgba(52,199,123,.12));border:1px solid rgba(201,161,74,.35);border-radius:16px;padding:18px;margin-top:14px;color:var(--txt)}
+.pl-parabens b{color:var(--gold2);font-size:16px}
+</style>
+<div class="tela" id="tela-plano">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
+    <div class="std-hinfo"><div class="std-titulo">Plano de Leitura</div><div class="std-sub">Leia a Bíblia todo dia, sem se perder</div></div>
+    <span style="font-size:24px;flex-shrink:0">📅</span></div>
+  <div class="pl-scroll" id="pl-conteudo"></div>
+</div>
+
+<!-- PERFIL / AJUSTES -->
 <!-- SILAS HUB -->
 <!-- ESCAVADOR DE PÉROLAS BÍBLICAS -->
 <style>
@@ -1601,6 +1654,7 @@ const MODS = [
   {id:'desafiomateus', nome:'Maratona de Marcos',  icon:'🏆', cor:'#C9A14A', desc:'Game bíblico — Marcos 1 a 5 · leia, ouça e jogue'},
   {id:'perolas', nome:'Descobrindo as Pérolas',   icon:'💎', cor:'#17a2a2', desc:'Análise bíblica de qualquer assunto'},
   {id:'devocional', nome:'Devocional Diário',     icon:'🕊️', cor:'#C9A14A', desc:'Palavra de hoje · versículo, reflexão e oração'},
+  {id:'plano', nome:'Plano de Leitura',           icon:'📅', cor:'#2563eb', desc:'Leia a Bíblia todo dia com progresso'},
   {id:'biblia',  nome:'Bíblia e Harpa Cristã',   icon:'📖', cor:'#C9A14A', desc:'Bíblia + 640 hinos'},
   {id:'ebd',     nome:'EBD',                      icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
   {id:'silas',   nome:'Projeto Silas',            icon:'✝️', img:'img/ceadema.png', cor:'#0e2a63', desc:'Documentos, cartazes, vídeos'},
@@ -2111,6 +2165,79 @@ function compartilharDevocional(idx){
   if(navigator.share){ navigator.share({title:'Devocional Diário — RADAR',text:txt}).catch(function(){}); }
   else { window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
 }
+
+// ══ PLANO DE LEITURA DA BÍBLIA ════════════════════════
+const PLANOS = [
+  {id:'joao', nome:'Evangelho de João', icon:'📖', cor:'#C9A14A', dias:21,
+   desc:'Um capítulo por dia — conheça Jesus', ref:function(n){return 'João '+n;}},
+  {id:'atos', nome:'Atos dos Apóstolos', icon:'🔥', cor:'#2563eb', dias:28,
+   desc:'A igreja primitiva e o poder do Espírito', ref:function(n){return 'Atos '+n;}},
+  {id:'proverbios', nome:'Provérbios', icon:'🦉', cor:'#34c77b', dias:31,
+   desc:'Um capítulo de sabedoria por dia', ref:function(n){return 'Provérbios '+n;}},
+  {id:'salmos', nome:'Salmos em 30 dias', icon:'🎵', cor:'#f5a623', dias:30,
+   desc:'Cinco salmos por dia — louvor e oração', ref:function(n){var a=(n-1)*5+1;return 'Salmos '+a+'–'+(a+4);}}
+];
+function _planoObj(id){ return PLANOS.find(function(p){return p.id===id;}); }
+function getPlanoProg(id){ try{ var a=JSON.parse(localStorage.getItem('radar_plano_'+id)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function setPlanoProg(id,arr){ localStorage.setItem('radar_plano_'+id, JSON.stringify(arr)); }
+function getPlanoAtivo(){ return localStorage.getItem('radar_plano_ativo')||''; }
+
+function abrirPlano(){ mostrarTela('tela-plano'); renderPlano(); var sc=document.getElementById('pl-conteudo'); if(sc) sc.scrollTop=0; }
+function renderPlano(){
+  var ativo=getPlanoAtivo();
+  if(ativo && _planoObj(ativo)) renderPlanoDetalhe(ativo);
+  else renderPlanoEscolha();
+}
+function renderPlanoEscolha(){
+  var html='<div class="pl-intro">Escolha um plano e leia a Bíblia um pouco a cada dia. O app guarda o seu progresso automaticamente.</div>';
+  html+=PLANOS.map(function(p){
+    var prog=getPlanoProg(p.id); var pct=Math.round(prog.length/p.dias*100);
+    var mini = prog.length ? '<div class="pl-mini"><div class="pl-mini-bar"><div class="pl-mini-fill" style="width:'+pct+'%"></div></div><div class="pl-mini-txt">'+prog.length+' de '+p.dias+' dias · '+pct+'%</div></div>' : '';
+    return '<div class="pl-plano-card" style="--pc:'+p.cor+'" onclick="escolherPlano(\''+p.id+'\')">'
+      +'<div class="pl-plano-top"><div class="pl-plano-ico">'+p.icon+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="pl-plano-nome">'+p.nome+'</div><div class="pl-plano-desc">'+p.desc+'</div></div>'
+      +'<span class="pl-plano-dias">'+p.dias+' dias</span></div>'+mini+'</div>';
+  }).join('');
+  document.getElementById('pl-conteudo').innerHTML=html;
+}
+function escolherPlano(id){ localStorage.setItem('radar_plano_ativo',id); renderPlano(); var sc=document.getElementById('pl-conteudo'); if(sc) sc.scrollTop=0; }
+function trocarPlano(){ localStorage.removeItem('radar_plano_ativo'); renderPlano(); var sc=document.getElementById('pl-conteudo'); if(sc) sc.scrollTop=0; }
+function reiniciarPlano(id){
+  if(!confirm('Reiniciar este plano? O seu progresso será apagado.')) return;
+  setPlanoProg(id,[]); renderPlanoDetalhe(id);
+}
+function marcarDiaPlano(id,dia){
+  var prog=getPlanoProg(id); var i=prog.indexOf(dia);
+  if(i>=0) prog.splice(i,1); else prog.push(dia);
+  setPlanoProg(id,prog); renderPlanoDetalhe(id, true);
+}
+function renderPlanoDetalhe(id, manterScroll){
+  var p=_planoObj(id); if(!p){ trocarPlano(); return; }
+  var prog=getPlanoProg(id); var lidos=prog.length; var pct=Math.round(lidos/p.dias*100);
+  // próxima leitura = primeiro dia não lido
+  var prox=0; for(var d=1; d<=p.dias; d++){ if(prog.indexOf(d)<0){ prox=d; break; } }
+  var sc=document.getElementById('pl-conteudo'); var top=(manterScroll&&sc)?sc.scrollTop:0;
+  var html='<div class="pl-head">'
+    +'<div class="pl-head-nome">'+p.icon+' '+p.nome+'</div>'
+    +'<div class="pl-head-sub">'+p.desc+'</div>'
+    +'<div class="pl-bar"><div class="pl-fill" style="width:'+pct+'%"></div></div>'
+    +'<div class="pl-bar-txt"><span class="pl-pct">'+pct+'%</span><span class="pl-conta">'+lidos+' de '+p.dias+' dias lidos</span></div>';
+  if(prox){ html+='<div class="pl-proxima"><span style="font-size:20px">👉</span><div><div style="font-size:11px;color:var(--sub);font-weight:700">Próxima leitura</div><b>Dia '+prox+' · '+p.ref(prox)+'</b></div></div>'; }
+  html+='</div>';
+  if(!prox){ html+='<div class="pl-parabens">🎉 <b>Parabéns!</b><br>Você concluiu o plano <b>'+p.nome+'</b>. Que a Palavra continue frutificando na sua vida!</div>'; }
+  html+='<div class="pl-sec">Leitura dia a dia</div>';
+  for(var n=1;n<=p.dias;n++){
+    var lido=prog.indexOf(n)>=0; var ehProx=(n===prox);
+    html+='<div class="pl-dia'+(lido?' lido':'')+(ehProx?' hoje':'')+'" onclick="marcarDiaPlano(\''+id+'\','+n+')">'
+      +'<div class="pl-check">✓</div>'
+      +'<div class="pl-dia-info"><div class="pl-dia-num">Dia '+n+'</div><div class="pl-dia-ref">'+p.ref(n)+'</div></div>'
+      +(ehProx?'<span class="pl-badge-hoje">HOJE</span>':'')
+      +'</div>';
+  }
+  html+='<div class="pl-acts"><button class="pl-act" onclick="trocarPlano()">↔ Trocar plano</button><button class="pl-act" onclick="reiniciarPlano(\''+id+'\')">↻ Reiniciar</button></div>';
+  document.getElementById('pl-conteudo').innerHTML=html;
+  if(manterScroll&&sc) sc.scrollTop=top;
+}
 function buscaGlobal(q){
   const v = q.trim().toLowerCase();
   document.getElementById('painel-hoje-wrap').innerHTML = '';
@@ -2491,6 +2618,7 @@ function abrirMod(id){
     return;
   }
   if(id==='devocional'){ abrirDevocional(); return; }
+  if(id==='plano'){ abrirPlano(); return; }
   if(id==='biblia'){
     document.getElementById('tela-bh-landing').classList.add('ativa');
     atualizarContadoresEv();
