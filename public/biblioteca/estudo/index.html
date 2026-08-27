@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meu Estudo — RADAR</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
+    padding:16px 13px calc(48px + env(safe-area-inset-bottom))}
+  .voltar{display:inline-block;margin:0 0 14px;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.9rem;font-weight:800;margin:2px 0 6px}
+  .sub{text-align:center;color:#6b7280;font-size:.98rem;margin-bottom:18px}
+  .cad{max-width:420px;margin:26px auto;background:#f2f7f8;border:1px solid #d5e6e8;border-radius:16px;padding:22px 18px;text-align:center}
+  .cad .lock{font-size:44px;margin-bottom:6px}
+  .cad p{color:#4b5563;font-size:.95rem;margin:6px 0 14px}
+  .cad input{width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:12px;font-size:1.05rem;font-family:inherit;text-align:center}
+  .cad button{width:100%;margin-top:12px;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .cad .rem{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:.9rem;color:#4b5563}
+  .erro{color:var(--vinho);font-weight:700;margin-top:12px;min-height:1.2em}
+  .lista{display:none}
+  .livro{display:flex;gap:13px;align-items:center;background:#fff;border:1px solid var(--linha);border-radius:14px;padding:14px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.05)}
+  .livro .ic{width:52px;height:52px;border-radius:13px;background:linear-gradient(135deg,var(--navy),var(--dourado));display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex-shrink:0}
+  .livro .tt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.12rem}
+  .livro .au{color:var(--dourado);font-weight:700;font-size:.85rem}
+  #leitor{display:none}
+  .barra{position:sticky;top:0;background:#fff;padding:8px 0;border-bottom:1px solid var(--linha);display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  .barra button{background:#eef2f4;border:1px solid var(--linha);border-radius:10px;padding:7px 12px;font-weight:700;font-family:inherit;cursor:pointer}
+  .barra .tit{flex:1;font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.05rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #texto{white-space:pre-wrap;word-wrap:break-word;text-align:justify;font-family:Georgia,serif;font-size:1.02rem;line-height:1.7;color:#1c2230}
+  .aviso{text-align:center;color:#9aa1ad;font-size:.82rem;margin-top:20px;border-top:1px solid var(--linha);padding-top:12px}
+</style>
+</head>
+<body>
+  <button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
+  <div class="selo">✦ Privado · só você ✦</div>
+  <h1>Meu Estudo</h1>
+  <div class="sub">Seus comentários, trancados com a sua senha</div>
+
+  <!-- CADEADO -->
+  <div class="cad" id="cad">
+    <div class="lock">🔒</div>
+    <p>Estes livros ficam <b>criptografados</b> — sem a sua senha, ninguém lê. Digite pra abrir:</p>
+    <input id="senha" type="password" placeholder="sua senha" autocomplete="off" enterkeyhint="go">
+    <button id="btn" onclick="abrir()">Abrir meu estudo</button>
+    <label class="rem"><input type="checkbox" id="lembrar" checked> Lembrar neste celular</label>
+    <div class="erro" id="erro"></div>
+  </div>
+
+  <!-- LISTA DE LIVROS -->
+  <div class="lista" id="lista"></div>
+
+  <!-- LEITOR -->
+  <div id="leitor">
+    <div class="barra">
+      <button onclick="fecharLivro()">← Livros</button>
+      <div class="tit" id="ltit"></div>
+      <button onclick="fonte(-1)">A−</button>
+      <button onclick="fonte(1)">A+</button>
+    </div>
+    <div id="texto"></div>
+  </div>
+
+<script>
+let SENHA=null, MANIFEST=null, FS=parseInt(localStorage.getItem('estudo_fs')||'17',10);
+const $=id=>document.getElementById(id);
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const salva=localStorage.getItem('estudo_pass');
+  if(salva){ $('senha').value=salva; abrir(); }
+  $('senha').addEventListener('keydown',e=>{ if(e.key==='Enter') abrir(); });
+});
+
+async function deriveKey(pass, salt, iter){
+  const km=await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:iter, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['decrypt']);
+}
+
+async function decifrar(arquivo){
+  const buf=new Uint8Array(await (await fetch(arquivo,{cache:'force-cache'})).arrayBuffer());
+  const salt=buf.slice(0,16), iv=buf.slice(16,28), ct=buf.slice(28);
+  const key=await deriveKey(SENHA, salt, MANIFEST.iter);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct);
+  return new TextDecoder('utf-8').decode(pt);
+}
+
+async function abrir(){
+  const s=$('senha').value.trim();
+  if(!s){ $('erro').textContent='Digite a senha.'; return; }
+  $('btn').textContent='Abrindo…'; $('erro').textContent='';
+  try{
+    if(!MANIFEST) MANIFEST=await (await fetch('estudo-manifest.json')).json();
+    // testa a senha decifrando o 1º livro (só o começo)
+    SENHA=s;
+    await decifrar(MANIFEST.livros[0].arquivo);   // se a senha estiver errada, lança erro
+    if($('lembrar').checked) localStorage.setItem('estudo_pass', s); else localStorage.removeItem('estudo_pass');
+    mostrarLista();
+  }catch(e){
+    SENHA=null; localStorage.removeItem('estudo_pass');
+    $('erro').textContent='Senha errada. Tente de novo.';
+  }
+  $('btn').textContent='Abrir meu estudo';
+}
+
+function mostrarLista(){
+  $('cad').style.display='none'; $('leitor').style.display='none';
+  const L=$('lista'); L.style.display='block';
+  L.innerHTML=MANIFEST.livros.map(l=>
+    `<div class="livro" onclick="abrirLivro('${l.slug}')">
+       <div class="ic">📖</div>
+       <div><div class="tt">${l.titulo}</div><div class="au">${l.autor}</div></div>
+     </div>`).join('')
+    + `<div class="aviso">Trancado com a sua senha · <a href="#" onclick="sair();return false" style="color:#8a1c1c">sair/bloquear</a></div>`;
+  // aviso de uso pessoal — SÓ na primeira vez
+  if(!localStorage.getItem('estudo_aviso')){
+    L.insertAdjacentHTML('afterbegin', '<div style="background:#fbf6ea;border:1px solid #ecd9ad;border-radius:12px;padding:11px 13px;margin-bottom:14px;font-size:.9rem;color:#6b5a2a;text-align:center">📖 Material <b>comprado por você</b> — uso pessoal e privado. Não compartilhe.</div>');
+    localStorage.setItem('estudo_aviso','1');
+  }
+}
+
+async function abrirLivro(slug){
+  const l=MANIFEST.livros.find(x=>x.slug===slug);
+  $('lista').style.display='none';
+  $('leitor').style.display='block';
+  $('ltit').textContent=l.titulo+' · '+l.autor;
+  $('texto').textContent='Descriptografando…';
+  window.scrollTo(0,0);
+  try{
+    const md=await decifrar(l.arquivo);
+    $('texto').style.fontSize=FS+'px';
+    $('texto').textContent=md;
+  }catch(e){ $('texto').textContent='Erro ao abrir. Tente sair e entrar de novo.'; }
+}
+
+function fecharLivro(){ $('leitor').style.display='none'; $('lista').style.display='block'; window.scrollTo(0,0); }
+function fonte(d){ FS=Math.max(13,Math.min(26,FS+d)); localStorage.setItem('estudo_fs',FS); $('texto').style.fontSize=FS+'px'; }
+function sair(){ SENHA=null; localStorage.removeItem('estudo_pass'); location.reload(); }
+</script>
+</body>
+</html>
