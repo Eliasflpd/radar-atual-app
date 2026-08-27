@@ -3073,10 +3073,17 @@ function abrirProximoTrimestre(){
   if(!ov){ ov=document.createElement('div'); ov.id='prox-4tri-ov'; document.body.appendChild(ov); }
   ov.style.cssText='position:fixed;inset:0;z-index:99998;background:#0a1420;display:flex;flex-direction:column';
   var lis=_PROX_4TRI.map(function(t,i){
-    return '<div style="display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:11px 13px;margin-bottom:8px">'
-      +'<div style="width:30px;height:30px;flex-shrink:0;border-radius:8px;background:#123a52;color:#f0d488;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:13px">'+(i+1)+'</div>'
-      +'<div style="color:#eaf2f8;font-size:13.5px;font-weight:600;line-height:1.3">'+t+'</div>'
-      +'<span style="margin-left:auto;color:#7f97a8;font-size:15px">🔒</span></div>';
+    var img='/ebd/adulto/img/prox4-licao-'+String(i+1).padStart(2,'0')+'.png';
+    return '<div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;margin-bottom:10px">'
+      +'<div style="position:relative;width:100%;aspect-ratio:16/9;background:#0f3d5c">'
+        +'<img src="'+img+'" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;display:block" onerror="this.style.display=\'none\'">'
+        +'<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(10,20,32,0) 55%,rgba(10,20,32,.75) 100%)"></div>'
+        +'<div style="position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:8px;background:#123a52;color:#f0d488;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.5)">'+(i+1)+'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:10px;align-items:center;padding:10px 12px">'
+        +'<div style="color:#eaf2f8;font-size:13.5px;font-weight:600;line-height:1.3">'+t+'</div>'
+        +'<span style="margin-left:auto;color:#7f97a8;font-size:15px;flex-shrink:0">🔒</span></div>'
+      +'</div>';
   }).join('');
   ov.innerHTML=''
    +'<div style="position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:10px;padding:12px 14px">'
@@ -3093,7 +3100,7 @@ function abrirProximoTrimestre(){
        +'<div style="color:#f0d488;font-weight:800;font-size:13px;margin:0 2px 10px;letter-spacing:.5px">AS 13 LIÇÕES</div>'
        +lis
        +'<button onclick="compartilharProximoTrimestre()" style="width:100%;margin-top:16px;padding:14px;border-radius:14px;border:none;background:#25D366;color:#fff;font-weight:800;font-size:15px;font-family:inherit;cursor:pointer">📤 Compartilhar nos grupos</button>'
-       +'<div style="text-align:center;color:#7f97a8;font-size:12px;margin-top:14px;line-height:1.5">📖 Liberado automaticamente quando o trimestre começar.<br>As imagens de cada lição entram quando a revista sair.</div>'
+       +'<div style="text-align:center;color:#7f97a8;font-size:12px;margin-top:14px;line-height:1.5">📖 Liberado automaticamente quando o trimestre começar.</div>'
      +'</div>'
    +'</div>';
   ov.style.display='flex';

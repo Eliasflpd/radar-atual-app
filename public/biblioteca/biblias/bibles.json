@@ -56,7 +56,7 @@
   {
    "id": "aplicacao-pessoal",
    "nome": "Aplicação Pessoal",
-   "temNotas": false
+   "temNotas": true
   },
   {
    "id": "de-estudo-apologetica-ampliada",
@@ -141,7 +141,7 @@
   {
    "id": "genebra-2-edicao",
    "nome": "Genebra 2° Edição",
-   "temNotas": false
+   "temNotas": true
   },
   {
    "id": "genebra-2o-edicao-ampliada",
