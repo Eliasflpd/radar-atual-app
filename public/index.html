@@ -754,6 +754,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   <div class="home-scroll">
     <div id="home-carousel" class="home-carousel"></div>
     <div id="painel-hoje-wrap"></div>
+    <div id="devocional-home-wrap"></div>
     <div id="continuar-wrap"></div>
     <div id="hist-home" onclick="abrirHistorinhas()" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1b3a6b,#122a52);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;margin-top:14px;cursor:pointer">
       <span style="font-size:30px">📖</span>
@@ -814,6 +815,53 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <input class="f-hist" id="hVid" placeholder="Link YouTube/Facebook OU /videos/arquivo.mp4">
       <button class="hist-add-btn" onclick="addHistAdm()">+ Adicionar</button>
     </div>
+  </div>
+</div>
+
+<!-- DEVOCIONAL DIÁRIO — Palavra de Hoje -->
+<style>
+#tela-devocional .dev-scroll{flex:1;overflow-y:auto;padding:14px 14px 96px;-webkit-overflow-scrolling:touch}
+#tela-devocional .dev-scroll::-webkit-scrollbar{display:none}
+.dev-hoje-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--gold);background:rgba(201,161,74,.12);border:1px solid rgba(201,161,74,.35);border-radius:999px;padding:5px 12px}
+.dev-sheet{margin-top:12px;background:#fffdf9;border-radius:18px;padding:22px 20px;box-shadow:0 12px 34px rgba(0,0,0,.4);color:#2a251d;font-family:'Lora',Georgia,'Times New Roman',serif}
+.dev-sheet h2{font-family:'Playfair Display',Georgia,serif;color:#12213c;font-size:21px;font-weight:800;text-align:center;line-height:1.25;margin-bottom:6px}
+.dev-ref{text-align:center;color:#a9761b;font-weight:700;font-size:13px;font-family:-apple-system,'Segoe UI',sans-serif;letter-spacing:.5px;margin-bottom:14px}
+.dev-verse{background:rgba(201,161,74,.10);border-left:4px solid #C9A14A;border-radius:0 12px 12px 0;padding:13px 15px;font-style:italic;font-size:15.5px;line-height:1.6;color:#3a3226;margin-bottom:16px}
+.dev-body{font-size:15.5px;line-height:1.72;text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto;overflow-wrap:break-word;color:#2a251d}
+.dev-body p{margin:0 0 11px}
+.dev-oracao-tit{font-family:'Playfair Display',Georgia,serif;color:#12213c;font-size:15px;font-weight:700;margin:16px 0 5px;border-top:1px solid rgba(18,33,60,.14);padding-top:14px}
+.dev-oracao{font-size:15px;line-height:1.66;color:#3a3226;font-style:italic}
+.dev-acts{display:flex;gap:9px;margin-top:16px}
+.dev-act{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:13px;padding:14px;font-size:14.5px;font-weight:800;font-family:inherit;cursor:pointer}
+.dev-act.copy{background:linear-gradient(90deg,#C9A14A,#F5C842);color:#080D1A}
+.dev-act.share{background:#25D366;color:#fff}
+.dev-act:active{opacity:.85}
+.dev-todos-label{font-size:10px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.7;margin:26px 0 10px}
+.dev-card{display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:9px;cursor:pointer;transition:border-color .15s}
+.dev-card:active{border-color:var(--gold);background:var(--card2)}
+.dev-card-num{width:38px;height:38px;border-radius:10px;background:rgba(201,161,74,.14);color:var(--gold);display:grid;place-items:center;font-weight:900;font-size:15px;flex-shrink:0;font-family:'Playfair Display',serif}
+.dev-card-info{flex:1;min-width:0}
+.dev-card-tit{font-size:14.5px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dev-card-ref{font-size:11.5px;color:var(--sub);margin-top:2px}
+.dev-card-arr{color:var(--sub);font-size:18px;flex-shrink:0}
+/* card na home */
+.dev-home{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,#12213c,#0d1830);border:1px solid rgba(201,161,74,.28);border-radius:16px;padding:14px;margin-top:14px;cursor:pointer}
+.dev-home-ico{width:46px;height:46px;border-radius:12px;background:rgba(201,161,74,.15);display:grid;place-items:center;font-size:24px;flex-shrink:0}
+.dev-home-info{flex:1;min-width:0}
+.dev-home-rot{font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.8}
+.dev-home-tit{font-size:15.5px;font-weight:800;color:var(--txt);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dev-home-ref{font-size:12px;color:var(--sub);margin-top:2px}
+.dev-home-arr{color:var(--gold);font-size:22px;flex-shrink:0;opacity:.7}
+</style>
+<div class="tela" id="tela-devocional">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
+    <div class="std-hinfo"><div class="std-titulo">Devocional Diário</div><div class="std-sub">Uma palavra pra edificar seu dia</div></div>
+    <span style="font-size:24px;flex-shrink:0">🕊️</span></div>
+  <div class="dev-scroll">
+    <span class="dev-hoje-tag">✨ Palavra de hoje</span>
+    <div id="dev-leitura"></div>
+    <div class="dev-todos-label">Todos os devocionais</div>
+    <div id="dev-todos"></div>
   </div>
 </div>
 
@@ -1481,6 +1529,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 const MODS = [
   {id:'desafiomateus', nome:'Maratona de Marcos',  icon:'🏆', cor:'#C9A14A', desc:'Game bíblico — Marcos 1 a 5 · leia, ouça e jogue'},
   {id:'perolas', nome:'Descobrindo as Pérolas',   icon:'💎', cor:'#17a2a2', desc:'Análise bíblica de qualquer assunto'},
+  {id:'devocional', nome:'Devocional Diário',     icon:'🕊️', cor:'#C9A14A', desc:'Palavra de hoje · versículo, reflexão e oração'},
   {id:'biblia',  nome:'Bíblia e Harpa Cristã',   icon:'📖', cor:'#C9A14A', desc:'Bíblia + 640 hinos'},
   {id:'ebd',     nome:'EBD',                      icon:'🏫', cor:'#34c77b', desc:'Lições adulto e jovem'},
   {id:'silas',   nome:'Projeto Silas',            icon:'✝️', img:'img/ceadema.png', cor:'#0e2a63', desc:'Documentos, cartazes, vídeos'},
@@ -1702,6 +1751,22 @@ function renderHome(){
   document.getElementById('painel-hoje-wrap').innerHTML =
     `<div class="painel-hoje"><div class="painel-hoje-topo"><span class="painel-hoje-label">Hoje</span><span class="painel-hoje-data">${dataStr}</span></div>${itensPainel}</div>`;
 
+  // Palavra de Hoje (devocional do dia)
+  try{
+    const dv = devocionalDoDia();
+    const dw = document.getElementById('devocional-home-wrap');
+    if(dw) dw.innerHTML =
+      `<div class="dev-home" onclick="abrirDevocional()">
+        <div class="dev-home-ico">🕊️</div>
+        <div class="dev-home-info">
+          <div class="dev-home-rot">Palavra de hoje</div>
+          <div class="dev-home-tit">${dv.t}</div>
+          <div class="dev-home-ref">${dv.ref}</div>
+        </div>
+        <span class="dev-home-arr">›</span>
+      </div>`;
+  }catch(e){}
+
   // Continuar acessando
   const ultimo = localStorage.getItem('radar_ultimo_mod');
   const ultimoMod = ultimo ? MODS.find(m=>m.id===ultimo) : null;
@@ -1745,6 +1810,134 @@ function compartilharMarcos(){
 function compartilharManuais(){
   var txt='📚 *Biblioteca* — livros e manuais do obreiro no app RADAR (Manual de Cerimônias e mais).\n\nAcesse aqui:\nhttps://radar-atual.vercel.app/?mod=manuais';
   if(navigator.share){ navigator.share({title:'Biblioteca — RADAR',text:txt}).catch(function(){}); }
+  else { window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
+}
+
+// ══ DEVOCIONAL DIÁRIO ═════════════════════════════════
+const DEVOCIONAIS = [
+  {t:'A paz que excede todo entendimento', ref:'Filipenses 4:6-7',
+   v:'Não estejais inquietos por coisa alguma; antes, as vossas petições sejam em tudo conhecidas diante de Deus, pela oração e súplica, com ações de graças. E a paz de Deus, que excede todo o entendimento, guardará os vossos corações e os vossos sentimentos em Cristo Jesus.',
+   r:['A ansiedade quer roubar o sono do obreiro e a alegria do crente. Mas Deus não nos manda apenas parar de nos preocupar — Ele nos ensina o caminho: trocar a inquietação pela oração. Cada aflição que você entrega no altar sai das suas mãos e vai para as mãos do Pai.','Repare que a promessa não é a paz que você entende, mas a que excede o entendimento. É uma paz que não depende de tudo estar resolvido; ela guarda o coração como uma sentinela, mesmo no meio da tempestade. Ore hoje, com gratidão, e deixe essa paz montar guarda na sua alma.'],
+   o:'Pai, eu entrego a Ti toda a minha ansiedade. Enche o meu coração da Tua paz que guarda e sustenta. Em nome de Jesus, amém.'},
+
+  {t:'Firmes sobre a Rocha', ref:'Mateus 7:24-25',
+   v:'Todo aquele, pois, que escuta estas minhas palavras e as pratica, assemelhá-lo-ei ao homem prudente, que edificou a sua casa sobre a rocha. E desceu a chuva, e correram rios, e assopraram ventos, e combateram aquela casa, e não caiu, porque estava edificada sobre a rocha.',
+   r:['A diferença entre a casa que cai e a que permanece não estava na tempestade — as duas enfrentaram a mesma chuva. A diferença estava no alicerce. Ouvir a Palavra é bom, mas é praticá-la que firma a nossa vida sobre a Rocha, que é Cristo.','Você não escolhe se a tempestade vem; ela vem para todos. Mas você escolhe hoje onde vai construir. Cada obediência à Palavra é mais um tijolo assentado sobre o fundamento que não se abala.'],
+   o:'Senhor, ajuda-me a não ser apenas ouvinte, mas praticante da Tua Palavra. Firma a minha vida na Rocha que é Cristo. Amém.'},
+
+  {t:'O poder do sangue de Jesus', ref:'1 João 1:7',
+   v:'Mas, se andarmos na luz, como ele na luz está, temos comunhão uns com os outros, e o sangue de Jesus Cristo, seu Filho, nos purifica de todo o pecado.',
+   r:['Não há mancha que o sangue de Jesus não alcance. O inimigo gosta de nos lembrar do passado para nos manter presos à culpa, mas a Palavra declara: o sangue nos purifica de TODO o pecado. Não de alguns — de todos.','Andar na luz é viver com o coração aberto diante de Deus, sem esconder nada. E quem anda na luz descobre que a cruz não foi só suficiente para salvar um dia; ela continua purificando hoje. Descanse nessa obra completa.'],
+   o:'Jesus, obrigado pelo Teu sangue que me purifica e me aproxima do Pai. Lava o meu coração e me guarda na luz. Amém.'},
+
+  {t:'Renovados na mente', ref:'Romanos 12:2',
+   v:'E não vos conformeis com este mundo, mas transformai-vos pela renovação do vosso entendimento, para que experimenteis qual seja a boa, agradável e perfeita vontade de Deus.',
+   r:['A transformação que Deus quer não é apenas de comportamento, mas de mente. O mundo tenta nos moldar todos os dias com seus valores; Deus nos transforma de dentro para fora, renovando a forma como pensamos.','Essa renovação vem pela Palavra e pela comunhão com o Espírito Santo. Quando a mente é renovada, passamos a enxergar a vontade de Deus como boa, agradável e perfeita — e não mais como um peso. Alimente o seu entendimento hoje com aquilo que vem do alto.'],
+   o:'Espírito Santo, renova a minha mente. Que eu não me conforme com este mundo, mas seja transformado para conhecer a Tua vontade. Amém.'},
+
+  {t:'Misericórdias que se renovam', ref:'Lamentações 3:22-23',
+   v:'As misericórdias do Senhor são a causa de não sermos consumidos; porque as suas misericórdias não têm fim. Novas são cada manhã; grande é a tua fidelidade.',
+   r:['Se ainda estamos de pé, não é por nossa força — é pela misericórdia de Deus. Ela é o motivo de não sermos consumidos pelas nossas próprias falhas e pelas lutas da vida.','E o mais lindo: essa misericórdia é nova a cada manhã. O erro de ontem não esgota a graça de hoje. Você acordou hoje sob um suprimento fresco do amor de Deus. Grande é a fidelidade dEle sobre a sua vida.'],
+   o:'Senhor, obrigado porque a Tua misericórdia me alcança nova a cada manhã. Eu confio na Tua fidelidade. Amém.'},
+
+  {t:'Descanso para a alma cansada', ref:'Mateus 11:28',
+   v:'Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.',
+   r:['Jesus não chama os fortes e descansados; Ele chama os cansados e oprimidos. Se você chegou hoje ao limite, saiba que esse convite é para você. O peso que você carrega não foi feito para os seus ombros.','O descanso que Cristo oferece não é ausência de trabalho, mas a presença dEle no meio do trabalho. Vá a Ele em oração, tire o fardo, e receba o alívio que só o Salvador pode dar.'],
+   o:'Jesus, eu venho a Ti cansado. Toma o meu fardo e dá-me o Teu descanso. Em Ti eu encontro alívio. Amém.'},
+
+  {t:'A oração que mobiliza o céu', ref:'Tiago 5:16',
+   v:'A oração feita por um justo pode muito em seus efeitos.',
+   r:['Muitas vezes subestimamos a oração, como se fosse o último recurso. Mas a Palavra ensina que a oração do justo é poderosa, produz efeitos, move a mão de Deus. Não há desperdício em oração.','Você não precisa de palavras bonitas, mas de um coração sincero e reto diante de Deus. Persista, mesmo quando a resposta demora. O justo ora, e o céu se move. Não desista de orar.'],
+   o:'Pai, ensina-me a orar com fé e perseverança. Que a minha oração seja agradável a Ti e poderosa em efeitos. Amém.'},
+
+  {t:'Mais que vencedores', ref:'Romanos 8:37',
+   v:'Mas em todas estas coisas somos mais do que vencedores, por aquele que nos amou.',
+   r:['Repare que o texto não diz que seremos livres das lutas — diz que EM todas estas coisas somos vencedores. A vitória não está na ausência do problema, mas na presença dAquele que nos ama.','Ser mais que vencedor é vencer sem depender das próprias forças, mas sustentado pelo amor de Cristo. Nada — nem tribulação, nem angústia, nem perseguição — pode nos separar desse amor. Levante a cabeça: a vitória já tem dono.'],
+   o:'Senhor, obrigado porque em Ti sou mais que vencedor. Fortalece a minha fé no Teu amor que nunca me abandona. Amém.'},
+
+  {t:'A Palavra é lâmpada', ref:'Salmos 119:105',
+   v:'Lâmpada para os meus pés é a tua palavra e luz para o meu caminho.',
+   r:['A lâmpada não ilumina o caminho todo de uma vez — ilumina o próximo passo. Assim é a Palavra de Deus: ela nos dá luz suficiente para andar hoje, confiando o amanhã ao Senhor.','Quando você não sabe qual direção tomar, volte à Palavra. Ela é a luz que expõe os enganos do caminho e mostra a vereda da justiça. Não ande no escuro tendo a lâmpada de Deus ao alcance das mãos.'],
+   o:'Senhor, que a Tua Palavra ilumine cada passo meu. Guia-me na Tua verdade e não me deixes andar no escuro. Amém.'},
+
+  {t:'O Senhor é o meu Pastor', ref:'Salmos 23:1',
+   v:'O Senhor é o meu pastor; nada me faltará.',
+   r:['Davi não disse "o Senhor é UM pastor", mas "o MEU pastor". A fé se torna pessoal quando entendemos que Deus cuida de cada ovelha pelo nome. Ele conhece você, guia você e provê para você.','"Nada me faltará" não é promessa de luxo, mas de suficiência. Sob os cuidados do Bom Pastor, você tem tudo o que precisa para hoje. Onde Ele guia, Ele sustenta. Confie no Pastor que dá a vida pelas ovelhas.'],
+   o:'Bom Pastor, obrigado por cuidares de mim. Guia-me e supre as minhas necessidades. Em Ti nada me faltará. Amém.'},
+
+  {t:'Esforça-te e tem bom ânimo', ref:'Josué 1:9',
+   v:'Não to mandei eu? Esforça-te, e tem bom ânimo; não pasmes, nem te espantes, porque o Senhor, teu Deus, é contigo, por onde quer que andares.',
+   r:['A coragem que Deus pede não nasce das circunstâncias, mas da Sua presença. "O Senhor é contigo" — essa é a razão para não temer. Josué enfrentaria gigantes, mas não sozinho.','Talvez você esteja diante de uma tarefa maior que a sua força. Lembre-se: o mesmo Deus que chama, capacita e acompanha. Esforça-te, tem bom ânimo, e avança — porque a presença dEle vai contigo por onde quer que andares.'],
+   o:'Senhor, dá-me coragem e bom ânimo. Confio que estás comigo em cada passo. Não temerei, porque Tu vais adiante. Amém.'},
+
+  {t:'A graça é suficiente', ref:'2 Coríntios 12:9',
+   v:'A minha graça te basta, porque o meu poder se aperfeiçoa na fraqueza.',
+   r:['Paulo pediu três vezes que Deus tirasse o seu espinho, e a resposta veio diferente: não a remoção da fraqueza, mas a suficiência da graça. Deus nem sempre tira o peso; muitas vezes Ele dá força para carregá-lo.','A sua fraqueza não é um obstáculo para Deus — é o palco onde o poder dEle se manifesta. Quando você reconhece que não dá conta sozinho, a graça entra em ação. Descanse: a graça de Deus basta para você hoje.'],
+   o:'Senhor, a Tua graça me basta. No meio da minha fraqueza, manifesta o Teu poder. Eu confio em Ti. Amém.'}
+];
+
+function _devDiaDoAno(){
+  const hoje=new Date();
+  const inicio=new Date(hoje.getFullYear(),0,0);
+  const diff=hoje-inicio;
+  return Math.floor(diff/86400000);
+}
+function devocionalDoDia(){ return DEVOCIONAIS[_devDiaDoAno()%DEVOCIONAIS.length]; }
+
+let _devIdxLendo=-1;
+function abrirDevocional(){
+  mostrarTela('tela-devocional');
+  _devIdxLendo=_devDiaDoAno()%DEVOCIONAIS.length;
+  renderDevLeitura(_devIdxLendo);
+  renderDevTodos();
+  const sc=document.querySelector('#tela-devocional .dev-scroll'); if(sc) sc.scrollTop=0;
+}
+function renderDevLeitura(idx){
+  const d=DEVOCIONAIS[idx]; if(!d) return;
+  const corpo=d.r.map(p=>'<p>'+p+'</p>').join('');
+  document.getElementById('dev-leitura').innerHTML=
+    '<div class="dev-sheet">'
+    +'<h2>'+d.t+'</h2>'
+    +'<div class="dev-ref">'+d.ref+'</div>'
+    +'<div class="dev-verse">"'+d.v+'"</div>'
+    +'<div class="dev-body">'+corpo+'</div>'
+    +'<div class="dev-oracao-tit">Oração</div>'
+    +'<div class="dev-oracao">'+d.o+'</div>'
+    +'<div class="dev-acts">'
+      +'<button class="dev-act copy" onclick="copiarDevocional('+idx+')">📋 Copiar</button>'
+      +'<button class="dev-act share" onclick="compartilharDevocional('+idx+')">📤 Compartilhar</button>'
+    +'</div></div>';
+}
+function renderDevTodos(){
+  const hojeIdx=_devDiaDoAno()%DEVOCIONAIS.length;
+  document.getElementById('dev-todos').innerHTML=DEVOCIONAIS.map(function(d,i){
+    return '<div class="dev-card" onclick="verDevocional('+i+')">'
+      +'<div class="dev-card-num">'+(i+1)+'</div>'
+      +'<div class="dev-card-info"><div class="dev-card-tit">'+d.t+(i===hojeIdx?' ✨':'')+'</div><div class="dev-card-ref">'+d.ref+'</div></div>'
+      +'<span class="dev-card-arr">›</span></div>';
+  }).join('');
+}
+function verDevocional(idx){
+  _devIdxLendo=idx;
+  renderDevLeitura(idx);
+  const sc=document.querySelector('#tela-devocional .dev-scroll'); if(sc) sc.scrollTop=0;
+}
+function _devTexto(idx){
+  const d=DEVOCIONAIS[idx];
+  return '🕊️ *'+d.t+'*\n📖 '+d.ref+'\n\n"'+d.v+'"\n\n'+d.r.join('\n\n')+'\n\n🙏 *Oração:* '+d.o+'\n\n— Devocional Diário · App RADAR\nhttps://radar-atual.vercel.app/?mod=devocional';
+}
+function copiarDevocional(idx){
+  const txt=_devTexto(idx);
+  const done=function(){ const b=document.querySelector('#tela-devocional .dev-act.copy'); if(b){ const o=b.innerHTML; b.innerHTML='✔ Copiado!'; setTimeout(function(){b.innerHTML=o;},1600); } };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(function(){ _devCopyFallback(txt); done(); }); }
+  else { _devCopyFallback(txt); done(); }
+}
+function _devCopyFallback(txt){
+  try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }catch(e){}
+}
+function compartilharDevocional(idx){
+  const txt=_devTexto(idx);
+  if(navigator.share){ navigator.share({title:'Devocional Diário — RADAR',text:txt}).catch(function(){}); }
   else { window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
 }
 function buscaGlobal(q){
@@ -2087,6 +2280,7 @@ function abrirMod(id){
     document.getElementById('tela-perolas').classList.add('ativa');
     return;
   }
+  if(id==='devocional'){ abrirDevocional(); return; }
   if(id==='biblia'){
     document.getElementById('tela-bh-landing').classList.add('ativa');
     atualizarContadoresEv();
