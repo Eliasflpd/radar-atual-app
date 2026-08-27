@@ -4,7 +4,8 @@
 {
 "id": "pentecostal",
 "nome": "Pentecostal",
-"temNotas": true
+"temNotas": true,
+"fonte": "Bíblia de Estudo Pentecostal (CPAD)"
 },
 {
 "id": "a-mensagem",
@@ -14,7 +15,8 @@
 {
 "id": "antonio-gilberto",
 "nome": "- Antônio Gilberto",
-"temNotas": false
+"temNotas": true,
+"fonte": "Bíblia com Comentários de Antônio Gilberto (CPAD)"
 },
 {
 "id": "luiz-sayao",

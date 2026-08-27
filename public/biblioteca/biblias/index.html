@@ -74,10 +74,12 @@
   #leitura .cabec h2{font-family:'Playfair Display',serif;font-weight:800;font-size:26px;color:var(--navy);margin:0}
   #leitura .cabec .cap-n{color:var(--ouro);font-size:14px;letter-spacing:3px;text-transform:uppercase;margin-top:4px}
   #leitura .cabec .orn{color:var(--ouro2);font-size:18px;margin-top:8px}
-  .vtexto{font-size:19px;line-height:1.85;text-align:justify;text-justify:inter-word;color:#26211b}
-  .vtexto .vn{font-family:'Playfair Display',serif;font-weight:700;font-size:12px;color:var(--ouro);
-    vertical-align:super;margin:0 4px 0 2px}
-  .vtexto .v{display:inline}
+  .vtexto{font-size:19px;line-height:1.8;color:#26211b}
+  /* cada versiculo em BLOCO proprio, empilhado, numero dourado com recuo pendurado */
+  .vtexto .v{display:block;position:relative;padding-left:2.2em;margin:0 0 .62em;
+    text-align:justify;text-justify:inter-word}
+  .vtexto .vn{position:absolute;left:0;top:.12em;font-family:'Playfair Display',serif;
+    font-weight:700;font-size:13.5px;color:var(--ouro);line-height:1}
   .navcap{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:34px;
     padding-top:18px;border-top:1px solid var(--linha)}
   .navcap button{flex:1;border:1px solid var(--linha);background:#fff;color:var(--navy);
@@ -218,7 +220,7 @@ function renderEscolha(){
   }).join('');
 }
 async function escolherBiblia(i){
-  var b=BIBLIAS[i]; FONTE_NOTAS=b.temNotas?'Bíblia de Estudo Pentecostal · CPAD':''; NOTAS={}; INTROS={}; SUBS={};
+  var b=BIBLIAS[i]; FONTE_NOTAS=b.temNotas?(b.fonte||'Bíblia de Estudo'):''; window._bibleFonte=FONTE_NOTAS; NOTAS={}; INTROS={}; SUBS={};
   if(b.temNotas){
     try{ const rn=await fetch('/biblioteca/biblias/notas-'+b.id+'.json'); NOTAS=await rn.json(); }catch(e){ NOTAS={}; }
     try{ const ri=await fetch('/biblioteca/biblias/intros-'+b.id+'.json'); INTROS=await ri.json(); }catch(e){ INTROS={}; }
@@ -269,7 +271,7 @@ function abrirLivro(i){
     slot.innerHTML='<div class="introbtn" onclick="abrirIntro()">'
       +'<div class="ib-ic">✦</div>'
       +'<div><div class="ib-tt">Introdução ao livro</div>'
-      +'<div class="ib-sb">Autor · data · tema · esboço — Bíblia de Estudo Pentecostal</div></div>'
+      +'<div class="ib-sb">Autor · data · tema · esboço — '+(window._bibleFonte||'Bíblia de Estudo')+'</div></div>'
       +'<div class="ib-ar">›</div></div>';
   } else slot.innerHTML='';
   let h='';
@@ -287,7 +289,7 @@ function abrirIntro(){
     +'<h2 class="ititulo">'+NOMES[liv]+'</h2>'
     +'<div class="orn">❦</div>'
     +html
-    +'<div class="fonte">📖 Bíblia de Estudo Pentecostal (CPAD)</div>'
+    +'<div class="fonte">📖 '+(window._bibleFonte||'Bíblia de Estudo')+'</div>'
     +'</div>';
   document.getElementById('topTit').innerHTML=NOMES[liv]+'<small>introdução</small>';
   mostrar('introView');
@@ -312,7 +314,7 @@ function lerCap(c){
   document.getElementById('leitura').innerHTML=
     '<div class="cabec"><h2>'+NOMES[liv]+'</h2><div class="cap-n">Capítulo '+(c+1)+'</div><div class="orn">❦</div></div>'
     +'<div class="vtexto">'+corpo+'</div>'
-    +(temNotasLivro?'<div class="creditos">Notas de estudo: Bíblia de Estudo Pentecostal (CPAD) — toque em “✦ nota”</div>':'')
+    +(temNotasLivro?'<div class="creditos">Notas de estudo: '+(window._bibleFonte||FONTE_NOTAS)+' — toque em “✦ nota”</div>':'')
     +'<div class="navcap">'
     +'<button onclick="lerCap('+(c-1)+')" '+(c<=0?'disabled':'')+'>‹ Anterior</button>'
     +'<div class="meio">'+(c+1)+' / '+total+'</div>'
