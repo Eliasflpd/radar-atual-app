@@ -41,15 +41,27 @@ module.exports = async (req,res) => {
     const ref=parseRef(termo);
     if(ref && ref.cap){
       // === cruzamento por versículo ===
+      const refStr=`${ref.livro||''} ${ref.cap}:${ref.vers}`.trim();
+      // 1) âncora exata detectada na ingestão
       const params=[ref.cap, ref.vers]; let filtroLivro='';
       if(ref.livro){ params.push('%'+ref.livro+'%'); filtroLivro=' and f_unaccent(lower(livro)) like $3'; }
-      const r=await c.query(
+      let r=await c.query(
         `select autor,titulo,livro,slug,ref,ordem,left(texto,320) as snippet
            from estudo_trechos
           where cap=$1 and vers=$2 ${filtroLivro}
           order by autor limit 60`, params);
-      res.json({ok:true, modo:'versiculo', ref:`${ref.livro||''} ${ref.cap}:${ref.vers}`.trim(),
-                 total:r.rowCount, itens:r.rows});
+      // 2) plano B: quem CITA "cap:vers" no texto (pega OCR que não virou âncora)
+      if(r.rowCount===0){
+        const cite=`${ref.cap}:${ref.vers}`, cite2=`${ref.cap}.${ref.vers}`;
+        const p2=[`%${cite}%`,`%${cite2}%`]; let fl='';
+        if(ref.livro){ p2.push('%'+ref.livro+'%'); fl=' and f_unaccent(lower(livro)) like $3'; }
+        r=await c.query(
+          `select autor,titulo,livro,slug,ref,ordem, left(texto,320) as snippet
+             from estudo_trechos
+            where (texto like $1 or texto like $2) ${fl}
+            order by autor limit 60`, p2);
+      }
+      res.json({ok:true, modo:'versiculo', ref:refStr, total:r.rowCount, itens:r.rows});
       return;
     }
     // === busca em texto ===
