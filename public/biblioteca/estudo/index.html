@@ -46,13 +46,17 @@
   .barra{position:sticky;top:0;background:#fff;padding:8px 0;border-bottom:1px solid var(--linha);display:flex;gap:8px;align-items:center;margin-bottom:10px}
   .barra button{background:#eef2f4;border:1px solid var(--linha);border-radius:10px;padding:7px 12px;font-weight:700;font-family:inherit;cursor:pointer}
   .barra .tit{flex:1;font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.05rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #texto{word-wrap:break-word;font-family:Georgia,serif;font-size:1.02rem;line-height:1.7;color:#1c2230}
-  #texto .par{margin:0 0 13px;text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto}
-  #texto .cap{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.18rem;text-align:center;margin:22px 0 12px;padding-top:6px}
-  #texto .rosto{min-height:58vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 10px}
-  #texto .rosto .rt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.9rem;line-height:1.25}
-  #texto .rosto .ra{color:var(--dourado);font-weight:800;font-size:1.05rem;margin-top:12px;text-transform:uppercase;letter-spacing:1px}
-  #texto .rosto .rl{width:70px;height:3px;background:var(--dourado);border-radius:3px;margin-top:18px}
+  #texto{word-wrap:break-word;font-family:'Georgia','Times New Roman',serif;font-size:1.05rem;line-height:1.82;color:#2a2620;-webkit-font-smoothing:antialiased}
+  #texto .par{margin:0 0 3px;text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto;text-indent:1.6em}
+  #texto .cap + .par, #texto .rosto + .par, #texto .par.drop{text-indent:0}
+  #texto .cap + .par::first-letter, #texto .par.drop::first-letter{float:left;font-family:Georgia,serif;font-weight:800;color:var(--dourado);font-size:3.3rem;line-height:.8;padding:7px 10px 0 0}
+  #texto .cap{font-family:Georgia,serif;font-weight:700;color:var(--navy);font-size:1.02rem;text-align:center;letter-spacing:1.6px;text-transform:uppercase;margin:32px 0 18px}
+  #texto .cap::after{content:'';display:block;width:44px;height:2px;background:var(--dourado);margin:10px auto 0;border-radius:2px}
+  #texto .rosto{min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px 14px;border-top:2px solid var(--dourado);border-bottom:2px solid var(--dourado)}
+  #texto .rosto .orn{color:var(--dourado);font-size:1.5rem;letter-spacing:8px;margin-bottom:16px}
+  #texto .rosto .rt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:2rem;line-height:1.25}
+  #texto .rosto .ra{color:var(--dourado);font-weight:800;font-size:1rem;margin-top:14px;text-transform:uppercase;letter-spacing:2px}
+  #texto .rosto .rl{width:58px;height:2px;background:var(--dourado);border-radius:2px;margin-top:16px}
   .idx-ov{position:fixed;inset:0;z-index:50;background:rgba(15,61,92,.5)}
   .idx-cx{position:absolute;left:0;right:0;bottom:0;max-width:860px;margin:0 auto;background:#fff;border-radius:16px 16px 0 0;max-height:82vh;display:flex;flex-direction:column}
   .idx-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--linha);font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.15rem}
@@ -260,6 +264,7 @@ async function abrirLivro(slug){
   try{
     const md=await decifrar(l.arquivo);
     const blocos=limparEstruturar(md, l.titulo, l.autor);
+    const _fp=blocos.find(b=>b.t==='p'); if(_fp) _fp.drop=true;   // capitular no 1º parágrafo do livro
     _paginas=paginarBlocos(blocos, 3000);
     _indice=[]; _paginas.forEach((pg,i)=>pg.forEach(b=>{ if(b.t==='h') _indice.push({titulo:b.x, pag:i}); }));
     _pag=0;
@@ -275,11 +280,11 @@ function renderPagina(){
   $('texto').style.fontSize=FS+'px';
   const pg=_paginas[_pag]||[];
   $('texto').innerHTML=pg.map(function(b){
-    if(b.t==='rosto') return '<div class="rosto"><div class="rt">'+escapeH(b.x)+'</div><div class="ra">'+escapeH(b.autor||'')+'</div><div class="rl"></div></div>';
+    if(b.t==='rosto') return '<div class="rosto"><div class="orn">❦</div><div class="rt">'+escapeH(b.x)+'</div><div class="ra">'+escapeH(b.autor||'')+'</div><div class="rl"></div></div>';
     if(b.t==='h') return '<div class="cap">'+escapeH(b.x)+'</div>';
-    return '<p class="par">'+escapeH(b.x)+'</p>';
+    return '<p class="par'+(b.drop?' drop':'')+'">'+escapeH(b.x)+'</p>';
   }).join('');
-  $('pag-ind').textContent=(_pag+1)+' / '+_paginas.length;
+  $('pag-ind').textContent='— '+(_pag+1)+' de '+_paginas.length+' —';
   $('pg-ant').disabled=_pag<=0;
   $('pg-prox').disabled=_pag>=_paginas.length-1;
   window.scrollTo(0,0);
