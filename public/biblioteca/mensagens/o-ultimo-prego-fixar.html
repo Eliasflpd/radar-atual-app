@@ -22,12 +22,13 @@
   .aba.on{background:var(--navy);color:#fff}
   .vis{display:none} .vis.on{display:block}
   .fio{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:14px 15px;margin-bottom:16px;font-size:1.08rem;text-align:center;color:#5c4a1e;font-weight:600}
-  .est{display:flex;gap:12px;background:#fff;border:1px solid var(--linha);border-radius:13px;padding:12px 13px;margin-bottom:11px}
-  .est .n{width:30px;height:30px;flex-shrink:0;background:var(--navy);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800}
-  .est .em{font-size:1.5rem;line-height:1}
-  .est .anc{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.12rem}
-  .est .rf{color:var(--dourado);font-weight:700;font-size:.82rem;margin:1px 0 5px}
-  .est .pu{color:#333;font-size:.98rem}
+  .est{background:#fff;border:1px solid var(--linha);border-radius:13px;padding:12px 14px;margin-bottom:11px}
+  .est .cab{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:1px}
+  .est .n{width:28px;height:28px;flex-shrink:0;background:var(--navy);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem}
+  .est .em{font-size:1.4rem;line-height:1}
+  .est .anc{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.12rem;text-align:center}
+  .est .rf{color:var(--dourado);font-weight:700;font-size:.82rem;text-align:center;margin:0 0 7px}
+  .est .pu{color:#333;font-size:.99rem;text-align:justify;line-height:1.55}
   /* cartão de púlpito */
   .cart{background:#0f3d5c;color:#eaf1f5;border-radius:14px;padding:16px 16px 10px}
   .cart h3{margin:0 0 10px;color:#fff;font-family:Georgia,serif;text-align:center}
@@ -111,8 +112,11 @@ const $=id=>document.getElementById(id);
 // MAPA
 $('fio').textContent='🧵 O Fio: '+FIO;
 $('estacoes').innerHTML=ESTACOES.map((e,i)=>
-  `<div class="est"><div class="n">${i+1}</div><div class="em">${e.em}</div>
-     <div><div class="anc">${e.anc}</div><div class="rf">${e.rf}</div><div class="pu">${e.pu}</div></div></div>`).join('');
+  `<div class="est">
+     <div class="cab"><div class="n">${i+1}</div><div class="em">${e.em}</div><div class="anc">${e.anc}</div></div>
+     <div class="rf">${e.rf}</div>
+     <div class="pu">${e.pu}</div>
+   </div>`).join('');
 // CARTÃO
 $('cartaoLista').innerHTML=ESTACOES.map(e=>{
   const [a]=e.anc.split(' · ');
