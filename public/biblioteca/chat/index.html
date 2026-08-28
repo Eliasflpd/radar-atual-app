@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bate-papo — RADAR</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec;--fundo:#f4f7f8}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html,body{height:100%}
+  body{margin:0;background:var(--fundo);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;
+    display:flex;flex-direction:column;max-width:820px;margin:0 auto}
+  header{background:var(--navy);color:#fff;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+  header .ico{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--dourado));display:flex;align-items:center;justify-content:center;font-size:20px}
+  header .t{flex:1;min-width:0}
+  header .t b{display:block;font-size:1.05rem}
+  header .t span{font-size:.78rem;color:#bcd3dc}
+  header button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:9px;padding:8px 11px;font-weight:700;font-family:inherit;cursor:pointer}
+  #msgs{flex:1;overflow-y:auto;padding:14px 12px 6px;display:flex;flex-direction:column;gap:9px}
+  .b{max-width:82%;padding:10px 13px;border-radius:15px;font-size:1.02rem;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .b .h{font-size:.72rem;font-weight:800;margin-bottom:2px;opacity:.7}
+  .b .hora{font-size:.66rem;opacity:.55;text-align:right;margin-top:3px}
+  .elias{align-self:flex-end;background:#dcf3e6;border-bottom-right-radius:4px}
+  .elias .h{color:#14804a}
+  .claude{align-self:flex-start;background:#fff;border:1px solid var(--linha);border-bottom-left-radius:4px}
+  .claude .h{color:var(--teal)}
+  .vazio{text-align:center;color:#9aa1ad;margin:30px 12px;font-size:.95rem}
+  .barra{display:flex;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--linha);flex-shrink:0}
+  .barra textarea{flex:1;resize:none;border:1.5px solid var(--linha);border-radius:20px;padding:11px 15px;font-size:1.05rem;font-family:inherit;max-height:120px;line-height:1.4}
+  .barra button{background:var(--navy);color:#fff;border:none;border-radius:50%;width:48px;height:48px;font-size:1.3rem;cursor:pointer;flex-shrink:0}
+  .barra button:disabled{opacity:.4}
+</style>
+</head>
+<body>
+  <header>
+    <div class="ico">🧙</div>
+    <div class="t"><b>Claude (Mestre dos Magos)</b><span id="status">bate-papo do RADAR</span></div>
+    <button onclick="location.href='/'">🏠</button>
+  </header>
+
+  <div id="msgs"><div class="vazio" id="vazio">Carregando…</div></div>
+
+  <div class="barra">
+    <textarea id="txt" rows="1" placeholder="Escreva pra mim… (peça, dúvida, tarefa)" enterkeyhint="send"></textarea>
+    <button id="env" onclick="enviar()">➤</button>
+  </div>
+
+<script>
+const TOKEN='radar-elias-2026';
+const $=id=>document.getElementById(id);
+let ultimo=0;
+
+function hora(iso){ try{ const d=new Date(iso); return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return'';} }
+function esc(s){ return (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+function pinta(m){
+  const div=document.createElement('div');
+  div.className='b '+(m.autor==='elias'?'elias':'claude');
+  div.innerHTML=`<div class="h">${m.autor==='elias'?'Você':'🧙 Claude'}</div>${esc(m.texto)}<div class="hora">${hora(m.criado_em)}</div>`;
+  $('msgs').appendChild(div);
+}
+function fim(){ const e=$('msgs'); e.scrollTop=e.scrollHeight; }
+
+async function carregar(){
+  try{
+    const r=await fetch('/api/chat?token='+TOKEN+(ultimo?'&desde='+ultimo:''));
+    const d=await r.json();
+    if(!d.ok) return;
+    if(d.msgs.length){
+      if($('vazio')) $('vazio').remove();
+      d.msgs.forEach(m=>{ pinta(m); ultimo=Math.max(ultimo,m.id); });
+      fim();
+    }else if(ultimo===0 && $('vazio')){
+      $('vazio').textContent='Ainda não há mensagens. Me escreva aqui — respondo quando estiver trabalhando pra você.';
+    }
+  }catch(e){ $('status').textContent='sem conexão…'; }
+}
+
+async function enviar(){
+  const t=$('txt').value.trim();
+  if(!t) return;
+  $('env').disabled=true;
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({token:TOKEN,autor:'elias',texto:t})});
+    const d=await r.json();
+    if(d.ok){ $('txt').value=''; pinta(d.msg); ultimo=Math.max(ultimo,d.msg.id); fim(); }
+  }catch(e){}
+  $('env').disabled=false;
+  $('txt').focus();
+}
+
+$('txt').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); enviar(); } });
+$('txt').addEventListener('input',e=>{ e.target.style.height='auto'; e.target.style.height=Math.min(120,e.target.scrollHeight)+'px'; });
+
+carregar();
+setInterval(carregar, 8000); // busca mensagens novas a cada 8s
+</script>
+</body>
+</html>
