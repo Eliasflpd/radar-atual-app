@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Como usar os 3 poderes de IA — RADAR</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.65;
+    padding:16px 13px calc(48px + env(safe-area-inset-bottom))}
+  .topo{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+  .btn{display:inline-block;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .btn.ouro{background:var(--dourado)}
+  .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:2rem;font-weight:800;line-height:1.15;margin:2px 0 4px}
+  .sub{text-align:center;color:#6b7280;font-size:1rem;margin-bottom:10px}
+  .divisor{height:3px;width:66px;background:var(--dourado);border-radius:3px;margin:0 auto 20px}
+  .intro{background:#f2f7f8;border:1px solid #d5e6e8;border-radius:14px;padding:15px 16px;margin-bottom:12px;text-align:justify}
+  .intro p{margin:0 0 9px} .intro p:last-child{margin:0}
+  .lei{background:#fbf6ea;border:1px solid #ecd9ad;border-radius:12px;padding:12px 14px;margin-bottom:24px;font-size:.96rem;color:#6b5a2a}
+  h2.sec{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.35rem;font-weight:800;margin:26px 0 2px;padding-top:16px;border-top:1px solid #e8e8ee}
+  .subsec{text-align:center;color:var(--teal);font-size:.9rem;font-weight:700;margin-bottom:14px}
+  .card{background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:16px 17px;margin-bottom:14px;box-shadow:0 2px 8px rgba(15,61,92,.05)}
+  .card .tag{display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:999px;margin-bottom:8px}
+  .tag.onde-fora{background:#eaf3f5;color:var(--teal)}
+  .tag.onde-app{background:#fbf6ea;color:var(--dourado)}
+  .card h3{font-family:Georgia,serif;color:var(--navy);font-size:1.22rem;font-weight:800;margin:2px 0 4px;line-height:1.2}
+  .card .p{text-align:justify;color:#3b4657;font-size:.98rem;margin:8px 0}
+  .card .p b{color:var(--vinho)}
+  .passos{list-style:none;padding:0;margin:10px 0}
+  .passos li{position:relative;padding:6px 0 6px 30px;font-size:.96rem;color:#3b4657;text-align:justify}
+  .passos li::before{content:attr(data-n);position:absolute;left:0;top:5px;width:22px;height:22px;background:var(--navy);color:#fff;border-radius:50%;font-size:.78rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .ex{background:#0f3d5c;color:#eef4f7;border-radius:14px;padding:14px 15px;margin:12px 0}
+  .ex .et{color:#e9c877;font-weight:800;font-size:.78rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+  .frase{display:flex;align-items:flex-start;gap:9px;background:rgba(255,255,255,.07);border:1px solid rgba(233,200,119,.3);border-radius:10px;padding:10px 12px;margin-bottom:9px}
+  .frase:last-child{margin-bottom:0}
+  .frase .q{color:#eef4f7;font-size:1rem;line-height:1.5;flex:1}
+  .frase .q b{color:#ffd98a}
+  .copiar{background:#e9c877;color:#5a3d0a;border:none;border-radius:8px;padding:6px 11px;font-size:.8rem;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0}
+  .copiar.ok{background:#7bbf6a;color:#123}
+  .dica{background:#f2f7f8;border:1px solid #d5e6e8;border-radius:12px;padding:11px 14px;margin-top:10px;font-size:.93rem;color:#3b4657;text-align:justify}
+  .dica b{color:var(--teal)}
+  .verlink{display:inline-block;margin-top:10px;background:var(--teal);color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none}
+  .ouro-box{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:16px;padding:18px 17px;margin-top:24px;text-align:justify}
+  .ouro-box .t{font-family:Georgia,serif;text-align:center;color:var(--dourado);font-size:1.2rem;font-weight:800;margin-bottom:8px}
+  .ouro-box p{margin:8px 0;color:#6b5a2a} .ouro-box p:last-child{margin-bottom:0}
+  .ouro-box b{color:var(--vinho)}
+  .compartilhar{display:block;width:100%;margin:22px 0 6px;background:var(--dourado);color:#fff;border:none;border-radius:14px;padding:15px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .assinatura{text-align:center;color:var(--teal);font-weight:700;font-size:.92rem;margin-top:18px}
+</style>
+</head>
+<body>
+  <div class="topo">
+    <button class="btn" onclick="location.href='/biblioteca/concilio/'">← Concílio</button>
+    <button class="btn ouro" onclick="location.href='/'">🏠 Início</button>
+  </div>
+
+  <div class="selo">✦ Manual do Pastor · João 16:13 ✦</div>
+  <h1>Os 3 Poderes de IA do RADAR</h1>
+  <div class="sub">Um guia simples: <b>quando</b> e <b>como</b> usar cada um</div>
+  <div class="divisor"></div>
+
+  <div class="intro">
+    <p>Pastor, o RADAR te dá <b>três ajudas de inteligência artificial</b>. Cada uma serve pra um momento diferente do seu trabalho. Esta página explica, em palavras simples, o que é cada uma e como usar — com <b>frases prontas</b> que é só copiar.</p>
+    <p>Pense assim: <b>uma delas mora fora do app</b> (funciona quando você conversa com o Claude, seu assistente no computador) e as <b>outras duas moram dentro do RADAR</b> (é só tocar num botão). Vamos por partes.</p>
+  </div>
+  <div class="lei"><b>Antes de qualquer coisa:</b> ore. O verdadeiro Mestre é o <b>Espírito Santo</b> (João 16:13). Estas ferramentas são só instrumentos nas Suas mãos. Nada é copiado de livro nenhum; nada é inventado; <b>Cristo fica sempre no centro</b>.</div>
+
+  <!-- PODER 1 -->
+  <div class="card">
+    <span class="tag onde-fora">📍 Funciona FORA do app · falando com o Claude no PC</span>
+    <h3>1. O Concílio dos Expositores</h3>
+    <div class="subsec" style="text-align:left;margin:0 0 6px">42 eruditos fiéis — o mais poderoso de todos</div>
+    <div class="p">Este é o <b>mais forte</b>. Ele <b>não fica dentro do app</b>: funciona quando você <b>fala com o Claude</b> (seu assistente aqui no computador). Você pede um estudo e escolhe a <b>“mente” de um gigante da fé</b> — e o Claude forja o estudo naquele método.</div>
+    <div class="p">Cada agente carrega o jeito de cavar o texto de um servo que Deus usou: <b>Spurgeon, Calvino, MacArthur, Keener, Stanley Horton, Antônio Gilberto</b>, e a <b>Lente Hebraica</b> (Edersheim, David Stern, Fruchtenbaum, Michael Brown, Rydelnik). Eles <b>forjam um estudo novo e original</b> — nunca copiam livro nenhum — sempre apontando pra Cristo, na doutrina das Assembleias de Deus.</div>
+
+    <div class="ex">
+      <div class="et">✍️ Frases prontas — toque em Copiar e cole pro Claude</div>
+      <div class="frase"><span class="q"><b>Forja</b> um estudo de <b>João 3</b> no método do <b>Spurgeon</b>.</span><button class="copiar" onclick="cp(this,'Forja um estudo de João 3 no método do Spurgeon.')">Copiar</button></div>
+      <div class="frase"><span class="q"><b>Explica</b> o <b>Salmo 23</b> como o <b>Stanley Horton</b> (pentecostal).</span><button class="copiar" onclick="cp(this,'Explica o Salmo 23 como o Stanley Horton (pentecostal).')">Copiar</button></div>
+      <div class="frase"><span class="q"><b>Monta</b> um sermão de <b>Romanos 8</b> com um <b>painel de 3 eruditos</b>.</span><button class="copiar" onclick="cp(this,'Monta um sermão de Romanos 8 com um painel de 3 eruditos.')">Copiar</button></div>
+      <div class="frase"><span class="q"><b>Cristo no Antigo Testamento</b> pelo <b>Rydelnik</b>.</span><button class="copiar" onclick="cp(this,'Cristo no Antigo Testamento pelo Rydelnik.')">Copiar</button></div>
+    </div>
+
+    <div class="dica"><b>O que fazer com o resultado:</b> o estudo que o Claude entregar você <b>cola aqui no RADAR</b> (vira página de estudo) ou leva pro púlpito e <b>prega</b>. Quer conhecer os 42 nomes um por um? 👇</div>
+    <a class="verlink" href="/biblioteca/concilio/">📚 Ver todos os 42 eruditos</a>
+  </div>
+
+  <!-- PODER 2 -->
+  <div class="card">
+    <span class="tag onde-app">📱 Funciona DENTRO do app · na tela inicial</span>
+    <h3>2. Descobrindo as Pérolas</h3>
+    <div class="subsec" style="text-align:left;margin:0 0 6px">a IA que analisa qualquer assunto à luz da Bíblia</div>
+    <div class="p">Esta mora <b>dentro do RADAR</b>, no módulo <b>“Descobrindo as Pérolas”</b> lá na tela inicial. Você digita <b>qualquer assunto</b> — pode ser bíblico ou do dia a dia — e recebe uma análise <b>em 13 camadas</b>, tudo à luz da Palavra.</div>
+    <ol class="passos">
+      <li data-n="1">Abra o módulo <b>“Descobrindo as Pérolas”</b> na home.</li>
+      <li data-n="2">Digite o assunto: um versículo, um tema, uma dúvida da vida.</li>
+      <li data-n="3">Receba a análise completa, fiel à Bíblia.</li>
+    </ol>
+    <div class="ex">
+      <div class="et">💡 Exemplos do que você pode digitar</div>
+      <div class="frase"><span class="q">“ansiedade”</span></div>
+      <div class="frase"><span class="q">“o que a Bíblia diz sobre dinheiro”</span></div>
+      <div class="frase"><span class="q">“Filipenses 4:13”</span></div>
+    </div>
+    <div class="dica"><b>Seguro contra invenção:</b> essa IA é <b>travada</b> — ela não inventa. Fala com base na Escritura. Serve pra você começar a garimpar um tema rápido, sobre <b>o que for</b>.</div>
+  </div>
+
+  <!-- PODER 3 -->
+  <div class="card">
+    <span class="tag onde-app">📱 Funciona DENTRO do app · na EBD</span>
+    <h3>3. A Lupa da Lição</h3>
+    <div class="subsec" style="text-align:left;margin:0 0 6px">tirar dúvida da lição enquanto lê a EBD</div>
+    <div class="p">Esta também mora <b>dentro do RADAR</b>, na <b>Escola Dominical (EBD)</b>. Quando você (ou o aluno) está lendo uma lição, aparece o botão <b>“🔎 Tirar dúvida da lição”</b>. A pessoa pergunta e a IA responde <b>com base naquela lição</b>, fiel à doutrina.</div>
+    <ol class="passos">
+      <li data-n="1">Abra uma <b>lição da EBD</b> no RADAR.</li>
+      <li data-n="2">Toque em <b>“🔎 Tirar dúvida da lição”</b>.</li>
+      <li data-n="3">Faça a pergunta — a resposta vem da <b>própria lição</b>.</li>
+    </ol>
+    <div class="dica"><b>Sempre humilde:</b> a resposta <b>sempre manda confirmar com o pastor</b>. É uma ajuda de estudo pro aluno, nunca a última palavra. A última palavra é sua e do Espírito pela Palavra.</div>
+  </div>
+
+  <!-- REGRA DE OURO -->
+  <div class="ouro-box">
+    <div class="t">⭐ A Regra de Ouro</div>
+    <p>O <b>verdadeiro Mestre é o Espírito Santo</b> — Ele guia a toda a verdade (João 16:13). Os eruditos e as ferramentas de IA são <b>só instrumentos</b> nas mãos de Deus. A glória é dEle, nunca do homem (1 Coríntios 3:7).</p>
+    <p><b>Ore antes</b> de usar qualquer um dos três poderes. Sem o Espírito, é só letra (2 Coríntios 3:6). E lembre sempre: <b>nada é copiado; nada é inventado; Cristo no centro.</b></p>
+  </div>
+
+  <button class="compartilhar" onclick="share()">📤 Compartilhar este manual</button>
+  <div class="assinatura">✦ RADAR · A Ele toda a glória ✦</div>
+
+<script>
+  function cp(btn, txt){
+    var done=function(){var o=btn.textContent;btn.textContent='✓ Copiado';btn.classList.add('ok');setTimeout(function(){btn.textContent=o;btn.classList.remove('ok')},1600)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(function(){fb(txt);done()})}
+    else{fb(txt);done()}
+  }
+  function fb(txt){try{var t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();document.execCommand('copy');document.body.removeChild(t)}catch(e){}}
+  function share(){
+    var url='https://radar-atual.vercel.app/biblioteca/concilio/manual.html';
+    var data={title:'Os 3 Poderes de IA do RADAR',text:'Manual: como usar os eruditos e a IA do RADAR.',url:url};
+    if(navigator.share){navigator.share(data).catch(function(){})}
+    else{fb(url);alert('Link copiado:\n'+url)}
+  }
+</script>
+</body>
+</html>
