@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fixar na Mente — O Último Prego</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:820px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
+    padding:14px 13px calc(46px + env(safe-area-inset-bottom))}
+  .top{display:flex;gap:8px;margin-bottom:14px}
+  .btn{margin:0;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .btn.n{background:var(--navy)}
+  .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.7rem;font-weight:800;margin:2px 0 2px}
+  .ref{text-align:center;color:var(--dourado);font-weight:800;margin-bottom:14px}
+  .abas{display:flex;gap:6px;margin:6px 0 16px;position:sticky;top:0;background:var(--branco);padding:8px 0;z-index:5;border-bottom:1px solid var(--linha)}
+  .aba{flex:1;text-align:center;padding:10px 4px;border-radius:11px;background:#eef2f4;font-weight:800;font-size:.9rem;cursor:pointer;border:1px solid var(--linha)}
+  .aba.on{background:var(--navy);color:#fff}
+  .vis{display:none} .vis.on{display:block}
+  .fio{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:14px 15px;margin-bottom:16px;font-size:1.08rem;text-align:center;color:#5c4a1e;font-weight:600}
+  .est{display:flex;gap:12px;background:#fff;border:1px solid var(--linha);border-left:5px solid var(--teal);border-radius:13px;padding:12px 13px;margin-bottom:11px}
+  .est .n{width:30px;height:30px;flex-shrink:0;background:var(--navy);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800}
+  .est .em{font-size:1.5rem;line-height:1}
+  .est .anc{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.12rem}
+  .est .rf{color:var(--dourado);font-weight:700;font-size:.82rem;margin:1px 0 5px}
+  .est .pu{color:#333;font-size:.98rem}
+  /* cartão de púlpito */
+  .cart{background:#0f3d5c;color:#eaf1f5;border-radius:14px;padding:16px 16px 10px}
+  .cart h3{margin:0 0 10px;color:#fff;font-family:Georgia,serif;text-align:center}
+  .cart ol{margin:0;padding-left:22px}
+  .cart li{margin-bottom:9px;font-size:1.05rem}
+  .cart li b{color:#ffd98a}
+  .cart .v{color:#9fc7d4;font-size:.82rem}
+  /* treino */
+  .tr-topo{text-align:center;margin-bottom:12px}
+  .placar{font-weight:800;color:var(--teal)}
+  .card{background:#fff;border:2px solid var(--linha);border-radius:18px;padding:26px 18px;text-align:center;box-shadow:0 6px 20px rgba(15,61,92,.08);min-height:240px;display:flex;flex-direction:column;justify-content:center}
+  .card .em{font-size:3rem}
+  .card .anc{font-family:Georgia,serif;font-size:1.7rem;font-weight:800;color:var(--navy);margin:6px 0}
+  .card .rf{color:var(--dourado);font-weight:800}
+  .card .dica{color:#9aa1ad;font-size:.9rem;margin-top:14px}
+  .card .pu{color:#1c2230;font-size:1.1rem;line-height:1.55;margin-top:10px}
+  .acoes{display:flex;gap:10px;margin-top:14px}
+  .acoes button{flex:1;border:none;border-radius:13px;padding:15px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .mostrar{background:var(--navy);color:#fff}
+  .fixei{background:#14804a;color:#fff}
+  .revisar{background:var(--vinho);color:#fff}
+  .fim{text-align:center;padding:26px 10px}
+  .fim .big{font-size:2.6rem}
+  .reiniciar{margin-top:14px;background:var(--teal);color:#fff;border:none;border-radius:13px;padding:13px 22px;font-weight:800;font-family:inherit;cursor:pointer}
+  .nota{color:#6b7280;font-size:.86rem;text-align:center;margin-top:16px;border-top:1px solid var(--linha);padding-top:12px}
+</style>
+</head>
+<body>
+  <div class="top">
+    <button class="btn" onclick="location.href='o-ultimo-prego.html'">← Ler a mensagem</button>
+    <button class="btn n" onclick="location.href='/'">🏠 Início</button>
+  </div>
+  <div class="selo">✦ Fixar na Mente ✦</div>
+  <h1>O Último Prego</h1>
+  <div class="ref">Gênesis 6 · roteiro de pregação</div>
+
+  <div class="abas">
+    <div class="aba on" onclick="aba('mapa')">🗺️ Estações</div>
+    <div class="aba" onclick="aba('cartao')">🎴 Púlpito</div>
+    <div class="aba" onclick="aba('treino')">🧠 Treino</div>
+  </div>
+
+  <!-- MAPA -->
+  <div id="v-mapa" class="vis on">
+    <div class="fio" id="fio"></div>
+    <div id="estacoes"></div>
+  </div>
+
+  <!-- CARTÃO -->
+  <div id="v-cartao" class="vis">
+    <div class="cart">
+      <h3>🎴 Cartão de Púlpito</h3>
+      <ol id="cartaoLista"></ol>
+    </div>
+    <div class="nota">Um olhar rápido no púlpito. Cada palavra puxa o ponto inteiro — se você treinou.</div>
+  </div>
+
+  <!-- TREINO -->
+  <div id="v-treino" class="vis">
+    <div class="tr-topo">Sem colar. Olhe a âncora, <b>pregue o ponto de cabeça</b>, depois confira.<br>
+      <span class="placar" id="placar"></span></div>
+    <div id="treinoArea"></div>
+  </div>
+
+<script>
+const ESTACOES=[
+ {em:'🔨',anc:'O SOM',rf:'Gênesis 6',pu:'Um som teimoso e solitário no vale — cada martelada era uma pregação que o mundo se recusava a ouvir.'},
+ {em:'🦠',anc:'PODRIDÃO · shachat',rf:'Gênesis 6:11',pu:'A terra não estava doente; estava em decomposição — apodrecida por dentro, como fruta estragada no próprio caroço. E é num mundo podre que Deus manda CONSTRUIR.'},
+ {em:'🪵',anc:'O CEDRO',rf:'Gênesis 6:14',pu:'A madeira de gofer NÃO apodrece. Dura, nodosa, torta, difícil de endireitar — e a mesma resistência que a faz difícil de dobrar é a que a faz difícil de estragar. A que cede fácil estraga fácil.'},
+ {em:'⏳',anc:'120 ANOS',rf:'Gênesis 6:3',pu:'Não é o prazo do juízo — é o tempo que a graça SEGUROU o juízo. Deus não afiou a espada; estendeu a mão, e a manteve estendida por um século.'},
+ {em:'👴',anc:'MATUSALÉM',rf:'Gênesis 5',pu:'O nome profetiza: “quando ele morrer, virá o envio”. E ele morreu no ano exato do Dilúvio — o relógio da paciência de Deus. Enquanto o velho respirava, o céu segurava a chuva.'},
+ {em:'🛡️',anc:'A COBERTURA · kôfer',rf:'Gênesis 6:14',pu:'Betume = kaphar = cobrir → Kippur, a Expiação. A arca não boiou por ser forte; boiou por estar COBERTA. Noé não se salvou por ser bom — por estar coberto.'},
+ {em:'🚪',anc:'UMA SÓ PORTA',rf:'Gn 6:16 · João 10:9',pu:'Uma porta só — não duas. “Eu sou a porta; se alguém entrar por mim, será salvo.” A arca é o retrato de Cristo flutuando sobre o juízo.'},
+ {em:'✋',anc:'DEUS FECHOU',rf:'Gênesis 7:16',pu:'“E o SENHOR fechou a porta.” Não foi Noé — foi Deus. A mesma mão que convidou por 120 anos foi a que, no tempo certo, fechou.'},
+ {em:'🌍',anc:'DIAS DE NOÉ',rf:'Mateus 24:37',pu:'“Como foi nos dias de Noé.” Nós somos a geração do som teimoso. O céu azul não é ausência de Deus — é a graça saturando o tempo.'},
+ {em:'🔥',anc:'O ÚLTIMO PREGO',rf:'Apelo',pu:'Todo prego tem um último. Enquanto há martelo, há misericórdia. Não espere a chuva para procurar a arca — entra HOJE, enquanto o martelo ainda soa.'}
+];
+const FIO='Enquanto o mundo apodrecia, um homem fiel erguia a salvação com a madeira que não apodrece — e a mesma mão que convidou por 120 anos é a que, no tempo certo, fecha a porta.';
+const $=id=>document.getElementById(id);
+
+// MAPA
+$('fio').textContent='🧵 O Fio: '+FIO;
+$('estacoes').innerHTML=ESTACOES.map((e,i)=>
+  `<div class="est"><div class="n">${i+1}</div><div class="em">${e.em}</div>
+     <div><div class="anc">${e.anc}</div><div class="rf">${e.rf}</div><div class="pu">${e.pu}</div></div></div>`).join('');
+// CARTÃO
+$('cartaoLista').innerHTML=ESTACOES.map(e=>{
+  const [a]=e.anc.split(' · ');
+  return `<li><b>${e.em} ${a}</b> <span class="v">— ${e.rf}</span></li>`;
+}).join('');
+
+function aba(q){
+  ['mapa','cartao','treino'].forEach(k=>{
+    $('v-'+k).classList.toggle('on',k===q);
+  });
+  document.querySelectorAll('.aba').forEach(a=>a.classList.toggle('on', a.textContent.toLowerCase().includes(q==='mapa'?'esta':q==='cartao'?'púlpito':'treino')));
+  if(q==='treino') iniciarTreino();
+}
+
+// TREINO — recordação ativa com repetição dos que faltam
+let fila=[], fixados=0, atual=null, revelado=false;
+function iniciarTreino(){
+  const salvo=JSON.parse(localStorage.getItem('fixar_ultprego')||'null');
+  fixados=0;
+  fila=ESTACOES.map((e,i)=>i);
+  embaralha(fila);
+  proxima();
+}
+function embaralha(a){ for(let i=a.length-1;i>0;i--){ const j=(i*7+3)%(i+1); [a[i],a[j]]=[a[j],a[i]]; } }
+function proxima(){
+  if(!fila.length){ return fim(); }
+  atual=fila[0]; revelado=false; render();
+}
+function placar(){ $('placar').textContent=`Fixados: ${fixados}/${ESTACOES.length}  ·  na fila: ${fila.length}`; }
+function render(){
+  placar();
+  const e=ESTACOES[atual];
+  $('treinoArea').innerHTML=
+   `<div class="card">
+      <div class="em">${e.em}</div>
+      <div class="anc">${e.anc.split(' · ')[0]}</div>
+      <div class="rf">${e.rf}</div>
+      ${revelado
+        ? `<div class="pu">${e.pu}</div>`
+        : `<div class="dica">Pregue esse ponto de cabeça… depois toque em Mostrar.</div>`}
+    </div>
+    <div class="acoes">
+      ${revelado
+        ? `<button class="revisar" onclick="marcar(false)">🔁 Revisar</button>
+           <button class="fixei" onclick="marcar(true)">✅ Fixei</button>`
+        : `<button class="mostrar" onclick="revelar()">👁️ Mostrar o ponto</button>`}
+    </div>`;
+}
+function revelar(){ revelado=true; render(); }
+function marcar(ok){
+  fila.shift();
+  if(ok){ fixados++; }
+  else{ fila.push(atual); }   // errou/quer revisar → volta pro fim
+  proxima();
+}
+function fim(){
+  $('treinoArea').innerHTML=
+   `<div class="fim"><div class="big">🔥📖</div>
+      <h2 style="color:var(--vinho);font-family:Georgia,serif">Mensagem fixada!</h2>
+      <p>Você percorreu as ${ESTACOES.length} estações de cabeça. Faça de novo <b>hoje e amanhã</b> — 3 passadas curtas cravam mais que 1 hora relendo.</p>
+      <button class="reiniciar" onclick="iniciarTreino()">🔁 Treinar de novo</button></div>`;
+  $('placar').textContent='';
+}
+</script>
+</body>
+</html>
