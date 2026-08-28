@@ -3527,10 +3527,14 @@ function abrirReader(idx,tipo){
   document.getElementById('reader-frame').src=`/ebd/${ebdTurmaAtual}/html/${tipo}-${n}.html`;
   ocultarTodas();
   document.getElementById('tela-ebd-reader').classList.add('ativa');
+  // Lupa da Lição: guarda a lição aberta e mostra o botão (só em lição/apoio de nº válido)
+  _lupaLicao=lic.n; _lupaTurma=ebdTurmaAtual;
+  if(lic.n>=1 && (tipo==='licao'||tipo==='apoio')) mostrarLupa(); else esconderLupa();
 }
 
 function fecharReader(){
   document.getElementById('reader-frame').src='';
+  esconderLupa();
   ocultarTodas();
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
 }
@@ -7196,5 +7200,69 @@ const _crmInitMap = {
    width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#0f6d78,#0f3d5c);
    box-shadow:0 6px 18px rgba(15,61,92,.4);display:flex;align-items:center;justify-content:center;
    font-size:30px;text-decoration:none;border:2px solid #fff">🧙</a>
+
+<!-- LUPA DA LIÇÃO — tutor de IA da EBD (só aparece lendo uma lição) -->
+<button id="lupa-btn" onclick="abrirLupaPanel()" style="display:none;position:fixed;left:50%;transform:translateX(-50%);
+   bottom:calc(18px + env(safe-area-inset-bottom));z-index:100000;background:linear-gradient(135deg,#a9791c,#0f3d5c);
+   color:#fff;border:2px solid #fff;border-radius:999px;padding:12px 20px;font-size:1rem;font-weight:800;font-family:inherit;
+   box-shadow:0 6px 20px rgba(0,0,0,.35);cursor:pointer">🔎 Tirar dúvida da lição</button>
+
+<div id="lupa-ov" style="display:none;position:fixed;inset:0;z-index:100001;background:rgba(10,20,32,.55)" onclick="if(event.target===this)fecharLupa()">
+  <div style="position:absolute;left:0;right:0;bottom:0;max-width:820px;margin:0 auto;background:#fff;border-radius:18px 18px 0 0;max-height:88vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:9px;padding:14px 16px 8px;border-bottom:1px solid #e4e7ec">
+      <div style="font-size:22px">🔎</div>
+      <div style="flex:1"><div style="font-family:Georgia,serif;font-weight:800;color:#0f3d5c;font-size:1.1rem">Lupa da Lição</div>
+        <div style="font-size:.74rem;color:#8a1c1c;font-weight:700">Auxiliar de estudo · confirme sempre com seu pastor</div></div>
+      <button onclick="fecharLupa()" style="background:#eef2f4;border:none;border-radius:10px;width:34px;height:34px;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div id="lupa-corpo" style="flex:1;overflow-y:auto;padding:14px 16px">
+      <div id="lupa-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px"></div>
+      <div id="lupa-resp" style="font-size:1.02rem;line-height:1.6;color:#1c2230;text-align:justify"></div>
+    </div>
+    <div style="display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #e4e7ec">
+      <input id="lupa-q" placeholder="Pergunte sobre a lição…" autocomplete="off" enterkeyhint="send"
+        style="flex:1;border:1.5px solid #e4e7ec;border-radius:20px;padding:12px 15px;font-size:1.02rem;font-family:inherit">
+      <button id="lupa-env" onclick="perguntarLupa()" style="background:#0f3d5c;color:#fff;border:none;border-radius:50%;width:48px;height:48px;font-size:1.2rem;cursor:pointer;flex-shrink:0">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var _lupaLicao=1,_lupaTurma='adulto';
+function mostrarLupa(){ var b=document.getElementById('lupa-btn'); if(b) b.style.display='block'; }
+function esconderLupa(){ var b=document.getElementById('lupa-btn'); if(b) b.style.display='none'; fecharLupa(); }
+function abrirLupaPanel(){
+  document.getElementById('lupa-ov').style.display='block';
+  document.getElementById('lupa-resp').innerHTML='<div style="color:#8a8f98;text-align:center;padding:14px">Pergunte com suas palavras sobre a lição que você está lendo. 🙏</div>';
+  var chips=['Explique o Texto Áureo','O que é a Verdade Prática?','Um versículo que confirma?','Como aplicar na minha vida?'];
+  document.getElementById('lupa-chips').innerHTML=chips.map(function(c){
+    return '<button onclick="document.getElementById(\'lupa-q\').value=this.textContent;perguntarLupa()" style="background:#eef6f7;border:1px solid #cfe3e6;color:#0f6d78;border-radius:999px;padding:8px 12px;font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer">'+c+'</button>';
+  }).join('');
+  setTimeout(function(){document.getElementById('lupa-q').focus();},200);
+}
+function fecharLupa(){ var o=document.getElementById('lupa-ov'); if(o) o.style.display='none'; }
+async function perguntarLupa(){
+  var q=document.getElementById('lupa-q').value.trim();
+  if(q.length<3) return;
+  document.getElementById('lupa-env').disabled=true;
+  document.getElementById('lupa-resp').innerHTML='<div style="color:#0f6d78;text-align:center;padding:16px;font-weight:700">🔎 Buscando na lição…</div>';
+  try{
+    var r=await fetch('/api/ebd-lupa',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({token:'radar-elias-2026',licao:_lupaLicao,revista:_lupaTurma,pergunta:q})});
+    var d=await r.json();
+    if(d.ok){
+      document.getElementById('lupa-resp').innerHTML=
+        '<div style="background:#f6faf7;border:1px solid #d7ecdd;border-radius:12px;padding:13px 14px">'+
+        d.resposta.replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div>'+
+        '<div style="font-size:.76rem;color:#9aa1ad;text-align:center;margin-top:10px">Auxiliar de estudo · para decisões, confirme com seu pastor</div>';
+    }else{
+      document.getElementById('lupa-resp').innerHTML='<div style="color:#8a1c1c;text-align:center;padding:14px">Não consegui responder agora. Tente de novo em instantes.</div>';
+    }
+  }catch(e){ document.getElementById('lupa-resp').innerHTML='<div style="color:#8a1c1c;text-align:center;padding:14px">Sem conexão agora.</div>'; }
+  document.getElementById('lupa-env').disabled=false;
+  document.getElementById('lupa-q').value='';
+}
+document.addEventListener('keydown',function(e){ if(e.key==='Enter'&&document.activeElement&&document.activeElement.id==='lupa-q'){ e.preventDefault(); perguntarLupa(); }});
+</script>
 </body>
 </html>
