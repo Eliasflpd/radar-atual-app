@@ -33,7 +33,10 @@
 </head>
 <body>
 
-  <button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <button class="voltar" style="margin:0" onclick="location.href='/?mod=manuais'">← Biblioteca</button>
+    <button class="voltar" style="margin:0;background:#0f3d5c" onclick="location.href='/'">🏠 Início</button>
+  </div>
 
   <div class="selo">✦ Mensagens para Pregar ✦</div>
   <h1>Mensagens para Pregar</h1>
