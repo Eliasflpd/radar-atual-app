@@ -2693,6 +2693,7 @@ function mostrarAvisoEBD(){
 }
 function abrirMod(id){
   localStorage.setItem('radar_ultimo_mod', id);
+  try{ trackVisit(id); }catch(e){}   // conta acesso de CADA módulo (global via /api/hit)
   ocultarTodas();
   if(id==='desafiomateus'){
     document.getElementById('tela-desafiomateus').classList.add('ativa');
@@ -7277,6 +7278,23 @@ const _crmInitMap = {
     <button class="mal-save" onclick="salvarAluno()">SALVAR ALUNO</button>
   </div>
 </div>
+
+<!-- Botão fixo COMPARTILHAR (universal — compartilha o módulo atual) -->
+<button onclick="compartilharApp()" title="Compartilhar"
+   style="position:fixed;left:16px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:99999;
+   width:56px;height:56px;border-radius:50%;background:#25D366;color:#fff;border:2px solid #fff;
+   box-shadow:0 6px 18px rgba(37,211,102,.4);font-size:24px;cursor:pointer">📤</button>
+<script>
+function compartilharApp(){
+  var mod=localStorage.getItem('radar_ultimo_mod')||'';
+  var url='https://radar-atual.vercel.app'+(mod?'/?mod='+encodeURIComponent(mod):'');
+  var txt='📖 Conheça o RADAR — Bíblias de estudo, lições da EBD, pregação e muito mais, no celular, de graça: ';
+  try{
+    if(navigator.share){ navigator.share({title:'RADAR',text:txt,url:url}).catch(function(){}); }
+    else { window.open('https://wa.me/?text='+encodeURIComponent(txt+url),'_blank'); }
+  }catch(e){ window.open('https://wa.me/?text='+encodeURIComponent(txt+url),'_blank'); }
+}
+</script>
 
 <!-- Botão fixo do BATE-PAPO com o Claude (nunca some) -->
 <a href="/biblioteca/chat/" title="Falar com o Claude"
