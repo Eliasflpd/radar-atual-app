@@ -32,6 +32,10 @@
   .barra button{background:#eef2f4;border:1px solid var(--linha);border-radius:10px;padding:7px 12px;font-weight:700;font-family:inherit;cursor:pointer}
   .barra .tit{flex:1;font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.05rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #texto{white-space:pre-wrap;word-wrap:break-word;text-align:justify;font-family:Georgia,serif;font-size:1.02rem;line-height:1.7;color:#1c2230}
+  .pagbar{position:sticky;bottom:0;display:flex;align-items:center;justify-content:center;gap:14px;background:#fff;border-top:1px solid var(--linha);padding:10px 0 calc(10px + env(safe-area-inset-bottom));margin-top:10px}
+  .pagbar button{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:9px 20px;font-size:1.1rem;font-weight:800;cursor:pointer}
+  .pagbar button:disabled{opacity:.35}
+  .pagbar span{font-weight:700;color:#4b5563;min-width:70px;text-align:center}
   .aviso{text-align:center;color:#9aa1ad;font-size:.82rem;margin-top:20px;border-top:1px solid var(--linha);padding-top:12px}
 </style>
 </head>
@@ -63,6 +67,7 @@
       <button onclick="fonte(1)">A+</button>
     </div>
     <div id="texto"></div>
+    <div class="pagbar"><button id="pg-ant" onclick="irPag(-1)">◀</button><span id="pag-ind">—</span><button id="pg-prox" onclick="irPag(1)">▶</button></div>
   </div>
 
 <script>
@@ -122,22 +127,45 @@ function mostrarLista(){
   }
 }
 
+let _paginas=[], _pag=0;
 async function abrirLivro(slug){
   const l=MANIFEST.livros.find(x=>x.slug===slug);
   $('lista').style.display='none';
   $('leitor').style.display='block';
   $('ltit').textContent=l.titulo+' · '+l.autor;
-  $('texto').textContent='Descriptografando…';
+  $('texto').textContent='Descriptografando… (uns segundos, é grande)';
+  $('pag-ind').textContent='—';
   window.scrollTo(0,0);
+  // deixa a mensagem pintar antes de descriptografar/paginar (senão trava sem feedback)
+  await new Promise(r=>setTimeout(r,50));
   try{
     const md=await decifrar(l.arquivo);
-    $('texto').style.fontSize=FS+'px';
-    $('texto').textContent=md;
-  }catch(e){ $('texto').textContent='Erro ao abrir. Tente sair e entrar de novo.'; }
+    _paginas=paginar(md, 3200);   // páginas pequenas = não trava o celular
+    _pag=0;
+    renderPagina();
+  }catch(e){ $('texto').textContent='Erro ao abrir. Volte e tente de novo.'; }
 }
+function paginar(txt, tam){
+  const out=[]; let i=0;
+  while(i<txt.length){
+    let fim=Math.min(i+tam, txt.length);
+    if(fim<txt.length){ const q=txt.lastIndexOf('\n', fim); if(q>i+tam*0.5) fim=q; }
+    out.push(txt.slice(i,fim)); i=fim;
+  }
+  return out.length?out:[''];
+}
+function renderPagina(){
+  $('texto').style.fontSize=FS+'px';
+  $('texto').textContent=_paginas[_pag]||'';
+  $('pag-ind').textContent=(_pag+1)+' / '+_paginas.length;
+  $('pg-ant').disabled=_pag<=0;
+  $('pg-prox').disabled=_pag>=_paginas.length-1;
+  window.scrollTo(0,0);
+}
+function irPag(d){ if(!_paginas.length)return; _pag=Math.max(0,Math.min(_paginas.length-1,_pag+d)); renderPagina(); }
 
-function fecharLivro(){ $('leitor').style.display='none'; $('lista').style.display='block'; window.scrollTo(0,0); }
-function fonte(d){ FS=Math.max(13,Math.min(26,FS+d)); localStorage.setItem('estudo_fs',FS); $('texto').style.fontSize=FS+'px'; }
+function fecharLivro(){ $('leitor').style.display='none'; $('lista').style.display='block'; _paginas=[]; window.scrollTo(0,0); }
+function fonte(d){ FS=Math.max(13,Math.min(26,FS+d)); localStorage.setItem('estudo_fs',FS); if(_paginas.length) renderPagina(); else $('texto').style.fontSize=FS+'px'; }
 function sair(){ SENHA=null; localStorage.removeItem('estudo_pass'); location.reload(); }
 </script>
 </body>
