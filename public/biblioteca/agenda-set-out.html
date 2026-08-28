@@ -3,235 +3,148 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Agenda Bimestral — Setembro e Outubro 2026 · Templo Central Tuntum-MA</title>
+<title>Agenda Set/Out 2026 — Templo Central</title>
 <style>
-  :root{
-    --branco:#ffffff;
-    --texto:#1c2530;
-    --navy:#0f3d5c;
-    --dourado:#a9791c;
-    --creme:#fbf6ea;
-    --creme-borda:#ecd9ad;
-    --cinza:#6b7480;
-  }
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--dourado:#a9791c;--marrom:#7a4a1e;--linha:#e7e2d6}
   *{box-sizing:border-box;-webkit-text-size-adjust:100%}
-  html{font-size:20px}
-  body{
-    margin:0;background:var(--branco);color:var(--texto);
-    font-family:'Segoe UI',system-ui,Arial,sans-serif;
-    line-height:1.6;
-    padding:16px 13px calc(56px + env(safe-area-inset-bottom));
-    max-width:780px;margin-left:auto;margin-right:auto;
-    -webkit-font-smoothing:antialiased;
-  }
-
-  .voltar{
-    display:inline-block;margin:0 0 16px;
-    background:var(--navy);color:#fff;border:none;border-radius:999px;
-    padding:10px 18px;font-size:1rem;font-weight:700;font-family:inherit;
-    box-shadow:0 3px 10px rgba(0,0,0,.18);cursor:pointer;
-  }
-
-  /* topo */
-  .cal{text-align:center;font-size:2rem;margin:2px 0 2px}
-  h1{
-    font-family:Georgia,'Times New Roman',serif;
-    color:var(--navy);text-align:center;
-    font-size:1.95rem;line-height:1.18;font-weight:800;
-    margin:4px 0 6px;letter-spacing:.3px;
-  }
-  .igreja{
-    text-align:center;color:var(--dourado);font-weight:800;
-    font-size:1.2rem;margin-bottom:4px;
-  }
-  .sub{
-    text-align:center;color:var(--cinza);font-size:.9rem;
-    text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;
-  }
-  .linha{height:4px;width:76px;background:var(--dourado);border-radius:4px;margin:0 auto 22px}
-
-  /* faixa do mês */
-  .mes{
-    background:var(--navy);color:#fff;text-align:center;
-    font-family:Georgia,serif;font-weight:800;font-size:1.5rem;
-    letter-spacing:.5px;border-radius:12px;padding:12px 10px;
-    margin:26px 0 16px;box-shadow:0 3px 10px rgba(15,61,92,.22);
-  }
-  .mes:first-of-type{margin-top:6px}
-  .nota-mes{
-    text-align:center;color:var(--cinza);font-size:.95rem;
-    margin:-8px 0 16px;font-style:italic;
-  }
-
-  /* card de evento */
-  .card{
-    display:flex;align-items:stretch;gap:0;
-    background:var(--creme);border:2px solid var(--creme-borda);
-    border-radius:14px;overflow:hidden;margin:0 0 12px;
-  }
-  .data{
-    flex:0 0 92px;background:var(--dourado);color:#fff;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;padding:10px 6px;
-  }
-  .data .dia{font-family:Georgia,serif;font-size:1.7rem;font-weight:800;line-height:1}
-  .data .mm{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;margin-top:3px}
-  .data .sem{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;margin-top:5px;opacity:.92}
-  .corpo{
-    flex:1;display:flex;align-items:center;
-    padding:12px 14px;font-size:1.18rem;font-weight:700;
-    color:var(--navy);line-height:1.35;
-  }
-  .corpo small{display:block;font-weight:600;color:var(--cinza);font-size:.9rem;margin-top:3px}
-
-  /* card de faixa (intervalo de dias) */
-  .data.faixa .dia{font-size:1.05rem}
-
-  /* lista de programação mensal */
-  .regra{
-    display:flex;gap:12px;align-items:baseline;
-    background:var(--creme);border:2px solid var(--creme-borda);
-    border-radius:12px;padding:11px 14px;margin:0 0 10px;
-  }
-  .regra .quando{
-    flex:0 0 auto;color:var(--dourado);font-weight:800;
-    font-size:1rem;min-width:130px;
-  }
-  .regra .oque{color:var(--navy);font-weight:700;font-size:1.08rem;line-height:1.35}
-
-  @media(max-width:420px){
-    .regra{flex-direction:column;gap:2px}
-    .regra .quando{min-width:0}
-  }
-
-  .btn-share{
-    display:block;width:100%;margin:28px 0 6px;
-    background:var(--dourado);color:#fff;border:none;border-radius:999px;
-    padding:15px 18px;font-size:1.15rem;font-weight:800;font-family:inherit;
-    box-shadow:0 4px 14px rgba(169,121,28,.35);cursor:pointer;
-  }
-  .rodape{text-align:center;color:var(--cinza);font-size:.85rem;margin-top:14px;line-height:1.5}
+  body{margin:0 auto;max-width:820px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.55;padding:14px 13px calc(40px + env(safe-area-inset-bottom))}
+  .top{display:flex;gap:8px;margin-bottom:14px}
+  .top button{margin:0;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;font-weight:700;font-family:inherit;cursor:pointer}
+  .top button.n{background:var(--navy)}
+  .cab{text-align:center;margin-bottom:6px}
+  .cab .sel{color:var(--dourado);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.5rem;margin:2px 0 2px}
+  .cab .ig{text-align:center;color:#6b7280;font-size:.9rem;margin-bottom:4px}
+  .divisor{height:3px;width:60px;background:var(--dourado);border-radius:3px;margin:8px auto 16px}
+  h2{font-family:Georgia,serif;color:var(--marrom);text-align:center;font-size:1.15rem;margin:22px 0 10px;border-top:1px solid var(--linha);padding-top:14px}
+  .ev{display:flex;gap:12px;align-items:flex-start;background:#fbf7ef;border:1px solid var(--linha);border-radius:12px;padding:11px 13px;margin-bottom:8px}
+  .ev .d{flex-shrink:0;width:78px;text-align:center}
+  .ev .d .dia{font-family:Georgia,serif;font-weight:800;color:var(--marrom);font-size:1.05rem;line-height:1}
+  .ev .d .sem{color:#9a8a6a;font-size:.72rem;font-weight:700;text-transform:uppercase;margin-top:2px}
+  .ev .t{font-size:1rem;color:#2a2620;padding-top:1px}
+  .wk{background:#fff;border:1px solid var(--linha);border-radius:12px;padding:11px 13px;margin-bottom:8px}
+  .wk .dia{font-weight:800;color:var(--navy);margin-bottom:3px}
+  .wk .prog{color:#3a3a3a;font-size:.96rem}
+  .grid2{display:flex;flex-wrap:wrap;gap:8px}
+  .grid2 .wk{flex:1;min-width:150px}
+  .share{display:block;width:100%;background:#25D366;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-family:inherit;font-size:1.02rem;cursor:pointer;margin:22px 0 6px}
+  .obs{color:#9aa1ad;font-size:.82rem;text-align:center;margin-top:12px}
 </style>
 </head>
 <body>
-
-  <button class="voltar" onclick="location.href='/'">← Voltar</button>
-
-  <div class="cal">🗓️</div>
-  <h1>Agenda Bimestral<br>Setembro e Outubro 2026</h1>
-  <div class="igreja">Templo Central — Tuntum-MA</div>
-  <div class="sub">Assembleia de Deus</div>
-  <div class="linha"></div>
-
-  <!-- ============ SETEMBRO ============ -->
-  <div class="mes">SETEMBRO 2026</div>
-
-  <div class="card">
-    <div class="data"><span class="dia">11</span><span class="mm">Set</span><span class="sem">Sex</span></div>
-    <div class="corpo">Cruzada Tuntum para Cristo<small>Canto Bom</small></div>
+  <div class="top">
+    <button onclick="location.href='/'">← Início</button>
   </div>
-
-  <div class="card">
-    <div class="data"><span class="dia">17</span><span class="mm">Set</span><span class="sem">Qui</span></div>
-    <div class="corpo">Encontro da UCADET</div>
+  <div class="cab">
+    <div class="sel">✦ IEADET · Templo Central · Tuntum-MA ✦</div>
+    <h1>🗓️ Agenda Bimestral</h1>
+    <div class="ig">Setembro e Outubro de 2026</div>
   </div>
+  <div class="divisor"></div>
 
-  <div class="card">
-    <div class="data"><span class="dia">17</span><span class="mm">Set</span><span class="sem">Qui</span></div>
-    <div class="corpo">Congresso da UMADEAS<small>AD Joselândia</small></div>
-  </div>
+  <h2>📌 Setembro 2026</h2>
+  <div id="set"></div>
 
-  <div class="card">
-    <div class="data faixa"><span class="dia">18 a 20</span><span class="mm">Set</span></div>
-    <div class="corpo">Cruzada Tuntum para Cristo<small>Cong. Lírio dos Vales</small></div>
-  </div>
+  <h2>📌 Outubro 2026</h2>
+  <div id="out"></div>
 
-  <div class="card">
-    <div class="data"><span class="dia">20</span><span class="mm">Set</span><span class="sem">Dom</span></div>
-    <div class="corpo">Culto de Santa Ceia nas Congregações</div>
-  </div>
+  <h2>🔭 Próximos (Nov/Dez)</h2>
+  <div id="prox"></div>
 
-  <div class="card">
-    <div class="data"><span class="dia">26</span><span class="mm">Set</span><span class="sem">Sáb</span></div>
-    <div class="corpo">1º Encontrão da UHADET</div>
-  </div>
+  <h2>🔁 Cultos Semanais</h2>
+  <div id="sem"></div>
 
-  <div class="card">
-    <div class="data"><span class="dia">27</span><span class="mm">Set</span><span class="sem">Dom</span></div>
-    <div class="corpo">Encerramento do 3º Trimestre 2026 da EBD</div>
-  </div>
+  <h2>⛪ Cultos — Templo Central</h2>
+  <div id="tc" class="grid2"></div>
 
-  <div class="card">
-    <div class="data"><span class="dia">27</span><span class="mm">Set</span><span class="sem">Dom</span></div>
-    <div class="corpo">Culto Local de Missões</div>
-  </div>
+  <h2>🎼 Ensaios Gerais — Domingo</h2>
+  <div id="ens" class="grid2"></div>
 
-  <!-- ============ OUTUBRO ============ -->
-  <div class="mes">OUTUBRO 2026</div>
-  <div class="nota-mes">Programação mensal de cultos (por semana do mês)</div>
-
-  <div class="regra"><span class="quando">1º Domingo</span><span class="oque">Culto da Família</span></div>
-  <div class="regra"><span class="quando">2º Domingo</span><span class="oque">Culto Local de Missões</span></div>
-  <div class="regra"><span class="quando">3º e 4º Domingo</span><span class="oque">Culto de Louvor e Adoração</span></div>
-  <div class="regra"><span class="quando">1ª Segunda do mês</span><span class="oque">Santa Ceia Geral</span></div>
-  <div class="regra"><span class="quando">Cultos de Crianças</span><span class="oque">Culto de Crianças / Culto da UHADET</span></div>
-  <div class="regra"><span class="quando">2ª Quinta</span><span class="oque">Encontro Geral da UCADET</span></div>
-  <div class="regra"><span class="quando">4ª Quinta</span><span class="oque">Encontro Geral da UHADET</span></div>
-  <div class="regra"><span class="quando">Sexta</span><span class="oque">Culto de Oração e Ensino nas Congregações</span></div>
-  <div class="regra"><span class="quando">1º Sábado</span><span class="oque">Culto Geral de Jovens</span></div>
-  <div class="regra"><span class="quando">2º Sábado</span><span class="oque">Culto de Jovens no Setor</span></div>
-  <div class="regra"><span class="quando">3º Sábado</span><span class="oque">UMADET em Missão</span></div>
-  <div class="regra"><span class="quando">4º Sábado</span><span class="oque">Agendamento de Eventos</span></div>
-
-  <!-- ============ PRÓXIMOS ============ -->
-  <div class="mes">PRÓXIMOS AGENDAMENTOS</div>
-
-  <div class="card">
-    <div class="data faixa"><span class="dia">31/10 e 01/11</span></div>
-    <div class="corpo">Festa Geral da UMADET</div>
-  </div>
-
-  <div class="card">
-    <div class="data faixa"><span class="dia">07 e 08</span><span class="mm">Nov</span></div>
-    <div class="corpo">2º Congresso da UFADEAS<small>AD Eugênio Barros</small></div>
-  </div>
-
-  <div class="card">
-    <div class="data faixa"><span class="dia">28 e 29</span><span class="mm">Nov</span></div>
-    <div class="corpo">Festa Geral da UFADET</div>
-  </div>
-
-  <div class="card">
-    <div class="data faixa"><span class="dia">05</span><span class="mm">Dez</span></div>
-    <div class="corpo">3º Encontro do Projeto Silas<small>AD Crioli do Bina</small></div>
-  </div>
-
-  <button class="btn-share" id="share">📤 Compartilhar agenda</button>
-  <div class="rodape">Templo Central — Tuntum-MA · Assembleia de Deus<br>Agenda Bimestral · Setembro e Outubro de 2026</div>
+  <button class="share" onclick="compartilhar()">📤 Compartilhar agenda</button>
+  <div class="obs">Fonte: Agenda Bimestral oficial do Templo Central. A programação semanal genérica pode diferir de um evento datado específico; nesses casos vale o evento datado.</div>
 
 <script>
-  var URL_PAGINA = 'https://radar-atual.vercel.app/biblioteca/agenda-set-out.html';
-  document.getElementById('share').addEventListener('click', async function(){
-    var dados = {
-      title: 'Agenda Bimestral — Set/Out 2026',
-      text: 'Agenda Bimestral (Setembro e Outubro 2026) — Templo Central Tuntum-MA',
-      url: URL_PAGINA
-    };
-    try{
-      if(navigator.share){ await navigator.share(dados); return; }
-      await navigator.clipboard.writeText(URL_PAGINA);
-      this.textContent = '✅ Link copiado!';
-      var b = this;
-      setTimeout(function(){ b.textContent = '📤 Compartilhar agenda'; }, 2200);
-    }catch(e){
-      try{
-        await navigator.clipboard.writeText(URL_PAGINA);
-        this.textContent = '✅ Link copiado!';
-      }catch(_){
-        prompt('Copie o link da agenda:', URL_PAGINA);
-      }
-    }
-  });
+var SET=[
+ ['01/09','Ter','Reunião Geral com a UMADET'],
+ ['05/09','Sáb','Encontro Projetos Silas e Jetro — Gov. Archer'],
+ ['05/09','Sáb','8º Encontro UMADET — Cong. Canaã'],
+ ['06/09','Dom','Culto da Família'],
+ ['08/09','Ter','Encontro de Auxiliares, Dirigentes e Esposas'],
+ ['09/09','Qua','Encontro UFADET — Cong. Nova Aliança'],
+ ['10/09','Qui','Cruzada Tuntum para Cristo — Cong. Lírio dos Vales'],
+ ['11/09','Sex','Cruzada Tuntum para Cristo — Canto Bom'],
+ ['12/09','Sáb','Cruzada Tuntum para Cristo — Cong. Betel'],
+ ['13/09','Dom','Culto de Louvor e Adoração'],
+ ['14/09','Seg','Culto Geral de Santa Ceia'],
+ ['17/09','Qui','Encontro da UCADET'],
+ ['18–20/09','Sex–Dom','Congresso da UMADEAS — AD Joselândia'],
+ ['20/09','Dom','Culto de Santa Ceia nas Congregações'],
+ ['22/09','Ter','Cultos Simultâneos nos Pontos de Pregação'],
+ ['26/09','Sáb','1º Encontrão da UHADET'],
+ ['27/09','Dom','Encerramento do 3º Trimestre 2026 da EBD'],
+ ['27/09','Dom','Culto Local de Missões']
+];
+var OUT=[
+ ['03/10','Sáb','Culto Local de Jovens'],
+ ['04/10','Dom','Culto da Família'],
+ ['05/10','Seg','Culto Geral de Santa Ceia'],
+ ['10/10','Sáb','2º Encontro do Silas — AD Angical'],
+ ['10/10','Sáb','9º Encontro da UMADET — Cong. Monte Hermon'],
+ ['11/10','Dom','Culto de Ceia nas Congregações'],
+ ['12/10','Seg','Dia das Crianças'],
+ ['14/10','Qua','Encontro Geral da UFADET'],
+ ['15/10','Qui','Encontro da UCADET'],
+ ['17/10','Sáb','Culto de Oração UMADET — Propósito Festa Geral'],
+ ['18/10','Dom','Culto Local de Missões'],
+ ['20/10','Ter','Encontro de Auxiliares, Dirigentes e Esposas'],
+ ['24/10','Sáb','UMADET'],
+ ['25/10','Dom','Culto de Louvor e Adoração'],
+ ['29/10','Qui','Encontro da UHADET'],
+ ['30/10','Sex','Um Dia com Deus']
+];
+var PROX=[
+ ['31/10–01/11','Sáb–Dom','Festa Geral da UMADET'],
+ ['07–08/11','Sáb–Dom','2º Congresso da UFADEAS — AD Eugênio Barros'],
+ ['28–29/11','Sáb–Dom','Festa Geral da UFADET'],
+ ['05/12','Sáb','3º Encontro do Projeto Silas — AD Crioli do Bina']
+];
+var SEM=[
+ ['Domingo','1º — Culto da Família · 2º — Culto Local de Missões · 3º e 4º — Culto de Louvor e Adoração'],
+ ['Segunda','Culto de Assembleia Geral · 1ª segunda do mês — Santa Ceia Geral'],
+ ['Terça','Livre / Ensaio Orquestra'],
+ ['Quarta','Consagração / Círculo de Oração · 2ª quarta — Encontro Geral UFADET'],
+ ['Quinta','Culto de Crianças / UHADET · 2ª quinta — Encontro Geral UCADET · 4ª quinta — Encontro Geral UHADET'],
+ ['Sexta','Culto de Oração e Ensino nas Congregações'],
+ ['Sábado','1º — Culto Geral de Jovens · 2º — Culto de Jovens no Setor · 3º — UMADET em Missão · 4º — Agendamento de Eventos']
+];
+var TC=[
+ ['Domingo','EBD e cultos conforme cronograma'],['Segunda','Culto de Doutrina'],['Terça','Ensaio Orquestra'],
+ ['Quarta','Círculo de Oração'],['Quinta','UHADET / UCADET'],['Sexta','Campanha de Oração'],['Sábado','Culto de Jovens']
+];
+var ENS=[
+ ['UMADET','14h — 15h'],['UCADET','15h — 15h30'],['Jovens e Adolescentes','15h30 — 16h'],
+ ['UFADET','16h — 16h45'],['UHADET','16h45 — 17h30']
+];
+function esc(s){return (s||'').replace(/[&<>]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[m];});}
+function evLista(arr){return arr.map(function(e){
+  return '<div class="ev"><div class="d"><div class="dia">'+esc(e[0])+'</div><div class="sem">'+esc(e[1])+'</div></div><div class="t">'+esc(e[2])+'</div></div>';
+}).join('');}
+function wkLista(arr){return arr.map(function(g){
+  return '<div class="wk"><div class="dia">'+esc(g[0])+'</div><div class="prog">'+esc(g[1])+'</div></div>';
+}).join('');}
+document.getElementById('set').innerHTML=evLista(SET);
+document.getElementById('out').innerHTML=evLista(OUT);
+document.getElementById('prox').innerHTML=evLista(PROX);
+document.getElementById('sem').innerHTML=wkLista(SEM);
+document.getElementById('tc').innerHTML=wkLista(TC);
+document.getElementById('ens').innerHTML=wkLista(ENS);
+function compartilhar(){
+  var u='https://radar-atual.vercel.app/biblioteca/agenda-set-out.html';
+  var t='🗓️ Agenda Bimestral Set/Out 2026 — Templo Central Tuntum-MA: ';
+  if(navigator.share){navigator.share({title:'Agenda Set/Out — Templo Central',text:t,url:u}).catch(function(){});}
+  else{window.open('https://wa.me/?text='+encodeURIComponent(t+u),'_blank');}
+}
 </script>
 </body>
 </html>
