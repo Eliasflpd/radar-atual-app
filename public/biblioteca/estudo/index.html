@@ -144,10 +144,6 @@ function mostrarLista(){
   $('q').addEventListener('input',e=>renderLista(e.target.value));
   $('q').addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.value.trim().length>=2) buscarConteudo(e.target.value.trim()); });
   renderLista('');
-  if(!localStorage.getItem('estudo_aviso')){
-    L.insertAdjacentHTML('afterbegin', '<div style="background:#fbf6ea;border:1px solid #ecd9ad;border-radius:12px;padding:11px 13px;margin-bottom:14px;font-size:.9rem;color:#6b5a2a;text-align:center">📖 Material <b>comprado por você</b> — uso pessoal e privado. Não compartilhe.</div>');
-    localStorage.setItem('estudo_aviso','1');
-  }
 }
 function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
 const ETOKEN='radar-elias-2026';
