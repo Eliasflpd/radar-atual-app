@@ -46,7 +46,20 @@
   .barra{position:sticky;top:0;background:#fff;padding:8px 0;border-bottom:1px solid var(--linha);display:flex;gap:8px;align-items:center;margin-bottom:10px}
   .barra button{background:#eef2f4;border:1px solid var(--linha);border-radius:10px;padding:7px 12px;font-weight:700;font-family:inherit;cursor:pointer}
   .barra .tit{flex:1;font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.05rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #texto{white-space:pre-wrap;word-wrap:break-word;text-align:justify;font-family:Georgia,serif;font-size:1.02rem;line-height:1.7;color:#1c2230}
+  #texto{word-wrap:break-word;font-family:Georgia,serif;font-size:1.02rem;line-height:1.7;color:#1c2230}
+  #texto .par{margin:0 0 13px;text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto}
+  #texto .cap{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.18rem;text-align:center;margin:22px 0 12px;padding-top:6px}
+  #texto .rosto{min-height:58vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 10px}
+  #texto .rosto .rt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.9rem;line-height:1.25}
+  #texto .rosto .ra{color:var(--dourado);font-weight:800;font-size:1.05rem;margin-top:12px;text-transform:uppercase;letter-spacing:1px}
+  #texto .rosto .rl{width:70px;height:3px;background:var(--dourado);border-radius:3px;margin-top:18px}
+  .idx-ov{position:fixed;inset:0;z-index:50;background:rgba(15,61,92,.5)}
+  .idx-cx{position:absolute;left:0;right:0;bottom:0;max-width:860px;margin:0 auto;background:#fff;border-radius:16px 16px 0 0;max-height:82vh;display:flex;flex-direction:column}
+  .idx-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--linha);font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.15rem}
+  .idx-top button{background:#eef2f4;border:none;border-radius:9px;width:32px;height:32px;font-size:16px;cursor:pointer}
+  .idx-lista{overflow-y:auto;padding:6px 0}
+  .idx-it{display:flex;justify-content:space-between;gap:10px;padding:12px 18px;border-bottom:1px solid #f0f2f4;cursor:pointer;color:#1c2230;font-size:1rem}
+  .idx-it span{color:#9aa1ad;font-size:.82rem;flex-shrink:0}
   .pagbar{position:sticky;bottom:0;display:flex;align-items:center;justify-content:center;gap:14px;background:#fff;border-top:1px solid var(--linha);padding:10px 0 calc(10px + env(safe-area-inset-bottom));margin-top:10px}
   .pagbar button{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:9px 20px;font-size:1.1rem;font-weight:800;cursor:pointer}
   .pagbar button:disabled{opacity:.35}
@@ -78,6 +91,7 @@
     <div class="barra">
       <button onclick="fecharLivro()">← Livros</button>
       <div class="tit" id="ltit"></div>
+      <button onclick="abrirIndice()" title="Índice">📑</button>
       <button onclick="fonte(-1)">A−</button>
       <button onclick="fonte(1)">A+</button>
     </div>
@@ -202,6 +216,38 @@ let _alvoTrecho=null;
 function abrirEmTrecho(slug,alvo){ _alvoTrecho=alvo? norm(alvo):null; abrirLivro(slug); }
 
 let _paginas=[], _pag=0;
+let _indice=[];
+// Limpa o lixo de OCR, junta linhas em parágrafos, detecta títulos de seção.
+function limparEstruturar(md, titulo, autor){
+  const linhas=md.split(/\r?\n/); const blocos=[]; let para='';
+  function fechaPara(){ if(para.trim()) blocos.push({t:'p',x:para.replace(/\s+/g,' ').trim()}); para=''; }
+  for(const raw of linhas){
+    const t=raw.trim();
+    if(!t){ fechaPara(); continue; }
+    if(t[0]==='>') continue;                              // metadata do topo
+    if(/^#\s/.test(t)) continue;                          // título markdown (mostrado no rosto)
+    if(t.length<=16 && /^[\d\W_]+$/.test(t)) continue;    // lixo: "278 !170401", símbolos soltos
+    if(/^[\dIVXLC]{1,5}\s*$/.test(t)) continue;           // número de página solto
+    const ehTitulo = (t.length>=3 && t.length<=68 && t===t.toUpperCase() && /[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{3}/.test(t) && !/\.{2,}/.test(t))
+                  || /^(CAP[IÍ]TULO|CAP\.\s|ESBO[ÇC]O|INTRODU[ÇC][ÃA]O|CONCLUS[ÃA]O|PREF[ÁA]CIO|AP[ÊE]NDICE)\b/i.test(t);
+    if(ehTitulo){ fechaPara(); blocos.push({t:'h',x:t}); }
+    else para+=(para?' ':'')+t;
+  }
+  fechaPara();
+  blocos.unshift({t:'rosto', x:titulo, autor:autor});     // página de rosto profissional
+  return blocos;
+}
+function paginarBlocos(blocos, tam){
+  const pgs=[]; let cur=[], len=0;
+  for(const b of blocos){
+    const bl=(b.x||'').length+40;
+    if(len+bl>tam && cur.length){ pgs.push(cur); cur=[]; len=0; }
+    cur.push(b); len+=bl;
+    if(b.t==='rosto'){ pgs.push(cur); cur=[]; len=0; }     // rosto sozinho na 1ª página
+  }
+  if(cur.length) pgs.push(cur);
+  return pgs.length?pgs:[[{t:'p',x:''}]];
+}
 async function abrirLivro(slug){
   const l=MANIFEST.livros.find(x=>x.slug===slug);
   $('lista').style.display='none';
@@ -210,39 +256,44 @@ async function abrirLivro(slug){
   $('texto').textContent='Descriptografando… (uns segundos, é grande)';
   $('pag-ind').textContent='—';
   window.scrollTo(0,0);
-  // deixa a mensagem pintar antes de descriptografar/paginar (senão trava sem feedback)
   await new Promise(r=>setTimeout(r,50));
   try{
     const md=await decifrar(l.arquivo);
-    _paginas=paginar(md, 3200);   // páginas pequenas = não trava o celular
+    const blocos=limparEstruturar(md, l.titulo, l.autor);
+    _paginas=paginarBlocos(blocos, 3000);
+    _indice=[]; _paginas.forEach((pg,i)=>pg.forEach(b=>{ if(b.t==='h') _indice.push({titulo:b.x, pag:i}); }));
     _pag=0;
-    // veio da busca? pula pra página que contém o trecho
     if(_alvoTrecho){
       const alvo=_alvoTrecho; _alvoTrecho=null;
-      const idx=_paginas.findIndex(p=>norm(p).includes(alvo));
+      const idx=_paginas.findIndex(pg=>norm(pg.map(b=>b.x||'').join(' ')).includes(alvo));
       if(idx>=0) _pag=idx;
     }
     renderPagina();
   }catch(e){ $('texto').textContent='Erro ao abrir. Volte e tente de novo.'; }
 }
-function paginar(txt, tam){
-  const out=[]; let i=0;
-  while(i<txt.length){
-    let fim=Math.min(i+tam, txt.length);
-    if(fim<txt.length){ const q=txt.lastIndexOf('\n', fim); if(q>i+tam*0.5) fim=q; }
-    out.push(txt.slice(i,fim)); i=fim;
-  }
-  return out.length?out:[''];
-}
 function renderPagina(){
   $('texto').style.fontSize=FS+'px';
-  $('texto').textContent=_paginas[_pag]||'';
+  const pg=_paginas[_pag]||[];
+  $('texto').innerHTML=pg.map(function(b){
+    if(b.t==='rosto') return '<div class="rosto"><div class="rt">'+escapeH(b.x)+'</div><div class="ra">'+escapeH(b.autor||'')+'</div><div class="rl"></div></div>';
+    if(b.t==='h') return '<div class="cap">'+escapeH(b.x)+'</div>';
+    return '<p class="par">'+escapeH(b.x)+'</p>';
+  }).join('');
   $('pag-ind').textContent=(_pag+1)+' / '+_paginas.length;
   $('pg-ant').disabled=_pag<=0;
   $('pg-prox').disabled=_pag>=_paginas.length-1;
   window.scrollTo(0,0);
 }
 function irPag(d){ if(!_paginas.length)return; _pag=Math.max(0,Math.min(_paginas.length-1,_pag+d)); renderPagina(); }
+function abrirIndice(){
+  if(!_indice.length){ alert('Este livro não tem seções detectadas para índice.'); return; }
+  let ov=$('idx-ov'); if(!ov){ ov=document.createElement('div'); ov.id='idx-ov'; document.body.appendChild(ov); }
+  ov.className='idx-ov';
+  ov.innerHTML='<div class="idx-cx"><div class="idx-top">📑 Índice<button onclick="document.getElementById(\'idx-ov\').remove()">✕</button></div><div class="idx-lista">'
+    + _indice.map(function(it){ return '<div class="idx-it" onclick="irIndice('+it.pag+')">'+escapeH(it.titulo)+'<span>pág. '+(it.pag+1)+'</span></div>'; }).join('')
+    + '</div></div>';
+}
+function irIndice(p){ _pag=p; renderPagina(); const o=$('idx-ov'); if(o)o.remove(); }
 
 function fecharLivro(){ $('leitor').style.display='none'; $('lista').style.display='block'; _paginas=[]; window.scrollTo(0,0); }
 function fonte(d){ FS=Math.max(13,Math.min(26,FS+d)); localStorage.setItem('estudo_fs',FS); if(_paginas.length) renderPagina(); else $('texto').style.fontSize=FS+'px'; }
