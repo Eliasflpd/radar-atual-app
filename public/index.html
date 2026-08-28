@@ -2624,6 +2624,8 @@ function renderTemplo(){
   h+='<div class="agv-brand marrom"><img class="agv-logo" src="img/ieadet.png">'+
      '<div><div class="agv-bnome" style="font-size:16px">IEADET</div><div class="agv-bsub">Igreja Evangélica Assembleia de Deus · Templo Central · Tuntum - MA</div></div></div>';
   h+='<div class="agv-tit marrom"><b>Agenda Bimestral</b><span>Julho / Agosto de 2026</span></div>';
+  h+='<a href="/biblioteca/agenda-set-out.html" style="display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#8a5a2b,#5a3a1a);color:#fff;border-radius:12px;padding:13px 14px;font-weight:800;margin:0 0 10px;box-shadow:0 4px 12px rgba(90,58,26,.3)">🗓️ Nova Agenda — Setembro e Outubro 2026 →</a>';
+  h+='<button onclick="var u=\'https://radar-atual.vercel.app/biblioteca/agenda-set-out.html\';if(navigator.share){navigator.share({title:\'Agenda Set/Out — Templo Central\',url:u})}else{window.open(\'https://wa.me/?text=\'+encodeURIComponent(\'Agenda Set/Out — Templo Central Tuntum: \'+u),\'_blank\')}" style="display:block;width:100%;background:#25D366;color:#fff;border:none;border-radius:12px;padding:11px;font-weight:800;font-family:inherit;cursor:pointer;margin:0 0 14px">📤 Compartilhar agenda</button>';
   h+='<div class="agv-lista">';
   var _meses=[]; var _jul=AG_TEMPLO_JUL_R(); if(_jul.length)_meses.push(['JULHO DE 2026',_jul]);
   var _ago=AG_TEMPLO_AGO_R(); if(_ago.length)_meses.push(['AGOSTO DE 2026',_ago]);
