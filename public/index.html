@@ -4460,7 +4460,21 @@ function whatsappVisitante(){
   if(fone) window.open('https://wa.me/55'+fone,'_blank');
 }
 
-if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'}).then(function(reg){
+    reg.update();
+    setInterval(function(){ reg.update(); }, 60000); // checa versão nova a cada 1 min
+    function ativar(w){ w&&w.addEventListener('statechange',function(){
+      if(w.state==='installed' && navigator.serviceWorker.controller){ w.postMessage({type:'SKIP_WAITING'}); }
+    }); }
+    if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+    reg.addEventListener('updatefound',function(){ ativar(reg.installing); });
+  }).catch(function(){});
+  var _recarregou=false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){
+    if(_recarregou) return; _recarregou=true; location.reload();
+  });
+}
 
 // ══════════════════════════════════════════════════════════
 // CAROUSEL HOME
