@@ -23,10 +23,25 @@
   .cad .rem{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:.9rem;color:#4b5563}
   .erro{color:var(--vinho);font-weight:700;margin-top:12px;min-height:1.2em}
   .lista{display:none}
-  .livro{display:flex;gap:13px;align-items:center;background:#fff;border:1px solid var(--linha);border-radius:14px;padding:14px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.05)}
-  .livro .ic{width:52px;height:52px;border-radius:13px;background:linear-gradient(135deg,var(--navy),var(--dourado));display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;flex-shrink:0}
-  .livro .tt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.12rem}
-  .livro .au{color:var(--dourado);font-weight:700;font-size:.85rem}
+  .busca{position:sticky;top:0;z-index:5;background:var(--branco);padding:4px 0 10px}
+  .busca input{width:100%;padding:12px 15px;border:1.5px solid var(--linha);border-radius:12px;font-size:1.02rem;font-family:inherit}
+  .grupo{margin:18px 0 8px;display:flex;align-items:center;gap:9px}
+  .grupo .capa-au{width:38px;height:52px;border-radius:6px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.18);flex-shrink:0;background:linear-gradient(135deg,var(--navy),var(--dourado))}
+  .grupo .nm{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.15rem}
+  .grupo .qt{color:#9aa1ad;font-size:.82rem;font-weight:700}
+  .livro{display:flex;gap:13px;align-items:center;background:#fff;border:1px solid var(--linha);border-radius:14px;padding:11px 13px;margin-bottom:9px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.05)}
+  .livro .ic{width:44px;height:58px;border-radius:8px;object-fit:cover;background:linear-gradient(135deg,var(--navy),var(--dourado));display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .livro .tt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.05rem;line-height:1.25}
+  .livro .au{color:var(--dourado);font-weight:700;font-size:.8rem}
+  .nada{text-align:center;color:#9aa1ad;padding:30px 0}
+  .btmotor{width:100%;margin:2px 0 8px;background:linear-gradient(135deg,var(--teal),var(--navy));color:#fff;border:none;border-radius:12px;padding:12px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .hit{background:#fff;border:1px solid var(--linha);border-left:4px solid var(--teal);border-radius:12px;padding:12px 13px;margin-bottom:9px;cursor:pointer}
+  .hit .meta{font-size:.8rem;font-weight:800;color:var(--teal)}
+  .hit .meta b{color:var(--navy)}
+  .hit .sn{font-size:.95rem;color:#333;line-height:1.5;margin-top:4px}
+  .hit .sn mark{background:#fdeec2;color:#000;font-weight:700}
+  .secmotor{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.05rem;margin:14px 0 8px;border-top:1px solid var(--linha);padding-top:12px}
+  .carregando{text-align:center;color:var(--teal);font-weight:700;padding:18px}
   #leitor{display:none}
   .barra{position:sticky;top:0;background:#fff;padding:8px 0;border-bottom:1px solid var(--linha);display:flex;gap:8px;align-items:center;margin-bottom:10px}
   .barra button{background:#eef2f4;border:1px solid var(--linha);border-radius:10px;padding:7px 12px;font-weight:700;font-family:inherit;cursor:pointer}
@@ -111,21 +126,84 @@ async function abrir(){
   $('btn').textContent='Abrir meu estudo';
 }
 
+function capaDe(autor){ return (MANIFEST.capas&&MANIFEST.capas[autor])||''; }
+function thumb(l){
+  const c=capaDe(l.autor);
+  return c ? `<img class="ic" src="${c}" loading="lazy" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment('<div class=ic>📖</div>').firstChild)">`
+           : `<div class="ic">📖</div>`;
+}
 function mostrarLista(){
   $('cad').style.display='none'; $('leitor').style.display='none';
   const L=$('lista'); L.style.display='block';
-  L.innerHTML=MANIFEST.livros.map(l=>
-    `<div class="livro" onclick="abrirLivro('${l.slug}')">
-       <div class="ic">📖</div>
-       <div><div class="tt">${l.titulo}</div><div class="au">${l.autor}</div></div>
-     </div>`).join('')
-    + `<div class="aviso">Trancado com a sua senha · <a href="#" onclick="sair();return false" style="color:#8a1c1c">sair/bloquear</a></div>`;
-  // aviso de uso pessoal — SÓ na primeira vez
+  const total=MANIFEST.livros.length;
+  L.innerHTML=
+    `<div class="busca"><input id="q" placeholder="🔎 Buscar livro, autor, tema ou versículo (ex: Rm 8:28)…" autocomplete="off" enterkeyhint="search"></div>
+     <div id="motor"></div>
+     <div id="resultados"></div>
+     <div class="aviso">${total} livros · trancado com a sua senha · <a href="#" onclick="sair();return false" style="color:#8a1c1c">sair/bloquear</a></div>`;
+  $('q').addEventListener('input',e=>renderLista(e.target.value));
+  $('q').addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.value.trim().length>=2) buscarConteudo(e.target.value.trim()); });
+  renderLista('');
   if(!localStorage.getItem('estudo_aviso')){
     L.insertAdjacentHTML('afterbegin', '<div style="background:#fbf6ea;border:1px solid #ecd9ad;border-radius:12px;padding:11px 13px;margin-bottom:14px;font-size:.9rem;color:#6b5a2a;text-align:center">📖 Material <b>comprado por você</b> — uso pessoal e privado. Não compartilhe.</div>');
     localStorage.setItem('estudo_aviso','1');
   }
 }
+function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+const ETOKEN='radar-elias-2026';
+function renderLista(qraw){
+  const R=$('resultados'); if(!R) return;
+  const M=$('motor'); if(M) M.innerHTML='';   // limpa resultados do motor ao digitar
+  const termo=(qraw||'').trim();
+  const q=norm(qraw);
+  // botão do motor (busca dentro do conteúdo) quando há termo
+  const btn = termo.length>=2
+    ? `<button class="btmotor" onclick="buscarConteudo('${termo.replace(/'/g,"\\'")}')">🔎 Buscar “${termo}” DENTRO de todos os livros →</button>` : '';
+  const livros=q ? MANIFEST.livros.filter(l=>norm(l.titulo).includes(q)||norm(l.autor).includes(q)) : MANIFEST.livros;
+  if(!livros.length){ R.innerHTML=btn+'<div class="nada">Nenhum título/autor com esse nome. Tente buscar dentro dos livros ↑</div>'; return; }
+  R.innerHTML=btn+renderGrupos(livros); return;
+}
+function renderGrupos(livros){
+  // agrupa por autor, preservando a ordem
+  const grupos={}, ordem=[];
+  for(const l of livros){ if(!grupos[l.autor]){grupos[l.autor]=[];ordem.push(l.autor);} grupos[l.autor].push(l); }
+  return ordem.map(au=>{
+    const c=capaDe(au);
+    const cap=c?`<img class="capa-au" src="${c}" loading="lazy" alt="" onerror="this.style.visibility='hidden'">`:`<div class="capa-au"></div>`;
+    const itens=grupos[au].map(l=>
+      `<div class="livro" onclick="abrirLivro('${l.slug}')">${thumb(l)}
+         <div><div class="tt">${l.titulo}</div><div class="au">${l.autor}</div></div></div>`).join('');
+    return `<div class="grupo">${cap}<div><div class="nm">${au}</div><div class="qt">${grupos[au].length} livro(s)</div></div></div>${itens}`;
+  }).join('');
+}
+
+// ==== MOTOR: busca dentro do conteúdo de TODOS os livros ====
+function escapeH(s){ return (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+function realce(sn){ return escapeH(sn).replace(/«/g,'<mark>').replace(/»/g,'</mark>'); }
+async function buscarConteudo(termo){
+  const M=$('motor'); if(!M) return;
+  M.innerHTML='<div class="carregando">🔎 Procurando em todos os livros…</div>';
+  try{
+    const r=await fetch('/api/estudo-busca?token='+ETOKEN+'&q='+encodeURIComponent(termo));
+    const d=await r.json();
+    if(!d.ok){ M.innerHTML='<div class="nada">O motor não respondeu agora. Tente de novo.</div>'; return; }
+    if(!d.total){ M.innerHTML=`<div class="secmotor">Dentro dos livros: “${escapeH(termo)}”</div><div class="nada">Nada encontrado no conteúdo.</div>`; return; }
+    const tit = d.modo==='versiculo'
+      ? `🕸️ O que cada autor diz sobre <b>${escapeH(d.ref||termo)}</b> · ${d.total}`
+      : `📚 “${escapeH(termo)}” dentro dos livros · ${d.total}`;
+    const hits=d.itens.map((it,i)=>{
+      const alvo=(it.snippet||'').replace(/[«»]/g,'').slice(0,60).replace(/'/g,"\\'");
+      const ref=it.ref?` · ${escapeH(it.ref)}`:'';
+      return `<div class="hit" onclick="abrirEmTrecho('${it.slug}','${alvo}')">
+        <div class="meta"><b>${escapeH(it.livro||it.titulo)}</b> — ${escapeH(it.autor)}${ref}</div>
+        <div class="sn">${realce(it.snippet)}…</div></div>`;
+    }).join('');
+    M.innerHTML=`<div class="secmotor">${tit}</div>${hits}`;
+    M.scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){ M.innerHTML='<div class="nada">Sem conexão com o motor agora.</div>'; }
+}
+let _alvoTrecho=null;
+function abrirEmTrecho(slug,alvo){ _alvoTrecho=alvo? norm(alvo):null; abrirLivro(slug); }
 
 let _paginas=[], _pag=0;
 async function abrirLivro(slug){
@@ -142,6 +220,12 @@ async function abrirLivro(slug){
     const md=await decifrar(l.arquivo);
     _paginas=paginar(md, 3200);   // páginas pequenas = não trava o celular
     _pag=0;
+    // veio da busca? pula pra página que contém o trecho
+    if(_alvoTrecho){
+      const alvo=_alvoTrecho; _alvoTrecho=null;
+      const idx=_paginas.findIndex(p=>norm(p).includes(alvo));
+      if(idx>=0) _pag=idx;
+    }
     renderPagina();
   }catch(e){ $('texto').textContent='Erro ao abrir. Volte e tente de novo.'; }
 }
