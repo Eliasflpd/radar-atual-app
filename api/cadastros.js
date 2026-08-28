@@ -18,8 +18,14 @@ module.exports = async (req, res) => {
       const cargo = (b && b.cargo || '').trim();
       const whatsapp = (b && b.whatsapp || '').replace(/\D/g, '');
       if (!nome) { res.status(400).json({ error: 'sem nome' }); return; }
-      if (whatsapp) await c.query('delete from radar_cadastros where regexp_replace(coalesce(whatsapp,\'\'),\'\\D\',\'\',\'g\') = $1', [whatsapp]); // 1 cadastro por WhatsApp
-      await c.query('insert into radar_cadastros(nome,cargo,whatsapp) values($1,$2,$3)', [nome, cargo, whatsapp]);
+      if (whatsapp) {
+        // 1 cadastro por WhatsApp — se já existe, ATUALIZA nome/cargo mas PRESERVA trial_inicio/liberado_ate
+        const ex = await c.query('select id from radar_cadastros where regexp_replace(coalesce(whatsapp,\'\'),\'\\D\',\'\',\'g\') = $1 limit 1', [whatsapp]);
+        if (ex.rows[0]) await c.query('update radar_cadastros set nome=$1, cargo=$2 where id=$3', [nome, cargo, ex.rows[0].id]);
+        else await c.query('insert into radar_cadastros(nome,cargo,whatsapp) values($1,$2,$3)', [nome, cargo, whatsapp]);
+      } else {
+        await c.query('insert into radar_cadastros(nome,cargo,whatsapp) values($1,$2,$3)', [nome, cargo, whatsapp]);
+      }
       // Confirmação no WhatsApp da própria pessoa (evita gente mentirosa) — via Fonnte, sem bloquear o cadastro se falhar
       let avisado = false;
       const FT = process.env.FONNTE_TOKEN;
