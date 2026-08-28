@@ -5153,7 +5153,18 @@ function abrirVideoCard(idx){
 // ===== Historinhas Infantil (compartilhavel + contador GLOBAL via Abacus) =====
 // Lista no codigo (banco do RADAR fora do ar). Novos videos: manda o arquivo pro Claude adicionar.
 var _HIST=[
-  {id:'jabez', titulo:'A Oracao de Jabez', video:'/videos/jabez.mp4'}
+  {id:'jose', titulo:'José e a Túnica Colorida', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/jose.mp4'},
+  {id:'adao-eva', titulo:'Adão e Eva', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/adao-eva.mp4'},
+  {id:'adao-eva-2', titulo:'Adão e Eva — Parte 2', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/adao-eva-2.mp4'},
+  {id:'davi', titulo:'Davi e Golias', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/davi.mp4'},
+  {id:'moises', titulo:'Moisés e o Mar Vermelho', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/moises.mp4'},
+  {id:'noe', titulo:'Noé e a Arca', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/noe.mp4'},
+  {id:'salomao', titulo:'Salomão e a Sabedoria', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/salomao-01.mp4'},
+  {id:'jose-historia', titulo:'José — A História', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/jose-historia.mp4'},
+  {id:'jesus', titulo:'Jesus', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/jesus.mp4'},
+  {id:'jesus-2', titulo:'Jesus — Parte 2', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/jesus-2.mp4'},
+  {id:'video-biblico', titulo:'Vídeo Bíblico', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/video-biblico.mp4'},
+  {id:'jabez', titulo:'A Oração de Jabez', video:'/videos/jabez.mp4'}
 ];
 var _ABC='https://abacus.jasoncameron.dev';
 function _htoast(m){ try{ var t=document.getElementById('_htoast'); if(!t){t=document.createElement('div');t.id='_htoast';t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(120px);background:#111;color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;font-size:14px;z-index:99999;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.3)';document.body.appendChild(t);} t.textContent=m;t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.transform='translateX(-50%) translateY(120px)';},2600);}catch(e){} }
