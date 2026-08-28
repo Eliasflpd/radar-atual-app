@@ -229,7 +229,7 @@ function limparEstruturar(md, titulo, autor){
     if(t.length<=16 && /^[\d\W_]+$/.test(t)) continue;    // lixo: "278 !170401", símbolos soltos
     if(/^[\dIVXLC]{1,5}\s*$/.test(t)) continue;           // número de página solto
     const ehTitulo = (t.length>=3 && t.length<=68 && t===t.toUpperCase() && /[A-ZÁÉÍÓÚÂÊÔÃÕÇ]{3}/.test(t) && !/\.{2,}/.test(t))
-                  || /^(CAP[IÍ]TULO|CAP\.\s|ESBO[ÇC]O|INTRODU[ÇC][ÃA]O|CONCLUS[ÃA]O|PREF[ÁA]CIO|AP[ÊE]NDICE)\b/i.test(t);
+                  || (t.length<=45 && /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ]/.test(t) && /^(CAP[IÍ]TULO|CAP\.\s|ESBO[ÇC]O|INTRODU[ÇC][ÃA]O|CONCLUS[ÃA]O|PREF[ÁA]CIO|AP[ÊE]NDICE)\b/i.test(t));
     if(ehTitulo){ fechaPara(); blocos.push({t:'h',x:t}); }
     else para+=(para?' ':'')+t;
   }
