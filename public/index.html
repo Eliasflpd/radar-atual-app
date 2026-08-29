@@ -220,11 +220,11 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .ebd-crm-filters{display:flex;gap:6px;overflow-x:auto}
 .ebd-crm-filters::-webkit-scrollbar{display:none}
 .ebd-crm-chip{background:var(--card);border:1px solid var(--line);color:var(--sub);border-radius:20px;padding:5px 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit}
-.ebd-crm-chip.ativa{background:rgba(124,92,191,.18);border-color:#7c5cbf;color:#b39ddb}
+.ebd-crm-chip.ativa{background:rgba(37,99,235,.18);border-color:#2563eb;color:#93b4f5}
 .ebd-crm-lista{flex:1;overflow-y:auto;padding:4px 14px 90px;-webkit-overflow-scrolling:touch}
 .ebd-crm-lista::-webkit-scrollbar{display:none}
 .ebd-crm-aluno{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
-.ebd-crm-aluno:active{border-color:#7c5cbf}
+.ebd-crm-aluno:active{border-color:#2563eb}
 .ebd-crm-info{flex:1;min-width:0}
 .ebd-crm-nome{font-size:14px;font-weight:700}
 .ebd-crm-meta{font-size:11px;color:var(--sub);margin-top:3px}
@@ -233,7 +233,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .ebd-crm-badge.jovem{background:rgba(245,166,35,.15);color:#f5a623}
 .ebd-crm-badge.crianca{background:rgba(79,142,247,.15);color:#4f8ef7}
 .ebd-crm-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:10px;color:var(--sub);font-size:13px;padding:40px 20px;text-align:center}
-.ebd-crm-fab{position:fixed;bottom:28px;right:20px;width:52px;height:52px;border-radius:50%;background:#7c5cbf;border:none;color:#fff;font-size:26px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 20px rgba(124,92,191,.5);z-index:100}
+.ebd-crm-fab{position:fixed;bottom:28px;right:20px;width:52px;height:52px;border-radius:50%;background:#2563eb;border:none;color:#fff;font-size:26px;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,.5);z-index:100}
 .ebd-crm-fab:active{opacity:.8;transform:scale(.95)}
 #modal-aluno{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:200}
 #modal-aluno.open{display:flex}
@@ -246,7 +246,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .mal-field select option{background:var(--bg)}
 .mal-field textarea{resize:none;height:72px}
 .mal-field input:focus,.mal-field select:focus,.mal-field textarea:focus{border-color:var(--gold)}
-.mal-save{width:100%;background:#7c5cbf;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px;font-family:inherit}
+.mal-save{width:100%;background:#2563eb;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px;font-family:inherit}
 .mal-save:active{opacity:.8}
 /* ══ EVENTOS ══ */
 #tela-eventos{background:var(--bg)}
@@ -1422,13 +1422,13 @@ html[data-fs="3"] .prl-out{font-size:20px}
     </div>
     <div class="bh-secao" style="margin-top:14px">Administração</div>
     <div class="bh-tiles">
-      <div class="bh-tile" style="--tc:#7c5cbf" onclick="abrirEbdCrm()">
+      <div class="bh-tile" style="--tc:#2563eb" onclick="abrirEbdCrm()">
         <div class="bh-tile-icon">👥</div>
         <div class="bh-tile-info">
           <div class="bh-tile-nome">ALUNOS</div>
           <div class="bh-tile-desc">CRM — cadastro da turma</div>
         </div>
-        <span class="bh-tile-count" id="cnt-ebd-alunos" style="background:rgba(124,92,191,.12);color:#7c5cbf"></span>
+        <span class="bh-tile-count" id="cnt-ebd-alunos" style="background:rgba(37,99,235,.12);color:#2563eb"></span>
         <span class="bh-tile-arr">›</span>
       </div>
       <div class="bh-tile" style="--tc:var(--gold)" onclick="abrirEventos('ebd')">
