@@ -173,6 +173,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .bib-cap:active{background:var(--gold);color:#080D1A;border-color:var(--gold)}
 .bib-cap.lido{border-color:rgba(201,161,74,.4);color:var(--gold)}
 .bib-vers-wrap{padding:14px 16px 100px}
+/* TEMA CLARO da Bíblia (o Elias não gosta do preto) */
+#tela-biblia{--bg:#f5f7fb;--card:#ffffff;--card2:#eef2f8;--line:rgba(201,161,74,.45);--txt:#1b2436;--sub:#6b7280;background:#f5f7fb!important;color:#1b2436}
+#tela-biblia .bib-livro,#tela-biblia .bib-result{border-bottom-color:rgba(0,0,0,.07)!important}
+#tela-biblia .bib-livro:active,#tela-biblia .bib-verso:active{background:#eef2f8!important}
+#tela-biblia .bib-cap{color:#1b2436;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+#tela-biblia .std-header,#tela-biblia .bib-header{background:#fff!important;color:#1b2436}
+#tela-biblia .std-titulo,#tela-biblia .bib-header *{color:#1b2436!important}
 .bib-vers-num{display:inline-block;min-width:28px;font-size:11px;font-weight:800;color:var(--gold);opacity:.7;vertical-align:top;padding-top:2px;user-select:none}
 .bib-vers-txt{display:inline;font-size:16px;line-height:1.75;color:rgba(255,255,255,.9)}
 .bib-verso{margin-bottom:8px;padding:6px 0;border-radius:6px;cursor:pointer}
