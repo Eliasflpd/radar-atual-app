@@ -117,7 +117,7 @@
       <button onclick="fecharPlayer()">‹ Voltar</button>
       <div class="pt" id="p-titulo"></div>
     </div>
-    <div class="vwrap"><video id="vid" controls playsinline preload="metadata"></video></div>
+    <div class="vwrap"></div>
     <div class="prox">
       <span id="p-mod"></span>
       <button id="p-prox" style="display:none" onclick="proximaAula()">Próxima aula ›</button>
@@ -243,21 +243,34 @@ function limpaModulo(s){ return (s||'').replace(/^M[ÓO]DULO\s*\d+\s*-\s*/i,'').
 function limpaAula(s){ return (s||'').replace(/\.(mkv|mp4)$/i,'').replace(/^AULA\s*[O0]?\d+\s*-\s*/i,'').trim(); }
 function toggleMod(mi){ document.querySelector('.mod[data-mi="'+mi+'"]').classList.toggle('aberto'); }
 
+function idDrive(url){ const m=(url||'').match(/\/d\/([^/]+)/)||(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
 function abrir(gi){
   atual=gi; const p=PLANO[gi]; if(!p) return;
   $('player').classList.add('on');
   $('p-titulo').textContent=limpaAula(p.a.titulo);
   $('p-mod').textContent=limpaModulo(p.m);
-  const v=$('vid'); v.src=p.a.url;
-  const pos=lerPos(p.a.url);
-  v.onloadedmetadata=()=>{ if(pos>5 && pos<v.duration-10){ v.currentTime=pos; } };
-  v.ontimeupdate=()=>{ if(v.currentTime>0) salvarPos(p.a.url,v.currentTime); };
-  v.onended=()=>{ marcarVista(p.a.url,true); const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista'); };
+  const vw=document.querySelector('#player .vwrap');
+  const url=p.a.url||'';
+  const gid=idDrive(url);
+  if(gid || /drive\.google\.com/.test(url)){
+    // vídeo do Drive embutido DENTRO do app (a pessoa não sai do app)
+    const emb = gid ? ('https://drive.google.com/file/d/'+gid+'/preview') : url;
+    vw.innerHTML='<iframe src="'+emb+'" allow="autoplay; fullscreen" allowfullscreen playsinline style="width:100%;height:100%;border:0;background:#000"></iframe>';
+    marcarVista(url,true);
+    const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista');
+  } else {
+    vw.innerHTML='<video id="vid" controls playsinline preload="metadata" style="width:100%;max-height:100%"></video>';
+    const v=$('vid'); v.src=url;
+    const pos=lerPos(url);
+    v.onloadedmetadata=()=>{ if(pos>5 && pos<v.duration-10){ v.currentTime=pos; } };
+    v.ontimeupdate=()=>{ if(v.currentTime>0) salvarPos(url,v.currentTime); };
+    v.onended=()=>{ marcarVista(url,true); const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista'); };
+    v.play().catch(()=>{});
+  }
   $('p-prox').style.display = (gi+1<PLANO.length)?'inline-block':'none';
-  v.play().catch(()=>{});
 }
 function proximaAula(){ if(atual+1<PLANO.length) abrir(atual+1); }
-function fecharPlayer(){ const v=$('vid'); try{ v.pause(); }catch(_){} $('player').classList.remove('on'); v.src=''; abrirCurso(); }
+function fecharPlayer(){ try{ const v=$('vid'); if(v){ v.pause(); v.src=''; } }catch(_){} const vw=document.querySelector('#player .vwrap'); if(vw) vw.innerHTML=''; $('player').classList.remove('on'); abrirCurso(); }
 
 // auto-desbloqueio (aparelho do Elias): se já entrou antes, não pede senha de novo
 (async function(){
