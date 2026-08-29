@@ -771,10 +771,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 #home{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
 #home .home-search,#home .home-divider{display:none}
 #home .home-scroll{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:8px 12px 4px}
-#home .vitrine{flex:1;min-height:0;display:flex;flex-direction:column;margin:0}
+#home .vitrine{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;margin:0}
 #home .vit-hero{flex:0 0 auto}
-#home .vit-grade{flex:1;min-height:0;grid-auto-rows:1fr;margin-top:8px}
-#home .vit-card{aspect-ratio:auto;min-height:0;padding:4px 4px}
+#home .vit-grade{flex:0 0 auto;margin-top:10px}
+#home .vit-card{aspect-ratio:1/1;min-height:0;overflow:hidden;padding:5px;justify-content:center}
 #home .vit-versiculo,#home #home-carousel,#home #painel-hoje-wrap,#home #devocional-home-wrap,#home #continuar-wrap,#home #hist-home,#home .sec-label,#home #modulos{display:none!important}
 #home .vit-ico{height:auto;font-size:clamp(20px,7vw,30px);margin-bottom:3px}
 #home .vit-ico img{max-height:clamp(26px,8vw,40px);width:auto}
@@ -4313,20 +4313,7 @@ function renderManuais(){
     + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Meu Estudo</div>'
     + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">Privado · trancado com senha</div>'
     + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Seus comentários (Champlin e outros), criptografados. Só você abre, de qualquer lugar.</div></div>'
-    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
-  + '<div onclick="location.href=\'/biblioteca/saudacao-mateus24.html\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
-    + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#9d1c1c,#dc2626);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">✝</div>'
-    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Saudação — O Princípio das Dores</div>'
-    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">Mateus 24 · Estudo pra hoje</div>'
-    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Guerras, pestes, terremotos e fomes — os sinais dos últimos dias.</div></div>'
-    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
-  + '<div onclick="abrirTetelestai()" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
-    + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#7a1626,#9E2233);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;color:#f0d488">✝</div>'
-    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Tetelestai — “Está Consumado”</div>'
-    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">João 19:30 · Estudo</div>'
-    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">O caminho da dor até a vitória — do Getsêmani ao brado final na cruz.</div></div>'
-    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
-  + '<div style="background:rgba(255,80,80,.07);border:1px solid rgba(255,80,80,.25);border-radius:12px;padding:12px 14px;margin-top:6px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:17px">⚠️</span><div style="font-size:11.5px;color:#ffb3b3;line-height:1.45"><b>Pirataria é crime</b> (Lei 9.610/98). Este material é protegido por direitos autorais e só pode ser lido dentro do app. Proibida a cópia, download ou distribuição.</div></div>';
+    + '<div style="color:var(--sub);font-size:20px">›</div></div>';
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function _pHtml(t){ return '<p style="margin:0 0 15px;text-align:justify;-webkit-hyphens:auto;hyphens:auto">'+esc(t)+'</p>'; }
@@ -6667,10 +6654,6 @@ const _crmInitMap = {
     <div style="width:36px"></div>
   </div>
   <div class="dash-scroll" style="padding:0;background:#faf7f0">
-    <div style="background:#fdeeee;border-bottom:1px solid #f2cccc;padding:10px 18px;display:flex;gap:9px;align-items:flex-start">
-      <span style="font-size:15px">⚠️</span>
-      <div style="font-size:11px;color:#a33b3b;line-height:1.4"><b>Pirataria é crime</b> (Lei 9.610/98). Leitura permitida somente no app. Proibida a cópia, download ou distribuição.</div>
-    </div>
     <div id="manual-conteudo" lang="pt" oncontextmenu="return false" ondragstart="return false" oncopy="return false" style="background:#faf7f0;padding:24px 22px;font-family:'Lora',Georgia,serif;font-size:16.5px;line-height:1.85;color:#2b2620;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none"></div>
     <div style="height:34px;background:#faf7f0"></div>
   </div>
