@@ -1,0 +1,371 @@
+[
+ {
+  "id": "stanley-m-horton",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Stanley M. Horton",
+  "icone": "⚡",
+  "tag": "Decano da teologia pentecostal (AD)",
+  "cre": "Doutrina AD clássica; batismo no Espírito com línguas; dons e sobrenatural pra hoje",
+  "forte": "Definir a ortodoxia pentecostal com rigor de seminário; Espírito Santo; Atos; Apocalipse"
+ },
+ {
+  "id": "gordon-d-fee",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Gordon D. Fee",
+  "icone": "🔬",
+  "tag": "Exegeta pentecostal do texto grego",
+  "cre": "Alta visão da Escritura; o Espírito que capacita; feroz contra o evangelho da prosperidade",
+  "forte": "Rigor no grego, crítica textual, o Espírito nas cartas de Paulo, hermenêutica séria"
+ },
+ {
+  "id": "craig-s-keener",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Craig S. Keener",
+  "icone": "🌍",
+  "tag": "O gigante do pano de fundo e dos milagres",
+  "cre": "Continuísta; raiz nas Assembleias de Deus; defende os milagres com erudição",
+  "forte": "Mundo do 1º século, contexto judaico/greco-romano, Atos, defender o sobrenatural"
+ },
+ {
+  "id": "french-l-arrington",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "French L. Arrington",
+  "icone": "🕊️",
+  "tag": "O dogmata do Espírito",
+  "cre": "Pentecostal clássico; batismo no Espírito com evidência; dons pra hoje",
+  "forte": "A doutrina do Espírito Santo com base exegética; Lucas, Atos, Coríntios"
+ },
+ {
+  "id": "roger-stronstad",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Roger Stronstad",
+  "icone": "📜",
+  "tag": "A chave da pneumatologia lucana",
+  "cre": "O dom do Espírito em Lucas-Atos é capacitação pra missão, subsequente à conversão",
+  "forte": "Defesa exegética do batismo no Espírito; 'o sacerdócio profético de todos os crentes'"
+ },
+ {
+  "id": "myer-pearlman",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Myer Pearlman",
+  "icone": "📘",
+  "tag": "O pai da sistemática pentecostal",
+  "cre": "Pentecostal clássico; as grandes doutrinas ditas de forma simples e ordenada",
+  "forte": "Panorama de cada livro da Bíblia; fundamentos de doutrina AD claros"
+ },
+ {
+  "id": "donald-c-stamps",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Donald C. Stamps",
+  "icone": "🔥",
+  "tag": "As notas que o Brasil inteiro lê (Bíblia de Estudo Pentecostal)",
+  "cre": "Pentecostal; batismo no Espírito, dons, cura; forte ênfase em santidade e separação do mundo",
+  "forte": "Nota de estudo utilizável no púlpito; artigos temáticos pentecostais"
+ },
+ {
+  "id": "antonio-gilberto",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Antônio Gilberto",
+  "icone": "🇧🇷",
+  "tag": "O didata-mor da CPAD",
+  "cre": "Pentecostal AD; 'erudição e piedade'; inspiração da Escritura",
+  "forte": "COMO ensinar a Bíblia na Escola Dominical; bibliologia; formar professores"
+ },
+ {
+  "id": "esequias-soares",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Esequias Soares",
+  "icone": "🛡️",
+  "tag": "Os originais e a apologética",
+  "cre": "Pentecostal AD; inerrância; ortodoxia trinitariana firme",
+  "forte": "Hebraico e grego; defesa da fé contra seitas (T. de Jeová, espiritismo, modismos)"
+ },
+ {
+  "id": "elienai-cabral",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Elienai Cabral",
+  "icone": "✉️",
+  "tag": "O expositor paulino da CPAD",
+  "cre": "Pentecostal AD; ênfase na vida cristã, conduta e mordomia",
+  "forte": "Exposição das cartas de Paulo (Efésios, Romanos); vida prática da igreja"
+ },
+ {
+  "id": "severino-pedro-da-silva",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Severino Pedro da Silva",
+  "icone": "⏳",
+  "tag": "Hebreus e as últimas coisas",
+  "cre": "Pentecostal AD; premilenista; tipologia cristocêntrica",
+  "forte": "Hebreus verso a verso; Apocalipse; escatologia; a superioridade de Cristo"
+ },
+ {
+  "id": "frank-m-boyd",
+  "sec": "⚡ Núcleo Pentecostal / AD",
+  "nome": "Frank M. Boyd",
+  "icone": "📖",
+  "tag": "O pioneiro doutrinário da AG",
+  "cre": "Pentecostal AD; dispensacionalista; escatologia clássica",
+  "forte": "As eras/dispensações; arrebatamento, tribulação, milênio; panorama do plano de Deus"
+ },
+ {
+  "id": "joao-calvino",
+  "sec": "🏛️ Clássicos",
+  "nome": "João Calvino",
+  "icone": "📕",
+  "tag": "O padrão-ouro da exegese reformada",
+  "cre": "Reformado; soberania de Deus; graça soberana; autoridade suprema da Escritura",
+  "forte": "Exegese clara e disciplinada (brevitas); revelar a mente do autor sagrado"
+ },
+ {
+  "id": "martinho-lutero",
+  "sec": "🏛️ Clássicos",
+  "nome": "Martinho Lutero",
+  "icone": "🛡️",
+  "tag": "O fogo da Reforma",
+  "cre": "Luterano; justificação só pela fé, só pela graça, só Cristo, só a Escritura",
+  "forte": "Lei e Evangelho; Cristo no centro; graça contra mérito; Gálatas, Gênesis"
+ },
+ {
+  "id": "john-owen",
+  "sec": "🏛️ Clássicos",
+  "nome": "John Owen",
+  "icone": "⛏️",
+  "tag": "O teólogo dos teólogos (puritano)",
+  "cre": "Puritano reformado; expiação definida; a obra de Cristo; mortificação do pecado",
+  "forte": "Profundidade sem fundo num texto; Hebreus; santidade; comunhão com Deus"
+ },
+ {
+  "id": "jonathan-edwards",
+  "sec": "🏛️ Clássicos",
+  "nome": "Jonathan Edwards",
+  "icone": "🧠",
+  "tag": "A mente mais penetrante da América",
+  "cre": "Reformado; a supremacia e a beleza de Deus; graça soberana; afetos santos",
+  "forte": "Tipologia intensa; a glória de Deus; conexões teológicas que ninguém vê"
+ },
+ {
+  "id": "matthew-henry",
+  "sec": "🏛️ Clássicos",
+  "nome": "Matthew Henry",
+  "icone": "🕯️",
+  "tag": "O devocional-pastoral",
+  "cre": "Puritano; glorificar a Deus em toda a vida; a Escritura como alimento da alma",
+  "forte": "Lição prática e devocional de cada versículo; calor pastoral; aforismos que grudam"
+ },
+ {
+  "id": "charles-spurgeon",
+  "sec": "🏛️ Clássicos",
+  "nome": "Charles Spurgeon",
+  "icone": "👑",
+  "tag": "O Príncipe dos Pregadores",
+  "cre": "Batista reformado; graça soberana; paixão evangelística",
+  "forte": "Achar Cristo em cada texto; imagem viva; apelo à alma; frase inesquecível"
+ },
+ {
+  "id": "john-gill",
+  "sec": "🏛️ Clássicos",
+  "nome": "John Gill",
+  "icone": "📜",
+  "tag": "O erudito hebraico e rabínico",
+  "cre": "Batista particular (calvinista); graça soberana; línguas a serviço da fé",
+  "forte": "O fundo judaico-rabínico do texto; o Antigo Testamento aberto com chaves judaicas"
+ },
+ {
+  "id": "j-c-ryle",
+  "sec": "🏛️ Clássicos",
+  "nome": "J.C. Ryle",
+  "icone": "💧",
+  "tag": "A clareza fiel",
+  "cre": "Anglicano evangélico; justificação pela fé; santidade prática",
+  "forte": "Explicar com clareza simples e viril; santidade real; franqueza contra o pecado"
+ },
+ {
+  "id": "alexander-maclaren",
+  "sec": "🏛️ Clássicos",
+  "nome": "Alexander Maclaren",
+  "icone": "🗣️",
+  "tag": "O Príncipe dos Expositores",
+  "cre": "Batista evangélico; exposição fiel ao texto original",
+  "forte": "Transformar exegese em sermão bem estruturado; as divisões naturais do texto"
+ },
+ {
+  "id": "martyn-lloyd-jones",
+  "sec": "📖 Modernos",
+  "nome": "Martyn Lloyd-Jones",
+  "icone": "🔥",
+  "tag": "'The Doctor'",
+  "cre": "Reformado experimental; soberania de Deus; anseio por avivamento e poder do Espírito",
+  "forte": "Lógica + doutrina + experiência ('logic on fire'); diagnóstico da alma"
+ },
+ {
+  "id": "john-stott",
+  "sec": "📖 Modernos",
+  "nome": "John Stott",
+  "icone": "⚖️",
+  "tag": "O equilíbrio e a aplicação",
+  "cre": "Anglicano evangélico; centralidade da cruz; evangelicalismo sério",
+  "forte": "Ponte entre o texto antigo e o mundo de hoje; sempre pergunta 'e daí?'"
+ },
+ {
+  "id": "d-a-carson",
+  "sec": "📖 Modernos",
+  "nome": "D.A. Carson",
+  "icone": "🔬",
+  "tag": "O bisturi exegético",
+  "cre": "Batista reformado; inerrância; unidade canônica da Escritura",
+  "forte": "Grego, estrutura, teologia bíblica; desmontar falácias exegéticas"
+ },
+ {
+  "id": "f-f-bruce",
+  "sec": "📖 Modernos",
+  "nome": "F.F. Bruce",
+  "icone": "🏛️",
+  "tag": "O historiador da confiabilidade",
+  "cre": "Evangélico conservador; confiabilidade histórica do NT",
+  "forte": "Contexto histórico; Atos; provar que os documentos do NT são confiáveis"
+ },
+ {
+  "id": "john-macarthur",
+  "sec": "📖 Modernos",
+  "nome": "John MacArthur",
+  "icone": "📖",
+  "tag": "Exposição verso a verso",
+  "cre": "Batista reformado; inerrância e suficiência; salvação senhorial (é cessacionista)",
+  "forte": "Precisão verso a verso; contexto gramatical-histórico; doutrina firme"
+ },
+ {
+  "id": "leon-morris",
+  "sec": "📖 Modernos",
+  "nome": "Leon Morris",
+  "icone": "✝️",
+  "tag": "O teólogo da cruz",
+  "cre": "Anglicano evangélico; expiação substitutiva e propiciação",
+  "forte": "A doutrina da cruz; o significado do sangue; João; Romanos"
+ },
+ {
+  "id": "r-c-sproul",
+  "sec": "📖 Modernos",
+  "nome": "R.C. Sproul",
+  "icone": "🎓",
+  "tag": "A santidade de Deus",
+  "cre": "Presbiteriano reformado; soberania e santidade de Deus; inerrância",
+  "forte": "Explicar doutrina densa de forma clara; ensino que leva à adoração"
+ },
+ {
+  "id": "douglas-moo",
+  "sec": "📖 Modernos",
+  "nome": "Douglas Moo",
+  "icone": "📨",
+  "tag": "O especialista paulino",
+  "cre": "Evangélico reformado; justificação forense pela fé",
+  "forte": "Romanos e a justificação; defesa da leitura clássica contra a Nova Perspectiva"
+ },
+ {
+  "id": "g-k-beale",
+  "sec": "📖 Modernos",
+  "nome": "G.K. Beale",
+  "icone": "🧵",
+  "tag": "O uso do AT no NT",
+  "cre": "Reformado; unidade da Escritura; a nova criação como alvo",
+  "forte": "Tipologia e cumprimento; temas canônicos (templo, Éden); Apocalipse pelo AT"
+ },
+ {
+  "id": "warren-wiersbe",
+  "sec": "📖 Modernos",
+  "nome": "Warren Wiersbe",
+  "icone": "🗝️",
+  "tag": "'Seja…' — o prático",
+  "cre": "Batista evangélico; exposição fiel e acessível pro crente comum",
+  "forte": "Estrutura clara, pontos memoráveis, palavra-chave que amarra o capítulo"
+ },
+ {
+  "id": "william-hendriksen",
+  "sec": "📖 Modernos",
+  "nome": "William Hendriksen",
+  "icone": "📗",
+  "tag": "A espinha reformada",
+  "cre": "Reformado; graça soberana; escatologia amilenista sóbria",
+  "forte": "Exposição reformada clara; Apocalipse sem sensacionalismo"
+ },
+ {
+  "id": "j-alec-motyer",
+  "sec": "📖 Modernos",
+  "nome": "J. Alec Motyer",
+  "icone": "🏔️",
+  "tag": "O profeta do AT",
+  "cre": "Anglicano evangélico; o AT cristocêntrico; o Servo Sofredor",
+  "forte": "Isaías e os profetas; as promessas do AT cumpridas em Cristo"
+ },
+ {
+  "id": "derek-kidner",
+  "sec": "📖 Modernos",
+  "nome": "Derek Kidner",
+  "icone": "✒️",
+  "tag": "O cirurgião conciso",
+  "cre": "Anglicano evangélico; sensibilidade literária; exegese conservadora",
+  "forte": "Salmos, Gênesis, Provérbios; o essencial afiado em pouco espaço"
+ },
+ {
+  "id": "bruce-waltke",
+  "sec": "📖 Modernos",
+  "nome": "Bruce Waltke",
+  "icone": "🔤",
+  "tag": "O hebraísta",
+  "cre": "Reformado; inerrância; teologia do AT cristocêntrica",
+  "forte": "Hebraico (sintaxe, palavra); Provérbios; a sabedoria e o temor do Senhor"
+ },
+ {
+  "id": "alfred-edersheim",
+  "sec": "🕎 Lente Hebraica — Israel e o 2º Templo",
+  "nome": "Alfred Edersheim",
+  "icone": "🏛️",
+  "tag": "A lente judaica dos Evangelhos",
+  "cre": "Judeu convertido a Cristo; alta visão da Escritura; Jesus é o Messias prometido a Israel",
+  "forte": "O NT dentro do 2º Templo — Templo, festas, sinagoga e costumes que abrem os Evangelhos"
+ },
+ {
+  "id": "david-h-stern",
+  "sec": "🕎 Lente Hebraica — Israel e o 2º Templo",
+  "nome": "David H. Stern",
+  "icone": "📜",
+  "tag": "As raízes judaicas do Novo Testamento",
+  "cre": "Judeu messiânico; crê em Yeshua; alta visão da Escritura",
+  "forte": "Ler o NT como documento judaico; nomes hebraicos; a unidade entre o Tanakh e o NT"
+ },
+ {
+  "id": "arnold-fruchtenbaum",
+  "sec": "🕎 Lente Hebraica — Israel e o 2º Templo",
+  "nome": "Arnold Fruchtenbaum",
+  "icone": "🇮🇱",
+  "tag": "Israel na profecia e a mente messiânica",
+  "cre": "Judeu messiânico; hermenêutica literal-gramatical-histórica; pré-milenista",
+  "forte": "Israel no plano de Deus; as festas de Levítico 23 como profecia; tipologia e escatologia"
+ },
+ {
+  "id": "michael-l-brown",
+  "sec": "🕎 Lente Hebraica — Israel e o 2º Templo",
+  "nome": "Michael L. Brown",
+  "icone": "🔥",
+  "tag": "O hebraísta que responde às objeções",
+  "cre": "Judeu messiânico; hebraísta (PhD/NYU); continuísta/carismático",
+  "forte": "O hebraico do AT; as profecias messiânicas; responder às objeções judaicas a Jesus"
+ },
+ {
+  "id": "michael-rydelnik",
+  "sec": "🕎 Lente Hebraica — Israel e o 2º Templo",
+  "nome": "Michael Rydelnik",
+  "icone": "⭐",
+  "tag": "O caçador do Messias no AT",
+  "cre": "Judeu messiânico; professor do Moody; a Bíblia Hebraica é diretamente messiânica",
+  "forte": "A esperança messiânica; Cristo direto no Antigo Testamento (Gênesis 3:15, Salmo 22)"
+ },
+ {
+  "id": "david-flusser",
+  "sec": "🕎 Lente Hebraica — Israel e o 2º Templo",
+  "nome": "David Flusser · consultor",
+  "icone": "📚",
+  "tag": "O mundo do 2º Templo (usado com filtro)",
+  "cre": "Erudito judeu de Jerusalém — NÃO cristão; honra Jesus como mestre judeu, mas nega Sua divindade",
+  "forte": "O mundo do 2º Templo e o Jesus histórico — a Pessoa de Cristo fica com a fé cristã e o Espírito"
+ }
+]

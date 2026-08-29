@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Consultar o Concílio — RADAR</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--ouro:#e9c877;--linha:#e4e7ec}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:880px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.65;
+    padding:14px 13px calc(58px + env(safe-area-inset-bottom))}
+  .topo{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .btn{background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:.92rem;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-block}
+  .btn.ouro{background:var(--dourado)} .btn.teal{background:var(--teal)}
+  .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.85rem;font-weight:800;line-height:1.15;margin:2px 0 4px}
+  .sub{text-align:center;color:#6b7280;font-size:.98rem;margin-bottom:9px}
+  .divisor{height:3px;width:66px;background:var(--dourado);border-radius:3px;margin:0 auto 18px}
+
+  .passo{font-family:Georgia,serif;color:var(--navy);font-size:1.12rem;font-weight:800;margin:20px 0 8px;display:flex;align-items:center;gap:9px}
+  .passo i{background:var(--navy);color:#fff;font-style:normal;font-size:.85rem;font-weight:800;width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  /* PASSO 1 — eruditos por clique */
+  #busca{width:100%;border:2px solid var(--linha);border-radius:12px;padding:11px 13px;font-size:1rem;font-family:inherit;color:var(--texto);margin-bottom:9px}
+  #busca:focus{outline:none;border-color:var(--teal)}
+  .grupo{color:var(--teal);font-size:.82rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin:14px 0 7px}
+  .lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:9px}
+  .e{background:#fff;border:2px solid var(--linha);border-radius:13px;padding:10px 12px;cursor:pointer;text-align:left;font-family:inherit;display:flex;gap:9px;align-items:flex-start;transition:border-color .12s,background .12s}
+  .e:hover{border-color:#bcd6da;background:#f8fcfd}
+  .e.sel{border-color:var(--dourado);background:#fdf8ec;box-shadow:0 2px 10px rgba(169,121,28,.14)}
+  .e .ei{font-size:21px;line-height:1.2;flex-shrink:0}
+  .e .en{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1rem;line-height:1.2}
+  .e .et{color:var(--dourado);font-weight:700;font-size:.79rem;line-height:1.3;margin-top:2px}
+  .e.sel .en:after{content:' ✓';color:var(--dourado)}
+  .vazio{color:#6b7280;font-size:.95rem;padding:10px 2px}
+
+  /* PASSO 2 — tipo */
+  .tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:9px}
+  .t{background:#fff;border:2px solid var(--linha);border-radius:13px;padding:11px 12px;cursor:pointer;font-family:inherit;text-align:left}
+  .t:hover{border-color:#bcd6da}
+  .t.sel{border-color:var(--teal);background:#f2f7f8}
+  .t .tn{font-weight:800;color:var(--navy);font-size:.98rem}
+  .t .td{color:#6b7280;font-size:.83rem;line-height:1.35;margin-top:2px}
+
+  /* PASSO 3 */
+  #passagem{width:100%;border:2px solid var(--linha);border-radius:12px;padding:12px 13px;font-size:1.02rem;font-family:inherit;color:var(--texto)}
+  #passagem:focus{outline:none;border-color:var(--teal)}
+  .sugs{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+  .sug{background:#f2f7f8;border:1px solid #d5e6e8;color:var(--teal);border-radius:999px;padding:6px 12px;font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer}
+
+  #forjar{display:block;width:100%;margin:20px 0 4px;background:linear-gradient(135deg,#0f6d78,#0f3d5c);color:#fff;border:none;border-radius:15px;padding:16px;font-size:1.1rem;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(15,61,92,.22)}
+  #forjar:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+  .aviso{text-align:center;color:#6b7280;font-size:.87rem;margin-top:7px}
+
+  /* RESULTADO */
+  #res{display:none;margin-top:24px;padding-top:18px;border-top:3px solid var(--ouro)}
+  .quem{background:#0f3d5c;color:#eef4f7;border-radius:15px;padding:13px 15px;margin-bottom:12px}
+  .quem .qn{font-family:Georgia,serif;font-weight:800;font-size:1.14rem;color:#fff}
+  .quem .qt{color:var(--ouro);font-weight:700;font-size:.86rem;margin-top:2px}
+  #saida{font-size:1.03rem;line-height:1.72;text-align:justify;white-space:pre-wrap;word-wrap:break-word}
+  #saida b{color:var(--navy)}
+  .acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .acoes .btn{flex:1;min-width:132px;text-align:center;padding:13px 14px;font-size:.98rem}
+  .lei{background:#fbf6ea;border:1px solid #ecd9ad;border-radius:12px;padding:11px 14px;margin-top:16px;font-size:.9rem;color:#6b5a2a;text-align:justify}
+  .assinatura{text-align:center;color:var(--teal);font-weight:700;font-size:.9rem;margin-top:18px}
+  .erro{background:#fdeaea;border:1px solid #f2c2c2;color:#8a1c1c;border-radius:12px;padding:12px 14px;font-weight:600}
+</style>
+</head>
+<body>
+  <div class="topo">
+    <a class="btn" href="/biblioteca/concilio/">← Concílio</a>
+    <a class="btn teal" href="/biblioteca/concilio/manual.html">📘 Manual</a>
+    <a class="btn ouro" href="/">🏠 Início</a>
+  </div>
+
+  <div class="selo">✦ O Espírito guia a toda a verdade · João 16:13 ✦</div>
+  <h1>Consultar o Concílio</h1>
+  <div class="sub">Toque num servo, toque no que quer, e receba — <b>sem decorar nome nenhum</b></div>
+  <div class="divisor"></div>
+
+  <div class="passo"><i>1</i>Escolha o servo — é só tocar</div>
+  <input id="busca" type="search" placeholder="🔎 Se quiser, filtre por nome ou por assunto (grego, Israel, pentecostal…)" autocomplete="off">
+  <div id="lista"><div class="vazio">Carregando os servos…</div></div>
+
+  <div class="passo"><i>2</i>O que o senhor quer?</div>
+  <div class="tipos" id="tipos"></div>
+
+  <div class="passo"><i>3</i>Sobre qual texto ou assunto?</div>
+  <input id="passagem" type="text" placeholder="Ex.: João 3  •  Salmo 23  •  ansiedade  •  o batismo no Espírito" autocomplete="off">
+  <div class="sugs" id="sugs"></div>
+
+  <button id="forjar" disabled>✍️ Forjar agora</button>
+  <div class="aviso" id="aviso">Escolha um servo e diga o texto pra liberar o botão.</div>
+
+  <div id="res">
+    <div class="quem" id="quem"></div>
+    <div id="saida"></div>
+    <div class="acoes" id="acoes" style="display:none">
+      <button class="btn ouro" id="bCopiar">📋 Copiar</button>
+      <button class="btn teal" id="bCompartilhar">📤 Compartilhar</button>
+      <button class="btn" id="bOutro">🔁 Outro servo</button>
+    </div>
+    <div class="lei"><b>Lembre sempre:</b> o verdadeiro Mestre é o <b>Espírito Santo</b> (João 16:13). Isto aqui é ferramenta na mão de Deus — <b>ore antes</b>, confira na Palavra, e leve pro púlpito só o que passar pelo crivo da Escritura. Nada é copiado de livro nenhum; nada deve ser inventado. <b>Cristo no centro.</b></div>
+  </div>
+
+  <div class="assinatura">✦ RADAR · A Ele toda a glória ✦</div>
+
+<script>
+var ERUDITOS = [], sel = null, tipoSel = 'estudo', ocupado = false;
+
+var TIPOS = [
+  {id:'estudo',  n:'📖 Estudo do texto',   d:'Cavar a passagem e entender'},
+  {id:'sermao',  n:'🔥 Esboço de sermão',  d:'Pronto pra levar ao púlpito'},
+  {id:'palavra', n:'🔤 Palavra no original', d:'O que o hebraico/grego abre'},
+  {id:'duvida',  n:'❓ Tirar uma dúvida',  d:'Pergunta respondida na Palavra'}
+];
+var SUGS = ['João 3','Salmo 23','Romanos 8','Efésios 2','ansiedade','o batismo no Espírito Santo'];
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ---- passo 2: tipos
+(function(){
+  var h='';
+  for(var i=0;i<TIPOS.length;i++){var t=TIPOS[i];
+    h+='<button class="t'+(t.id===tipoSel?' sel':'')+'" data-t="'+t.id+'"><div class="tn">'+esc(t.n)+'</div><div class="td">'+esc(t.d)+'</div></button>';}
+  document.getElementById('tipos').innerHTML=h;
+  document.getElementById('tipos').addEventListener('click',function(ev){
+    var b=ev.target.closest('.t'); if(!b) return;
+    tipoSel=b.getAttribute('data-t');
+    var all=document.querySelectorAll('#tipos .t');
+    for(var i=0;i<all.length;i++) all[i].classList.remove('sel');
+    b.classList.add('sel');
+  });
+})();
+
+// ---- passo 3: sugestões
+(function(){
+  var h='';
+  for(var i=0;i<SUGS.length;i++) h+='<button class="sug">'+esc(SUGS[i])+'</button>';
+  var el=document.getElementById('sugs'); el.innerHTML=h;
+  el.addEventListener('click',function(ev){
+    if(!ev.target.classList.contains('sug')) return;
+    document.getElementById('passagem').value=ev.target.textContent; conferir();
+  });
+})();
+
+// ---- passo 1: eruditos
+function pintar(filtro){
+  filtro=(filtro||'').toLowerCase().trim();
+  var grupos=[], mapa={};
+  for(var i=0;i<ERUDITOS.length;i++){
+    var e=ERUDITOS[i];
+    if(filtro){
+      var alvo=(e.nome+' '+e.tag+' '+e.cre+' '+e.forte+' '+e.sec).toLowerCase();
+      if(alvo.indexOf(filtro)<0) continue;
+    }
+    if(!mapa[e.sec]){mapa[e.sec]=[];grupos.push(e.sec)}
+    mapa[e.sec].push(e);
+  }
+  if(!grupos.length){document.getElementById('lista').innerHTML='<div class="vazio">Nenhum servo com esse filtro. Apague a busca pra ver os 41.</div>';return}
+  var h='';
+  for(var g=0;g<grupos.length;g++){
+    h+='<div class="grupo">'+esc(grupos[g])+'</div><div class="lista">';
+    var arr=mapa[grupos[g]];
+    for(var j=0;j<arr.length;j++){var e=arr[j];
+      h+='<button class="e'+(sel&&sel.id===e.id?' sel':'')+'" data-id="'+esc(e.id)+'">'+
+         '<span class="ei">'+esc(e.icone)+'</span><span><span class="en">'+esc(e.nome)+'</span>'+
+         '<span class="et" style="display:block">'+esc(e.forte)+'</span></span></button>';}
+    h+='</div>';
+  }
+  document.getElementById('lista').innerHTML=h;
+}
+
+document.getElementById('lista').addEventListener('click',function(ev){
+  var b=ev.target.closest('.e'); if(!b) return;
+  var id=b.getAttribute('data-id');
+  for(var i=0;i<ERUDITOS.length;i++) if(ERUDITOS[i].id===id) sel=ERUDITOS[i];
+  var all=document.querySelectorAll('#lista .e');
+  for(var i=0;i<all.length;i++) all[i].classList.remove('sel');
+  b.classList.add('sel');
+  conferir();
+});
+document.getElementById('busca').addEventListener('input',function(){pintar(this.value)});
+document.getElementById('passagem').addEventListener('input',conferir);
+
+function conferir(){
+  var ok = !!sel && document.getElementById('passagem').value.trim().length>0 && !ocupado;
+  document.getElementById('forjar').disabled=!ok;
+  var av=document.getElementById('aviso');
+  if(ocupado) av.textContent='Forjando… pode levar alguns segundos.';
+  else if(!sel) av.textContent='Falta escolher o servo lá em cima (passo 1).';
+  else if(!document.getElementById('passagem').value.trim()) av.textContent='Falta dizer o texto ou o assunto (passo 3).';
+  else av.textContent='Pronto: '+sel.nome+' vai trabalhar esse texto. Ore antes. 🙏';
+}
+
+fetch('eruditos.json').then(function(r){return r.json()}).then(function(d){
+  ERUDITOS=d;
+  // se vier ?e=slug (vindo do card lá do Concílio), já deixa escolhido
+  var q=new URLSearchParams(location.search).get('e');
+  if(q) for(var i=0;i<d.length;i++) if(d[i].id===q) sel=d[i];
+  pintar('');
+  if(sel){var el=document.querySelector('#lista .e.sel'); if(el&&el.scrollIntoView) el.scrollIntoView({block:'center'});}
+  conferir();
+}).catch(function(){
+  document.getElementById('lista').innerHTML='<div class="erro">Não consegui carregar a lista dos servos. Confira a internet e recarregue a página.</div>';
+});
+
+// ---- forjar
+document.getElementById('forjar').addEventListener('click',function(){
+  if(!sel||ocupado) return;
+  var passagem=document.getElementById('passagem').value.trim();
+  if(!passagem) return;
+  ocupado=true; conferir();
+  document.getElementById('forjar').textContent='⏳ Forjando…';
+  document.getElementById('res').style.display='block';
+  document.getElementById('acoes').style.display='none';
+  var tn=''; for(var i=0;i<TIPOS.length;i++) if(TIPOS[i].id===tipoSel) tn=TIPOS[i].n;
+  document.getElementById('quem').innerHTML='<div class="qn">'+esc(sel.icone+' '+sel.nome)+'</div><div class="qt">'+esc(tn+' · '+passagem)+'</div>';
+  var saida=document.getElementById('saida');
+  saida.textContent='Buscando… 🙏';
+  document.getElementById('res').scrollIntoView({behavior:'smooth',block:'start'});
+
+  fetch('/api/concilio',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({erudito:sel.id,passagem:passagem,tipo:tipoSel})})
+  .then(function(r){
+    if(!r.ok) return r.text().then(function(t){throw new Error(t||('Erro '+r.status))});
+    if(!r.body||!r.body.getReader) return r.text().then(function(t){saida.textContent=t;});
+    var reader=r.body.getReader(), dec=new TextDecoder(), acc='';
+    saida.textContent='';
+    return (function ler(){
+      return reader.read().then(function(x){
+        if(x.done) return;
+        acc+=dec.decode(x.value,{stream:true});
+        saida.textContent=acc;
+        return ler();
+      });
+    })();
+  })
+  .then(function(){ terminar(true) })
+  .catch(function(err){
+    saida.innerHTML='<div class="erro">Não deu certo agora: '+esc(err.message||'falha')+'<br>Tente de novo em instantes.</div>';
+    terminar(false);
+  });
+});
+
+function terminar(ok){
+  ocupado=false;
+  document.getElementById('forjar').textContent='✍️ Forjar agora';
+  document.getElementById('acoes').style.display=ok?'flex':'none';
+  conferir();
+}
+
+function textoFinal(){
+  return (sel?sel.nome:'')+' — '+document.getElementById('passagem').value.trim()+'\n\n'+
+    document.getElementById('saida').textContent+
+    '\n\n— forjado no Concílio dos Expositores · RADAR\nhttps://radar-atual.vercel.app/biblioteca/concilio/consultar.html';
+}
+document.getElementById('bCopiar').addEventListener('click',function(){
+  var b=this, t=textoFinal(), fim=function(){var o=b.textContent;b.textContent='✓ Copiado';setTimeout(function(){b.textContent=o},1600)};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(fim).catch(function(){fb(t);fim()});
+  else {fb(t);fim()}
+});
+function fb(t){try{var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.focus();a.select();document.execCommand('copy');document.body.removeChild(a)}catch(e){}}
+document.getElementById('bCompartilhar').addEventListener('click',function(){
+  var t=textoFinal();
+  if(navigator.share) navigator.share({title:'Concílio dos Expositores — RADAR',text:t}).catch(function(){});
+  else {fb(t);alert('Copiado! É só colar onde quiser.')}
+});
+document.getElementById('bOutro').addEventListener('click',function(){
+  document.getElementById('res').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('busca').focus();
+});
+</script>
+</body>
+</html>
