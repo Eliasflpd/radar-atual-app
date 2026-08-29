@@ -27,7 +27,8 @@ const TIPOS = {
   palavra: {
     nome: 'Palavra no original',
     ordem: `Trabalhe as PALAVRAS NO ORIGINAL deste texto, no método deste servo. Estrutura:
-1) 🔤 AS PALAVRAS-CHAVE — 2 a 4 palavras do hebraico ou grego que realmente estão no texto. Para cada uma: a palavra transliterada, o que significa de verdade, e o que ela ABRE no texto. ⚠️ Se você não tiver CERTEZA da palavra no original, DIGA que vai trabalhar pelo sentido do texto em português e NÃO invente termo nenhum.
+1) 🔤 AS PALAVRAS-CHAVE — 2 a 4 palavras do hebraico ou grego que realmente estão no texto. Para cada uma: a palavra TRANSLITERADA em letras latinas (ex.: *pentekoste*, *dorea*, *chesed*), o que significa de verdade, e o que ela ABRE no texto.
+⚠️ REGRA DA GRAFIA: escreva a palavra APENAS transliterada em letras latinas. NÃO escreva no alfabeto grego nem no hebraico — um acento ou uma letra trocada vira erro, e é melhor não arriscar. ⚠️ Se você não tiver CERTEZA de que a palavra está mesmo nesse texto, DIGA que vai trabalhar pelo sentido do texto em português e NÃO invente termo nenhum.
 2) 💎 O QUE ISSO MUDA — o que o leitor comum não vê e passa a ver.
 3) ✝️ CRISTO — para onde aponta.
 4) 🙏 APLICAÇÃO — 2 ou 3 usos práticos no púlpito ou na vida.`
