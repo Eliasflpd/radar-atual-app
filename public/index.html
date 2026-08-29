@@ -761,14 +761,6 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
 <!-- HOME -->
 <div class="tela" id="home">
-  <div class="home-greeting">
-    <div>
-      <div class="greet-bom" id="greet-bom">Bom dia ☀️</div>
-      <div class="greet-nome" id="greet-nome">Visitante</div>
-      <div class="greet-cargo" id="greet-cargo">RADAR ATUAL</div>
-    </div>
-    <div class="greet-avatar" id="logo-tap" onclick="tapLogo()">⚙️</div>
-  </div>
   <div class="home-search">
     <div class="home-search-inner">
       <span style="font-size:16px;opacity:.4">🔍</span>
@@ -784,6 +776,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
         <div class="vit-topo">
           <div class="vit-tbtn" onclick="document.getElementById('painel-hoje-wrap').scrollIntoView({behavior:'smooth',block:'center'})">🔔</div>
           <div class="vit-tbtn" onclick="irPerfil()">👤</div>
+          <div class="vit-tbtn" id="logo-tap" onclick="tapLogo()" title="Config">⚙️</div>
         </div>
         <div class="vit-bemvindo">Bem-vindo ao</div>
         <div class="vit-marca">Radar Atual</div>
@@ -2017,9 +2010,7 @@ function renderHome(){
   // Saudação dinâmica
   const h = new Date().getHours();
   const [saud, icone] = h < 12 ? ['Bom dia','☀️'] : h < 18 ? ['Boa tarde','🌤️'] : ['Boa noite','🌙'];
-  document.getElementById('greet-bom').textContent = saud + ' ' + icone;
-  document.getElementById('greet-nome').textContent = 'RADAR SEMANAL';
-  document.getElementById('greet-cargo').textContent = 'Avisos e agenda da igreja';
+  var _gb=document.getElementById('greet-bom'); if(_gb) _gb.textContent = saud + ' ' + icone; // saudação removida do topo
 
   // Carousel — 7 louvores + 5 vídeos
   soLouvores();
