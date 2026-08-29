@@ -734,6 +734,31 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   <img src="/capa.png" alt="RADAR ATUAL">
 </div>
 
+<!-- ══ VITRINE 3×3 — NOVO VISUAL DA HOME (azul claro + dourado) ══ -->
+<style>
+.vitrine{margin:2px 0 18px}
+.vit-hero{position:relative;background:linear-gradient(165deg,#3E74B4 0%,#254A80 100%);border-radius:20px;padding:16px 16px 18px;overflow:hidden}
+.vit-topo{display:flex;justify-content:flex-end;gap:10px;margin-bottom:6px}
+.vit-tbtn{width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.10);color:#fff;font-size:16px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
+.vit-tbtn:active{background:rgba(255,255,255,.25)}
+.vit-bemvindo{font-size:19px;font-weight:400;color:#EAF2FF;letter-spacing:.2px;line-height:1.15}
+.vit-marca{font-family:'Playfair Display',Georgia,serif;font-size:33px;font-weight:800;color:var(--gold2);line-height:1.1;margin:1px 0 6px}
+.vit-sub{font-size:14px;color:rgba(255,255,255,.86);line-height:1.35;max-width:270px}
+.vit-fio{width:42px;height:2px;border-radius:2px;background:var(--gold2);margin:12px auto 0;opacity:.9}
+.vit-grade{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.vit-card{background:linear-gradient(160deg,#37659F 0%,#264C82 100%);border:1px solid rgba(245,200,66,.30);border-radius:15px;padding:12px 7px 11px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:126px;transition:transform .12s,border-color .12s;box-shadow:0 3px 10px rgba(0,0,0,.22)}
+.vit-card:active{transform:scale(.96);border-color:var(--gold2)}
+.vit-ico{height:44px;display:grid;place-items:center;font-size:30px;line-height:1;margin-bottom:7px}
+.vit-ico img{max-height:44px;max-width:46px;object-fit:contain;display:block}
+.vit-nome{font-size:12px;font-weight:900;color:var(--gold2);letter-spacing:.4px;line-height:1.15;text-transform:uppercase}
+.vit-desc{font-size:10.5px;color:rgba(255,255,255,.80);line-height:1.25;margin-top:4px}
+.vit-versiculo{margin-top:13px;background:linear-gradient(160deg,#2F5D96,#22497C);border:1.5px solid rgba(245,200,66,.55);border-radius:16px;padding:14px 16px;text-align:center;position:relative}
+.vit-aspas{position:absolute;left:12px;top:4px;font-family:Georgia,serif;font-size:36px;color:var(--gold2);opacity:.55;line-height:1}
+.vit-vtxt{font-size:13.5px;color:#F2F7FF;line-height:1.45;font-style:italic}
+.vit-vref{font-size:12px;font-weight:900;color:var(--gold2);letter-spacing:1.6px;margin-top:7px}
+@media(min-width:560px){.vit-marca{font-size:38px}.vit-card{min-height:142px}.vit-nome{font-size:13px}.vit-desc{font-size:11.5px}}
+</style>
+
 <!-- HOME -->
 <div class="tela" id="home">
   <div class="home-greeting">
@@ -752,6 +777,68 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   </div>
   <div class="home-divider"></div>
   <div class="home-scroll">
+
+    <!-- VITRINE 3×3 -->
+    <div class="vitrine">
+      <div class="vit-hero">
+        <div class="vit-topo">
+          <div class="vit-tbtn" onclick="document.getElementById('painel-hoje-wrap').scrollIntoView({behavior:'smooth',block:'center'})">🔔</div>
+          <div class="vit-tbtn" onclick="irPerfil()">👤</div>
+        </div>
+        <div class="vit-bemvindo">Bem-vindo ao</div>
+        <div class="vit-marca">Radar Atual</div>
+        <div class="vit-sub">Sua jornada espiritual completa em um só lugar.</div>
+        <div class="vit-fio"></div>
+      </div>
+
+      <div class="vit-grade">
+        <div class="vit-card" onclick="abrirBiblia()">
+          <div class="vit-ico"><img src="/img/home/biblia.png" alt="" onerror="this.parentNode.textContent='📖'"></div>
+          <div class="vit-nome">Bíblia</div><div class="vit-desc">Leia e estude a Palavra</div>
+        </div>
+        <div class="vit-card" onclick="abrirHarpa()">
+          <div class="vit-ico"><img src="/img/home/harpa.png" alt="" onerror="this.parentNode.textContent='🎼'"></div>
+          <div class="vit-nome">Harpa</div><div class="vit-desc">Louvores que edificam</div>
+        </div>
+        <div class="vit-card" onclick="location.href='/biblioteca/sermoes/'">
+          <div class="vit-ico"><img src="/img/home/sermoes.png" alt="" onerror="this.parentNode.textContent='🕊️'"></div>
+          <div class="vit-nome">Sermões</div><div class="vit-desc">Mensagens que inspiram</div>
+        </div>
+
+        <div class="vit-card" onclick="location.href='/biblioteca/mensagens/'">
+          <div class="vit-ico"><img src="/img/home/pregacoes.png" alt="" onerror="this.parentNode.textContent='🎙️'"></div>
+          <div class="vit-nome">Pregações</div><div class="vit-desc">Pregações poderosas</div>
+        </div>
+        <div class="vit-card" onclick="abrirHistorinhas()">
+          <div class="vit-ico"><img src="/img/home/historinhas.png" alt="" onerror="this.parentNode.textContent='👧'"></div>
+          <div class="vit-nome">Historinhas Infantis</div><div class="vit-desc">Conteúdo para crianças</div>
+        </div>
+        <div class="vit-card" onclick="abrirMod('desafiomateus')">
+          <div class="vit-ico"><img src="/img/home/quiz.png" alt="" onerror="this.parentNode.textContent='❓'"></div>
+          <div class="vit-nome">Quiz Bíblico</div><div class="vit-desc">Desafie seu conhecimento</div>
+        </div>
+
+        <div class="vit-card" onclick="abrirEbd()">
+          <div class="vit-ico"><img src="/img/home/ebd.png" alt="" onerror="this.parentNode.textContent='🔎'"></div>
+          <div class="vit-nome">EBD Completo</div><div class="vit-desc">Estudos para todas as idades</div>
+        </div>
+        <div class="vit-card" onclick="location.href='/biblioteca/mensagens/o-ultimo-prego-fixar.html'">
+          <div class="vit-ico"><img src="/img/home/preparador.png" alt="" onerror="this.parentNode.textContent='📝'"></div>
+          <div class="vit-nome">Preparador de Sermões</div><div class="vit-desc">Organize e prepare suas mensagens</div>
+        </div>
+        <div class="vit-card" onclick="location.href='/biblioteca/escola-pregacao/'">
+          <div class="vit-ico"><img src="/img/home/pregar.png" alt="" onerror="this.parentNode.textContent='🙌'"></div>
+          <div class="vit-nome">Aprenda a Pregar</div><div class="vit-desc">Dicas e ferramentas para o ministério</div>
+        </div>
+      </div>
+
+      <div class="vit-versiculo">
+        <span class="vit-aspas">&ldquo;</span>
+        <div class="vit-vtxt">Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.</div>
+        <div class="vit-vref">SALMOS 119:105</div>
+      </div>
+    </div>
+
     <div id="home-carousel" class="home-carousel"></div>
     <div id="painel-hoje-wrap"></div>
     <div id="devocional-home-wrap"></div>
