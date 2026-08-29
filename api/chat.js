@@ -25,7 +25,29 @@ module.exports = async (req, res) => {
       const texto = (b.texto||'').toString().trim().slice(0,4000);
       if(!texto){ res.status(400).json({error:'vazio'}); return; }
       const r=await c.query('insert into radar_chat(autor,texto) values($1,$2) returning id,autor,texto,criado_em',[autor,texto]);
-      res.json({ok:true, msg:r.rows[0]});
+
+      // RESPOSTA INSTANTÂNEA (24h, sem depender do PC): a IA do RADAR responde na hora
+      let reply=null;
+      const KEY=process.env.OPENAI_API_KEY;
+      if(autor==='elias' && KEY){
+        try{
+          const hist=await c.query("select autor,texto from radar_chat order by id desc limit 12");
+          const msgs=hist.rows.reverse().map(function(m){ return {role: m.autor==='elias'?'user':'assistant', content:m.texto}; });
+          const SYS="Você é o assistente pessoal do RADAR, o app do Pastor Elias (Assembleia de Deus). Fale em português do Brasil, com carinho e respeito, sempre fiel à sã doutrina pentecostal (AD) e cristocêntrica. Ajude o Elias com: dúvidas bíblicas, ideias de pregação e EBD, e como usar o app. NUNCA invente versículo, dado ou fato — se não tiver certeza, diga com humildade. Se ele pedir para CONSTRUIR, mudar ou consertar algo no app, responda que ANOTOU o pedido e que será feito (NÃO diga que já fez). Seja curto, prático e caloroso. Aponte sempre para Cristo.";
+          const rr=await fetch('https://api.openai.com/v1/chat/completions',{
+            method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},
+            body:JSON.stringify({ model:'gpt-4o-mini', temperature:0.5, max_tokens:500,
+              messages:[{role:'system',content:SYS}].concat(msgs) })
+          });
+          const dd=await rr.json();
+          const ans=dd && dd.choices && dd.choices[0] && dd.choices[0].message && dd.choices[0].message.content;
+          if(ans){
+            const ins=await c.query('insert into radar_chat(autor,texto) values($1,$2) returning id,autor,texto,criado_em',['claude',ans.trim()]);
+            reply=ins.rows[0];
+          }
+        }catch(e){ /* se a IA falhar, ainda salva a msg do Elias */ }
+      }
+      res.json({ok:true, msg:r.rows[0], reply:reply});
       return;
     }
 

@@ -89,12 +89,21 @@ async function enviar(){
   const t=$('txt').value.trim();
   if(!t) return;
   $('env').disabled=true;
+  $('txt').value='';
+  // mostra a msg do Elias na hora + "digitando…"
+  pinta({autor:'elias',texto:t,criado_em:new Date().toISOString()}); fim();
+  const dig=document.createElement('div'); dig.className='b claude'; dig.id='digitando';
+  dig.innerHTML='<div class="h">🧙 Claude</div><i>digitando…</i>'; $('msgs').appendChild(dig); fim();
   try{
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({token:TOKEN,autor:'elias',texto:t})});
     const d=await r.json();
-    if(d.ok){ $('txt').value=''; pinta(d.msg); ultimo=Math.max(ultimo,d.msg.id); fim(); }
-  }catch(e){}
+    var dd=document.getElementById('digitando'); if(dd) dd.remove();
+    if(d.ok){
+      if(d.msg) ultimo=Math.max(ultimo,d.msg.id);
+      if(d.reply){ pinta(d.reply); ultimo=Math.max(ultimo,d.reply.id); fim(); }
+    }
+  }catch(e){ var dd=document.getElementById('digitando'); if(dd) dd.remove(); $('status').textContent='sem conexão…'; }
   $('env').disabled=false;
   $('txt').focus();
 }
