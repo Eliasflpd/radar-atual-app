@@ -17,8 +17,8 @@
   .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase}
   h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.7rem;font-weight:800;margin:2px 0 2px}
   .ref{text-align:center;color:var(--dourado);font-weight:800;margin-bottom:14px}
-  .abas{display:flex;gap:6px;margin:6px 0 16px;position:sticky;top:0;background:var(--branco);padding:8px 0;z-index:5;border-bottom:1px solid var(--linha)}
-  .aba{flex:1;text-align:center;padding:10px 4px;border-radius:11px;background:#eef2f4;font-weight:800;font-size:.9rem;cursor:pointer;border:1px solid var(--linha)}
+  .abas{display:flex;gap:6px;margin:6px 0 16px;position:sticky;top:0;background:var(--branco);padding:8px 0;z-index:5;border-bottom:1px solid var(--linha);flex-wrap:wrap}
+  .aba{flex:1;min-width:70px;text-align:center;padding:10px 4px;border-radius:11px;background:#eef2f4;font-weight:800;font-size:.86rem;cursor:pointer;border:1px solid var(--linha)}
   .aba.on{background:var(--navy);color:#fff}
   .vis{display:none} .vis.on{display:block}
   .fio{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:14px 15px;margin-bottom:16px;font-size:1.08rem;text-align:center;color:#5c4a1e;font-weight:600}
@@ -36,6 +36,18 @@
   .cart li{margin-bottom:9px;font-size:1.05rem}
   .cart li b{color:#ffd98a}
   .cart .v{color:#9fc7d4;font-size:.82rem}
+  .copiar{display:block;width:100%;margin:12px 0 0;background:var(--teal);color:#fff;border:none;border-radius:12px;padding:13px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer}
+  /* plano */
+  .p-abre{background:#0f3d5c;color:#eaf1f5;border-radius:14px;padding:16px;margin-bottom:14px}
+  .p-abre h3{margin:0 0 8px;color:#ffd98a;font-family:Georgia,serif;font-size:1.05rem;text-align:center}
+  .p-abre .txt{font-family:Georgia,serif;font-size:1.08rem;line-height:1.6;font-style:italic}
+  .p-abre .lab{color:#9fc7d4;font-size:.74rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-top:12px}
+  .bloco{background:#fff;border:1px solid var(--linha);border-radius:13px;padding:14px 15px;margin-bottom:12px}
+  .bloco h3{margin:0 0 8px;color:var(--navy);font-family:Georgia,serif;font-size:1.12rem;display:flex;align-items:center;gap:8px}
+  .bloco ul{margin:6px 0 0;padding-left:20px}
+  .bloco li{margin-bottom:7px;font-size:1rem;line-height:1.5}
+  .doze{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:14px 15px;margin-bottom:12px;text-align:center;color:#5c4a1e;font-weight:700;font-size:1.05rem;line-height:1.7}
+  .dica-branco{background:#fff4f4;border:1px solid #f0cccc;border-radius:12px;padding:12px 14px;color:#7a2a2a;font-size:.96rem;line-height:1.55;margin-bottom:8px}
   /* treino */
   .tr-topo{text-align:center;margin-bottom:12px}
   .placar{font-weight:800;color:var(--teal)}
@@ -63,18 +75,20 @@
   </div>
   <div class="selo">✦ Fixar na Mente ✦</div>
   <h1>O Último Prego</h1>
-  <div class="ref">Gênesis 6 · roteiro de pregação</div>
+  <div class="ref">Gênesis 6 · roteiro de pregação · 12 cenas</div>
 
   <div class="abas">
-    <div class="aba on" onclick="aba('mapa')">🗺️ Estações</div>
-    <div class="aba" onclick="aba('cartao')">🎴 Púlpito</div>
-    <div class="aba" onclick="aba('treino')">🧠 Treino</div>
+    <div class="aba on" data-k="mapa" onclick="aba('mapa')">🗺️ Cenas</div>
+    <div class="aba" data-k="cartao" onclick="aba('cartao')">🎴 Púlpito</div>
+    <div class="aba" data-k="plano" onclick="aba('plano')">📅 Plano</div>
+    <div class="aba" data-k="treino" onclick="aba('treino')">🧠 Treino</div>
   </div>
 
   <!-- MAPA -->
   <div id="v-mapa" class="vis on">
     <div class="fio" id="fio"></div>
     <div id="estacoes"></div>
+    <button class="copiar" onclick="copiar12()">📋 Copiar as 12 palavras-chave</button>
   </div>
 
   <!-- CARTÃO -->
@@ -83,7 +97,52 @@
       <h3>🎴 Cartão de Púlpito</h3>
       <ol id="cartaoLista"></ol>
     </div>
+    <button class="copiar" onclick="copiar12()">📋 Copiar as 12 palavras-chave</button>
     <div class="nota">Um olhar rápido no púlpito. Cada palavra puxa o ponto inteiro — se você treinou.</div>
+  </div>
+
+  <!-- PLANO -->
+  <div id="v-plano" class="vis">
+    <div class="p-abre">
+      <h3>Decore LITERAL só a abertura e o fechamento</h3>
+      <div class="lab">Abertura</div>
+      <div class="txt">“Havia um som naquele vale que ninguém sabia interpretar: o som de um martelo. E cada martelada era uma pregação que o mundo se recusava a ouvir.”</div>
+      <div class="lab">Fechamento</div>
+      <div class="txt">“Não espere a chuva para procurar a arca. Entra hoje. Entra enquanto o martelo ainda soa!”</div>
+    </div>
+
+    <div class="doze" id="doze"></div>
+
+    <div class="bloco">
+      <h3>🌅 Para hoje</h3>
+      <ul>
+        <li><b>20 min:</b> aprenda as cenas <b>1 a 4</b>.</li>
+        <li>Pausa de 5 min, longe do celular.</li>
+        <li><b>20 min:</b> cenas <b>5 a 8</b>.</li>
+        <li>Pausa.</li>
+        <li><b>20 min:</b> cenas <b>9 a 12</b>.</li>
+        <li>Grave uma pregação completa no celular, <b>mesmo tropeçando</b>.</li>
+        <li>Antes de dormir, diga só as <b>12 palavras-chave</b> sem consultar.</li>
+      </ul>
+    </div>
+
+    <div class="bloco">
+      <h3>☀️ Amanhã</h3>
+      <ul>
+        <li>Ao acordar, reconstrua tudo <b>antes de ler</b>.</li>
+        <li>Confira apenas o que esqueceu.</li>
+        <li>Pregue uma vez olhando só para as 12 palavras.</li>
+        <li>Última repetição <b>em pé, com voz de púlpito</b>.</li>
+      </ul>
+    </div>
+
+    <div class="bloco">
+      <h3>🧭 Se der branco</h3>
+      <div class="dica-branco">Diga: <b>“E repare…”</b>, visualize a próxima cena e prossiga. Se esquecer uma frase, <b>continue — não volte ao começo</b>. A congregação não conhece o manuscrito; ela precisa receber a mensagem, não o texto.</div>
+      <div class="dica-branco">Você não precisa <i>sentir</i> que aprendeu para conseguir lembrar. O teste é um só: <b>tentar falar sem olhar</b>.</div>
+    </div>
+
+    <button class="copiar" onclick="copiarPlano()">📋 Copiar o plano completo</button>
   </div>
 
   <!-- TREINO -->
@@ -95,18 +154,21 @@
 
 <script>
 const ESTACOES=[
- {em:'🔨',anc:'O SOM',rf:'Gênesis 6',pu:'Um som teimoso e solitário no vale — cada martelada era uma pregação que o mundo se recusava a ouvir.'},
+ {em:'🔨',anc:'MARTELO',rf:'Gênesis 6:14',pu:'Um som teimoso e solitário no vale — cada martelada era uma pregação que o mundo se recusava a ouvir. Enquanto há martelo, há misericórdia.'},
  {em:'🦠',anc:'PODRIDÃO · shachat',rf:'Gênesis 6:11',pu:'A terra não estava doente; estava em decomposição — apodrecida por dentro, como fruta estragada no próprio caroço. E é num mundo podre que Deus manda CONSTRUIR.'},
- {em:'🪵',anc:'O CEDRO',rf:'Gênesis 6:14',pu:'A madeira de gofer NÃO apodrece. Dura, nodosa, torta, difícil de endireitar — e a mesma resistência que a faz difícil de dobrar é a que a faz difícil de estragar. A que cede fácil estraga fácil.'},
+ {em:'🪵',anc:'CEDRO',rf:'Gênesis 6:14',pu:'A madeira de gofer atravessa a corrupção — não apodrece. A mesma dureza que a faz difícil de dobrar é a que a faz difícil de estragar. O que cede fácil, estraga fácil.'},
+ {em:'🪚',anc:'TORTO',rf:'Gênesis 6:14',pu:'O cedro é nodoso, torto, difícil de endireitar — como o coração humano. E só o Artífice endireita o que nasceu torto. Deus não descarta a madeira torta: Ele a trabalha, com paciência, até servir à salvação.'},
  {em:'⏳',anc:'120 ANOS',rf:'Gênesis 6:3',pu:'Não é o prazo do juízo — é o tempo que a graça SEGUROU o juízo. Deus não afiou a espada; estendeu a mão, e a manteve estendida por um século.'},
+ {em:'📣',anc:'ARAUTO · keryx',rf:'2 Pedro 2:5',pu:'Noé, “pregoeiro da justiça”, o arauto (keryx) que pregou 120 anos sem um só convertido fora de casa. Fiel sem aplausos: o valor da mensagem não se mede pela multidão que a ouve, mas pela boca de Quem a mandou.'},
  {em:'👴',anc:'MATUSALÉM',rf:'Gênesis 5',pu:'O nome profetiza: “quando ele morrer, virá o envio”. E ele morreu no ano exato do Dilúvio — o relógio da paciência de Deus. Enquanto o velho respirava, o céu segurava a chuva.'},
- {em:'🛡️',anc:'A COBERTURA · kôfer',rf:'Gênesis 6:14',pu:'Betume = kaphar = cobrir → Kippur, a Expiação. A arca não boiou por ser forte; boiou por estar COBERTA. Noé não se salvou por ser bom — por estar coberto.'},
- {em:'🚪',anc:'UMA SÓ PORTA',rf:'Gn 6:16 · João 10:9',pu:'Uma porta só — não duas. “Eu sou a porta; se alguém entrar por mim, será salvo.” A arca é o retrato de Cristo flutuando sobre o juízo.'},
- {em:'✋',anc:'DEUS FECHOU',rf:'Gênesis 7:16',pu:'“E o SENHOR fechou a porta.” Não foi Noé — foi Deus. A mesma mão que convidou por 120 anos foi a que, no tempo certo, fechou.'},
- {em:'🌍',anc:'DIAS DE NOÉ',rf:'Mateus 24:37',pu:'“Como foi nos dias de Noé.” Nós somos a geração do som teimoso. O céu azul não é ausência de Deus — é a graça saturando o tempo.'},
- {em:'🔥',anc:'O ÚLTIMO PREGO',rf:'Apelo',pu:'Todo prego tem um último. Enquanto há martelo, há misericórdia. Não espere a chuva para procurar a arca — entra HOJE, enquanto o martelo ainda soa.'}
+ {em:'🛡️',anc:'COBERTURA · kôfer',rf:'Gênesis 6:14',pu:'Betume = kaphar = cobrir → Kippur, a Expiação. Coberta por dentro e por fora. A arca não boiou por ser forte; boiou por estar COBERTA. Noé não se salvou por ser bom — por estar coberto.'},
+ {em:'🚪',anc:'UMA PORTA',rf:'Gn 6:16 · João 10:9',pu:'Uma porta só — não duas. “Eu sou a porta; se alguém entrar por mim, será salvo.” A arca é o retrato de Cristo flutuando sobre o juízo.'},
+ {em:'✋',anc:'DEUS FECHOU',rf:'Gênesis 7:16',pu:'“E o SENHOR fechou a porta.” Não foi Noé — foi Deus. A mesma mão que convidou por 120 anos é a que, no tempo certo, encerra o convite.'},
+ {em:'🌍',anc:'DIAS DE NOÉ',rf:'Mateus 24:37',pu:'“Como foi nos dias de Noé.” O céu azul não é ausência de Deus — é a graça saturando o tempo. Nós somos a geração do som teimoso.'},
+ {em:'🔥',anc:'O ÚLTIMO PREGO',rf:'Apelo',pu:'Todo prego tem um último. Não espere a chuva para procurar a arca — entra HOJE, enquanto o martelo ainda soa!'}
 ];
-const FIO='Enquanto o mundo apodrecia, um homem fiel erguia a salvação com a madeira que não apodrece — e a mesma mão que convidou por 120 anos é a que, no tempo certo, fecha a porta.';
+const FIO='Enquanto o mundo apodrecia, um arauto fiel erguia a salvação com a madeira que não apodrece — e a mesma mão que convidou por 120 anos é a que, no tempo certo, fecha a porta.';
+const PALAVRAS=['Martelo','Podridão','Cedro','Torto','Cento e vinte','Arauto','Matusalém','Cobertura','Uma porta','Deus fechou','Dias de Noé','Último prego'];
 const $=id=>document.getElementById(id);
 
 // MAPA
@@ -122,29 +184,45 @@ $('cartaoLista').innerHTML=ESTACOES.map(e=>{
   const [a]=e.anc.split(' · ');
   return `<li><b>${e.em} ${a}</b> <span class="v">— ${e.rf}</span></li>`;
 }).join('');
+// PLANO — linha das 12 palavras
+$('doze').textContent=PALAVRAS.join('. ')+'.';
 
 function aba(q){
-  ['mapa','cartao','treino'].forEach(k=>{
-    $('v-'+k).classList.toggle('on',k===q);
-  });
-  document.querySelectorAll('.aba').forEach(a=>a.classList.toggle('on', a.textContent.toLowerCase().includes(q==='mapa'?'esta':q==='cartao'?'púlpito':'treino')));
+  ['mapa','cartao','plano','treino'].forEach(k=>{ $('v-'+k).classList.toggle('on',k===q); });
+  document.querySelectorAll('.aba').forEach(a=>a.classList.toggle('on', a.getAttribute('data-k')===q));
   if(q==='treino') iniciarTreino();
+}
+
+// COPIAR (norma do Elias: tudo com botão copiar)
+function toast(txt){
+  const t=document.createElement('div');
+  t.textContent='✓ '+txt;
+  t.style.cssText='position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#14804a;color:#fff;padding:11px 18px;border-radius:999px;font-weight:800;z-index:99;box-shadow:0 6px 18px rgba(0,0,0,.2)';
+  document.body.appendChild(t); setTimeout(()=>t.remove(),1600);
+}
+function copiar(txt,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(()=>toast(msg)).catch(()=>fallback(txt,msg)); }
+  else fallback(txt,msg);
+}
+function fallback(txt,msg){ const a=document.createElement('textarea'); a.value=txt; document.body.appendChild(a); a.select(); try{document.execCommand('copy');}catch(_){}; a.remove(); toast(msg); }
+function copiar12(){ copiar(PALAVRAS.join('. ')+'.', '12 palavras copiadas'); }
+function copiarPlano(){
+  let t='O ÚLTIMO PREGO — FIXAR NA MENTE\n\n';
+  t+='AS 12 CENAS:\n'+ESTACOES.map((e,i)=>`${i+1}. ${e.anc.split(' · ')[0]} — ${e.pu}`).join('\n')+'\n\n';
+  t+='AS 12 PALAVRAS-CHAVE:\n'+PALAVRAS.join('. ')+'.\n\n';
+  t+='DECORE LITERAL:\nAbertura: “Havia um som naquele vale que ninguém sabia interpretar: o som de um martelo. E cada martelada era uma pregação que o mundo se recusava a ouvir.”\n';
+  t+='Fechamento: “Não espere a chuva para procurar a arca. Entra hoje. Entra enquanto o martelo ainda soa!”\n\n';
+  t+='HOJE: 20min cenas 1-4 · pausa 5min · 20min cenas 5-8 · pausa · 20min cenas 9-12 · gravar uma pregação completa · antes de dormir, só as 12 palavras sem consultar.\n\n';
+  t+='AMANHÃ: reconstruir tudo antes de ler · conferir só o que esqueceu · pregar olhando só as 12 palavras · última repetição em pé, com voz de púlpito.\n\n';
+  t+='SE DER BRANCO: diga “E repare…”, visualize a próxima cena e prossiga. Não volte ao começo. O teste é falar sem olhar.';
+  copiar(t,'Plano completo copiado');
 }
 
 // TREINO — recordação ativa com repetição dos que faltam
 let fila=[], fixados=0, atual=null, revelado=false;
-function iniciarTreino(){
-  const salvo=JSON.parse(localStorage.getItem('fixar_ultprego')||'null');
-  fixados=0;
-  fila=ESTACOES.map((e,i)=>i);
-  embaralha(fila);
-  proxima();
-}
+function iniciarTreino(){ fixados=0; fila=ESTACOES.map((e,i)=>i); embaralha(fila); proxima(); }
 function embaralha(a){ for(let i=a.length-1;i>0;i--){ const j=(i*7+3)%(i+1); [a[i],a[j]]=[a[j],a[i]]; } }
-function proxima(){
-  if(!fila.length){ return fim(); }
-  atual=fila[0]; revelado=false; render();
-}
+function proxima(){ if(!fila.length){ return fim(); } atual=fila[0]; revelado=false; render(); }
 function placar(){ $('placar').textContent=`Fixados: ${fixados}/${ESTACOES.length}  ·  na fila: ${fila.length}`; }
 function render(){
   placar();
@@ -154,9 +232,7 @@ function render(){
       <div class="em">${e.em}</div>
       <div class="anc">${e.anc.split(' · ')[0]}</div>
       <div class="rf">${e.rf}</div>
-      ${revelado
-        ? `<div class="pu">${e.pu}</div>`
-        : `<div class="dica">Pregue esse ponto de cabeça… depois toque em Mostrar.</div>`}
+      ${revelado ? `<div class="pu">${e.pu}</div>` : `<div class="dica">Pregue esse ponto de cabeça… depois toque em Mostrar.</div>`}
     </div>
     <div class="acoes">
       ${revelado
@@ -166,17 +242,12 @@ function render(){
     </div>`;
 }
 function revelar(){ revelado=true; render(); }
-function marcar(ok){
-  fila.shift();
-  if(ok){ fixados++; }
-  else{ fila.push(atual); }   // errou/quer revisar → volta pro fim
-  proxima();
-}
+function marcar(ok){ fila.shift(); if(ok){ fixados++; } else{ fila.push(atual); } proxima(); }
 function fim(){
   $('treinoArea').innerHTML=
    `<div class="fim"><div class="big">🔥📖</div>
       <h2 style="color:var(--vinho);font-family:Georgia,serif">Mensagem fixada!</h2>
-      <p>Você percorreu as ${ESTACOES.length} estações de cabeça. Faça de novo <b>hoje e amanhã</b> — 3 passadas curtas cravam mais que 1 hora relendo.</p>
+      <p>Você percorreu as ${ESTACOES.length} cenas de cabeça. Faça de novo <b>hoje e amanhã</b> — 3 passadas curtas cravam mais que 1 hora relendo.</p>
       <button class="reiniciar" onclick="iniciarTreino()">🔁 Treinar de novo</button></div>`;
   $('placar').textContent='';
 }
