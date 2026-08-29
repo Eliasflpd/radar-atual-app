@@ -1532,7 +1532,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
     <a class="std-back" id="ppt-dl-btn" href="" target="_blank" style="font-size:17px;text-decoration:none;opacity:.5" title="Em breve">↓</a>
   </div>
   <div class="ppt-viewer" id="ppt-viewer">
-    <img class="ppt-slide" id="ppt-slide-img" src="" alt="slide">
+    <img class="ppt-slide" id="ppt-slide-img" alt="slide">
     <div class="ppt-nav ppt-nav-prev" onclick="pptSlide(-1)">‹</div>
     <div class="ppt-nav ppt-nav-next" onclick="pptSlide(1)">›</div>
     <div class="ppt-counter-bar" id="ppt-counter">1 / 1</div>
@@ -1579,7 +1579,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
       <div class="std-sub" id="leitor-fonte-h"></div>
     </div>
   </div>
-  <img class="not-leitor-img" id="leitor-img" src="" alt="" style="display:none">
+  <img class="not-leitor-img" id="leitor-img" alt="" style="display:none">
   <div class="not-leitor-body">
     <span class="not-badge" id="leitor-badge" style="display:none;margin-bottom:10px"></span>
     <div style="font-size:18px;font-weight:900;line-height:1.35;margin-bottom:8px" id="leitor-titulo"></div>
@@ -3776,10 +3776,10 @@ function fecharVideo(){
 }
 
 // ══ NOTÍCIAS DE ISRAEL ════════════════════════════
-const NOT_CORES={Profecia:'#f5a623',Arqueologia:'#a78bfa',Política:'#4f8ef7','Povo Judeu':'#34c77b',Conflito:'#f75f5f',Sociedade:'#38bdf8'};
+const NOT_CORES={Profecia:'#f5a623',Arqueologia:'#c8873f',Política:'#4f8ef7','Povo Judeu':'#34c77b',Conflito:'#f75f5f',Sociedade:'#38bdf8'};
 const NOT_ART={
   Profecia:   {bg:'linear-gradient(150deg,#1c0d00 0%,#3d1f00 45%,#1a0900 100%)',em:'🕊️'},
-  Arqueologia:{bg:'linear-gradient(150deg,#0d0020 0%,#2a0060 45%,#0a001a 100%)',em:'🏺'},
+  Arqueologia:{bg:'linear-gradient(150deg,#1a1206 0%,#4a3212 45%,#150e04 100%)',em:'🏺'},
   Conflito:   {bg:'linear-gradient(150deg,#200000 0%,#4a0000 45%,#1a0000 100%)',em:'⚔️'},
   'Povo Judeu':{bg:'linear-gradient(150deg,#001a0a 0%,#00442a 45%,#000e05 100%)',em:'✡️'},
   Política:   {bg:'linear-gradient(150deg,#000a1a 0%,#001a44 45%,#00051a 100%)',em:'⚖️'},
@@ -3857,7 +3857,7 @@ function renderNotAba(){
       {nome:'i24 NEWS — Israel ao Vivo',canal:'i24NEWS',emoji:'📡',cor:'#4f8ef7',ytUrl:'https://www.youtube.com/results?search_query=i24+news+israel+live'},
       {nome:'Israel em Profecia Bíblica',canal:'Profecia',emoji:'📖',cor:'#f5a623',ytUrl:'https://www.youtube.com/results?search_query=israel+profecia+biblica+hoje'},
       {nome:'Jerusalem Post — Notícias',canal:'Jerusalem Post',emoji:'🗞️',cor:'#34c77b',ytUrl:'https://www.youtube.com/results?search_query=jerusalem+post+israel+today'},
-      {nome:'Descobertas Arqueológicas',canal:'Arqueologia',emoji:'🏺',cor:'#a78bfa',ytUrl:'https://www.youtube.com/results?search_query=arqueologia+biblica+israel+descoberta'},
+      {nome:'Descobertas Arqueológicas',canal:'Arqueologia',emoji:'🏺',cor:'#c8873f',ytUrl:'https://www.youtube.com/results?search_query=arqueologia+biblica+israel+descoberta'},
     ];
     list.innerHTML=`<div style="font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.6;padding:6px 2px 8px">Canais Recomendados</div>`+
     CANAIS.map(v=>{
@@ -6468,7 +6468,7 @@ const _crmInitMap = {
         <div class="adm-tile-nome">Alunos EBD</div>
         <div class="adm-tile-cnt" id="adm-cnt-alunos">0 cadastrados</div>
       </div>
-      <div class="adm-tile" style="--tc:#a78bfa" onclick="abrirAdm('turmas')">
+      <div class="adm-tile" style="--tc:#0ea5e9" onclick="abrirAdm('turmas')">
         <div class="adm-tile-bar"></div>
         <div class="adm-tile-icon">🏫</div>
         <div class="adm-tile-nome">Turmas</div>
@@ -6496,7 +6496,7 @@ const _crmInitMap = {
         <div class="adm-tile-nome">Eventos</div>
         <div class="adm-tile-cnt" id="adm-cnt-eventos">0 programados</div>
       </div>
-      <div class="adm-tile" style="--tc:#ec4899" onclick="abrirAdm('conteudos')">
+      <div class="adm-tile" style="--tc:#eab308" onclick="abrirAdm('conteudos')">
         <div class="adm-tile-bar"></div>
         <div class="adm-tile-icon">🗂️</div>
         <div class="adm-tile-nome">Conteúdos</div>
@@ -6528,7 +6528,7 @@ const _crmInitMap = {
           </div>
         </div>
       </div>
-      <div class="adm-tile" style="--tc:#818cf8" onclick="abrirAdm('relatorios')">
+      <div class="adm-tile" style="--tc:#0891b2" onclick="abrirAdm('relatorios')">
         <div class="adm-tile-bar"></div>
         <div class="adm-tile-icon">📈</div>
         <div class="adm-tile-nome">Relatórios</div>
