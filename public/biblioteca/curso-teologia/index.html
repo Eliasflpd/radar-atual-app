@@ -3,207 +3,202 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>🎓 Curso de Teologia — Estude a fé a fundo</title>
+<title>Curso de Teologia — RADAR</title>
 <style>
-  :root{
-    --fundo:#f5f7fb;
-    --card:#ffffff;
-    --texto:#1b2436;
-    --texto-suave:#54607a;
-    --navy:#0f3d5c;
-    --dourado:#a9791c;
-    --dourado-claro:#c79a3e;
-    --borda:#e3e8f2;
-    --sombra:0 6px 20px rgba(15,61,92,.08);
-  }
-  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
-  html{font-size:18px}
-  body{
-    margin:0;background:var(--fundo);color:var(--texto);
-    font-family:'Segoe UI',system-ui,Arial,sans-serif;
-    line-height:1.6;
-    padding:16px 14px calc(40px + env(safe-area-inset-bottom));
-    max-width:860px;margin-left:auto;margin-right:auto;
-    -webkit-font-smoothing:antialiased;
-  }
+  :root{--bg:#f5f7fb;--card:#fff;--txt:#1b2436;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--linha:#e4e7ec;--suave:#6b7480}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,Arial,sans-serif;max-width:860px;margin:0 auto;min-height:100dvh}
+  header{background:var(--navy);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 14px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+  header .ico{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--teal),var(--dourado));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  header .t{flex:1;min-width:0}
+  header .t b{display:block;font-size:1.06rem;line-height:1.15}
+  header .t span{font-size:.76rem;color:#bcd3dc}
+  header button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:9px;padding:9px 11px;font-weight:700;font-family:inherit;cursor:pointer;font-size:.9rem}
+  .wrap{padding:16px 14px 40px}
 
-  /* barra de navegação topo */
-  .nav{
-    display:flex;justify-content:flex-start;margin-bottom:14px;
-  }
-  .btn{
-    display:inline-flex;align-items:center;gap:6px;
-    border:none;cursor:pointer;font-family:inherit;
-    font-size:.95rem;font-weight:700;border-radius:12px;
-    padding:10px 16px;transition:transform .12s ease,box-shadow .12s ease;
-    text-decoration:none;
-  }
-  .btn:active{transform:scale(.97)}
-  .btn-inicio{
-    background:var(--card);color:var(--navy);
-    border:1.5px solid var(--borda);box-shadow:var(--sombra);
-  }
-  .btn-share{
-    background:var(--navy);color:#fff;box-shadow:var(--sombra);
-    font-size:1.05rem;padding:14px 22px;
-  }
+  /* ===== CADEADO / SENHA ===== */
+  #gate{min-height:calc(100dvh - 66px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 22px;text-align:center;gap:14px}
+  #gate .lock{width:82px;height:82px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 10px 30px rgba(15,61,92,.28)}
+  #gate h2{margin:4px 0 0;color:var(--navy);font-size:1.3rem}
+  #gate p{margin:0;color:var(--suave);font-size:.95rem;max-width:320px;line-height:1.5}
+  #gate .campo{width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  #gate input{border:1.6px solid var(--linha);border-radius:13px;padding:14px 16px;font-size:1.05rem;font-family:inherit;text-align:center;background:#fff}
+  #gate input:focus{outline:none;border-color:var(--teal)}
+  #gate .btn{background:var(--navy);color:#fff;border:none;border-radius:13px;padding:14px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
+  #gate .erro{color:#a8162a;font-size:.9rem;font-weight:700;min-height:18px}
 
-  /* cabeçalho */
-  header{text-align:center;margin:6px 0 22px}
-  .selo{font-size:2.6rem;line-height:1;margin-bottom:4px}
-  h1{
-    font-family:Georgia,'Times New Roman',serif;
-    color:var(--navy);font-size:2rem;line-height:1.15;
-    font-weight:800;margin:6px 0 6px;letter-spacing:.3px;
-  }
-  .sub{
-    color:var(--dourado);font-weight:700;font-size:1.05rem;
-    margin:0 0 4px;
-  }
-  .linha{
-    height:4px;width:64px;background:var(--dourado);
-    border-radius:4px;margin:14px auto 0;
-  }
+  /* ===== CURSO ===== */
+  #curso{display:none}
+  .capa{background:linear-gradient(135deg,var(--navy),#14507a);color:#fff;border-radius:18px;padding:20px 18px;margin-bottom:16px;box-shadow:0 8px 24px rgba(15,61,92,.18)}
+  .capa .badge{display:inline-block;background:rgba(255,255,255,.16);color:#ffe4a8;font-size:.72rem;font-weight:800;letter-spacing:.5px;padding:5px 10px;border-radius:20px;text-transform:uppercase}
+  .capa h1{margin:9px 0 4px;font-size:1.5rem;line-height:1.15}
+  .capa .prof{color:#cfe3ec;font-size:.95rem}
+  .capa .stats{display:flex;gap:18px;margin-top:12px;font-size:.8rem;color:#e7f1f6}
+  .capa .stats b{display:block;font-size:1.15rem;color:#ffd98a}
+  .pdf-link{display:flex;align-items:center;gap:10px;background:#fff8e6;border:1px solid #f0dcaa;color:#6b551f;border-radius:12px;padding:11px 13px;margin-bottom:14px;text-decoration:none;font-weight:700;font-size:.92rem}
 
-  /* grade de trilhas */
-  .trilhas{
-    display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px;
-  }
-  @media(min-width:620px){
-    .trilhas{grid-template-columns:1fr 1fr}
-  }
-  .card{
-    background:var(--card);border:1.5px solid var(--borda);
-    border-radius:16px;padding:18px 18px 16px;
-    box-shadow:var(--sombra);cursor:pointer;text-align:center;
-    transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease;
-    position:relative;overflow:hidden;
-  }
-  .card::before{
-    content:"";position:absolute;top:0;left:0;right:0;height:4px;
-    background:linear-gradient(90deg,var(--dourado),var(--dourado-claro));
-  }
-  .card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(15,61,92,.14);border-color:var(--dourado-claro)}
-  .card:active{transform:scale(.98)}
-  .card .num{
-    color:var(--dourado);font-weight:800;font-size:.8rem;
-    letter-spacing:2px;text-transform:uppercase;
-  }
-  .card .ic{font-size:2.3rem;line-height:1;margin:6px 0 8px;display:block}
-  .card h2{
-    color:var(--navy);font-size:1.18rem;font-weight:800;
-    margin:0 0 6px;font-family:Georgia,'Times New Roman',serif;
-  }
-  .card p{
-    color:var(--texto-suave);font-size:.95rem;margin:0 0 10px;
-  }
-  .badge{
-    display:inline-block;background:#f0f3fa;color:var(--navy);
-    border:1px solid var(--borda);border-radius:999px;
-    font-size:.75rem;font-weight:700;padding:4px 12px;
-    letter-spacing:.5px;
-  }
+  .mod{background:var(--card);border:1px solid var(--linha);border-radius:14px;margin-bottom:11px;overflow:hidden;box-shadow:0 2px 6px rgba(20,40,70,.05)}
+  .mod-h{display:flex;align-items:center;gap:12px;padding:14px 15px;cursor:pointer;user-select:none}
+  .mod-h .n{width:34px;height:34px;border-radius:9px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;flex-shrink:0}
+  .mod-h .ti{flex:1;min-width:0}
+  .mod-h .ti b{display:block;font-size:1rem;color:var(--navy);line-height:1.2}
+  .mod-h .ti span{font-size:.76rem;color:var(--suave)}
+  .mod-h .seta{color:var(--dourado);font-size:1.1rem;transition:transform .2s}
+  .mod.aberto .seta{transform:rotate(90deg)}
+  .aulas{display:none;border-top:1px solid var(--linha)}
+  .mod.aberto .aulas{display:block}
+  .aula{display:flex;align-items:center;gap:11px;padding:12px 15px 12px 14px;border-top:1px solid #f0f2f5;cursor:pointer}
+  .aula:first-child{border-top:none}
+  .aula:active{background:#f2f6fb}
+  .aula .pl{width:30px;height:30px;border-radius:50%;background:#eaf3f5;color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+  .aula.vista .pl{background:#e5f6ec;color:#1a8a4a}
+  .aula .txt{flex:1;min-width:0;font-size:.92rem;line-height:1.35}
+  .aula .txt small{display:block;color:var(--suave);font-size:.72rem;margin-top:1px}
+  .vazio-mod{padding:14px 15px;color:var(--suave);font-size:.85rem}
 
-  /* aviso expansível dentro do card */
-  .aviso{
-    max-height:0;overflow:hidden;transition:max-height .3s ease,margin .3s ease;
-    margin-top:0;
-  }
-  .card.aberto .aviso{max-height:120px;margin-top:12px}
-  .aviso-in{
-    background:#fbf6ea;border:1px solid #eadfc2;border-radius:12px;
-    padding:12px;color:#7a5a12;font-size:.9rem;font-weight:600;
-    line-height:1.45;
-  }
-
-  /* rodapé */
-  .rodape{text-align:center;margin-top:26px}
-  .versiculo{
-    color:var(--texto-suave);font-style:italic;font-size:.92rem;
-    max-width:520px;margin:0 auto 20px;line-height:1.55;
-  }
-  .versiculo b{color:var(--navy);font-style:normal}
-  .compartilhar-wrap{display:flex;justify-content:center}
-  .creditos{
-    color:#9aa4ba;font-size:.8rem;margin-top:22px;letter-spacing:.5px;
-  }
+  /* ===== PLAYER ===== */
+  #player{position:fixed;inset:0;background:#0a1420;z-index:50;display:none;flex-direction:column}
+  #player.on{display:flex}
+  #player .pbar{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;color:#fff}
+  #player .pbar button{background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:9px;padding:8px 12px;font-weight:700;font-family:inherit;cursor:pointer}
+  #player .pbar .pt{flex:1;min-width:0;font-size:.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #player .vwrap{flex:1;display:flex;align-items:center;justify-content:center;background:#000}
+  #player video{width:100%;max-height:100%}
+  #player .prox{padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:#0f1d2e;color:#cfe0ee;font-size:.85rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  #player .prox button{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-family:inherit;cursor:pointer}
+  .carregando{text-align:center;color:var(--suave);padding:40px 20px}
 </style>
 </head>
 <body>
-
-  <nav class="nav">
-    <button class="btn btn-inicio" onclick="location.href='/'">🏠 Início</button>
-  </nav>
-
   <header>
-    <div class="selo">🎓</div>
-    <h1>Curso de Teologia</h1>
-    <p class="sub">Estude a fé a fundo, na sã doutrina</p>
-    <div class="linha"></div>
+    <div class="ico">🎓</div>
+    <div class="t"><b>Curso de Teologia</b><span>Área particular — trancada</span></div>
+    <button onclick="location.href='/'">🏠</button>
   </header>
 
-  <main class="trilhas" id="trilhas"></main>
-
-  <div class="rodape">
-    <p class="versiculo">"Procura apresentar-te a Deus aprovado, como obreiro que não tem de que se envergonhar, que maneja bem a palavra da verdade." <b>— 2 Timóteo 2.15</b></p>
-    <div class="compartilhar-wrap">
-      <button class="btn btn-share" onclick="compartilhar()">📤 Compartilhar</button>
+  <!-- CADEADO -->
+  <div id="gate">
+    <div class="lock">🔒</div>
+    <h2>Conteúdo particular</h2>
+    <p>Esta área é sua. Digite a senha para liberar os vídeos do curso.</p>
+    <div class="campo">
+      <input id="senha" type="password" placeholder="Senha" autocomplete="off" enterkeyhint="go">
+      <button class="btn" id="btnEntrar" onclick="entrar()">Entrar 🔓</button>
+      <div class="erro" id="erro"></div>
     </div>
-    <p class="creditos">RADAR • Curso de Teologia</p>
+  </div>
+
+  <!-- CURSO -->
+  <div id="curso" class="wrap"></div>
+
+  <!-- PLAYER -->
+  <div id="player">
+    <div class="pbar">
+      <button onclick="fecharPlayer()">‹ Voltar</button>
+      <div class="pt" id="p-titulo"></div>
+    </div>
+    <div class="vwrap"><video id="vid" controls playsinline preload="metadata"></video></div>
+    <div class="prox">
+      <span id="p-mod"></span>
+      <button id="p-prox" style="display:none" onclick="proximaAula()">Próxima aula ›</button>
+    </div>
   </div>
 
 <script>
-  const TRILHAS = [
-    { ic:"📖", t:"Bibliologia", d:"A Bíblia: inspiração, cânon e autoridade." },
-    { ic:"👑", t:"Teologia Própria (Deus)", d:"Quem é Deus: atributos e Trindade." },
-    { ic:"✝️", t:"Cristologia", d:"A pessoa e a obra de Cristo." },
-    { ic:"🕊️", t:"Pneumatologia", d:"O Espírito Santo, dons e o batismo no Espírito." },
-    { ic:"🙌", t:"Soteriologia", d:"A salvação: graça, fé, arrependimento e santificação." },
-    { ic:"⛪", t:"Eclesiologia", d:"A Igreja: natureza, ministérios e ordenanças." },
-    { ic:"⏳", t:"Escatologia", d:"As últimas coisas: arrebatamento, tribulação e o Reino." },
-    { ic:"👼", t:"Angelologia e Antropologia", d:"Anjos, o homem, o pecado." },
-    { ic:"🗣️", t:"Homilética e Hermenêutica", d:"Como interpretar e pregar a Palavra." }
-  ];
+const $=id=>document.getElementById(id);
+let DADOS=null, PLANO=[], atual=-1;
 
-  const cont = document.getElementById('trilhas');
-  TRILHAS.forEach((tr, i) => {
-    const el = document.createElement('article');
-    el.className = 'card';
-    const n = String(i + 1).padStart(2, '0');
-    el.innerHTML =
-      '<span class="num">Trilha ' + n + '</span>' +
-      '<span class="ic">' + tr.ic + '</span>' +
-      '<h2>' + tr.t + '</h2>' +
-      '<p>' + tr.d + '</p>' +
-      '<span class="badge">📚 Em preparação</span>' +
-      '<div class="aviso"><div class="aviso-in">📚 Aulas em preparação — em breve o conteúdo completo desta trilha estará disponível aqui.</div></div>';
-    el.addEventListener('click', () => {
-      const jaAberto = el.classList.contains('aberto');
-      document.querySelectorAll('.card.aberto').forEach(c => c.classList.remove('aberto'));
-      if (!jaAberto) el.classList.add('aberto');
-    });
-    cont.appendChild(el);
-  });
+function marcarVista(u,v){ try{ localStorage.setItem('curso_vista_'+btoa(unescape(encodeURIComponent(u))).slice(0,40), v?'1':''); }catch(_){} }
+function estaVista(u){ try{ return localStorage.getItem('curso_vista_'+btoa(unescape(encodeURIComponent(u))).slice(0,40))==='1'; }catch(_){ return false; } }
+function salvarPos(u,t){ try{ localStorage.setItem('curso_pos_'+btoa(unescape(encodeURIComponent(u))).slice(0,40), String(Math.floor(t))); }catch(_){} }
+function lerPos(u){ try{ return parseInt(localStorage.getItem('curso_pos_'+btoa(unescape(encodeURIComponent(u))).slice(0,40))||'0',10)||0; }catch(_){ return 0; } }
 
-  function compartilhar(){
-    const url = 'https://radar-atual.vercel.app/biblioteca/curso-teologia/';
-    const dados = {
-      title: 'Curso de Teologia',
-      text: 'Curso de Teologia — Estude a fé a fundo, na sã doutrina.',
-      url: url
-    };
-    if (navigator.share) {
-      navigator.share(dados).catch(() => {});
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
-        alert('🔗 Link copiado!\n' + url);
-      }).catch(() => {
-        prompt('Copie o link:', url);
-      });
-    } else {
-      prompt('Copie o link:', url);
+async function entrar(){
+  const s=$('senha').value.trim();
+  if(!s){ return; }
+  $('btnEntrar').disabled=true; $('erro').textContent='';
+  try{
+    const r=await fetch('/api/curso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({senha:s})});
+    const d=await r.json();
+    if(d && d.ok){
+      try{ localStorage.setItem('curso_senha', s); }catch(_){}
+      DADOS=d; render();
+    }else{
+      $('erro').textContent='Senha incorreta.';
+      $('btnEntrar').disabled=false;
     }
+  }catch(e){ $('erro').textContent='Sem conexão. Tente de novo.'; $('btnEntrar').disabled=false; }
+}
+$('senha').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); entrar(); } });
+
+function render(){
+  $('gate').style.display='none';
+  const cur=$('curso'); cur.style.display='block';
+  PLANO=[];
+  let totVistas=0;
+  DADOS.modulos.forEach(m=>{ m.aulas.forEach(a=>{ PLANO.push({m:m.nome,mo:m.ordem,a}); if(estaVista(a.url)) totVistas++; }); });
+  const pdfUrl = (DADOS.pdf||'');
+  let html=`
+    <div class="capa">
+      <span class="badge">Curso completo</span>
+      <h1>Escatologia Avançada</h1>
+      <div class="prof">com Ivan Santos</div>
+      <div class="stats">
+        <div><b>${DADOS.modulos.length}</b>módulos</div>
+        <div><b>${DADOS.total}</b>aulas</div>
+        <div><b>${totVistas}</b>assistidas</div>
+      </div>
+    </div>`;
+  if(pdfUrl){ html+=`<a class="pdf-link" href="${pdfUrl}" target="_blank">📄 Apostila do curso (PDF) — abrir</a>`; }
+  DADOS.modulos.forEach((m,mi)=>{
+    html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="toggleMod(${mi})">
+      <div class="n">${m.ordem}</div>
+      <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${m.aulas.length} aula${m.aulas.length>1?'s':''}</span></div>
+      <div class="seta">›</div></div><div class="aulas">`;
+    if(!m.aulas.length){ html+=`<div class="vazio-mod">Subindo os vídeos deste módulo…</div>`; }
+    m.aulas.forEach(a=>{
+      const gi=PLANO.findIndex(p=>p.a.url===a.url);
+      html+=`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${gi}" onclick="abrir(${gi})">
+        <div class="pl">▶</div>
+        <div class="txt">${limpaAula(a.titulo)}<small>Aula ${a.ordem}</small></div></div>`;
+    });
+    html+=`</div></div>`;
+  });
+  cur.innerHTML=html;
+}
+function limpaModulo(s){ return (s||'').replace(/^M[ÓO]DULO\s*\d+\s*-\s*/i,'').replace(/\s+\d+$/,'').trim(); }
+function limpaAula(s){ return (s||'').replace(/\.(mkv|mp4)$/i,'').replace(/^AULA\s*[O0]?\d+\s*-\s*/i,'').trim(); }
+function toggleMod(mi){ document.querySelector('.mod[data-mi="'+mi+'"]').classList.toggle('aberto'); }
+
+function abrir(gi){
+  atual=gi; const p=PLANO[gi]; if(!p) return;
+  $('player').classList.add('on');
+  $('p-titulo').textContent=limpaAula(p.a.titulo);
+  $('p-mod').textContent=limpaModulo(p.m);
+  const v=$('vid'); v.src=p.a.url;
+  const pos=lerPos(p.a.url);
+  v.onloadedmetadata=()=>{ if(pos>5 && pos<v.duration-10){ v.currentTime=pos; } };
+  v.ontimeupdate=()=>{ if(v.currentTime>0) salvarPos(p.a.url,v.currentTime); };
+  v.onended=()=>{ marcarVista(p.a.url,true); const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista'); };
+  $('p-prox').style.display = (gi+1<PLANO.length)?'inline-block':'none';
+  v.play().catch(()=>{});
+}
+function proximaAula(){ if(atual+1<PLANO.length) abrir(atual+1); }
+function fecharPlayer(){ const v=$('vid'); try{ v.pause(); }catch(_){} $('player').classList.remove('on'); v.src=''; render(); }
+
+// auto-desbloqueio (aparelho do Elias): se já entrou antes, não pede senha de novo
+(async function(){
+  let s=''; try{ s=localStorage.getItem('curso_senha')||''; }catch(_){}
+  if(s){
+    try{
+      const r=await fetch('/api/curso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({senha:s})});
+      const d=await r.json();
+      if(d && d.ok){ DADOS=d; render(); return; }
+    }catch(_){}
   }
+  $('senha').focus();
+})();
 </script>
 </body>
 </html>
