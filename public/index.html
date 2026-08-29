@@ -766,7 +766,20 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .vit-aspas{position:absolute;left:12px;top:4px;font-family:Georgia,serif;font-size:36px;color:var(--gold2);opacity:.55;line-height:1}
 .vit-vtxt{font-size:13.5px;color:#F2F7FF;line-height:1.45;font-style:italic}
 .vit-vref{font-size:12px;font-weight:900;color:var(--gold2);letter-spacing:1.6px;margin-top:7px}
-@media(min-width:560px){.vit-marca{font-size:31px}.vit-card{min-height:142px}.vit-nome{font-size:13px}.vit-desc{font-size:11.5px}}
+@media(min-width:560px){.vit-marca{font-size:31px}.vit-nome{font-size:13px}.vit-desc{font-size:11.5px}}
+/* HOME ESTÁTICA — sem rolagem: só o card de boas-vindas + os 9 blocos, na linha de visão */
+#home{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+#home .home-search,#home .home-divider{display:none}
+#home .home-scroll{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:8px 12px 4px}
+#home .vitrine{flex:1;min-height:0;display:flex;flex-direction:column;margin:0}
+#home .vit-hero{flex:0 0 auto}
+#home .vit-grade{flex:1;min-height:0;grid-auto-rows:1fr;margin-top:8px}
+#home .vit-card{aspect-ratio:auto;min-height:0;padding:4px 4px}
+#home .vit-versiculo,#home #home-carousel,#home #painel-hoje-wrap,#home #devocional-home-wrap,#home #continuar-wrap,#home #hist-home,#home .sec-label,#home #modulos{display:none!important}
+#home .vit-ico{height:auto;font-size:clamp(20px,7vw,30px);margin-bottom:3px}
+#home .vit-ico img{max-height:clamp(26px,8vw,40px);width:auto}
+#home .vit-nome{font-size:clamp(10px,3vw,13px)}
+#home .vit-desc{font-size:clamp(8.5px,2.6vw,11px);margin-top:2px}
 </style>
 
 <!-- HOME -->
