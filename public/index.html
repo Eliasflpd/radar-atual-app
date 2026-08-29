@@ -816,13 +816,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       </div>
 
       <div class="vit-grade">
-        <div class="vit-card" onclick="abrirBiblia()">
+        <div class="vit-card" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)">
           <div class="vit-ico"><img src="/img/home/biblia.png" alt="" onerror="this.parentNode.textContent='📖'"></div>
-          <div class="vit-nome">Bíblia</div><div class="vit-desc">Leia e estude a Palavra</div>
+          <div class="vit-nome">Bíblia e Harpa</div><div class="vit-desc">Palavra e louvores</div>
         </div>
-        <div class="vit-card" onclick="abrirHarpa()">
-          <div class="vit-ico"><img src="/img/home/harpa.png" alt="" onerror="this.parentNode.textContent='🎼'"></div>
-          <div class="vit-nome">Harpa</div><div class="vit-desc">Louvores que edificam</div>
+        <div class="vit-card" onclick="location.href='/biblioteca/curso-teologia/'">
+          <div class="vit-ico"><img src="/img/home/teologia.png" alt="" onerror="this.parentNode.textContent='🎓'"></div>
+          <div class="vit-nome">Curso de Teologia</div><div class="vit-desc">Estude a fé a fundo</div>
         </div>
         <div class="vit-card" onclick="location.href='/biblioteca/sermoes/'">
           <div class="vit-ico"><img src="/img/home/sermoes.png" alt="" onerror="this.parentNode.textContent='🕊️'"></div>
@@ -2966,7 +2966,7 @@ function bibVoltar(){
   if(bibLevel==='caps'){bibMostrarLivros();return;}
   if(bibLevel==='vers'){bibMostrarCaps(bibLivroIdx);return;}
   if(bibLevel==='busca'){bibMostrarLivros();return;}
-  irHome();   // volta pra home azul (a home abre a Bíblia direto agora)
+  ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');
 }
 
 function bibSetHeader(titulo,bread,posBar,posLabel,search){
@@ -3096,7 +3096,8 @@ async function abrirHarpa(){
 }
 
 function fecharHarpaLista(){
-  irHome();   // volta pra home azul (a home abre a Harpa direto agora)
+  ocultarTodas();
+  document.getElementById('tela-bh-landing').classList.add('ativa');
 }
 
 function fecharHarpaHino(){
