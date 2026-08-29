@@ -400,6 +400,14 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
 /* Conteúdo do hino */
 .harpa-hino-body{padding:24px 18px 100px}
+/* TEMA CLARO da Harpa (sem preto na leitura, com contraste) */
+#tela-harpa-lista,#tela-harpa-hino{--bg:#f5f7fb;--card:#ffffff;--card2:#eef2f8;--line:rgba(201,161,74,.45);--txt:#1b2436;--sub:#6b7280;background:#f5f7fb!important;color:#1b2436}
+#tela-harpa-lista .harpa-item{border-bottom-color:rgba(0,0,0,.08)!important}
+#tela-harpa-lista .harpa-item:active{background:#eef2f8!important}
+#tela-harpa-lista .harpa-nome{color:#1b2436!important}
+#tela-harpa-lista .std-header,#tela-harpa-hino .std-header{background:#fff!important}
+#tela-harpa-lista .std-titulo,#tela-harpa-hino .std-titulo{color:#1b2436!important}
+#tela-harpa-hino .harpa-hino-body,#tela-harpa-hino .harpa-hino-body *{color:#1b2436!important}
 
 .harpa-hino-num{
   text-align:center;
@@ -2958,7 +2966,7 @@ function bibVoltar(){
   if(bibLevel==='caps'){bibMostrarLivros();return;}
   if(bibLevel==='vers'){bibMostrarCaps(bibLivroIdx);return;}
   if(bibLevel==='busca'){bibMostrarLivros();return;}
-  ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');
+  irHome();   // volta pra home azul (a home abre a Bíblia direto agora)
 }
 
 function bibSetHeader(titulo,bread,posBar,posLabel,search){
@@ -3088,8 +3096,7 @@ async function abrirHarpa(){
 }
 
 function fecharHarpaLista(){
-  ocultarTodas();
-  document.getElementById('tela-bh-landing').classList.add('ativa');
+  irHome();   // volta pra home azul (a home abre a Harpa direto agora)
 }
 
 function fecharHarpaHino(){
