@@ -843,12 +843,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <div id="painel-hoje-wrap"></div>
     <div id="devocional-home-wrap"></div>
     <div id="continuar-wrap"></div>
-    <div id="hist-home" onclick="abrirHistorinhas()" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1b3a6b,#122a52);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;margin-top:14px;cursor:pointer">
+    <!-- Historinhas ja tem bloco proprio na vitrine 3x3 acima; card duplicado escondido (menos rolagem) -->
+    <div id="hist-home" onclick="abrirHistorinhas()" style="display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#1b3a6b,#122a52);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;margin-top:14px;cursor:pointer">
       <span style="font-size:30px">📖</span>
       <div style="flex:1"><b style="font-size:16px">Historinhas Infantil</b><div style="font-size:12.5px;color:#9fb0bd;margin-top:2px">Videos biblicos pras criancas - assista e compartilhe</div></div>
       <span style="font-size:22px;color:#9fb0bd">&rsaquo;</span>
     </div>
-    <div class="sec-label" style="margin-top:16px">Seus módulos</div>
+    <div class="sec-label" style="margin-top:16px">Mais no RADAR</div>
     <div class="modulos" id="modulos"></div>
   </div>
   <nav class="nav-bottom">
@@ -2074,8 +2075,10 @@ function renderHome(){
     ? `<div class="continuar-card" onclick="abrirMod('${ultimoMod.id}')"><span class="continuar-icone">${ultimoMod.img?`<img class="cont-icone-img" src="${ultimoMod.img}">`:ultimoMod.icon}</span><div class="continuar-info"><div class="continuar-rotulo">Continuar acessando</div><div class="continuar-nome">${ultimoMod.nome}</div></div><span class="continuar-arr">›</span></div>`
     : '';
 
-  // Módulos
-  document.getElementById('modulos').innerHTML = MODS.map(m=>{
+  // Módulos — esconde da lista de baixo o que JÁ está na vitrine 3x3 (nao duplicar / menos rolagem).
+  // Nao apaga nada: continuam abrindo pela vitrine e aparecendo na busca.
+  const NA_VITRINE = ['biblia','ebd'];
+  document.getElementById('modulos').innerHTML = MODS.filter(m=>!NA_VITRINE.includes(m.id)).map(m=>{
     const linha = `<div class="tile-icon">${m.img?`<img class="tile-icon-img" src="${m.img}">`:m.icon}</div>`
       + `<div class="tile-info"><div class="tile-nome">${m.nome}</div><div class="tile-desc">${m.desc}</div></div>`
       + `<div class="tile-arr">›</div>`;
