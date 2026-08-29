@@ -1,4 +1,4 @@
-const V='radar-v131';
+const V='radar-v132';
 const CACHE=['/','/manifest.json','/capa.png'];
 
 self.addEventListener('install',e=>{
@@ -32,4 +32,29 @@ self.addEventListener('fetch',e=>{
   if(req.mode==='navigate' || req.destination==='document'){ e.respondWith(documento(req)); return; }
   // demais recursos: cache primeiro (rápido), com busca na rede se faltar
   e.respondWith(caches.match(req).then(r=>r||fetch(req)));
+});
+
+// ═══ NOTIFICAÇÃO com o app FECHADO (apita/vibra o celular) ═══
+self.addEventListener('push',e=>{
+  let d={}; try{ d=e.data?e.data.json():{}; }catch(_){ d={title:'RADAR', body:(e.data&&e.data.text())||''}; }
+  const titulo=d.title||'RADAR';
+  const opc={
+    body:d.body||'',
+    icon:d.icon||'/icon-192.png',
+    badge:'/icon-192.png',
+    vibrate:[200,100,200,100,200],
+    tag:d.tag||'radar-aviso',
+    renotify:true,
+    requireInteraction:true,
+    data:{url:d.url||'/'}
+  };
+  e.waitUntil(self.registration.showNotification(titulo,opc));
+});
+self.addEventListener('notificationclick',e=>{
+  e.notification.close();
+  const url=(e.notification.data&&e.notification.data.url)||'/';
+  e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(ls=>{
+    for(const c of ls){ if('focus' in c){ c.navigate&&c.navigate(url); return c.focus(); } }
+    if(clients.openWindow) return clients.openWindow(url);
+  }));
 });

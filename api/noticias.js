@@ -12,6 +12,13 @@ const CAT = { Profecia:'🕊️', Arqueologia:'🏺', Conflito:'⚔️', Socieda
 
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
+  // Só no CRON (path tem ?cron=1): dispara o aviso de push da EBD (endpoint idempotente, 1x/dia).
+  try {
+    const u = new URL(req.url);
+    if (u.searchParams.get('cron') === '1') {
+      await fetch('https://radar-atual.vercel.app/api/videos?acao=push-cron&k=' + (process.env.PUSH_CRON_SECRET || ''), { signal: AbortSignal.timeout(9000) }).catch(()=>{});
+    }
+  } catch (_) {}
   const feeds = await Promise.allSettled(
     QUERIES.map(url => fetch(url, { headers: { 'User-Agent': 'Googlebot/2.1' }, signal: AbortSignal.timeout(4000) }).then(r => r.text()))
   );

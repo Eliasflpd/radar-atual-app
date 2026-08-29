@@ -7531,7 +7531,7 @@ document.addEventListener('keydown',function(e){ if(e.key==='Enter'&&document.ac
       speechSynthesis.speak(u);
     }catch(_){}
   }
-  function tocar(txt){ chime(); setTimeout(function(){ falar(txt); }, 650); }
+  function tocar(txt){ chime(); }  /* só som (chime), sem voz */
 
   function fechar(){ var o=document.getElementById('aviso-int'); if(o) o.remove(); }
   function mudo(){
@@ -7557,11 +7557,8 @@ document.addEventListener('keydown',function(e){ if(e.key==='Enter'&&document.ac
        '</div>'+
        '<div style="padding:16px 18px;color:#1c2230;font-size:1.05rem;line-height:1.5">'+corpo+'</div>'+
        '<div style="display:flex;gap:9px;padding:0 16px 16px">'+
-         '<button onclick="_avisoTocar()" style="flex:1;background:#a9791c;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-family:inherit;font-size:1rem;cursor:pointer">🔊 Ouvir de novo</button>'+
+         '<button onclick="_avisoTocar()" style="flex:1;background:#a9791c;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-family:inherit;font-size:1rem;cursor:pointer">🔔 Tocar de novo</button>'+
          '<button onclick="document.getElementById(\'aviso-int\').remove()" style="flex:1;background:#0f3d5c;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-family:inherit;font-size:1rem;cursor:pointer">OK, entendi</button>'+
-       '</div>'+
-       '<div style="padding:0 16px 14px;text-align:center">'+
-         '<button id="aviso-mudo" onclick="_avisoMudo()" style="background:none;border:none;color:#6b7280;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer">'+(off?'🔕 Voz desligada':'🔔 Voz ligada')+'</button>'+
        '</div>'+
      '</div>';
     document.body.appendChild(o);
@@ -7589,6 +7586,56 @@ document.addEventListener('keydown',function(e){ if(e.key==='Enter'&&document.ac
   if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){}; }catch(_){} }
   if(document.readyState==='complete') setTimeout(rodar,1400);
   else window.addEventListener('load', function(){ setTimeout(rodar,1400); });
+})();
+
+/* ═══════════════ PUSH — avisos com o app FECHADO (apita o celular) ═══════════════ */
+(function(){
+  var VAPID='BM9z6FNx-VTiqq2tn_juuW3Qqt7zRsNFwtmYjX290tV1NgkmjhIqLTzYHx3svqzgjMgrP6LiG7EsdKl--DIg85g';
+  function b64(s){ var pad='='.repeat((4-s.length%4)%4); var b=(s+pad).replace(/-/g,'+').replace(/_/g,'/'); var raw=atob(b); var arr=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i); return arr; }
+  function suportado(){ return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window); }
+  async function inscrever(){
+    var reg=await navigator.serviceWorker.ready;
+    var sub=await reg.pushManager.getSubscription();
+    if(!sub){ sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64(VAPID)}); }
+    var j=sub.toJSON();
+    await fetch('/api/videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'push-sub', sub:{endpoint:j.endpoint, keys:j.keys}})});
+    return true;
+  }
+  function fecharPrompt(){ var p=document.getElementById('push-prompt'); if(p) p.remove(); }
+  window._pushDispensar=function(){ localStorage.setItem('push_dispensado','1'); fecharPrompt(); };
+  window._ativarAvisos=async function(){
+    try{
+      if(!suportado()){ alert('Para receber avisos no iPhone, primeiro adicione o app à tela inicial (compartilhar → Adicionar à Tela de Início). No Android já funciona.'); return; }
+      var p=await Notification.requestPermission();
+      if(p!=='granted'){ localStorage.setItem('push_dispensado','1'); fecharPrompt(); return; }
+      await inscrever();
+      localStorage.setItem('push_ok','1'); fecharPrompt();
+      var t=document.createElement('div'); t.textContent='✓ Avisos ativados!';
+      t.style.cssText='position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#14804a;color:#fff;padding:11px 18px;border-radius:999px;font-weight:800;z-index:99999';
+      document.body.appendChild(t); setTimeout(function(){t.remove();},1800);
+    }catch(e){ localStorage.setItem('push_dispensado','1'); fecharPrompt(); }
+  };
+  function mostrarPrompt(){
+    if(document.getElementById('push-prompt')||document.getElementById('aviso-int')) return;
+    var p=document.createElement('div'); p.id='push-prompt';
+    p.style.cssText='position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));max-width:440px;margin:0 auto;background:#fff;border:1px solid #e4e7ec;border-radius:16px;box-shadow:0 12px 34px rgba(0,0,0,.22);z-index:9998;padding:14px 15px;display:flex;align-items:center;gap:12px';
+    p.innerHTML='<div style="font-size:26px">🔔</div>'+
+      '<div style="flex:1;min-width:0"><div style="font-weight:800;color:#0f3d5c">Ativar avisos do RADAR</div>'+
+      '<div style="font-size:.84rem;color:#5c6470;line-height:1.35">A lição da EBD e novidades chegam pra você — mesmo com o app fechado.</div></div>'+
+      '<div style="display:flex;flex-direction:column;gap:6px">'+
+      '<button onclick="_ativarAvisos()" style="background:#0f3d5c;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-weight:800;font-family:inherit;cursor:pointer">Ativar</button>'+
+      '<button onclick="_pushDispensar()" style="background:none;border:none;color:#8a91a0;font-family:inherit;font-size:.78rem;cursor:pointer">agora não</button></div>';
+    document.body.appendChild(p);
+  }
+  function iniciar(){
+    if(!suportado()) return;
+    if(Notification.permission==='granted'){ inscrever().catch(function(){}); return; }  // já aceitou → renova inscrição
+    if(Notification.permission==='denied') return;
+    if(localStorage.getItem('push_dispensado')||localStorage.getItem('push_ok')) return;
+    setTimeout(mostrarPrompt, 6500);  // deixa o alerta inteligente aparecer primeiro
+  }
+  if(document.readyState==='complete') iniciar();
+  else window.addEventListener('load', iniciar);
 })();
 </script>
 <style>

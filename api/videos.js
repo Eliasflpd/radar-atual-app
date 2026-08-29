@@ -18,6 +18,40 @@ function detectar(url){
   return 'link';
 }
 
+// ===== PUSH (notificação com app fechado) =====
+const EBD_TITULOS=['O CHAMADO PARA OS GENTIOS','A PORTA DA FÉ SE ABRE ENTRE OS GENTIOS','A GRAÇA QUE ALCANÇA TODAS AS NAÇÕES','O ESPÍRITO QUE NOS GUIA PARA ALÉM DAS FRONTEIRAS','CRISTO ENTRE OS FILÓSOFOS — O DEUS DESCONHECIDO SE REVELA','A SUFICIÊNCIA DA GRAÇA NA CIDADE DE CORINTO','QUANDO O ESPÍRITO SOPRA EM ÉFESO','DESPEDIDA EM ÉFESO ENTRE LÁGRIMAS E ALERTAS','CORAGEM PARA TESTEMUNHAR — PAULO DIANTE DA MULTIDÃO','UMA ESPERANÇA INABALÁVEL PERANTE OS PODEROSOS','ENTRE TEMPESTADES E PROMESSAS','O EVANGELHO CHEGA AO CORAÇÃO DO IMPÉRIO','A MISSÃO CONTINUA EM NÓS'];
+function ebdInfo(){
+  const sp=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'}));
+  sp.setHours(0,0,0,0);
+  const start=new Date(2026,6,5); start.setHours(0,0,0,0);
+  const dow=sp.getDay();
+  const prox=new Date(sp); if(dow!==0) prox.setDate(sp.getDate()+(7-dow));
+  const wk=Math.round((prox-start)/(7*86400000));
+  const n=Math.max(1,wk+1);
+  return {dow, n, titulo:(EBD_TITULOS[n-1]||'')};
+}
+async function ensurePush(c){
+  await c.query(`create table if not exists push_subs(id bigserial primary key, endpoint text unique not null, p256dh text not null, auth text not null, criado_em timestamptz default now(), ultimo_ok timestamptz)`);
+}
+async function enviarPush(c, payload){
+  const webpush=require('web-push');
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT||'mailto:radar@radar-atual.vercel.app', process.env.VAPID_PUBLIC, process.env.VAPID_PRIVATE);
+  const subs=await c.query('select id,endpoint,p256dh,auth from push_subs');
+  const data=JSON.stringify(payload);
+  let ok=0, rm=0;
+  for(const s of subs.rows){
+    try{
+      await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}}, data);
+      ok++;
+    }catch(err){
+      const sc=err&&err.statusCode;
+      if(sc===404||sc===410){ await c.query('delete from push_subs where id=$1',[s.id]); rm++; }
+    }
+  }
+  if(ok) await c.query('update push_subs set ultimo_ok=now()');
+  return {enviados:ok, removidos:rm, total:subs.rows.length};
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
@@ -57,6 +91,16 @@ module.exports = async (req, res) => {
         return;
       }
 
+      // === INSCREVER no push (qualquer pessoa que aceitar receber avisos) ===
+      if(b.acao==='push-sub'){
+        const sub=b.sub||{};
+        if(!sub.endpoint||!sub.keys||!sub.keys.p256dh||!sub.keys.auth){ res.status(400).json({ok:false,erro:'sub'}); return; }
+        await ensurePush(c);
+        await c.query('insert into push_subs(endpoint,p256dh,auth) values($1,$2,$3) on conflict(endpoint) do update set p256dh=excluded.p256dh,auth=excluded.auth',[sub.endpoint,sub.keys.p256dh,sub.keys.auth]);
+        res.status(200).json({ok:true});
+        return;
+      }
+
       if((b.token||'')!==ADM){ res.status(401).json({error:'não autorizado'}); return; }
       const url=(b.url||'').trim();
       if(!url){ res.status(400).json({error:'sem link'}); return; }
@@ -69,6 +113,44 @@ module.exports = async (req, res) => {
 
     const q=req.query||{};
     const admin=(q.token||'')===ADM;
+
+    // === CRON: envia o aviso da EBD (chamado pelo Vercel no sábado/domingo) ===
+    if(q.acao==='push-cron'){
+      if((q.k||'')!==(process.env.PUSH_CRON_SECRET||'__x__')){ res.status(403).json({ok:false}); return; }
+      await ensurePush(c);
+      await c.query('create table if not exists push_estado(id int primary key default 1, ultimo_envio date)');
+      const e=ebdInfo();
+      if(e.dow!==6 && e.dow!==0){ res.status(200).json({ok:true, pulou:'nao e vespera/dia de EBD', dow:e.dow}); return; }
+      // trava: 1 aviso por dia (o cron roda 2x/dia)
+      const hojeSP=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'})).toISOString().slice(0,10);
+      const est=await c.query('select ultimo_envio from push_estado where id=1');
+      if(est.rows.length && est.rows[0].ultimo_envio && new Date(est.rows[0].ultimo_envio).toISOString().slice(0,10)===hojeSP){
+        res.status(200).json({ok:true, pulou:'ja avisou hoje'}); return;
+      }
+      const quando=(e.dow===6)?'Amanhã tem EBD!':'Hoje tem EBD!';
+      const body=(e.titulo?('Lição '+e.n+': '+e.titulo):('Lição '+e.n))+' — toque para abrir.';
+      const r=await enviarPush(c,{title:'🔔 '+quando, body:body, url:'/', tag:'ebd'});
+      await c.query('insert into push_estado(id,ultimo_envio) values(1,$1) on conflict(id) do update set ultimo_envio=excluded.ultimo_envio',[hojeSP]);
+      res.status(200).json({ok:true, licao:e.n, ...r});
+      return;
+    }
+    // === TESTE (só admin): dispara uma notificação agora pra todos os inscritos ===
+    if(q.acao==='push-test'){
+      if(!admin){ res.status(403).json({ok:false}); return; }
+      await ensurePush(c);
+      const r=await enviarPush(c,{title:'🔔 RADAR', body:'Teste de notificação — funcionando! 🎉', url:'/', tag:'teste'});
+      res.status(200).json({ok:true, ...r});
+      return;
+    }
+    // quantos inscritos (só admin)
+    if(q.acao==='push-count'){
+      if(!admin){ res.status(403).json({ok:false}); return; }
+      await ensurePush(c);
+      const r=await c.query('select count(*)::int n from push_subs');
+      res.status(200).json({ok:true, inscritos:r.rows[0].n});
+      return;
+    }
+
     if(admin && q.del){
       const rd=await c.query('delete from radar_videos where id=$1',[parseInt(q.del,10)]);
       res.json({ok:true, apagados:rd.rowCount});
