@@ -178,6 +178,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 #tela-biblia .bib-livro,#tela-biblia .bib-result{border-bottom-color:rgba(0,0,0,.07)!important}
 #tela-biblia .bib-livro:active,#tela-biblia .bib-verso:active{background:#eef2f8!important}
 #tela-biblia .bib-cap{color:#1b2436;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+#tela-biblia .bib-vers-txt,#tela-biblia .bib-verso,#tela-biblia .bib-livro-nome,#tela-biblia .bib-result{color:#1b2436!important}
+#tela-biblia .bib-vers-num{color:var(--gold)!important;font-weight:800}
+#tela-biblia .bib-verso.marcado .bib-vers-txt{color:#a9791c!important}
 #tela-biblia .std-header,#tela-biblia .bib-header{background:#fff!important;color:#1b2436}
 #tela-biblia .std-titulo,#tela-biblia .bib-header *{color:#1b2436!important}
 .bib-vers-num{display:inline-block;min-width:28px;font-size:11px;font-weight:800;color:var(--gold);opacity:.7;vertical-align:top;padding-top:2px;user-select:none}
@@ -744,16 +747,16 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 <!-- ══ VITRINE 3×3 — NOVO VISUAL DA HOME (azul claro + dourado) ══ -->
 <style>
 .vitrine{margin:2px 0 18px}
-.vit-hero{position:relative;background:linear-gradient(165deg,#3E74B4 0%,#254A80 100%);border-radius:20px;padding:16px 16px 18px;overflow:hidden}
+.vit-hero{position:relative;background:linear-gradient(165deg,#3E74B4 0%,#254A80 100%);border-radius:18px;padding:9px 14px 13px;overflow:hidden;text-align:center}
 .vit-topo{display:flex;justify-content:flex-end;gap:10px;margin-bottom:6px}
 .vit-tbtn{width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.10);color:#fff;font-size:16px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
 .vit-tbtn:active{background:rgba(255,255,255,.25)}
-.vit-bemvindo{font-size:19px;font-weight:400;color:#EAF2FF;letter-spacing:.2px;line-height:1.15}
-.vit-marca{font-family:'Playfair Display',Georgia,serif;font-size:33px;font-weight:800;color:var(--gold2);line-height:1.1;margin:1px 0 6px}
-.vit-sub{font-size:14px;color:rgba(255,255,255,.86);line-height:1.35;max-width:270px}
+.vit-bemvindo{font-size:16px;font-weight:400;color:#EAF2FF;letter-spacing:.2px;line-height:1.15}
+.vit-marca{font-family:'Playfair Display',Georgia,serif;font-size:27px;font-weight:800;color:var(--gold2);line-height:1.1;margin:1px 0 6px}
+.vit-sub{font-size:13px;color:rgba(255,255,255,.86);line-height:1.3;max-width:270px;margin:4px auto 0}
 .vit-fio{width:42px;height:2px;border-radius:2px;background:var(--gold2);margin:12px auto 0;opacity:.9}
 .vit-grade{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
-.vit-card{background:linear-gradient(160deg,#37659F 0%,#264C82 100%);border:1px solid rgba(245,200,66,.30);border-radius:15px;padding:12px 7px 11px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:126px;transition:transform .12s,border-color .12s;box-shadow:0 3px 10px rgba(0,0,0,.22)}
+.vit-card{background:linear-gradient(160deg,#37659F 0%,#264C82 100%);border:1px solid rgba(245,200,66,.30);border-radius:15px;padding:8px 6px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:1/1;min-height:0;transition:transform .12s,border-color .12s;box-shadow:0 3px 10px rgba(0,0,0,.22)}
 .vit-card:active{transform:scale(.96);border-color:var(--gold2)}
 .vit-ico{height:44px;display:grid;place-items:center;font-size:30px;line-height:1;margin-bottom:7px}
 .vit-ico img{max-height:44px;max-width:46px;object-fit:contain;display:block}
@@ -763,7 +766,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .vit-aspas{position:absolute;left:12px;top:4px;font-family:Georgia,serif;font-size:36px;color:var(--gold2);opacity:.55;line-height:1}
 .vit-vtxt{font-size:13.5px;color:#F2F7FF;line-height:1.45;font-style:italic}
 .vit-vref{font-size:12px;font-weight:900;color:var(--gold2);letter-spacing:1.6px;margin-top:7px}
-@media(min-width:560px){.vit-marca{font-size:38px}.vit-card{min-height:142px}.vit-nome{font-size:13px}.vit-desc{font-size:11.5px}}
+@media(min-width:560px){.vit-marca{font-size:31px}.vit-card{min-height:142px}.vit-nome{font-size:13px}.vit-desc{font-size:11.5px}}
 </style>
 
 <!-- HOME -->
