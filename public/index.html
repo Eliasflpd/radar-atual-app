@@ -7483,6 +7483,117 @@ async function perguntarLupa(){
   document.getElementById('lupa-q').value='';
 }
 document.addEventListener('keydown',function(e){ if(e.key==='Enter'&&document.activeElement&&document.activeElement.id==='lupa-q'){ e.preventDefault(); perguntarLupa(); }});
+
+/* ═══════════════ AVISO INTELIGENTE — o app toca e FALA (EBD/eventos) ═══════════════
+   Quando você abre o app no sábado ou domingo, ele mostra um alerta, dá um chime
+   e fala em voz alta qual é a lição da EBD. 1x por dia. Voz pode ser desligada. */
+(function(){
+  function hoje0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
+  // nº e título da lição do próximo domingo (usa a função que o app já tem)
+  function ebdProxima(){
+    var n=0;
+    try{ n=(typeof licaoDaSemana==='function')?licaoDaSemana():0; }catch(_){ n=0; }
+    var tit='';
+    try{
+      if(typeof EBD_LICOES!=='undefined' && EBD_LICOES.adulto){
+        var it=EBD_LICOES.adulto.find(function(x){ return x.n===n; });
+        if(it) tit=it.titulo||'';
+      }
+    }catch(_){}
+    return {n:n, titulo:tit};
+  }
+  // chime agradável (3 notas) via WebAudio
+  function chime(){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      var ac=new AC(); var notas=[523.25,659.25,783.99]; var t=ac.currentTime;
+      notas.forEach(function(f,i){
+        var o=ac.createOscillator(), g=ac.createGain();
+        o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(ac.destination);
+        var s=t+i*0.16; g.gain.setValueAtTime(0.0001,s);
+        g.gain.exponentialRampToValueAtTime(0.28,s+0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001,s+0.42);
+        o.start(s); o.stop(s+0.45);
+      });
+    }catch(_){}
+  }
+  // fala pt-BR
+  function falar(txt){
+    try{
+      if(localStorage.getItem('aviso_voz')==='off') return;
+      if(!('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(txt);
+      u.lang='pt-BR'; u.rate=0.98; u.pitch=1;
+      var vs=speechSynthesis.getVoices()||[];
+      var pt=vs.find(function(v){ return /pt.?BR/i.test(v.lang); })||vs.find(function(v){ return /^pt/i.test(v.lang); });
+      if(pt) u.voice=pt;
+      speechSynthesis.speak(u);
+    }catch(_){}
+  }
+  function tocar(txt){ chime(); setTimeout(function(){ falar(txt); }, 650); }
+
+  function fechar(){ var o=document.getElementById('aviso-int'); if(o) o.remove(); }
+  function mudo(){
+    var off=localStorage.getItem('aviso_voz')==='off';
+    localStorage.setItem('aviso_voz', off?'on':'off');
+    try{ if(!off) speechSynthesis.cancel(); }catch(_){}
+    var b=document.getElementById('aviso-mudo'); if(b) b.textContent = off?'🔔 Voz ligada':'🔕 Voz desligada';
+  }
+  window._avisoMudo=mudo;
+
+  function mostrar(tituloMsg, corpo, fala){
+    fechar();
+    var off=localStorage.getItem('aviso_voz')==='off';
+    var o=document.createElement('div');
+    o.id='aviso-int';
+    o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(8,20,34,.55);display:flex;align-items:flex-start;justify-content:center;padding:calc(18px + env(safe-area-inset-top)) 16px 16px;animation:avfade .25s';
+    o.innerHTML=''+
+     '<div style="background:#fff;max-width:440px;width:100%;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.35)">'+
+       '<div style="background:linear-gradient(135deg,#0f3d5c,#0f6d78);color:#fff;padding:16px 18px;display:flex;align-items:center;gap:12px">'+
+         '<div style="font-size:30px;animation:avring 1.2s infinite">🔔</div>'+
+         '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:1.12rem;line-height:1.15">'+tituloMsg+'</div>'+
+         '<div style="color:#cfe3ec;font-size:.8rem">Aviso do RADAR</div></div>'+
+       '</div>'+
+       '<div style="padding:16px 18px;color:#1c2230;font-size:1.05rem;line-height:1.5">'+corpo+'</div>'+
+       '<div style="display:flex;gap:9px;padding:0 16px 16px">'+
+         '<button onclick="_avisoTocar()" style="flex:1;background:#a9791c;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-family:inherit;font-size:1rem;cursor:pointer">🔊 Ouvir de novo</button>'+
+         '<button onclick="document.getElementById(\'aviso-int\').remove()" style="flex:1;background:#0f3d5c;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-family:inherit;font-size:1rem;cursor:pointer">OK, entendi</button>'+
+       '</div>'+
+       '<div style="padding:0 16px 14px;text-align:center">'+
+         '<button id="aviso-mudo" onclick="_avisoMudo()" style="background:none;border:none;color:#6b7280;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer">'+(off?'🔕 Voz desligada':'🔔 Voz ligada')+'</button>'+
+       '</div>'+
+     '</div>';
+    document.body.appendChild(o);
+    o.addEventListener('click',function(e){ if(e.target===o) fechar(); });
+    window._avisoTocar=function(){ tocar(fala); };
+    tocar(fala);
+  }
+
+  function rodar(){
+    var d=hoje0(), dow=d.getDay(); // 0=dom .. 6=sáb
+    if(dow!==6 && dow!==0) return;            // só avisa no fim de semana (sáb/dom)
+    var chave='aviso_'+d.toISOString().slice(0,10);
+    if(localStorage.getItem(chave)) return;   // já avisou hoje
+    var e=ebdProxima();
+    if(!e.n || e.n<1) return;
+    var quando = (dow===6)?'Amanhã é domingo — tem EBD!':'Hoje tem EBD!';
+    var falaQuando = (dow===6)?'Amanhã é domingo. Tem escola bíblica.':'Hoje tem escola bíblica dominical.';
+    var corpo = '<b>Lição '+e.n+'</b>'+(e.titulo?': '+e.titulo:'')+'.';
+    var fala = falaQuando+' A lição '+e.n+(e.titulo?': '+e.titulo:'')+'.';
+    localStorage.setItem(chave,'1');
+    mostrar(quando, corpo, fala);
+  }
+
+  // as vozes carregam assíncrono; espera a home assentar
+  if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){}; }catch(_){} }
+  if(document.readyState==='complete') setTimeout(rodar,1400);
+  else window.addEventListener('load', function(){ setTimeout(rodar,1400); });
+})();
 </script>
+<style>
+@keyframes avfade{from{opacity:0}to{opacity:1}}
+@keyframes avring{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(8deg)}80%{transform:rotate(-6deg)}}
+</style>
 </body>
 </html>
