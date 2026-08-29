@@ -39,6 +39,12 @@
   .capa .stats{display:flex;gap:18px;margin-top:12px;font-size:.8rem;color:#e7f1f6}
   .capa .stats b{display:block;font-size:1.15rem;color:#ffd98a}
   .pdf-link{display:flex;align-items:center;gap:10px;background:#fff8e6;border:1px solid #f0dcaa;color:#6b551f;border-radius:12px;padding:11px 13px;margin-bottom:14px;text-decoration:none;font-weight:700;font-size:.92rem}
+  .lista-tit{font-size:.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#8a91a0;margin:2px 2px 12px}
+  .capa-click{cursor:pointer;position:relative;transition:transform .12s}
+  .capa-click:active{transform:scale(.99)}
+  .capa-arr{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#ffd98a;font-size:1.7rem;font-weight:700}
+  .voltar-curso{background:none;border:none;color:#0f3d5c;font-weight:800;font-family:inherit;font-size:.98rem;cursor:pointer;padding:2px 0 10px}
+  .sec-mod{font-size:.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#8a91a0;margin:6px 2px 10px}
 
   .mod{background:var(--card);border:1px solid var(--linha);border-radius:14px;margin-bottom:11px;overflow:hidden;box-shadow:0 2px 6px rgba(20,40,70,.05)}
   .mod-h{display:flex;align-items:center;gap:12px;padding:14px 15px;cursor:pointer;user-select:none}
@@ -134,15 +140,15 @@ async function entrar(){
 }
 $('senha').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); entrar(); } });
 
+// NÍVEL 1 — lista de cursos (cada curso é um card; clica pra entrar)
 function render(){
   $('gate').style.display='none';
   const cur=$('curso'); cur.style.display='block';
-  PLANO=[];
   let totVistas=0;
-  DADOS.modulos.forEach(m=>{ m.aulas.forEach(a=>{ PLANO.push({m:m.nome,mo:m.ordem,a}); if(estaVista(a.url)) totVistas++; }); });
-  const pdfUrl = (DADOS.pdf||'');
-  let html=`
-    <div class="capa">
+  DADOS.modulos.forEach(m=>{ m.aulas.forEach(a=>{ if(estaVista(a.url)) totVistas++; }); });
+  cur.innerHTML=`
+    <div class="lista-tit">Meus cursos</div>
+    <div class="capa capa-click" onclick="abrirCurso()">
       <img class="foto" src="/img/curso/ivansantos.jpg" alt="Ivan Santos" onerror="this.style.display='none'">
       <div class="info">
         <span class="badge">Curso completo</span>
@@ -154,13 +160,33 @@ function render(){
           <div><b>${totVistas}</b>assistidas</div>
         </div>
       </div>
+      <span class="capa-arr">›</span>
     </div>`;
-  html+=`<a class="pdf-link" href="apostila.html">
+  window.scrollTo(0,0);
+}
+
+// NÍVEL 2 — dentro do curso: apostila + módulos/aulas
+function abrirCurso(){
+  const cur=$('curso');
+  PLANO=[];
+  DADOS.modulos.forEach(m=>{ m.aulas.forEach(a=>{ PLANO.push({m:m.nome,mo:m.ordem,a}); }); });
+  let html=`
+    <button class="voltar-curso" onclick="render()">‹ Meus cursos</button>
+    <div class="capa">
+      <img class="foto" src="/img/curso/ivansantos.jpg" alt="Ivan Santos" onerror="this.style.display='none'">
+      <div class="info">
+        <span class="badge">Curso completo</span>
+        <h1>Escatologia Avançada</h1>
+        <div class="prof">com Ivan Santos</div>
+      </div>
+    </div>
+    <a class="pdf-link" href="apostila.html">
       <span style="font-size:22px">📖</span>
       <span style="flex:1"><b style="display:block;font-size:1rem;color:#0f3d5c">Apostila do Curso</b>
       <span style="font-size:.82rem;color:#6b551f">Texto completo — 16 módulos, leitura com índice</span></span>
       <span style="color:#a9791c;font-size:1.2rem">›</span>
-    </a>`;
+    </a>
+    <div class="sec-mod">Módulos e aulas</div>`;
   DADOS.modulos.forEach((m,mi)=>{
     html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="toggleMod(${mi})">
       <div class="n">${m.ordem}</div>
@@ -176,6 +202,7 @@ function render(){
     html+=`</div></div>`;
   });
   cur.innerHTML=html;
+  window.scrollTo(0,0);
 }
 function limpaModulo(s){ return (s||'').replace(/^M[ÓO]DULO\s*\d+\s*-\s*/i,'').replace(/\s+\d+$/,'').trim(); }
 function limpaAula(s){ return (s||'').replace(/\.(mkv|mp4)$/i,'').replace(/^AULA\s*[O0]?\d+\s*-\s*/i,'').trim(); }
@@ -195,7 +222,7 @@ function abrir(gi){
   v.play().catch(()=>{});
 }
 function proximaAula(){ if(atual+1<PLANO.length) abrir(atual+1); }
-function fecharPlayer(){ const v=$('vid'); try{ v.pause(); }catch(_){} $('player').classList.remove('on'); v.src=''; render(); }
+function fecharPlayer(){ const v=$('vid'); try{ v.pause(); }catch(_){} $('player').classList.remove('on'); v.src=''; abrirCurso(); }
 
 // auto-desbloqueio (aparelho do Elias): se já entrou antes, não pede senha de novo
 (async function(){
