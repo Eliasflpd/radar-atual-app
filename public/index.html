@@ -805,6 +805,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 <div class="tela" id="tela-historinhas">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
     <div class="std-hinfo"><div class="std-titulo">📖 Historinhas Infantil</div><div class="std-sub" id="hist-sub">Videos pras criancas</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Historinhas Infantil')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <span style="font-size:24px;flex-shrink:0">📖</span>
   </div>
   <div class="home-scroll" style="padding-top:12px">
@@ -1024,6 +1025,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
 <div class="tela" id="tela-perolas">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Descobrindo as Pérolas</div><div class="std-sub">Resposta sempre à luz da Bíblia</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Descobrindo as Pérolas')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <span style="font-size:24px">💎</span></div>
   <div class="prl-scroll">
     <div class="prl-intro">Digite <b>qualquer assunto</b> — bíblico ou não (ansiedade, dinheiro, Salmo 23, casamento, medo…). A resposta vem <b>sempre à luz da Bíblia</b>. 💎</div>
@@ -1070,6 +1072,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
 <div class="tela" id="tela-silas">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Projeto Silas</div><div class="std-sub">Documentos e agendas</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Projeto Silas')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <img src="img/ceadema.png" style="width:32px;height:32px;object-fit:contain;border-radius:8px;background:#fff;padding:2px;flex-shrink:0"></div>
   <div class="agv-scroll" style="background:var(--bg)">
     <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
@@ -1091,6 +1094,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
 <div class="tela" id="tela-templo">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Templo Central</div><div class="std-sub">Tuntum - MA</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Templo Central Tuntum-MA')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <span style="font-size:24px">⛪</span></div>
   <div class="agv-scroll" style="background:var(--bg)">
     <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
@@ -1184,7 +1188,8 @@ html[data-fs="3"] .prl-out{font-size:20px}
       <div class="std-titulo">Bíblia e Harpa Cristã</div>
       <div class="std-sub">Leitor + CRM isolados</div>
     </div>
-    <span style="font-size:22px">📖</span>
+    <button onclick="event.stopPropagation();compartilharApp('Bíblia e Harpa Cristã')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <span style="font-size:22px;margin-left:8px">📖</span>
   </div>
   <div class="bh-scroll">
 
@@ -6470,6 +6475,7 @@ const _crmInitMap = {
   <div class="std-header">
     <button class="std-back" onclick="irHome()">←</button>
     <div class="std-hinfo"><div class="std-titulo">📣 Igrejas Parceiras</div><div class="std-sub">Conheça e divulgue</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Igrejas Parceiras')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <div style="width:36px"></div>
   </div>
   <div class="dash-scroll" style="padding:14px">
@@ -7279,42 +7285,15 @@ const _crmInitMap = {
   </div>
 </div>
 
-<!-- Botão fixo COMPARTILHAR (universal — compartilha o módulo atual) -->
-<button onclick="compartilharApp()" title="Compartilhar"
-   style="position:fixed;left:16px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:99999;
-   width:56px;height:56px;border-radius:50%;background:#25D366;color:#fff;border:2px solid #fff;
-   box-shadow:0 6px 18px rgba(37,211,102,.4);font-size:24px;cursor:pointer">📤</button>
 <script>
-function compartilharApp(){
-  var mod=localStorage.getItem('radar_ultimo_mod')||'';
-  var url='https://radar-atual.vercel.app'+(mod?'/?mod='+encodeURIComponent(mod):'');
-  var txt='📖 Conheça o RADAR — Bíblias de estudo, lições da EBD, pregação e muito mais, no celular, de graça: ';
+function compartilharApp(nome){
+  var url='https://radar-atual.vercel.app';
+  var txt=(nome?('📖 '+nome+' — no RADAR (grátis, no celular): '):'📖 Conheça o RADAR — Bíblias de estudo, EBD, pregação e muito mais: ');
   try{
-    if(navigator.share){ navigator.share({title:'RADAR',text:txt,url:url}).catch(function(){}); }
+    if(navigator.share){ navigator.share({title:(nome||'RADAR'),text:txt,url:url}).catch(function(){}); }
     else { window.open('https://wa.me/?text='+encodeURIComponent(txt+url),'_blank'); }
   }catch(e){ window.open('https://wa.me/?text='+encodeURIComponent(txt+url),'_blank'); }
 }
-// injeta um botão 📤 Compartilhar no cabeçalho de CADA módulo (automático)
-function injetarShareHeader(tela){
-  try{
-    if(!tela) return;
-    var h=tela.querySelector('.std-header, .agv-header, .mc-header');
-    if(!h || h.querySelector('.hdr-share')) return;
-    var b=document.createElement('button');
-    b.className='hdr-share'; b.type='button'; b.innerHTML='📤'; b.title='Compartilhar';
-    b.style.cssText='background:#25D366;color:#fff;border:none;border-radius:10px;width:36px;height:36px;font-size:17px;cursor:pointer;flex-shrink:0;margin-left:8px';
-    b.onclick=function(e){ e.stopPropagation(); compartilharApp(); };
-    h.appendChild(b);
-  }catch(e){}
-}
-try{
-  new MutationObserver(function(muts){
-    muts.forEach(function(m){
-      var t=m.target;
-      if(t && t.classList && t.classList.contains('tela') && t.classList.contains('ativa')) injetarShareHeader(t);
-    });
-  }).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
-}catch(e){}
 </script>
 
 
