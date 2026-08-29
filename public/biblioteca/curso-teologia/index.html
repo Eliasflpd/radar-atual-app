@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>🎓 Curso de Teologia — Estude a fé a fundo</title>
+<style>
+  :root{
+    --fundo:#f5f7fb;
+    --card:#ffffff;
+    --texto:#1b2436;
+    --texto-suave:#54607a;
+    --navy:#0f3d5c;
+    --dourado:#a9791c;
+    --dourado-claro:#c79a3e;
+    --borda:#e3e8f2;
+    --sombra:0 6px 20px rgba(15,61,92,.08);
+  }
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:18px}
+  body{
+    margin:0;background:var(--fundo);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;
+    line-height:1.6;
+    padding:16px 14px calc(40px + env(safe-area-inset-bottom));
+    max-width:860px;margin-left:auto;margin-right:auto;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* barra de navegação topo */
+  .nav{
+    display:flex;justify-content:flex-start;margin-bottom:14px;
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;
+    border:none;cursor:pointer;font-family:inherit;
+    font-size:.95rem;font-weight:700;border-radius:12px;
+    padding:10px 16px;transition:transform .12s ease,box-shadow .12s ease;
+    text-decoration:none;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn-inicio{
+    background:var(--card);color:var(--navy);
+    border:1.5px solid var(--borda);box-shadow:var(--sombra);
+  }
+  .btn-share{
+    background:var(--navy);color:#fff;box-shadow:var(--sombra);
+    font-size:1.05rem;padding:14px 22px;
+  }
+
+  /* cabeçalho */
+  header{text-align:center;margin:6px 0 22px}
+  .selo{font-size:2.6rem;line-height:1;margin-bottom:4px}
+  h1{
+    font-family:Georgia,'Times New Roman',serif;
+    color:var(--navy);font-size:2rem;line-height:1.15;
+    font-weight:800;margin:6px 0 6px;letter-spacing:.3px;
+  }
+  .sub{
+    color:var(--dourado);font-weight:700;font-size:1.05rem;
+    margin:0 0 4px;
+  }
+  .linha{
+    height:4px;width:64px;background:var(--dourado);
+    border-radius:4px;margin:14px auto 0;
+  }
+
+  /* grade de trilhas */
+  .trilhas{
+    display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px;
+  }
+  @media(min-width:620px){
+    .trilhas{grid-template-columns:1fr 1fr}
+  }
+  .card{
+    background:var(--card);border:1.5px solid var(--borda);
+    border-radius:16px;padding:18px 18px 16px;
+    box-shadow:var(--sombra);cursor:pointer;text-align:center;
+    transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease;
+    position:relative;overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,var(--dourado),var(--dourado-claro));
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(15,61,92,.14);border-color:var(--dourado-claro)}
+  .card:active{transform:scale(.98)}
+  .card .num{
+    color:var(--dourado);font-weight:800;font-size:.8rem;
+    letter-spacing:2px;text-transform:uppercase;
+  }
+  .card .ic{font-size:2.3rem;line-height:1;margin:6px 0 8px;display:block}
+  .card h2{
+    color:var(--navy);font-size:1.18rem;font-weight:800;
+    margin:0 0 6px;font-family:Georgia,'Times New Roman',serif;
+  }
+  .card p{
+    color:var(--texto-suave);font-size:.95rem;margin:0 0 10px;
+  }
+  .badge{
+    display:inline-block;background:#f0f3fa;color:var(--navy);
+    border:1px solid var(--borda);border-radius:999px;
+    font-size:.75rem;font-weight:700;padding:4px 12px;
+    letter-spacing:.5px;
+  }
+
+  /* aviso expansível dentro do card */
+  .aviso{
+    max-height:0;overflow:hidden;transition:max-height .3s ease,margin .3s ease;
+    margin-top:0;
+  }
+  .card.aberto .aviso{max-height:120px;margin-top:12px}
+  .aviso-in{
+    background:#fbf6ea;border:1px solid #eadfc2;border-radius:12px;
+    padding:12px;color:#7a5a12;font-size:.9rem;font-weight:600;
+    line-height:1.45;
+  }
+
+  /* rodapé */
+  .rodape{text-align:center;margin-top:26px}
+  .versiculo{
+    color:var(--texto-suave);font-style:italic;font-size:.92rem;
+    max-width:520px;margin:0 auto 20px;line-height:1.55;
+  }
+  .versiculo b{color:var(--navy);font-style:normal}
+  .compartilhar-wrap{display:flex;justify-content:center}
+  .creditos{
+    color:#9aa4ba;font-size:.8rem;margin-top:22px;letter-spacing:.5px;
+  }
+</style>
+</head>
+<body>
+
+  <nav class="nav">
+    <button class="btn btn-inicio" onclick="location.href='/'">🏠 Início</button>
+  </nav>
+
+  <header>
+    <div class="selo">🎓</div>
+    <h1>Curso de Teologia</h1>
+    <p class="sub">Estude a fé a fundo, na sã doutrina</p>
+    <div class="linha"></div>
+  </header>
+
+  <main class="trilhas" id="trilhas"></main>
+
+  <div class="rodape">
+    <p class="versiculo">"Procura apresentar-te a Deus aprovado, como obreiro que não tem de que se envergonhar, que maneja bem a palavra da verdade." <b>— 2 Timóteo 2.15</b></p>
+    <div class="compartilhar-wrap">
+      <button class="btn btn-share" onclick="compartilhar()">📤 Compartilhar</button>
+    </div>
+    <p class="creditos">RADAR • Curso de Teologia</p>
+  </div>
+
+<script>
+  const TRILHAS = [
+    { ic:"📖", t:"Bibliologia", d:"A Bíblia: inspiração, cânon e autoridade." },
+    { ic:"👑", t:"Teologia Própria (Deus)", d:"Quem é Deus: atributos e Trindade." },
+    { ic:"✝️", t:"Cristologia", d:"A pessoa e a obra de Cristo." },
+    { ic:"🕊️", t:"Pneumatologia", d:"O Espírito Santo, dons e o batismo no Espírito." },
+    { ic:"🙌", t:"Soteriologia", d:"A salvação: graça, fé, arrependimento e santificação." },
+    { ic:"⛪", t:"Eclesiologia", d:"A Igreja: natureza, ministérios e ordenanças." },
+    { ic:"⏳", t:"Escatologia", d:"As últimas coisas: arrebatamento, tribulação e o Reino." },
+    { ic:"👼", t:"Angelologia e Antropologia", d:"Anjos, o homem, o pecado." },
+    { ic:"🗣️", t:"Homilética e Hermenêutica", d:"Como interpretar e pregar a Palavra." }
+  ];
+
+  const cont = document.getElementById('trilhas');
+  TRILHAS.forEach((tr, i) => {
+    const el = document.createElement('article');
+    el.className = 'card';
+    const n = String(i + 1).padStart(2, '0');
+    el.innerHTML =
+      '<span class="num">Trilha ' + n + '</span>' +
+      '<span class="ic">' + tr.ic + '</span>' +
+      '<h2>' + tr.t + '</h2>' +
+      '<p>' + tr.d + '</p>' +
+      '<span class="badge">📚 Em preparação</span>' +
+      '<div class="aviso"><div class="aviso-in">📚 Aulas em preparação — em breve o conteúdo completo desta trilha estará disponível aqui.</div></div>';
+    el.addEventListener('click', () => {
+      const jaAberto = el.classList.contains('aberto');
+      document.querySelectorAll('.card.aberto').forEach(c => c.classList.remove('aberto'));
+      if (!jaAberto) el.classList.add('aberto');
+    });
+    cont.appendChild(el);
+  });
+
+  function compartilhar(){
+    const url = 'https://radar-atual.vercel.app/biblioteca/curso-teologia/';
+    const dados = {
+      title: 'Curso de Teologia',
+      text: 'Curso de Teologia — Estude a fé a fundo, na sã doutrina.',
+      url: url
+    };
+    if (navigator.share) {
+      navigator.share(dados).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('🔗 Link copiado!\n' + url);
+      }).catch(() => {
+        prompt('Copie o link:', url);
+      });
+    } else {
+      prompt('Copie o link:', url);
+    }
+  }
+</script>
+</body>
+</html>
