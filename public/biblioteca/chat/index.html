@@ -61,19 +61,28 @@ function pinta(m){
 }
 function fim(){ const e=$('msgs'); e.scrollTop=e.scrollHeight; }
 
+let _carregando=false;
 async function carregar(){
+  if(_carregando) return;              // não sobrepõe requisições (evita travar)
+  _carregando=true;
   try{
-    const r=await fetch('/api/chat?token='+TOKEN+(ultimo?'&desde='+ultimo:''));
+    const ctrl=new AbortController();
+    const to=setTimeout(function(){ ctrl.abort(); }, 9000);  // tempo-limite: não fica pendurado
+    const r=await fetch('/api/chat?token='+TOKEN+(ultimo?'&desde='+ultimo:''), {signal:ctrl.signal});
+    clearTimeout(to);
     const d=await r.json();
-    if(!d.ok) return;
-    if(d.msgs.length){
-      if($('vazio')) $('vazio').remove();
-      d.msgs.forEach(m=>{ pinta(m); ultimo=Math.max(ultimo,m.id); });
-      fim();
-    }else if(ultimo===0 && $('vazio')){
-      $('vazio').textContent='Ainda não há mensagens. Me escreva aqui — respondo quando estiver trabalhando pra você.';
+    if(d && d.ok){
+      if(d.msgs.length){
+        if($('vazio')) $('vazio').remove();
+        d.msgs.forEach(m=>{ pinta(m); ultimo=Math.max(ultimo,m.id); });
+        fim();
+      }else if(ultimo===0 && $('vazio')){
+        $('vazio').textContent='Ainda não há mensagens. Me escreva aqui — respondo na próxima rodada.';
+      }
+      $('status').textContent='bate-papo do RADAR';
     }
-  }catch(e){ $('status').textContent='sem conexão…'; }
+  }catch(e){ $('status').textContent='sem conexão… tentando de novo'; }
+  finally{ _carregando=false; }
 }
 
 async function enviar(){
