@@ -903,7 +903,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
 <style>
 #tela-historinhas .hist-item{display:flex;gap:12px;background:var(--card,#12213c);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px;margin-bottom:12px}
-#tela-historinhas .hist-thumb{width:76px;height:76px;border-radius:12px;background:linear-gradient(135deg,#2a4a80,#16305c);display:grid;place-items:center;font-size:30px;flex:none;cursor:pointer}
+#tela-historinhas .hist-thumb{position:relative;width:104px;height:132px;border-radius:12px;overflow:hidden;background-image:linear-gradient(135deg,#2a4a80,#16305c);background-size:cover;background-position:center;flex:none;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+#tela-historinhas .hist-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.85);color:#fff;display:grid;place-items:center;font-size:18px;padding-left:3px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+#tela-historinhas .hist-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 55%,rgba(0,0,0,.35))}
 #tela-historinhas .hist-body{flex:1;min-width:0}
 #tela-historinhas .hist-body b{font-size:16px;color:var(--txt,#eef3fb)}
 #tela-historinhas .hist-views{font-size:13px;color:#9fb0bd;margin:4px 0 8px}
@@ -5408,7 +5410,7 @@ function _carregaViews(){ _HIST.forEach(function(h){ fetch(_ABC+'/get/radaratual
 function _histById(id){ return _HIST.find(function(x){return x.id==id;}); }
 function renderHist(){ var el=document.getElementById('hist-lista'); if(!el)return; var sub=document.getElementById('hist-sub'); if(sub)sub.textContent=_HIST.length+' video(s)';
   if(!_HIST.length){ el.innerHTML='<div style="text-align:center;color:#9fb0bd;padding:40px 16px">Nenhuma historinha ainda.</div>'; return; }
-  el.innerHTML=_HIST.map(function(h){ return '<div class="hist-item"><div class="hist-thumb" onclick="verHistorinha(\''+h.id+'\')">▶️</div><div class="hist-body"><b>'+String(h.titulo||'Historinha').replace(/</g,'&lt;')+'</b><div class="hist-views">👁 <span id="hv-'+h.id+'">...</span> visualizacoes</div><div class="hist-acts"><button class="hist-a play" onclick="verHistorinha(\''+h.id+'\')">▶️ Assistir</button><button class="hist-a" onclick="shareHist(\''+h.id+'\')">↗️ Compartilhar</button></div></div></div>'; }).join(''); }
+  el.innerHTML=_HIST.map(function(h){ var cap=(h.capa||('/img/hist/'+h.id+'.jpg')); return '<div class="hist-item"><div class="hist-thumb" onclick="verHistorinha(\''+h.id+'\')" style="background-image:url(\''+cap+'\'),linear-gradient(135deg,#2a4a80,#16305c)"><span class="hist-play">▶</span></div><div class="hist-body"><b>'+String(h.titulo||'Historinha').replace(/</g,'&lt;')+'</b><div class="hist-views">👁 <span id="hv-'+h.id+'">...</span> visualizacoes</div><div class="hist-acts"><button class="hist-a play" onclick="verHistorinha(\''+h.id+'\')">▶️ Assistir</button><button class="hist-a" onclick="shareHist(\''+h.id+'\')">↗️ Compartilhar</button></div></div></div>'; }).join(''); }
 function verHistorinha(id){ var h=_histById(id); if(!h)return;
   fetch(_ABC+'/hit/radaratual-hist/'+id).then(function(r){return r.json();}).then(function(d){ var sp=document.getElementById('hv-'+id); if(sp&&d&&d.value!=null)sp.textContent=d.value; }).catch(function(){});
   var v=h.video||''; if((h.tipo=='mp4')||v.indexOf('.mp4')>=0||v.indexOf('/videos')===0){ abrirVideoTela(v, h.titulo||'Historinha', 'hist-'+id); } else { window.open(v,'_blank'); } }
