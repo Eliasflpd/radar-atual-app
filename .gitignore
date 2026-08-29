@@ -8,3 +8,5 @@ Configurações/
 !public/**/*.PNG
 !public/*.png
 !public/*.PNG
+
+.env*.local

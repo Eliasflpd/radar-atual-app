@@ -1,4 +1,4 @@
-const V='radar-v126';
+const V='radar-v130';
 const CACHE=['/','/manifest.json','/capa.png'];
 
 self.addEventListener('install',e=>{

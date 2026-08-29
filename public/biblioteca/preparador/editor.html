@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Montar roteiro — Preparador de Sermões</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec;--verde:#14804a}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
+    padding:14px 13px calc(74px + env(safe-area-inset-bottom))}
+  .top{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .btn{margin:0;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;
+    font-size:.88rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .btn.n{background:var(--navy)}
+  .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.6rem;font-weight:800;margin:2px 0 4px}
+  .sub{text-align:center;color:#6b7280;font-size:.95rem;margin-bottom:8px}
+  .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 18px}
+  .ajuda{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:12px 14px;margin-bottom:18px;
+    color:#5c4a1e;font-size:.93rem;text-align:justify}
+  label{display:block;font-weight:800;color:var(--navy);font-size:.86rem;margin:0 0 4px}
+  input,textarea{width:100%;font-family:inherit;font-size:1rem;color:var(--texto);background:#fff;
+    border:1px solid var(--linha);border-radius:11px;padding:10px 12px;line-height:1.5}
+  input:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,109,120,.12)}
+  textarea{min-height:92px;resize:vertical}
+  .campo{margin-bottom:12px}
+  .dupla{display:flex;gap:10px}
+  .dupla .campo:first-child{flex:0 0 82px}
+  .dupla .campo:last-child{flex:1}
+  h2{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.2rem;margin:24px 0 2px}
+  .h2sub{text-align:center;color:#6b7280;font-size:.88rem;margin-bottom:14px}
+  .est{border:1px solid var(--linha);border-radius:15px;padding:13px;margin-bottom:13px;background:#fdfdfe}
+  .est .cab{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .est .num{width:28px;height:28px;flex-shrink:0;background:var(--navy);color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.88rem}
+  .est .cab .sp{flex:1}
+  .mini{border:1px solid var(--linha);background:#eef2f4;color:var(--navy);border-radius:9px;
+    padding:6px 11px;font-weight:800;font-size:.9rem;font-family:inherit;cursor:pointer}
+  .mini.del{background:#fdecec;color:var(--vinho);border-color:#f3c9c9}
+  .add{display:block;width:100%;background:var(--dourado);color:#fff;border:none;border-radius:14px;
+    padding:14px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer;margin-top:4px}
+  .vazio{text-align:center;color:#9aa1ad;padding:20px 10px;font-size:.95rem;border:1px dashed var(--linha);
+    border-radius:14px;margin-bottom:13px}
+  .barra{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--linha);
+    display:flex;gap:8px;padding:9px 10px calc(9px + env(safe-area-inset-bottom));z-index:20}
+  .barra button{flex:1;border:none;border-radius:13px;padding:13px;font-weight:800;font-family:inherit;
+    font-size:.95rem;cursor:pointer}
+  .b-salvar{background:var(--verde);color:#fff}
+  .b-preparar{background:var(--navy);color:#fff}
+  .b-sair{background:#eef2f4;color:var(--navy);border:1px solid var(--linha)!important;flex:0 0 auto;min-width:0}
+  .aviso{position:fixed;left:50%;transform:translateX(-50%);bottom:80px;background:var(--verde);color:#fff;
+    padding:11px 20px;border-radius:999px;font-weight:800;font-size:.92rem;z-index:30;display:none;
+    box-shadow:0 6px 20px rgba(0,0,0,.18)}
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <button class="btn" onclick="sair()">← Preparador</button>
+    <button class="btn n" onclick="sair('/')">🏠 Início</button>
+  </div>
+
+  <div class="selo">✦ Montar roteiro ✦</div>
+  <h1 id="tituloTela">Novo roteiro</h1>
+  <div class="sub">Quebre a mensagem em estações — no púlpito você só olha as âncoras</div>
+  <div class="divisor"></div>
+
+  <div class="ajuda">
+    <b>Dica de ouro:</b> a <b>âncora</b> é UMA palavra ou expressão curta que puxa o ponto inteiro da sua cabeça
+    (ex.: “O CEDRO”, “UMA SÓ PORTA”). A <b>referência</b> é o versículo. O <b>ponto</b> é o que você vai dizer ali.
+    Comece com 6 a 10 estações — a última costuma ser o apelo.
+  </div>
+
+  <div class="campo">
+    <label for="fTit">Título da mensagem</label>
+    <input id="fTit" placeholder="Ex.: O Último Prego">
+  </div>
+  <div class="dupla">
+    <div class="campo"><label for="fEmoji">Ícone</label><input id="fEmoji" placeholder="🔩" maxlength="4"></div>
+    <div class="campo"><label for="fRef">Referência</label><input id="fRef" placeholder="Ex.: Gênesis 6"></div>
+  </div>
+  <div class="campo">
+    <label for="fFio">O Fio (a frase que amarra a mensagem inteira)</label>
+    <textarea id="fFio" placeholder="Em uma frase: o que essa mensagem prova?" style="min-height:76px"></textarea>
+  </div>
+
+  <h2>🗺️ Estações</h2>
+  <div class="h2sub">Cada estação é um ponto da pregação, na ordem</div>
+  <div id="lista"></div>
+  <button class="add" onclick="addEstacao()">➕ Adicionar estação</button>
+
+  <div class="barra">
+    <button class="b-sair" onclick="sair()">✖</button>
+    <button class="b-salvar" onclick="salvar(false)">💾 Salvar</button>
+    <button class="b-preparar" onclick="salvar(true)">🎤 Salvar e preparar</button>
+  </div>
+  <div class="aviso" id="aviso">✅ Salvo</div>
+
+<script>
+var CHAVE='preparador_roteiros';
+function $(id){ return document.getElementById(id); }
+function qs(n){ var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search); return m?decodeURIComponent(m[1].replace(/\+/g,' ')):''; }
+function todos(){ try{ return JSON.parse(localStorage.getItem(CHAVE)||'[]'); }catch(e){ return []; } }
+function salvarTodos(l){ localStorage.setItem(CHAVE, JSON.stringify(l)); }
+
+var editandoId=qs('id');
+var R={ id:editandoId||('r'+Date.now()), titulo:'', ref:'', emoji:'📝', fio:'', ler:'', estacoes:[] };
+var sujo=false;
+
+if(editandoId){
+  var achado=todos().filter(function(r){ return r.id===editandoId; })[0];
+  if(achado){ R=achado; $('tituloTela').textContent='Editar roteiro'; }
+} else if(qs('novo')){
+  R.titulo=qs('titulo'); R.ref=qs('ref'); R.emoji=qs('emoji')||'📝'; R.ler=qs('ler');
+}
+
+$('fTit').value=R.titulo||'';
+$('fRef').value=R.ref||'';
+$('fEmoji').value=R.emoji||'📝';
+$('fFio').value=R.fio||'';
+['fTit','fRef','fEmoji','fFio'].forEach(function(id){ $(id).addEventListener('input',function(){ sujo=true; }); });
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function pinta(){
+  var box=$('lista');
+  if(!R.estacoes.length){
+    box.innerHTML='<div class="vazio">Nenhuma estação ainda.<br>Toque em <b>“Adicionar estação”</b> pra começar o roteiro.</div>';
+    return;
+  }
+  box.innerHTML=R.estacoes.map(function(e,i){
+    return '<div class="est">'
+      +'<div class="cab"><div class="num">'+(i+1)+'</div><div class="sp"></div>'
+      +'<button class="mini" onclick="mover('+i+',-1)" title="subir">↑</button>'
+      +'<button class="mini" onclick="mover('+i+',1)" title="descer">↓</button>'
+      +'<button class="mini del" onclick="apagarEst('+i+')" title="apagar">🗑️</button></div>'
+      +'<div class="dupla">'
+      +'  <div class="campo"><label>Ícone</label>'
+      +'    <input value="'+esc(e.em)+'" maxlength="4" oninput="campo('+i+',\'em\',this.value)" placeholder="🔨"></div>'
+      +'  <div class="campo"><label>Âncora (a palavra que puxa o ponto)</label>'
+      +'    <input value="'+esc(e.anc)+'" oninput="campo('+i+',\'anc\',this.value)" placeholder="Ex.: O CEDRO"></div>'
+      +'</div>'
+      +'<div class="campo"><label>Referência</label>'
+      +'  <input value="'+esc(e.rf)+'" oninput="campo('+i+',\'rf\',this.value)" placeholder="Ex.: Gênesis 6:14"></div>'
+      +'<div class="campo" style="margin-bottom:0"><label>O ponto (o que você vai pregar aqui)</label>'
+      +'  <textarea oninput="campo('+i+',\'pu\',this.value)" placeholder="Escreva o ponto com suas palavras.">'+esc(e.pu)+'</textarea></div>'
+      +'</div>';
+  }).join('');
+}
+
+function campo(i,k,v){ R.estacoes[i][k]=v; sujo=true; }
+function addEstacao(){
+  R.estacoes.push({em:'',anc:'',rf:'',pu:''}); sujo=true; pinta();
+  window.scrollTo(0, document.body.scrollHeight);
+}
+function apagarEst(i){
+  if(!confirm('Apagar a estação '+(i+1)+'?')) return;
+  R.estacoes.splice(i,1); sujo=true; pinta();
+}
+function mover(i,d){
+  var j=i+d; if(j<0||j>=R.estacoes.length) return;
+  var t=R.estacoes[i]; R.estacoes[i]=R.estacoes[j]; R.estacoes[j]=t; sujo=true; pinta();
+}
+
+function toast(txt){
+  var a=$('aviso'); a.textContent=txt; a.style.display='block';
+  setTimeout(function(){ a.style.display='none'; }, 1800);
+}
+
+function salvar(irPreparar){
+  R.titulo=$('fTit').value.trim();
+  R.ref=$('fRef').value.trim();
+  R.emoji=$('fEmoji').value.trim()||'📝';
+  R.fio=$('fFio').value.trim();
+  if(!R.titulo){ alert('Dê um título pra mensagem antes de salvar.'); $('fTit').focus(); return; }
+  R.estacoes=R.estacoes.filter(function(e){ return (e.anc||'').trim() || (e.pu||'').trim(); });
+  if(irPreparar && !R.estacoes.length){ alert('Adicione pelo menos uma estação pra poder preparar.'); return; }
+  var l=todos(), achou=false;
+  l=l.map(function(x){ if(x.id===R.id){ achou=true; return R; } return x; });
+  if(!achou){ l.unshift(R); }
+  salvarTodos(l);
+  sujo=false;
+  if(irPreparar){ location.href='preparar.html?meu='+encodeURIComponent(R.id); }
+  else { pinta(); toast('✅ Roteiro salvo'); }
+}
+
+function sair(destino){
+  if(sujo && !confirm('Você tem mudanças não salvas. Sair mesmo assim?')) return;
+  location.href = destino || './';
+}
+window.addEventListener('beforeunload', function(e){
+  if(sujo){ e.preventDefault(); e.returnValue=''; }
+});
+
+pinta();
+if(!R.estacoes.length && !editandoId){ addEstacao(); }
+</script>
+</body>
+</html>

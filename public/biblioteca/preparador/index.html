@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Preparador de Sermões — RADAR</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--linha:#e4e7ec;--verde:#14804a}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
+    padding:14px 13px calc(56px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+  .top{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .btn{margin:0;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;
+    font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .btn.n{background:var(--navy)} .btn.d{background:var(--dourado)} .btn.t{background:var(--teal)}
+  .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.9rem;font-weight:800;margin:2px 0 4px}
+  .sub{text-align:center;color:#6b7280;font-size:1rem;margin-bottom:8px}
+  .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 20px}
+  h2{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.25rem;margin:26px 0 4px}
+  .h2sub{text-align:center;color:#6b7280;font-size:.9rem;margin-bottom:14px}
+  .novo{display:block;width:100%;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;border:none;
+    border-radius:16px;padding:16px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:8px}
+  .card{background:#fff;border:1px solid var(--linha);border-radius:16px;padding:14px;margin-bottom:12px;
+    box-shadow:0 2px 10px rgba(15,61,92,.06)}
+  .card .lin{display:flex;gap:12px;align-items:center}
+  .card .ic{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--navy),var(--dourado));
+    display:flex;align-items:center;justify-content:center;font-size:25px;flex-shrink:0}
+  .card .tit{font-family:Georgia,serif;font-weight:800;font-size:1.1rem;color:var(--navy);line-height:1.25}
+  .card .ref{color:var(--dourado);font-weight:800;font-size:.86rem;margin-top:2px}
+  .card .meta{color:#6b7280;font-size:.82rem;margin-top:2px}
+  .acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+  .acoes button{flex:1 1 auto;min-width:120px;border:none;border-radius:12px;padding:11px 10px;
+    font-size:.92rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .a-preparar{background:var(--navy);color:#fff}
+  .a-montar{background:var(--dourado);color:#fff}
+  .a-editar{background:#eef2f4;color:var(--navy);border:1px solid var(--linha)!important}
+  .a-apagar{background:#fdecec;color:#8a1c1c;border:1px solid #f3c9c9!important;flex:0 0 auto;min-width:0}
+  .badge{display:inline-block;background:#e8f5ee;color:var(--verde);border-radius:999px;padding:2px 9px;
+    font-size:.74rem;font-weight:800;margin-top:4px}
+  .vazio{text-align:center;color:#9aa1ad;padding:22px 10px;font-size:.95rem;border:1px dashed var(--linha);border-radius:14px}
+  .caixa{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:13px 15px;margin:18px 0;
+    color:#5c4a1e;font-size:.95rem;text-align:justify}
+  .rodape{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px;border-top:1px solid var(--linha);padding-top:14px}
+  .rodape button{flex:1 1 auto;min-width:140px;border:none;border-radius:12px;padding:11px;font-size:.88rem;
+    font-weight:800;font-family:inherit;cursor:pointer;background:#eef2f4;color:var(--navy);border:1px solid var(--linha)!important}
+  .fixo{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--linha);
+    display:flex;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));z-index:20}
+  .fixo button{flex:1;border:none;border-radius:12px;padding:11px;font-weight:800;font-family:inherit;
+    font-size:.9rem;cursor:pointer;background:var(--navy);color:#fff}
+  .fixo button.sec{background:#eef2f4;color:var(--navy);border:1px solid var(--linha)!important}
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <button class="btn" onclick="location.href='/?mod=manuais'">← Biblioteca</button>
+    <button class="btn n" onclick="location.href='/'">🏠 Início</button>
+    <button class="btn t" id="btShare">🔗 Compartilhar</button>
+  </div>
+
+  <div class="selo">✦ Preparador de Sermões ✦</div>
+  <h1>Preparador de Sermões</h1>
+  <div class="sub">Transforme qualquer mensagem em roteiro para pregar sem papel</div>
+  <div class="divisor"></div>
+
+  <div class="caixa">
+    <b>Como funciona:</b> um roteiro é a sua mensagem quebrada em <b>estações</b> — cada estação tem uma
+    âncora (a palavra que puxa o ponto), a referência e o ponto em si. No púlpito você olha só as âncoras;
+    no Treino você prega de cabeça até fixar. Você mesmo monta, edita e apaga seus roteiros aqui — sem depender de ninguém.
+  </div>
+
+  <button class="novo" onclick="location.href='editor.html'">➕ Criar roteiro do zero</button>
+
+  <h2>📋 Meus roteiros</h2>
+  <div class="h2sub">Os que você montou (ficam salvos neste aparelho)</div>
+  <div id="meus"></div>
+
+  <h2>📖 Roteiros prontos</h2>
+  <div class="h2sub">Já montados e conferidos — é só preparar</div>
+  <div id="prontos"></div>
+
+  <h2>🗂️ Mensagens do app</h2>
+  <div class="h2sub">Toque em “Montar roteiro” e o título já vem preenchido</div>
+  <div id="catalogo"></div>
+
+  <div class="rodape">
+    <button onclick="baixarBackup()">💾 Baixar backup</button>
+    <button onclick="document.getElementById('arq').click()">📂 Restaurar backup</button>
+    <input type="file" id="arq" accept=".json,application/json" style="display:none" onchange="restaurar(this)">
+  </div>
+
+  <div class="fixo">
+    <button class="sec" onclick="location.href='/?mod=manuais'">📚 Biblioteca</button>
+    <button onclick="location.href='/'">🏠 Voltar ao Início</button>
+  </div>
+
+<script src="roteiros.js"></script>
+<script>
+var CHAVE='preparador_roteiros';
+function meus(){ try{ return JSON.parse(localStorage.getItem(CHAVE)||'[]'); }catch(e){ return []; } }
+function salvarTodos(l){ localStorage.setItem(CHAVE, JSON.stringify(l)); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function pintaMeus(){
+  var l=meus(), box=document.getElementById('meus');
+  if(!l.length){
+    box.innerHTML='<div class="vazio">Você ainda não montou nenhum roteiro.<br>Toque em <b>“Criar roteiro do zero”</b> ou escolha uma mensagem do app lá embaixo.</div>';
+    return;
+  }
+  box.innerHTML=l.map(function(r){
+    var n=(r.estacoes||[]).length;
+    return '<div class="card">'
+      +'<div class="lin"><div class="ic">'+esc(r.emoji||'📝')+'</div>'
+      +'<div><div class="tit">'+esc(r.titulo)+'</div>'
+      +'<div class="ref">'+esc(r.ref||'')+'</div>'
+      +'<div class="badge">'+n+' estaç'+(n===1?'ão':'ões')+'</div></div></div>'
+      +'<div class="acoes">'
+      +'<button class="a-preparar" onclick="location.href=\'preparar.html?meu='+encodeURIComponent(r.id)+'\'">🎤 Preparar</button>'
+      +'<button class="a-editar" onclick="location.href=\'editor.html?id='+encodeURIComponent(r.id)+'\'">✏️ Editar</button>'
+      +'<button class="a-apagar" onclick="apagar(\''+esc(r.id)+'\')">🗑️</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function pintaProntos(){
+  document.getElementById('prontos').innerHTML=(window.ROTEIROS_PRONTOS||[]).map(function(r){
+    var n=(r.estacoes||[]).length;
+    return '<div class="card">'
+      +'<div class="lin"><div class="ic">'+esc(r.emoji||'📖')+'</div>'
+      +'<div><div class="tit">'+esc(r.titulo)+'</div>'
+      +'<div class="ref">'+esc(r.ref||'')+'</div>'
+      +'<div class="badge">'+n+' estações · pronto</div></div></div>'
+      +'<div class="acoes">'
+      +'<button class="a-preparar" onclick="location.href=\'preparar.html?id='+encodeURIComponent(r.id)+'\'">🎤 Preparar</button>'
+      +(r.ler?'<button class="a-editar" onclick="location.href=\''+r.ler+'\'">📖 Ler a mensagem</button>':'')
+      +'<button class="a-editar" onclick="copiarPronto(\''+esc(r.id)+'\')">📄 Copiar p/ meus</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function pintaCatalogo(){
+  var jaTem={};
+  (window.ROTEIROS_PRONTOS||[]).forEach(function(r){ jaTem[r.titulo]=1; });
+  meus().forEach(function(r){ jaTem[r.titulo]=1; });
+  var faltam=(window.CATALOGO_APP||[]).filter(function(c){ return !jaTem[c.titulo]; });
+  var box=document.getElementById('catalogo');
+  if(!faltam.length){
+    box.innerHTML='<div class="vazio">Todas as mensagens do app já têm roteiro. 🎉</div>';
+    return;
+  }
+  box.innerHTML=faltam.map(function(c){
+    var q='novo=1&titulo='+encodeURIComponent(c.titulo)+'&ref='+encodeURIComponent(c.ref)
+         +'&emoji='+encodeURIComponent(c.emoji)+'&ler='+encodeURIComponent(c.ler);
+    return '<div class="card">'
+      +'<div class="lin"><div class="ic">'+esc(c.emoji)+'</div>'
+      +'<div><div class="tit">'+esc(c.titulo)+'</div>'
+      +'<div class="ref">'+esc(c.ref)+'</div>'
+      +'<div class="meta">sem roteiro ainda</div></div></div>'
+      +'<div class="acoes">'
+      +'<button class="a-montar" onclick="location.href=\'editor.html?'+q+'\'">✏️ Montar roteiro</button>'
+      +'<button class="a-editar" onclick="location.href=\''+c.ler+'\'">📖 Ler</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function apagar(id){
+  var l=meus(), r=l.filter(function(x){return x.id===id;})[0];
+  if(!r) return;
+  if(!confirm('Apagar o roteiro “'+r.titulo+'”? Isso não apaga a mensagem, só o roteiro.')) return;
+  salvarTodos(l.filter(function(x){return x.id!==id;}));
+  pintaMeus(); pintaCatalogo();
+}
+
+function copiarPronto(id){
+  var base=(window.ROTEIROS_PRONTOS||[]).filter(function(r){return r.id===id;})[0];
+  if(!base) return;
+  var l=meus();
+  var novo=JSON.parse(JSON.stringify(base));
+  novo.id='r'+Date.now();
+  novo.titulo=base.titulo+' (minha versão)';
+  l.unshift(novo); salvarTodos(l);
+  pintaMeus(); pintaCatalogo();
+  alert('Copiado para “Meus roteiros”. Agora é só editar do seu jeito.');
+}
+
+function baixarBackup(){
+  var dados=JSON.stringify({app:'RADAR-preparador',versao:1,roteiros:meus()},null,2);
+  var b=new Blob([dados],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download='meus-roteiros-radar.json';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function restaurar(input){
+  var f=input.files&&input.files[0]; if(!f) return;
+  var fr=new FileReader();
+  fr.onload=function(){
+    try{
+      var d=JSON.parse(fr.result);
+      var vindos=(d&&d.roteiros)||(Array.isArray(d)?d:null);
+      if(!vindos) throw new Error('arquivo sem roteiros');
+      // UNIÃO: nunca apaga o que já existe
+      var l=meus(), porId={};
+      l.forEach(function(r){ porId[r.id]=1; });
+      var add=0;
+      vindos.forEach(function(r){
+        if(!r||!r.titulo) return;
+        if(porId[r.id]){ r.id='r'+Date.now()+Math.floor(Math.random()*999); }
+        l.push(r); add++;
+      });
+      salvarTodos(l); pintaMeus(); pintaCatalogo();
+      alert('Restaurado! '+add+' roteiro(s) adicionados. Nada foi apagado.');
+    }catch(e){ alert('Não consegui ler esse arquivo. Use o backup baixado por aqui.'); }
+    input.value='';
+  };
+  fr.readAsText(f);
+}
+
+document.getElementById('btShare').onclick=function(){
+  var d={title:'Preparador de Sermões — RADAR',
+         text:'Monte o roteiro da sua mensagem e pregue sem papel:',
+         url:location.origin+'/biblioteca/preparador/'};
+  if(navigator.share){ navigator.share(d).catch(function(){}); }
+  else if(navigator.clipboard){ navigator.clipboard.writeText(d.url); alert('Link copiado!'); }
+  else { prompt('Copie o link:', d.url); }
+};
+
+pintaMeus(); pintaProntos(); pintaCatalogo();
+</script>
+</body>
+</html>

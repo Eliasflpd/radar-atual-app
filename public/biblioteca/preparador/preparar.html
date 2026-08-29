@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Preparar — Preparador de Sermões</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec;--pulp:1.05rem}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
+    padding:14px 13px calc(60px + env(safe-area-inset-bottom))}
+  .top{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .btn{margin:0;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;
+    font-size:.88rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .btn.n{background:var(--navy)} .btn.t{background:var(--teal)}
+  .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.7rem;font-weight:800;margin:2px 0 2px}
+  .ref{text-align:center;color:var(--dourado);font-weight:800;margin-bottom:14px}
+  .abas{display:flex;gap:6px;margin:6px 0 16px;position:sticky;top:0;background:var(--branco);
+    padding:8px 0;z-index:5;border-bottom:1px solid var(--linha)}
+  .aba{flex:1;text-align:center;padding:10px 4px;border-radius:11px;background:#eef2f4;font-weight:800;
+    font-size:.88rem;cursor:pointer;border:1px solid var(--linha)}
+  .aba.on{background:var(--navy);color:#fff}
+  .vis{display:none} .vis.on{display:block}
+  .fio{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:14px 15px;margin-bottom:16px;
+    font-size:1.05rem;text-align:center;color:#5c4a1e;font-weight:600}
+  .est{background:#fff;border:1px solid var(--linha);border-radius:13px;padding:12px 14px;margin-bottom:11px}
+  .est .cab{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:1px;flex-wrap:wrap}
+  .est .n{width:28px;height:28px;flex-shrink:0;background:var(--navy);color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem}
+  .est .em{font-size:1.4rem;line-height:1}
+  .est .anc{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.1rem;text-align:center}
+  .est .rf{color:var(--dourado);font-weight:700;font-size:.82rem;text-align:center;margin:0 0 7px}
+  .est .pu{color:#333;font-size:.98rem;text-align:justify;line-height:1.55}
+  .cart{background:#0f3d5c;color:#eaf1f5;border-radius:14px;padding:16px 16px 10px}
+  .cart h3{margin:0 0 10px;color:#fff;font-family:Georgia,serif;text-align:center}
+  .cart ol{margin:0;padding-left:22px}
+  .cart li{margin-bottom:9px;font-size:var(--pulp)}
+  .cart li b{color:#ffd98a}
+  .cart .v{color:#9fc7d4;font-size:.8em}
+  .zoom{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
+  .zoom button{background:#eef2f4;color:var(--navy);border:1px solid var(--linha);border-radius:10px;
+    padding:8px 16px;font-weight:800;font-family:inherit;cursor:pointer}
+  .tr-topo{text-align:center;margin-bottom:12px}
+  .placar{font-weight:800;color:var(--teal)}
+  .card{background:#fff;border:2px solid var(--linha);border-radius:18px;padding:26px 18px;text-align:center;
+    box-shadow:0 6px 20px rgba(15,61,92,.08);min-height:240px;display:flex;flex-direction:column;justify-content:center}
+  .card .em{font-size:3rem}
+  .card .anc{font-family:Georgia,serif;font-size:1.65rem;font-weight:800;color:var(--navy);margin:6px 0}
+  .card .rf{color:var(--dourado);font-weight:800}
+  .card .dica{color:#9aa1ad;font-size:.9rem;margin-top:14px}
+  .card .pu{color:#1c2230;font-size:1.08rem;line-height:1.55;margin-top:10px;text-align:justify}
+  .acoes{display:flex;gap:10px;margin-top:14px}
+  .acoes button{flex:1;border:none;border-radius:13px;padding:15px;font-size:1.02rem;font-weight:800;
+    font-family:inherit;cursor:pointer}
+  .mostrar{background:var(--navy);color:#fff}
+  .fixei{background:#14804a;color:#fff}
+  .revisar{background:var(--vinho);color:#fff}
+  .fim{text-align:center;padding:26px 10px}
+  .fim .big{font-size:2.6rem}
+  .reiniciar{margin-top:14px;background:var(--teal);color:#fff;border:none;border-radius:13px;padding:13px 22px;
+    font-weight:800;font-family:inherit;cursor:pointer}
+  .nota{color:#6b7280;font-size:.85rem;text-align:center;margin-top:16px;border-top:1px solid var(--linha);padding-top:12px}
+  .erro{text-align:center;color:#8a1c1c;padding:40px 14px;font-size:1.05rem}
+  .fixo{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--linha);
+    display:flex;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));z-index:20}
+  .fixo button{flex:1;border:none;border-radius:12px;padding:11px;font-weight:800;font-family:inherit;
+    font-size:.9rem;cursor:pointer;background:var(--navy);color:#fff}
+  .fixo button.sec{background:#eef2f4;color:var(--navy);border:1px solid var(--linha)}
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <button class="btn" onclick="location.href='./'">← Preparador</button>
+    <button class="btn n" onclick="location.href='/'">🏠 Início</button>
+    <button class="btn t" id="btShare">🔗 Compartilhar</button>
+    <button class="btn" id="btLer" style="display:none;background:var(--dourado)">📖 Ler a mensagem</button>
+  </div>
+
+  <div id="conteudo"></div>
+
+  <div class="fixo">
+    <button class="sec" onclick="location.href='./'">📋 Meus roteiros</button>
+    <button onclick="location.href='/'">🏠 Voltar ao Início</button>
+  </div>
+
+<script src="roteiros.js"></script>
+<script>
+var CHAVE='preparador_roteiros';
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function qs(n){ var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search); return m?decodeURIComponent(m[1].replace(/\+/g,' ')):''; }
+
+var R=null;
+var idPronto=qs('id'), idMeu=qs('meu');
+if(idMeu){
+  try{ R=(JSON.parse(localStorage.getItem(CHAVE)||'[]')).filter(function(r){return r.id===idMeu;})[0]||null; }catch(e){}
+} else if(idPronto){
+  R=(window.ROTEIROS_PRONTOS||[]).filter(function(r){return r.id===idPronto;})[0]||null;
+}
+
+if(!R || !R.estacoes || !R.estacoes.length){
+  $('conteudo').innerHTML='<div class="erro">Não encontrei esse roteiro (ou ele está sem estações).<br><br>'
+    +'<button class="btn n" onclick="location.href=\'./\'">Voltar ao Preparador</button></div>';
+} else {
+  montar();
+}
+
+function montar(){
+  var E=R.estacoes;
+  $('conteudo').innerHTML=
+   '<div class="selo">✦ Preparador de Sermões ✦</div>'
+  +'<h1>'+esc(R.titulo)+'</h1>'
+  +'<div class="ref">'+esc(R.ref||'')+' · roteiro de pregação</div>'
+  +'<div class="abas">'
+  +' <div class="aba on" data-q="mapa" onclick="aba(\'mapa\')">🗺️ Estações</div>'
+  +' <div class="aba" data-q="cartao" onclick="aba(\'cartao\')">🎴 Púlpito</div>'
+  +' <div class="aba" data-q="treino" onclick="aba(\'treino\')">🧠 Treino</div>'
+  +'</div>'
+  +'<div id="v-mapa" class="vis on">'
+  +  (R.fio?'<div class="fio">🧵 O Fio: '+esc(R.fio)+'</div>':'')
+  +  '<div id="estacoes"></div></div>'
+  +'<div id="v-cartao" class="vis">'
+  +  '<div class="zoom"><button onclick="zoom(-1)">A −</button><button onclick="zoom(1)">A +</button></div>'
+  +  '<div class="cart"><h3>🎴 Cartão de Púlpito</h3><ol id="cartaoLista"></ol></div>'
+  +  '<div class="nota">Um olhar rápido no púlpito. Cada palavra puxa o ponto inteiro — se você treinou.</div></div>'
+  +'<div id="v-treino" class="vis">'
+  +  '<div class="tr-topo">Sem colar. Olhe a âncora, <b>pregue o ponto de cabeça</b>, depois confira.<br>'
+  +  '<span class="placar" id="placar"></span></div><div id="treinoArea"></div></div>';
+
+  $('estacoes').innerHTML=E.map(function(e,i){
+    return '<div class="est">'
+      +'<div class="cab"><div class="n">'+(i+1)+'</div><div class="em">'+esc(e.em||'•')+'</div>'
+      +'<div class="anc">'+esc(e.anc)+'</div></div>'
+      +'<div class="rf">'+esc(e.rf||'')+'</div>'
+      +'<div class="pu">'+esc(e.pu||'')+'</div></div>';
+  }).join('');
+
+  $('cartaoLista').innerHTML=E.map(function(e){
+    var a=String(e.anc||'').split(' · ')[0];
+    return '<li><b>'+esc(e.em||'•')+' '+esc(a)+'</b> <span class="v">— '+esc(e.rf||'')+'</span></li>';
+  }).join('');
+
+  if(R.ler){ var b=$('btLer'); b.style.display=''; b.onclick=function(){ location.href=R.ler; }; }
+}
+
+function aba(q){
+  ['mapa','cartao','treino'].forEach(function(k){ $('v-'+k).classList.toggle('on',k===q); });
+  Array.prototype.forEach.call(document.querySelectorAll('.aba'),function(a){
+    a.classList.toggle('on', a.getAttribute('data-q')===q);
+  });
+  if(q==='treino') iniciarTreino();
+}
+
+var tam=1.05;
+function zoom(d){
+  tam=Math.min(2.2,Math.max(.85, tam + d*0.15));
+  document.documentElement.style.setProperty('--pulp', tam.toFixed(2)+'rem');
+}
+
+// TREINO — recordação ativa: o que não fixou volta pro fim da fila
+var fila=[], fixados=0, atual=null, revelado=false;
+function iniciarTreino(){
+  fixados=0; revelado=false;
+  fila=R.estacoes.map(function(e,i){ return i; });
+  embaralha(fila); proxima();
+}
+function embaralha(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } }
+function proxima(){ if(!fila.length){ return fim(); } atual=fila[0]; revelado=false; render(); }
+function placar(){ $('placar').textContent='Fixados: '+fixados+'/'+R.estacoes.length+'  ·  na fila: '+fila.length; }
+function render(){
+  placar();
+  var e=R.estacoes[atual];
+  $('treinoArea').innerHTML=
+   '<div class="card"><div class="em">'+esc(e.em||'•')+'</div>'
+  +'<div class="anc">'+esc(String(e.anc||'').split(' · ')[0])+'</div>'
+  +'<div class="rf">'+esc(e.rf||'')+'</div>'
+  +(revelado?'<div class="pu">'+esc(e.pu||'')+'</div>'
+            :'<div class="dica">Pregue esse ponto de cabeça… depois toque em Mostrar.</div>')
+  +'</div><div class="acoes">'
+  +(revelado?'<button class="revisar" onclick="marcar(false)">🔁 Revisar</button>'
+            +'<button class="fixei" onclick="marcar(true)">✅ Fixei</button>'
+            :'<button class="mostrar" onclick="revelar()">👁️ Mostrar o ponto</button>')
+  +'</div>';
+}
+function revelar(){ revelado=true; render(); }
+function marcar(ok){ fila.shift(); if(ok){ fixados++; } else { fila.push(atual); } proxima(); }
+function fim(){
+  $('treinoArea').innerHTML=
+   '<div class="fim"><div class="big">🔥📖</div>'
+  +'<h2 style="color:var(--vinho);font-family:Georgia,serif">Mensagem fixada!</h2>'
+  +'<p>Você percorreu as '+R.estacoes.length+' estações de cabeça. Faça de novo <b>hoje e amanhã</b> — '
+  +'3 passadas curtas cravam mais que 1 hora relendo.</p>'
+  +'<button class="reiniciar" onclick="iniciarTreino()">🔁 Treinar de novo</button></div>';
+  $('placar').textContent='';
+}
+
+$('btShare').onclick=function(){
+  var d={title:(R?R.titulo:'Preparador de Sermões')+' — RADAR',
+         text:'Roteiro de pregação no RADAR:',
+         url:location.origin+'/biblioteca/preparador/'};
+  if(navigator.share){ navigator.share(d).catch(function(){}); }
+  else if(navigator.clipboard){ navigator.clipboard.writeText(d.url); alert('Link copiado!'); }
+  else { prompt('Copie o link:', d.url); }
+};
+</script>
+</body>
+</html>
