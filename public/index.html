@@ -151,6 +151,21 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .bh-tile-desc{font-size:11px;color:var(--sub);margin-top:2px}
 .bh-tile-arr{font-size:18px;color:var(--sub);flex-shrink:0}
 .bh-tile-count{font-size:11px;font-weight:800;color:var(--tc);background:rgba(255,255,255,.06);border-radius:20px;padding:3px 9px;flex-shrink:0}
+/* ===== TEMA CLARO nas telas de leitura/CRM (nada de preto) ===== */
+#tela-bh-landing, #tela-modulo{--bg:#f5f7fb;--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
+#tela-bh-landing .std-back, #tela-modulo .std-back{background:rgba(15,61,92,.06)}
+#tela-modulo .crm-item, #tela-modulo .mod-card{box-shadow:0 2px 8px rgba(15,61,92,.05)}
+/* ===== Bíblia e Harpa — menos genérico ===== */
+.bh-hero{background:linear-gradient(135deg,#0f3d5c,#12557e);color:#fff;border-radius:18px;padding:18px 18px 16px;margin-bottom:6px;box-shadow:0 8px 22px rgba(15,61,92,.18)}
+.bh-hero .h1{font-family:Georgia,serif;font-size:1.35rem;font-weight:800;line-height:1.15}
+.bh-hero .h2{color:#cfe3ec;font-size:.9rem;margin-top:4px}
+#tela-bh-landing .bh-secao{opacity:1;color:#a9791c}
+#tela-bh-landing .bh-tile{background:#fff;border:1px solid rgba(15,61,92,.1);border-left:5px solid var(--tc);box-shadow:0 4px 14px rgba(15,61,92,.08);padding:17px 16px}
+#tela-bh-landing .bh-tile-icon{width:52px;height:52px;font-size:30px;border-radius:13px;background:#eef3f8}
+#tela-bh-landing .bh-tile-icon{background:color-mix(in srgb, var(--tc) 16%, #fff)}
+#tela-bh-landing .bh-tile-nome{font-size:17px;color:#0f3d5c;letter-spacing:.3px}
+#tela-bh-landing .bh-tile-desc{font-size:12px}
+#tela-bh-landing .bh-tile-arr{color:var(--tc);font-size:22px}
 
 /* ══ BÍBLIA ══ */
 #tela-biblia{background:var(--bg)}
@@ -1306,6 +1321,11 @@ html[data-fs="3"] .prl-out{font-size:20px}
     <span style="font-size:22px;margin-left:8px">📖</span>
   </div>
   <div class="bh-scroll">
+
+    <div class="bh-hero">
+      <div class="h1">📖 A Palavra &amp; o Louvor 🎵</div>
+      <div class="h2">Leia a Bíblia e cante os hinos da Harpa Cristã — tudo num lugar só.</div>
+    </div>
 
     <div class="bh-secao">Bíblia</div>
     <div class="bh-tiles">
