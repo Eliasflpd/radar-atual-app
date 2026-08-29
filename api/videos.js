@@ -34,6 +34,29 @@ module.exports = async (req, res) => {
     if(req.method==='POST'){
       let b=req.body; if(typeof b==='string'){ try{ b=JSON.parse(b); }catch(e){ b={}; } }
       b=b||{};
+
+      // === CURSO DE TEOLOGIA (área trancada a senha) ===
+      // POST {acao:'curso', senha, curso?} -> se a senha bater, devolve módulos+aulas com os links.
+      if(b.acao==='curso'){
+        const SENHA=process.env.CURSO_SENHA||'__sem_senha_configurada__';
+        if((b.senha||'')!==SENHA){ res.status(403).json({ok:false,erro:'senha'}); return; }
+        const curso=(b.curso||'escatologia-ivan-santos').toString();
+        await c.query(`create table if not exists curso_aulas(
+          id bigserial primary key, curso text not null default 'escatologia-ivan-santos',
+          modulo_ordem int not null, modulo_nome text not null, aula_ordem int not null,
+          titulo text not null, tipo text not null default 'video', blob_url text,
+          tamanho_bytes bigint, criado_em timestamptz default now())`);
+        const rc=await c.query('select modulo_ordem,modulo_nome,aula_ordem,titulo,tipo,blob_url from curso_aulas where curso=$1 and blob_url is not null order by modulo_ordem,aula_ordem',[curso]);
+        const mods=[]; const idx={};
+        for(const row of rc.rows){
+          const k=row.modulo_ordem;
+          if(idx[k]===undefined){ idx[k]=mods.length; mods.push({ordem:row.modulo_ordem,nome:row.modulo_nome,aulas:[]}); }
+          mods[idx[k]].aulas.push({ordem:row.aula_ordem,titulo:row.titulo,tipo:row.tipo,url:row.blob_url});
+        }
+        res.status(200).json({ok:true, curso, total:rc.rows.length, modulos:mods});
+        return;
+      }
+
       if((b.token||'')!==ADM){ res.status(401).json({error:'não autorizado'}); return; }
       const url=(b.url||'').trim();
       if(!url){ res.status(400).json({error:'sem link'}); return; }

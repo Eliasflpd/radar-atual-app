@@ -1,0 +1,530 @@
+[
+ {
+  "idx": 0,
+  "abbrev": "gn",
+  "name": "Gênesis",
+  "text_s": 30,
+  "text_e": 113,
+  "nchaps": 50
+ },
+ {
+  "idx": 1,
+  "abbrev": "ex",
+  "name": "Êxodo",
+  "text_s": 117,
+  "text_e": 182,
+  "nchaps": 40
+ },
+ {
+  "idx": 2,
+  "abbrev": "lv",
+  "name": "Levítico",
+  "text_s": 185,
+  "text_e": 228,
+  "nchaps": 27
+ },
+ {
+  "idx": 3,
+  "abbrev": "nm",
+  "name": "Números",
+  "text_s": 231,
+  "text_e": 287,
+  "nchaps": 36
+ },
+ {
+  "idx": 4,
+  "abbrev": "dt",
+  "name": "Deuteronômio",
+  "text_s": 291,
+  "text_e": 343,
+  "nchaps": 34
+ },
+ {
+  "idx": 5,
+  "abbrev": "js",
+  "name": "Josué",
+  "text_s": 347,
+  "text_e": 380,
+  "nchaps": 24
+ },
+ {
+  "idx": 6,
+  "abbrev": "jz",
+  "name": "Juízes",
+  "text_s": 384,
+  "text_e": 419,
+  "nchaps": 21
+ },
+ {
+  "idx": 7,
+  "abbrev": "rt",
+  "name": "Rute",
+  "text_s": 422,
+  "text_e": 426,
+  "nchaps": 4
+ },
+ {
+  "idx": 8,
+  "abbrev": "1sm",
+  "name": "1 Samuel",
+  "text_s": 430,
+  "text_e": 476,
+  "nchaps": 31
+ },
+ {
+  "idx": 9,
+  "abbrev": "2sm",
+  "name": "2 Samuel",
+  "text_s": 480,
+  "text_e": 514,
+  "nchaps": 24
+ },
+ {
+  "idx": 10,
+  "abbrev": "1rs",
+  "name": "1 Reis",
+  "text_s": 518,
+  "text_e": 569,
+  "nchaps": 22
+ },
+ {
+  "idx": 11,
+  "abbrev": "2rs",
+  "name": "2 Reis",
+  "text_s": 573,
+  "text_e": 617,
+  "nchaps": 25
+ },
+ {
+  "idx": 12,
+  "abbrev": "1cr",
+  "name": "1 Crônicas",
+  "text_s": 621,
+  "text_e": 658,
+  "nchaps": 29
+ },
+ {
+  "idx": 13,
+  "abbrev": "2cr",
+  "name": "2 Crônicas",
+  "text_s": 661,
+  "text_e": 707,
+  "nchaps": 36
+ },
+ {
+  "idx": 14,
+  "abbrev": "ed",
+  "name": "Esdras",
+  "text_s": 711,
+  "text_e": 726,
+  "nchaps": 10
+ },
+ {
+  "idx": 15,
+  "abbrev": "ne",
+  "name": "Neemias",
+  "text_s": 730,
+  "text_e": 752,
+  "nchaps": 13
+ },
+ {
+  "idx": 16,
+  "abbrev": "et",
+  "name": "Ester",
+  "text_s": 756,
+  "text_e": 765,
+  "nchaps": 10
+ },
+ {
+  "idx": 17,
+  "abbrev": "jó",
+  "name": "Jó",
+  "text_s": 769,
+  "text_e": 812,
+  "nchaps": 42
+ },
+ {
+  "idx": 18,
+  "abbrev": "sl",
+  "name": "Salmos",
+  "text_s": 817,
+  "text_e": 924,
+  "nchaps": 150
+ },
+ {
+  "idx": 19,
+  "abbrev": "pv",
+  "name": "Provérbios",
+  "text_s": 928,
+  "text_e": 963,
+  "nchaps": 31
+ },
+ {
+  "idx": 20,
+  "abbrev": "ec",
+  "name": "Eclesiastes",
+  "text_s": 967,
+  "text_e": 980,
+  "nchaps": 12
+ },
+ {
+  "idx": 21,
+  "abbrev": "ct",
+  "name": "Cânticos",
+  "text_s": 984,
+  "text_e": 989,
+  "nchaps": 8
+ },
+ {
+  "idx": 22,
+  "abbrev": "is",
+  "name": "Isaías",
+  "text_s": 993,
+  "text_e": 1077,
+  "nchaps": 66
+ },
+ {
+  "idx": 23,
+  "abbrev": "jr",
+  "name": "Jeremias",
+  "text_s": 1081,
+  "text_e": 1158,
+  "nchaps": 52
+ },
+ {
+  "idx": 24,
+  "abbrev": "lm",
+  "name": "Lamentações de Jeremias",
+  "text_s": 1162,
+  "text_e": 1168,
+  "nchaps": 5
+ },
+ {
+  "idx": 25,
+  "abbrev": "ez",
+  "name": "Ezequiel",
+  "text_s": 1172,
+  "text_e": 1240,
+  "nchaps": 48
+ },
+ {
+  "idx": 26,
+  "abbrev": "dn",
+  "name": "Daniel",
+  "text_s": 1244,
+  "text_e": 1269,
+  "nchaps": 12
+ },
+ {
+  "idx": 27,
+  "abbrev": "os",
+  "name": "Oséias",
+  "text_s": 1273,
+  "text_e": 1284,
+  "nchaps": 14
+ },
+ {
+  "idx": 28,
+  "abbrev": "jl",
+  "name": "Joel",
+  "text_s": 1288,
+  "text_e": 1294,
+  "nchaps": 3
+ },
+ {
+  "idx": 29,
+  "abbrev": "am",
+  "name": "Amós",
+  "text_s": 1298,
+  "text_e": 1308,
+  "nchaps": 9
+ },
+ {
+  "idx": 30,
+  "abbrev": "ob",
+  "name": "Obadias",
+  "text_s": 1311,
+  "text_e": 1312,
+  "nchaps": 1
+ },
+ {
+  "idx": 31,
+  "abbrev": "jn",
+  "name": "Jonas",
+  "text_s": 1315,
+  "text_e": 1318,
+  "nchaps": 4
+ },
+ {
+  "idx": 32,
+  "abbrev": "mq",
+  "name": "Miquéias",
+  "text_s": 1322,
+  "text_e": 1328,
+  "nchaps": 7
+ },
+ {
+  "idx": 33,
+  "abbrev": "na",
+  "name": "Naum",
+  "text_s": 1331,
+  "text_e": 1333,
+  "nchaps": 3
+ },
+ {
+  "idx": 34,
+  "abbrev": "hc",
+  "name": "Habacuque",
+  "text_s": 1336,
+  "text_e": 1339,
+  "nchaps": 3
+ },
+ {
+  "idx": 35,
+  "abbrev": "sf",
+  "name": "Sofonias",
+  "text_s": 1342,
+  "text_e": 1345,
+  "nchaps": 3
+ },
+ {
+  "idx": 36,
+  "abbrev": "ag",
+  "name": "Ageu",
+  "text_s": 1348,
+  "text_e": 1350,
+  "nchaps": 2
+ },
+ {
+  "idx": 37,
+  "abbrev": "zc",
+  "name": "Zacarias",
+  "text_s": 1354,
+  "text_e": 1367,
+  "nchaps": 14
+ },
+ {
+  "idx": 38,
+  "abbrev": "ml",
+  "name": "Malaquias",
+  "text_s": 1371,
+  "text_e": 1382,
+  "nchaps": 4
+ },
+ {
+  "idx": 39,
+  "abbrev": "mt",
+  "name": "Mateus",
+  "text_s": 1386,
+  "text_e": 1457,
+  "nchaps": 28
+ },
+ {
+  "idx": 40,
+  "abbrev": "mc",
+  "name": "Marcos",
+  "text_s": 1461,
+  "text_e": 1496,
+  "nchaps": 16
+ },
+ {
+  "idx": 41,
+  "abbrev": "lc",
+  "name": "Lucas",
+  "text_s": 1500,
+  "text_e": 1565,
+  "nchaps": 24
+ },
+ {
+  "idx": 42,
+  "abbrev": "jo",
+  "name": "João",
+  "text_s": 1569,
+  "text_e": 1621,
+  "nchaps": 21
+ },
+ {
+  "idx": 43,
+  "abbrev": "atos",
+  "name": "Atos",
+  "text_s": 1626,
+  "text_e": 1691,
+  "nchaps": 28
+ },
+ {
+  "idx": 44,
+  "abbrev": "rm",
+  "name": "Romanos",
+  "text_s": 1694,
+  "text_e": 1731,
+  "nchaps": 16
+ },
+ {
+  "idx": 45,
+  "abbrev": "1co",
+  "name": "1 Coríntios",
+  "text_s": 1735,
+  "text_e": 1767,
+  "nchaps": 16
+ },
+ {
+  "idx": 46,
+  "abbrev": "2co",
+  "name": "2 Coríntios",
+  "text_s": 1770,
+  "text_e": 1791,
+  "nchaps": 13
+ },
+ {
+  "idx": 47,
+  "abbrev": "gl",
+  "name": "Gálatas",
+  "text_s": 1794,
+  "text_e": 1804,
+  "nchaps": 6
+ },
+ {
+  "idx": 48,
+  "abbrev": "ef",
+  "name": "Efésios",
+  "text_s": 1807,
+  "text_e": 1820,
+  "nchaps": 6
+ },
+ {
+  "idx": 49,
+  "abbrev": "fp",
+  "name": "Filipenses",
+  "text_s": 1823,
+  "text_e": 1830,
+  "nchaps": 4
+ },
+ {
+  "idx": 50,
+  "abbrev": "cl",
+  "name": "Colossenses",
+  "text_s": 1833,
+  "text_e": 1841,
+  "nchaps": 4
+ },
+ {
+  "idx": 51,
+  "abbrev": "1ts",
+  "name": "1 Tessalonicenses",
+  "text_s": 1844,
+  "text_e": 1851,
+  "nchaps": 5
+ },
+ {
+  "idx": 52,
+  "abbrev": "2ts",
+  "name": "2 Tessalonicenses",
+  "text_s": 1854,
+  "text_e": 1860,
+  "nchaps": 3
+ },
+ {
+  "idx": 53,
+  "abbrev": "1tm",
+  "name": "1 Timóteo",
+  "text_s": 1864,
+  "text_e": 1863,
+  "nchaps": 6
+ },
+ {
+  "idx": 54,
+  "abbrev": "2tm",
+  "name": "2 Timóteo",
+  "text_s": 1864,
+  "text_e": 1885,
+  "nchaps": 4
+ },
+ {
+  "idx": 55,
+  "abbrev": "tt",
+  "name": "Tito",
+  "text_s": 1888,
+  "text_e": 1891,
+  "nchaps": 3
+ },
+ {
+  "idx": 56,
+  "abbrev": "fm",
+  "name": "Filemom",
+  "text_s": 1894,
+  "text_e": 1895,
+  "nchaps": 1
+ },
+ {
+  "idx": 57,
+  "abbrev": "hb",
+  "name": "Hebreus",
+  "text_s": 1899,
+  "text_e": 1923,
+  "nchaps": 13
+ },
+ {
+  "idx": 58,
+  "abbrev": "tg",
+  "name": "Tiago",
+  "text_s": 1926,
+  "text_e": 1933,
+  "nchaps": 5
+ },
+ {
+  "idx": 59,
+  "abbrev": "1pe",
+  "name": "1 Pedro",
+  "text_s": 1936,
+  "text_e": 1945,
+  "nchaps": 5
+ },
+ {
+  "idx": 60,
+  "abbrev": "2pe",
+  "name": "2 Pedro",
+  "text_s": 1948,
+  "text_e": 1952,
+  "nchaps": 3
+ },
+ {
+  "idx": 61,
+  "abbrev": "1jo",
+  "name": "1 João",
+  "text_s": 1955,
+  "text_e": 1965,
+  "nchaps": 5
+ },
+ {
+  "idx": 62,
+  "abbrev": "2jo",
+  "name": "2 João",
+  "text_s": 1968,
+  "text_e": 1968,
+  "nchaps": 1
+ },
+ {
+  "idx": 63,
+  "abbrev": "3jo",
+  "name": "3 João",
+  "text_s": 1971,
+  "text_e": 1972,
+  "nchaps": 1
+ },
+ {
+  "idx": 64,
+  "abbrev": "jd",
+  "name": "Judas",
+  "text_s": 1975,
+  "text_e": 1976,
+  "nchaps": 1
+ },
+ {
+  "idx": 65,
+  "abbrev": "ap",
+  "name": "Apocalipse",
+  "text_s": 1981,
+  "text_e": 1985,
+  "nchaps": 22
+ }
+]

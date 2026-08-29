@@ -1,0 +1,38 @@
+slot fora DeepSeek HTTP Error 402: Payment Requir
+slot fora Cerebras HTTP Error 404: Not Found
+slot fora Cerebras HTTP Error 404: Not Found
+slot fora Cerebras HTTP Error 404: Not Found
+slot fora NVIDIA HTTP Error 410: Gone
+slots: ['DeepSeek']
+livros a processar: 57 | ja limpos: 27
+  lv    ok (736)
+  dt    ok (1314)
+  js    ok (787)
+  jz    ok (985)
+  rt    ok (1245)
+  1sm   ok (1444)
+  2sm   ok (1311)
+  1cr   ok (1811)
+  2cr   ok (874)
+  et    ok (1139)
+  sl    ok (1974)
+  pv    ok (1263)
+  ec    ok (853)
+  dn    ok (1422)
+  ob    ok (1000)
+  jn    ok (1740)
+  na    ok (1315)
+  hc    ok (885)
+  sf    ok (896)
+  lc    ok (1193)
+  jo    ok (1427)
+  atos  ok (1524)
+  rm    ok (775)
+  1co   ok (1872)
+  ef    ok (1569)
+  fp    ok (1687)
+  2ts   ok (601)
+  1tm   ok (1252)
+  2tm   ok (1314)
+  tg    ok (1403)
+GRAVADO intros-antonio-gilberto.json com 57 livros

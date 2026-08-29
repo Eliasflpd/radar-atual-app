@@ -119,7 +119,7 @@ async function entrar(){
   if(!s){ return; }
   $('btnEntrar').disabled=true; $('erro').textContent='';
   try{
-    const r=await fetch('/api/curso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({senha:s})});
+    const r=await fetch('/api/videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'curso',senha:s})});
     const d=await r.json();
     if(d && d.ok){
       try{ localStorage.setItem('curso_senha', s); }catch(_){}
@@ -192,7 +192,7 @@ function fecharPlayer(){ const v=$('vid'); try{ v.pause(); }catch(_){} $('player
   let s=''; try{ s=localStorage.getItem('curso_senha')||''; }catch(_){}
   if(s){
     try{
-      const r=await fetch('/api/curso',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({senha:s})});
+      const r=await fetch('/api/videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'curso',senha:s})});
       const d=await r.json();
       if(d && d.ok){ DADOS=d; render(); return; }
     }catch(_){}
