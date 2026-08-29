@@ -15,6 +15,16 @@
   header .t{flex:1;min-width:0}
   header .t b{display:block;font-size:1.05rem}
   header .t span{font-size:.78rem;color:#bcd3dc}
+  /* LUZ DO CLAUDE: aceso (ao vivo) x apagado (leio de 10 em 10 min) */
+  #status{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+  #status .luz{width:9px;height:9px;border-radius:50%;background:#8fa7b3;flex-shrink:0}
+  #status.vivo{color:#7ef0b4}
+  #status.vivo .luz{background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:pulsa 1.8s infinite}
+  #status.espera{color:#f0cf8a}
+  #status.espera .luz{background:var(--dourado)}
+  @keyframes pulsa{70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+  .aviso{align-self:center;max-width:92%;background:#fff8e6;border:1px solid #f0dcaa;color:#6b551f;
+    border-radius:12px;padding:8px 12px;font-size:.82rem;line-height:1.45;text-align:center}
   header button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:9px;padding:8px 11px;font-weight:700;font-family:inherit;cursor:pointer}
   #msgs{flex:1;overflow-y:auto;padding:14px 12px 6px;display:flex;flex-direction:column;gap:9px}
   .b{max-width:82%;padding:10px 13px;border-radius:15px;font-size:1.02rem;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;box-shadow:0 1px 2px rgba(0,0,0,.08)}
@@ -34,7 +44,7 @@
 <body>
   <header>
     <div class="ico">🧙</div>
-    <div class="t"><b>Claude (Mestre dos Magos)</b><span id="status">bate-papo do RADAR</span></div>
+    <div class="t"><b>Claude (Mestre dos Magos)</b><span id="status"><i class="luz"></i>bate-papo do RADAR</span></div>
     <button onclick="location.href='/'">🏠</button>
   </header>
 
@@ -61,6 +71,28 @@ function pinta(m){
 }
 function fim(){ const e=$('msgs'); e.scrollTop=e.scrollHeight; }
 
+/* ===== LUZ DO CLAUDE =====
+   Aceso  = ele está trabalhando AGORA (responde na hora).
+   Apagado= ele lê o bate-papo de tempos em tempos. A mensagem NÃO se perde. */
+let AO_VIVO=false;
+function dizStatus(classe,texto){
+  const s=$('status'); s.className=classe||'';
+  s.innerHTML='<i class="luz"></i>'+esc(texto);
+}
+function pintaStatus(st){
+  if(st && st.ao_vivo){
+    AO_VIVO=true;
+    dizStatus('vivo','AO VIVO — respondo na hora');
+  }else{
+    AO_VIVO=false;
+    dizStatus('espera','anotando — respondo em minutos');
+  }
+}
+function avisar(txt){
+  const d=document.createElement('div'); d.className='aviso'; d.textContent=txt;
+  $('msgs').appendChild(d); fim();
+}
+
 let _carregando=false;
 async function carregar(){
   if(_carregando) return;              // não sobrepõe requisições (evita travar)
@@ -79,9 +111,9 @@ async function carregar(){
       }else if(ultimo===0 && $('vazio')){
         $('vazio').textContent='Ainda não há mensagens. Me escreva aqui — respondo na próxima rodada.';
       }
-      $('status').textContent='bate-papo do RADAR';
+      pintaStatus(d.status);
     }
-  }catch(e){ $('status').textContent='sem conexão… tentando de novo'; }
+  }catch(e){ dizStatus('','sem conexão… tentando de novo'); }
   finally{ _carregando=false; }
 }
 
@@ -102,17 +134,26 @@ async function enviar(){
     if(d.ok){
       if(d.msg) ultimo=Math.max(ultimo,d.msg.id);
       if(d.reply){ pinta(d.reply); ultimo=Math.max(ultimo,d.reply.id); fim(); }
+      pintaStatus(d.status);
+      // Se for TAREFA no app (construir/mudar/consertar), quem faz é o Claude do PC.
+      // Explica UMA vez, pra ele saber que não se perdeu e não ficar esperando à toa.
+      if(!AO_VIVO && !_jaAvisou){
+        _jaAvisou=true;
+        avisar('📌 Se isso for TAREFA no app (construir, mudar, consertar), já está anotado. O Claude do PC pega e volta aqui com a prova. A luz lá em cima fica VERDE quando ele estiver trabalhando ao vivo.');
+      }
     }
-  }catch(e){ var dd=document.getElementById('digitando'); if(dd) dd.remove(); $('status').textContent='sem conexão…'; }
+  }catch(e){ var dd=document.getElementById('digitando'); if(dd) dd.remove(); dizStatus('','sem conexão…'); }
   $('env').disabled=false;
   $('txt').focus();
 }
+let _jaAvisou=false;
 
 $('txt').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); enviar(); } });
 $('txt').addEventListener('input',e=>{ e.target.style.height='auto'; e.target.style.height=Math.min(120,e.target.scrollHeight)+'px'; });
 
-carregar();
-setInterval(carregar, 8000); // busca mensagens novas a cada 8s
+// Busca mensagens novas: de 3 em 3s quando o Claude está AO VIVO (pra resposta cair na hora),
+// de 8 em 8s quando não está (economiza bateria/dados do celular).
+(function laco(){ carregar().finally(function(){ setTimeout(laco, AO_VIVO?3000:8000); }); })();
 </script>
 </body>
 </html>

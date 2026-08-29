@@ -1,7 +1,19 @@
 // BATE-PAPO Elias <-> Claude, dentro do RADAR.
-// GET  ?token=&desde=<id>   -> mensagens novas (ou últimas 200)
+// GET  ?token=&desde=<id>   -> mensagens novas (ou últimas 200) + status do Claude
 // POST {token, texto, autor} -> grava mensagem (autor 'elias' por padrão)
 const { Client } = require('pg');
+
+// Status do Claude (AO VIVO x fora do ar). Nunca pode derrubar o chat:
+// se a tabela não existir ou der erro, devolve null e o chat segue igual.
+async function lerStatus(c){
+  try{
+    const s=await c.query('select ao_vivo_ate, nota, atualizado_em from radar_claude_status where id=1');
+    if(!s.rows.length) return null;
+    const r=s.rows[0];
+    const ate=r.ao_vivo_ate?new Date(r.ao_vivo_ate).getTime():0;
+    return { ao_vivo: ate>Date.now(), ao_vivo_ate: r.ao_vivo_ate, nota: r.nota||'' };
+  }catch(_){ return null; }
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin','*');
@@ -47,7 +59,7 @@ module.exports = async (req, res) => {
           }
         }catch(e){ /* se a IA falhar, ainda salva a msg do Elias */ }
       }
-      res.json({ok:true, msg:r.rows[0], reply:reply});
+      res.json({ok:true, msg:r.rows[0], reply:reply, status: await lerStatus(c)});
       return;
     }
 
@@ -61,7 +73,7 @@ module.exports = async (req, res) => {
     }else{
       r=await c.query('select id,autor,texto,criado_em from (select id,autor,texto,criado_em from radar_chat order by id desc limit 200) t order by id asc');
     }
-    res.json({ok:true, msgs:r.rows});
+    res.json({ok:true, msgs:r.rows, status: await lerStatus(c)});
   }catch(e){
     res.status(200).json({ok:false, err:String(e).slice(0,140)});
   }finally{ try{ await c.end(); }catch(_){}}
