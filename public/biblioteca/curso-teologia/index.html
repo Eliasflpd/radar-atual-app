@@ -155,7 +155,12 @@ function render(){
         </div>
       </div>
     </div>`;
-  if(pdfUrl){ html+=`<a class="pdf-link" href="${pdfUrl}" target="_blank">📄 Apostila do curso (PDF) — abrir</a>`; }
+  html+=`<a class="pdf-link" href="apostila.html">
+      <span style="font-size:22px">📖</span>
+      <span style="flex:1"><b style="display:block;font-size:1rem;color:#0f3d5c">Apostila do Curso</b>
+      <span style="font-size:.82rem;color:#6b551f">Texto completo — 16 módulos, leitura com índice</span></span>
+      <span style="color:#a9791c;font-size:1.2rem">›</span>
+    </a>`;
   DADOS.modulos.forEach((m,mi)=>{
     html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="toggleMod(${mi})">
       <div class="n">${m.ordem}</div>
