@@ -73,8 +73,8 @@
   </style>
   <div class="lupa">
     <div class="lp-selo">🔎 Lupa do Concílio</div>
-    <h2>Pergunte — o mestre escolhe o servo certo</h2>
-    <div class="lp-dica">Escreva sua pergunta. O mago-mestre aciona sozinho o(s) expositor(es) certo(s), <b>pesquisa na web</b> e traz a resposta — firmada na Palavra.</div>
+    <h2>Pergunte o que quiser</h2>
+    <div class="lp-dica">Escreva sua dúvida — o Concílio <b>pesquisa</b> e te responde firmado na Bíblia. Você não precisa escolher ninguém.</div>
     <textarea id="lp-tema" rows="2" placeholder="Ex.: Qual o formato original da Terra segundo a Bíblia?"></textarea>
     <button id="lp-btn" class="lp-btn">🔎 Perguntar ao Concílio</button>
     <div id="lp-quem"></div>
@@ -126,6 +126,9 @@
     }
     btn.addEventListener('click',perguntar);
     tema.addEventListener('keydown',function(e){ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) perguntar(); });
+    // sobe a Lupa pro topo (logo abaixo do título), pra não ficar enterrada no texto
+    var _lp=document.querySelector('.lupa'), _dv=document.querySelector('.divisor');
+    if(_lp&&_dv&&_dv.parentNode) _dv.parentNode.insertBefore(_lp, _dv.nextSibling);
   })();
   </script>
 
