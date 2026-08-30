@@ -762,8 +762,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .agv-hub-nome{color:#14233a}
 .agv-hub-sub{color:#5c6470}
 #tela-informativo .sec-label,#tela-silas .sec-label,#tela-templo .sec-label,#tela-monte-carmelo .sec-label{color:#a9791c;opacity:.9}
-#tela-informativo,#tela-silas,#tela-templo,#tela-ceadema,#tela-monte-carmelo{--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
-#tela-informativo .std-back,#tela-silas .std-back,#tela-templo .std-back,#tela-ceadema .std-back,#tela-monte-carmelo .std-back{background:rgba(15,61,92,.06)}
+#tela-informativo,#tela-silas,#tela-templo,#tela-ceadema,#tela-monte-carmelo,#tela-cartazes,#tela-cartaz{--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
+#tela-informativo .std-back,#tela-silas .std-back,#tela-templo .std-back,#tela-ceadema .std-back,#tela-monte-carmelo .std-back,#tela-cartazes .std-back,#tela-cartaz .std-back{background:rgba(15,61,92,.06)}
+#tela-cartazes .agv-scroll,#tela-cartaz .agv-scroll{background:#eef3fa}
 
 </style>
 </head>
@@ -851,7 +852,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       </div>
 
       <div class="vit-grade">
-        <div class="vit-card vit-vazio"></div>
+        <div class="vit-card" onclick="abrirCartazes()">
+          <div class="vit-ico"><img src="/img/home/cartazes.png" alt="" onerror="this.parentNode.textContent='🖼️'"></div>
+          <div class="vit-nome">Cartazes</div><div class="vit-desc">Eventos e avisos</div>
+        </div>
         <div class="vit-card" onclick="mostrarTela('tela-informativo')">
           <div class="vit-ico"><img src="/img/home/informativo.png" alt="" onerror="this.parentNode.textContent='📢'"></div>
           <div class="vit-nome">Informativo</div><div class="vit-desc">Agendas e avisos</div>
@@ -1228,6 +1232,19 @@ html[data-fs="3"] .prl-out{font-size:20px}
       </div>
     </div>
   </div>
+</div>
+<div class="tela" id="tela-cartazes">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Cartazes</div><div class="std-sub">Eventos e avisos</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Cartazes')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <span style="font-size:24px">🖼️</span></div>
+  <div class="agv-scroll" style="padding:12px 14px 40px"><div id="cartazes-lista"></div></div>
+</div>
+<div class="tela" id="tela-cartaz">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-cartazes')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo" id="cartaz-tit">Cartaz</div><div class="std-sub" id="cartaz-sub"></div></div>
+    <span style="font-size:24px">📢</span></div>
+  <div class="agv-scroll" id="cartaz-body" style="padding:14px 14px 40px"></div>
 </div>
 <div class="tela" id="tela-informativo">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
@@ -2604,6 +2621,41 @@ const AG_MURAL=["11 e 12/09 — Festa Cong. Lírio dos Vales", "26/09 — 1º En
 
 // ===== AGENDAS (CEADEMA + Templo Central) =====
 function mostrarTela(id){ ocultarTodas(); document.getElementById(id).classList.add('ativa'); }
+
+/* ===== CARTAZES (mural visual de eventos) ===== */
+var CARTAZES=[
+  {id:'encontro-projetos', titulo:'Encontro de Projetos', data:'05 de setembro de 2026', sub:'AD Governador Archer',
+   img:'/img/cartazes/encontro-projetos.jpg', link:'https://forms.gle/8j69Up7inBNigtXGA', linkTxt:'📝 Fazer inscrição',
+   texto:'Em nome do Pr. Elizaldo Abreu (coordenador do PRO-JETRO) e do Pr. José Aguinaldo (coordenador do Projeto SILAS), junto com o Pr. Lázaro (presidente da AD em Governador Archer), convidamos todos para o Encontro de Projetos — 05 de setembro.\n\n🕗 1ª Plenária: 8h às 11h30\n🍽️ Almoço: 11h30 às 13h30\n🕜 2ª Plenária: 13h30 às 16h\n\n💰 Inscrição: Individual R$ 20 · Casal R$ 30\n🎤 Pregador: Pr. Euvaldo Sá (Timon)\n🎶 Cantora: Vitória (Dom Pedro)\n🤝 Participação: SEDAC · Conselho Político\n\nContamos com a presença de todos!'}
+];
+function abrirCartazes(){
+  mostrarTela('tela-cartazes');
+  var el=document.getElementById('cartazes-lista'); if(!el) return;
+  if(!CARTAZES.length){ el.innerHTML='<div style="text-align:center;color:#6b7280;padding:44px 16px">Nenhum cartaz ainda.</div>'; return; }
+  el.innerHTML=CARTAZES.map(function(c){
+    return '<div onclick="abrirCartaz(\''+c.id+'\')" style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 3px 12px rgba(15,61,92,.10);cursor:pointer">'
+      +'<img src="'+c.img+'" style="width:100%;display:block">'
+      +'<div style="padding:12px 15px"><div style="font-weight:800;color:#0f3d5c;font-size:1.08rem">'+esc2(c.titulo)+'</div>'
+      +'<div style="font-size:.86rem;color:#6b7280;margin-top:3px">📅 '+esc2(c.data)+(c.sub?(' · '+esc2(c.sub)):'')+'</div></div></div>';
+  }).join('');
+}
+function abrirCartaz(id){
+  var c=CARTAZES.find(function(x){return x.id===id;}); if(!c) return;
+  document.getElementById('cartaz-tit').textContent=c.titulo;
+  document.getElementById('cartaz-sub').textContent=c.data;
+  var h='<img src="'+c.img+'" style="width:100%;border-radius:16px;display:block;box-shadow:0 6px 18px rgba(0,0,0,.18)">';
+  if(c.texto) h+='<div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:16px;margin-top:14px;color:#1b2436;font-size:.98rem;line-height:1.62;white-space:pre-line">'+esc2(c.texto)+'</div>';
+  if(c.link) h+='<a href="'+c.link+'" target="_blank" style="display:block;text-align:center;background:#0f3d5c;color:#fff;border-radius:13px;padding:15px;font-weight:800;text-decoration:none;margin-top:13px">'+esc2(c.linkTxt||'Abrir link')+'</a>';
+  h+='<button onclick="compartilharCartaz(\''+c.id+'\')" style="display:block;width:100%;background:#25D366;color:#fff;border:none;border-radius:13px;padding:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:10px">📤 Compartilhar</button>';
+  var b=document.getElementById('cartaz-body'); b.innerHTML=h; b.scrollTop=0;
+  mostrarTela('tela-cartaz');
+}
+function compartilharCartaz(id){
+  var c=CARTAZES.find(function(x){return x.id===id;}); if(!c) return;
+  var txt='📢 '+c.titulo+' — '+c.data+(c.sub?(' · '+c.sub):'')+(c.link?('\n📝 Inscrição: '+c.link):'')+'\n\nVeja no RADAR: https://radar-atual.vercel.app';
+  if(navigator.share){ navigator.share({title:c.titulo,text:txt}).catch(function(){}); }
+  else { navigator.clipboard&&navigator.clipboard.writeText(txt); window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
+}
 function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ══ AUTO-EXPIRAÇÃO DE DATAS (remove avisos vencidos, deixa só de hoje em diante) ══
