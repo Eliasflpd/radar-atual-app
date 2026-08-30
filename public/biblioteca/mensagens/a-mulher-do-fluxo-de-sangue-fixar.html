@@ -32,8 +32,8 @@
   /* cartão de púlpito */
   .cart{background:#0f3d5c;color:#eaf1f5;border-radius:14px;padding:16px 16px 10px}
   .cart h3{margin:0 0 10px;color:#fff;font-family:Georgia,serif;text-align:center}
-  .cart ol{margin:0;padding-left:22px}
-  .cart li{margin-bottom:9px;font-size:1.05rem}
+  .cart ol{margin:0;padding-left:20px;columns:2;column-gap:16px}
+  .cart li{margin-bottom:6px;font-size:.9rem;break-inside:avoid;-webkit-column-break-inside:avoid}
   .cart li b{color:#ffd98a}
   .cart .v{color:#9fc7d4;font-size:.82rem}
   .copiar{display:block;width:100%;margin:12px 0 0;background:var(--teal);color:#fff;border:none;border-radius:12px;padding:13px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer}
@@ -252,5 +252,6 @@ function fim(){
   $('placar').textContent='';
 }
 </script>
+  <script src="_refs.js" defer></script>
 </body>
 </html>
