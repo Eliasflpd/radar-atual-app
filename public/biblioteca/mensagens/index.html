@@ -43,6 +43,11 @@
   <div class="sub">Sermões densos em prosa — revelação correndo como um rio</div>
   <div class="divisor"></div>
 
+  <div class="mtabs">
+    <button class="mtab on" data-p="lista" onclick="mtab('lista')">📖 Mensagens</button>
+    <button class="mtab" data-p="forjar" onclick="mtab('forjar')">🔥 Forjar Mensagem</button>
+  </div>
+
   <div id="lista"></div>
 
 <script>
@@ -96,7 +101,10 @@
 
 <!-- ══════════ CRIADOR DE MENSAGENS (skill Mensagens para Pregar) ══════════ -->
 <style>
-  .criador{margin:0 0 26px;border-bottom:2px dashed #e2d4b0;padding-bottom:24px}
+  .criador{margin:0}
+  .mtabs{display:flex;gap:8px;margin:0 0 18px}
+  .mtab{flex:1;padding:12px 8px;border-radius:13px;background:#eef2f4;border:1px solid #e4e7ec;color:#0f3d5c;font-weight:800;font-family:inherit;font-size:.98rem;cursor:pointer}
+  .mtab.on{background:linear-gradient(135deg,#8a1c1c,#a9791c);color:#fff;border-color:transparent}
   .cr-selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase}
   .cr-tit{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.42rem;margin:4px 0 6px}
   .cr-dica{text-align:center;color:#6b7280;font-size:.95rem;margin:0 auto 14px;max-width:560px;line-height:1.5}
@@ -135,8 +143,15 @@
   var $=function(id){return document.getElementById(id);};
   var tema=$('cr-tema'), btn=$('cr-btn'), saida=$('cr-saida'), quem=$('cr-quem'), acoes=$('cr-acoes');
   var raw='', ocupado=false;
-  // deixa o Criador de Mensagens lá em cima, acima da lista
-  (function(){ var c=document.querySelector('.criador'), l=document.getElementById('lista'); if(c&&l&&l.parentNode) l.parentNode.insertBefore(c,l); })();
+  // duas abas: 📖 Mensagens (padrão) e 🔥 Forjar — nada fica escondido pra baixo
+  var _cri=document.querySelector('.criador'), _list=document.getElementById('lista');
+  if(_cri&&_list&&_list.parentNode){ _list.parentNode.insertBefore(_cri, _list.nextSibling); _cri.style.display='none'; }
+  window.mtab=function(p){
+    if(_list) _list.style.display = p==='lista'?'block':'none';
+    if(_cri) _cri.style.display = p==='forjar'?'block':'none';
+    document.querySelectorAll('.mtab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-p')===p); });
+    window.scrollTo(0,0);
+  };
   function escH(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function inl(s){return escH(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');}
   function render(txt){
