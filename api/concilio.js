@@ -159,11 +159,25 @@ ${LEI}
 Comece direto no TÍTULO (sem saudação e sem "claro!").`;
 
 // ── LUPA DO CONCÍLIO — o mago-mestre roteia sozinho + pesquisa na web ──
-async function lupaWeb(pergunta) {
+async function lupaWeb(pergunta, contexto, historico) {
   const key = process.env.OPENAI_API_KEY;
   if (!key) return new Response('IA não configurada (falta OPENAI_API_KEY).', { status: 500, headers: CORS });
   const roster = ERUDITOS.map((e) => `- ${e.nome} (${e.tag}) — forte em: ${e.forte}`).join('\n');
-  const SYS = `Você é o MAGO-MESTRE do CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil).
+  const SYS_MSG = `Você é o CONCÍLIO DOS EXPOSITORES do app RADAR (Assembleias de Deus, Brasil), conversando com o pastor Elias SOBRE uma mensagem/pregação que ele está lendo.
+
+A MENSAGEM (fonte — use como base, NÃO a repita inteira):
+"""
+${(contexto || '').toString().slice(0, 9000)}
+"""
+
+Sua tarefa: responder as perguntas do pastor sobre ESTA mensagem, APROFUNDANDO e ENRIQUECENDO o ponto (pano de fundo histórico, palavra no original, referência cruzada, aplicação) — como quem acrescenta uma nota à margem, SEM contradizer e SEM reescrever a mensagem dele. Se ajudar, pesquise na web fontes comprometidas com a verdade.
+
+⚖️ AUTORIDADE: a Bíblia e a sã doutrina AD (pentecostal clássica). Nada inventado — nem versículo, nem etimologia. Cristo no centro. Em ponto disputado, sinalize com humildade e mande confirmar com a Palavra.
+
+Responda direto, em prosa pastoral, curto e denso (o pastor lê no celular). Sem cabeçalhos com emoji, sem "claro!".
+
+${LEI}`;
+  const SYS = contexto ? SYS_MSG : `Você é o MAGO-MESTRE do CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil).
 
 O pastor faz UMA pergunta. Sua tarefa:
 1) ESCOLHA INTERNAMENTE, sem perguntar e sem pedir pra ele escolher, o(s) expositor(es) do Concílio mais aptos a responder. Roster disponível:
@@ -188,7 +202,7 @@ ${LEI}`;
       body: JSON.stringify({
         model: 'gpt-4o',
         tools: [{ type: 'web_search_preview' }],
-        input: [{ role: 'system', content: SYS }, { role: 'user', content: pergunta }],
+        input: [{ role: 'system', content: SYS }, ...(Array.isArray(historico) ? historico.slice(-6).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: (m.content || '').toString().slice(0, 2000) })) : []), { role: 'user', content: pergunta }],
       }),
     });
   } catch (_) {
@@ -237,6 +251,11 @@ export default async function handler(req) {
     const pergunta = (b.pergunta || b.tema || b.passagem || '').toString().trim().slice(0, 500);
     if (!pergunta) return new Response('Escreva a sua pergunta.', { status: 400, headers: CORS });
     return lupaWeb(pergunta);
+  }
+  if (acao === 'lupa-msg') {
+    const pergunta = (b.pergunta || '').toString().trim().slice(0, 500);
+    if (!pergunta) return new Response('Escreva a sua pergunta.', { status: 400, headers: CORS });
+    return lupaWeb(pergunta, (b.contexto || '').toString(), b.historico);
   }
 
   const id = (b.erudito || '').toString().trim().slice(0, 60);
