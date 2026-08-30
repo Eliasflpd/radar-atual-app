@@ -121,15 +121,18 @@ module.exports = async (req, res) => {
         let media_url=null, media_tipo=null;
         if(b.imgBase64){
           try{
-            const { put } = require('@vercel/blob');
             const m=(b.imgBase64||'').match(/^data:([^;]+);base64,(.*)$/);
             const mime = m? m[1] : 'image/jpeg';
             const data = m? m[2] : b.imgBase64;
             const buf = Buffer.from(data,'base64');
             if(buf.length > 5*1024*1024){ res.status(413).json({ok:false,erro:'Imagem muito grande (máx 5MB)'}); return; }
             const ext=(mime.split('/')[1]||'jpg').replace('jpeg','jpg');
-            const r=await put('midias/'+Date.now()+'.'+ext, buf, {access:'public', addRandomSuffix:true, contentType:mime, token:process.env.BLOB_READ_WRITE_TOKEN});
-            media_url=r.url; media_tipo='imagem';
+            const fname=Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+            const SUPA='https://tjyquvmbaaavqnpirapp.supabase.co';
+            const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqeXF1dm1iYWFhdnFucGlyYXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NjY1NjEsImV4cCI6MjEwMzQ0MjU2MX0.-MAINAAdh3XBvLD8UAdgtBwv5Ze4skAeKSocrGXWxGc';
+            const up=await fetch(SUPA+'/storage/v1/object/midias/'+fname, {method:'POST', headers:{'Authorization':'Bearer '+ANON,'apikey':ANON,'Content-Type':mime}, body:buf});
+            if(!up.ok){ const t=await up.text(); res.status(200).json({ok:false,erro:'Falha no upload: '+t.slice(0,90)}); return; }
+            media_url=SUPA+'/storage/v1/object/public/midias/'+fname; media_tipo='imagem';
           }catch(e){ res.status(200).json({ok:false,erro:'Falha no upload: '+String(e.message||e).slice(0,90)}); return; }
         } else if(b.videoLink){
           media_url=(b.videoLink||'').toString().trim().slice(0,500); media_tipo='video';
