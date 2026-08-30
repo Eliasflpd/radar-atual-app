@@ -58,6 +58,7 @@ async function ensureMidias(c){
     id bigserial primary key, autor_nome text, autor_cargo text, autor_fone text,
     autor_cidade text, autor_bairro text, autor_igreja text, texto text,
     media_url text, media_tipo text, aprovado boolean default true, criado_em timestamptz default now())`);
+  try{ await c.query('alter table midias add column if not exists data_evento date'); }catch(_){}
   await c.query(`create table if not exists cadastros_crm(
     id bigserial primary key, fone text unique, nome text, cargo text, cidade text, bairro text, igreja text,
     criado_em timestamptz default now(), atualizado_em timestamptz default now())`);
@@ -137,8 +138,9 @@ module.exports = async (req, res) => {
         } else if(b.videoLink){
           media_url=(b.videoLink||'').toString().trim().slice(0,500); media_tipo='video';
         }
-        const ins=await c.query('insert into midias(autor_nome,autor_cargo,autor_fone,autor_cidade,autor_bairro,autor_igreja,texto,media_url,media_tipo) values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id',
-          [nome,(b.cargo||'').toString().slice(0,60),fone,(b.cidade||'').toString().slice(0,60),(b.bairro||'').toString().slice(0,60),(b.igreja||'').toString().slice(0,90),(b.texto||'').toString().slice(0,4000),media_url,media_tipo]);
+        let dataEv=null; const dm=(b.data||'').toString().match(/^(\d{4})-(\d{2})-(\d{2})$/); if(dm) dataEv=dm[0];
+        const ins=await c.query('insert into midias(autor_nome,autor_cargo,autor_fone,autor_cidade,autor_bairro,autor_igreja,texto,media_url,media_tipo,data_evento) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id',
+          [nome,(b.cargo||'').toString().slice(0,60),fone,(b.cidade||'').toString().slice(0,60),(b.bairro||'').toString().slice(0,60),(b.igreja||'').toString().slice(0,90),(b.texto||'').toString().slice(0,4000),media_url,media_tipo,dataEv]);
         await c.query(`insert into cadastros_crm(fone,nome,cargo,cidade,bairro,igreja) values($1,$2,$3,$4,$5,$6)
           on conflict(fone) do update set nome=excluded.nome,cargo=excluded.cargo,cidade=excluded.cidade,bairro=excluded.bairro,igreja=excluded.igreja,atualizado_em=now()`,
           [fone,nome,(b.cargo||'').toString(),(b.cidade||'').toString(),(b.bairro||'').toString(),(b.igreja||'').toString()]);
@@ -227,7 +229,8 @@ module.exports = async (req, res) => {
     // lista pública das mídias publicadas pela comunidade
     if(q.acao==='midia-list'){
       await ensureMidias(c);
-      const r=await c.query('select id,autor_nome,autor_cargo,autor_igreja,autor_cidade,autor_bairro,texto,media_url,media_tipo,criado_em from midias where aprovado=true order by criado_em desc limit 100');
+      // some sozinho após o prazo: só mostra sem data OU com data de hoje em diante (fuso SP)
+      const r=await c.query("select id,autor_nome,autor_cargo,autor_igreja,autor_cidade,autor_bairro,texto,media_url,media_tipo,to_char(data_evento,'YYYY-MM-DD') as data_evento,criado_em from midias where aprovado=true and (data_evento is null or data_evento >= (now() at time zone 'America/Sao_Paulo')::date) order by coalesce(data_evento, (criado_em at time zone 'America/Sao_Paulo')::date) asc limit 100");
       res.status(200).json({ok:true, midias:r.rows});
       return;
     }
