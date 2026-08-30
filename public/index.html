@@ -762,7 +762,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .agv-hub-nome{color:#14233a}
 .agv-hub-sub{color:#5c6470}
 #tela-informativo .sec-label,#tela-silas .sec-label,#tela-templo .sec-label,#tela-monte-carmelo .sec-label{color:#a9791c;opacity:.9}
-#tela-informativo,#tela-silas,#tela-templo,#tela-ceadema,#tela-monte-carmelo,#tela-cartazes,#tela-cartaz,#tela-enviar{--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
+#tela-informativo,#tela-silas,#tela-templo,#tela-ceadema,#tela-monte-carmelo,#tela-cartazes,#tela-cartaz,#tela-enviar,#tela-admin{--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
+#tela-admin .std-back{background:rgba(15,61,92,.06)}
+#tela-admin .agv-scroll{background:#eef3fa}
 #tela-enviar .agv-scroll{background:#eef3fa}
 #tela-informativo .std-back,#tela-silas .std-back,#tela-templo .std-back,#tela-ceadema .std-back,#tela-monte-carmelo .std-back,#tela-cartazes .std-back,#tela-cartaz .std-back{background:rgba(15,61,92,.06)}
 #tela-cartazes .agv-scroll,#tela-cartaz .agv-scroll{background:#eef3fa}
@@ -1096,6 +1098,12 @@ html[data-fs="3"] .prl-out{font-size:20px}
       <button class="pf-btn-lg pf-btn-share" style="background:#0f3d5c" onclick="location.href='/biblioteca/chat/'">💬 Abrir o bate-papo</button>
     </div>
 
+    <div class="pf-sec">Administração (pastor)</div>
+    <div class="pf-card">
+      <div style="font-size:13px;color:var(--sub);line-height:1.5">Veja quem publicou (cadastros) e gerencie as publicações do mural “Eventos e Mídias”.</div>
+      <button class="pf-btn-lg pf-btn-share" style="background:#8a1c1c" onclick="abrirAdmin()">🔒 Abrir painel do pastor</button>
+    </div>
+
     <div class="pf-sec">Compartilhar</div>
     <div class="pf-card">
       <div style="font-size:13px;color:var(--sub);line-height:1.5">Convide um irmão para usar o RADAR. É grátis e cheio de conteúdo pra edificar.</div>
@@ -1238,12 +1246,22 @@ html[data-fs="3"] .prl-out{font-size:20px}
     </div>
   </div>
 </div>
+<div class="tela" id="tela-slides">
+  <div style="padding:calc(12px + env(safe-area-inset-top)) 16px 10px;text-align:center;background:linear-gradient(135deg,#0f3d5c,#12557e);color:#fff;flex-shrink:0">
+    <div style="font-family:'Playfair Display',Georgia,serif;font-size:1.15rem;font-weight:800">📢 Slides &amp; Cia</div>
+    <div style="font-size:.76rem;color:#cfe3ec">Eventos e avisos da igreja</div>
+  </div>
+  <div id="slides-full" style="flex:1;overflow-y:auto;background:#eef3fa;padding:14px 14px 6px"></div>
+  <div style="padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e4e7ec;flex-shrink:0">
+    <button onclick="irParaMenu()" style="width:100%;background:#0f3d5c;color:#fff;border:none;border-radius:14px;padding:16px;font-weight:800;font-size:1.08rem;font-family:inherit;cursor:pointer">Ir para o menu ›</button>
+  </div>
+</div>
 <div class="tela" id="tela-cartazes">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Eventos e Mídias</div><div class="std-sub">Cartazes, vídeos e avisos</div></div>
-    <span style="font-size:24px">🖼️</span></div>
+    <button onclick="abrirEnviarMidia()" style="margin-left:auto;background:#0f3d5c;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">➕ Publicar</button>
+    <span style="font-size:22px;margin-left:8px">🖼️</span></div>
   <div class="agv-scroll" style="padding:12px 14px 40px">
-    <button onclick="abrirEnviarMidia()" style="display:block;width:100%;background:#0f3d5c;color:#fff;border:none;border-radius:13px;padding:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:14px">➕ Publicar minha mídia</button>
     <div id="slideshow"></div>
   </div>
 </div>
@@ -1289,6 +1307,12 @@ html[data-fs="3"] .prl-out{font-size:20px}
     <div class="std-hinfo"><div class="std-titulo" id="cartaz-tit">Cartaz</div><div class="std-sub" id="cartaz-sub"></div></div>
     <span style="font-size:24px">📢</span></div>
   <div class="agv-scroll" id="cartaz-body" style="padding:14px 14px 40px"></div>
+</div>
+<div class="tela" id="tela-admin">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-perfil')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Painel do Pastor</div><div class="std-sub">Cadastros e publicações</div></div>
+    <span style="font-size:24px">🔒</span></div>
+  <div class="agv-scroll" id="admin-body" style="padding:14px 14px 40px"></div>
 </div>
 <div class="tela" id="tela-informativo">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
@@ -2153,6 +2177,8 @@ var _deepLinkFeito=false;
 function irHome(){
   if(!checkAuth()) return;
   if(_acessoBloqueado){ mostrarBloqueio(); return; }
+  // logo que abre o app: primeiro os SLIDES (se houver), com botão "Ir para o menu"
+  if(!_slidesMostrados){ _slidesMostrados=true; if(typeof _temSlides==='function' && _temSlides()){ abrirSlides(); return; } }
   ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
@@ -2672,7 +2698,7 @@ var CARTAZES=[
    img:'/img/cartazes/encontro-projetos.jpg', link:'https://forms.gle/8j69Up7inBNigtXGA', linkTxt:'📝 Fazer inscrição',
    texto:'Em nome do Pastor Elizaldo Abreu, coordenador do PRO-JETRO, e do Pastor José Aguinaldo, coordenador do Projeto SILAS, juntamente com o Pastor Lázaro, presidente da Assembleia de Deus em Governador Archer. Convidamos todos para o Encontro de Projetos, dia 05 de setembro.\n\n🕗 1ª Plenária: 8h às 11h30\n🍽️ Almoço: 11h30 às 13h30\n🕜 2ª Plenária: 13h30 às 16h\n\n💰 Inscrição: Individual R$ 20 | Casal R$ 30\n\n🎤 Pregador: Pr. Euvaldo Sá – Timon\n🎶 Cantora: Vitória – Dom Pedro\n\n🤝 Participação:\n • SEDAC\n • Conselho Político\n\nContamos com a presença de todos!'}
 ];
-var _slides=[], _slideIdx=0, _slideTimer=null;
+var _slides=[], _slideIdx=0, _slideTimer=null, _slideBox='slideshow', _slidesMostrados=false;
 function _naoExpirou(iso){ if(!iso) return true; try{ var t=new Date(iso+'T23:59:59'); var h=new Date(); h.setHours(0,0,0,0); return t>=h; }catch(e){ return true; } }
 function _fmtData(iso){ if(!iso) return ''; var p=(''+iso).split('-'); return p.length===3?(p[2]+'/'+p[1]+'/'+p[0]):iso; }
 function embedMedia(u){
@@ -2684,7 +2710,7 @@ function embedMedia(u){
   return {type:'link', src:u};
 }
 function abrirCartazes(){
-  mostrarTela('tela-cartazes'); _slideIdx=0;
+  mostrarTela('tela-cartazes'); _slideBox='slideshow'; _slideIdx=0;
   _slides=CARTAZES.filter(function(c){return _naoExpirou(c.dataISO);}).map(function(c){var o={};for(var k in c)o[k]=c[k];o._t='cartaz';return o;});
   renderSlideshow();
   carregarMidias();
@@ -2724,7 +2750,7 @@ function slideHTML(s){
   return '<div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;overflow:hidden;box-shadow:0 3px 12px rgba(15,61,92,.10)">'+slideMediaHTML(s)+cap+'</div>';
 }
 function renderSlideshow(){
-  var box=document.getElementById('slideshow'); if(!box) return;
+  var box=document.getElementById(_slideBox); if(!box) return;
   if(!_slides.length){ box.innerHTML='<div style="text-align:center;color:#6b7280;padding:40px 16px">Nenhum cartaz ou mídia no momento.<br><span style="font-size:.85rem">Toque em “Publicar minha mídia” pra começar.</span></div>'; return; }
   if(_slideIdx>=_slides.length)_slideIdx=0;
   var s=_slides[_slideIdx], dots='';
@@ -2761,6 +2787,73 @@ function compartilharCartaz(id){
 
 function _abrirImg(u){ var o=document.createElement('div'); o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;padding:14px'; o.innerHTML='<img src="'+u+'" style="max-width:100%;max-height:100%;border-radius:8px">'; o.onclick=function(){o.remove();}; document.body.appendChild(o); }
 function abrirEnviarMidia(){ mostrarTela('tela-enviar'); }
+
+/* ===== SLIDES DE ABERTURA (Slides & Cia) ===== */
+function _carregarSlides(cb){
+  _slides=CARTAZES.filter(function(c){return _naoExpirou(c.dataISO);}).map(function(c){var o={};for(var k in c)o[k]=c[k];o._t='cartaz';return o;});
+  if(cb)cb();
+  fetch('/api/videos?acao=midia-list').then(function(r){return r.json();}).then(function(d){
+    var est=CARTAZES.filter(function(c){return _naoExpirou(c.dataISO);}).map(function(c){var o={};for(var k in c)o[k]=c[k];o._t='cartaz';return o;});
+    var din=(d&&d.ok&&d.midias?d.midias:[]).map(function(m){m._t='midia';return m;});
+    _slides=est.concat(din); if(_slideIdx>=_slides.length)_slideIdx=0; renderSlideshow();
+  }).catch(function(){});
+}
+function abrirSlides(){ _slideBox='slides-full'; _slideIdx=0; mostrarTela('tela-slides'); _carregarSlides(function(){ renderSlideshow(); }); }
+function irParaMenu(){ clearTimeout(_slideTimer); _slidesMostrados=true; irHome(); }
+function _temSlides(){ return CARTAZES.filter(function(c){return _naoExpirou(c.dataISO);}).length>0; }
+
+/* ===== PAINEL DO PASTOR (CRM + apagar publicações) ===== */
+function abrirAdmin(){ mostrarTela('tela-admin'); var tk=localStorage.getItem('radar_adm')||''; if(!tk){ _admPrompt(); } else { renderAdmin(tk); } }
+function _admPrompt(){
+  document.getElementById('admin-body').innerHTML=
+   '<div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:22px;text-align:center">'
+   +'<div style="font-size:40px">🔒</div><div style="font-weight:800;color:#0f3d5c;margin:6px 0">Área do pastor</div>'
+   +'<div style="color:#6b7280;font-size:.9rem;margin-bottom:12px">Digite a senha de administrador.</div>'
+   +'<input id="adm-token" type="password" placeholder="Senha admin" style="width:100%;box-sizing:border-box;border:1.6px solid #dbe6f2;border-radius:12px;padding:13px;text-align:center;font-size:1rem;font-family:inherit">'
+   +'<button onclick="_admUnlock()" style="width:100%;background:#0f3d5c;color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:10px">Entrar</button>'
+   +'<div id="adm-erro" style="color:#a8162a;font-weight:700;font-size:.85rem;margin-top:8px"></div></div>';
+}
+function _admUnlock(){
+  var tk=document.getElementById('adm-token').value.trim(); if(!tk) return;
+  fetch('/api/videos?acao=crm-list&token='+encodeURIComponent(tk)).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok){ localStorage.setItem('radar_adm',tk); renderAdmin(tk); } else { document.getElementById('adm-erro').textContent='Senha incorreta.'; }
+  }).catch(function(){ document.getElementById('adm-erro').textContent='Sem conexão.'; });
+}
+function renderAdmin(tk){
+  var box=document.getElementById('admin-body'); box.innerHTML='<div style="text-align:center;color:#6b7280;padding:20px">Carregando…</div>';
+  Promise.all([
+    fetch('/api/videos?acao=crm-list&token='+encodeURIComponent(tk)).then(function(r){return r.json();}),
+    fetch('/api/videos?acao=midia-list').then(function(r){return r.json();})
+  ]).then(function(res){
+    var crm=(res[0]&&res[0].crm)||[], mid=(res[1]&&res[1].midias)||[]; window._admCRM=crm;
+    var h='<div class="sec-label" style="margin:2px 2px 8px;color:#a9791c">Publicações no mural ('+mid.length+')</div>';
+    if(!mid.length) h+='<div style="color:#6b7280;font-size:.9rem;margin-bottom:14px">Nenhuma publicação.</div>';
+    mid.forEach(function(m){
+      h+='<div style="background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:11px 13px;margin-bottom:9px;display:flex;align-items:center;gap:10px">'
+       +'<div style="flex:1;min-width:0"><div style="font-weight:700;color:#0f3d5c;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc2((m.texto||'(mídia)').slice(0,60))+'</div>'
+       +'<div style="font-size:.78rem;color:#6b7280">'+esc2(m.autor_nome||'')+(m.data_evento?(' · 📅 '+_fmtData(m.data_evento)):'')+'</div></div>'
+       +'<button onclick="delMidiaAdmin('+m.id+')" style="background:#8a1c1c;color:#fff;border:none;border-radius:9px;padding:9px 12px;font-weight:800;cursor:pointer;flex-shrink:0">🗑️</button></div>';
+    });
+    h+='<div class="sec-label" style="margin:18px 2px 8px;color:#a9791c">Cadastros — CRM ('+crm.length+')</div>';
+    h+='<button onclick="_admCopiarCRM()" style="width:100%;background:#0f6d78;color:#fff;border:none;border-radius:11px;padding:11px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:10px">📋 Copiar lista de contatos</button>';
+    if(!crm.length) h+='<div style="color:#6b7280;font-size:.9rem">Ninguém cadastrado ainda.</div>';
+    crm.forEach(function(p){
+      h+='<div style="background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:12px 14px;margin-bottom:8px">'
+       +'<div style="font-weight:800;color:#0f3d5c">'+esc2(p.nome||'')+(p.cargo?(' · '+esc2(p.cargo)):'')+'</div>'
+       +'<div style="font-size:.85rem;color:#6b7280;margin-top:2px">📞 '+esc2(p.fone||'')+(p.igreja?('<br>⛪ '+esc2(p.igreja)):'')+((p.cidade||p.bairro)?('<br>📍 '+esc2([p.bairro,p.cidade].filter(Boolean).join(', '))):'')+'</div></div>';
+    });
+    box.innerHTML=h;
+  }).catch(function(){ box.innerHTML='<div style="color:#a8162a;text-align:center;padding:20px">Erro ao carregar.</div>'; });
+}
+function delMidiaAdmin(id){
+  if(!confirm('Apagar esta publicação do mural?')) return;
+  var tk=localStorage.getItem('radar_adm')||'';
+  fetch('/api/videos?acao=midia-del&id='+id+'&token='+encodeURIComponent(tk)).then(function(r){return r.json();}).then(function(){ renderAdmin(tk); }).catch(function(){});
+}
+function _admCopiarCRM(){
+  var crm=window._admCRM||[]; var t='CADASTROS RADAR ('+crm.length+')\n\n'+crm.map(function(p){return p.nome+' · '+(p.cargo||'')+'\n📞 '+(p.fone||'')+' · '+(p.igreja||'')+' · '+[p.bairro,p.cidade].filter(Boolean).join(', ');}).join('\n\n');
+  if(navigator.clipboard){ navigator.clipboard.writeText(t).then(function(){alert('Lista copiada!');}).catch(function(){alert(t);}); } else { alert(t); }
+}
 var _midImgData=null;
 function _midPreview(inp){
   var f=inp.files&&inp.files[0]; if(!f) return;
