@@ -191,6 +191,23 @@ function abrirCurso(){
         <div class="prof">com Ivan Santos</div>
       </div>
     </div>
+    <div class="sec-mod" style="margin-top:2px">Módulos e aulas</div>`;
+  DADOS.modulos.forEach((m,mi)=>{
+    html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="toggleMod(${mi})">
+      <div class="n">${m.ordem}</div>
+      <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${m.aulas.length} aula${m.aulas.length>1?'s':''}</span></div>
+      <div class="seta">›</div></div><div class="aulas">`;
+    if(!m.aulas.length){ html+=`<div class="vazio-mod">Subindo os vídeos deste módulo…</div>`; }
+    m.aulas.forEach(a=>{
+      const gi=PLANO.findIndex(p=>p.a.url===a.url);
+      html+=`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${gi}" onclick="abrir(${gi})">
+        <div class="pl">▶</div>
+        <div class="txt">${limpaAula(a.titulo)}<small>Aula ${a.ordem}</small></div></div>`;
+    });
+    html+=`</div></div>`;
+  });
+  html+=`
+    <div class="sec-mod" style="margin-top:22px">Material do curso</div>
     <a class="pdf-link" href="apostila.html">
       <span style="font-size:22px">📖</span>
       <span style="flex:1"><b style="display:block;font-size:1rem;color:#0f3d5c">Apostila do Curso</b>
@@ -203,7 +220,6 @@ function abrirCurso(){
       <span style="font-size:.82rem;color:#41607a">ivansantosescatologia.com.br — Ivan Santos</span></span>
       <span style="color:#0f6d78;font-size:1.2rem">›</span>
     </a>
-
     <div class="mentor">
       <div class="mentor-sel">Conheça o mentor</div>
       <div class="mentor-top">
@@ -219,23 +235,7 @@ function abrirCurso(){
         <li>Professor em diversos institutos teológicos</li>
       </ul>
       <p class="mentor-foot">Seu trabalho vai além da sala de aula — Ivan tem participado dos mais relevantes debates teológicos nos principais programas de TV e podcasts.</p>
-    </div>
-
-    <div class="sec-mod">Módulos e aulas</div>`;
-  DADOS.modulos.forEach((m,mi)=>{
-    html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="toggleMod(${mi})">
-      <div class="n">${m.ordem}</div>
-      <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${m.aulas.length} aula${m.aulas.length>1?'s':''}</span></div>
-      <div class="seta">›</div></div><div class="aulas">`;
-    if(!m.aulas.length){ html+=`<div class="vazio-mod">Subindo os vídeos deste módulo…</div>`; }
-    m.aulas.forEach(a=>{
-      const gi=PLANO.findIndex(p=>p.a.url===a.url);
-      html+=`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${gi}" onclick="abrir(${gi})">
-        <div class="pl">▶</div>
-        <div class="txt">${limpaAula(a.titulo)}<small>Aula ${a.ordem}</small></div></div>`;
-    });
-    html+=`</div></div>`;
-  });
+    </div>`;
   cur.innerHTML=html;
   window.scrollTo(0,0);
 }
