@@ -845,7 +845,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
       <div class="vit-grade">
         <div class="vit-card vit-vazio"></div>
-        <div class="vit-card vit-vazio"></div>
+        <div class="vit-card" onclick="mostrarTela('tela-informativo')">
+          <div class="vit-ico"><img src="/img/home/informativo.png" alt="" onerror="this.parentNode.textContent='📢'"></div>
+          <div class="vit-nome">Informativo</div><div class="vit-desc">Agendas e avisos</div>
+        </div>
         <div class="vit-card" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)">
           <div class="vit-ico"><img src="/img/home/biblia.png" alt="" onerror="this.parentNode.textContent='📖'"></div>
           <div class="vit-nome">Bíblia e Harpa</div><div class="vit-desc">Palavra e louvores</div>
@@ -1219,8 +1222,27 @@ html[data-fs="3"] .prl-out{font-size:20px}
     </div>
   </div>
 </div>
-<div class="tela" id="tela-silas">
+<div class="tela" id="tela-informativo">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Informativo</div><div class="std-sub">Agendas e avisos das igrejas</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Informativo')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <span style="font-size:24px">📢</span></div>
+  <div class="agv-scroll" style="background:var(--bg)">
+    <div class="sec-label" style="margin:16px 14px 4px">CRMs</div>
+    <div class="agv-hub-card" onclick="mostrarTela('tela-templo')">
+      <div class="agv-hub-ic marrom">⛪</div>
+      <div><div class="agv-hub-nome">Templo Central</div><div class="agv-hub-sub">Tuntum - MA · Agenda + Cong. Monte Carmelo</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+    <div class="agv-hub-card" onclick="mostrarTela('tela-silas')">
+      <div class="agv-hub-ic">📅</div>
+      <div><div class="agv-hub-nome">Projeto Silas</div><div class="agv-hub-sub">CRM CEADEMA · Agenda Estadual e Regional 2026</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+  </div>
+</div>
+<div class="tela" id="tela-silas">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-informativo')">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Projeto Silas</div><div class="std-sub">Documentos e agendas</div></div>
     <button onclick="event.stopPropagation();compartilharApp('Projeto Silas')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <img src="img/ceadema.png" style="width:32px;height:32px;object-fit:contain;border-radius:8px;background:#fff;padding:2px;flex-shrink:0"></div>
@@ -1242,7 +1264,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
 </div>
 <!-- TEMPLO HUB -->
 <div class="tela" id="tela-templo">
-  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-informativo')">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Templo Central</div><div class="std-sub">Tuntum - MA</div></div>
     <button onclick="event.stopPropagation();compartilharApp('Templo Central Tuntum-MA')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <span style="font-size:24px">⛪</span></div>
