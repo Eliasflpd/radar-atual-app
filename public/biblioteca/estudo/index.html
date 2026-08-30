@@ -29,6 +29,17 @@
   .grupo .capa-au{width:38px;height:52px;border-radius:6px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.18);flex-shrink:0;background:linear-gradient(135deg,var(--navy),var(--dourado))}
   .grupo .nm{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.15rem}
   .grupo .qt{color:#9aa1ad;font-size:.82rem;font-weight:700}
+  /* PASTA (autor com muitos livros — ex.: Champlin) */
+  .folder{background:#fff;border:1px solid var(--linha);border-radius:14px;margin-bottom:11px;overflow:hidden;box-shadow:0 2px 8px rgba(15,61,92,.06)}
+  .folder-h{display:flex;gap:13px;align-items:center;padding:13px 14px;cursor:pointer;user-select:none}
+  .folder-h:active{background:#f7fafb}
+  .folder-h .capa-au{width:44px;height:58px;border-radius:7px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.2);flex-shrink:0;background:linear-gradient(135deg,var(--navy),var(--dourado))}
+  .folder-h .nm{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.18rem;line-height:1.2}
+  .folder-h .qt{color:#9aa1ad;font-size:.82rem;font-weight:700;margin-top:2px}
+  .folder-h .chev{margin-left:auto;color:var(--dourado);font-size:1.5rem;font-weight:700;transition:transform .2s;flex-shrink:0}
+  .folder.aberta .chev{transform:rotate(90deg)}
+  .folder-body{display:none;padding:10px 11px 3px;border-top:1px solid var(--linha);background:#fbfcfd}
+  .folder.aberta .folder-body{display:block}
   .livro{display:flex;gap:13px;align-items:center;background:#fff;border:1px solid var(--linha);border-radius:14px;padding:11px 13px;margin-bottom:9px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.05)}
   .livro .ic{width:44px;height:58px;border-radius:8px;object-fit:cover;background:linear-gradient(135deg,var(--navy),var(--dourado));display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.15)}
   .livro .tt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.05rem;line-height:1.25}
@@ -145,8 +156,15 @@ async function abrir(){
 }
 
 function capaDe(autor){ return (MANIFEST.capas&&MANIFEST.capas[autor])||''; }
+// capas oficiais do Champlin (caixas AT e NT) — cada livro pega a do seu testamento
+const CAPA_NT='/img/estudo/champlin-nt.jpg', CAPA_AT='/img/estudo/champlin-at.jpg';
+const NT_SET=new Set(["Mateus","Marcos","Lucas","Joao","Atos","Romanos","1 Corintios","2 Corintios","Galatas","Efesios","Flipenses","Filipenses","Colossenses","1 Tessalonicenses","2 Tessalonicenses","1 Timoteo","2 Timoteo","Tito","Filemom","Hebreus","Tiago","1 Pedro","2 Pedro","1 Joao","2 Joao","3 Joao","Judas","Apocalipse"].map(norm));
+function capaLivro(l){
+  if(l.autor==='Champlin') return NT_SET.has(norm(l.titulo)) ? CAPA_NT : CAPA_AT;
+  return capaDe(l.autor);
+}
 function thumb(l){
-  const c=capaDe(l.autor);
+  const c=capaLivro(l);
   return c ? `<img class="ic" src="${c}" loading="lazy" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment('<div class=ic>📖</div>').firstChild)">`
            : `<div class="ic">📖</div>`;
 }
@@ -175,19 +193,34 @@ function renderLista(qraw){
     ? `<button class="btmotor" onclick="buscarConteudo('${termo.replace(/'/g,"\\'")}')">🔎 Buscar “${termo}” DENTRO de todos os livros →</button>` : '';
   const livros=q ? MANIFEST.livros.filter(l=>norm(l.titulo).includes(q)||norm(l.autor).includes(q)) : MANIFEST.livros;
   if(!livros.length){ R.innerHTML=btn+'<div class="nada">Nenhum título/autor com esse nome. Tente buscar dentro dos livros ↑</div>'; return; }
-  R.innerHTML=btn+renderGrupos(livros); return;
+  R.innerHTML=btn+renderGrupos(livros, !!q); return;
 }
-function renderGrupos(livros){
-  // agrupa por autor, preservando a ordem
+// ordem bíblica (livros conhecidos vêm primeiro; o resto mantém a ordem do manifesto)
+const ORDEM_BIB=["Estudos Introdutorios","Genesis","Exodo","Levitico","Numeros","Deuteronomio","Josue","Juizes","Rute","1 Samuel","2 Samauel","2 Samuel","1 Reis","2 Reis","1 Cronicas","2 Cronicas","Esdras","Neemias","Ester","Jo","Salmos","Proverbios","Eclesiastes","Cantares","Isaias","Jeremias","Lamentacao De Jeremias","Ezequiel","Daniel","Oseias","Joel","Amos","Obadias","Jonas","Miqueias","Naum","Habacuque","Sofonias","Ageu","Zacarias","Malaquias","Mateus","Marcos","Lucas","Joao","Atos","Romanos","1 Corintios","2 Corintios","Galatas","Efesios","Flipenses","Filipenses","Colossenses","1 Tessalonicenses","2 Tessalonicenses","1 Timoteo","2 Timoteo","Tito","Filemom","Hebreus","Tiago","1 Pedro","2 Pedro","1 Joao","2 Joao","3 Joao","Judas","Apocalipse"].map(norm);
+function rankBib(t){ const i=ORDEM_BIB.indexOf(norm(t)); return i<0?999:i; }
+function cardLivro(l){
+  return `<div class="livro" onclick="abrirLivro('${l.slug}')">${thumb(l)}`
+       + `<div><div class="tt">${l.titulo}</div><div class="au">${l.autor}</div></div></div>`;
+}
+function toggleFolder(h){ h.parentElement.classList.toggle('aberta'); }
+function renderGrupos(livros, abrir){
+  // agrupa por autor, preservando a ordem de aparição
   const grupos={}, ordem=[];
   for(const l of livros){ if(!grupos[l.autor]){grupos[l.autor]=[];ordem.push(l.autor);} grupos[l.autor].push(l); }
   return ordem.map(au=>{
-    const c=capaDe(au);
+    const itens=grupos[au].slice().sort((a,b)=>rankBib(a.titulo)-rankBib(b.titulo));
+    const c = au==='Champlin' ? CAPA_NT : capaDe(au);
     const cap=c?`<img class="capa-au" src="${c}" loading="lazy" alt="" onerror="this.style.visibility='hidden'">`:`<div class="capa-au"></div>`;
-    const itens=grupos[au].map(l=>
-      `<div class="livro" onclick="abrirLivro('${l.slug}')">${thumb(l)}
-         <div><div class="tt">${l.titulo}</div><div class="au">${l.autor}</div></div></div>`).join('');
-    return `<div class="grupo">${cap}<div><div class="nm">${au}</div><div class="qt">${grupos[au].length} livro(s)</div></div></div>${itens}`;
+    // autor com 1 livro só: card direto, sem virar pasta
+    if(itens.length<2){
+      return `<div class="grupo">${cap}<div><div class="nm">${au}</div><div class="qt">1 livro</div></div></div>${itens.map(cardLivro).join('')}`;
+    }
+    // muitos livros: vira PASTA fechada (abre no toque) — ex.: Champlin
+    return `<div class="folder${abrir?' aberta':''}">`
+         + `<div class="folder-h" onclick="toggleFolder(this)">${cap}`
+         + `<div><div class="nm">${au}</div><div class="qt">${itens.length} livros · toque para abrir</div></div>`
+         + `<div class="chev">›</div></div>`
+         + `<div class="folder-body">${itens.map(cardLivro).join('')}</div></div>`;
   }).join('');
 }
 
