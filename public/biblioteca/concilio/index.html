@@ -191,5 +191,45 @@
   if (window.console) console.log('[concilio] servos clicáveis:', n);
 })();
 </script>
+
+<!-- ══ Sanfona: mata a rolagem infinita — Lupa em cima, resto abre ao toque ══ -->
+<style>
+  .acc-h{cursor:pointer;user-select:none;-webkit-user-select:none}
+  .acc-caret{display:inline-block;color:var(--dourado);font-size:.85rem;vertical-align:middle}
+  .acc-badge{color:var(--teal);font-weight:700;font-size:.85rem}
+  .mini-toggle{display:block;width:100%;text-align:center;background:#f2f7f8;border:1px solid #d5e6e8;color:#0f6d78;border-radius:12px;padding:11px;font-weight:800;font-family:inherit;font-size:.95rem;cursor:pointer;margin:0 0 14px}
+</style>
+<script>
+(function(){
+  // 1) recolhe a apresentação + as leis num toggle discreto (fica logo abaixo da Lupa)
+  var intro=document.querySelector('.intro'), lei=document.querySelector('.lei');
+  if(intro){
+    var wrap=document.createElement('div'); intro.parentNode.insertBefore(wrap, intro);
+    wrap.appendChild(intro); if(lei) wrap.appendChild(lei); wrap.style.display='none';
+    var tg=document.createElement('button'); tg.type='button'; tg.className='mini-toggle';
+    tg.textContent='ⓘ Sobre o Concílio e as leis';
+    wrap.parentNode.insertBefore(tg, wrap);
+    tg.addEventListener('click',function(){ var o=wrap.style.display!=='none'; wrap.style.display=o?'none':'block'; tg.textContent=o?'ⓘ Sobre o Concílio e as leis':'▲ Ocultar'; });
+  }
+  // 2) cada seção (os 41 expositores + o exemplo) vira sanfona fechada, com contador
+  var hs=document.querySelectorAll('h2.sec');
+  Array.prototype.forEach.call(hs,function(h){
+    var els=[], n=h.nextElementSibling;
+    while(n && !(n.tagName==='H2' && n.classList.contains('sec')) && !(n.classList&&(n.classList.contains('final')||n.classList.contains('assinatura')))){
+      var nx=n.nextElementSibling; els.push(n); n=nx;
+    }
+    if(!els.length) return;
+    var box=document.createElement('div'); box.style.display='none';
+    h.parentNode.insertBefore(box, h.nextSibling);
+    els.forEach(function(e){ box.appendChild(e); });
+    var count=box.querySelectorAll('.m').length;
+    var caret=document.createElement('span'); caret.className='acc-caret'; caret.textContent='▸ ';
+    h.insertBefore(caret, h.firstChild);
+    h.classList.add('acc-h');
+    if(count){ var bd=document.createElement('span'); bd.className='acc-badge'; bd.textContent=' ('+count+')'; h.appendChild(bd); }
+    h.addEventListener('click',function(){ var o=box.style.display!=='none'; box.style.display=o?'none':'block'; caret.textContent=o?'▸ ':'▾ '; });
+  });
+})();
+</script>
 </body>
 </html>
