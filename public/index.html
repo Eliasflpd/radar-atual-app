@@ -2812,7 +2812,9 @@ function slideHTMLFull(s){
   }
   var cap='<div style="padding:13px 6px 4px;color:#1b2436">';
   if(s.texto) cap+='<div style="font-size:1rem;line-height:1.55;white-space:pre-line">'+esc2(s.texto)+'</div>';
-  cap+='<div style="font-size:.82rem;color:#6b7280;margin-top:9px;border-top:1px solid #dfe6ee;padding-top:9px">👤 '+esc2(s.autor_nome||'')+(s.autor_cargo?(' · '+esc2(s.autor_cargo)):'')+(s.autor_igreja?(' · '+esc2(s.autor_igreja)):'')+'</div></div>';
+  cap+='<div style="font-size:.82rem;color:#6b7280;margin-top:9px;border-top:1px solid #dfe6ee;padding-top:9px">👤 '+esc2(s.autor_nome||'')+(s.autor_cargo?(' · '+esc2(s.autor_cargo)):'')+(s.autor_igreja?(' · '+esc2(s.autor_igreja)):'')+'</div>';
+  if(_ehAdmin()&&s.id) cap+='<button onclick="deletePost('+s.id+')" style="margin-top:10px;background:#8a1c1c;color:#fff;border:none;border-radius:9px;padding:9px 13px;font-weight:800;font-family:inherit;cursor:pointer">🗑️ Apagar publicação</button>';
+  cap+='</div>';
   return media+cap;
 }
 function renderSlideshow(){
@@ -2915,6 +2917,21 @@ function delMidiaAdmin(id){
   if(!confirm('Apagar esta publicação do mural?')) return;
   var tk=localStorage.getItem('radar_adm')||'';
   fetch('/api/videos?acao=midia-del&id='+id+'&token='+encodeURIComponent(tk)).then(function(r){return r.json();}).then(function(){ renderAdmin(tk); }).catch(function(){});
+}
+function _admToken(){ var tk=localStorage.getItem('radar_adm'); if(tk) return tk; try{ var u=getUser(); if(u&&u.admin){ return 'radar-elias-2026'; } }catch(e){} return ''; }
+function _ehAdmin(){ return !!_admToken(); }
+function deletePost(id){
+  if(!confirm('Apagar esta publicação?')) return;
+  var tk=_admToken();
+  if(!tk){ alert('Pra apagar, entre no Painel do Pastor (Perfil) com a senha uma vez.'); return; }
+  fetch('/api/videos?acao=midia-del&id='+id+'&token='+encodeURIComponent(tk)).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok){
+      _slides=_slides.filter(function(x){ return !(x._t==='midia'&&x.id===id); });
+      if(_slideIdx>=_slides.length)_slideIdx=Math.max(0,_slides.length-1);
+      renderSlideshow();
+      var ta=document.getElementById('tela-admin'); if(ta&&ta.classList.contains('ativa')) renderAdmin(tk);
+    } else { alert('Não consegui apagar. Confira a senha no Painel do Pastor.'); }
+  }).catch(function(){ alert('Sem conexão.'); });
 }
 function _admCopiarCRM(){
   var crm=window._admCRM||[]; var t='CADASTROS RADAR ('+crm.length+')\n\n'+crm.map(function(p){return p.nome+' · '+(p.cargo||'')+'\n📞 '+(p.fone||'')+' · '+(p.igreja||'')+' · '+[p.bairro,p.cidade].filter(Boolean).join(', ');}).join('\n\n');
