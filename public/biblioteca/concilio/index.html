@@ -201,33 +201,44 @@
 </style>
 <script>
 (function(){
-  // 1) recolhe a apresentação + as leis num toggle discreto (fica logo abaixo da Lupa)
+  function btnToggle(label, target){
+    var b=document.createElement('button'); b.type='button'; b.className='mini-toggle'; b.textContent=label;
+    b.addEventListener('click',function(){ var o=target.style.display!=='none'; target.style.display=o?'none':'block'; b.textContent=o?label:'▲ Ocultar'; if(!o) setTimeout(function(){ try{ b.scrollIntoView({block:'start',behavior:'smooth'}); }catch(e){} },30); });
+    return b;
+  }
+  // 1) apresentação + leis: escondidas num toggle discreto
   var intro=document.querySelector('.intro'), lei=document.querySelector('.lei');
   if(intro){
-    var wrap=document.createElement('div'); intro.parentNode.insertBefore(wrap, intro);
-    wrap.appendChild(intro); if(lei) wrap.appendChild(lei); wrap.style.display='none';
-    var tg=document.createElement('button'); tg.type='button'; tg.className='mini-toggle';
-    tg.textContent='ⓘ Sobre o Concílio e as leis';
-    wrap.parentNode.insertBefore(tg, wrap);
-    tg.addEventListener('click',function(){ var o=wrap.style.display!=='none'; wrap.style.display=o?'none':'block'; tg.textContent=o?'ⓘ Sobre o Concílio e as leis':'▲ Ocultar'; });
+    var w=document.createElement('div'); intro.parentNode.insertBefore(w, intro);
+    w.appendChild(intro); if(lei) w.appendChild(lei); w.style.display='none';
+    w.parentNode.insertBefore(btnToggle('ⓘ Sobre o Concílio e as leis', w), w);
   }
-  // 2) cada seção (os 41 expositores + o exemplo) vira sanfona fechada, com contador
-  var hs=document.querySelectorAll('h2.sec');
-  Array.prototype.forEach.call(hs,function(h){
-    var els=[], n=h.nextElementSibling;
+  // 2) separa as seções: as do roster (têm .grid) e a do exemplo
+  var hs=Array.prototype.slice.call(document.querySelectorAll('h2.sec'));
+  var roster=[], exemplo=[];
+  hs.forEach(function(h){
+    var els=[h], n=h.nextElementSibling;
     while(n && !(n.tagName==='H2' && n.classList.contains('sec')) && !(n.classList&&(n.classList.contains('final')||n.classList.contains('assinatura')))){
       var nx=n.nextElementSibling; els.push(n); n=nx;
     }
-    if(!els.length) return;
+    (els.some(function(e){return e.classList&&e.classList.contains('grid');}) ? roster : exemplo).push(els);
+  });
+  // os 41 expositores → escondidos atrás de UM botão (a Lupa já escolhe sozinha)
+  if(roster.length){
+    var anchor=roster[0][0];
     var box=document.createElement('div'); box.style.display='none';
-    h.parentNode.insertBefore(box, h.nextSibling);
-    els.forEach(function(e){ box.appendChild(e); });
+    anchor.parentNode.insertBefore(box, anchor);
+    roster.forEach(function(els){ els.forEach(function(e){ box.appendChild(e); }); });
     var count=box.querySelectorAll('.m').length;
-    var caret=document.createElement('span'); caret.className='acc-caret'; caret.textContent='▸ ';
-    h.insertBefore(caret, h.firstChild);
-    h.classList.add('acc-h');
-    if(count){ var bd=document.createElement('span'); bd.className='acc-badge'; bd.textContent=' ('+count+')'; h.appendChild(bd); }
-    h.addEventListener('click',function(){ var o=box.style.display!=='none'; box.style.display=o?'none':'block'; caret.textContent=o?'▸ ':'▾ '; });
+    box.parentNode.insertBefore(btnToggle('👥 Ver os '+count+' expositores do Concílio', box), box);
+  }
+  // o exemplo → seu próprio toggle
+  exemplo.forEach(function(els){
+    var h=els[0];
+    var box=document.createElement('div'); box.style.display='none';
+    h.parentNode.insertBefore(box, h);
+    els.forEach(function(e){ box.appendChild(e); });
+    box.parentNode.insertBefore(btnToggle('🔥 Ver um exemplo de exposição', box), box);
   });
 })();
 </script>
