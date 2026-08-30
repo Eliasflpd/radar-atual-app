@@ -1,1 +1,1 @@
-{"name":"radar-atual","private":true,"dependencies":{"pg":"^8.22.0","web-push":"^3.6.7"}}
+{"name":"radar-atual","private":true,"dependencies":{"@vercel/blob":"^2.8.0","pg":"^8.22.0","web-push":"^3.6.7"}}

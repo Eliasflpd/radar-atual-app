@@ -52,6 +52,17 @@ async function enviarPush(c, payload){
   return {enviados:ok, removidos:rm, total:subs.rows.length};
 }
 
+// ===== MÍDIAS DA COMUNIDADE (qualquer um publica) + CRM =====
+async function ensureMidias(c){
+  await c.query(`create table if not exists midias(
+    id bigserial primary key, autor_nome text, autor_cargo text, autor_fone text,
+    autor_cidade text, autor_bairro text, autor_igreja text, texto text,
+    media_url text, media_tipo text, aprovado boolean default true, criado_em timestamptz default now())`);
+  await c.query(`create table if not exists cadastros_crm(
+    id bigserial primary key, fone text unique, nome text, cargo text, cidade text, bairro text, igreja text,
+    criado_em timestamptz default now(), atualizado_em timestamptz default now())`);
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
@@ -98,6 +109,37 @@ module.exports = async (req, res) => {
         await ensurePush(c);
         await c.query('insert into push_subs(endpoint,p256dh,auth) values($1,$2,$3) on conflict(endpoint) do update set p256dh=excluded.p256dh,auth=excluded.auth',[sub.endpoint,sub.keys.p256dh,sub.keys.auth]);
         res.status(200).json({ok:true});
+        return;
+      }
+
+      // === PUBLICAR MÍDIA (qualquer pessoa) + vira CRM ===
+      if(b.acao==='midia-sub'){
+        const nome=(b.nome||'').toString().trim().slice(0,80);
+        const fone=(b.fone||'').toString().trim().slice(0,30);
+        if(!nome || !fone){ res.status(400).json({ok:false,erro:'Nome e telefone são obrigatórios'}); return; }
+        await ensureMidias(c);
+        let media_url=null, media_tipo=null;
+        if(b.imgBase64){
+          try{
+            const { put } = require('@vercel/blob');
+            const m=(b.imgBase64||'').match(/^data:([^;]+);base64,(.*)$/);
+            const mime = m? m[1] : 'image/jpeg';
+            const data = m? m[2] : b.imgBase64;
+            const buf = Buffer.from(data,'base64');
+            if(buf.length > 5*1024*1024){ res.status(413).json({ok:false,erro:'Imagem muito grande (máx 5MB)'}); return; }
+            const ext=(mime.split('/')[1]||'jpg').replace('jpeg','jpg');
+            const r=await put('midias/'+Date.now()+'.'+ext, buf, {access:'public', addRandomSuffix:true, contentType:mime, token:process.env.BLOB_READ_WRITE_TOKEN});
+            media_url=r.url; media_tipo='imagem';
+          }catch(e){ res.status(200).json({ok:false,erro:'Falha no upload: '+String(e.message||e).slice(0,90)}); return; }
+        } else if(b.videoLink){
+          media_url=(b.videoLink||'').toString().trim().slice(0,500); media_tipo='video';
+        }
+        const ins=await c.query('insert into midias(autor_nome,autor_cargo,autor_fone,autor_cidade,autor_bairro,autor_igreja,texto,media_url,media_tipo) values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id',
+          [nome,(b.cargo||'').toString().slice(0,60),fone,(b.cidade||'').toString().slice(0,60),(b.bairro||'').toString().slice(0,60),(b.igreja||'').toString().slice(0,90),(b.texto||'').toString().slice(0,4000),media_url,media_tipo]);
+        await c.query(`insert into cadastros_crm(fone,nome,cargo,cidade,bairro,igreja) values($1,$2,$3,$4,$5,$6)
+          on conflict(fone) do update set nome=excluded.nome,cargo=excluded.cargo,cidade=excluded.cidade,bairro=excluded.bairro,igreja=excluded.igreja,atualizado_em=now()`,
+          [fone,nome,(b.cargo||'').toString(),(b.cidade||'').toString(),(b.bairro||'').toString(),(b.igreja||'').toString()]);
+        res.status(200).json({ok:true, id:ins.rows[0].id});
         return;
       }
 
@@ -179,6 +221,15 @@ module.exports = async (req, res) => {
       res.status(200).json({ok:true, inscritos:r.rows[0].n});
       return;
     }
+    // lista pública das mídias publicadas pela comunidade
+    if(q.acao==='midia-list'){
+      await ensureMidias(c);
+      const r=await c.query('select id,autor_nome,autor_cargo,autor_igreja,autor_cidade,autor_bairro,texto,media_url,media_tipo,criado_em from midias where aprovado=true order by criado_em desc limit 100');
+      res.status(200).json({ok:true, midias:r.rows});
+      return;
+    }
+    if(q.acao==='midia-del'){ if(!admin){ res.status(403).json({ok:false}); return; } await ensureMidias(c); await c.query('delete from midias where id=$1',[parseInt(q.id,10)||0]); res.status(200).json({ok:true}); return; }
+    if(q.acao==='crm-list'){ if(!admin){ res.status(403).json({ok:false}); return; } await ensureMidias(c); const r=await c.query('select fone,nome,cargo,cidade,bairro,igreja,atualizado_em from cadastros_crm order by atualizado_em desc'); res.status(200).json({ok:true, total:r.rows.length, crm:r.rows}); return; }
 
     if(admin && q.del){
       const rd=await c.query('delete from radar_videos where id=$1',[parseInt(q.del,10)]);

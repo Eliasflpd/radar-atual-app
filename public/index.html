@@ -762,7 +762,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .agv-hub-nome{color:#14233a}
 .agv-hub-sub{color:#5c6470}
 #tela-informativo .sec-label,#tela-silas .sec-label,#tela-templo .sec-label,#tela-monte-carmelo .sec-label{color:#a9791c;opacity:.9}
-#tela-informativo,#tela-silas,#tela-templo,#tela-ceadema,#tela-monte-carmelo,#tela-cartazes,#tela-cartaz{--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
+#tela-informativo,#tela-silas,#tela-templo,#tela-ceadema,#tela-monte-carmelo,#tela-cartazes,#tela-cartaz,#tela-enviar{--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
+#tela-enviar .agv-scroll{background:#eef3fa}
 #tela-informativo .std-back,#tela-silas .std-back,#tela-templo .std-back,#tela-ceadema .std-back,#tela-monte-carmelo .std-back,#tela-cartazes .std-back,#tela-cartaz .std-back{background:rgba(15,61,92,.06)}
 #tela-cartazes .agv-scroll,#tela-cartaz .agv-scroll{background:#eef3fa}
 
@@ -854,7 +855,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <div class="vit-grade">
         <div class="vit-card" onclick="abrirCartazes()">
           <div class="vit-ico"><img src="/img/home/cartazes.png" alt="" onerror="this.parentNode.textContent='🖼️'"></div>
-          <div class="vit-nome">Cartazes</div><div class="vit-desc">Eventos e avisos</div>
+          <div class="vit-nome">Eventos e Mídias</div><div class="vit-desc">Cartazes, vídeos e avisos</div>
         </div>
         <div class="vit-card" onclick="mostrarTela('tela-informativo')">
           <div class="vit-ico"><img src="/img/home/informativo.png" alt="" onerror="this.parentNode.textContent='📢'"></div>
@@ -898,7 +899,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
           <div class="vit-ico"><img src="/img/home/pregar.png" alt="" onerror="this.parentNode.textContent='🙌'"></div>
           <div class="vit-nome">Aprenda a Pregar</div><div class="vit-desc">Dicas e ferramentas para o ministério</div>
         </div>
-        <div class="vit-card vit-vazio"></div>
+        <div class="vit-card" onclick="abrirEnviarMidia()">
+          <div class="vit-ico"><img src="/img/home/publicar.png" alt="" onerror="this.parentNode.textContent='➕'"></div>
+          <div class="vit-nome">Publicar</div><div class="vit-desc">Envie sua mídia</div>
+        </div>
       </div>
 
       <div class="vit-versiculo">
@@ -1236,10 +1240,46 @@ html[data-fs="3"] .prl-out{font-size:20px}
 </div>
 <div class="tela" id="tela-cartazes">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
-    <div class="std-hinfo"><div class="std-titulo">Cartazes</div><div class="std-sub">Eventos e avisos</div></div>
-    <button onclick="event.stopPropagation();compartilharApp('Cartazes')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <div class="std-hinfo"><div class="std-titulo">Eventos e Mídias</div><div class="std-sub">Cartazes, vídeos e avisos</div></div>
     <span style="font-size:24px">🖼️</span></div>
-  <div class="agv-scroll" style="padding:12px 14px 40px"><div id="cartazes-lista"></div></div>
+  <div class="agv-scroll" style="padding:12px 14px 40px">
+    <button onclick="abrirEnviarMidia()" style="display:block;width:100%;background:#0f3d5c;color:#fff;border:none;border-radius:13px;padding:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:14px">➕ Publicar minha mídia</button>
+    <div id="cartazes-lista"></div>
+    <div id="midias-lista"></div>
+  </div>
+</div>
+<div class="tela" id="tela-enviar">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-cartazes')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Publicar mídia</div><div class="std-sub">Envie seu cartaz, vídeo ou aviso</div></div>
+    <span style="font-size:24px">➕</span></div>
+  <div class="agv-scroll" style="padding:14px 14px 40px">
+    <div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:16px">
+      <div style="font-weight:800;color:#0f3d5c;margin-bottom:10px">📎 Sua mídia</div>
+      <label style="display:block;background:#eef4f8;border:2px dashed #a9c4d8;border-radius:12px;padding:18px;text-align:center;color:#0f3d5c;font-weight:700;cursor:pointer">
+        🖼️ Escolher imagem (cartaz)
+        <input id="mid-img" type="file" accept="image/*" style="display:none" onchange="_midPreview(this)">
+      </label>
+      <div id="mid-prev" style="margin-top:10px"></div>
+      <div style="text-align:center;color:#8a91a0;font-size:.85rem;margin:8px 0">— ou —</div>
+      <input id="mid-video" placeholder="🔗 Link de vídeo (YouTube/Facebook)" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit">
+
+      <div style="font-weight:800;color:#0f3d5c;margin:18px 0 10px">📝 Sobre você</div>
+      <input id="mid-nome" placeholder="Seu nome *" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;margin-bottom:9px">
+      <input id="mid-cargo" placeholder="Cargo na igreja (ex: Diácono, Líder de jovens)" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;margin-bottom:9px">
+      <input id="mid-fone" placeholder="Telefone (com DDD) *" inputmode="tel" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;margin-bottom:9px">
+      <div style="display:flex;gap:9px;margin-bottom:9px">
+        <input id="mid-cidade" placeholder="Cidade" style="flex:1;min-width:0;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit">
+        <input id="mid-bairro" placeholder="Bairro" style="flex:1;min-width:0;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit">
+      </div>
+      <input id="mid-igreja" placeholder="Nome da igreja" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;margin-bottom:9px">
+
+      <div style="font-weight:800;color:#0f3d5c;margin:18px 0 10px">💬 Texto / recado</div>
+      <textarea id="mid-texto" rows="5" placeholder="Cole aqui o texto do evento/aviso..." style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;resize:vertical"></textarea>
+
+      <button id="mid-enviar" onclick="enviarMidia()" style="display:block;width:100%;background:#25D366;color:#fff;border:none;border-radius:13px;padding:15px;font-weight:800;font-size:1.05rem;font-family:inherit;cursor:pointer;margin-top:16px">📤 Publicar</button>
+      <div id="mid-status" style="text-align:center;margin-top:10px;font-weight:700;font-size:.92rem"></div>
+    </div>
+  </div>
 </div>
 <div class="tela" id="tela-cartaz">
   <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-cartazes')">‹</button>
@@ -2631,6 +2671,7 @@ var CARTAZES=[
 ];
 function abrirCartazes(){
   mostrarTela('tela-cartazes');
+  carregarMidias();
   var el=document.getElementById('cartazes-lista'); if(!el) return;
   if(!CARTAZES.length){ el.innerHTML='<div style="text-align:center;color:#6b7280;padding:44px 16px">Nenhum cartaz ainda.</div>'; return; }
   el.innerHTML=CARTAZES.map(function(c){
@@ -2656,6 +2697,57 @@ function compartilharCartaz(id){
   var txt='📢 '+c.titulo+' — '+c.data+(c.sub?(' · '+c.sub):'')+(c.link?('\n📝 Inscrição: '+c.link):'')+'\n\nVeja no RADAR: https://radar-atual.vercel.app';
   if(navigator.share){ navigator.share({title:c.titulo,text:txt}).catch(function(){}); }
   else { navigator.clipboard&&navigator.clipboard.writeText(txt); window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
+}
+
+/* ===== MÍDIAS DA COMUNIDADE (qualquer um publica) ===== */
+function _embedVideo(u){ u=u||''; var yt=u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/); return yt?('https://www.youtube.com/embed/'+yt[1]):null; }
+function _abrirImg(u){ var o=document.createElement('div'); o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;padding:14px'; o.innerHTML='<img src="'+u+'" style="max-width:100%;max-height:100%;border-radius:8px">'; o.onclick=function(){o.remove();}; document.body.appendChild(o); }
+function carregarMidias(){
+  var box=document.getElementById('midias-lista'); if(!box) return;
+  fetch('/api/videos?acao=midia-list').then(function(r){return r.json();}).then(function(d){
+    if(!d.ok || !d.midias || !d.midias.length){ box.innerHTML=''; return; }
+    var h='<div class="sec-label" style="margin:14px 2px 8px;color:#a9791c">Publicações da comunidade</div>';
+    d.midias.forEach(function(m){
+      h+='<div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 3px 12px rgba(15,61,92,.08)">';
+      if(m.media_tipo==='imagem' && m.media_url){ h+='<img src="'+m.media_url+'" onclick="_abrirImg(\''+m.media_url+'\')" style="width:100%;display:block;cursor:pointer">'; }
+      else if(m.media_tipo==='video' && m.media_url){ var e=_embedVideo(m.media_url); h+= e ? '<div style="position:relative;padding-top:56.25%;background:#000"><iframe src="'+e+'" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe></div>' : '<a href="'+m.media_url+'" target="_blank" style="display:block;background:#0f3d5c;color:#fff;text-align:center;padding:16px;font-weight:800;text-decoration:none">▶ Ver vídeo</a>'; }
+      h+='<div style="padding:13px 15px">';
+      if(m.texto){ h+='<div style="color:#1b2436;font-size:.96rem;line-height:1.55;white-space:pre-line;margin-bottom:9px">'+esc2(m.texto)+'</div>'; }
+      h+='<div style="font-size:.82rem;color:#6b7280;border-top:1px solid #eef1f5;padding-top:9px">👤 <b style="color:#0f3d5c">'+esc2(m.autor_nome||'')+'</b>'+(m.autor_cargo?(' · '+esc2(m.autor_cargo)):'')+(m.autor_igreja?('<br>⛪ '+esc2(m.autor_igreja)):'')+((m.autor_cidade||m.autor_bairro)?('<br>📍 '+esc2([m.autor_bairro,m.autor_cidade].filter(Boolean).join(', '))):'')+'</div>';
+      h+='</div></div>';
+    });
+    box.innerHTML=h;
+  }).catch(function(){ box.innerHTML=''; });
+}
+function abrirEnviarMidia(){ mostrarTela('tela-enviar'); }
+var _midImgData=null;
+function _midPreview(inp){
+  var f=inp.files&&inp.files[0]; if(!f) return;
+  if(f.size>5*1024*1024){ alert('Imagem muito grande (máximo 5MB). Escolha uma menor.'); inp.value=''; return; }
+  var rd=new FileReader();
+  rd.onload=function(){ _midImgData=rd.result; document.getElementById('mid-prev').innerHTML='<img src="'+rd.result+'" style="width:100%;border-radius:12px">'; document.getElementById('mid-video').value=''; };
+  rd.readAsDataURL(f);
+}
+function enviarMidia(){
+  var nome=document.getElementById('mid-nome').value.trim();
+  var fone=document.getElementById('mid-fone').value.trim();
+  var vlink=document.getElementById('mid-video').value.trim();
+  var st=document.getElementById('mid-status');
+  if(!nome||!fone){ st.style.color='#a8162a'; st.textContent='Preencha seu nome e telefone.'; return; }
+  if(!_midImgData && !vlink){ st.style.color='#a8162a'; st.textContent='Envie uma imagem OU um link de vídeo.'; return; }
+  var btn=document.getElementById('mid-enviar'); btn.disabled=true; st.style.color='#0f6d78'; st.textContent='Publicando… aguarde';
+  var body={acao:'midia-sub', nome:nome, cargo:document.getElementById('mid-cargo').value.trim(), fone:fone,
+    cidade:document.getElementById('mid-cidade').value.trim(), bairro:document.getElementById('mid-bairro').value.trim(),
+    igreja:document.getElementById('mid-igreja').value.trim(), texto:document.getElementById('mid-texto').value.trim()};
+  if(_midImgData) body.imgBase64=_midImgData; else body.videoLink=vlink;
+  fetch('/api/videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(d){
+    btn.disabled=false;
+    if(d && d.ok){ st.style.color='#14804a'; st.textContent='✓ Publicado! Obrigado.';
+      ['mid-nome','mid-cargo','mid-fone','mid-cidade','mid-bairro','mid-igreja','mid-texto','mid-video'].forEach(function(id){document.getElementById(id).value='';});
+      _midImgData=null; document.getElementById('mid-prev').innerHTML=''; document.getElementById('mid-img').value='';
+      setTimeout(function(){ abrirCartazes(); },900);
+    } else { st.style.color='#a8162a'; st.textContent=(d&&d.erro)||'Não consegui publicar. Tente de novo.'; }
+  }).catch(function(){ btn.disabled=false; st.style.color='#a8162a'; st.textContent='Sem conexão. Tente de novo.'; });
 }
 function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
