@@ -38,12 +38,10 @@
     <button class="voltar" style="margin:0;background:#0f3d5c" onclick="location.href='/'">🏠 Início</button>
   </div>
 
-  <div class="selo">✦ Mensagens para Pregar ✦</div>
   <h1>Mensagens para Pregar</h1>
-  <div class="sub">Sermões densos em prosa — revelação correndo como um rio</div>
-  <div class="divisor"></div>
+  <div class="sub">Sermões densos em prosa</div>
 
-  <div class="mtabs">
+  <div class="mtabs" style="margin-top:12px">
     <button class="mtab on" data-p="lista" onclick="mtab('lista')">📖 Mensagens</button>
     <button class="mtab" data-p="forjar" onclick="mtab('forjar')">🔥 Forjar Mensagem</button>
   </div>
@@ -125,9 +123,7 @@
   .cr-sec{flex:1;background:rgba(15,61,92,.07);border:1px solid #e4e7ec;color:var(--navy);border-radius:12px;padding:11px;font-size:.98rem;font-weight:800;font-family:inherit;cursor:pointer}
 </style>
 <div class="criador">
-  <div class="cr-selo">✦ Criador de Mensagens ✦</div>
-  <h2 class="cr-tit">🔥 Forjar uma mensagem nova</h2>
-  <p class="cr-dica">Digite o texto-base ou o tema. A mensagem vem em <b>prosa densa</b> — garimpo do original, tipologia que aponta pra Cristo e um final que queima.</p>
+  <p class="cr-dica" style="margin-top:2px">Digite o texto-base ou o tema — a mensagem vem em <b>prosa densa</b>, com garimpo do original e final que queima.</p>
   <textarea id="cr-tema" rows="2" placeholder="Ex.: A mulher com o fluxo de sangue  •  Mateus 1  •  o filho pródigo"></textarea>
   <button id="cr-btn">🔥 Forjar mensagem</button>
   <div id="cr-quem"></div>
