@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fixar na Mente — A Mulher do Fluxo de Sangue</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:820px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
+    padding:14px 13px calc(46px + env(safe-area-inset-bottom))}
+  .top{display:flex;gap:8px;margin-bottom:14px}
+  .btn{margin:0;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .btn.n{background:var(--navy)}
+  .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.6rem;font-weight:800;margin:2px 0 2px}
+  .ref{text-align:center;color:var(--dourado);font-weight:800;margin-bottom:14px}
+  .abas{display:flex;gap:6px;margin:6px 0 16px;position:sticky;top:0;background:var(--branco);padding:8px 0;z-index:5;border-bottom:1px solid var(--linha);flex-wrap:wrap}
+  .aba{flex:1;min-width:70px;text-align:center;padding:10px 4px;border-radius:11px;background:#eef2f4;font-weight:800;font-size:.86rem;cursor:pointer;border:1px solid var(--linha)}
+  .aba.on{background:var(--navy);color:#fff}
+  .vis{display:none} .vis.on{display:block}
+  .fio{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:14px 15px;margin-bottom:16px;font-size:1.08rem;text-align:center;color:#5c4a1e;font-weight:600}
+  .est{background:#fff;border:1px solid var(--linha);border-radius:13px;padding:12px 14px;margin-bottom:11px}
+  .est .cab{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:1px}
+  .est .n{width:28px;height:28px;flex-shrink:0;background:var(--navy);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem}
+  .est .em{font-size:1.4rem;line-height:1}
+  .est .anc{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.12rem;text-align:center}
+  .est .rf{color:var(--dourado);font-weight:700;font-size:.82rem;text-align:center;margin:0 0 7px}
+  .est .pu{color:#333;font-size:.99rem;text-align:justify;line-height:1.55}
+  /* cartão de púlpito */
+  .cart{background:#0f3d5c;color:#eaf1f5;border-radius:14px;padding:16px 16px 10px}
+  .cart h3{margin:0 0 10px;color:#fff;font-family:Georgia,serif;text-align:center}
+  .cart ol{margin:0;padding-left:22px}
+  .cart li{margin-bottom:9px;font-size:1.05rem}
+  .cart li b{color:#ffd98a}
+  .cart .v{color:#9fc7d4;font-size:.82rem}
+  .copiar{display:block;width:100%;margin:12px 0 0;background:var(--teal);color:#fff;border:none;border-radius:12px;padding:13px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer}
+  /* plano */
+  .p-abre{background:#0f3d5c;color:#eaf1f5;border-radius:14px;padding:16px;margin-bottom:14px}
+  .p-abre h3{margin:0 0 8px;color:#ffd98a;font-family:Georgia,serif;font-size:1.05rem;text-align:center}
+  .p-abre .txt{font-family:Georgia,serif;font-size:1.08rem;line-height:1.6;font-style:italic}
+  .p-abre .lab{color:#9fc7d4;font-size:.74rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-top:12px}
+  .bloco{background:#fff;border:1px solid var(--linha);border-radius:13px;padding:14px 15px;margin-bottom:12px}
+  .bloco h3{margin:0 0 8px;color:var(--navy);font-family:Georgia,serif;font-size:1.12rem;display:flex;align-items:center;gap:8px}
+  .bloco ul{margin:6px 0 0;padding-left:20px}
+  .bloco li{margin-bottom:7px;font-size:1rem;line-height:1.5}
+  .doze{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:14px 15px;margin-bottom:12px;text-align:center;color:#5c4a1e;font-weight:700;font-size:1.05rem;line-height:1.7}
+  .dica-branco{background:#fff4f4;border:1px solid #f0cccc;border-radius:12px;padding:12px 14px;color:#7a2a2a;font-size:.96rem;line-height:1.55;margin-bottom:8px}
+  /* treino */
+  .tr-topo{text-align:center;margin-bottom:12px}
+  .placar{font-weight:800;color:var(--teal)}
+  .card{background:#fff;border:2px solid var(--linha);border-radius:18px;padding:26px 18px;text-align:center;box-shadow:0 6px 20px rgba(15,61,92,.08);min-height:240px;display:flex;flex-direction:column;justify-content:center}
+  .card .em{font-size:3rem}
+  .card .anc{font-family:Georgia,serif;font-size:1.7rem;font-weight:800;color:var(--navy);margin:6px 0}
+  .card .rf{color:var(--dourado);font-weight:800}
+  .card .dica{color:#9aa1ad;font-size:.9rem;margin-top:14px}
+  .card .pu{color:#1c2230;font-size:1.1rem;line-height:1.55;margin-top:10px}
+  .acoes{display:flex;gap:10px;margin-top:14px}
+  .acoes button{flex:1;border:none;border-radius:13px;padding:15px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .mostrar{background:var(--navy);color:#fff}
+  .fixei{background:#14804a;color:#fff}
+  .revisar{background:var(--vinho);color:#fff}
+  .fim{text-align:center;padding:26px 10px}
+  .fim .big{font-size:2.6rem}
+  .reiniciar{margin-top:14px;background:var(--teal);color:#fff;border:none;border-radius:13px;padding:13px 22px;font-weight:800;font-family:inherit;cursor:pointer}
+  .nota{color:#6b7280;font-size:.86rem;text-align:center;margin-top:16px;border-top:1px solid var(--linha);padding-top:12px}
+</style>
+</head>
+<body>
+  <div class="top">
+    <button class="btn" onclick="location.href='a-mulher-do-fluxo-de-sangue.html'">← Ler a mensagem</button>
+    <button class="btn n" onclick="location.href='/'">🏠 Início</button>
+  </div>
+  <div class="selo">✦ Fixar na Mente ✦</div>
+  <h1>A Mulher do Fluxo de Sangue</h1>
+  <div class="ref">Marcos 5:25-34 · roteiro de pregação · 12 cenas</div>
+
+  <div class="abas">
+    <div class="aba on" data-k="mapa" onclick="aba('mapa')">🗺️ Cenas</div>
+    <div class="aba" data-k="cartao" onclick="aba('cartao')">🎴 Púlpito</div>
+    <div class="aba" data-k="plano" onclick="aba('plano')">📅 Plano</div>
+    <div class="aba" data-k="treino" onclick="aba('treino')">🧠 Treino</div>
+  </div>
+
+  <!-- MAPA -->
+  <div id="v-mapa" class="vis on">
+    <div class="fio" id="fio"></div>
+    <div id="estacoes"></div>
+    <button class="copiar" onclick="copiar12()">📋 Copiar as 12 palavras-chave</button>
+  </div>
+
+  <!-- CARTÃO -->
+  <div id="v-cartao" class="vis">
+    <div class="cart">
+      <h3>🎴 Cartão de Púlpito</h3>
+      <ol id="cartaoLista"></ol>
+    </div>
+    <button class="copiar" onclick="copiar12()">📋 Copiar as 12 palavras-chave</button>
+    <div class="nota">Um olhar rápido no púlpito. Cada palavra puxa o ponto inteiro — se você treinou.</div>
+  </div>
+
+  <!-- PLANO -->
+  <div id="v-plano" class="vis">
+    <div class="p-abre">
+      <h3>Decore LITERAL só a abertura e o fechamento</h3>
+      <div class="lab">Abertura</div>
+      <div class="txt">“Havia uma multidão apertando Jesus por todos os lados, e ninguém reparou nela. Ninguém devia reparar. Fazia doze anos que ela sangrava.”</div>
+      <div class="lab">Fechamento</div>
+      <div class="txt">“Não seja multidão, seja a mulher. Estende a mão. Agarra a orla. E VIVE!”</div>
+    </div>
+
+    <div class="doze" id="doze"></div>
+
+    <div class="bloco">
+      <h3>🌅 Para hoje</h3>
+      <ul>
+        <li><b>20 min:</b> aprenda as cenas <b>1 a 4</b>.</li>
+        <li>Pausa de 5 min, longe do celular.</li>
+        <li><b>20 min:</b> cenas <b>5 a 8</b>.</li>
+        <li>Pausa.</li>
+        <li><b>20 min:</b> cenas <b>9 a 12</b>.</li>
+        <li>Grave uma pregação completa no celular, <b>mesmo tropeçando</b>.</li>
+        <li>Antes de dormir, diga só as <b>12 palavras-chave</b> sem consultar.</li>
+      </ul>
+    </div>
+
+    <div class="bloco">
+      <h3>☀️ Amanhã</h3>
+      <ul>
+        <li>Ao acordar, reconstrua tudo <b>antes de ler</b>.</li>
+        <li>Confira apenas o que esqueceu.</li>
+        <li>Pregue uma vez olhando só para as 12 palavras.</li>
+        <li>Última repetição <b>em pé, com voz de púlpito</b>.</li>
+      </ul>
+    </div>
+
+    <div class="bloco">
+      <h3>🧭 Se der branco</h3>
+      <div class="dica-branco">Diga: <b>“E repare…”</b>, visualize a próxima cena e prossiga. Se esquecer uma frase, <b>continue — não volte ao começo</b>. A congregação não conhece o manuscrito; ela precisa receber a mensagem, não o texto.</div>
+      <div class="dica-branco">Você não precisa <i>sentir</i> que aprendeu para conseguir lembrar. O teste é um só: <b>tentar falar sem olhar</b>.</div>
+    </div>
+
+    <button class="copiar" onclick="copiarPlano()">📋 Copiar o plano completo</button>
+  </div>
+
+  <!-- TREINO -->
+  <div id="v-treino" class="vis">
+    <div class="tr-topo">Sem colar. Olhe a âncora, <b>pregue o ponto de cabeça</b>, depois confira.<br>
+      <span class="placar" id="placar"></span></div>
+    <div id="treinoArea"></div>
+  </div>
+
+<script>
+const ESTACOES=[
+ {em:'🩸',anc:'DOZE ANOS',rf:'Marcos 5:25-26',pu:'Doze anos sangrando. Gastou TUDO com médicos e “ia a pior”. É onde muita gente chega antes de encontrar Jesus: o dinheiro acabou, a esperança secou, e só a doença ainda cresce.'},
+ {em:'🚫',anc:'IMPURA · Levítico',rf:'Levítico 15:25-27',pu:'O pior não era o sangue — era o que ele significava diante de Deus. Impura, intocável, excluída com carimbo divino. Doze anos sem um abraço; a religião a empurrava para longe.'},
+ {em:'✋',anc:'TOCAR POR DETRÁS',rf:'Marcos 5:27-28',pu:'A proibida de tocar decide tocar. Vem por detrás, curvada, escondida: “Se tão somente tocar as suas vestes, ficarei sã”. A fé sabe que a menor parte d’Ele basta.'},
+ {em:'🧵',anc:'ORLA · kraspedon',rf:'Mateus 9:20 · Números 15:38',pu:'Não a barra qualquer: a orla, os tsitsit — o uniforme da aliança. A mulher imunda agarrou, com fé, a própria aliança de Deus pendurada na ponta do manto.'},
+ {em:'🕊️',anc:'ASA · kanaf',rf:'Malaquias 4:2',pu:'“Borda” (kanaf) é a mesma palavra que “asa”. “Nascerá o Sol da justiça, e cura trará debaixo das suas asas”. Ela se atirou onde a profecia marcou o encontro.'},
+ {em:'⚡',anc:'DYNAMIS · a corrente inverte',rf:'Marcos 5:29-30 · 2Co 5:21',pu:'No toque, em vez da imundície subir, o poder (dynamis) desceu. O fluxo secou num toque. O santo não ficou imundo — a imunda ficou limpa. O Evangelho inteiro numa cena.'},
+ {em:'🙋',anc:'QUEM TOCOU?',rf:'Marcos 5:31',pu:'A multidão apertava (synthlíbo) — esbarrava por acaso. Ela tocou (hápsato) — o toque intencional da fé. Multidão encosta; fé toca. Milhares esbarraram; UMA saiu curada.'},
+ {em:'🗣️',anc:'TODA A VERDADE',rf:'Marcos 5:33',pu:'Ele a expõe não para envergonhá-la, mas para completá-la. Ela volta “com temor e tremendo” e diz “toda a verdade”. Diante de Jesus não há testemunho pela metade.'},
+ {em:'👑',anc:'FILHA · thugáter',rf:'Marcos 5:34',pu:'Ele a chama “Filha” — a única vez, em todos os Evangelhos, que Jesus chama assim uma mulher. De intocável a abraçada; de excluída a FILHA.'},
+ {em:'✝️',anc:'SÉSOKEN · o açoite',rf:'Marcos 5:34',pu:'“A tua fé te salvou” (sésoken/sozo): cura o corpo E salva a alma. O “mal” é mástix — açoite. O mesmo Cristo que receberia o açoite livra a filha do dela.'},
+ {em:'🩸',anc:'O SANGUE QUE INCLUI',rf:'1 João 1:7',pu:'O mal dela era sangue — morte, impureza, maldição. Só o encontro com Aquele cujo próprio sangue correria na cruz fechou a fonte. O sangue dela excluía; o sangue d’Ele inclui.'},
+ {em:'🔥',anc:'AGARRA A ORLA',rf:'Apelo',pu:'A mesma orla ainda passa; o mesmo poder não diminuiu um grau. Não te falta poder no céu — te falta estender a mão. Não seja multidão, seja a mulher: agarra a orla e VIVE!'}
+];
+const FIO='A intocável de doze anos rompeu o aperto e agarrou a orla da aliança; o poder desceu em vez da imundície subir — e Jesus a chamou FILHA. O sangue que a excluía, trocado pelo Sangue que a inclui.';
+const PALAVRAS=['Doze anos','Impura','Tocar por detrás','Orla','Asa','Dynamis','Quem tocou','Toda a verdade','Filha','Sésoken','Sangue que inclui','Agarra a orla'];
+const $=id=>document.getElementById(id);
+
+// MAPA
+$('fio').textContent='🧵 O Fio: '+FIO;
+$('estacoes').innerHTML=ESTACOES.map((e,i)=>
+  `<div class="est">
+     <div class="cab"><div class="n">${i+1}</div><div class="em">${e.em}</div><div class="anc">${e.anc}</div></div>
+     <div class="rf">${e.rf}</div>
+     <div class="pu">${e.pu}</div>
+   </div>`).join('');
+// CARTÃO
+$('cartaoLista').innerHTML=ESTACOES.map(e=>{
+  const [a]=e.anc.split(' · ');
+  return `<li><b>${e.em} ${a}</b> <span class="v">— ${e.rf}</span></li>`;
+}).join('');
+// PLANO — linha das 12 palavras
+$('doze').textContent=PALAVRAS.join('. ')+'.';
+
+function aba(q){
+  ['mapa','cartao','plano','treino'].forEach(k=>{ $('v-'+k).classList.toggle('on',k===q); });
+  document.querySelectorAll('.aba').forEach(a=>a.classList.toggle('on', a.getAttribute('data-k')===q));
+  if(q==='treino') iniciarTreino();
+}
+
+// COPIAR (norma do Elias: tudo com botão copiar)
+function toast(txt){
+  const t=document.createElement('div');
+  t.textContent='✓ '+txt;
+  t.style.cssText='position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#14804a;color:#fff;padding:11px 18px;border-radius:999px;font-weight:800;z-index:99;box-shadow:0 6px 18px rgba(0,0,0,.2)';
+  document.body.appendChild(t); setTimeout(()=>t.remove(),1600);
+}
+function copiar(txt,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(()=>toast(msg)).catch(()=>fallback(txt,msg)); }
+  else fallback(txt,msg);
+}
+function fallback(txt,msg){ const a=document.createElement('textarea'); a.value=txt; document.body.appendChild(a); a.select(); try{document.execCommand('copy');}catch(_){}; a.remove(); toast(msg); }
+function copiar12(){ copiar(PALAVRAS.join('. ')+'.', '12 palavras copiadas'); }
+function copiarPlano(){
+  let t='A MULHER DO FLUXO DE SANGUE — FIXAR NA MENTE\n\n';
+  t+='AS 12 CENAS:\n'+ESTACOES.map((e,i)=>`${i+1}. ${e.anc.split(' · ')[0]} — ${e.pu}`).join('\n')+'\n\n';
+  t+='AS 12 PALAVRAS-CHAVE:\n'+PALAVRAS.join('. ')+'.\n\n';
+  t+='DECORE LITERAL:\nAbertura: “Havia uma multidão apertando Jesus por todos os lados, e ninguém reparou nela. Ninguém devia reparar. Fazia doze anos que ela sangrava.”\n';
+  t+='Fechamento: “Não seja multidão, seja a mulher. Estende a mão. Agarra a orla. E VIVE!”\n\n';
+  t+='HOJE: 20min cenas 1-4 · pausa 5min · 20min cenas 5-8 · pausa · 20min cenas 9-12 · gravar uma pregação completa · antes de dormir, só as 12 palavras sem consultar.\n\n';
+  t+='AMANHÃ: reconstruir tudo antes de ler · conferir só o que esqueceu · pregar olhando só as 12 palavras · última repetição em pé, com voz de púlpito.\n\n';
+  t+='SE DER BRANCO: diga “E repare…”, visualize a próxima cena e prossiga. Não volte ao começo. O teste é falar sem olhar.';
+  copiar(t,'Plano completo copiado');
+}
+
+// TREINO — recordação ativa com repetição dos que faltam
+let fila=[], fixados=0, atual=null, revelado=false;
+function iniciarTreino(){ fixados=0; fila=ESTACOES.map((e,i)=>i); embaralha(fila); proxima(); }
+function embaralha(a){ for(let i=a.length-1;i>0;i--){ const j=(i*7+3)%(i+1); [a[i],a[j]]=[a[j],a[i]]; } }
+function proxima(){ if(!fila.length){ return fim(); } atual=fila[0]; revelado=false; render(); }
+function placar(){ $('placar').textContent=`Fixados: ${fixados}/${ESTACOES.length}  ·  na fila: ${fila.length}`; }
+function render(){
+  placar();
+  const e=ESTACOES[atual];
+  $('treinoArea').innerHTML=
+   `<div class="card">
+      <div class="em">${e.em}</div>
+      <div class="anc">${e.anc.split(' · ')[0]}</div>
+      <div class="rf">${e.rf}</div>
+      ${revelado ? `<div class="pu">${e.pu}</div>` : `<div class="dica">Pregue esse ponto de cabeça… depois toque em Mostrar.</div>`}
+    </div>
+    <div class="acoes">
+      ${revelado
+        ? `<button class="revisar" onclick="marcar(false)">🔁 Revisar</button>
+           <button class="fixei" onclick="marcar(true)">✅ Fixei</button>`
+        : `<button class="mostrar" onclick="revelar()">👁️ Mostrar o ponto</button>`}
+    </div>`;
+}
+function revelar(){ revelado=true; render(); }
+function marcar(ok){ fila.shift(); if(ok){ fixados++; } else{ fila.push(atual); } proxima(); }
+function fim(){
+  $('treinoArea').innerHTML=
+   `<div class="fim"><div class="big">🩸👑</div>
+      <h2 style="color:var(--vinho);font-family:Georgia,serif">Mensagem fixada!</h2>
+      <p>Você percorreu as ${ESTACOES.length} cenas de cabeça. Faça de novo <b>hoje e amanhã</b> — 3 passadas curtas cravam mais que 1 hora relendo.</p>
+      <button class="reiniciar" onclick="iniciarTreino()">🔁 Treinar de novo</button></div>`;
+  $('placar').textContent='';
+}
+</script>
+</body>
+</html>
