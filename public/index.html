@@ -757,6 +757,13 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .agv-hub-ic.marrom{background:#5b5228}
 .agv-hub-nome{font-size:16px;font-weight:800;color:var(--ink)}
 .agv-hub-sub{font-size:12.5px;color:var(--ink2);margin-top:2px}
+/* CRM hubs (Informativo, Templo, Silas) — tema claro, sem preto */
+.agv-hub-card{background:#fff;border:1px solid #dbe6f2;box-shadow:0 2px 8px rgba(15,61,92,.06)}
+.agv-hub-nome{color:#14233a}
+.agv-hub-sub{color:#5c6470}
+#tela-informativo .sec-label,#tela-silas .sec-label,#tela-templo .sec-label,#tela-monte-carmelo .sec-label{color:#a9791c;opacity:.9}
+#tela-informativo,#tela-silas,#tela-templo,#tela-ceadema,#tela-monte-carmelo{--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
+#tela-informativo .std-back,#tela-silas .std-back,#tela-templo .std-back,#tela-ceadema .std-back,#tela-monte-carmelo .std-back{background:rgba(15,61,92,.06)}
 
 </style>
 </head>
@@ -1203,7 +1210,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
   <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Maratona de Marcos</div><div class="std-sub">Evangelho de Marcos</div></div>
     <span style="font-size:24px">🏆</span></div>
-  <div class="agv-scroll" style="background:var(--bg)">
+  <div class="agv-scroll">
     <div style="max-width:460px;margin:18px auto;padding:0 16px">
       <div style="background:linear-gradient(160deg,#0c1e40,#0b1b3a 60%,#091531);border:1px solid rgba(217,182,90,.4);border-radius:22px;padding:28px 22px;text-align:center;box-shadow:0 16px 44px rgba(0,0,0,.45)">
         <div style="font-size:56px;line-height:1;filter:drop-shadow(0 6px 16px rgba(217,182,90,.5))">🏆</div>
@@ -1227,7 +1234,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
     <div class="std-hinfo"><div class="std-titulo">Informativo</div><div class="std-sub">Agendas e avisos das igrejas</div></div>
     <button onclick="event.stopPropagation();compartilharApp('Informativo')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <span style="font-size:24px">📢</span></div>
-  <div class="agv-scroll" style="background:var(--bg)">
+  <div class="agv-scroll">
     <div class="sec-label" style="margin:16px 14px 4px">CRMs</div>
     <div class="agv-hub-card" onclick="mostrarTela('tela-templo')">
       <div class="agv-hub-ic marrom">⛪</div>
@@ -1246,7 +1253,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
     <div class="std-hinfo"><div class="std-titulo">Projeto Silas</div><div class="std-sub">Documentos e agendas</div></div>
     <button onclick="event.stopPropagation();compartilharApp('Projeto Silas')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <img src="img/ceadema.png" style="width:32px;height:32px;object-fit:contain;border-radius:8px;background:#fff;padding:2px;flex-shrink:0"></div>
-  <div class="agv-scroll" style="background:var(--bg)">
+  <div class="agv-scroll">
     <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
     <div class="agv-hub-card" onclick="abrirCeadema('estadual')">
       <div class="agv-hub-ic">📅</div>
@@ -1268,7 +1275,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
     <div class="std-hinfo"><div class="std-titulo">Templo Central</div><div class="std-sub">Tuntum - MA</div></div>
     <button onclick="event.stopPropagation();compartilharApp('Templo Central Tuntum-MA')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
     <span style="font-size:24px">⛪</span></div>
-  <div class="agv-scroll" style="background:var(--bg)">
+  <div class="agv-scroll">
     <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
     <div class="agv-hub-card" onclick="abrirTemploAg()">
       <div class="agv-hub-ic marrom">📅</div>
@@ -1288,7 +1295,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
   <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-templo')">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Cong. Monte Carmelo</div><div class="std-sub">Templo Central · Tuntum - MA</div></div>
     <span style="font-size:24px">⛪</span></div>
-  <div class="agv-scroll" style="background:var(--bg)">
+  <div class="agv-scroll">
     <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
     <div class="agv-hub-card" onclick="abrirMcGrupo('jovem')">
       <div class="agv-hub-ic marrom">🔥</div>
