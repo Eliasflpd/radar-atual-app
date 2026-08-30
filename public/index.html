@@ -1247,11 +1247,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
   </div>
 </div>
 <div class="tela" id="tela-slides">
-  <div style="padding:calc(12px + env(safe-area-inset-top)) 16px 10px;text-align:center;background:linear-gradient(135deg,#0f3d5c,#12557e);color:#fff;flex-shrink:0">
-    <div style="font-family:'Playfair Display',Georgia,serif;font-size:1.15rem;font-weight:800">📢 Slides &amp; Cia</div>
-    <div style="font-size:.76rem;color:#cfe3ec">Eventos e avisos da igreja</div>
-  </div>
-  <div id="slides-full" style="flex:1;overflow-y:auto;background:#eef3fa;padding:14px 14px 6px"></div>
+  <div id="slides-full" style="flex:1;overflow-y:auto;background:#eef3fa;padding:calc(10px + env(safe-area-inset-top)) 12px 6px"></div>
   <div style="padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e4e7ec;flex-shrink:0">
     <button onclick="irParaMenu()" style="width:100%;background:#0f3d5c;color:#fff;border:none;border-radius:14px;padding:16px;font-weight:800;font-size:1.08rem;font-family:inherit;cursor:pointer">Ir para o menu ›</button>
   </div>
@@ -2707,6 +2703,7 @@ function embedMedia(u){
   if(yt) return {type:'yt', src:'https://www.youtube.com/embed/'+yt[1]};
   if(/instagram\.com/.test(u)){ var b=u.split('?')[0].replace(/\/+$/,''); return {type:'ig', src:b+'/embed'}; }
   if(/facebook\.com|fb\.watch|fb\.me/.test(u)){ return {type:'fb', src:'https://www.facebook.com/plugins/video.php?href='+encodeURIComponent(u)+'&show_text=false&width=500'}; }
+  if(/drive\.google\.com/.test(u)){ var g=u.match(/\/d\/([^/]+)/)||u.match(/[?&]id=([^&]+)/); return {type:'gd', src:(g?('https://drive.google.com/file/d/'+g[1]+'/preview'):u)}; }
   return {type:'link', src:u};
 }
 function abrirCartazes(){
@@ -2783,12 +2780,25 @@ function _ovTexto(s){
 function slideHTMLFull(s){
   if(s.media_tipo==='video' && s.media_url){
     return '<div style="background:#000;border-radius:14px;overflow:hidden">'+slideMediaHTML(s)+'</div>'
-      +'<div style="padding:12px 4px;color:#1b2436">'+_ovTexto(s).replace(/color:#eef3fa|color:#fff|color:#cfe0ee|color:#ffe1a6/g,'color:#1b2436')+'</div>';
+      +'<div style="padding:12px 4px;color:#1b2436;font-size:.95rem;line-height:1.5;white-space:pre-line">'+esc2(s.texto||'')+'<div style="font-size:.8rem;color:#6b7280;margin-top:6px">👤 '+esc2(s.autor_nome||'')+(s.autor_cargo?(' · '+esc2(s.autor_cargo)):'')+(s.autor_igreja?(' · '+esc2(s.autor_igreja)):'')+'</div></div>';
   }
-  var img = s._t==='cartaz'?s.img:s.media_url;
-  return '<div style="position:relative;height:calc(100dvh - 250px);min-height:320px;background:#0a1420;border-radius:14px;overflow:hidden">'
+  var img = s._t==='cartaz'?s.img:s.media_url, ov='', tall=false;
+  if(s._t==='cartaz'){
+    ov='<div style="font-weight:800;font-size:1.05rem;line-height:1.15;text-shadow:0 1px 5px rgba(0,0,0,.85)">'+esc2(s.titulo)+'</div>'
+      +'<div style="font-size:.8rem;color:#ffe1a6;margin-top:2px;text-shadow:0 1px 5px rgba(0,0,0,.85)">📅 '+esc2(s.data)+(s.sub?(' · '+esc2(s.sub)):'')+'</div>';
+    var b='';
+    if(s.link) b+='<a href="'+s.link+'" target="_blank" style="flex:1;text-align:center;background:#a9791c;color:#fff;border-radius:10px;padding:11px;font-weight:800;text-decoration:none;font-size:.9rem">'+esc2(s.linkTxt||'Abrir link')+'</a>';
+    b+='<button onclick="compartilharCartaz(\''+s.id+'\')" style="'+(s.link?'':'flex:1;')+'background:#25D366;color:#fff;border:none;border-radius:10px;padding:11px 16px;font-weight:800;font-family:inherit;cursor:pointer">📤</button>';
+    ov+='<div style="display:flex;gap:8px;margin-top:10px">'+b+'</div>';
+  } else {
+    tall=true;
+    if(s.texto) ov+='<div style="font-weight:700;font-size:.95rem;line-height:1.42;color:#fff;max-height:24vh;overflow:auto;white-space:pre-line;text-shadow:0 1px 3px rgba(0,0,0,.75)">'+esc2(s.texto)+'</div>';
+    ov+='<div style="font-size:.78rem;color:#cfe0ee;margin-top:6px">👤 '+esc2(s.autor_nome||'')+(s.autor_cargo?(' · '+esc2(s.autor_cargo)):'')+(s.autor_igreja?(' · '+esc2(s.autor_igreja)):'')+'</div>';
+  }
+  var grad = tall ? 'linear-gradient(to top, rgba(8,20,34,.93), rgba(8,20,34,.55) 42%, transparent 72%)' : 'linear-gradient(to top, rgba(8,20,34,.82), rgba(8,20,34,.18) 52%, transparent 78%)';
+  return '<div style="position:relative;height:calc(100dvh - 165px);min-height:340px;background:#0a1420;border-radius:14px;overflow:hidden">'
     +'<div onclick="_abrirImg(\''+img+'\')" style="position:absolute;inset:0;background:#0a1420 url(\''+img+'\') center/contain no-repeat;cursor:pointer"></div>'
-    +'<div style="position:absolute;left:0;right:0;bottom:0;padding:52px 16px 16px;background:linear-gradient(to top, rgba(8,20,34,.96), rgba(8,20,34,.72) 48%, transparent);color:#fff">'+_ovTexto(s)+'</div>'
+    +'<div style="position:absolute;left:0;right:0;bottom:0;padding:'+(tall?'46px':'28px')+' 16px 14px;background:'+grad+';color:#fff">'+ov+'</div>'
     +'</div>';
 }
 function renderSlideshow(){
