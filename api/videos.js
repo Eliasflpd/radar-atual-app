@@ -119,19 +119,48 @@ module.exports = async (req, res) => {
       if((q.k||'')!==(process.env.PUSH_CRON_SECRET||'__x__')){ res.status(403).json({ok:false}); return; }
       await ensurePush(c);
       await c.query('create table if not exists push_estado(id int primary key default 1, ultimo_envio date)');
+      try{ await c.query('alter table push_estado add column if not exists ultimo_agenda date'); }catch(_){}
+      const hojeSP=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'})); hojeSP.setHours(0,0,0,0);
+      const hojeStr=hojeSP.toISOString().slice(0,10);
+      const amanha=new Date(hojeSP); amanha.setDate(hojeSP.getDate()+1);
+      const amanhaStr=amanha.toISOString().slice(0,10);
+      const est0=await c.query('select ultimo_envio,ultimo_agenda from push_estado where id=1');
+      const est=est0.rows[0]||{};
+      const out={ok:true, hoje:hojeStr, amanha:amanhaStr};
+
+      // ===== DESPERTADOR DA AGENDA — avisa 1 dia antes (todo dia) =====
+      const jaAgenda = est.ultimo_agenda && new Date(est.ultimo_agenda).toISOString().slice(0,10)===hojeStr;
+      if(!jaAgenda){
+        let ev=[];
+        try{ const q2=await c.query('select titulo,origem from agenda_eventos where data=$1 order by origem',[amanhaStr]); ev=q2.rows; }catch(_){}
+        if(ev.length){
+          const body = ev.length===1 ? (ev[0].titulo+' ('+ev[0].origem+')') : ('Amanhã: '+ev.map(r=>r.titulo).join(' · '));
+          const ra=await enviarPush(c,{title:(ev.length>1?('🔔 Amanhã — '+ev.length+' eventos'):'🔔 Amanhã na agenda'), body:body, url:'/', tag:'agenda-'+amanhaStr});
+          out.agenda={eventos:ev.length, ...ra};
+        } else { out.agenda={eventos:0}; }
+        await c.query('insert into push_estado(id,ultimo_agenda) values(1,$1) on conflict(id) do update set ultimo_agenda=excluded.ultimo_agenda',[hojeStr]);
+      } else { out.agenda={pulou:'ja avisou hoje'}; }
+
+      // ===== EBD — véspera (sáb) e dia (dom) =====
       const e=ebdInfo();
-      if(e.dow!==6 && e.dow!==0){ res.status(200).json({ok:true, pulou:'nao e vespera/dia de EBD', dow:e.dow}); return; }
-      // trava: 1 aviso por dia (o cron roda 2x/dia)
-      const hojeSP=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo'})).toISOString().slice(0,10);
-      const est=await c.query('select ultimo_envio from push_estado where id=1');
-      if(est.rows.length && est.rows[0].ultimo_envio && new Date(est.rows[0].ultimo_envio).toISOString().slice(0,10)===hojeSP){
-        res.status(200).json({ok:true, pulou:'ja avisou hoje'}); return;
-      }
-      const quando=(e.dow===6)?'Amanhã tem EBD!':'Hoje tem EBD!';
-      const body=(e.titulo?('Lição '+e.n+': '+e.titulo):('Lição '+e.n))+' — toque para abrir.';
-      const r=await enviarPush(c,{title:'🔔 '+quando, body:body, url:'/', tag:'ebd'});
-      await c.query('insert into push_estado(id,ultimo_envio) values(1,$1) on conflict(id) do update set ultimo_envio=excluded.ultimo_envio',[hojeSP]);
-      res.status(200).json({ok:true, licao:e.n, ...r});
+      const jaEbd = est.ultimo_envio && new Date(est.ultimo_envio).toISOString().slice(0,10)===hojeStr;
+      if((e.dow===6 || e.dow===0) && !jaEbd){
+        const quando=(e.dow===6)?'Amanhã tem EBD!':'Hoje tem EBD!';
+        const body=(e.titulo?('Lição '+e.n+': '+e.titulo):('Lição '+e.n))+' — toque para abrir.';
+        const rb=await enviarPush(c,{title:'🔔 '+quando, body:body, url:'/', tag:'ebd'});
+        await c.query('insert into push_estado(id,ultimo_envio) values(1,$1) on conflict(id) do update set ultimo_envio=excluded.ultimo_envio',[hojeStr]);
+        out.ebd={licao:e.n, ...rb};
+      } else { out.ebd={pulou:true, dow:e.dow}; }
+
+      res.status(200).json(out);
+      return;
+    }
+    // debug (admin): ver os eventos de uma data (YYYY-MM-DD)
+    if(q.acao==='agenda-check'){
+      if(!admin){ res.status(403).json({ok:false}); return; }
+      const d=(q.d||'').toString();
+      const r=await c.query('select data,titulo,origem from agenda_eventos where data=$1 order by origem',[d]);
+      res.status(200).json({ok:true, data:d, eventos:r.rows});
       return;
     }
     // === TESTE (só admin): dispara uma notificação agora pra todos os inscritos ===
