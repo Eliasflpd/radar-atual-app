@@ -2736,16 +2736,34 @@ function slideMediaHTML(s){
   return '';
 }
 function slideHTML(s){
-  var cap='<div style="padding:13px 15px">';
-  if(s._t==='cartaz'){
-    cap+='<div style="font-weight:800;color:#0f3d5c;font-size:1.08rem">'+esc2(s.titulo)+'</div><div style="font-size:.85rem;color:#6b7280;margin-top:2px">📅 '+esc2(s.data)+(s.sub?(' · '+esc2(s.sub)):'')+'</div>';
-    if(s.texto) cap+='<div style="color:#1b2436;font-size:.95rem;line-height:1.55;white-space:pre-line;margin-top:10px">'+esc2(s.texto)+'</div>';
-    if(s.link) cap+='<a href="'+s.link+'" target="_blank" style="display:block;text-align:center;background:#0f3d5c;color:#fff;border-radius:12px;padding:13px;font-weight:800;text-decoration:none;margin-top:12px">'+esc2(s.linkTxt||'Abrir link')+'</a>';
-    cap+='<button onclick="compartilharCartaz(\''+s.id+'\')" style="display:block;width:100%;background:#25D366;color:#fff;border:none;border-radius:12px;padding:12px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:9px">📤 Compartilhar</button>';
-  } else {
-    if(s.texto) cap+='<div style="color:#1b2436;font-size:.96rem;line-height:1.55;white-space:pre-line;margin-bottom:9px">'+esc2(s.texto)+'</div>';
-    cap+='<div style="font-size:.82rem;color:#6b7280;border-top:1px solid #eef1f5;padding-top:9px">👤 <b style="color:#0f3d5c">'+esc2(s.autor_nome||'')+'</b>'+(s.autor_cargo?(' · '+esc2(s.autor_cargo)):'')+(s.autor_igreja?('<br>⛪ '+esc2(s.autor_igreja)):'')+((s.autor_cidade||s.autor_bairro)?('<br>📍 '+esc2([s.autor_bairro,s.autor_cidade].filter(Boolean).join(', '))):'')+(s.data_evento?('<br>📅 '+_fmtData(s.data_evento)):'')+'</div>';
+  var isVid=(s.media_tipo==='video' && s.media_url);
+  var img = s._t==='cartaz' ? s.img : (s.media_tipo==='imagem'? s.media_url : '');
+  if(!isVid && img){
+    var ov='';
+    if(s._t==='cartaz'){
+      ov='<div style="font-weight:800;font-size:1.08rem;line-height:1.2">'+esc2(s.titulo)+'</div>'
+        +'<div style="font-size:.8rem;color:#ffe1a6;margin-top:2px">📅 '+esc2(s.data)+(s.sub?(' · '+esc2(s.sub)):'')+'</div>';
+      if(s.texto) ov+='<div style="font-size:.85rem;line-height:1.45;margin-top:7px;color:#eef3fa;max-height:30vh;overflow:auto;white-space:pre-line">'+esc2(s.texto)+'</div>';
+    } else {
+      if(s.texto) ov+='<div style="font-weight:700;font-size:.98rem;line-height:1.45;color:#fff;max-height:30vh;overflow:auto;white-space:pre-line">'+esc2(s.texto)+'</div>';
+      ov+='<div style="font-size:.78rem;color:#cfe0ee;margin-top:6px">👤 '+esc2(s.autor_nome||'')+(s.autor_cargo?(' · '+esc2(s.autor_cargo)):'')+(s.autor_igreja?(' · '+esc2(s.autor_igreja)):'')+(s.data_evento?(' · 📅 '+_fmtData(s.data_evento)):'')+'</div>';
+    }
+    var btns='';
+    if(s._t==='cartaz'){
+      var b='';
+      if(s.link) b+='<a href="'+s.link+'" target="_blank" style="flex:1;text-align:center;background:#0f3d5c;color:#fff;border-radius:11px;padding:12px;font-weight:800;text-decoration:none;font-size:.92rem">'+esc2(s.linkTxt||'Abrir link')+'</a>';
+      b+='<button onclick="compartilharCartaz(\''+s.id+'\')" style="'+(s.link?'':'flex:1;')+'background:#25D366;color:#fff;border:none;border-radius:11px;padding:12px 16px;font-weight:800;font-family:inherit;cursor:pointer">📤</button>';
+      btns='<div style="display:flex;gap:8px;padding:10px 12px">'+b+'</div>';
+    }
+    return '<div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(15,61,92,.12)">'
+      +'<div style="position:relative">'
+        +'<img src="'+img+'" onclick="_abrirImg(\''+img+'\')" style="width:100%;display:block;cursor:pointer">'
+        +'<div style="position:absolute;left:0;right:0;bottom:0;padding:48px 15px 14px;background:linear-gradient(to top, rgba(8,20,34,.95), rgba(8,20,34,.78) 42%, rgba(8,20,34,0));color:#fff">'+ov+'</div>'
+      +'</div>'+btns+'</div>';
   }
+  var cap='<div style="padding:13px 15px">';
+  if(s.texto) cap+='<div style="color:#1b2436;font-size:.96rem;line-height:1.55;white-space:pre-line;margin-bottom:9px">'+esc2(s.texto)+'</div>';
+  if(s._t!=='cartaz') cap+='<div style="font-size:.82rem;color:#6b7280;border-top:1px solid #eef1f5;padding-top:9px">👤 <b style="color:#0f3d5c">'+esc2(s.autor_nome||'')+'</b>'+(s.autor_cargo?(' · '+esc2(s.autor_cargo)):'')+(s.autor_igreja?('<br>⛪ '+esc2(s.autor_igreja)):'')+(s.data_evento?('<br>📅 '+_fmtData(s.data_evento)):'')+'</div>';
   cap+='</div>';
   return '<div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;overflow:hidden;box-shadow:0 3px 12px rgba(15,61,92,.10)">'+slideMediaHTML(s)+cap+'</div>';
 }
