@@ -803,6 +803,19 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 #home .vit-ico img{max-height:clamp(26px,8vw,40px);width:auto}
 #home .vit-nome{font-size:clamp(10px,3vw,13px)}
 #home .vit-desc{font-size:clamp(8.5px,2.6vw,11px);margin-top:2px}
+/* card vazio (reservado — sem conteúdo por enquanto) */
+.vit-vazio{background:linear-gradient(160deg,rgba(55,101,159,.35),rgba(38,76,130,.35));border:1.5px dashed rgba(245,200,66,.35);box-shadow:none;cursor:default}
+.vit-vazio:active{transform:none;border-color:rgba(245,200,66,.35)}
+/* hero mais compacto e mais alto + grade preenche a tela (11 blocos, sem estourar) */
+#home .vit-hero{padding:7px 12px 8px}
+#home .vit-topo{margin-bottom:3px}
+#home .vit-bemvindo{font-size:13px}
+#home .vit-marca{font-size:clamp(19px,6vw,25px);margin:0}
+#home .vit-sub,#home .vit-fio{display:none}
+#home .vitrine{justify-content:flex-start}
+#home .home-scroll{padding-bottom:calc(74px + env(safe-area-inset-bottom))} /* reserva o menu fixo de baixo */
+#home .vit-grade{flex:1 1 0;min-height:0;grid-auto-rows:minmax(0,1fr);margin-top:8px}
+#home .vit-card{aspect-ratio:auto;height:100%;min-height:0}
 </style>
 
 <!-- HOME -->
@@ -831,6 +844,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       </div>
 
       <div class="vit-grade">
+        <div class="vit-card vit-vazio"></div>
+        <div class="vit-card vit-vazio"></div>
         <div class="vit-card" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)">
           <div class="vit-ico"><img src="/img/home/biblia.png" alt="" onerror="this.parentNode.textContent='📖'"></div>
           <div class="vit-nome">Bíblia e Harpa</div><div class="vit-desc">Palavra e louvores</div>
