@@ -2767,6 +2767,30 @@ function slideHTML(s){
   cap+='</div>';
   return '<div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;overflow:hidden;box-shadow:0 3px 12px rgba(15,61,92,.10)">'+slideMediaHTML(s)+cap+'</div>';
 }
+function _ovTexto(s){
+  var ov='';
+  if(s._t==='cartaz'){
+    ov='<div style="font-weight:800;font-size:1.06rem;line-height:1.2">'+esc2(s.titulo)+'</div>'
+      +'<div style="font-size:.8rem;color:#ffe1a6;margin-top:2px">📅 '+esc2(s.data)+(s.sub?(' · '+esc2(s.sub)):'')+'</div>';
+    if(s.texto) ov+='<div style="font-size:.85rem;line-height:1.42;margin-top:6px;color:#eef3fa;max-height:26vh;overflow:auto;white-space:pre-line">'+esc2(s.texto)+'</div>';
+    if(s.link) ov+='<a href="'+s.link+'" target="_blank" style="display:inline-block;margin-top:9px;background:#a9791c;color:#fff;border-radius:10px;padding:9px 14px;font-weight:800;text-decoration:none;font-size:.86rem">'+esc2(s.linkTxt||'Abrir link')+'</a>';
+  } else {
+    if(s.texto) ov+='<div style="font-weight:700;font-size:.98rem;line-height:1.45;color:#fff;max-height:26vh;overflow:auto;white-space:pre-line">'+esc2(s.texto)+'</div>';
+    ov+='<div style="font-size:.78rem;color:#cfe0ee;margin-top:6px">👤 '+esc2(s.autor_nome||'')+(s.autor_cargo?(' · '+esc2(s.autor_cargo)):'')+(s.autor_igreja?(' · '+esc2(s.autor_igreja)):'')+(s.data_evento?(' · 📅 '+_fmtData(s.data_evento)):'')+'</div>';
+  }
+  return ov;
+}
+function slideHTMLFull(s){
+  if(s.media_tipo==='video' && s.media_url){
+    return '<div style="background:#000;border-radius:14px;overflow:hidden">'+slideMediaHTML(s)+'</div>'
+      +'<div style="padding:12px 4px;color:#1b2436">'+_ovTexto(s).replace(/color:#eef3fa|color:#fff|color:#cfe0ee|color:#ffe1a6/g,'color:#1b2436')+'</div>';
+  }
+  var img = s._t==='cartaz'?s.img:s.media_url;
+  return '<div style="position:relative;height:calc(100dvh - 250px);min-height:320px;background:#0a1420;border-radius:14px;overflow:hidden">'
+    +'<div onclick="_abrirImg(\''+img+'\')" style="position:absolute;inset:0;background:#0a1420 url(\''+img+'\') center/contain no-repeat;cursor:pointer"></div>'
+    +'<div style="position:absolute;left:0;right:0;bottom:0;padding:52px 16px 16px;background:linear-gradient(to top, rgba(8,20,34,.96), rgba(8,20,34,.72) 48%, transparent);color:#fff">'+_ovTexto(s)+'</div>'
+    +'</div>';
+}
 function renderSlideshow(){
   var box=document.getElementById(_slideBox); if(!box) return;
   if(!_slides.length){ box.innerHTML='<div style="text-align:center;color:#6b7280;padding:40px 16px">Nenhum cartaz ou mídia no momento.<br><span style="font-size:.85rem">Toque em “Publicar minha mídia” pra começar.</span></div>'; return; }
@@ -2778,7 +2802,7 @@ function renderSlideshow(){
     +'<div style="display:flex;gap:7px;align-items:center">'+dots+'</div>'
     +'<button onclick="_slideNext()" style="background:#eef4f8;border:none;border-radius:10px;width:42px;height:38px;font-size:20px;color:#0f3d5c;cursor:pointer">›</button></div>'
     +'<div style="text-align:center;color:#8a91a0;font-size:.78rem;margin-top:6px">'+(_slideIdx+1)+' de '+_slides.length+'</div>'):'';
-  box.innerHTML=slideHTML(s)+ctrl;
+  box.innerHTML=(_slideBox==='slides-full'?slideHTMLFull(s):slideHTML(s))+ctrl;
   clearTimeout(_slideTimer);
   if(_slides.length>1 && s.media_tipo!=='video'){ _slideTimer=setTimeout(_slideNext,7000); }
 }
