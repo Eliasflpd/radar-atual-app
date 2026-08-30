@@ -93,5 +93,90 @@
     }).join('');
   }
 </script>
+
+<!-- ══════════ CRIADOR DE MENSAGENS (skill Mensagens para Pregar) ══════════ -->
+<style>
+  .criador{margin-top:34px;border-top:2px dashed #e2d4b0;padding-top:22px}
+  .cr-selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase}
+  .cr-tit{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.42rem;margin:4px 0 6px}
+  .cr-dica{text-align:center;color:#6b7280;font-size:.95rem;margin:0 auto 14px;max-width:560px;line-height:1.5}
+  #cr-tema{width:100%;border:2px solid #e4e7ec;border-radius:13px;padding:12px 13px;font-size:1.02rem;font-family:inherit;color:var(--texto);resize:vertical}
+  #cr-tema:focus{outline:none;border-color:var(--teal)}
+  #cr-btn{display:block;width:100%;margin-top:11px;background:linear-gradient(135deg,#8a1c1c,var(--dourado));color:#fff;border:none;border-radius:13px;padding:14px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
+  #cr-btn:disabled{opacity:.55;cursor:default}
+  #cr-quem{text-align:center;color:var(--dourado);font-weight:700;margin:14px 0 0;font-size:.95rem}
+  #cr-saida{margin-top:14px}
+  #cr-saida h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.5rem;line-height:1.25;margin:6px 0 4px}
+  #cr-saida .cr-ref{text-align:center;color:var(--dourado);font-weight:800;margin-bottom:12px}
+  #cr-saida h2{font-family:Georgia,serif;color:var(--navy);font-size:1.16rem;margin:20px 0 8px;padding-top:12px;border-top:1px solid #eee}
+  #cr-saida p{font-size:1.07rem;margin:0 0 13px;text-align:justify;line-height:1.65}
+  #cr-saida .cr-li{padding-left:6px;margin:0 0 9px;font-size:1.05rem}
+  #cr-saida strong{color:#8a1c1c;font-weight:800}
+  #cr-saida em{color:var(--navy);font-style:italic}
+  #cr-acoes{display:flex;gap:9px;margin-top:16px}
+  .cr-sec{flex:1;background:rgba(15,61,92,.07);border:1px solid #e4e7ec;color:var(--navy);border-radius:12px;padding:11px;font-size:.98rem;font-weight:800;font-family:inherit;cursor:pointer}
+</style>
+<div class="criador">
+  <div class="cr-selo">✦ Criador de Mensagens ✦</div>
+  <h2 class="cr-tit">🔥 Forjar uma mensagem nova</h2>
+  <p class="cr-dica">Digite o texto-base ou o tema. A mensagem vem em <b>prosa densa</b> — garimpo do original, tipologia que aponta pra Cristo e um final que queima.</p>
+  <textarea id="cr-tema" rows="2" placeholder="Ex.: A mulher com o fluxo de sangue  •  Mateus 1  •  o filho pródigo"></textarea>
+  <button id="cr-btn">🔥 Forjar mensagem</button>
+  <div id="cr-quem"></div>
+  <div id="cr-saida"></div>
+  <div id="cr-acoes" style="display:none">
+    <button id="cr-copiar" class="cr-sec">📋 Copiar</button>
+    <button id="cr-outro" class="cr-sec">🔁 Fazer outra</button>
+  </div>
+</div>
+<script>
+(function(){
+  var ACAO='mensagem', LABEL='🔥 Forjar mensagem', PENSANDO='Escavando a Palavra… a revelação está vindo.';
+  var $=function(id){return document.getElementById(id);};
+  var tema=$('cr-tema'), btn=$('cr-btn'), saida=$('cr-saida'), quem=$('cr-quem'), acoes=$('cr-acoes');
+  var raw='', ocupado=false;
+  function escH(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function inl(s){return escH(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');}
+  function render(txt){
+    var lines=txt.split(/\r?\n/), h='', para=[];
+    function flush(){ if(para.length){ h+='<p>'+inl(para.join(' '))+'</p>'; para=[]; } }
+    for(var i=0;i<lines.length;i++){
+      var L=lines[i].trim();
+      if(!L){ flush(); continue; }
+      var mT=L.match(/^T[IÍ]TULO:\s*(.*)$/i); if(mT){ flush(); h+='<h1>'+inl(mT[1])+'</h1>'; continue; }
+      var mR=L.match(/^REFER[EÊ]NCIA:\s*(.*)$/i); if(mR){ flush(); h+='<div class="cr-ref">'+escH(mR[1])+'</div>'; continue; }
+      var mI=L.match(/^INTRO:\s*(.*)$/i); if(mI){ flush(); para.push(mI[1]); continue; }
+      var mH=L.match(/^\*\*(.+?)\*\*:?\s*$/); if(mH){ flush(); h+='<h2>'+inl(mH[1])+'</h2>'; continue; }
+      if(/^[•\-]\s+/.test(L)){ flush(); h+='<div class="cr-li">◆ '+inl(L.replace(/^[•\-]\s+/,''))+'</div>'; continue; }
+      para.push(L);
+    }
+    flush();
+    saida.innerHTML=h;
+  }
+  function forjar(){
+    var t=tema.value.trim(); if(!t||ocupado) return;
+    ocupado=true; btn.disabled=true; btn.textContent='🔥 Forjando…'; raw=''; saida.innerHTML=''; acoes.style.display='none';
+    quem.textContent=PENSANDO;
+    fetch('/api/concilio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:ACAO,tema:t})})
+    .then(function(r){
+      if(!r.body||!r.body.getReader) return r.text().then(function(x){ raw=x; render(raw); });
+      var reader=r.body.getReader(), dec=new TextDecoder();
+      return (function pump(){ return reader.read().then(function(x){ if(x.done) return; raw+=dec.decode(x.value,{stream:true}); render(raw); return pump(); }); })();
+    })
+    .then(function(){ quem.textContent=''; if(raw.trim()) acoes.style.display='flex'; })
+    .catch(function(e){ quem.textContent=''; saida.innerHTML='<p style="color:#b91c1c">Não deu certo agora: '+escH(e.message||'falha')+'. Tente de novo.</p>'; })
+    .then(function(){ ocupado=false; btn.disabled=false; btn.textContent=LABEL; });
+  }
+  btn.addEventListener('click',forjar);
+  tema.addEventListener('keydown',function(e){ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) forjar(); });
+  $('cr-outro').addEventListener('click',function(){ saida.innerHTML=''; acoes.style.display='none'; tema.value=''; tema.focus(); });
+  $('cr-copiar').addEventListener('click',function(){
+    var t=saida.innerText||saida.textContent||'';
+    function fb(){ var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.focus();a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a); }
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).catch(fb); } else fb();
+    var b=$('cr-copiar'), o=b.textContent; b.textContent='✅ Copiado'; setTimeout(function(){b.textContent=o;},1500);
+  });
+})();
+</script>
 </body>
 </html>

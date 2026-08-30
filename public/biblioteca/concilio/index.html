@@ -49,7 +49,87 @@
   </div>
   <div class="lei"><b>As leis do concílio:</b> ① <b>O Espírito Santo é o verdadeiro intérprete</b> — tudo na dependência dEle (1Co 2:10-14). ② Cristo no centro, doutrina fiel. ③ Original, nunca cópia. ④ Só verdade real (nada inventado; o disputado é sinalizado). ⑤ A glória é de Deus, nunca do homem.</div>
 
-  <a href="consultar.html" style="display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#0f6d78,#0f3d5c);color:#fff;border-radius:14px;padding:16px;font-size:1.08rem;font-weight:800;margin:0 0 10px;box-shadow:0 4px 14px rgba(15,61,92,.22)">✍️ CONSULTAR AGORA — aqui dentro do app →</a>
+  <!-- ══════════ LUPA DO CONCÍLIO — o mestre escolhe + pesquisa na web ══════════ -->
+  <style>
+    .lupa{background:linear-gradient(135deg,#0f3d5c,#0f6d78);border-radius:18px;padding:18px 15px;margin:0 0 14px;box-shadow:0 6px 20px rgba(15,61,92,.28)}
+    .lupa .lp-selo{text-align:center;color:#bfe6ea;font-size:.74rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase}
+    .lupa h2{text-align:center;color:#fff;font-family:Georgia,serif;font-size:1.32rem;margin:5px 0 4px}
+    .lupa .lp-dica{text-align:center;color:#d6e9ec;font-size:.9rem;margin:0 0 12px;line-height:1.45}
+    .lupa textarea{width:100%;border:none;border-radius:12px;padding:13px;font-size:1.04rem;font-family:inherit;color:#12303f;resize:vertical;box-sizing:border-box}
+    .lupa textarea:focus{outline:3px solid #a9d8de}
+    .lupa .lp-btn{display:block;width:100%;margin-top:10px;background:#fbf6ea;color:#0f3d5c;border:none;border-radius:12px;padding:14px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
+    .lupa .lp-btn:disabled{opacity:.6;cursor:default}
+    .lp-quem{text-align:center;color:#cdeef2;font-weight:700;margin:12px 0 0;font-size:.92rem}
+    .lp-saida{margin-top:12px;background:#fff;border-radius:14px;padding:0}
+    .lp-saida:empty{display:none}
+    .lp-saida .lp-in{padding:16px 15px}
+    .lp-saida h3{font-family:Georgia,serif;color:#0f3d5c;font-size:1.06rem;margin:16px 0 7px}
+    .lp-saida h3:first-child{margin-top:0}
+    .lp-saida p{color:#1c2230;font-size:1.04rem;line-height:1.62;margin:0 0 11px;text-align:justify}
+    .lp-saida .lp-li{color:#1c2230;padding-left:6px;margin:0 0 8px;font-size:1.02rem}
+    .lp-saida strong{color:#8a1c1c}
+    .lp-acoes{display:flex;gap:8px;padding:0 15px 15px}
+    .lp-sec{flex:1;background:rgba(15,61,92,.08);border:1px solid #e4e7ec;color:#0f3d5c;border-radius:11px;padding:10px;font-weight:800;font-family:inherit;font-size:.95rem;cursor:pointer}
+  </style>
+  <div class="lupa">
+    <div class="lp-selo">🔎 Lupa do Concílio</div>
+    <h2>Pergunte — o mestre escolhe o servo certo</h2>
+    <div class="lp-dica">Escreva sua pergunta. O mago-mestre aciona sozinho o(s) expositor(es) certo(s), <b>pesquisa na web</b> e traz a resposta — firmada na Palavra.</div>
+    <textarea id="lp-tema" rows="2" placeholder="Ex.: Qual o formato original da Terra segundo a Bíblia?"></textarea>
+    <button id="lp-btn" class="lp-btn">🔎 Perguntar ao Concílio</button>
+    <div id="lp-quem"></div>
+    <div id="lp-saida" class="lp-saida"></div>
+  </div>
+  <script>
+  (function(){
+    var $=function(id){return document.getElementById(id);};
+    var tema=$('lp-tema'), btn=$('lp-btn'), saida=$('lp-saida'), quem=$('lp-quem');
+    var raw='', ocupado=false;
+    function escH(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    function inl(s){return escH(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');}
+    function render(txt){
+      var lines=txt.split(/\r?\n/), h='<div class="lp-in">', para=[];
+      function flush(){ if(para.length){ h+='<p>'+inl(para.join(' '))+'</p>'; para=[]; } }
+      for(var i=0;i<lines.length;i++){
+        var L=lines[i].trim();
+        if(!L){ flush(); continue; }
+        if(/^(📖|📚|✝️|🧙|⚖️|🔎)/.test(L)){ flush(); h+='<h3>'+inl(L)+'</h3>'; continue; }
+        var mH=L.match(/^\*\*(.+?)\*\*:?\s*$/); if(mH){ flush(); h+='<h3>'+inl(mH[1])+'</h3>'; continue; }
+        if(/^[•\-]\s+/.test(L)){ flush(); h+='<div class="lp-li">◆ '+inl(L.replace(/^[•\-]\s+/,''))+'</div>'; continue; }
+        para.push(L);
+      }
+      flush(); h+='</div>';
+      h+='<div class="lp-acoes"><button id="lp-copiar" class="lp-sec">📋 Copiar</button><button id="lp-outro" class="lp-sec">🔁 Outra pergunta</button></div>';
+      saida.innerHTML=h;
+      $('lp-copiar').addEventListener('click',copiar);
+      $('lp-outro').addEventListener('click',function(){ saida.innerHTML=''; tema.value=''; tema.focus(); });
+    }
+    function copiar(){
+      var t=(saida.querySelector('.lp-in')||saida).innerText||'';
+      function fb(){ var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.focus();a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a); }
+      if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).catch(fb); } else fb();
+      var b=$('lp-copiar'), o=b.textContent; b.textContent='✅ Copiado'; setTimeout(function(){b.textContent=o;},1500);
+    }
+    function perguntar(){
+      var t=tema.value.trim(); if(!t||ocupado) return;
+      ocupado=true; btn.disabled=true; btn.textContent='🔎 Consultando…'; raw=''; saida.innerHTML='';
+      quem.textContent='O mestre está escolhendo o servo e pesquisando na web…';
+      fetch('/api/concilio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'lupa',pergunta:t})})
+      .then(function(r){
+        if(!r.body||!r.body.getReader) return r.text().then(function(x){ raw=x; });
+        var reader=r.body.getReader(), dec=new TextDecoder();
+        return (function pump(){ return reader.read().then(function(x){ if(x.done) return; raw+=dec.decode(x.value,{stream:true}); return pump(); }); })();
+      })
+      .then(function(){ quem.textContent=''; render(raw||'Não veio resposta. Tente de novo.'); })
+      .catch(function(e){ quem.textContent=''; saida.innerHTML='<div class="lp-in"><p style="color:#b91c1c">Não deu certo agora: '+escH(e.message||'falha')+'. Tente de novo.</p></div>'; })
+      .then(function(){ ocupado=false; btn.disabled=false; btn.textContent='🔎 Perguntar ao Concílio'; });
+    }
+    btn.addEventListener('click',perguntar);
+    tema.addEventListener('keydown',function(e){ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) perguntar(); });
+  })();
+  </script>
+
+  <a href="consultar.html" style="display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#0f6d78,#0f3d5c);color:#fff;border-radius:14px;padding:16px;font-size:1.08rem;font-weight:800;margin:0 0 10px;box-shadow:0 4px 14px rgba(15,61,92,.22)">✍️ Ou escolha você mesmo um expositor →</a>
   <div style="text-align:center;color:#6b7280;font-size:.9rem;margin:0 0 12px">Não precisa decorar nome: <b>toque no servo</b>, diga o texto, e pronto.</div>
   <a href="manual.html" style="display:block;text-align:center;text-decoration:none;background:#fbf6ea;border:2px solid #ecd9ad;color:#a9791c;border-radius:14px;padding:12px;font-weight:800;margin:0 0 22px">📘 Manual fácil — como usar →</a>
 

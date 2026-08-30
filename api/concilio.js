@@ -53,17 +53,195 @@ const LEI = `⛔ TRAVAS INEGOCIÁVEIS (valem mais que impressionar):
 - Em ponto disputado, sinalize com humildade e mande confirmar com o pastor.
 - Português do Brasil, prosa densa e pastoral, parágrafos de verdade (nada de lista solta sem carne). Use **negrito** só nos destaques.`;
 
+// ── Streaming genérico de chat (reaproveitado por consulta, sermão e mensagem) ──
+async function streamChat(SYS, user, opts) {
+  opts = opts || {};
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return new Response('IA não configurada (falta OPENAI_API_KEY).', { status: 500, headers: CORS });
+  let upstream;
+  try {
+    upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
+      body: JSON.stringify({
+        model: opts.model || 'gpt-4o-mini',
+        stream: true,
+        temperature: opts.temperature != null ? opts.temperature : 0.5,
+        max_tokens: opts.max_tokens || 2200,
+        messages: [{ role: 'system', content: SYS }, { role: 'user', content: user }],
+      }),
+    });
+  } catch (_) {
+    return new Response('Falha ao conectar na IA.', { status: 502, headers: CORS });
+  }
+  if (!upstream.ok || !upstream.body) {
+    const txt = await upstream.text().catch(() => '');
+    return new Response('Erro da IA: ' + txt.slice(0, 200), { status: 502, headers: CORS });
+  }
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  (async () => {
+    const reader = upstream.body.getReader();
+    let buf = '';
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let i;
+        while ((i = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+          if (!line.startsWith('data:')) continue;
+          const data = line.slice(5).trim();
+          if (data === '[DONE]') { await writer.close(); return; }
+          try {
+            const j = JSON.parse(data);
+            const tok = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+            if (tok) await writer.write(enc.encode(tok));
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+    try { await writer.close(); } catch (_) {}
+  })();
+  return new Response(readable, { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
+}
+
+// ── CRIADOR DE SERMÕES — método "Escavador de Pérolas" (13 seções) ──
+const SYS_PEROLA = `Você é o ESCAVADOR DE PÉROLAS BÍBLICAS do app RADAR, do pastor Elias (Assembleias de Deus, Brasil).
+
+A partir do texto/tema que o pastor der, FORJE UM SERMÃO PROFUNDO no método "Escavador de Pérolas" — um estudo que cava o texto até a pérola aparecer.
+
+Comece com estas 3 linhas, exatamente assim (cada uma na sua linha):
+TÍTULO: <um título forte e original>
+REFERÊNCIA: <o(s) versículo(s)-base>
+INTRO: <2 a 4 frases de abertura, densas>
+
+Depois desenvolva EXATAMENTE estas seções, cada uma com o cabeçalho em **negrito** com o emoji, e prosa densa (3 a 6 frases) — nada de tópico solto:
+**📖 Contexto Histórico-Cultural**
+**🔤 Análise Linguística** — 2 a 4 palavras no hebraico/grego que REALMENTE estão no texto, transliteradas em letras latinas (ex.: *shachat*, *kaphar*, *keryx*). NUNCA invente termo nem etimologia; se não tiver certeza, trabalhe pelo sentido em português e diga isso.
+**💎 Pérolas Ocultas**
+**🔗 Conexões Intertextuais** — pode usar bullets com "• "
+**🎯 Aplicação Profética**
+**💥 Detalhes Demolidores**
+**⚔️ Batalha Espiritual**
+**👑 Caráter de Deus**
+**🙏 Aplicação Prática** — bullets com "• "
+**💭 Meditação Profunda**
+**🔥 Declarações de Fé** — bullets com "• ", frases em 1ª pessoa
+**📚 Tesouros Adicionais**
+**✨ Pérola Final** — o fecho TEM QUE QUEIMAR: sobe o tom, martela em frases curtas, chama à decisão e aterrissa em CRISTO. Proibido terminar com síntese morna.
+
+${LEI}
+
+Comece direto no TÍTULO (sem saudação e sem "claro!").`;
+
+// ── CRIADOR DE MENSAGENS — skill "Mensagens para Pregar" (prosa densa) ──
+const SYS_MENSAGEM = `Você escreve uma "MENSAGEM PARA PREGAR" do app RADAR, do pastor Elias (Assembleias de Deus, Brasil). Padrão-ouro: prosa densa e revelatória — NÃO é lista de tópicos, é um rio de revelação correndo.
+
+Comece com estas 2 linhas, exatamente assim (cada uma na sua linha):
+TÍTULO: <título forte e original>
+REFERÊNCIA: <o texto-base>
+
+Depois escreva a mensagem em PROSA (parágrafos de verdade), seguindo o método em ordem:
+1) Pegue o texto/tema e ESCAVE até a pérola aparecer.
+2) GARIMPE O ORIGINAL: 2 a 4 palavras-chave no hebraico/grego com o significado REAL e verificável, transliteradas em letras latinas. NUNCA invente etimologia; se não tiver certeza, não use.
+3) REVELE A TIPOLOGIA: mostre como o texto aponta para Cristo/Evangelho, honesto ao texto, nunca forçado.
+4) ENCADEIE REFERÊNCIAS que se encaixam e iluminam (livro cap:verso corretos).
+5) O FINAL TEM QUE QUEIMAR: o fecho é CRESCENDO, não resumo. Frases curtas de martelo, anáfora que embala, 2ª pessoa no imperativo ("Levanta", "Entra", "Não larga"), exalta o NOME de Jesus, urgência real, e uma última linha-grito curta. PROIBIDO terminar com parágrafo calmo de síntese — se der pra ler o último parágrafo sem levantar a voz, reescreva.
+
+Use **negrito** nas palavras do original e nas ênfases. Português do Brasil.
+
+${LEI}
+
+Comece direto no TÍTULO (sem saudação e sem "claro!").`;
+
+// ── LUPA DO CONCÍLIO — o mago-mestre roteia sozinho + pesquisa na web ──
+async function lupaWeb(pergunta) {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return new Response('IA não configurada (falta OPENAI_API_KEY).', { status: 500, headers: CORS });
+  const roster = ERUDITOS.map((e) => `- ${e.nome} (${e.tag}) — forte em: ${e.forte}`).join('\n');
+  const SYS = `Você é o MAGO-MESTRE do CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil).
+
+O pastor faz UMA pergunta. Sua tarefa:
+1) ESCOLHA INTERNAMENTE, sem perguntar e sem pedir pra ele escolher, o(s) expositor(es) do Concílio mais aptos a responder. Roster disponível:
+${roster}
+2) PESQUISE NA WEB (obrigatório) fontes sólidas e comprometidas com a VERDADE para embasar — o texto bíblico, teologia séria, dados confiáveis. Use a busca de verdade.
+3) RESPONDA de forma clara, satisfatória e pastoral, no método combinado do(s) servo(s) escolhido(s).
+
+⚖️ AUTORIDADE FINAL: a Bíblia e a sã doutrina (Assembleias de Deus, pentecostal clássica). A web serve pra confirmar e enriquecer — NUNCA para adotar erro só porque está publicado. Se a pergunta tocar em ponto disputado (ciência x fé, datas, interpretações), diga com honestidade o que a Escritura afirma, separe o que é certeza do que é opinião, e oriente confirmar com a Palavra e o pastor.
+
+FORMATO da resposta (use os cabeçalhos com emoji):
+📖 RESPOSTA — direta, em prosa densa.
+📚 O QUE SUSTENTA — os textos bíblicos (livro cap:verso corretos) e, quando útil, o que as fontes confiáveis dizem.
+✝️ CRISTO NO CENTRO.
+🧙 QUEM RESPONDEU — no fim, 1 linha dizendo qual(is) servo(s) do Concílio você consultou e por quê.
+
+${LEI}`;
+  let r;
+  try {
+    r = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        tools: [{ type: 'web_search_preview' }],
+        input: [{ role: 'system', content: SYS }, { role: 'user', content: pergunta }],
+      }),
+    });
+  } catch (_) {
+    return new Response('Falha ao conectar na IA.', { status: 502, headers: CORS });
+  }
+  if (!r.ok) {
+    const txt = await r.text().catch(() => '');
+    return new Response('Erro da IA: ' + txt.slice(0, 300), { status: 502, headers: CORS });
+  }
+  let j;
+  try { j = await r.json(); } catch (_) { return new Response('Resposta inválida da IA.', { status: 502, headers: CORS }); }
+  let out = '';
+  try {
+    if (typeof j.output_text === 'string' && j.output_text) out = j.output_text;
+    else if (Array.isArray(j.output)) {
+      for (const item of j.output) {
+        if (item.type === 'message' && Array.isArray(item.content)) {
+          for (const c of item.content) { if ((c.type === 'output_text' || c.type === 'text') && c.text) out += c.text; }
+        }
+      }
+    }
+  } catch (_) {}
+  if (!out.trim()) out = 'Não consegui uma resposta agora. Tente de novo em instantes.';
+  return new Response(out, { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
+}
+
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
   if (req.method !== 'POST') return new Response('POST apenas', { status: 405, headers: CORS });
 
-  let id = '', passagem = '', tipo = 'estudo';
-  try {
-    const b = await req.json();
-    id = (b.erudito || '').toString().trim().slice(0, 60);
-    passagem = (b.passagem || '').toString().trim().slice(0, 400);
-    tipo = (b.tipo || 'estudo').toString().trim();
-  } catch (_) {}
+  let b = {};
+  try { b = await req.json(); } catch (_) {}
+  const acao = (b.acao || '').toString().trim();
+
+  if (acao === 'perola') {
+    const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
+    if (!tema) return new Response('Diga o texto ou o tema do sermão.', { status: 400, headers: CORS });
+    return streamChat(SYS_PEROLA, 'TEXTO / TEMA DO PASTOR: ' + tema, { temperature: 0.6, max_tokens: 3600 });
+  }
+  if (acao === 'mensagem') {
+    const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
+    if (!tema) return new Response('Diga o texto ou o tema da mensagem.', { status: 400, headers: CORS });
+    return streamChat(SYS_MENSAGEM, 'TEXTO / TEMA DO PASTOR: ' + tema, { temperature: 0.65, max_tokens: 3600 });
+  }
+  if (acao === 'lupa') {
+    const pergunta = (b.pergunta || b.tema || b.passagem || '').toString().trim().slice(0, 500);
+    if (!pergunta) return new Response('Escreva a sua pergunta.', { status: 400, headers: CORS });
+    return lupaWeb(pergunta);
+  }
+
+  const id = (b.erudito || '').toString().trim().slice(0, 60);
+  const passagem = (b.passagem || '').toString().trim().slice(0, 400);
+  const tipo = (b.tipo || 'estudo').toString().trim();
 
   const e = ERUDITOS.find((x) => x.id === id);
   if (!e) return new Response('Escolha um erudito da lista.', { status: 400, headers: CORS });
