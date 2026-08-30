@@ -2188,6 +2188,7 @@ function irHome(){
     if(p){ history.replaceState({},'',location.pathname); abrirMod(p); }
     else if(ir==='jovem'){ history.replaceState({},'',location.pathname); abrirMonteCarmelo(); abrirMcGrupo('jovem'); }
     else if(_qs.get('hist')){ history.replaceState({},'',location.pathname); var _hid=_qs.get('hist'); setTimeout(function(){ abrirHistorinhas().then(function(){ verHistorinha(_hid); }); },300); }
+    else if(_qs.get('manual')){ history.replaceState({},'',location.pathname); var _mid=_qs.get('manual'); if(typeof abrirManuais==='function') abrirManuais(); setTimeout(function(){ if(typeof abrirManual==='function') abrirManual(_mid); },140); }
   }
 }
 
@@ -4705,23 +4706,23 @@ let _manualAtual = null, _manualToc = [], _manualSecoes = [], _manualIndiceHtml 
 
 function abrirManuais(){ mostrarTela('tela-manuais'); renderManuais(); }
 function renderManuais(){
+  // Manual de Cerimônias e Declaração de Fé saíram daqui → vão pro Meu Estudo (livros particulares)
   var itens=[];
-  MANUAIS.forEach(function(m){ itens.push({onclick:"abrirManual('"+m.id+"')", titulo:m.titulo, autor:m.autor, capa:m.capa, emoji:m.emoji, cor:m.cor}); });
   itens.push({onclick:"location.href='/biblioteca/biblias/'", titulo:'Bíblias', autor:'A Palavra pra ler', capa:'/biblioteca/biblias/biblia-icone2.png', emoji:'📖', cor:'#8b6a1e'});
   itens.push({onclick:"location.href='/biblioteca/sermoes/'", titulo:'Sermões', autor:'Escavador de Pérolas', emoji:'📜', cor:'#0f6d78'});
-  itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', emoji:'🔥', cor:'#a9791c'});
-  itens.push({onclick:"location.href='/biblioteca/mensagens/'", titulo:'Mensagens para Pregar', autor:'Sermões em prosa', emoji:'🔥', cor:'#8a1c1c'});
-  itens.push({onclick:"location.href='/biblioteca/concilio/'", titulo:'Concílio dos Expositores', autor:'42 expositores', emoji:'📖', cor:'#0f3d5c'});
+  itens.push({onclick:"location.href='/biblioteca/mensagens/'", titulo:'Mensagens', autor:'Sermões em prosa', emoji:'🔥', cor:'#8a1c1c'});
+  itens.push({onclick:"location.href='/biblioteca/concilio/'", titulo:'Concílio', autor:'42 expositores + Lupa', emoji:'📖', cor:'#0f3d5c'});
+  itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', emoji:'🎓', cor:'#a9791c'});
   itens.push({onclick:"location.href='/biblioteca/estudo/'", titulo:'Meu Estudo', autor:'Privado · senha', emoji:'🔒', cor:'#5b3a1a'});
   var box=document.getElementById('manuais-lista');
-  box.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">'+itens.map(function(m){
+  box.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">'+itens.map(function(m){
     var capa = m.capa
-      ? '<img src="'+m.capa+'" style="width:100%;height:100px;object-fit:cover;border-radius:11px;box-shadow:0 3px 10px rgba(0,0,0,.22)" onerror="this.outerHTML=\'<div style=&quot;width:100%;height:100px;border-radius:11px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:38px&quot;>'+m.emoji+'</div>\'">'
-      : '<div style="width:100%;height:100px;border-radius:11px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:38px">'+m.emoji+'</div>';
-    return '<div onclick="'+m.onclick+'" style="background:#fff;border:1px solid #e4e7ec;border-radius:15px;padding:9px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06)">'
+      ? '<img src="'+m.capa+'" style="width:100%;height:70px;object-fit:cover;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.22)" onerror="this.outerHTML=\'<div style=&quot;width:100%;height:70px;border-radius:10px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:30px&quot;>'+m.emoji+'</div>\'">'
+      : '<div style="width:100%;height:70px;border-radius:10px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:30px">'+m.emoji+'</div>';
+    return '<div onclick="'+m.onclick+'" style="background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:7px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06)">'
       +capa
-      +'<div style="font-weight:800;font-size:13.5px;color:#0f3d5c;font-family:\'Playfair Display\',serif;margin-top:7px;line-height:1.18">'+m.titulo+'</div>'
-      +'<div style="font-size:11px;color:#8a6a2f;margin-top:2px;line-height:1.2">'+m.autor+'</div></div>';
+      +'<div style="font-weight:800;font-size:12.5px;color:#0f3d5c;font-family:\'Playfair Display\',serif;margin-top:6px;line-height:1.15">'+m.titulo+'</div>'
+      +'<div style="font-size:10.5px;color:#8a6a2f;margin-top:1px;line-height:1.15">'+m.autor+'</div></div>';
   }).join('')+'</div>';
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

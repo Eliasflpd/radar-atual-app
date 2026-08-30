@@ -173,7 +173,17 @@ function mostrarLista(){
   const L=$('lista'); L.style.display='block';
   const total=MANIFEST.livros.length;
   L.innerHTML=
-    `<div class="busca"><input id="q" placeholder="🔎 Buscar livro, autor, tema ou versículo (ex: Rm 8:28)…" autocomplete="off" enterkeyhint="search"></div>
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 0 14px">
+       <a href="/?manual=cerimonias" style="text-decoration:none;background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:11px;box-shadow:0 2px 8px rgba(15,61,92,.06)">
+         <div style="height:56px;border-radius:10px;background:linear-gradient(135deg,#8b3a4a,#20122a);display:flex;align-items:center;justify-content:center;font-size:26px">⛪</div>
+         <div style="font-weight:800;font-size:12.5px;color:#0f3d5c;margin-top:6px;line-height:1.15">Manual de Cerimônias</div>
+         <div style="font-size:10.5px;color:#8a6a2f;margin-top:1px">Temóteo Ramos de Oliveira</div></a>
+       <a href="/?manual=declaracao-fe" style="text-decoration:none;background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:11px;box-shadow:0 2px 8px rgba(15,61,92,.06)">
+         <img src="/capas/declaracao-fe.jpg" style="width:100%;height:56px;object-fit:cover;border-radius:10px" onerror="this.outerHTML='<div style=&quot;height:56px;border-radius:10px;background:linear-gradient(135deg,#1b3b6f,#20122a);display:flex;align-items:center;justify-content:center;font-size:26px&quot;>📜</div>'">
+         <div style="font-weight:800;font-size:12.5px;color:#0f3d5c;margin-top:6px;line-height:1.15">Declaração de Fé</div>
+         <div style="font-size:10.5px;color:#8a6a2f;margin-top:1px">CPAD — Conselho de Doutrina</div></a>
+     </div>
+     <div class="busca"><input id="q" placeholder="🔎 Buscar livro, autor, tema ou versículo (ex: Rm 8:28)…" autocomplete="off" enterkeyhint="search"></div>
      <div id="motor"></div>
      <div id="resultados"></div>
      <div class="aviso">${total} livros · trancado com a sua senha · <a href="#" onclick="sair();return false" style="color:#8a1c1c">sair/bloquear</a></div>`;
