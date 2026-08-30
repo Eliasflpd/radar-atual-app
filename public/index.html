@@ -762,8 +762,9 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .agv-hub-nome{color:#14233a}
 .agv-hub-sub{color:#5c6470}
 #tela-informativo .sec-label,#tela-silas .sec-label,#tela-templo .sec-label,#tela-monte-carmelo .sec-label{color:#a9791c;opacity:.9}
-#tela-informativo,#tela-silas,#tela-templo,#tela-ceadema,#tela-monte-carmelo,#tela-cartazes,#tela-cartaz,#tela-enviar,#tela-admin{--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
-#tela-admin .std-back{background:rgba(15,61,92,.06)}
+#tela-informativo,#tela-silas,#tela-templo,#tela-ceadema,#tela-monte-carmelo,#tela-cartazes,#tela-cartaz,#tela-enviar,#tela-admin,#tela-manuais{--card:#ffffff;--txt:#1b2436;--sub:#6b7280;--line:rgba(15,61,92,.14)}
+#tela-admin .std-back,#tela-manuais .std-back{background:rgba(15,61,92,.06)}
+#tela-manuais .mod-lista,#tela-manuais .agv-scroll,#tela-manuais .home-scroll{background:#eef3fa}
 #tela-admin .agv-scroll{background:#eef3fa}
 #tela-enviar .agv-scroll{background:#eef3fa}
 #tela-informativo .std-back,#tela-silas .std-back,#tela-templo .std-back,#tela-ceadema .std-back,#tela-monte-carmelo .std-back,#tela-cartazes .std-back,#tela-cartaz .std-back{background:rgba(15,61,92,.06)}
@@ -4704,55 +4705,24 @@ let _manualAtual = null, _manualToc = [], _manualSecoes = [], _manualIndiceHtml 
 
 function abrirManuais(){ mostrarTela('tela-manuais'); renderManuais(); }
 function renderManuais(){
+  var itens=[];
+  MANUAIS.forEach(function(m){ itens.push({onclick:"abrirManual('"+m.id+"')", titulo:m.titulo, autor:m.autor, capa:m.capa, emoji:m.emoji, cor:m.cor}); });
+  itens.push({onclick:"location.href='/biblioteca/biblias/'", titulo:'Bíblias', autor:'A Palavra pra ler', capa:'/biblioteca/biblias/biblia-icone2.png', emoji:'📖', cor:'#8b6a1e'});
+  itens.push({onclick:"location.href='/biblioteca/sermoes/'", titulo:'Sermões', autor:'Escavador de Pérolas', emoji:'📜', cor:'#0f6d78'});
+  itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', emoji:'🔥', cor:'#a9791c'});
+  itens.push({onclick:"location.href='/biblioteca/mensagens/'", titulo:'Mensagens para Pregar', autor:'Sermões em prosa', emoji:'🔥', cor:'#8a1c1c'});
+  itens.push({onclick:"location.href='/biblioteca/concilio/'", titulo:'Concílio dos Expositores', autor:'42 expositores', emoji:'📖', cor:'#0f3d5c'});
+  itens.push({onclick:"location.href='/biblioteca/estudo/'", titulo:'Meu Estudo', autor:'Privado · senha', emoji:'🔒', cor:'#5b3a1a'});
   var box=document.getElementById('manuais-lista');
-  box.innerHTML=MANUAIS.map(function(m){
-    return '<div style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px">'
-      +'<div onclick="abrirManual(\''+m.id+'\')" style="display:flex;gap:14px;align-items:center;cursor:pointer">'
-      +(m.capa
-        ? '<img src="'+m.capa+'" style="width:58px;height:78px;object-fit:cover;border-radius:8px;flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,.4)">'
-        : '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,'+m.cor+',#4a1a24);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">'+m.emoji+'</div>')
-      +'<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">'+m.titulo+'</div>'
-      +'<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">'+m.autor+'</div>'
-      +'<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">'+m.desc+'</div></div>'
-      +'<div style="color:var(--sub);font-size:20px">›</div></div>'
-      +'</div>';
-  }).join('')
-  + '<div onclick="location.href=\'/biblioteca/biblias/\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
-    + '<img src="/biblioteca/biblias/biblia-icone2.png" style="width:60px;height:60px;border-radius:14px;object-fit:cover;flex-shrink:0;box-shadow:0 3px 10px rgba(0,0,0,.4)">'
-    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Bíblias</div>'
-    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">A Palavra de Deus para ler</div>'
-    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Bíblia Sagrada com índice por livro e capítulo. Leitura limpa e agradável.</div></div>'
-    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
-  + '<div onclick="location.href=\'/biblioteca/sermoes/\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
-    + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#0f3d5c,#0f6d78);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">📜</div>'
-    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Sermões</div>'
-    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">Escavador de Pérolas Bíblicas</div>'
-    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Estudos profundos pra edificar — comece por “O Último Prego”.</div></div>'
-    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
-  + '<div onclick="location.href=\'/biblioteca/escola-pregacao/\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
-    + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#0f3d5c,#a9791c);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">🔥</div>'
-    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Escola de Pregação Avivalista</div>'
-    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">Curso · Estudo profundo + Unção</div>'
-    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Aprenda a pregar passo a passo: método indutivo, esboço, unção e um montador de sermão. Interativo.</div></div>'
-    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
-  + '<div onclick="location.href=\'/biblioteca/mensagens/\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
-    + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#8a1c1c,#a9791c);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">🔥</div>'
-    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Mensagens para Pregar</div>'
-    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">Sermões densos em prosa</div>'
-    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Mensagens prontas pra pregar, revelação correndo como um rio — comece por “O Último Prego”.</div></div>'
-    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
-  + '<div onclick="location.href=\'/biblioteca/concilio/\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
-    + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#0f3d5c,#a9791c);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">📖</div>'
-    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Concílio dos Expositores</div>'
-    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">35 servos que Deus usou · o Espírito é o Mestre</div>'
-    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Spurgeon, Stanley Horton, Calvino, Keener… o método deles a serviço da Palavra, na dependência do Espírito.</div></div>'
-    + '<div style="color:var(--sub);font-size:20px">›</div></div>'
-  + '<div onclick="location.href=\'/biblioteca/estudo/\'" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:14px;align-items:center">'
-    + '<div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#0f3d5c,#a9791c);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">🔒</div>'
-    + '<div style="flex:1;min-width:0"><div style="font-weight:800;font-size:16px;color:var(--txt);font-family:\'Playfair Display\',serif">Meu Estudo</div>'
-    + '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-top:2px">Privado · trancado com senha</div>'
-    + '<div style="font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.4">Seus comentários (Champlin e outros), criptografados. Só você abre, de qualquer lugar.</div></div>'
-    + '<div style="color:var(--sub);font-size:20px">›</div></div>';
+  box.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">'+itens.map(function(m){
+    var capa = m.capa
+      ? '<img src="'+m.capa+'" style="width:100%;height:100px;object-fit:cover;border-radius:11px;box-shadow:0 3px 10px rgba(0,0,0,.22)" onerror="this.outerHTML=\'<div style=&quot;width:100%;height:100px;border-radius:11px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:38px&quot;>'+m.emoji+'</div>\'">'
+      : '<div style="width:100%;height:100px;border-radius:11px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:38px">'+m.emoji+'</div>';
+    return '<div onclick="'+m.onclick+'" style="background:#fff;border:1px solid #e4e7ec;border-radius:15px;padding:9px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06)">'
+      +capa
+      +'<div style="font-weight:800;font-size:13.5px;color:#0f3d5c;font-family:\'Playfair Display\',serif;margin-top:7px;line-height:1.18">'+m.titulo+'</div>'
+      +'<div style="font-size:11px;color:#8a6a2f;margin-top:2px;line-height:1.2">'+m.autor+'</div></div>';
+  }).join('')+'</div>';
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function _pHtml(t){ return '<p style="margin:0 0 15px;text-align:justify;-webkit-hyphens:auto;hyphens:auto">'+esc(t)+'</p>'; }
