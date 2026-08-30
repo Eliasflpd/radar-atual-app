@@ -2796,19 +2796,19 @@ function slideHTMLFull(s){
     if(s.link) b+='<a href="'+s.link+'" target="_blank" style="flex:1;text-align:center;background:#a9791c;color:#fff;border-radius:10px;padding:11px;font-weight:800;text-decoration:none;font-size:.9rem">'+esc2(s.linkTxt||'Abrir link')+'</a>';
     b+='<button onclick="compartilharCartaz(\''+s.id+'\')" style="'+(s.link?'':'flex:1;')+'background:#25D366;color:#fff;border:none;border-radius:10px;padding:11px 16px;font-weight:800;font-family:inherit;cursor:pointer">📤</button>';
     ov+='<div style="display:flex;gap:8px;margin-top:10px">'+b+'</div>';
-    return '<div style="position:relative;height:calc(100dvh - 165px);min-height:340px;background:#0a1420;border-radius:14px;overflow:hidden">'
-      +'<div onclick="_abrirImg(\''+s.img+'\')" style="position:absolute;inset:0;background:#0a1420 url(\''+s.img+'\') center/contain no-repeat;cursor:pointer"></div>'
+    return '<div style="position:relative;height:calc(100dvh - 165px);min-height:340px;background:#0a1420;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center">'
+      +'<img src="'+s.img+'" onclick="_abrirImg(\''+s.img+'\')" style="max-width:100%;max-height:100%;display:block;cursor:pointer">'
       +'<div style="position:absolute;left:0;right:0;bottom:0;padding:28px 16px 14px;background:linear-gradient(to top, rgba(8,20,34,.82), rgba(8,20,34,.15) 55%, transparent 80%);color:#fff">'+ov+'</div>'
       +'</div>';
   }
   var media='';
   if(s.media_tipo==='video' && s.media_url){
     var poster=s.poster_url||_ytThumb(s.media_url);
-    var playbtn='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:74px;height:74px;border-radius:50%;background:rgba(0,0,0,.55);border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;padding-left:5px">▶</div></div>';
-    if(poster){ media='<div onclick="_playVideo(\''+encodeURIComponent(s.media_url)+'\')" style="position:relative;height:46vh;min-height:240px;background:#0a1420 url(\''+poster+'\') center/contain no-repeat;border-radius:14px;cursor:pointer">'+playbtn+'</div>'; }
-    else { media='<div onclick="_playVideo(\''+encodeURIComponent(s.media_url)+'\')" style="position:relative;height:44vh;min-height:220px;background:#0a1420;border-radius:14px;cursor:pointer">'+playbtn+'</div>'; }
+    var playbtn='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none"><div style="width:74px;height:74px;border-radius:50%;background:rgba(0,0,0,.55);border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;padding-left:5px">▶</div></div>';
+    media='<div onclick="_playVideo(\''+encodeURIComponent(s.media_url)+'\')" style="position:relative;height:46vh;min-height:240px;background:#0a1420;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer">'
+      +(poster?('<img src="'+poster+'" style="max-width:100%;max-height:100%;display:block">'):'')+playbtn+'</div>';
   } else if(s.media_tipo==='imagem' && s.media_url){
-    media='<div onclick="_abrirImg(\''+s.media_url+'\')" style="height:44vh;min-height:220px;background:#0a1420 url(\''+s.media_url+'\') center/contain no-repeat;border-radius:14px;cursor:pointer"></div>';
+    media='<div onclick="_abrirImg(\''+s.media_url+'\')" style="height:46vh;min-height:240px;background:#0a1420;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer"><img src="'+s.media_url+'" style="max-width:100%;max-height:100%;display:block"></div>';
   }
   var cap='<div style="padding:13px 6px 4px;color:#1b2436">';
   if(s.texto) cap+='<div style="font-size:1rem;line-height:1.55;white-space:pre-line">'+esc2(s.texto)+'</div>';
