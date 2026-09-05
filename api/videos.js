@@ -87,20 +87,26 @@ module.exports = async (req, res) => {
       if(b.acao==='curso'){
         const SENHA=process.env.CURSO_SENHA||'__sem_senha_configurada__';
         if((b.senha||'')!==SENHA){ res.status(403).json({ok:false,erro:'senha'}); return; }
-        const curso=(b.curso||'escatologia-ivan-santos').toString();
         await c.query(`create table if not exists curso_aulas(
           id bigserial primary key, curso text not null default 'escatologia-ivan-santos',
           modulo_ordem int not null, modulo_nome text not null, aula_ordem int not null,
           titulo text not null, tipo text not null default 'video', blob_url text,
           tamanho_bytes bigint, criado_em timestamptz default now())`);
-        const rc=await c.query('select modulo_ordem,modulo_nome,aula_ordem,titulo,tipo,blob_url from curso_aulas where curso=$1 and blob_url is not null order by modulo_ordem,aula_ordem',[curso]);
-        const mods=[]; const idx={};
+        // devolve TODOS os cursos (cada um com seus módulos/aulas) — o app lista vários cursos
+        const rc=await c.query('select curso,modulo_ordem,modulo_nome,aula_ordem,titulo,tipo,blob_url from curso_aulas where blob_url is not null order by curso,modulo_ordem,aula_ordem');
+        const byCurso={};
         for(const row of rc.rows){
-          const k=row.modulo_ordem;
-          if(idx[k]===undefined){ idx[k]=mods.length; mods.push({ordem:row.modulo_ordem,nome:row.modulo_nome,aulas:[]}); }
-          mods[idx[k]].aulas.push({ordem:row.aula_ordem,titulo:row.titulo,tipo:row.tipo,url:row.blob_url});
+          const cs=row.curso||'escatologia-ivan-santos';
+          if(!byCurso[cs]){ byCurso[cs]={curso:cs, modulos:[], idx:{}, total:0}; }
+          const g=byCurso[cs];
+          if(g.idx[row.modulo_ordem]===undefined){ g.idx[row.modulo_ordem]=g.modulos.length; g.modulos.push({ordem:row.modulo_ordem,nome:row.modulo_nome,aulas:[]}); }
+          g.modulos[g.idx[row.modulo_ordem]].aulas.push({ordem:row.aula_ordem,titulo:row.titulo,tipo:row.tipo,url:row.blob_url});
+          g.total++;
         }
-        res.status(200).json({ok:true, curso, total:rc.rows.length, modulos:mods});
+        // ordem: escatologia primeiro, depois os demais (alfabético do slug)
+        const cursos=Object.values(byCurso).map(g=>({curso:g.curso,total:g.total,modulos:g.modulos}));
+        const first=cursos[0]||{curso:'',total:0,modulos:[]};
+        res.status(200).json({ok:true, cursos, curso:first.curso, total:first.total, modulos:first.modulos});
         return;
       }
 

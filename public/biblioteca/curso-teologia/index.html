@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Curso de Teologia — RADAR</title>
+<title>Cursos de Teologia — RADAR</title>
 <style>
   :root{--bg:#f5f7fb;--card:#fff;--txt:#1b2436;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--linha:#e4e7ec;--suave:#6b7480}
   *{box-sizing:border-box;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
@@ -92,7 +92,7 @@
 <body>
   <header>
     <div class="ico">🎓</div>
-    <div class="t"><b>Curso de Teologia</b><span>Área particular — trancada</span></div>
+    <div class="t"><b>Cursos de Teologia</b><span>Área particular — trancada</span></div>
     <button onclick="location.href='/'">🏠</button>
   </header>
 
@@ -126,7 +126,29 @@
 
 <script>
 const $=id=>document.getElementById(id);
-let DADOS=null, PLANO=[], atual=-1;
+let DADOS=null, PLANO=[], atual=-1, CURSO_ATUAL='';
+
+// Metadados (capa/mentor) de cada curso — casa pelo slug 'curso' vindo do banco
+const META={
+  'escatologia-ivan-santos':{
+    titulo:'Escatologia Avançada', prof:'com Ivan Santos', foto:'/img/curso/ivansantos.jpg', badge:'Curso completo',
+    apostila:{href:'apostila.html', sub:'Texto completo — 16 módulos, leitura com índice'},
+    site:{href:'https://ivansantosescatologia.com.br/', label:'ivansantosescatologia.com.br — Ivan Santos'},
+    mentor:{ nome:'Ivan Santos', cargo:'Pastor, teólogo e especialista em Escatologia', foto:'/img/curso/ivansantos.jpg',
+      bio:'Pastor, teólogo e especialista em Escatologia com mais de 10 anos de experiência no ensino e estudo das profecias bíblicas, reconhecido no Brasil como uma das maiores autoridades sobre dispensacionalismo. Ivan dedicou sua carreira a traduzir e revisar as mais importantes obras escatológicas (John Walvoord, Renald Showers, Darrell Bock, Craig Blaising, William Watson, dentre outros), trazendo conhecimento profundo e revelador sobre os últimos tempos.',
+      tags:['Tradutor','Escritor','Teólogo','Especialista em Escatologia Dispensacionalista','Professor em diversos institutos teológicos'],
+      foot:'Seu trabalho vai além da sala de aula — Ivan tem participado dos mais relevantes debates teológicos nos principais programas de TV e podcasts.' }
+  },
+  'giom-teologia':{
+    titulo:'Instituto Teológico GIOM', prof:'com Dr. Wagner Cordeiro', foto:'/img/curso/wagner-cordeiro.jpg', badge:'Curso completo',
+    site:{href:'https://www.instagram.com/giomoficial/', label:'Instituto Teológico GIOM — @giomoficial'},
+    mentor:{ nome:'Dr. Wagner Cordeiro', cargo:'Pastor e professor de teologia', foto:'/img/curso/wagner-cordeiro.jpg',
+      bio:'Pastor e professor à frente do Instituto Teológico GIOM, com ensino teológico semanal voltado a enriquecer o conhecimento da Palavra de Deus. As aulas percorrem temas como Parakletologia, Escatologia, Batalha Espiritual, o Tabernáculo e a Igreja, entre outros.',
+      tags:['Pastor','Professor de Teologia','Instituto Teológico GIOM'],
+      foot:'Conteúdo do Instituto Teológico GIOM Online.' }
+  }
+};
+function meta(slug){ return META[slug] || {titulo:slug, prof:'', foto:'', badge:'Curso'}; }
 
 function marcarVista(u,v){ try{ localStorage.setItem('curso_vista_'+btoa(unescape(encodeURIComponent(u))).slice(0,40), v?'1':''); }catch(_){} }
 function estaVista(u){ try{ return localStorage.getItem('curso_vista_'+btoa(unescape(encodeURIComponent(u))).slice(0,40))==='1'; }catch(_){ return false; } }
@@ -155,44 +177,54 @@ $('senha').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault
 function render(){
   $('gate').style.display='none';
   const cur=$('curso'); cur.style.display='block';
-  let totVistas=0;
-  DADOS.modulos.forEach(m=>{ m.aulas.forEach(a=>{ if(estaVista(a.url)) totVistas++; }); });
-  cur.innerHTML=`
-    <div class="lista-tit">Meus cursos</div>
-    <div class="capa capa-click" onclick="abrirCurso()">
-      <img class="foto" src="/img/curso/ivansantos.jpg" alt="Ivan Santos" onerror="this.style.display='none'">
+  const cursos = DADOS.cursos || (DADOS.modulos ? [{curso:DADOS.curso||'escatologia-ivan-santos', total:DADOS.total, modulos:DADOS.modulos}] : []);
+  let html=`<div class="lista-tit">Meus cursos</div>`;
+  cursos.forEach(cs=>{
+    const m=meta(cs.curso);
+    let vistas=0; cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ if(estaVista(a.url)) vistas++; }));
+    html+=`
+    <div class="capa capa-click" onclick="abrirCurso('${cs.curso}')">
+      <img class="foto" src="${m.foto}" alt="${m.titulo}" onerror="this.style.display='none'">
       <div class="info">
-        <span class="badge">Curso completo</span>
-        <h1>Escatologia Avançada</h1>
-        <div class="prof">com Ivan Santos</div>
+        <span class="badge">${m.badge}</span>
+        <h1>${m.titulo}</h1>
+        <div class="prof">${m.prof}</div>
         <div class="stats">
-          <div><b>${DADOS.modulos.length}</b>módulos</div>
-          <div><b>${DADOS.total}</b>aulas</div>
-          <div><b>${totVistas}</b>assistidas</div>
+          <div><b>${cs.modulos.length}</b>módulos</div>
+          <div><b>${cs.total}</b>aulas</div>
+          <div><b>${vistas}</b>assistidas</div>
         </div>
       </div>
       <span class="capa-arr">›</span>
     </div>`;
+  });
+  cur.innerHTML=html;
   window.scrollTo(0,0);
+}
+function cursoPorSlug(slug){
+  const cursos = DADOS.cursos || [{curso:DADOS.curso, total:DADOS.total, modulos:DADOS.modulos}];
+  return cursos.find(c=>c.curso===slug) || cursos[0];
 }
 
 // NÍVEL 2 — dentro do curso: apostila + módulos/aulas
-function abrirCurso(){
+function abrirCurso(slug){
   const cur=$('curso');
+  const cs=cursoPorSlug(slug); CURSO_ATUAL=cs.curso;
+  const m0=meta(cs.curso);
   PLANO=[];
-  DADOS.modulos.forEach(m=>{ m.aulas.forEach(a=>{ PLANO.push({m:m.nome,mo:m.ordem,a}); }); });
+  cs.modulos.forEach(m=>{ m.aulas.forEach(a=>{ PLANO.push({m:m.nome,mo:m.ordem,a}); }); });
   let html=`
     <button class="voltar-curso" onclick="render()">‹ Meus cursos</button>
     <div class="capa">
-      <img class="foto" src="/img/curso/ivansantos.jpg" alt="Ivan Santos" onerror="this.style.display='none'">
+      <img class="foto" src="${m0.foto}" alt="${m0.titulo}" onerror="this.style.display='none'">
       <div class="info">
-        <span class="badge">Curso completo</span>
-        <h1>Escatologia Avançada</h1>
-        <div class="prof">com Ivan Santos</div>
+        <span class="badge">${m0.badge}</span>
+        <h1>${m0.titulo}</h1>
+        <div class="prof">${m0.prof}</div>
       </div>
     </div>
     <div class="sec-mod" style="margin-top:2px">Módulos e aulas</div>`;
-  DADOS.modulos.forEach((m,mi)=>{
+  cs.modulos.forEach((m,mi)=>{
     html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="toggleMod(${mi})">
       <div class="n">${m.ordem}</div>
       <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${m.aulas.length} aula${m.aulas.length>1?'s':''}</span></div>
@@ -206,36 +238,36 @@ function abrirCurso(){
     });
     html+=`</div></div>`;
   });
-  html+=`
-    <div class="sec-mod" style="margin-top:22px">Material do curso</div>
-    <a class="pdf-link" href="apostila.html">
-      <span style="font-size:22px">📖</span>
-      <span style="flex:1"><b style="display:block;font-size:1rem;color:#0f3d5c">Apostila do Curso</b>
-      <span style="font-size:.82rem;color:#6b551f">Texto completo — 16 módulos, leitura com índice</span></span>
-      <span style="color:#a9791c;font-size:1.2rem">›</span>
-    </a>
-    <a class="pdf-link" href="https://ivansantosescatologia.com.br/" target="_blank" style="background:#eef4f8;border-color:#cfe0ee">
-      <span style="font-size:22px">🌐</span>
-      <span style="flex:1"><b style="display:block;font-size:1rem;color:#0f3d5c">Site oficial do curso</b>
-      <span style="font-size:.82rem;color:#41607a">ivansantosescatologia.com.br — Ivan Santos</span></span>
-      <span style="color:#0f6d78;font-size:1.2rem">›</span>
-    </a>
-    <div class="mentor">
+  if(m0.apostila || m0.site){
+    html+=`<div class="sec-mod" style="margin-top:22px">Material do curso</div>`;
+    if(m0.apostila){
+      html+=`<a class="pdf-link" href="${m0.apostila.href}">
+        <span style="font-size:22px">📖</span>
+        <span style="flex:1"><b style="display:block;font-size:1rem;color:#0f3d5c">Apostila do Curso</b>
+        <span style="font-size:.82rem;color:#6b551f">${m0.apostila.sub}</span></span>
+        <span style="color:#a9791c;font-size:1.2rem">›</span></a>`;
+    }
+    if(m0.site){
+      html+=`<a class="pdf-link" href="${m0.site.href}" target="_blank" style="background:#eef4f8;border-color:#cfe0ee">
+        <span style="font-size:22px">🌐</span>
+        <span style="flex:1"><b style="display:block;font-size:1rem;color:#0f3d5c">Site oficial do curso</b>
+        <span style="font-size:.82rem;color:#41607a">${m0.site.label}</span></span>
+        <span style="color:#0f6d78;font-size:1.2rem">›</span></a>`;
+    }
+  }
+  if(m0.mentor){
+    const mt=m0.mentor;
+    html+=`<div class="mentor">
       <div class="mentor-sel">Conheça o mentor</div>
       <div class="mentor-top">
-        <img src="/img/curso/ivansantos.jpg" alt="Ivan Santos" onerror="this.style.display='none'">
-        <div class="mentor-id"><b>Ivan Santos</b><span>Pastor, teólogo e especialista em Escatologia</span></div>
+        <img src="${mt.foto||m0.foto}" alt="${mt.nome}" onerror="this.style.display='none'">
+        <div class="mentor-id"><b>${mt.nome}</b><span>${mt.cargo}</span></div>
       </div>
-      <p>Pastor, teólogo e especialista em Escatologia com mais de 10 anos de experiência no ensino e estudo das profecias bíblicas, reconhecido no Brasil como uma das maiores autoridades sobre dispensacionalismo. Ivan dedicou sua carreira a traduzir e revisar as mais importantes obras escatológicas (John Walvoord, Renald Showers, Darrell Bock, Craig Blaising, William Watson, dentre outros), trazendo conhecimento profundo e revelador sobre os últimos tempos.</p>
-      <ul class="mentor-list">
-        <li>Tradutor</li>
-        <li>Escritor</li>
-        <li>Teólogo</li>
-        <li>Especialista em Escatologia Dispensacionalista</li>
-        <li>Professor em diversos institutos teológicos</li>
-      </ul>
-      <p class="mentor-foot">Seu trabalho vai além da sala de aula — Ivan tem participado dos mais relevantes debates teológicos nos principais programas de TV e podcasts.</p>
+      <p>${mt.bio}</p>
+      <ul class="mentor-list">${(mt.tags||[]).map(t=>`<li>${t}</li>`).join('')}</ul>
+      ${mt.foot?`<p class="mentor-foot">${mt.foot}</p>`:''}
     </div>`;
+  }
   cur.innerHTML=html;
   window.scrollTo(0,0);
 }
