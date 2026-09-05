@@ -1,4 +1,4 @@
-const V='radar-v132';
+const V='radar-v134';
 const CACHE=['/','/manifest.json','/capa.png'];
 
 self.addEventListener('install',e=>{
@@ -30,8 +30,23 @@ self.addEventListener('fetch',e=>{
   const req=e.request;
   if(req.method!=='GET'){ return; }
   if(req.mode==='navigate' || req.destination==='document'){ e.respondWith(documento(req)); return; }
-  // demais recursos: cache primeiro (rápido), com busca na rede se faltar
-  e.respondWith(caches.match(req).then(r=>r||fetch(req)));
+  // demais recursos (capas/imagens/slides/js/css/json): serve do cache NA HORA e,
+  // ao mesmo tempo, GUARDA o que baixa (stale-while-revalidate) -> depois da 1ª vez com
+  // internet, funciona OFFLINE. Guarda só o que é do próprio app (mesma origem).
+  const url=new URL(req.url);
+  const mesmaOrigem = (url.origin===self.location.origin);
+  e.respondWith(
+    caches.match(req).then(cache=>{
+      const rede=fetch(req).then(resp=>{
+        if(resp && resp.ok && mesmaOrigem){
+          const clone=resp.clone();
+          caches.open(V).then(c=>c.put(req,clone)).catch(()=>{});
+        }
+        return resp;
+      }).catch(()=>cache);
+      return cache || rede;
+    })
+  );
 });
 
 // ═══ NOTIFICAÇÃO com o app FECHADO (apita/vibra o celular) ═══
