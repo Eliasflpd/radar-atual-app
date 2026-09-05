@@ -40,9 +40,11 @@
   .capa .stats{display:flex;gap:18px;margin-top:12px;font-size:.8rem;color:#e7f1f6}
   .capa .stats b{display:block;font-size:1.15rem;color:#ffd98a}
   /* ===== CARD: imagem 16:9 na ESQUERDA + títulos na DIREITA ===== */
-  .ccard{display:flex;gap:13px;align-items:center;background:linear-gradient(135deg,var(--navy),#14507a);border-radius:16px;padding:11px 13px 11px 11px;margin-bottom:14px;cursor:pointer;box-shadow:0 8px 22px rgba(15,61,92,.20);transition:transform .12s;position:relative}
+  .ccard{display:flex;gap:2px;align-items:center;background:linear-gradient(135deg,var(--navy),#14507a);border-radius:16px;padding:11px 13px 11px 10px;margin-bottom:14px;cursor:pointer;box-shadow:0 8px 22px rgba(15,61,92,.20);transition:transform .12s;position:relative;overflow:hidden}
   .ccard:active{transform:scale(.99)}
-  .ccard .cover{width:104px;height:104px;border-radius:12px;object-fit:cover;object-position:center top;flex-shrink:0;background:#0a2233;border:1px solid rgba(255,255,255,.15)}
+  .ccard .cover{width:132px;height:110px;border-radius:12px 0 0 12px;object-fit:cover;object-position:center top;flex-shrink:0;
+    -webkit-mask-image:linear-gradient(to right,#000 52%,rgba(0,0,0,.35) 78%,transparent 100%);
+    mask-image:linear-gradient(to right,#000 52%,rgba(0,0,0,.35) 78%,transparent 100%)}
   .ccard .info{flex:1;min-width:0;color:#fff;padding-right:8px}
   .ccard .info .badge{display:inline-block;background:rgba(255,255,255,.16);color:#ffe4a8;font-size:.62rem;font-weight:800;letter-spacing:.4px;padding:4px 9px;border-radius:20px;text-transform:uppercase}
   .ccard .info h1{margin:7px 0 2px;font-size:1.18rem;line-height:1.13}
@@ -50,7 +52,7 @@
   .ccard .info .stats{display:flex;gap:13px;margin-top:9px;font-size:.66rem;color:#e7f1f6}
   .ccard .info .stats b{display:block;font-size:1rem;color:#ffd98a;line-height:1}
   .ccard .arr{position:absolute;top:50%;right:9px;transform:translateY(-50%);color:#ffd98a;font-size:1.5rem;font-weight:700;opacity:.85}
-  @media(max-width:360px){ .ccard .info h1{font-size:1.06rem} .ccard .cover{width:88px;height:88px} }
+  @media(max-width:360px){ .ccard .info h1{font-size:1.06rem} .ccard .cover{width:116px;height:98px} }
   .pdf-link{display:flex;align-items:center;gap:10px;background:#fff8e6;border:1px solid #f0dcaa;color:#6b551f;border-radius:12px;padding:11px 13px;margin-bottom:14px;text-decoration:none;font-weight:700;font-size:.92rem}
   .lista-tit{font-size:.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#8a91a0;margin:2px 2px 12px}
   .capa-click{cursor:pointer;position:relative;transition:transform .12s}
