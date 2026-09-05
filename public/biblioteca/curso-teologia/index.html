@@ -39,6 +39,18 @@
   .capa .prof{color:#cfe3ec;font-size:.95rem}
   .capa .stats{display:flex;gap:18px;margin-top:12px;font-size:.8rem;color:#e7f1f6}
   .capa .stats b{display:block;font-size:1.15rem;color:#ffd98a}
+  /* ===== TILE 16:9 (lista de cursos) ===== */
+  .ctile{position:relative;aspect-ratio:16/9;width:100%;border-radius:18px;overflow:hidden;margin-bottom:16px;cursor:pointer;background:linear-gradient(135deg,var(--navy),#14507a);box-shadow:0 10px 26px rgba(15,61,92,.22);transition:transform .12s}
+  .ctile:active{transform:scale(.99)}
+  .ctile .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+  .ctile .ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,12,20,.94) 6%,rgba(5,12,20,.55) 42%,rgba(5,12,20,.10) 78%,rgba(5,12,20,.20) 100%)}
+  .ctile .badge{position:absolute;top:13px;left:14px;background:rgba(255,255,255,.18);backdrop-filter:blur(3px);color:#ffe4a8;font-size:.68rem;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:20px;text-transform:uppercase}
+  .ctile .cap{position:absolute;left:16px;right:16px;bottom:14px;color:#fff}
+  .ctile .cap h1{margin:0 0 3px;font-size:1.7rem;line-height:1.12;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+  .ctile .cap .prof{color:#e6eef4;font-size:.95rem;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .ctile .cap .stats{display:flex;gap:20px;margin-top:11px;font-size:.76rem;color:#eaf2f7}
+  .ctile .cap .stats b{display:block;font-size:1.2rem;color:#ffd98a;line-height:1}
+  .ctile .arr{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.35);color:#ffd98a;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700}
   .pdf-link{display:flex;align-items:center;gap:10px;background:#fff8e6;border:1px solid #f0dcaa;color:#6b551f;border-radius:12px;padding:11px 13px;margin-bottom:14px;text-decoration:none;font-weight:700;font-size:.92rem}
   .lista-tit{font-size:.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#8a91a0;margin:2px 2px 12px}
   .capa-click{cursor:pointer;position:relative;transition:transform .12s}
@@ -184,10 +196,12 @@ function render(){
     const m=meta(cs.curso);
     let vistas=0; cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ if(estaVista(a.url)) vistas++; }));
     html+=`
-    <div class="capa capa-click" onclick="abrirCurso('${cs.curso}')">
-      <img class="foto" src="${m.foto}" alt="${m.titulo}" onerror="this.style.display='none'">
-      <div class="info">
-        <span class="badge">${m.badge}</span>
+    <div class="ctile" onclick="abrirCurso('${cs.curso}')">
+      <img class="bg" src="${m.foto}" alt="${m.titulo}" onerror="this.style.display='none'">
+      <div class="ov"></div>
+      <span class="badge">${m.badge}</span>
+      <span class="arr">›</span>
+      <div class="cap">
         <h1>${m.titulo}</h1>
         <div class="prof">${m.prof}</div>
         <div class="stats">
@@ -196,7 +210,6 @@ function render(){
           <div><b>${vistas}</b>assistidas</div>
         </div>
       </div>
-      <span class="capa-arr">›</span>
     </div>`;
   });
   cur.innerHTML=html;
