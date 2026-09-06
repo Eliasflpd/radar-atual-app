@@ -1594,6 +1594,15 @@ html[data-fs="3"] .prl-out{font-size:20px}
         <span class="bh-tile-count" style="background:rgba(63,140,224,.12);color:#3f8ce0">13</span>
         <span class="bh-tile-arr">›</span>
       </div>
+      <div class="bh-tile" style="--tc:#e0699a" onclick="abrirEbdTurma('adolescentes')">
+        <div class="bh-tile-icon">🧑‍🎓</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">LIÇÃO ADOLESCENTES</div>
+          <div class="bh-tile-desc">13 lições — Apóstolo Paulo, o Grande Missionário</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(224,105,154,.12);color:#e0699a">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
     </div>
     <div class="bh-secao" style="margin-top:14px">🔜 Próximo trimestre</div>
     <div onclick="abrirProximoTrimestre()" style="background:linear-gradient(160deg,#0a2a3a,#123a52);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
@@ -3708,6 +3717,21 @@ const EBD_LICOES = {
     {n:11, titulo:'DIGA "NÃO!"',                            licao:'/ebd/juvenis/html/licao-11.html', ppt:null, apoio:'/ebd/juvenis/html/apoio-11.html', mapa:null},
     {n:12, titulo:'CUIDADO COM O EGO E SUAS AMBIÇÕES',      licao:'/ebd/juvenis/html/licao-12.html', ppt:null, apoio:'/ebd/juvenis/html/apoio-12.html', mapa:null},
     {n:13, titulo:'LUTE POR SUA FÉ',                        licao:'/ebd/juvenis/html/licao-13.html', ppt:null, apoio:'/ebd/juvenis/html/apoio-13.html', mapa:null},
+  ],
+  adolescentes:[
+    {n:1,  titulo:'A IGREJA E A ÉPOCA DO APÓSTOLO PAULO',       licao:null, ppt:null, apoio:null, mapa:null},
+    {n:2,  titulo:'A GRANDE MUDANÇA: DE PERSEGUIDOR A PERSEGUIDO', licao:null, ppt:null, apoio:null, mapa:null},
+    {n:3,  titulo:'OS PRIMEIROS PASSOS DE PAULO',               licao:null, ppt:null, apoio:null, mapa:null},
+    {n:4,  titulo:'A PRIMEIRA VIAGEM MISSIONÁRIA',              licao:null, ppt:null, apoio:null, mapa:null},
+    {n:5,  titulo:'O PRIMEIRO DIÁRIO DE VIAGEM',                licao:null, ppt:null, apoio:null, mapa:null},
+    {n:6,  titulo:'O CONCÍLIO DE JERUSALÉM',                    licao:null, ppt:null, apoio:null, mapa:null},
+    {n:7,  titulo:'A SEGUNDA VIAGEM MISSIONÁRIA',               licao:null, ppt:null, apoio:null, mapa:null},
+    {n:8,  titulo:'O SEGUNDO DIÁRIO DE VIAGEM',                 licao:null, ppt:null, apoio:null, mapa:null},
+    {n:9,  titulo:'A TERCEIRA VIAGEM MISSIONÁRIA',              licao:null, ppt:null, apoio:null, mapa:null},
+    {n:10, titulo:'O TERCEIRO DIÁRIO DE VIAGEM',                licao:'/ebd/adolescentes/html/licao-10.html', ppt:null, apoio:'/ebd/adolescentes/html/apoio-10.html', mapa:null},
+    {n:11, titulo:'A PRISÃO E O JULGAMENTO DE PAULO',           licao:'/ebd/adolescentes/html/licao-11.html', ppt:null, apoio:'/ebd/adolescentes/html/apoio-11.html', mapa:null},
+    {n:12, titulo:'OS AMIGOS E COOPERADORES DE PAULO',          licao:'/ebd/adolescentes/html/licao-12.html', ppt:null, apoio:'/ebd/adolescentes/html/apoio-12.html', mapa:null},
+    {n:13, titulo:'A PARTIDA E O LEGADO DE PAULO',              licao:'/ebd/adolescentes/html/licao-13.html', ppt:null, apoio:'/ebd/adolescentes/html/apoio-13.html', mapa:null},
   ]
 };
 
@@ -4057,8 +4081,8 @@ function deletarEvento(id){
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
   const lics=EBD_LICOES[turma];
-  const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS'}[turma]||'LIÇÃO';
-  const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒'}[turma]||'📖';
+  const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS',adolescentes:'LIÇÃO ADOLESCENTES'}[turma]||'LIÇÃO';
+  const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒',adolescentes:'🧑‍🎓'}[turma]||'📖';
   document.getElementById('ebd-turma-titulo').textContent=label;
   document.getElementById('ebd-turma-icon').textContent=icon;
   const body=document.getElementById('ebd-turma-body');
