@@ -4057,8 +4057,8 @@ function deletarEvento(id){
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
   const lics=EBD_LICOES[turma];
-  const label=turma==='adulto'?'LIÇÃO ADULTO':'LIÇÃO JOVEM';
-  const icon=turma==='adulto'?'👨':'🧑';
+  const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS'}[turma]||'LIÇÃO';
+  const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒'}[turma]||'📖';
   document.getElementById('ebd-turma-titulo').textContent=label;
   document.getElementById('ebd-turma-icon').textContent=icon;
   const body=document.getElementById('ebd-turma-body');
