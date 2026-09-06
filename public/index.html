@@ -1585,6 +1585,15 @@ html[data-fs="3"] .prl-out{font-size:20px}
         <span class="bh-tile-count" style="background:rgba(245,166,35,.12);color:#f5a623">13</span>
         <span class="bh-tile-arr">›</span>
       </div>
+      <div class="bh-tile" style="--tc:#3f8ce0" onclick="abrirEbdTurma('juvenis')">
+        <div class="bh-tile-icon">🧒</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">LIÇÃO JUVENIS</div>
+          <div class="bh-tile-desc">13 lições — Fundamentos da Fé nas Epístolas Gerais</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(63,140,224,.12);color:#3f8ce0">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
     </div>
     <div class="bh-secao" style="margin-top:14px">🔜 Próximo trimestre</div>
     <div onclick="abrirProximoTrimestre()" style="background:linear-gradient(160deg,#0a2a3a,#123a52);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
@@ -3684,6 +3693,21 @@ const EBD_LICOES = {
      licao:'/ebd/jovem/licoes/licao-12.docx',ppt:null, apoio:null, mapa:null},
     {n:13, titulo:'ESPERANÇA EM MEIO AO CAOS: AGUARDANDO A VINDA DO REI',
      licao:'/ebd/jovem/licoes/licao-13.docx',ppt:null, apoio:null, mapa:null},
+  ],
+  juvenis:[
+    {n:1,  titulo:'A SUPERIORIDADE DE CRISTO',              licao:null, ppt:null, apoio:null, mapa:null},
+    {n:2,  titulo:'CRISTO ENTENDE VOCÊ',                    licao:null, ppt:null, apoio:null, mapa:null},
+    {n:3,  titulo:'A FÉ E O NOSSO RELACIONAMENTO COM DEUS', licao:null, ppt:null, apoio:null, mapa:null},
+    {n:4,  titulo:'MAIS QUE VENCEDOR: PROVAS E TENTAÇÕES',  licao:null, ppt:null, apoio:null, mapa:null},
+    {n:5,  titulo:'FÉ E OBRAS',                             licao:null, ppt:null, apoio:null, mapa:null},
+    {n:6,  titulo:'UMA ARMA PODEROSAMENTE MORTAL',          licao:null, ppt:null, apoio:null, mapa:null},
+    {n:7,  titulo:'A SANTIFICAÇÃO NECESSÁRIA',              licao:null, ppt:null, apoio:null, mapa:null},
+    {n:8,  titulo:'O PROPÓSITO DO SOFRIMENTO',              licao:null, ppt:null, apoio:null, mapa:null},
+    {n:9,  titulo:'INIMIGO ÍNTIMO',                         licao:null, ppt:null, apoio:null, mapa:null},
+    {n:10, titulo:'UMA CARTA PARA VOCÊ',                    licao:'/ebd/juvenis/html/licao-10.html', ppt:null, apoio:'/ebd/juvenis/html/apoio-10.html', mapa:null},
+    {n:11, titulo:'DIGA "NÃO!"',                            licao:'/ebd/juvenis/html/licao-11.html', ppt:null, apoio:'/ebd/juvenis/html/apoio-11.html', mapa:null},
+    {n:12, titulo:'CUIDADO COM O EGO E SUAS AMBIÇÕES',      licao:'/ebd/juvenis/html/licao-12.html', ppt:null, apoio:'/ebd/juvenis/html/apoio-12.html', mapa:null},
+    {n:13, titulo:'LUTE POR SUA FÉ',                        licao:'/ebd/juvenis/html/licao-13.html', ppt:null, apoio:'/ebd/juvenis/html/apoio-13.html', mapa:null},
   ]
 };
 
@@ -4059,7 +4083,7 @@ function abrirEbdTurma(turma){
           :'<div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.62);color:#fff;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px">🔒 Em breve</div>';
         return `<div class="ebd-item ppt-item" style="display:block;padding:0;overflow:hidden;margin-bottom:12px${lic.n>_at?';opacity:.9':''}" onclick="abrirLicaoDetalhe(${idx})">
           <div style="position:relative">
-            <img src="/ebd/adulto/img/licao-${nn}.jpg" style="width:100%;display:block" onerror="this.style.display='none'">
+            <img src="/ebd/${ebdTurmaAtual}/img/licao-${nn}.jpg" style="width:100%;display:block" onerror="this.style.display='none'">
             ${badge}
           </div>
           <div style="display:flex;align-items:center;gap:10px;padding:11px 14px">
@@ -4118,7 +4142,7 @@ function abrirLicaoDetalhe(idx){
   document.getElementById('ebd-det-titulo').textContent=nLabel;
   document.getElementById('ebd-det-sub').textContent=lic.titulo;
   const n=String(lic.n>0?lic.n:0).padStart(2,'0');
-  const _licBanner=(ebdTurmaAtual==='adulto'&&lic.n>=1&&lic.n<=13)?`<img src="/ebd/adulto/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`:'';
+  const _licBanner=(lic.n>=1&&lic.n<=13)?`<img src="/ebd/${ebdTurmaAtual}/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`:'';
   const itens=[
     {num:'1',icon:'📝',nome:'LIÇÃO',
      ativo:!!lic.licao,
@@ -5066,9 +5090,10 @@ if('serviceWorker' in navigator){
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
     reg.addEventListener('updatefound',function(){ ativar(reg.installing); });
   }).catch(function(){});
-  var _recarregou=false;
   navigator.serviceWorker.addEventListener('controllerchange',function(){
-    if(_recarregou) return; _recarregou=true; location.reload();   // atualiza SOZINHO, sem botão, sem travar
+    // trava por SESSÃO (sobrevive ao reload) — impede LOOP de recarregar que travava o app
+    try{ if(sessionStorage.getItem('_swReloaded')==='1') return; sessionStorage.setItem('_swReloaded','1'); }catch(e){}
+    location.reload();
   });
   // reforço: checa versão nova toda vez que o app volta pro primeiro plano
   document.addEventListener('visibilitychange',function(){ if(!document.hidden){ navigator.serviceWorker.getRegistration().then(function(r){ if(r) r.update(); }); } });
