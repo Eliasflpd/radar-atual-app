@@ -1603,6 +1603,15 @@ html[data-fs="3"] .prl-out{font-size:20px}
         <span class="bh-tile-count" style="background:rgba(224,105,154,.12);color:#e0699a">13</span>
         <span class="bh-tile-arr">›</span>
       </div>
+      <div class="bh-tile" style="--tc:#2bb673" onclick="abrirEbdTurma('juniores')">
+        <div class="bh-tile-icon">🧒</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">LIÇÃO JUNIORES</div>
+          <div class="bh-tile-desc">13 lições — O Tempo dos Juízes</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(43,182,115,.12);color:#2bb673">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
     </div>
     <div class="bh-secao" style="margin-top:14px">🔜 Próximo trimestre</div>
     <div onclick="abrirProximoTrimestre()" style="background:linear-gradient(160deg,#0a2a3a,#123a52);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
@@ -3732,6 +3741,21 @@ const EBD_LICOES = {
     {n:11, titulo:'A PRISÃO E O JULGAMENTO DE PAULO',           licao:'/ebd/adolescentes/html/licao-11.html', ppt:null, apoio:'/ebd/adolescentes/html/apoio-11.html', mapa:null},
     {n:12, titulo:'OS AMIGOS E COOPERADORES DE PAULO',          licao:'/ebd/adolescentes/html/licao-12.html', ppt:null, apoio:'/ebd/adolescentes/html/apoio-12.html', mapa:null},
     {n:13, titulo:'A PARTIDA E O LEGADO DE PAULO',              licao:'/ebd/adolescentes/html/licao-13.html', ppt:null, apoio:'/ebd/adolescentes/html/apoio-13.html', mapa:null},
+  ],
+  juniores:[
+    {n:1,  titulo:'A DESOBEDIÊNCIA DO POVO DE DEUS',            licao:null, ppt:null, apoio:null, mapa:null},
+    {n:2,  titulo:'DEUS ESCOLHE LIBERTADORES',                 licao:null, ppt:null, apoio:null, mapa:null},
+    {n:3,  titulo:'OTNIEL E OS MESOPOTÂMIOS',                  licao:null, ppt:null, apoio:null, mapa:null},
+    {n:4,  titulo:'EÚDE E OS MOABITAS',                        licao:null, ppt:null, apoio:null, mapa:null},
+    {n:5,  titulo:'SANGAR E OS FILISTEUS',                     licao:null, ppt:null, apoio:null, mapa:null},
+    {n:6,  titulo:'DÉBORA E BARAQUE NA BATALHA CONTRA OS CANANEUS', licao:null, ppt:null, apoio:null, mapa:null},
+    {n:7,  titulo:'GIDEÃO ENFRENTA OS MIDIANITAS',             licao:null, ppt:null, apoio:null, mapa:null},
+    {n:8,  titulo:'ABIMELEQUE LIDERA ISRAEL',                  licao:null, ppt:null, apoio:null, mapa:null},
+    {n:9,  titulo:'JEFTÉ LIVRA ISRAEL DOS AMONITAS',           licao:null, ppt:null, apoio:null, mapa:null},
+    {n:10, titulo:'JEFTÉ BATALHA CONTRA OS EFRAIMITAS',        licao:'/ebd/juniores/html/licao-10.html', ppt:null, apoio:'/ebd/juniores/html/apoio-10.html', mapa:null},
+    {n:11, titulo:'O NASCIMENTO E VIDA DE SANSÃO',             licao:'/ebd/juniores/html/licao-11.html', ppt:null, apoio:'/ebd/juniores/html/apoio-11.html', mapa:null},
+    {n:12, titulo:'SANSÃO LIVRA ISRAEL DOS FILISTEUS',         licao:'/ebd/juniores/html/licao-12.html', ppt:null, apoio:'/ebd/juniores/html/apoio-12.html', mapa:null},
+    {n:13, titulo:'MICA E O LEVITA EM SUA CASA',               licao:'/ebd/juniores/html/licao-13.html', ppt:null, apoio:'/ebd/juniores/html/apoio-13.html', mapa:null},
   ]
 };
 
@@ -4081,8 +4105,8 @@ function deletarEvento(id){
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
   const lics=EBD_LICOES[turma];
-  const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS',adolescentes:'LIÇÃO ADOLESCENTES'}[turma]||'LIÇÃO';
-  const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒',adolescentes:'🧑‍🎓'}[turma]||'📖';
+  const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS',adolescentes:'LIÇÃO ADOLESCENTES',juniores:'LIÇÃO JUNIORES'}[turma]||'LIÇÃO';
+  const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒',adolescentes:'🧑‍🎓',juniores:'🧒'}[turma]||'📖';
   document.getElementById('ebd-turma-titulo').textContent=label;
   document.getElementById('ebd-turma-icon').textContent=icon;
   const body=document.getElementById('ebd-turma-body');
