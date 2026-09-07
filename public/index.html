@@ -1614,13 +1614,24 @@ html[data-fs="3"] .prl-out{font-size:20px}
       </div>
     </div>
     <div class="bh-secao" style="margin-top:14px">🔜 Próximo trimestre</div>
-    <div onclick="abrirProximoTrimestre()" style="background:linear-gradient(160deg,#0a2a3a,#123a52);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
+    <div onclick="abrirEbdTurma('adulto4')" style="background:linear-gradient(160deg,#0a2a3a,#123a52);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3);margin-bottom:10px">
       <div style="display:flex;gap:12px;padding:12px;align-items:center">
-        <img src="/ebd/adulto/img/proximo-4tri.jpg" style="width:82px;height:108px;object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">
+        <img src="/ebd/adulto4/img/licao-01.jpg" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">
         <div style="min-width:0">
           <div style="display:inline-block;background:rgba(0,0,0,.5);color:#f0d488;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:999px;margin-bottom:6px">🔒 EM BREVE · OUT 2026</div>
           <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;line-height:1.15">O Deus da Aliança</div>
           <div style="font-size:12px;color:#cfe0ea;margin-top:2px">Adultos · 4º Tri 2026 · Deuteronômio</div>
+          <div style="font-size:11.5px;color:#f0d488;margin-top:6px;font-weight:700">Ver as 13 lições ›</div>
+        </div>
+      </div>
+    </div>
+    <div onclick="abrirEbdTurma('jovem4')" style="background:linear-gradient(160deg,#2a0a3a,#3a1252);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
+      <div style="display:flex;gap:12px;padding:12px;align-items:center">
+        <img src="/ebd/jovem4/img/licao-01.jpg" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">
+        <div style="min-width:0">
+          <div style="display:inline-block;background:rgba(0,0,0,.5);color:#f0d488;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:999px;margin-bottom:6px">🔒 EM BREVE · OUT 2026</div>
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;line-height:1.15">Alegria em Cristo — Filipenses</div>
+          <div style="font-size:12px;color:#cfe0ea;margin-top:2px">Jovens · 4º Tri 2026 · Filipenses</div>
           <div style="font-size:11.5px;color:#f0d488;margin-top:6px;font-weight:700">Ver as 13 lições ›</div>
         </div>
       </div>
@@ -2996,6 +3007,8 @@ function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 
 // ══ AUTO-EXPIRAÇÃO DE DATAS (remove avisos vencidos, deixa só de hoje em diante) ══
 function _hoje0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
+/* PRÓXIMO TRIMESTRE (turmas *4): tudo travado até o 4º Trim começar (04/10/2026). */
+function ebd4TriTravado(){ return _hoje0() < new Date(2026,9,4); }
 function _mesNum(s){
   var m={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
   s=(''+s).toLowerCase().slice(0,3);
@@ -3756,6 +3769,36 @@ const EBD_LICOES = {
     {n:11, titulo:'O NASCIMENTO E VIDA DE SANSÃO',             licao:'/ebd/juniores/html/licao-11.html', ppt:null, apoio:'/ebd/juniores/html/apoio-11.html', mapa:null},
     {n:12, titulo:'SANSÃO LIVRA ISRAEL DOS FILISTEUS',         licao:'/ebd/juniores/html/licao-12.html', ppt:null, apoio:'/ebd/juniores/html/apoio-12.html', mapa:null},
     {n:13, titulo:'MICA E O LEVITA EM SUA CASA',               licao:'/ebd/juniores/html/licao-13.html', ppt:null, apoio:'/ebd/juniores/html/apoio-13.html', mapa:null},
+  ],
+  adulto4:[
+    {n:1,  titulo:'Deuteronômio: O Livro da Aliança',              licao:'/ebd/adulto4/html/licao-01.html', ppt:null, apoio:null, mapa:null},
+    {n:2,  titulo:'Recapitulando a Jornada no Deserto',            licao:'/ebd/adulto4/html/licao-02.html', ppt:null, apoio:null, mapa:null},
+    {n:3,  titulo:'A Fidelidade de Deus diante da Infidelidade de Israel', licao:'/ebd/adulto4/html/licao-03.html', ppt:null, apoio:null, mapa:null},
+    {n:4,  titulo:'O Chamado à Obediência',                        licao:'/ebd/adulto4/html/licao-04.html', ppt:null, apoio:null, mapa:null},
+    {n:5,  titulo:'O Grande Mandamento',                           licao:'/ebd/adulto4/html/licao-05.html', ppt:null, apoio:null, mapa:null},
+    {n:6,  titulo:'A Aliança e as Bênçãos da Obediência',          licao:'/ebd/adulto4/html/licao-06.html', ppt:null, apoio:null, mapa:null},
+    {n:7,  titulo:'Maldições e Bênçãos da Aliança',                licao:'/ebd/adulto4/html/licao-07.html', ppt:null, apoio:null, mapa:null},
+    {n:8,  titulo:'Escolhendo a Vida ou a Morte',                  licao:'/ebd/adulto4/html/licao-08.html', ppt:null, apoio:null, mapa:null},
+    {n:9,  titulo:'A Sucessão de Moisés',                          licao:'/ebd/adulto4/html/licao-09.html', ppt:null, apoio:null, mapa:null},
+    {n:10, titulo:'O Cântico de Moisés: Advertência e Esperança',  licao:'/ebd/adulto4/html/licao-10.html', ppt:null, apoio:null, mapa:null},
+    {n:11, titulo:'A Bênção Final de Moisés',                      licao:'/ebd/adulto4/html/licao-11.html', ppt:null, apoio:null, mapa:null},
+    {n:12, titulo:'A Morte de Moisés e a Continuidade da Promessa',licao:'/ebd/adulto4/html/licao-12.html', ppt:null, apoio:null, mapa:null},
+    {n:13, titulo:'O Cumprimento de Deuteronômio em Cristo',       licao:'/ebd/adulto4/html/licao-13.html', ppt:null, apoio:null, mapa:null},
+  ],
+  jovem4:[
+    {n:1,  titulo:'Carta aos Filipenses: Um Chamado à Alegria',    licao:'/ebd/jovem4/html/licao-01.html', ppt:null, apoio:null, mapa:null},
+    {n:2,  titulo:'Uma Vida Digna do Evangelho',                   licao:'/ebd/jovem4/html/licao-02.html', ppt:null, apoio:null, mapa:null},
+    {n:3,  titulo:'A Humildade de Cristo: O Exemplo Supremo',      licao:'/ebd/jovem4/html/licao-03.html', ppt:null, apoio:null, mapa:null},
+    {n:4,  titulo:'Brilhe a Luz de Cristo em Meio à Geração Corrompida', licao:'/ebd/jovem4/html/licao-04.html', ppt:null, apoio:null, mapa:null},
+    {n:5,  titulo:'Exemplo de Servos Fiéis: Timóteo e Epafrodito', licao:'/ebd/jovem4/html/licao-05.html', ppt:null, apoio:null, mapa:null},
+    {n:6,  titulo:'Guardando-se dos Falsos Mestres',               licao:'/ebd/jovem4/html/licao-06.html', ppt:null, apoio:null, mapa:null},
+    {n:7,  titulo:'O Alvo Supremo: Conhecer a Cristo',             licao:'/ebd/jovem4/html/licao-07.html', ppt:null, apoio:null, mapa:null},
+    {n:8,  titulo:'Unidade e Alegria no Senhor',                   licao:'/ebd/jovem4/html/licao-08.html', ppt:null, apoio:null, mapa:null},
+    {n:9,  titulo:'A Paz de Deus Guarda o Coração',                licao:'/ebd/jovem4/html/licao-09.html', ppt:null, apoio:null, mapa:null},
+    {n:10, titulo:'O Pensar Cristão: O que Ocupa a Sua Mente?',    licao:'/ebd/jovem4/html/licao-10.html', ppt:null, apoio:null, mapa:null},
+    {n:11, titulo:'Contentamento em Toda e Qualquer Situação',     licao:'/ebd/jovem4/html/licao-11.html', ppt:null, apoio:null, mapa:null},
+    {n:12, titulo:'Generosidade e Cuidado com a Obra de Deus',     licao:'/ebd/jovem4/html/licao-12.html', ppt:null, apoio:null, mapa:null},
+    {n:13, titulo:'Saudações Finais, Comunhão e Bênçãos',          licao:'/ebd/jovem4/html/licao-13.html', ppt:null, apoio:null, mapa:null},
   ]
 };
 
@@ -4105,8 +4148,8 @@ function deletarEvento(id){
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
   const lics=EBD_LICOES[turma];
-  const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS',adolescentes:'LIÇÃO ADOLESCENTES',juniores:'LIÇÃO JUNIORES'}[turma]||'LIÇÃO';
-  const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒',adolescentes:'🧑‍🎓',juniores:'🧒'}[turma]||'📖';
+  const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS',adolescentes:'LIÇÃO ADOLESCENTES',juniores:'LIÇÃO JUNIORES',adulto4:'ADULTO · 4º TRI',jovem4:'JOVEM · 4º TRI'}[turma]||'LIÇÃO';
+  const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒',adolescentes:'🧑‍🎓',juniores:'🧒',adulto4:'📘',jovem4:'📗'}[turma]||'📖';
   document.getElementById('ebd-turma-titulo').textContent=label;
   document.getElementById('ebd-turma-icon').textContent=icon;
   const body=document.getElementById('ebd-turma-body');
@@ -4119,7 +4162,7 @@ function abrirEbdTurma(turma){
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
     body.innerHTML=main.map(lic=>{
       const idx=lics.indexOf(lic);
-      const isLocked=(lic.n!==licaoDaSemana()); /* só a lição do domingo atual fica aberta (pedido do Elias) */
+      const isLocked=turma.endsWith('4') ? ebd4TriTravado() : (lic.n!==licaoDaSemana()); /* 4º tri: tudo travado até OUT; senão só a do domingo atual */
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
       if(ebdTurmaAtual==='adulto' && lic.n>=1 && lic.n<=13){
         const nn=String(lic.n).padStart(2,'0');
@@ -4183,7 +4226,7 @@ function fecharEbdTurma(){
 
 function abrirLicaoDetalhe(idx){
   const _lc=EBD_LICOES[ebdTurmaAtual][idx];
-  const _detLocked=!!(_lc && _lc.n>0 && _lc.n>licaoDaSemana());  /* só FUTURA trava o conteúdo; antiga e atual abrem */
+  const _detLocked=ebdTurmaAtual.endsWith('4') ? ebd4TriTravado() : !!(_lc && _lc.n>0 && _lc.n>licaoDaSemana());  /* 4º tri travado até OUT; senão só FUTURA trava */
   ebdDetalheIdx=idx;
   const lic=EBD_LICOES[ebdTurmaAtual][idx];
   const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
