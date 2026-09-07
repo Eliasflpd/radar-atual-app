@@ -4160,7 +4160,7 @@ function abrirEbdTurma(turma){
     const main=lics.filter(l=>l.n>0);
     const extra=lics.filter(l=>l.n===0);
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
-    const _capaHero=`<div style="margin:0 0 16px;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.32)"><img src="/ebd/${turma}/img/capa.jpg" loading="lazy" style="width:100%;display:block" onerror="this.parentNode.style.display='none'"></div>`;
+    const _capaHero=`<div style="margin:0 0 16px;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.32)"><img src="/ebd/${turma}/img/capa.jpg" style="width:100%;display:block" onerror="this.parentNode.style.display='none'"></div>`;
     body.innerHTML=_capaHero+main.map(lic=>{
       const idx=lics.indexOf(lic);
       const isLocked=turma.endsWith('4') ? ebd4TriTravado() : (lic.n!==licaoDaSemana()); /* 4º tri: tudo travado até OUT; senão só a do domingo atual */
