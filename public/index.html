@@ -4160,13 +4160,35 @@ function ebdToggleConcluida(turma,n){
   return ebdConcluida(turma,n);
 }
 function ebdProgTurma(turma){
-  const lics=EBD_LICOES[turma]||[]; const total=lics.filter(l=>l.n>0).length;
-  const p=ebdProg()[turma]||{}; const feitas=lics.filter(l=>l.n>0&&p[l.n]).length;
+  const lics=EBD_LICOES[turma]||[];
+  const comConteudo=lics.filter(l=>l.n>0 && (l.licao||l.apoio||l.ppt)); // só conta lição que tem conteúdo
+  const total=comConteudo.length;
+  const p=ebdProg()[turma]||{}; const feitas=comConteudo.filter(l=>p[l.n]).length;
   return {feitas,total};
 }
 
+// ══ PIN MESTRE (0607) — abre QUALQUER bloqueio do app ════════════
+// O Elias nem sempre está por perto; com o PIN ele destrava tudo (lições futuras,
+// 4º tri, configs). Fica guardado no aparelho até ele sair (basta digitar 1 vez).
+function pinMaster(){ try{ return localStorage.getItem('radar_pin_master')==='1'; }catch(_){ return false; } }
+function pedirPinMaster(aposOk){
+  const p=prompt('🔒 Conteúdo bloqueado.\nDigite o PIN para abrir:');
+  if(p===null) return;
+  if(p.trim()==='0607'){ try{ localStorage.setItem('radar_pin_master','1'); }catch(_){ } if(typeof showToast==='function') showToast('🔓 Desbloqueado com PIN'); if(aposOk) aposOk(); }
+  else if(typeof showToast==='function') showToast('PIN incorreto');
+}
+
+// ══ PRÉVIA da lição bloqueada (capa + Texto Áureo + Verdade Prática) ══
+let EBD_PREVIA=null;
+function carregarPrevia(cb){
+  if(EBD_PREVIA){ if(cb)cb(); return; }
+  fetch('/ebd/previa.json').then(r=>r.json()).then(d=>{ EBD_PREVIA=d||{}; if(cb)cb(); }).catch(()=>{ EBD_PREVIA={}; if(cb)cb(); });
+}
+function previaLic(turma,n){ try{ return (EBD_PREVIA&&EBD_PREVIA[turma]&&EBD_PREVIA[turma][String(n)])||null; }catch(_){ return null; } }
+
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
+  carregarPrevia();
   const lics=EBD_LICOES[turma];
   const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS',adolescentes:'LIÇÃO ADOLESCENTES',juniores:'LIÇÃO JUNIORES',adulto4:'ADULTO · 4º TRI',jovem4:'JOVEM · 4º TRI'}[turma]||'LIÇÃO';
   const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒',adolescentes:'🧑‍🎓',juniores:'🧒',adulto4:'📘',jovem4:'📗'}[turma]||'📖';
@@ -4196,7 +4218,7 @@ function abrirEbdTurma(turma){
       const _feita=ebdConcluida(turma,lic.n);
       const _selo=_feita?'<div style="position:absolute;top:10px;left:10px;background:#25D366;color:#fff;font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.4)">✓ CONCLUÍDA</div>':'';
       const _selo2=_feita?'<span style="background:#25D366;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;flex-shrink:0">✓</span>':'';
-      const isLocked=turma.endsWith('4') ? ebd4TriTravado() : (lic.n!==licaoDaSemana()); /* 4º tri: tudo travado até OUT; senão só a do domingo atual */
+      const isLocked=pinMaster()?false:(turma.endsWith('4') ? ebd4TriTravado() : (lic.n!==licaoDaSemana())); /* PIN mestre abre tudo; senão 4º tri travado até OUT e só a do domingo atual */
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
       if(ebdTurmaAtual==='adulto' && lic.n>=1 && lic.n<=13){
         const nn=String(lic.n).padStart(2,'0');
@@ -4219,11 +4241,11 @@ function abrirEbdTurma(turma){
         </div>`;
       }
       if(isLocked){
-        return `<div class="ebd-item" style="opacity:.42;cursor:pointer" onclick="toastBloqueado()">
+        return `<div class="ebd-item ppt-item" style="opacity:.72;cursor:pointer" onclick="abrirLicaoDetalhe(${idx})">
           <div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
           <div class="ebd-item-info">
             <div class="ebd-item-titulo">${lic.titulo}</div>
-            <div class="ebd-item-meta">Em breve</div>
+            <div class="ebd-item-meta">🔒 Ver prévia · abre com PIN</div>
           </div>
           <span style="font-size:18px;flex-shrink:0">🔒</span>
         </div>`;
@@ -4260,7 +4282,8 @@ function fecharEbdTurma(){
 
 function abrirLicaoDetalhe(idx){
   const _lc=EBD_LICOES[ebdTurmaAtual][idx];
-  const _detLocked=ebdTurmaAtual.endsWith('4') ? ebd4TriTravado() : !!(_lc && _lc.n>0 && _lc.n>licaoDaSemana());  /* 4º tri travado até OUT; senão só FUTURA trava */
+  const _detLocked=pinMaster()?false:(ebdTurmaAtual.endsWith('4') ? ebd4TriTravado() : !!(_lc && _lc.n>0 && _lc.n>licaoDaSemana()));  /* PIN mestre abre; senão 4º tri travado até OUT e só a FUTURA trava */
+  const _needPrevia=_detLocked && !EBD_PREVIA;
   ebdDetalheIdx=idx;
   const lic=EBD_LICOES[ebdTurmaAtual][idx];
   const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
@@ -4290,7 +4313,23 @@ function abrirLicaoDetalhe(idx){
   ];
   const _fnd=lic.n>0&&ebdConcluida(ebdTurmaAtual,lic.n);
   const _btnConcluir=(lic.n>0&&!_detLocked)?`<button id="ebd-btn-concluir" onclick="ebdMarcarConcluida(${idx})" style="width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${_fnd?'background:#25D366;color:#fff':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)'}">${_fnd?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA'}</button>`:'';
-  document.getElementById('ebd-det-body').innerHTML=_licBanner+_btnConcluir+itens.map(it=>{
+  // PRÉVIA da lição bloqueada: capa (acima) + Texto Áureo + Verdade Prática + botão de PIN
+  const _pv=_detLocked?previaLic(ebdTurmaAtual,lic.n):null;
+  const _previaBlk=_detLocked?`<div style="background:linear-gradient(160deg,#0d1826,#12233a);border:1px solid rgba(240,226,184,.22);border-radius:16px;padding:16px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:${(_pv&&(_pv.aureo||_pv.pratica))?'13px':'4px'}">
+        <span style="font-size:22px">🔒</span>
+        <div><div style="font-size:13px;font-weight:800;color:#f0dca0;letter-spacing:.4px">PRÉVIA DA LIÇÃO</div>
+        <div style="font-size:11.5px;color:var(--sub)">O conteúdo completo abre no domingo — ou agora com o PIN</div></div>
+      </div>
+      ${_pv&&_pv.aureo?`<div style="background:rgba(201,161,74,.10);border:1px solid rgba(201,161,74,.28);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:900;color:#e8c877;letter-spacing:2px;margin-bottom:6px">✨ TEXTO ÁUREO</div>
+        <div style="font-size:14.5px;line-height:1.55;color:#efe7d2;font-style:italic">${_pv.aureo}</div></div>`:''}
+      ${_pv&&_pv.pratica?`<div style="background:rgba(52,199,123,.09);border:1px solid rgba(52,199,123,.26);border-radius:12px;padding:12px 14px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:900;color:#6fe0a3;letter-spacing:2px;margin-bottom:6px">🎯 VERDADE PRÁTICA</div>
+        <div style="font-size:14px;line-height:1.55;color:#dceee3">${_pv.pratica}</div></div>`:''}
+      <button onclick="pedirPinMaster(function(){abrirLicaoDetalhe(${idx});})" style="width:100%;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:var(--gold);color:#0a2a24;letter-spacing:.3px">🔓 ABRIR AGORA COM PIN</button>
+    </div>`:'';
+  document.getElementById('ebd-det-body').innerHTML=_licBanner+_previaBlk+_btnConcluir+itens.map(it=>{
     const tappable=it.ativo&&it.tap&&!_detLocked;
     const action=_detLocked?`<span class="ebd-em-breve">🔒 Em breve</span>`:(it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`));
     return `<div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}${tappable?' ppt-item':''}"${tappable?` onclick="${it.tap}"`:''}>
@@ -4300,6 +4339,7 @@ function abrirLicaoDetalhe(idx){
       ${action}
     </div>`;
   }).join('');
+  if(_needPrevia) carregarPrevia(function(){ if(ebdDetalheIdx===idx && document.getElementById('tela-ebd-detalhe').classList.contains('ativa')) abrirLicaoDetalhe(idx); });
   ocultarTodas();
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
 }
