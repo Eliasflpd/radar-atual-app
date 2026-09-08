@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
       let b=req.body;
       if(typeof b==='string'){ try{ b=JSON.parse(b); }catch(_){ b={}; } }
       b=b||{};
-      if(ADM && b.token!==ADM){ res.status(403).json({error:'token'}); return; }
+      if(!ADM || b.token!==ADM){ res.status(403).json({error:'token'}); return; }
       const autor = b.autor==='claude' ? 'claude' : 'elias';
       const texto = (b.texto||'').toString().trim().slice(0,4000);
       if(!texto){ res.status(400).json({error:'vazio'}); return; }
@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
 
     // GET
     const q=req.query||{};
-    if(ADM && q.token!==ADM){ res.status(403).json({error:'token'}); return; }
+    if(!ADM || q.token!==ADM){ res.status(403).json({error:'token'}); return; }
     const desde=parseInt(q.desde||'0',10)||0;
     let r;
     if(desde>0){

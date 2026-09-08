@@ -10,3 +10,7 @@ Configurações/
 !public/*.PNG
 
 .env*.local
+
+.env.prod
+.env.curso
+BACKUP/

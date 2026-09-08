@@ -1625,7 +1625,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
         </div>
       </div>
     </div>
-    <div onclick="abrirEbdTurma('jovem4')" style="background:linear-gradient(160deg,#2a0a3a,#3a1252);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
+    <div onclick="abrirEbdTurma('jovem4')" style="background:linear-gradient(160deg,#08272a,#0f4038);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
       <div style="display:flex;gap:12px;padding:12px;align-items:center">
         <img src="/ebd/jovem4/img/licao-01.jpg" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">
         <div style="min-width:0">
@@ -4145,6 +4145,26 @@ function deletarEvento(id){
 }
 // ══ FIM EVENTOS ════════════════════════════════════
 
+// ══ MEU PROGRESSO EBD ════════════════════════════
+// Marca lição como concluída (só no aparelho do aluno, offline). Guarda por turma
+// -> lição, pra cada turma ter sua própria trilha. Nunca sobe pra servidor: é o
+// caderninho pessoal do aluno acompanhar o trimestre.
+function ebdProg(){ try{ return JSON.parse(localStorage.getItem('radar_ebd_progresso')||'{}'); }catch(_){ return {}; } }
+function ebdProgSave(o){ try{ localStorage.setItem('radar_ebd_progresso',JSON.stringify(o)); }catch(_){} }
+function ebdConcluida(turma,n){ const p=ebdProg(); return !!(p[turma]&&p[turma][n]); }
+function ebdToggleConcluida(turma,n){
+  const p=ebdProg(); if(!p[turma]) p[turma]={};
+  if(p[turma][n]){ delete p[turma][n]; } else { p[turma][n]=true; }
+  if(!Object.keys(p[turma]).length) delete p[turma];
+  ebdProgSave(p);
+  return ebdConcluida(turma,n);
+}
+function ebdProgTurma(turma){
+  const lics=EBD_LICOES[turma]||[]; const total=lics.filter(l=>l.n>0).length;
+  const p=ebdProg()[turma]||{}; const feitas=lics.filter(l=>l.n>0&&p[l.n]).length;
+  return {feitas,total};
+}
+
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
   const lics=EBD_LICOES[turma];
@@ -4161,8 +4181,21 @@ function abrirEbdTurma(turma){
     const extra=lics.filter(l=>l.n===0);
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
     const _capaHero=`<div style="margin:0 0 16px;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.32)"><img src="/ebd/${turma}/img/capa.jpg" style="width:100%;display:block" onerror="this.parentNode.style.display='none'"></div>`;
-    body.innerHTML=_capaHero+main.map(lic=>{
+    const _pg=ebdProgTurma(turma); const _pct=_pg.total?Math.round(_pg.feitas/_pg.total*100):0;
+    const _progBar=_pg.total?`<div style="margin:0 0 16px;background:rgba(15,24,38,.6);border:1px solid rgba(240,226,184,.18);border-radius:14px;padding:12px 14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12.5px;font-weight:800;color:#f0dca0;letter-spacing:.3px">📗 MEU PROGRESSO</div>
+        <div style="font-size:12px;color:var(--sub)">${_pg.feitas} de ${_pg.total} concluídas</div>
+      </div>
+      <div style="height:9px;background:rgba(255,255,255,.09);border-radius:99px;overflow:hidden">
+        <div style="height:100%;width:${_pct}%;background:linear-gradient(90deg,#c8873f,#f0dca0);border-radius:99px;transition:width .4s"></div>
+      </div>
+    </div>`:'';
+    body.innerHTML=_capaHero+_progBar+main.map(lic=>{
       const idx=lics.indexOf(lic);
+      const _feita=ebdConcluida(turma,lic.n);
+      const _selo=_feita?'<div style="position:absolute;top:10px;left:10px;background:#25D366;color:#fff;font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.4)">✓ CONCLUÍDA</div>':'';
+      const _selo2=_feita?'<span style="background:#25D366;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;flex-shrink:0">✓</span>':'';
       const isLocked=turma.endsWith('4') ? ebd4TriTravado() : (lic.n!==licaoDaSemana()); /* 4º tri: tudo travado até OUT; senão só a do domingo atual */
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':''].filter(Boolean).join(' · ');
       if(ebdTurmaAtual==='adulto' && lic.n>=1 && lic.n<=13){
@@ -4176,7 +4209,7 @@ function abrirEbdTurma(turma){
         return `<div class="ebd-item ppt-item" style="display:block;padding:0;overflow:hidden;margin-bottom:12px${lic.n>_at?';opacity:.9':''}" onclick="abrirLicaoDetalhe(${idx})">
           <div style="position:relative">
             <img src="/ebd/${ebdTurmaAtual}/img/licao-${nn}.jpg" style="width:100%;display:block" onerror="this.style.display='none'">
-            ${badge}
+            ${badge}${_selo}
           </div>
           <div style="display:flex;align-items:center;gap:10px;padding:11px 14px">
             <div style="background:var(--gold);color:#0a3a33;font-weight:900;border-radius:8px;padding:3px 10px;font-size:13px;flex-shrink:0">LIÇÃO ${nn}</div>
@@ -4201,7 +4234,7 @@ function abrirEbdTurma(turma){
           <div class="ebd-item-titulo">${lic.titulo}</div>
           <div class="ebd-item-meta">${tags}</div>
         </div>
-        <span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>
+        ${_selo2}<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>
       </div>`;
     }).join('')+
     (extra.length?`<div style="padding:8px 0 4px"><div class="bh-secao" style="margin:0">Extra</div></div>`+
@@ -4255,7 +4288,9 @@ function abrirLicaoDetalhe(idx){
      ativo:!!lic.video,
      tap:lic.video?`abrirVideo('${lic.video||''}')`:null}
   ];
-  document.getElementById('ebd-det-body').innerHTML=_licBanner+itens.map(it=>{
+  const _fnd=lic.n>0&&ebdConcluida(ebdTurmaAtual,lic.n);
+  const _btnConcluir=(lic.n>0&&!_detLocked)?`<button id="ebd-btn-concluir" onclick="ebdMarcarConcluida(${idx})" style="width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${_fnd?'background:#25D366;color:#fff':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)'}">${_fnd?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA'}</button>`:'';
+  document.getElementById('ebd-det-body').innerHTML=_licBanner+_btnConcluir+itens.map(it=>{
     const tappable=it.ativo&&it.tap&&!_detLocked;
     const action=_detLocked?`<span class="ebd-em-breve">🔒 Em breve</span>`:(it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`));
     return `<div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}${tappable?' ppt-item':''}"${tappable?` onclick="${it.tap}"`:''}>
@@ -4267,6 +4302,17 @@ function abrirLicaoDetalhe(idx){
   }).join('');
   ocultarTodas();
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
+}
+
+function ebdMarcarConcluida(idx){
+  const lic=EBD_LICOES[ebdTurmaAtual][idx]; if(!lic||lic.n<=0) return;
+  const feita=ebdToggleConcluida(ebdTurmaAtual,lic.n);
+  const b=document.getElementById('ebd-btn-concluir');
+  if(b){
+    b.textContent=feita?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA';
+    b.style.cssText=`width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${feita?'background:#25D366;color:#fff':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)'}`;
+  }
+  if(typeof showToast==='function') showToast(feita?'Lição marcada como concluída ✓':'Marcação removida');
 }
 
 function abrirReader(idx,tipo){

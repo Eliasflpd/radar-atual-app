@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
     const liberar = (q.liberar || '').replace(/\D/g, '');
     if (liberar) {
       const ADM = process.env.RADAR_ADMIN_TOKEN;
-      if (ADM && q.token !== ADM) { res.status(403).json({ error: 'token' }); return; }
+      if (!ADM || q.token !== ADM) { res.status(403).json({ error: 'token' }); return; }
       const meses = Math.max(1, Math.min(24, parseInt(q.meses || '1', 10) || 1));
       const r = await c.query(
         `update radar_cadastros
