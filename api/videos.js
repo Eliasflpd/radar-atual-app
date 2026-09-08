@@ -112,6 +112,30 @@ module.exports = async (req, res) => {
         return;
       }
 
+      // === ADMIN: cadastrar as aulas de um curso de uma vez (seed) ===
+      // POST {acao:'curso-seed', token, curso, aulas:[{modulo_ordem,modulo_nome,aula_ordem,titulo,tipo?,blob_url}], substituir?}
+      if(b.acao==='curso-seed'){
+        if((b.token||'')!==ADM){ res.status(401).json({ok:false,erro:'token'}); return; }
+        const curso=(b.curso||'').toString().trim();
+        const aulas=Array.isArray(b.aulas)?b.aulas:[];
+        if(!curso || !aulas.length){ res.status(400).json({ok:false,erro:'faltam curso/aulas'}); return; }
+        await c.query(`create table if not exists curso_aulas(
+          id bigserial primary key, curso text not null default 'escatologia-ivan-santos',
+          modulo_ordem int not null, modulo_nome text not null, aula_ordem int not null,
+          titulo text not null, tipo text not null default 'video', blob_url text,
+          tamanho_bytes bigint, criado_em timestamptz default now())`);
+        if(b.substituir){ await c.query('delete from curso_aulas where curso=$1',[curso]); }
+        let n=0;
+        for(const a of aulas){
+          if(!a || !a.blob_url) continue;
+          await c.query('insert into curso_aulas(curso,modulo_ordem,modulo_nome,aula_ordem,titulo,tipo,blob_url) values($1,$2,$3,$4,$5,$6,$7)',
+            [curso, a.modulo_ordem|0, (a.modulo_nome||'').toString(), a.aula_ordem|0, (a.titulo||'').toString(), (a.tipo||'video').toString(), a.blob_url.toString()]);
+          n++;
+        }
+        res.status(200).json({ok:true, curso, inseridas:n});
+        return;
+      }
+
       // === INSCREVER no push (qualquer pessoa que aceitar receber avisos) ===
       if(b.acao==='push-sub'){
         const sub=b.sub||{};
