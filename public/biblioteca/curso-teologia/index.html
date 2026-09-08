@@ -97,8 +97,10 @@
   #player .pbar{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;color:#fff}
   #player .pbar button{background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:9px;padding:8px 12px;font-weight:700;font-family:inherit;cursor:pointer}
   #player .pbar .pt{flex:1;min-width:0;font-size:.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #player .vwrap{flex:1;display:flex;align-items:center;justify-content:center;background:#000}
-  #player video{width:100%;max-height:100%}
+  #player .vwrap{flex:1;display:flex;align-items:center;justify-content:center;background:#000;padding:0 10px}
+  /* vídeo encaixado num quadro 16:9 que cabe na largura do celular (não estoura a tela) */
+  #player .vbox{position:relative;width:100%;max-width:760px;aspect-ratio:16/9;max-height:100%;border-radius:12px;overflow:hidden;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  #player .vbox iframe,#player .vbox video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;object-fit:contain}
   #player .prox{padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:#0f1d2e;color:#cfe0ee;font-size:.85rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
   #player .prox button{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-family:inherit;cursor:pointer}
   .carregando{text-align:center;color:var(--suave);padding:40px 20px}
@@ -302,11 +304,11 @@ function abrir(gi){
   if(gid || /drive\.google\.com/.test(url)){
     // vídeo do Drive embutido DENTRO do app (a pessoa não sai do app)
     const emb = gid ? ('https://drive.google.com/file/d/'+gid+'/preview') : url;
-    vw.innerHTML='<iframe src="'+emb+'" allow="autoplay; fullscreen" allowfullscreen playsinline style="width:100%;height:100%;border:0;background:#000"></iframe>';
+    vw.innerHTML='<div class="vbox"><iframe src="'+emb+'" allow="autoplay; fullscreen" allowfullscreen playsinline></iframe></div>';
     marcarVista(url,true);
     const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista');
   } else {
-    vw.innerHTML='<video id="vid" controls playsinline preload="metadata" style="width:100%;max-height:100%"></video>';
+    vw.innerHTML='<div class="vbox"><video id="vid" controls playsinline preload="metadata"></video></div>';
     const v=$('vid'); v.src=url;
     const pos=lerPos(url);
     v.onloadedmetadata=()=>{ if(pos>5 && pos<v.duration-10){ v.currentTime=pos; } };
