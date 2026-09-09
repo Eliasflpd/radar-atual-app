@@ -3520,7 +3520,7 @@ function verLigados(li,ci,vi){
   const ref=`${abbrev} ${ci+1}:${vi+1}`;
   box.classList.add('aberto');
   box.innerHTML=`<div class="bib-lig-head">🔗 Versículos ligados</div><div class="bib-lig-load">Buscando ligações…</div>`;
-  fetch('/api/ligacoes?ref='+encodeURIComponent(ref)+'&limit=6').then(r=>r.json()).then(d=>{
+  fetch('/api/estudo-busca?sem=1&limit=6&ref='+encodeURIComponent(ref)).then(r=>r.json()).then(d=>{
     if(!d.ok||!d.itens||!d.itens.length){
       box.innerHTML=`<div class="bib-lig-head">🔗 Versículos ligados</div><div class="bib-lig-load">${d&&d.msg?d.msg:'Ainda não indexado (motor cobre João na Fase 1).'}</div>`;
       return;
