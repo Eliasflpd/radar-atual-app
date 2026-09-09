@@ -1,4 +1,4 @@
-const V='radar-v135';
+const V='radar-v136';
 const CACHE=['/','/manifest.json']; // capa.png (2MB) fora do precache — não atrasa o 1º load; é cacheada sob demanda
 
 self.addEventListener('install',e=>{

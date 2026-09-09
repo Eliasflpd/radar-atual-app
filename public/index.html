@@ -216,6 +216,21 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 .bib-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--sub)}
 .bib-spinner{width:36px;height:36px;border:3px solid rgba(201,161,74,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* 🔗 MOTOR DE LIGAÇÕES — versículos ligados por sentido */
+.bib-verso{position:relative}
+.bib-link-btn{position:absolute;top:2px;right:0;background:none;border:none;font-size:14px;opacity:.28;cursor:pointer;padding:2px 4px;line-height:1;transition:opacity .15s}
+.bib-link-btn:active{opacity:1}
+.bib-lig{margin:2px 0 12px 28px;display:none}
+.bib-lig.aberto{display:block}
+.bib-lig-head{font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);opacity:.85;margin:6px 0 8px;display:flex;align-items:center;gap:6px}
+.bib-lig-load{font-size:12px;color:#6b7280;padding:6px 0}
+.bib-lig-item{background:#fff;border:1px solid rgba(201,161,74,.28);border-left:3px solid var(--gold);border-radius:10px;padding:9px 11px;margin-bottom:7px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.bib-lig-item:active{background:#f5f7fb}
+.bib-lig-ref{font-size:11px;font-weight:800;color:#a9791c;margin-bottom:3px;display:flex;justify-content:space-between;align-items:center}
+.bib-lig-score{font-size:10px;font-weight:700;color:#9aa3b2;background:rgba(201,161,74,.12);border-radius:10px;padding:1px 7px}
+.bib-lig-txt{font-size:13px;line-height:1.5;color:#1b2436}
+.bib-verso.lig-flash{animation:ligflash 1.6s ease}
+@keyframes ligflash{0%,40%{background:rgba(201,161,74,.28)}100%{background:transparent}}
 
 /* ══ EBD ══ */
 #tela-ebd{background:var(--bg)}
@@ -3490,10 +3505,45 @@ function bibMostrarVers(livIdx,capIdx){
   let html='<div class="bib-vers-wrap">';
   cap.forEach((v,vi)=>{
     const mk=bibMarcados[`v_${livIdx}_${capIdx}_${vi}`];
-    html+=`<div class="bib-verso ${mk?'marcado':''}" onclick="toggleVers(${livIdx},${capIdx},${vi},this)"><span class="bib-vers-num">${vi+1}</span><span class="bib-vers-txt">${v}</span></div>`;
+    html+=`<div class="bib-verso ${mk?'marcado':''}" id="bv_${livIdx}_${capIdx}_${vi}" onclick="toggleVers(${livIdx},${capIdx},${vi},this)"><span class="bib-vers-num">${vi+1}</span><span class="bib-vers-txt">${v}</span><button class="bib-link-btn" title="Versículos ligados" onclick="event.stopPropagation();verLigados(${livIdx},${capIdx},${vi})">🔗</button></div><div class="bib-lig" id="lig_${livIdx}_${capIdx}_${vi}"></div>`;
   });
   document.getElementById('bib-body').innerHTML=html+'</div>';
   document.getElementById('bib-body').scrollTop=0;
+}
+
+// 🔗 MOTOR DE LIGAÇÕES — versículos parecidos por SENTIDO (busca semântica pgvector)
+function verLigados(li,ci,vi){
+  const box=document.getElementById(`lig_${li}_${ci}_${vi}`);
+  if(!box) return;
+  if(box.classList.contains('aberto')){ box.classList.remove('aberto'); box.innerHTML=''; return; }
+  const abbrev=bibData[li].abbrev;
+  const ref=`${abbrev} ${ci+1}:${vi+1}`;
+  box.classList.add('aberto');
+  box.innerHTML=`<div class="bib-lig-head">🔗 Versículos ligados</div><div class="bib-lig-load">Buscando ligações…</div>`;
+  fetch('/api/ligacoes?ref='+encodeURIComponent(ref)+'&limit=6').then(r=>r.json()).then(d=>{
+    if(!d.ok||!d.itens||!d.itens.length){
+      box.innerHTML=`<div class="bib-lig-head">🔗 Versículos ligados</div><div class="bib-lig-load">${d&&d.msg?d.msg:'Ainda não indexado (motor cobre João na Fase 1).'}</div>`;
+      return;
+    }
+    let h=`<div class="bib-lig-head">🔗 Versículos ligados por sentido</div>`;
+    d.itens.forEach(it=>{
+      const nome=it.livro?it.livro.replace(/\b\w/g,m=>m.toUpperCase()):it.ref;
+      const pct=Math.round((it.score||0)*100);
+      h+=`<div class="bib-lig-item" onclick="navLig('${it.ref}')"><div class="bib-lig-ref"><span>${nome} ${it.cap}:${it.ver}</span><span class="bib-lig-score">${pct}%</span></div><div class="bib-lig-txt">${(it.texto||'').replace(/</g,'&lt;')}</div></div>`;
+    });
+    box.innerHTML=h;
+  }).catch(()=>{ box.innerHTML=`<div class="bib-lig-head">🔗 Versículos ligados</div><div class="bib-lig-load">Sem conexão com o motor.</div>`; });
+}
+function navLig(refStr){
+  const m=refStr.match(/^(\S+)\s+(\d+):(\d+)$/); if(!m) return;
+  const abbrev=m[1].toLowerCase(), cap=+m[2]-1, ver=+m[3]-1;
+  const li=bibData.findIndex(x=>x.abbrev.toLowerCase()===abbrev);
+  if(li<0||!bibData[li].chapters[cap]) return;
+  bibMostrarVers(li,cap);
+  setTimeout(()=>{
+    const el=document.getElementById(`bv_${li}_${cap}_${ver}`);
+    if(el){ el.scrollIntoView({block:'center'}); el.classList.add('lig-flash'); setTimeout(()=>el.classList.remove('lig-flash'),1600); }
+  },120);
 }
 
 function toggleVers(li,ci,vi,el){
