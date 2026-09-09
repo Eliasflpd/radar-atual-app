@@ -229,7 +229,7 @@ function abrirCurso(slug){
   const cs=cursoPorSlug(slug); CURSO_ATUAL=cs.curso;
   const m0=meta(cs.curso);
   PLANO=[];
-  cs.modulos.forEach(m=>{ m.aulas.forEach(a=>{ PLANO.push({m:m.nome,mo:m.ordem,a}); }); });
+  cs.modulos.forEach(m=>{ m.aulas.forEach(a=>{ a._gi=PLANO.length; PLANO.push({m:m.nome,mo:m.ordem,a}); }); });
   let html=`
     <button class="voltar-curso" onclick="render()">‹ Meus cursos</button>
     <div class="capa">
@@ -241,18 +241,14 @@ function abrirCurso(slug){
       </div>
     </div>
     <div class="sec-mod" style="margin-top:2px">Módulos e aulas</div>`;
+  // LAZY: só os cabeçalhos dos módulos entram agora (abre instantâneo mesmo em celular fraco);
+  // as aulas de cada módulo são montadas quando ele é aberto (toggleMod).
   cs.modulos.forEach((m,mi)=>{
     html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="toggleMod(${mi})">
       <div class="n">${m.ordem}</div>
       <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${m.aulas.length} aula${m.aulas.length>1?'s':''}</span></div>
       <div class="seta">›</div></div><div class="aulas">`;
     if(!m.aulas.length){ html+=`<div class="vazio-mod">Subindo os vídeos deste módulo…</div>`; }
-    m.aulas.forEach(a=>{
-      const gi=PLANO.findIndex(p=>p.a.url===a.url);
-      html+=`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${gi}" onclick="abrir(${gi})">
-        <div class="pl">▶</div>
-        <div class="txt">${limpaAula(a.titulo)}<small>Aula ${a.ordem}</small></div></div>`;
-    });
     html+=`</div></div>`;
   });
   if(m0.apostila || m0.site){
@@ -287,10 +283,25 @@ function abrirCurso(slug){
   }
   cur.innerHTML=html;
   window.scrollTo(0,0);
+  // abre o 1º módulo automaticamente pra já mostrar aulas (feedback imediato)
+  if(cs.modulos.length && cs.modulos[0].aulas.length) toggleMod(0);
 }
 function limpaModulo(s){ return (s||'').replace(/^M[ÓO]DULO\s*\d+\s*-\s*/i,'').replace(/\s+\d+$/,'').trim(); }
 function limpaAula(s){ return (s||'').replace(/\.(mkv|mp4)$/i,'').replace(/^AULA\s*[O0]?\d+\s*-\s*/i,'').trim(); }
-function toggleMod(mi){ document.querySelector('.mod[data-mi="'+mi+'"]').classList.toggle('aberto'); }
+function toggleMod(mi){
+  const el=document.querySelector('.mod[data-mi="'+mi+'"]'); if(!el) return;
+  const cont=el.querySelector('.aulas');
+  if(cont && !cont.dataset.pronto){
+    const cs=cursoPorSlug(CURSO_ATUAL); const m=cs&&cs.modulos[mi];
+    if(m && m.aulas.length){
+      cont.innerHTML=m.aulas.map(a=>`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${a._gi}" onclick="abrir(${a._gi})">
+        <div class="pl">▶</div>
+        <div class="txt">${limpaAula(a.titulo)}<small>Aula ${a.ordem}</small></div></div>`).join('');
+    }
+    cont.dataset.pronto='1';
+  }
+  el.classList.toggle('aberto');
+}
 
 function idDrive(url){ const m=(url||'').match(/\/d\/([^/]+)/)||(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
 function abrir(gi){
