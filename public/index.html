@@ -1174,6 +1174,38 @@ html[data-fs="3"] .prl-out{font-size:20px}
 .pl-act:active{opacity:.7}
 .pl-parabens{text-align:center;background:linear-gradient(135deg,rgba(201,161,74,.16),rgba(52,199,123,.12));border:1px solid rgba(201,161,74,.35);border-radius:16px;padding:18px;margin-top:14px;color:var(--txt)}
 .pl-parabens b{color:var(--gold2);font-size:16px}
+/* ── Plano Bíblia inteira (DB) ── */
+.pl-planos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.pl-plano-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:11px 6px;font-family:inherit;cursor:pointer;color:var(--sub);text-align:center;line-height:1.15}
+.pl-plano-btn .pl-pb-ico{font-size:19px}
+.pl-plano-btn .pl-pb-tit{font-size:12.5px;font-weight:800;color:var(--txt)}
+.pl-plano-btn .pl-pb-sub{font-size:9.5px;font-weight:600;opacity:.75}
+.pl-plano-btn.on{border-color:var(--gold);background:linear-gradient(180deg,rgba(201,161,74,.2),rgba(201,161,74,.06));box-shadow:0 4px 14px rgba(201,161,74,.2)}
+.pl-plano-btn.on .pl-pb-tit{color:var(--gold2)}
+.pl-stats{display:flex;gap:9px;margin-top:12px}
+.pl-stat{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center}
+.pl-stat b{display:block;font-size:20px;font-weight:900;color:var(--gold2);line-height:1}
+.pl-stat span{font-size:10.5px;color:var(--sub);font-weight:700}
+.pl-cont-btn{width:100%;margin-top:12px;background:linear-gradient(90deg,#C9A14A,#F5C842);color:#080D1A;border:none;border-radius:13px;padding:14px;font-size:16px;font-weight:900;font-family:inherit;cursor:pointer;box-shadow:0 8px 20px rgba(201,161,74,.35);display:flex;align-items:center;justify-content:center;gap:8px}
+.pl-cont-btn:active{opacity:.85}
+.pl-livros{margin-top:4px}
+.pl-livro-row{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:7px;cursor:pointer}
+.pl-livro-row.full{border-color:rgba(52,199,123,.4);background:rgba(52,199,123,.06)}
+.pl-lr-nome{flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-livro-row.full .pl-lr-nome{color:#8fd9b0}
+.pl-lr-bar{width:74px;height:6px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden;flex-shrink:0}
+.pl-lr-fill{height:100%;background:linear-gradient(90deg,#C9A14A,#F5C842);border-radius:4px}
+.pl-livro-row.full .pl-lr-fill{background:#34c77b}
+.pl-lr-cnt{font-size:11px;font-weight:800;color:var(--sub);flex-shrink:0;width:52px;text-align:right}
+.pl-hoje-caps{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.pl-hoje-cap{font-size:12px;font-weight:800;color:var(--gold2);background:rgba(201,161,74,.12);border:1px solid rgba(201,161,74,.3);border-radius:8px;padding:5px 9px}
+/* botão marcar-lido dentro do leitor da Bíblia */
+.bib-capmark{display:flex;gap:9px;align-items:center;background:rgba(201,161,74,.1);border:1px solid rgba(201,161,74,.3);border-radius:12px;padding:10px 12px;margin:0 0 14px}
+.bib-capmark .cm-txt{flex:1;font-size:12.5px;color:var(--sub);font-weight:700}
+.bib-capmark .cm-btn{border:none;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:900;font-family:inherit;cursor:pointer;background:#34c77b;color:#fff}
+.bib-capmark.nao .cm-btn{background:var(--gold);color:#080D1A}
+#tela-biblia .bib-capmark{background:#eef2f8;border-color:rgba(201,161,74,.4)}
+#tela-biblia .bib-capmark .cm-txt{color:#5a6373}
 </style>
 <div class="tela" id="tela-plano">
   <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
@@ -2576,77 +2608,197 @@ function compartilharDevocional(idx){
   else { window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); }
 }
 
-// ══ PLANO DE LEITURA DA BÍBLIA ════════════════════════
-const PLANOS = [
-  {id:'joao', nome:'Evangelho de João', icon:'📖', cor:'#C9A14A', dias:21,
-   desc:'Um capítulo por dia — conheça Jesus', ref:function(n){return 'João '+n;}},
-  {id:'atos', nome:'Atos dos Apóstolos', icon:'🔥', cor:'#2563eb', dias:28,
-   desc:'A igreja primitiva e o poder do Espírito', ref:function(n){return 'Atos '+n;}},
-  {id:'proverbios', nome:'Provérbios', icon:'🦉', cor:'#34c77b', dias:31,
-   desc:'Um capítulo de sabedoria por dia', ref:function(n){return 'Provérbios '+n;}},
-  {id:'salmos', nome:'Salmos em 30 dias', icon:'🎵', cor:'#f5a623', dias:30,
-   desc:'Cinco salmos por dia — louvor e oração', ref:function(n){var a=(n-1)*5+1;return 'Salmos '+a+'–'+(a+4);}}
-];
-function _planoObj(id){ return PLANOS.find(function(p){return p.id===id;}); }
-function getPlanoProg(id){ try{ var a=JSON.parse(localStorage.getItem('radar_plano_'+id)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
-function setPlanoProg(id,arr){ localStorage.setItem('radar_plano_'+id, JSON.stringify(arr)); }
-function getPlanoAtivo(){ return localStorage.getItem('radar_plano_ativo')||''; }
+// ══ PLANO DE LEITURA DA BÍBLIA — Bíblia inteira · progresso por usuário (DB) ══
+const BIB_TOTAL_CAPS = 1189;
+// Ordem cronológica aproximada (nível livro; capítulos sequenciais dentro de cada livro).
+// Livros faltantes são anexados ao fim automaticamente (garante os 66 livros).
+const CHRON_LIVROS = ['gn','jó','ex','lv','nm','dt','js','jz','rt','1sm','2sm','1cr','sl','1rs','pv','ec','ct','2rs','2cr','jl','am','os','is','mq','na','sf','hc','jr','lm','ob','ez','dn','ag','zc','et','ed','ne','ml','jn',
+  'mt','mc','lc','jo','atos','tg','gl','1ts','2ts','1co','2co','rm','ef','fp','cl','fm','1tm','tt','1pe','hb','2tm','2pe','jd','1jo','2jo','3jo','ap'];
+const PLANOS_META = { livre:1, ano:4, cronologico:3 };
+const PLANOS_INFO = {
+  livre:       {ico:'🕊️', tit:'Livre',       sub:'no seu ritmo'},
+  ano:         {ico:'📅', tit:'1 ano',       sub:'~4 caps/dia'},
+  cronologico: {ico:'⏳', tit:'Cronológico', sub:'ordem dos fatos'}
+};
+const LEIT = { key:null, plano:'livre', meta:1, iniciado:null, set:new Set(), datas:new Set(), carregado:false, migrado:false };
 
-function abrirPlano(){ mostrarTela('tela-plano'); renderPlano(); var sc=document.getElementById('pl-conteudo'); if(sc) sc.scrollTop=0; }
-function renderPlano(){
-  var ativo=getPlanoAtivo();
-  if(ativo && _planoObj(ativo)) renderPlanoDetalhe(ativo);
-  else renderPlanoEscolha();
+function leitKey(){ var u=getUser()||{}; if(u.whatsapp) return u.whatsapp.replace(/\D/g,''); return (u.id||'anon'); }
+function _ck(abbrev,cap){ return abbrev.toLowerCase()+'|'+cap; }
+function leitLido(abbrev,cap){ return LEIT.set.has(_ck(abbrev,cap)); }
+function _fmtDia(dt){ var m=dt.getMonth()+1, d=dt.getDate(); return dt.getFullYear()+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d); }
+function _hojeStr(){ return _fmtDia(new Date()); }
+
+function _leitCache(){ try{ return 'radar_leitura_'+(LEIT.key||'x'); }catch(e){ return 'radar_leitura_x'; } }
+function _leitSalvarCache(){
+  try{ localStorage.setItem(_leitCache(), JSON.stringify({plano:LEIT.plano,meta:LEIT.meta,iniciado:LEIT.iniciado,set:[...LEIT.set],datas:[...LEIT.datas]})); }catch(e){}
 }
-function renderPlanoEscolha(){
-  var html='<div class="pl-intro">Escolha um plano e leia a Bíblia um pouco a cada dia. O app guarda o seu progresso automaticamente.</div>';
-  html+=PLANOS.map(function(p){
-    var prog=getPlanoProg(p.id); var pct=Math.round(prog.length/p.dias*100);
-    var mini = prog.length ? '<div class="pl-mini"><div class="pl-mini-bar"><div class="pl-mini-fill" style="width:'+pct+'%"></div></div><div class="pl-mini-txt">'+prog.length+' de '+p.dias+' dias · '+pct+'%</div></div>' : '';
-    return '<div class="pl-plano-card" style="--pc:'+p.cor+'" onclick="escolherPlano(\''+p.id+'\')">'
-      +'<div class="pl-plano-top"><div class="pl-plano-ico">'+p.icon+'</div>'
-      +'<div style="flex:1;min-width:0"><div class="pl-plano-nome">'+p.nome+'</div><div class="pl-plano-desc">'+p.desc+'</div></div>'
-      +'<span class="pl-plano-dias">'+p.dias+' dias</span></div>'+mini+'</div>';
-  }).join('');
-  document.getElementById('pl-conteudo').innerHTML=html;
+function _leitLerCache(){
+  try{ var o=JSON.parse(localStorage.getItem(_leitCache())||'null'); if(o){ LEIT.plano=o.plano||'livre'; LEIT.meta=o.meta||PLANOS_META[LEIT.plano]||1; LEIT.iniciado=o.iniciado||null; LEIT.set=new Set(o.set||[]); LEIT.datas=new Set(o.datas||[]); return true; } }catch(e){}
+  return false;
 }
-function escolherPlano(id){ localStorage.setItem('radar_plano_ativo',id); renderPlano(); var sc=document.getElementById('pl-conteudo'); if(sc) sc.scrollTop=0; }
-function trocarPlano(){ localStorage.removeItem('radar_plano_ativo'); renderPlano(); var sc=document.getElementById('pl-conteudo'); if(sc) sc.scrollTop=0; }
-function reiniciarPlano(id){
-  if(!confirm('Reiniciar este plano? O seu progresso será apagado.')) return;
-  setPlanoProg(id,[]); renderPlanoDetalhe(id);
+
+function leitCarregar(cb){
+  LEIT.key = leitKey();
+  _leitLerCache(); // instantâneo (offline-friendly)
+  fetch('/api/leitura?user='+encodeURIComponent(LEIT.key)).then(function(r){return r.json();}).then(function(d){
+    if(d && d.ok){
+      LEIT.plano = (d.config && d.config.plano) || 'livre';
+      LEIT.meta  = (d.config && d.config.meta_dia) || PLANOS_META[LEIT.plano] || 1;
+      LEIT.iniciado = d.config && d.config.iniciado_em || null;
+      LEIT.set = new Set();
+      LEIT.datas = new Set();
+      (d.progresso||[]).forEach(function(p){
+        LEIT.set.add(_ck(p.livro, p.capitulo));
+        if(p.lido_em){ try{ LEIT.datas.add(_fmtDia(new Date(p.lido_em))); }catch(e){} }
+      });
+      LEIT.carregado = true;
+      _leitSalvarCache();
+      leitMigrarLocal();
+    }
+    if(cb) cb();
+  }).catch(function(){ LEIT.carregado = _leitLerCache(); if(cb) cb(); });
 }
-function marcarDiaPlano(id,dia){
-  var prog=getPlanoProg(id); var i=prog.indexOf(dia);
-  if(i>=0) prog.splice(i,1); else prog.push(dia);
-  setPlanoProg(id,prog); renderPlanoDetalhe(id, true);
+
+// Migra o progresso local antigo (bib_marcados, índices) pro servidor — uma vez.
+function leitMigrarLocal(){
+  if(LEIT.migrado || !bibData) return;
+  var itens=[];
+  try{
+    var m=JSON.parse(localStorage.getItem('bib_marcados')||'{}');
+    Object.keys(m).forEach(function(k){
+      var mm=k.match(/^(\d+)_(\d+)$/); if(!mm) return; // só capítulos (não versículos v_)
+      var li=+mm[1], ci=+mm[2];
+      if(bibData[li] && bibData[li].chapters[ci]){
+        var ab=bibData[li].abbrev.toLowerCase(), cap=ci+1;
+        if(!leitLido(ab,cap)) itens.push({livro:ab,capitulo:cap});
+      }
+    });
+  }catch(e){}
+  LEIT.migrado=true;
+  if(!itens.length) return;
+  itens.forEach(function(it){ LEIT.set.add(_ck(it.livro,it.capitulo)); });
+  LEIT.datas.add(_hojeStr()); _leitSalvarCache();
+  fetch('/api/leitura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:LEIT.key,acao:'marcar_lote',itens:itens})}).catch(function(){});
 }
-function renderPlanoDetalhe(id, manterScroll){
-  var p=_planoObj(id); if(!p){ trocarPlano(); return; }
-  var prog=getPlanoProg(id); var lidos=prog.length; var pct=Math.round(lidos/p.dias*100);
-  // próxima leitura = primeiro dia não lido
-  var prox=0; for(var d=1; d<=p.dias; d++){ if(prog.indexOf(d)<0){ prox=d; break; } }
-  var sc=document.getElementById('pl-conteudo'); var top=(manterScroll&&sc)?sc.scrollTop:0;
-  var html='<div class="pl-head">'
-    +'<div class="pl-head-nome">'+p.icon+' '+p.nome+'</div>'
-    +'<div class="pl-head-sub">'+p.desc+'</div>'
-    +'<div class="pl-bar"><div class="pl-fill" style="width:'+pct+'%"></div></div>'
-    +'<div class="pl-bar-txt"><span class="pl-pct">'+pct+'%</span><span class="pl-conta">'+lidos+' de '+p.dias+' dias lidos</span></div>';
-  if(prox){ html+='<div class="pl-proxima"><span style="font-size:20px">👉</span><div><div style="font-size:11px;color:var(--sub);font-weight:700">Próxima leitura</div><b>Dia '+prox+' · '+p.ref(prox)+'</b></div></div>'; }
-  html+='</div>';
-  if(!prox){ html+='<div class="pl-parabens">🎉 <b>Parabéns!</b><br>Você concluiu o plano <b>'+p.nome+'</b>. Que a Palavra continue frutificando na sua vida!</div>'; }
-  html+='<div class="pl-sec">Leitura dia a dia</div>';
-  for(var n=1;n<=p.dias;n++){
-    var lido=prog.indexOf(n)>=0; var ehProx=(n===prox);
-    html+='<div class="pl-dia'+(lido?' lido':'')+(ehProx?' hoje':'')+'" onclick="marcarDiaPlano(\''+id+'\','+n+')">'
-      +'<div class="pl-check">✓</div>'
-      +'<div class="pl-dia-info"><div class="pl-dia-num">Dia '+n+'</div><div class="pl-dia-ref">'+p.ref(n)+'</div></div>'
-      +(ehProx?'<span class="pl-badge-hoje">HOJE</span>':'')
-      +'</div>';
+
+function leitMarcar(abbrev,cap,estado){
+  abbrev=abbrev.toLowerCase();
+  var k=_ck(abbrev,cap);
+  if(estado){ LEIT.set.add(k); LEIT.datas.add(_hojeStr()); }
+  else{ LEIT.set.delete(k); }
+  _leitSalvarCache();
+  fetch('/api/leitura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:LEIT.key,acao:(estado?'marcar':'desmarcar'),livro:abbrev,capitulo:cap})}).catch(function(){});
+}
+
+function leitStreak(){
+  if(!LEIT.datas.size) return 0;
+  var probe=new Date(); probe.setHours(0,0,0,0);
+  if(!LEIT.datas.has(_fmtDia(probe))) probe.setDate(probe.getDate()-1); // vale se leu ontem
+  var s=0;
+  while(LEIT.datas.has(_fmtDia(probe))){ s++; probe.setDate(probe.getDate()-1); }
+  return s;
+}
+
+// sequência de leitura conforme o plano (lista de {li,ci,abbrev,cap,nome})
+function _seqPlano(){
+  var seq=[], vistos={};
+  function pushLivro(li){
+    if(li<0 || vistos[li]) return; vistos[li]=1;
+    var b=bibData[li];
+    for(var ci=0; ci<b.chapters.length; ci++) seq.push({li:li,ci:ci,abbrev:b.abbrev.toLowerCase(),cap:ci+1,nome:b.name});
   }
-  html+='<div class="pl-acts"><button class="pl-act" onclick="trocarPlano()">↔ Trocar plano</button><button class="pl-act" onclick="reiniciarPlano(\''+id+'\')">↻ Reiniciar</button></div>';
+  if(LEIT.plano==='cronologico'){
+    CHRON_LIVROS.forEach(function(ab){ pushLivro(bibData.findIndex(function(x){return x.abbrev.toLowerCase()===ab;})); });
+    for(var i=0;i<bibData.length;i++) pushLivro(i); // anexa faltantes
+  }else{
+    for(var j=0;j<bibData.length;j++) pushLivro(j); // canônica (livre e 1 ano)
+  }
+  return seq;
+}
+function _proxNaoLidos(n){
+  var seq=_seqPlano(), out=[];
+  for(var i=0;i<seq.length && out.length<n;i++){ if(!leitLido(seq[i].abbrev,seq[i].cap)) out.push(seq[i]); }
+  return out;
+}
+
+function abrirPlano(){ mostrarTela('tela-plano'); var sc=document.getElementById('pl-conteudo'); if(sc) sc.scrollTop=0;
+  document.getElementById('pl-conteudo').innerHTML='<div class="pl-intro">Carregando seu progresso…</div>';
+  var render=function(){ if(!bibData){ fetch('/biblia.json').then(function(r){return r.json();}).then(function(d){bibData=d;renderPlano();}).catch(function(){renderPlano();}); } else { leitMigrarLocal(); renderPlano(); } };
+  if(!LEIT.carregado) leitCarregar(render); else render();
+}
+
+function escolherPlano(id){
+  if(!PLANOS_INFO[id]) return;
+  LEIT.plano=id; LEIT.meta=PLANOS_META[id]||1; _leitSalvarCache();
+  fetch('/api/leitura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:LEIT.key,acao:'plano',plano:id,meta_dia:LEIT.meta})}).catch(function(){});
+  renderPlano();
+}
+
+function leitContinuar(){
+  var prox=_proxNaoLidos(1)[0];
+  if(!prox){ alert('🎉 Você já leu a Bíblia inteira! Glória a Deus.'); return; }
+  abrirBiblia();
+  setTimeout(function(){ bibMostrarVers(prox.li, prox.ci); },60);
+}
+
+function renderPlano(){
+  if(!bibData){ document.getElementById('pl-conteudo').innerHTML='<div class="pl-intro">Não consegui carregar a Bíblia agora. Tente de novo.</div>'; return; }
+  var lidos=LEIT.set.size; var pct=Math.round(lidos/BIB_TOTAL_CAPS*100);
+  var streak=leitStreak();
+  var hoje=_proxNaoLidos(LEIT.plano==='livre'?1:LEIT.meta);
+  var prox=hoje[0];
+
+  var html='';
+  // seletor de plano
+  html+='<div class="pl-planos">'+['livre','ano','cronologico'].map(function(id){
+    var info=PLANOS_INFO[id], on=(LEIT.plano===id);
+    return '<button class="pl-plano-btn'+(on?' on':'')+'" onclick="escolherPlano(\''+id+'\')">'
+      +'<span class="pl-pb-ico">'+info.ico+'</span><span class="pl-pb-tit">'+info.tit+'</span><span class="pl-pb-sub">'+info.sub+'</span></button>';
+  }).join('')+'</div>';
+
+  // cabeçalho de progresso
+  html+='<div class="pl-head">'
+    +'<div class="pl-head-nome">📖 Bíblia inteira</div>'
+    +'<div class="pl-head-sub">'+(LEIT.plano==='ano'?'Plano de 1 ano':(LEIT.plano==='cronologico'?'Ordem cronológica':'No seu ritmo'))+'</div>'
+    +'<div class="pl-bar"><div class="pl-fill" style="width:'+pct+'%"></div></div>'
+    +'<div class="pl-bar-txt"><span class="pl-pct">'+pct+'%</span><span class="pl-conta">'+lidos+' de '+BIB_TOTAL_CAPS+' capítulos</span></div>'
+    +'<div class="pl-stats">'
+      +'<div class="pl-stat"><b>'+streak+'</b><span>'+(streak===1?'dia seguido':'dias seguidos')+'</span></div>'
+      +'<div class="pl-stat"><b>'+lidos+'</b><span>capítulos lidos</span></div>'
+      +'<div class="pl-stat"><b>'+(BIB_TOTAL_CAPS-lidos)+'</b><span>faltam</span></div>'
+    +'</div>';
+  if(prox){
+    html+='<div class="pl-proxima"><span style="font-size:20px">👉</span><div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--sub);font-weight:700">Hoje leia</div><b>'+hoje.map(function(x){return x.nome+' '+x.cap;}).join(' · ')+'</b></div></div>';
+    html+='<button class="pl-cont-btn" onclick="leitContinuar()">▶ Continuar — '+prox.nome+' '+prox.cap+'</button>';
+  }else{
+    html+='<div class="pl-parabens">🎉 <b>Parabéns!</b><br>Você leu a Bíblia inteira. Que a Palavra continue frutificando!</div>';
+  }
+  html+='</div>';
+
+  // visão geral por livro
+  html+='<div class="pl-sec">Avanço por livro</div><div class="pl-livros">';
+  bibData.forEach(function(b,li){
+    var ab=b.abbrev.toLowerCase(), tot=b.chapters.length, n=0;
+    for(var ci=1;ci<=tot;ci++){ if(leitLido(ab,ci)) n++; }
+    var lp=Math.round(n/tot*100), full=(n===tot);
+    html+='<div class="pl-livro-row'+(full?' full':'')+'" onclick="planoAbrirLivro('+li+')">'
+      +'<div class="pl-lr-nome">'+(full?'✓ ':'')+b.name+'</div>'
+      +'<div class="pl-lr-bar"><div class="pl-lr-fill" style="width:'+lp+'%"></div></div>'
+      +'<div class="pl-lr-cnt">'+n+'/'+tot+'</div></div>';
+  });
+  html+='</div>';
+  html+='<div class="pl-acts"><button class="pl-act" onclick="compartilharPlano()">📤 Compartilhar progresso</button></div>';
+
   document.getElementById('pl-conteudo').innerHTML=html;
-  if(manterScroll&&sc) sc.scrollTop=top;
+}
+
+function planoAbrirLivro(li){ abrirBiblia(); setTimeout(function(){ bibMostrarCaps(li); },60); }
+
+function compartilharPlano(){
+  var lidos=LEIT.set.size, pct=Math.round(lidos/BIB_TOTAL_CAPS*100), streak=leitStreak();
+  var txt='📖 Meu plano de leitura da Bíblia (App RADAR)\n\n✅ '+lidos+' de '+BIB_TOTAL_CAPS+' capítulos ('+pct+'%)\n🔥 '+streak+' '+(streak===1?'dia seguido':'dias seguidos')+'\n\nLeia a Bíblia todo dia também:\nhttps://radar-atual.vercel.app';
+  if(navigator.share){ navigator.share({title:'Meu progresso na Bíblia',text:txt}).catch(function(){}); }
+  else { try{ navigator.clipboard.writeText(txt); alert('Progresso copiado! 📋'); }catch(e){ window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank'); } }
 }
 function buscaGlobal(q){
   const v = q.trim().toLowerCase();
@@ -3441,6 +3593,7 @@ function carregarPos(){const p=JSON.parse(localStorage.getItem('bib_pos')||'null
 function abrirBiblia(){
   ocultarTodas();
   document.getElementById('tela-biblia').classList.add('ativa');
+  if(typeof leitCarregar==='function' && !LEIT.carregado) leitCarregar();
   if(bibData){bibMostrarLivros();return;}
   document.getElementById('bib-body').innerHTML='<div class="bib-loading"><div class="bib-spinner"></div><span>Carregando Bíblia...</span></div>';
   document.getElementById('bib-search-wrap').style.display='none';
@@ -3487,22 +3640,36 @@ function bibMostrarLivros(){
 function bibMostrarCaps(livIdx){
   bibLevel='caps'; bibLivroIdx=livIdx;
   const liv=bibData[livIdx];
+  const _ab=liv.abbrev.toLowerCase();
   bibSetHeader(liv.name,'Selecione o capítulo',false,'',false);
   let html='<div class="bib-caps-grid">';
   liv.chapters.forEach((_,ci)=>{
-    const marcado=bibMarcados[`${livIdx}_${ci}`];
+    const marcado=(typeof leitLido==='function' && leitLido(_ab,ci+1)) || bibMarcados[`${livIdx}_${ci}`];
     html+=`<div class="bib-cap ${marcado?'lido':''}" onclick="bibMostrarVers(${livIdx},${ci})">${ci+1}</div>`;
   });
   document.getElementById('bib-body').innerHTML=html+'</div>';
 }
 
+function _capMarkHTML(li,ci,ab){
+  var lido = (typeof leitLido==='function') && leitLido(ab, ci+1);
+  return '<div class="bib-capmark'+(lido?'':' nao')+'" id="capmark_'+li+'_'+ci+'">'
+    +'<span class="cm-txt">'+(lido?'✓ Capítulo marcado como lido':'Já leu este capítulo?')+'</span>'
+    +'<button class="cm-btn" onclick="toggleCapLido('+li+','+ci+')">'+(lido?'Desmarcar':'Marcar como lido')+'</button></div>';
+}
+function toggleCapLido(li,ci){
+  var b=bibData[li]; if(!b) return; var ab=b.abbrev.toLowerCase(); var cap=ci+1;
+  var novo=!((typeof leitLido==='function') && leitLido(ab,cap));
+  if(typeof leitMarcar==='function') leitMarcar(ab,cap,novo);
+  var box=document.getElementById('capmark_'+li+'_'+ci);
+  if(box){ box.className='bib-capmark'+(novo?'':' nao'); box.querySelector('.cm-txt').textContent=novo?'✓ Capítulo marcado como lido':'Já leu este capítulo?'; box.querySelector('.cm-btn').textContent=novo?'Desmarcar':'Marcar como lido'; }
+}
 function bibMostrarVers(livIdx,capIdx){
   bibLevel='vers'; bibLivroIdx=livIdx; bibCapIdx=capIdx; salvarPos();
   bibMarcados[`${livIdx}_${capIdx}`]=true;
   localStorage.setItem('bib_marcados',JSON.stringify(bibMarcados));
   const liv=bibData[livIdx]; const cap=liv.chapters[capIdx];
   bibSetHeader(liv.name,`Capítulo ${capIdx+1} de ${liv.chapters.length}`,true,`${liv.name} ${capIdx+1}`,false);
-  let html='<div class="bib-vers-wrap">';
+  let html=_capMarkHTML(livIdx,capIdx,liv.abbrev.toLowerCase())+'<div class="bib-vers-wrap">';
   cap.forEach((v,vi)=>{
     const mk=bibMarcados[`v_${livIdx}_${capIdx}_${vi}`];
     html+=`<div class="bib-verso ${mk?'marcado':''}" id="bv_${livIdx}_${capIdx}_${vi}" onclick="toggleVers(${livIdx},${capIdx},${vi},this)"><span class="bib-vers-num">${vi+1}</span><span class="bib-vers-txt">${v}</span><button class="bib-link-btn" title="Versículos ligados" onclick="event.stopPropagation();verLigados(${livIdx},${capIdx},${vi})">🔗</button></div><div class="bib-lig" id="lig_${livIdx}_${capIdx}_${vi}"></div>`;
