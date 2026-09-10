@@ -27,6 +27,7 @@ if (!CS) { console.error('FALTA RADAR_DB'); process.exit(1); }
 const PROVIDER = (process.env.EMB_PROVIDER || 'gemini').toLowerCase();
 const DIM = parseInt(process.env.EMB_DIM || '768', 10);
 const BATCH = parseInt(process.env.BATCH || '100', 10);
+const TABLE = (process.env.EMB_TABLE || 'versiculo_embeddings').replace(/[^a-z0-9_]/gi, '');
 const BOOKS = (process.env.BOOKS || 'jo').toLowerCase();
 const GKEY = process.env.GEMINI_API_KEY;
 const GMODEL = process.env.GEMINI_MODEL || 'gemini-embedding-001';
@@ -91,8 +92,9 @@ const embed = PROVIDER === 'voyage' ? embedVoyage : embedGemini;
   const c = new Client({ connectionString: CS, ssl: { rejectUnauthorized: false } });
   await c.connect();
 
+  console.log(`Tabela destino: ${TABLE}`);
   // idempotência: pula refs que já têm embedding
-  const jaR = await c.query('select ref from versiculo_embeddings where embedding is not null');
+  const jaR = await c.query(`select ref from ${TABLE} where embedding is not null`);
   const ja = new Set(jaR.rows.map(x => x.ref));
   const pend = alvo.filter(a => !ja.has(a.ref));
   console.log(`Já embutidos: ${ja.size}. Pendentes: ${pend.length}.`);
@@ -105,9 +107,12 @@ const embed = PROVIDER === 'voyage' ? embedVoyage : embedGemini;
     for (let tent = 1; ; tent++) {
       try { vetores = await embed(lote.map(x => x.texto)); break; }
       catch (e) {
-        if (tent >= 5) throw e;
-        const wait = 2000 * tent;
-        console.warn(`  retry ${tent} (${String(e).slice(0, 80)}) — esperando ${wait}ms`);
+        const msg = String(e);
+        const is429 = /\b429\b|rate limit/i.test(msg);
+        if (tent >= (is429 ? 15 : 5)) throw e;
+        // 429 (trial Voyage = ~3 RPM/10K TPM): espera longa e crescente
+        const wait = is429 ? Math.min(25000 + 5000 * tent, 60000) : 2000 * tent;
+        console.warn(`  retry ${tent} (${msg.slice(0, 80)}) — esperando ${wait}ms`);
         await sleep(wait);
       }
     }
@@ -115,7 +120,7 @@ const embed = PROVIDER === 'voyage' ? embedVoyage : embedGemini;
     for (let k = 0; k < lote.length; k++) {
       const a = lote[k], vec = '[' + vetores[k].join(',') + ']';
       await c.query(
-        `insert into versiculo_embeddings (ref,abbrev,livro,cap,ver,texto,modelo,dim,embedding)
+        `insert into ${TABLE} (ref,abbrev,livro,cap,ver,texto,modelo,dim,embedding)
          values ($1,$2,$3,$4,$5,$6,$7,$8,$9::vector)
          on conflict (ref) do update set texto=excluded.texto, modelo=excluded.modelo,
            dim=excluded.dim, embedding=excluded.embedding`,
@@ -128,7 +133,7 @@ const embed = PROVIDER === 'voyage' ? embedVoyage : embedGemini;
     if (i + BATCH < pend.length) { console.log(`  aguardando ${pace}ms (quota)...`); await sleep(pace); }
   }
 
-  const tot = await c.query('select count(*) n from versiculo_embeddings where embedding is not null');
+  const tot = await c.query(`select count(*) n from ${TABLE} where embedding is not null`);
   console.log(`OK. Total no banco: ${tot.rows[0].n}`);
   await c.end();
 })().catch(e => { console.error('ERRO', e); process.exit(1); });

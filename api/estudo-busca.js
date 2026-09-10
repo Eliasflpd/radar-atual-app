@@ -20,9 +20,11 @@ const ABBR={ rm:'rm', rom:'rm', romanos:'rm', gn:'gn', genesis:'gn', ex:'ex', ex
   atos:'atos', at:'atos', ap:'ap', apocalipse:'ap', hb:'hb', hebreus:'hb', tg:'tg',
   ef:'ef', efesios:'ef', fp:'fp', cl:'cl', gl:'gl', galatas:'gl' };
 
-const DIM=parseInt(process.env.EMB_DIM||'768',10);
-const GKEY=process.env.GEMINI_API_KEY;
-const GMODEL=process.env.GEMINI_MODEL||'gemini-embedding-001';
+// Motor semântico agora padronizado em Voyage 1024 dims (tabela versiculo_emb_voyage).
+const SEM_TABLE=(process.env.EMB_TABLE||'versiculo_emb_voyage').replace(/[^a-z0-9_]/gi,'');
+const VDIM=parseInt(process.env.EMB_DIM||'1024',10);
+const VKEY=process.env.VOYAGE_API_KEY;
+const VMODEL=process.env.VOYAGE_MODEL||'voyage-3.5';
 
 function parseRef(s){
   const m=s.trim().match(/^(.*?)[\s]*?(\d{1,3})[:\s.](\d{1,3})\s*$/);
@@ -39,11 +41,12 @@ function parseAbbrev(s){
   return { abbrev:ABBR[a]||a, cap:+m[2], ver:+m[3] };
 }
 async function embedQuery(text){
-  const url=`https://generativelanguage.googleapis.com/v1beta/models/${GMODEL}:embedContent?key=${GKEY}`;
-  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({content:{parts:[{text}]},outputDimensionality:DIM})});
-  if(!r.ok) throw new Error('gemini '+r.status);
-  return (await r.json()).embedding.values;
+  // Voyage — mesma família/dimensão dos vetores salvos (input_type:query melhora a busca)
+  const r=await fetch('https://api.voyageai.com/v1/embeddings',{method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+VKEY},
+    body:JSON.stringify({model:VMODEL,input:[text],output_dimension:VDIM,input_type:'query'})});
+  if(!r.ok) throw new Error('voyage '+r.status);
+  return (await r.json()).data[0].embedding;
 }
 
 module.exports = async (req,res) => {
@@ -66,13 +69,13 @@ module.exports = async (req,res) => {
         const ref=parseAbbrev(q.ref.toString());
         if(!ref){ res.status(400).json({ok:false,err:'ref'}); return; }
         const base=await c.query(
-          `select ref,livro,cap,ver,texto,embedding from versiculo_embeddings
+          `select ref,livro,cap,ver,texto,embedding from ${SEM_TABLE}
             where abbrev=$1 and cap=$2 and ver=$3 and embedding is not null limit 1`,
           [ref.abbrev,ref.cap,ref.ver]);
         if(!base.rowCount){ res.status(200).json({ok:true,modo:'ref',achou:false,total:0,itens:[],msg:'versículo ainda não indexado'}); return; }
         const r=await c.query(
           `select ref,livro,cap,ver,texto, 1-(embedding <=> $1::vector) as score
-             from versiculo_embeddings
+             from ${SEM_TABLE}
             where embedding is not null and ref <> $2
             order by embedding <=> $1::vector limit $3`,
           [base.rows[0].embedding, base.rows[0].ref, limit]);
@@ -83,11 +86,11 @@ module.exports = async (req,res) => {
       }
       const termo=(q.q||'').toString().trim().slice(0,300);
       if(termo.length<2){ res.status(400).json({ok:false,err:'curto'}); return; }
-      if(!GKEY){ res.status(200).json({ok:false,err:'sem chave IA'}); return; }
+      if(!VKEY){ res.status(200).json({ok:false,err:'sem chave IA'}); return; }
       const vec='['+(await embedQuery(termo)).join(',')+']';
       const r=await c.query(
         `select ref,livro,cap,ver,texto, 1-(embedding <=> $1::vector) as score
-           from versiculo_embeddings where embedding is not null
+           from ${SEM_TABLE} where embedding is not null
           order by embedding <=> $1::vector limit $2`, [vec,limit]);
       res.status(200).json({ok:true,modo:'texto',q:termo,total:r.rowCount,itens:r.rows});
     }catch(e){ res.status(200).json({ok:false,err:String(e).slice(0,160)}); }
