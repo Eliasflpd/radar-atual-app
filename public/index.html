@@ -6210,17 +6210,16 @@ function abrirVideoCard(idx){
 // ===== Historinhas Infantil (compartilhavel + contador GLOBAL via Abacus) =====
 // Lista no codigo (banco do RADAR fora do ar). Novos videos: manda o arquivo pro Claude adicionar.
 var _HIST=[
-  {id:'jose', titulo:'José e a Túnica Colorida', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/jose.mp4'},
-  {id:'adao-eva', titulo:'Adão e Eva', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/adao-eva.mp4'},
-  {id:'adao-eva-2', titulo:'Adão e Eva — Parte 2', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/adao-eva-2.mp4'},
-  {id:'davi', titulo:'Davi e Golias', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/davi.mp4'},
-  {id:'moises', titulo:'Moisés e o Mar Vermelho', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/moises.mp4'},
-  {id:'noe', titulo:'Noé e a Arca', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/noe.mp4'},
-  {id:'salomao', titulo:'Salomão e a Sabedoria', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/salomao-01.mp4'},
-  {id:'jose-historia', titulo:'José — A História', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/jose-historia.mp4'},
-  {id:'jesus', titulo:'Jesus', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/jesus.mp4'},
-  {id:'video-biblico', titulo:'Vídeo Bíblico', video:'https://kzjtjdxsmgtj3c35.public.blob.vercel-storage.com/historinhas/video-biblico.mp4'},
-  {id:'jabez', titulo:'A Oração de Jabez', video:'/videos/jabez.mp4'}
+  {id:'noe', titulo:'A Arca de Noé', video:'https://www.youtube.com/watch?v=bdCuh2_k184', capa:'https://img.youtube.com/vi/bdCuh2_k184/hqdefault.jpg'},
+  {id:'jose', titulo:'José e seus Sonhos', video:'https://www.youtube.com/watch?v=Lc4VKPvWdhk', capa:'https://img.youtube.com/vi/Lc4VKPvWdhk/hqdefault.jpg'},
+  {id:'natal', titulo:'O Primeiro Natal — O Nascimento de Jesus', video:'https://www.youtube.com/watch?v=aRE7U-5O13U', capa:'https://img.youtube.com/vi/aRE7U-5O13U/hqdefault.jpg'},
+  {id:'salomao', titulo:'O Rei Salomão e a Sabedoria', video:'https://www.youtube.com/watch?v=pSHJrh3PnYo', capa:'https://img.youtube.com/vi/pSHJrh3PnYo/hqdefault.jpg'},
+  {id:'elias', titulo:'Elias e o Fogo do Céu', video:'https://www.youtube.com/watch?v=lwnIoFNpIR0', capa:'https://img.youtube.com/vi/lwnIoFNpIR0/hqdefault.jpg'},
+  {id:'lazaro', titulo:'Jesus e o seu Amigo Lázaro', video:'https://www.youtube.com/watch?v=hpjg_rDcVGQ', capa:'https://img.youtube.com/vi/hpjg_rDcVGQ/hqdefault.jpg'},
+  {id:'prodigo', titulo:'O Filho Pródigo', video:'https://www.youtube.com/watch?v=8wH5e_WRPXY', capa:'https://img.youtube.com/vi/8wH5e_WRPXY/hqdefault.jpg'},
+  {id:'isaque-rebeca', titulo:'Isaque e Rebeca', video:'https://www.youtube.com/watch?v=KWKhYWrPPdg', capa:'https://img.youtube.com/vi/KWKhYWrPPdg/hqdefault.jpg'},
+  {id:'joao-batista', titulo:'O Nascimento de João Batista', video:'https://www.youtube.com/watch?v=41WMuAd-Eaw', capa:'https://img.youtube.com/vi/41WMuAd-Eaw/hqdefault.jpg'},
+  {id:'apocalipse', titulo:'Apocalipse — A Grande Promessa', video:'https://www.youtube.com/watch?v=-kI517dxNeE', capa:'https://img.youtube.com/vi/-kI517dxNeE/hqdefault.jpg'}
 ];
 var _ABC='https://abacus.jasoncameron.dev';
 function _htoast(m){ try{ var t=document.getElementById('_htoast'); if(!t){t=document.createElement('div');t.id='_htoast';t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(120px);background:#111;color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;font-size:14px;z-index:99999;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.3)';document.body.appendChild(t);} t.textContent=m;t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.transform='translateX(-50%) translateY(120px)';},2600);}catch(e){} }
@@ -6233,7 +6232,20 @@ function renderHist(){ var el=document.getElementById('hist-lista'); if(!el)retu
   el.innerHTML=_HIST.map(function(h){ var cap=(h.capa||('/img/hist/'+h.id+'.jpg')); return '<div class="hist-item"><div class="hist-thumb" onclick="verHistorinha(\''+h.id+'\')" style="background-image:url(\''+cap+'\'),linear-gradient(135deg,#2a4a80,#16305c)"><span class="hist-play">▶</span></div><div class="hist-body"><b>'+String(h.titulo||'Historinha').replace(/</g,'&lt;')+'</b><div class="hist-views">👁 <span id="hv-'+h.id+'">...</span> visualizacoes</div><div class="hist-acts"><button class="hist-a play" onclick="verHistorinha(\''+h.id+'\')">▶️ Assistir</button><button class="hist-a" onclick="shareHist(\''+h.id+'\')">↗️ Compartilhar</button></div></div></div>'; }).join(''); }
 function verHistorinha(id){ var h=_histById(id); if(!h)return;
   fetch(_ABC+'/hit/radaratual-hist/'+id).then(function(r){return r.json();}).then(function(d){ var sp=document.getElementById('hv-'+id); if(sp&&d&&d.value!=null)sp.textContent=d.value; }).catch(function(){});
-  var v=h.video||''; if((h.tipo=='mp4')||v.indexOf('.mp4')>=0||v.indexOf('/videos')===0){ abrirVideoTela(v, h.titulo||'Historinha', 'hist-'+id); } else { window.open(v,'_blank'); } }
+  var v=h.video||''; if((h.tipo=='mp4')||v.indexOf('.mp4')>=0||v.indexOf('/videos')===0){ abrirVideoTela(v, h.titulo||'Historinha', 'hist-'+id); } else { var yt=_ytId(v); if(yt){ _playYT(yt, h.titulo||'Historinha'); } else { window.open(v,'_blank'); } } }
+function _ytId(u){ var m=(u||'').match(/(?:v=|youtu\.be\/|\/embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:''; }
+function _playYT(id,titulo){
+  var ov=document.getElementById('yt-ov');
+  if(!ov){ ov=document.createElement('div'); ov.id='yt-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:100050;background:#000;display:none;flex-direction:column';
+    ov.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;color:#fff;background:#0a1420"><button onclick="_closeYT()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:9px;padding:8px 14px;font-weight:800;font-family:inherit;cursor:pointer">&lsaquo; Voltar</button><span id="yt-tit" style="flex:1;min-width:0;font-size:.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span></div><div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 8px 8px"><div style="position:relative;width:100%;max-width:960px;aspect-ratio:16/9;max-height:100%;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.5)"><iframe id="yt-if" allow="autoplay;encrypted-media;fullscreen;picture-in-picture" allowfullscreen playsinline style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#000"></iframe></div></div>';
+    document.body.appendChild(ov);
+  }
+  document.getElementById('yt-tit').textContent=titulo||'Historinha';
+  document.getElementById('yt-if').src='https://www.youtube.com/embed/'+id+'?rel=0&autoplay=1&playsinline=1&modestbranding=1';
+  ov.style.display='flex';
+}
+function _closeYT(){ var ov=document.getElementById('yt-ov'); if(ov){ var f=document.getElementById('yt-if'); if(f)f.src=''; ov.style.display='none'; } }
 function shareHist(id){ var h=_histById(id); var url=location.origin+'/?hist='+id; var dados={title:(h&&h.titulo)||'Historinha Infantil', text:'Assista essa historinha no app RADAR:', url:url}; if(navigator.share){ navigator.share(dados).catch(function(){}); } else { navigator.clipboard.writeText(url).then(function(){_htoast('🔗 Link copiado!');}).catch(function(){_htoast(url);}); } }
 function toggleHistAdm(){ var a=document.getElementById('hist-adm'); a.style.display=a.style.display=='none'?'block':'none'; }
 function addHistAdm(){ _htoast('Pra adicionar um video novo, manda o arquivo pro Claude ✅'); }
