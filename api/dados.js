@@ -7,8 +7,6 @@ const HANDLERS = {
   hist:         require('./_lib/hist.js'),
   igrejas:      require('./_lib/igrejas.js'),
   acesso:       require('./_lib/acesso.js'),
-  perolas:      require('./_lib/perolas.js'),
-  mensagem:     require('./_lib/mensagem.js'),
   'ebd-lupa':   require('./_lib/ebd-lupa.js'),
   manual:       require('./_lib/manual.js'),
   leitura:      require('./_lib/leitura.js')

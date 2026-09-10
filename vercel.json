@@ -5,11 +5,12 @@
     { "source": "/api/hist",     "destination": "/api/dados?fn=hist" },
     { "source": "/api/igrejas",  "destination": "/api/dados?fn=igrejas" },
     { "source": "/api/acesso",   "destination": "/api/dados?fn=acesso" },
-    { "source": "/api/perolas",  "destination": "/api/dados?fn=perolas" },
-    { "source": "/api/mensagem", "destination": "/api/dados?fn=mensagem" },
     { "source": "/api/ebd-lupa", "destination": "/api/dados?fn=ebd-lupa" },
     { "source": "/api/manual",   "destination": "/api/dados?fn=manual" },
-    { "source": "/api/leitura",  "destination": "/api/dados?fn=leitura" }
+    { "source": "/api/leitura",  "destination": "/api/dados?fn=leitura" },
+    { "source": "/api/perolas",  "destination": "/api/edge?fn=perolas" },
+    { "source": "/api/mensagem", "destination": "/api/edge?fn=mensagem" },
+    { "source": "/api/concilio", "destination": "/api/edge?fn=concilio" }
   ],
   "headers": [
     {
