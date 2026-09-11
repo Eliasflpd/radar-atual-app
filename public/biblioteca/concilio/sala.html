@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sala de Perguntas — Concílio dos Expositores</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--ouro:#e9c877;--vinho:#8a1c1c;--linha:#e4e7ec;--fundo:#f4f7f8}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px;height:100%;background:var(--fundo)}
+  body{height:100%;height:100dvh;margin:0 auto;max-width:880px;background:var(--fundo);color:var(--texto);
+    border-left:1px solid var(--linha);border-right:1px solid var(--linha);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
+    display:flex;flex-direction:column;overflow:hidden}
+
+  /* ── cabeçalho: quem está respondendo + voltar ── */
+  header{background:var(--navy);color:#fff;flex-shrink:0;display:flex;align-items:center;gap:9px;
+    padding:calc(7px + env(safe-area-inset-top)) 10px 7px;box-shadow:0 2px 8px rgba(15,61,92,.22)}
+  header .hb{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:10px;
+    min-width:38px;height:38px;padding:0 9px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer;flex-shrink:0}
+  header .hb:hover{background:rgba(255,255,255,.28)}
+  header .av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--dourado));
+    display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+  header .ti{flex:1;min-width:0}
+  header .ti b{display:block;font-family:Georgia,serif;font-size:1.02rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header .ti span{display:block;font-size:.76rem;color:var(--ouro);font-weight:700;line-height:1.25;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ── conversa (a ÚNICA coisa que rola) ── */
+  #msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 11px 8px;display:flex;flex-direction:column;gap:9px}
+  #msgs.semnada{justify-content:center}   /* sala vazia: nada de buraco no meio da tela */
+  .b{max-width:88%;padding:10px 13px;border-radius:15px;font-size:1.01rem;line-height:1.58;
+    word-wrap:break-word;overflow-wrap:anywhere;box-shadow:0 1px 3px rgba(15,61,92,.08)}
+  .b .h{font-size:.72rem;font-weight:800;margin-bottom:3px;opacity:.75}
+  .eu{align-self:flex-end;background:#dff0f2;border:1px solid #cfe6e9;border-bottom-right-radius:4px;white-space:pre-wrap}
+  .eu .h{color:#0b5a63}
+  .ele{align-self:flex-start;background:#fff;border:1px solid var(--linha);border-bottom-left-radius:4px;text-align:justify}
+  .ele .h{color:var(--teal)}
+  .ele h4{font-family:Georgia,serif;color:var(--navy);font-size:1.02rem;margin:13px 0 5px}
+  .ele h4:first-of-type{margin-top:2px}
+  .ele p{margin:0 0 9px} .ele p:last-child{margin:0}
+  .ele strong{color:var(--vinho)} .ele em{color:var(--teal)}
+  .ele .li{padding-left:4px;margin:0 0 6px;text-align:left}
+  .rod{display:flex;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid var(--linha)}
+  .rod button{background:#f2f7f8;border:1px solid #d5e6e8;color:var(--teal);border-radius:10px;
+    padding:7px 12px;font-size:.85rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .rod button:hover{background:#e6f1f3}
+  .erro{align-self:flex-start;max-width:92%;background:#fdeaea;border:1px solid #f2c2c2;color:var(--vinho);
+    border-radius:13px;padding:11px 13px;font-size:.95rem;font-weight:600}
+  .pensando{align-self:flex-start;background:#fff;border:1px dashed #bcd6da;color:var(--teal);
+    border-radius:15px;padding:10px 14px;font-size:.97rem;font-weight:700}
+  .pensando i{font-style:normal;animation:pisca 1.2s infinite}
+  .pensando i:nth-child(2){animation-delay:.2s} .pensando i:nth-child(3){animation-delay:.4s}
+  @keyframes pisca{0%,60%,100%{opacity:.25}30%{opacity:1}}
+
+  /* ── boas-vindas + sugestões ── */
+  .abre{background:#fff;border:1px solid var(--linha);border-radius:16px;padding:14px 15px}
+  .abre .t{font-family:Georgia,serif;color:var(--navy);font-weight:800;font-size:1.1rem;margin-bottom:4px}
+  .abre .d{color:#5b6672;font-size:.95rem;margin-bottom:11px}
+  .abre .lb{color:var(--teal);font-size:.79rem;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{background:#f2f7f8;border:1px solid #d5e6e8;color:var(--teal);border-radius:999px;
+    padding:8px 13px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer;text-align:left}
+  .chip:hover{background:#e6f1f3;border-color:#bcd6da}
+  .lei{background:#fbf6ea;border:1px solid #ecd9ad;border-radius:12px;padding:9px 12px;
+    margin-top:12px;font-size:.86rem;color:#6b5a2a;line-height:1.45}
+
+  /* ── servo ainda não ligado ── */
+  .fechado{align-self:center;max-width:96%;background:#fff;border:2px solid #ecd9ad;border-radius:16px;padding:15px 16px;text-align:center}
+  .fechado .t{font-family:Georgia,serif;color:var(--dourado);font-weight:800;font-size:1.08rem;margin-bottom:5px}
+  .fechado p{margin:0 0 11px;color:#5b6672;font-size:.96rem}
+  .fechado a{display:inline-block;text-decoration:none;background:var(--teal);color:#fff;border-radius:11px;
+    padding:10px 15px;font-weight:800;font-size:.95rem;margin:3px}
+  .fechado a.ouro{background:var(--dourado)}
+
+  /* ── barra de perguntar ── */
+  .barra{flex-shrink:0;display:flex;gap:8px;align-items:flex-end;background:#fff;border-top:1px solid var(--linha);
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+  .barra textarea{flex:1;resize:none;border:1.5px solid var(--linha);border-radius:19px;padding:10px 15px;
+    font-size:1.02rem;font-family:inherit;line-height:1.4;max-height:104px;color:var(--texto)}
+  .barra textarea:focus{outline:none;border-color:var(--teal)}
+  .barra button{background:var(--navy);color:#fff;border:none;border-radius:50%;width:46px;height:46px;
+    font-size:1.25rem;cursor:pointer;flex-shrink:0}
+  .barra button:disabled{opacity:.4;cursor:not-allowed}
+
+  @media(max-width:430px){
+    html{font-size:16px}
+    header{gap:7px;padding-left:8px;padding-right:8px}
+    header .hb{min-width:34px;height:34px;padding:0 7px;font-size:.92rem}
+    header .av{width:34px;height:34px;font-size:18px}
+    header .ti b{font-size:.95rem}
+    header .ti span{white-space:normal;font-size:.7rem;line-height:1.2}
+    .b{max-width:94%}
+    .abre{padding:12px 13px}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <button class="hb" id="bVoltar" title="Voltar ao Concílio" aria-label="Voltar ao Concílio">←</button>
+    <div class="av" id="hIcone">🕊️</div>
+    <div class="ti"><b id="hNome">Sala de Perguntas</b><span id="hTag">Concílio dos Expositores</span></div>
+    <button class="hb" id="bTudo" title="Copiar toda a conversa" aria-label="Copiar toda a conversa">📋</button>
+    <button class="hb" id="bLimpar" title="Apagar esta conversa" aria-label="Apagar esta conversa">🗑️</button>
+  </header>
+
+  <div id="msgs"></div>
+
+  <div class="barra">
+    <textarea id="txt" rows="1" placeholder="Escreva sua dúvida…" enterkeyhint="send" autocomplete="off"></textarea>
+    <button id="env" title="Enviar a pergunta" aria-label="Enviar a pergunta">➤</button>
+  </div>
+
+<script src="/biblioteca/_peca.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   SALA DE PERGUNTAS DO CONCÍLIO — genérica por dentro.
+   Pra LIGAR o próximo servo, é só acrescentar UMA linha em LIGADOS.
+   ══════════════════════════════════════════════════════════════════════ */
+var LIGADOS = {
+  'wagner-cordeiro': { api: '/api/concilio-wagner' }
+  /* exemplo do próximo:  'stanley-m-horton': { api: '/api/concilio-horton' }  */
+};
+var PADRAO = 'wagner-cordeiro';   // quem abre quando não vem ?e= na URL
+
+/* Sem sugestão de pergunta: o Elias não quer. A sala abre limpa, ele escreve o que quiser. */
+
+var FALLBACK = { id:'wagner-cordeiro', nome:'Dr. Wagner Cordeiro', icone:'🕊️', tag:'O garimpeiro de tipologias (GIOM)' };
+
+var DEMO = /[?&]demo=1/.test(location.search);   // modo de teste: resposta de exemplo, sem servidor
+var $ = function(id){ return document.getElementById(id); };
+var ID = (new URLSearchParams(location.search).get('e') || PADRAO).trim();
+var SERVO = null, LIGADO = !!LIGADOS[ID], ocupado = false, HIST = [];
+var CHAVE = 'concilio_sala_' + ID;
+
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function inl(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/(^|[\s(])\*(.+?)\*/g,'$1<em>$2</em>'); }
+
+/* markdown-lite igual ao da Lupa do Concílio */
+function fmt(txt){
+  var linhas = String(txt||'').split(/\r?\n/), h = '', para = [];
+  function solta(){ if(para.length){ h += '<p>' + inl(para.join(' ')) + '</p>'; para = []; } }
+  for (var i=0;i<linhas.length;i++){
+    var L = linhas[i].trim();
+    if(!L){ solta(); continue; }
+    var mH = L.match(/^#{1,4}\s*(.+)$/) || L.match(/^\*\*(.+?)\*\*:?\s*$/);
+    if(mH){ solta(); h += '<h4>' + inl(mH[1]) + '</h4>'; continue; }
+    if(/^(📖|📚|✝️|🕊️|⚖️|🔎|🔥|🧭|🪶)/.test(L) && L.length < 90){ solta(); h += '<h4>' + inl(L) + '</h4>'; continue; }
+    if(/^([•\-\*]|\d+[.)])\s+/.test(L)){ solta(); h += '<div class="li">◆ ' + inl(L.replace(/^([•\-\*]|\d+[.)])\s+/,'')) + '</div>'; continue; }
+    para.push(L);
+  }
+  solta();
+  return h || '<p>' + inl(txt||'') + '</p>';
+}
+
+/* ─────────── memória da conversa (localStorage, por servo) ─────────── */
+function ler(){ try{ var d = JSON.parse(localStorage.getItem(CHAVE)||'[]'); return Array.isArray(d)?d:[]; }catch(e){ return []; } }
+function gravar(){ try{ localStorage.setItem(CHAVE, JSON.stringify(HIST.slice(-60))); }catch(e){} }
+
+/* ─────────── copiar (o Elias exige em tudo) ─────────── */
+function copiaTexto(t, botao){
+  function fb(){ try{ var a=document.createElement('textarea'); a.value=t; a.style.position='fixed'; a.style.opacity='0';
+    document.body.appendChild(a); a.focus(); a.select(); document.execCommand('copy'); document.body.removeChild(a); }catch(e){} }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(fb); else fb();
+  if (botao){ var o = botao.textContent; botao.textContent = '✅ Copiado'; setTimeout(function(){ botao.textContent = o; }, 1600); }
+}
+function assinatura(){
+  return '\n\n— ' + (SERVO?SERVO.nome:'Concílio') + ' · Sala de Perguntas do Concílio dos Expositores (RADAR)' +
+         '\nhttps://radar-atual.vercel.app/biblioteca/concilio/sala.html?e=' + encodeURIComponent(ID);
+}
+
+/* ─────────── desenhar a conversa ─────────── */
+function fim(){ var m = $('msgs'); m.scrollTop = m.scrollHeight; }
+
+function bolha(item){
+  var d = document.createElement('div');
+  if (item.quem === 'eu'){
+    d.className = 'b eu';
+    d.innerHTML = '<div class="h">Você perguntou</div>' + esc(item.texto);
+  } else {
+    d.className = 'b ele';
+    d.innerHTML = '<div class="h">' + esc((SERVO?SERVO.icone:'🕊️') + ' ' + (SERVO?SERVO.nome:'')) + '</div>' +
+                  fmt(item.texto) +
+                  '<div class="rod"><button class="bcopia">📋 Copiar</button></div>';
+    var b = d.querySelector('.bcopia');
+    b.addEventListener('click', function(){ copiaTexto(item.texto + assinatura(), b); });
+  }
+  $('msgs').appendChild(d);
+  return d;
+}
+
+/* ─── fechar o ciclo: os dois botões no FIM da última resposta ───
+   Terminou de cavar? "Gerar uma mensagem" / "Gerar um estudo" → preview → publica.
+   Só a última resposta carrega os botões, pra conversa longa não virar bagunça. */
+function botoesDaPeca(){
+  if (!janelaTemPeca()) return;
+  var velhos = $('msgs').querySelectorAll('.pc-ger');
+  for (var i=0;i<velhos.length;i++) velhos[i].remove();
+  var respostas = $('msgs').querySelectorAll('.b.ele .rod');
+  if (!respostas.length) return;
+  window.RadarPeca.botoes(respostas[respostas.length-1], function(){
+    return { expositor: SERVO || FALLBACK, estudo: transcricao(), tema: primeiraPergunta() };
+  });
+}
+function janelaTemPeca(){ return !!(window.RadarPeca && window.RadarPeca.botoes); }
+function transcricao(){
+  var t = '';
+  for (var i=0;i<HIST.length;i++)
+    t += (HIST[i].quem === 'eu' ? 'PERGUNTA: ' : 'RESPOSTA DE ' + ((SERVO&&SERVO.nome)||'').toUpperCase() + ': ') + HIST[i].texto + '\n\n';
+  return t.trim();
+}
+function primeiraPergunta(){
+  for (var i=0;i<HIST.length;i++) if (HIST[i].quem === 'eu') return HIST[i].texto.slice(0,240);
+  return '';
+}
+
+function boasVindas(){
+  var d = document.createElement('div');
+  d.className = 'abre'; d.id = 'abre';
+  d.innerHTML = '<div class="t">' + esc((SERVO?SERVO.icone:'🕊️') + ' Pergunte à vontade') + '</div>' +
+    '<div class="d">Escreva sua dúvida aqui embaixo. ' + esc(SERVO?SERVO.nome:'O servo') +
+    ' responde no método dele — firmado na Bíblia, apontando pra <b>Cristo</b>.<br>' +
+    'No fim de cada resposta você pode <b>gerar uma mensagem</b> ou <b>gerar um estudo</b> — e já publicar no RADAR.</div>' +
+    '<div class="lei"><b>Ore antes.</b> O verdadeiro Mestre é o <b>Espírito Santo</b> (João 16:13). Isto é ferramenta — confira tudo na Palavra.</div>';
+  $('msgs').appendChild(d);
+}
+
+function avisoFechado(){
+  var d = document.createElement('div');
+  d.className = 'fechado';
+  d.innerHTML = '<div class="t">🚧 ' + esc(SERVO?SERVO.nome:'Este servo') + ' ainda não está disponível na sala</div>' +
+    '<p>A sala de perguntas está aberta por enquanto só com o <b>Dr. Wagner Cordeiro</b>. Os outros servos vão sendo ligados um a um.</p>' +
+    '<a href="sala.html?e=wagner-cordeiro">🕊️ Conversar com o Dr. Wagner Cordeiro</a>' +
+    '<a class="ouro" href="consultar.html?e=' + encodeURIComponent(ID) + '">✍️ Pedir um estudo a este servo</a>' +
+    '<p style="margin:11px 0 0;font-size:.9rem">Ou use a <b>Lupa do Concílio</b> na página principal — ela responde qualquer pergunta.</p>';
+  $('msgs').appendChild(d);
+}
+
+function pintarTudo(){
+  var m = $('msgs');
+  m.innerHTML = ''; m.className = '';
+  if (!LIGADO){ m.className = 'semnada'; avisoFechado(); return; }
+  if (!HIST.length){ m.className = 'semnada'; boasVindas(); return; }
+  for (var i=0;i<HIST.length;i++) bolha(HIST[i]);
+  botoesDaPeca();
+  fim();
+}
+
+/* ─────────── perguntar ─────────── */
+var RESPOSTA_DEMO =
+'🪶 O corvo e a pomba — dois envios, duas naturezas\n\n' +
+'Repare no que Noé faz em **Gênesis 8**: solta o corvo e solta a pomba. O corvo *saiu, indo e voltando* — ' +
+'e não voltou pra arca, porque achou carniça flutuando sobre as águas do juízo. A pomba **não achou onde pousar a planta do pé** e voltou.\n\n' +
+'**A figura:** o corvo é a velha natureza — se alimenta do que a morte deixou e se dá bem no meio do juízo. ' +
+'A pomba é o Espírito Santo, que não pousa sobre nada que ainda esteja debaixo da maldição.\n\n' +
+'- 1º envio: ela volta com as mãos vazias — a terra ainda não estava pronta.\n' +
+'- 2º envio: volta com **a folha de oliveira** — sinal de vida nova, o azeite que aponta pra unção.\n' +
+'- 3º envio: não volta mais — o Espírito enfim encontra descanso na nova criação.\n\n' +
+'E onde isso desemboca? No Jordão: *"vi o Espírito descer como pomba e pousar sobre Ele"* (João 1:32). ' +
+'Só houve **um** lugar em toda a terra onde a pomba pôde pousar e ficar: **Cristo**. Em Noé a pomba procurava; em Jesus ela achou.\n\n' +
+'(Resposta de EXEMPLO — modo de teste da sala.)';
+
+function pensando(on){
+  var v = document.getElementById('pensando');
+  if (!on){ if(v) v.remove(); return; }
+  if (v) return;
+  var d = document.createElement('div');
+  d.className = 'pensando'; d.id = 'pensando';
+  d.innerHTML = esc((SERVO?SERVO.icone:'🕊️')) + ' garimpando no texto <i>·</i><i>·</i><i>·</i>';
+  $('msgs').appendChild(d); fim();
+}
+
+function erroNaTela(msg){
+  var d = document.createElement('div');
+  d.className = 'erro'; d.innerHTML = esc(msg);
+  $('msgs').appendChild(d); fim();
+}
+
+function paraHistorico(){
+  return HIST.slice(-12).map(function(m){
+    return { papel: (m.quem === 'eu' ? 'usuario' : 'erudito'), texto: m.texto };
+  });
+}
+
+function guarda(quem, texto){
+  HIST.push({ quem: quem, texto: texto, ts: Date.now() });
+  gravar();
+}
+
+function perguntar(){
+  if (!LIGADO || ocupado) return;
+  var t = $('txt').value.trim();
+  if (!t) return;
+
+  $('msgs').className = '';
+  var abre = document.getElementById('abre'); if (abre) abre.remove();
+  var er = $('msgs').querySelectorAll('.erro'); for (var i=0;i<er.length;i++) er[i].remove();
+
+  ocupado = true; $('env').disabled = true;
+  $('txt').value = ''; $('txt').style.height = 'auto';
+  guarda('eu', t); bolha(HIST[HIST.length-1]); fim();
+  pensando(true);
+
+  if (DEMO){
+    setTimeout(function(){
+      pensando(false);
+      guarda('ele', RESPOSTA_DEMO); bolha(HIST[HIST.length-1]); botoesDaPeca(); fim();
+      ocupado = false; $('env').disabled = false; $('txt').focus();
+    }, 700);
+    return;
+  }
+
+  var alvo = LIGADOS[ID].api;
+  fetch(alvo, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ erudito: ID, pergunta: t, historico: paraHistorico() })
+  })
+  .then(function(r){
+    return r.text().then(function(corpo){ return { ok:r.ok, status:r.status, corpo:corpo }; });
+  })
+  .then(function(x){
+    pensando(false);
+    if (!x.ok){
+      if (x.status === 404 || x.status === 501)
+        erroNaTela('🔌 A sala ainda está sendo ligada. O ' + (SERVO?SERVO.nome:'servo') +
+                   ' ainda não está atendendo aqui. Sua pergunta ficou salva — tente de novo daqui a pouco.');
+      else
+        erroNaTela('Não deu certo agora (erro ' + x.status + '). Tente de novo em instantes.');
+      return;
+    }
+    var txt = x.corpo || '';
+    // aceita texto puro (streaming) OU json {resposta|texto|answer|conteudo}
+    if (/^\s*[{[]/.test(txt)){
+      try{
+        var j = JSON.parse(txt);
+        txt = j.resposta || j.texto || j.answer || j.conteudo || j.content || j.erro || txt;
+        if (typeof txt !== 'string') txt = JSON.stringify(j);
+      }catch(e){}
+    }
+    if (!String(txt).trim()){ erroNaTela('Veio uma resposta vazia. Pergunte de novo, por favor.'); return; }
+    guarda('ele', txt); bolha(HIST[HIST.length-1]); botoesDaPeca(); fim();
+  })
+  .catch(function(e){
+    pensando(false);
+    erroNaTela('🔌 A sala ainda está sendo ligada (ou a internet caiu): ' + (e && e.message ? e.message : 'falha na conexão') +
+               '. Sua pergunta ficou salva — tente de novo.');
+  })
+  .then(function(){ ocupado = false; $('env').disabled = false; $('txt').focus(); });
+}
+
+/* ─────────── botões do cabeçalho ─────────── */
+$('bVoltar').addEventListener('click', function(){ location.href = '/biblioteca/concilio/'; });
+$('bTudo').addEventListener('click', function(){
+  if (!HIST.length){ copiaTexto('', null); alert('Ainda não há conversa pra copiar.'); return; }
+  var t = 'Sala de Perguntas — ' + (SERVO?SERVO.nome:'') + '\n\n';
+  for (var i=0;i<HIST.length;i++) t += (HIST[i].quem === 'eu' ? 'PERGUNTA: ' : 'RESPOSTA: ') + HIST[i].texto + '\n\n';
+  copiaTexto(t.trim() + assinatura(), null);
+  var b = $('bTudo'); b.textContent = '✅'; setTimeout(function(){ b.textContent = '📋'; }, 1600);
+});
+$('bLimpar').addEventListener('click', function(){
+  if (!HIST.length) return;
+  if (!confirm('Apagar toda esta conversa? Não dá pra desfazer.')) return;
+  HIST = []; gravar(); pintarTudo();
+});
+$('env').addEventListener('click', perguntar);
+$('txt').addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); perguntar(); }
+});
+$('txt').addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(104, this.scrollHeight) + 'px';
+});
+
+/* ─────────── abrir a sala ─────────── */
+function abrir(e){
+  SERVO = e;
+  $('hIcone').textContent = e.icone || '🕊️';
+  $('hNome').textContent  = e.nome;
+  $('hTag').textContent   = e.tag || '';
+  document.title = e.nome + ' — Sala de Perguntas';
+  $('txt').placeholder = LIGADO ? ('Pergunte a ' + e.nome.split(' ').slice(0,2).join(' ') + '…') : 'Este servo ainda não está na sala';
+  $('txt').disabled = !LIGADO; $('env').disabled = !LIGADO;
+  HIST = ler();
+  pintarTudo();
+  if (LIGADO) $('txt').focus();
+}
+
+fetch('eruditos.json').then(function(r){ return r.json(); }).then(function(d){
+  var achou = null;
+  for (var i=0;i<d.length;i++) if (d[i].id === ID) achou = d[i];
+  abrir(achou || (ID === FALLBACK.id ? FALLBACK : { id:ID, nome:'Servo do Concílio', icone:'📖', tag:'' }));
+}).catch(function(){
+  abrir(ID === FALLBACK.id ? FALLBACK : { id:ID, nome:'Servo do Concílio', icone:'📖', tag:'' });
+});
+</script>
+</body>
+</html>

@@ -1,5 +1,10 @@
 export const config = { runtime: 'edge' };
 
+// TODA a IA deste arquivo passa pela CASCATA (Groq → Cerebras → Gemini → DeepSeek →
+// OpenAI). Era aqui que doía: com uma conta só, o dia em que ela secou levou junto o
+// Concílio inteiro e o Escavador de Pérolas. Ver api/_lib/ia.js.
+import { respostaStream, respostaTexto, respostaErro } from './ia.js';
+
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 
 // 41 eruditos do Concílio — gerado a partir de public/biblioteca/concilio/eruditos.json
@@ -54,59 +59,21 @@ const LEI = `⛔ TRAVAS INEGOCIÁVEIS (valem mais que impressionar):
 - Português do Brasil, prosa densa e pastoral, parágrafos de verdade (nada de lista solta sem carne). Use **negrito** só nos destaques.`;
 
 // ── Streaming genérico de chat (reaproveitado por consulta, sermão e mensagem) ──
+// Continua com a MESMA assinatura de antes, pra nenhuma tela precisar mudar. O que
+// mudou por dentro: em vez de um fetch cravado na OpenAI, agora é a cascata.
 async function streamChat(SYS, user, opts) {
   opts = opts || {};
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return new Response('IA não configurada (falta OPENAI_API_KEY).', { status: 500, headers: CORS });
-  let upstream;
   try {
-    upstream = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({
-        model: opts.model || 'gpt-4o-mini',
-        stream: true,
-        temperature: opts.temperature != null ? opts.temperature : 0.5,
-        max_tokens: opts.max_tokens || 2200,
-        messages: [{ role: 'system', content: SYS }, { role: 'user', content: user }],
-      }),
-    });
-  } catch (_) {
-    return new Response('Falha ao conectar na IA.', { status: 502, headers: CORS });
+    return await respostaStream({
+      sys: SYS,
+      user,
+      temperature: opts.temperature != null ? opts.temperature : 0.5,
+      max_tokens: opts.max_tokens || 2200,
+      tag: opts.tag || 'concilio',
+    }, CORS);
+  } catch (e) {
+    return respostaErro(e, CORS);
   }
-  if (!upstream.ok || !upstream.body) {
-    const txt = await upstream.text().catch(() => '');
-    return new Response('Erro da IA: ' + txt.slice(0, 200), { status: 502, headers: CORS });
-  }
-  const enc = new TextEncoder();
-  const dec = new TextDecoder();
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-  (async () => {
-    const reader = upstream.body.getReader();
-    let buf = '';
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        let i;
-        while ((i = buf.indexOf('\n')) >= 0) {
-          const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
-          if (!line.startsWith('data:')) continue;
-          const data = line.slice(5).trim();
-          if (data === '[DONE]') { await writer.close(); return; }
-          try {
-            const j = JSON.parse(data);
-            const tok = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
-            if (tok) await writer.write(enc.encode(tok));
-          } catch (_) {}
-        }
-      }
-    } catch (_) {}
-    try { await writer.close(); } catch (_) {}
-  })();
-  return new Response(readable, { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
 
 // ── CRIADOR DE SERMÕES — método "Escavador de Pérolas" (13 seções) ──
@@ -160,8 +127,6 @@ Comece direto no TÍTULO (sem saudação e sem "claro!").`;
 
 // ── LUPA DO CONCÍLIO — o mago-mestre roteia sozinho + pesquisa na web ──
 async function lupaWeb(pergunta, contexto, historico) {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return new Response('IA não configurada (falta OPENAI_API_KEY).', { status: 500, headers: CORS });
   const roster = ERUDITOS.map((e) => `- ${e.nome} (${e.tag}) — forte em: ${e.forte}`).join('\n');
   const SYS_MSG = `Você é o CONCÍLIO DOS EXPOSITORES do app RADAR (Assembleias de Deus, Brasil), conversando com o pastor Elias SOBRE uma mensagem/pregação que ele está lendo.
 
@@ -194,40 +159,34 @@ FORMATO da resposta (use os cabeçalhos com emoji):
 🧙 QUEM RESPONDEU — no fim, 1 linha dizendo qual(is) servo(s) do Concílio você consultou e por quê.
 
 ${LEI}`;
-  let r;
+  // Versão do prompt para quando NÃO houver busca na web disponível (o Gemini é o
+  // único provedor da cascata com busca de verdade, e ele vive estourando cota).
+  // Aqui a ordem de pesquisar SAI e entra a ordem de ser honesto sobre isso —
+  // mandar "pesquise" quem não pode pesquisar é pedir fonte inventada.
+  const SYS_SEM_WEB = SYS
+    .replace(/2\) PESQUISE NA WEB \(obrigatório\)[^\n]*\n/, '2) NÃO invente pesquisa: você NÃO tem acesso à web nesta resposta. Responda pela Escritura e pela doutrina, e NÃO cite fonte externa, site, notícia nem estatística que você não possa garantir.\n')
+    .replace('⚖️ AUTORIDADE FINAL: a Bíblia e a sã doutrina (Assembleias de Deus, pentecostal clássica). A web serve pra confirmar e enriquecer — NUNCA para adotar erro só porque está publicado.', '⚖️ AUTORIDADE FINAL: a Bíblia e a sã doutrina (Assembleias de Deus, pentecostal clássica).')
+    .replace('Se ajudar, pesquise na web fontes comprometidas com a verdade.', 'Você NÃO tem acesso à web nesta resposta — trabalhe com a Escritura e a doutrina, sem citar fonte externa.');
+
+  const historicoLimpo = Array.isArray(historico)
+    ? historico.slice(-6).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: (m.content || '').toString().slice(0, 2000) }))
+    : [];
+
   try {
-    r = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        tools: [{ type: 'web_search_preview' }],
-        input: [{ role: 'system', content: SYS }, ...(Array.isArray(historico) ? historico.slice(-6).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: (m.content || '').toString().slice(0, 2000) })) : []), { role: 'user', content: pergunta }],
-      }),
-    });
-  } catch (_) {
-    return new Response('Falha ao conectar na IA.', { status: 502, headers: CORS });
+    return await respostaTexto({
+      sys: SYS,
+      sysSemWeb: SYS_SEM_WEB,
+      web: true,
+      messages: [...historicoLimpo, { role: 'user', content: pergunta }],
+      temperature: 0.5,
+      max_tokens: 2200,
+      tag: 'lupa',
+    }, CORS);
+  } catch (e) {
+    return respostaErro(e, CORS);
   }
-  if (!r.ok) {
-    const txt = await r.text().catch(() => '');
-    return new Response('Erro da IA: ' + txt.slice(0, 300), { status: 502, headers: CORS });
-  }
-  let j;
-  try { j = await r.json(); } catch (_) { return new Response('Resposta inválida da IA.', { status: 502, headers: CORS }); }
-  let out = '';
-  try {
-    if (typeof j.output_text === 'string' && j.output_text) out = j.output_text;
-    else if (Array.isArray(j.output)) {
-      for (const item of j.output) {
-        if (item.type === 'message' && Array.isArray(item.content)) {
-          for (const c of item.content) { if ((c.type === 'output_text' || c.type === 'text') && c.text) out += c.text; }
-        }
-      }
-    }
-  } catch (_) {}
-  if (!out.trim()) out = 'Não consegui uma resposta agora. Tente de novo em instantes.';
-  return new Response(out, { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
+
 
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
@@ -262,13 +221,20 @@ export default async function handler(req) {
   const passagem = (b.passagem || '').toString().trim().slice(0, 400);
   const tipo = (b.tipo || 'estudo').toString().trim();
 
+  // ⚠️ O Dr. Wagner Cordeiro está no eruditos.json (42 servos) mas NÃO está nesta lista
+  // embutida (41) — quem clicava nele levava "Escolha um erudito da lista." (400).
+  // Além do conserto, ele não deve passar pela ficha genérica de 3 linhas: o método dele
+  // é garimpo tipológico com material de verdade atrás. Vai pro handler próprio.
+  if (id === 'wagner-cordeiro') {
+    if (!passagem) return new Response('Diga o texto, o assunto ou a sua dúvida.', { status: 400, headers: CORS });
+    const { wagnerStream } = await import('./concilio-wagner.js');
+    return wagnerStream(passagem, (TIPOS[tipo] || TIPOS.estudo).ordem);
+  }
+
   const e = ERUDITOS.find((x) => x.id === id);
   if (!e) return new Response('Escolha um erudito da lista.', { status: 400, headers: CORS });
   if (!passagem) return new Response('Diga o texto ou o assunto (ex.: João 3, ou "ansiedade").', { status: 400, headers: CORS });
   const t = TIPOS[tipo] || TIPOS.estudo;
-
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return new Response('IA não configurada (falta OPENAI_API_KEY).', { status: 500, headers: CORS });
 
   const filtro = e.id === 'david-flusser'
     ? `\n\n🚨 ATENÇÃO ESPECIAL: este consultor é um erudito judeu que NÃO crê na divindade de Cristo. Use SOMENTE o que ele traz de pano de fundo do 2º Templo (costumes, Templo, festas, mundo judaico). A Pessoa, a divindade e a obra de Cristo ficam com a fé cristã e a doutrina AD — NUNCA reproduza a negação dele. Deixe isso claro numa linha no fim.`
@@ -291,55 +257,6 @@ FORMATO: use os cabeçalhos com emoji exatamente como pedidos abaixo. Comece dir
 
   const user = `${t.ordem}\n\nTEXTO / ASSUNTO DO PASTOR: ${passagem}`;
 
-  let upstream;
-  try {
-    upstream = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        stream: true,
-        temperature: 0.5,
-        max_tokens: 2200,
-        messages: [{ role: 'system', content: SYS }, { role: 'user', content: user }],
-      }),
-    });
-  } catch (_) {
-    return new Response('Falha ao conectar na IA.', { status: 502, headers: CORS });
-  }
-  if (!upstream.ok || !upstream.body) {
-    const txt = await upstream.text().catch(() => '');
-    return new Response('Erro da IA: ' + txt.slice(0, 200), { status: 502, headers: CORS });
-  }
-
-  const enc = new TextEncoder();
-  const dec = new TextDecoder();
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-  (async () => {
-    const reader = upstream.body.getReader();
-    let buf = '';
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        let i;
-        while ((i = buf.indexOf('\n')) >= 0) {
-          const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
-          if (!line.startsWith('data:')) continue;
-          const data = line.slice(5).trim();
-          if (data === '[DONE]') { await writer.close(); return; }
-          try {
-            const j = JSON.parse(data);
-            const tok = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
-            if (tok) await writer.write(enc.encode(tok));
-          } catch (_) {}
-        }
-      }
-    } catch (_) {}
-    try { await writer.close(); } catch (_) {}
-  })();
-
-  return new Response(readable, { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
+  // Mesmo streaming de antes, só que agora servido pela cascata (streamChat).
+  return streamChat(SYS, user, { temperature: 0.5, max_tokens: 2200, tag: 'concilio-erudito' });
 }

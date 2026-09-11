@@ -92,6 +92,7 @@
   <div class="sugs" id="sugs"></div>
 
   <button id="forjar" disabled>✍️ Forjar agora</button>
+  <a id="irSala" href="#" style="display:none;text-align:center;text-decoration:none;background:#fbf6ea;border:2px solid #ecd9ad;color:#a9791c;border-radius:14px;padding:12px;font-weight:800;margin:10px 0 0">💬 Ou tire dúvidas com ele na Sala de Perguntas →</a>
   <div class="aviso" id="aviso">Escolha um servo e diga o texto pra liberar o botão.</div>
 
   <div id="res">
@@ -102,11 +103,14 @@
       <button class="btn teal" id="bCompartilhar">📤 Compartilhar</button>
       <button class="btn" id="bOutro">🔁 Outro servo</button>
     </div>
+    <!-- fecha o ciclo: o que acabou de ser cavado vira peça pronta e publicada -->
+    <div id="pecaBotoes" style="display:none;margin-top:10px"></div>
     <div class="lei"><b>Lembre sempre:</b> o verdadeiro Mestre é o <b>Espírito Santo</b> (João 16:13). Isto aqui é ferramenta na mão de Deus — <b>ore antes</b>, confira na Palavra, e leve pro púlpito só o que passar pelo crivo da Escritura. Nada é copiado de livro nenhum; nada deve ser inventado. <b>Cristo no centro.</b></div>
   </div>
 
   <div class="assinatura">✦ RADAR · A Ele toda a glória ✦</div>
 
+<script src="/biblioteca/_peca.js"></script>
 <script>
 var ERUDITOS = [], sel = null, tipoSel = 'estudo', ocupado = false;
 
@@ -185,7 +189,21 @@ document.getElementById('lista').addEventListener('click',function(ev){
 document.getElementById('busca').addEventListener('input',function(){pintar(this.value)});
 document.getElementById('passagem').addEventListener('input',conferir);
 
+// servos com Sala de Perguntas ligada (conversa direta) — ligar o próximo = mais um id aqui
+var SALA_LIGADA = {'wagner-cordeiro':1};
+function pintarSala(){
+  var a=document.getElementById('irSala');
+  if(!sel){ a.style.display='none'; return; }
+  a.href='sala.html?e='+encodeURIComponent(sel.id);
+  a.style.display='block';
+  a.textContent = SALA_LIGADA[sel.id]
+    ? '💬 Ou tire dúvidas com '+sel.nome+' na Sala de Perguntas →'
+    : '💬 Sala de Perguntas (ainda não disponível para este servo) →';
+  a.style.opacity = SALA_LIGADA[sel.id] ? '1' : '.75';
+}
+
 function conferir(){
+  pintarSala();
   var ok = !!sel && document.getElementById('passagem').value.trim().length>0 && !ocupado;
   document.getElementById('forjar').disabled=!ok;
   var av=document.getElementById('aviso');
@@ -199,7 +217,11 @@ fetch('eruditos.json').then(function(r){return r.json()}).then(function(d){
   ERUDITOS=d;
   // se vier ?e=slug (vindo do card lá do Concílio), já deixa escolhido
   var q=new URLSearchParams(location.search).get('e');
-  if(q) for(var i=0;i<d.length;i++) if(d[i].id===q) sel=d[i];
+  if(q){
+    for(var i=0;i<d.length;i++) if(d[i].id===q) sel=d[i];
+    // o card lá do Concílio manda o nome com título (ex.: "dr-wagner-cordeiro") — aceita assim também
+    if(!sel){ var q2=q.replace(/^(dr|pr|rev)-/,''); for(var i=0;i<d.length;i++) if(d[i].id===q2) sel=d[i]; }
+  }
   pintar('');
   if(sel){var el=document.querySelector('#lista .e.sel'); if(el&&el.scrollIntoView) el.scrollIntoView({block:'center'});}
   conferir();
@@ -249,7 +271,29 @@ function terminar(ok){
   ocupado=false;
   document.getElementById('forjar').textContent='✍️ Forjar agora';
   document.getElementById('acoes').style.display=ok?'flex':'none';
+  mostrarBotoesDaPeca(ok);
   conferir();
+}
+
+/* ─── fechar o ciclo ───
+   Cavou o texto com o servo? Agora vira peça pronta e vai pro devido lugar do RADAR:
+   mensagem -> /biblioteca/mensagens/  ·  estudo -> /biblioteca/estudo/           */
+var _pecaMontada = false;
+function mostrarBotoesDaPeca(ok){
+  var cx = document.getElementById('pecaBotoes');
+  if(!cx) return;
+  if(!ok || !window.RadarPeca || !window.RadarPeca.botoes){ cx.style.display='none'; return; }
+  if(!_pecaMontada){
+    window.RadarPeca.botoes(cx, function(){
+      return {
+        expositor: sel || {},
+        estudo: document.getElementById('saida').textContent || '',
+        tema: document.getElementById('passagem').value.trim()
+      };
+    });
+    _pecaMontada = true;
+  }
+  cx.style.display='block';
 }
 
 function textoFinal(){

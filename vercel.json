@@ -8,8 +8,11 @@
     { "source": "/api/ebd-lupa", "destination": "/api/dados?fn=ebd-lupa" },
     { "source": "/api/manual",   "destination": "/api/dados?fn=manual" },
     { "source": "/api/leitura",  "destination": "/api/dados?fn=leitura" },
+    { "source": "/api/publicacoes", "destination": "/api/dados?fn=publicacoes" },
+    { "source": "/api/peca",     "destination": "/api/edge?fn=peca" },
     { "source": "/api/perolas",  "destination": "/api/edge?fn=perolas" },
     { "source": "/api/mensagem", "destination": "/api/edge?fn=mensagem" },
+    { "source": "/api/concilio-wagner", "destination": "/api/edge?fn=concilio-wagner" },
     { "source": "/api/concilio", "destination": "/api/edge?fn=concilio" }
   ],
   "headers": [

@@ -132,6 +132,7 @@
   })();
   </script>
 
+  <a href="sala.html?e=wagner-cordeiro" style="display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#a9791c,#8a6414);color:#fff;border-radius:14px;padding:15px;font-size:1.06rem;font-weight:800;margin:0 0 10px;box-shadow:0 4px 14px rgba(169,121,28,.24)">💬 Sala de perguntas — converse com o Dr. Wagner Cordeiro →<span style="display:block;font-weight:600;font-size:.85rem;color:#fbf1dc;margin-top:2px">🕊️ O garimpeiro de tipologias (GIOM) · pergunte e tire dúvidas ali mesmo</span></a>
   <a href="consultar.html" style="display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#0f6d78,#0f3d5c);color:#fff;border-radius:14px;padding:16px;font-size:1.08rem;font-weight:800;margin:0 0 10px;box-shadow:0 4px 14px rgba(15,61,92,.22)">✍️ Ou escolha você mesmo um expositor →</a>
   <div style="text-align:center;color:#6b7280;font-size:.9rem;margin:0 0 12px">Não precisa decorar nome: <b>toque no servo</b>, diga o texto, e pronto.</div>
   <a href="manual.html" style="display:block;text-align:center;text-decoration:none;background:#fbf6ea;border:2px solid #ecd9ad;color:#a9791c;border-radius:14px;padding:12px;font-weight:800;margin:0 0 22px">📘 Manual fácil — como usar →</a>
@@ -162,11 +163,20 @@
     n = n.normalize('NFKD').replace(/[̀-ͯ]/g,'');
     return n.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
   }
+  /* quem já tem SALA DE PERGUNTAS ligada (conversar com ele ali mesmo).
+     Pra ligar o próximo, é só acrescentar o id aqui e em sala.html. */
+  var SALA_LIGADA = { 'dr-wagner-cordeiro': 1, 'wagner-cordeiro': 1 };
+  function idSala(id){ return (id === 'dr-wagner-cordeiro') ? 'wagner-cordeiro' : id; }
+
   var st = document.createElement('style');
   st.textContent = '.m{cursor:pointer;transition:border-color .12s,box-shadow .12s}'+
     '.m:hover{border-color:#a9791c;box-shadow:0 4px 14px rgba(169,121,28,.16)}'+
     '.m .chamar{display:block;width:100%;margin-top:9px;background:#0f6d78;color:#fff;border:none;'+
-    'border-radius:10px;padding:9px;font-size:.88rem;font-weight:800;font-family:inherit;cursor:pointer}';
+    'border-radius:10px;padding:9px;font-size:.88rem;font-weight:800;font-family:inherit;cursor:pointer}'+
+    '.m .falar{display:block;width:100%;margin-top:6px;background:#fbf6ea;color:#a9791c;border:1.5px solid #ecd9ad;'+
+    'border-radius:10px;padding:9px;font-size:.88rem;font-weight:800;font-family:inherit;cursor:pointer}'+
+    '.m .falar.on{background:#a9791c;color:#fff;border-color:#a9791c}'+
+    '.m .falar.on:hover{background:#8d6416}';
   document.head.appendChild(st);
 
   var cards = document.querySelectorAll('.m'), n = 0;
@@ -181,9 +191,17 @@
     b.type = 'button';
     b.textContent = '✍️ Consultar este servo';
     c.appendChild(b);
+    var f = document.createElement('button');
+    f.className = 'falar' + (SALA_LIGADA[id] ? ' on' : '');
+    f.type = 'button';
+    f.setAttribute('data-sala', idSala(id));
+    f.textContent = SALA_LIGADA[id] ? '💬 Tirar dúvidas com ele' : '💬 Sala (em breve)';
+    c.appendChild(f);
     n++;
   }
   document.addEventListener('click', function(ev){
+    var s = ev.target.closest ? ev.target.closest('[data-sala]') : null;
+    if (s) { ev.stopPropagation(); location.href = 'sala.html?e=' + encodeURIComponent(s.getAttribute('data-sala')); return; }
     var c = ev.target.closest ? ev.target.closest('.m') : null;
     if (!c || !c.getAttribute('data-id')) return;
     location.href = 'consultar.html?e=' + encodeURIComponent(c.getAttribute('data-id'));

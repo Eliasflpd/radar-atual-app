@@ -9,7 +9,8 @@ const HANDLERS = {
   acesso:       require('./_lib/acesso.js'),
   'ebd-lupa':   require('./_lib/ebd-lupa.js'),
   manual:       require('./_lib/manual.js'),
-  leitura:      require('./_lib/leitura.js')
+  leitura:      require('./_lib/leitura.js'),
+  publicacoes:  require('./_lib/publicacoes.js')
 };
 
 module.exports = async (req, res) => {

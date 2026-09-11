@@ -27,6 +27,7 @@
   .card .ic{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#8a1c1c,var(--dourado));display:flex;align-items:center;justify-content:center;font-size:27px;flex-shrink:0}
   .card .tit{font-family:Georgia,serif;font-weight:800;font-size:1.18rem;color:var(--navy);line-height:1.25}
   .card .ref{color:var(--dourado);font-weight:800;font-size:.9rem;margin-top:2px}
+  .card .fonte{color:var(--teal);font-weight:700;font-size:.79rem;margin-top:2px}
   .card .desc{font-size:.98rem;color:#4b5563;margin-top:9px;text-align:justify;line-height:1.55}
   .vazio{text-align:center;color:#9aa1ad;padding:30px 0;font-size:.95rem}
 </style>
@@ -52,63 +53,63 @@
   // ── CRM de Mensagens — pra postar uma nova, é só adicionar aqui em cima ──
   var MENSAGENS = [
     {
-      arquivo:'de-sobre-para-dentro.html',
+      arquivo:'de-sobre-para-dentro.html', data:'2026-09-10',
       titulo:'De Sobre para Dentro',
       ref:'João 16 · Gênesis 6',
       emoji:'🕊️',
       desc:'Por 4 mil anos, de Gênesis a Malaquias, o Espírito veio SOBRE o homem — nunca DENTRO. Davi temia perdê-lo, Eliseu o pegava emprestado, os 70 profetizaram "uma vez e nunca mais". Até Cristo dizer "convém que eu vá" — e o que era sobre virar dentro, para nunca mais sair.'
     },
     {
-      arquivo:'ouro-prata-e-cobre.html',
+      arquivo:'ouro-prata-e-cobre.html', data:'2026-09-10',
       titulo:'Ouro, Prata e Cobre',
       ref:'Êxodo 25',
       emoji:'⛺',
       desc:'Os três metais que abrem a lista da oferta e revelam o que Deus exige de quem vai ser Sua casa: ouro (glória), prata (almas resgatadas) e cobre — o metal que aguenta o fogo. E os pés de bronze de Jesus, que pisam a fornalha e não se contaminam.'
     },
     {
-      arquivo:'a-luz-do-primeiro-dia.html',
+      arquivo:'a-luz-do-primeiro-dia.html', data:'2026-09-10',
       titulo:'A Luz do Primeiro Dia',
       ref:'Gênesis 1 · João 1',
       emoji:'🌅',
       desc:'Se o sol só veio no quarto dia, de onde vinha a luz do primeiro? Era Cristo — Luz forte demais para o homem suportar. Por isso Deus filtrou a glória com luminares, e depois o próprio Verbo abaixou o nível e coube numa manjedoura, para você olhar pra Deus e viver.'
     },
     {
-      arquivo:'voce-nao-e-levita.html',
+      arquivo:'voce-nao-e-levita.html', data:'2026-09-10',
       titulo:'Você Não é Levita',
       ref:'Êxodo 19 · 1 Pedro 2',
       emoji:'👑',
       desc:'O plano de Deus era a nação inteira de sacerdotes. Mas o povo teve medo — "vai tu por nós" — e Deus desceu o nível a uma só tribo. Até Cristo, Rei e Sacerdote, rasgar o véu e restaurar o que o medo rebaixou: você não é levita, é sacerdócio real.'
     },
     {
-      arquivo:'o-trono-que-ele-nunca-alcancou.html',
+      arquivo:'o-trono-que-ele-nunca-alcancou.html', data:'2026-09-10',
       titulo:'O Trono que Ele Nunca Alcançou',
       ref:'Ezequiel 28 · Hebreus 10',
       emoji:'⚔️',
       desc:'O querubim ungido cobria a glória por fora, mas nunca entrou no Santíssimo. Sua fúria contra você é inveja: em Cristo, você atravessa com ousadia o véu que ele nunca cruzou. Toda a estratégia dele é uma só — te expulsar do lugar onde ele jamais entrou.'
     },
     {
-      arquivo:'a-genealogia-de-jesus.html',
+      arquivo:'a-genealogia-de-jesus.html', data:'2026-08-30',
       titulo:'A Genealogia de Jesus',
       ref:'Mateus 1:1-17',
       emoji:'📜',
       desc:'Uma lista de nomes que é o Evangelho em miniatura. Quatro mulheres improváveis, o 3×14 que assina DAVI, uma preposição grega que prega o nascimento virginal — e uma vaga com o teu nome.'
     },
     {
-      arquivo:'a-mulher-do-fluxo-de-sangue.html',
+      arquivo:'a-mulher-do-fluxo-de-sangue.html', data:'2026-08-30',
       titulo:'A Mulher do Fluxo de Sangue',
       ref:'Marcos 5:25-34',
       emoji:'🩸',
       desc:'Doze anos sangrando, impura, sem um abraço. Ela agarra a orla — o kraspedon, as franjas da aliança — e o poder que devia contaminá-Lo a purifica. De excluída a FILHA.'
     },
     {
-      arquivo:'o-ultimo-prego.html',
+      arquivo:'o-ultimo-prego.html', data:'2026-08-30',
       titulo:'O Último Prego',
       ref:'Gênesis 6',
       emoji:'🔩',
       desc:'Enquanto o mundo apodrecia, um homem serrava cedro. A engenharia da misericórdia: kôfer, Matusalém e a porta que Deus mesmo fechou.'
     },
     {
-      arquivo:'olha-e-vive.html',
+      arquivo:'olha-e-vive.html', data:'2026-08-30',
       titulo:'Olha e Vive',
       ref:'Números 21 · João 3',
       emoji:'🐍',
@@ -116,20 +117,51 @@
     }
   ];
 
+  // ── A LISTA: os arquivos acima + as mensagens que nasceram no Concílio (banco) ──
+  // Uma lista só, da mais nova pra mais velha. As antigas continuam intactas: se o
+  // banco estiver fora do ar, a página mostra exatamente o que sempre mostrou.
   var box=document.getElementById('lista');
-  if(!MENSAGENS.length){
-    box.innerHTML='<div class="vazio">Nenhuma mensagem postada ainda.</div>';
-  } else {
-    box.innerHTML=MENSAGENS.map(function(s){
-      return '<a class="card" href="'+s.arquivo+'">'
-        +'<div class="top">'
-        +'<div class="ic">'+(s.emoji||'🔥')+'</div>'
-        +'<div><div class="tit">'+s.titulo+'</div><div class="ref">'+s.ref+'</div></div>'
-        +'</div>'
-        +(s.desc?'<div class="desc">'+s.desc+'</div>':'')
-        +'</a>';
-    }).join('');
+
+  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function dia(v){ var d=new Date(v); return isNaN(d)?'':d.toISOString().slice(0,10); }
+  function cartao(s){
+    return '<a class="card" href="'+esc(s.arquivo)+'">'
+      +'<div class="top">'
+      +'<div class="ic">'+esc(s.emoji||'🔥')+'</div>'
+      +'<div><div class="tit">'+esc(s.titulo)+'</div><div class="ref">'+esc(s.ref||'')+'</div>'
+      +(s.fonte?'<div class="fonte">✍️ '+esc(s.fonte)+'</div>':'')+'</div>'
+      +'</div>'
+      +(s.desc?'<div class="desc">'+esc(s.desc)+'</div>':'')
+      +'</a>';
   }
+  function pintar(daNuvem){
+    var todas=MENSAGENS.concat(daNuvem||[]);
+    // ordena por data (mais nova em cima); empate mantém a ordem curada do array
+    todas=todas.map(function(x,i){return {x:x,i:i}})
+      .sort(function(a,b){
+        var da=(a.x.data||''), db=(b.x.data||'');
+        if(da===db) return a.i-b.i;
+        return da<db?1:-1;
+      }).map(function(o){return o.x});
+    if(!todas.length){ box.innerHTML='<div class="vazio">Nenhuma mensagem postada ainda.</div>'; return; }
+    box.innerHTML=todas.map(cartao).join('');
+  }
+  pintar([]);
+
+  fetch('/api/publicacoes?tipo=mensagem')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !d.ok || !d.itens || !d.itens.length) return;
+      pintar(d.itens.map(function(p){
+        return {
+          arquivo:'/biblioteca/publicacao.html?s='+encodeURIComponent(p.slug),
+          titulo:p.titulo, ref:p.referencia||'', emoji:p.emoji||'🔥',
+          desc:p.resumo||'', data:dia(p.criado_em),
+          fonte:p.expositor_nome?('forjada com '+p.expositor_nome):'forjada no Concílio'
+        };
+      }));
+    })
+    .catch(function(){ /* sem nuvem: a lista dos arquivos continua de pé */ });
 </script>
 
 <!-- ══════════ CRIADOR DE MENSAGENS (skill Mensagens para Pregar) ══════════ -->

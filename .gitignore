@@ -14,3 +14,12 @@ Configurações/
 .env.prod
 .env.curso
 BACKUP/
+
+# ── CHAVES E PROVAS — NUNCA VÃO PRO GIT ──────────────────────────────────────
+# Guia de configuração das chaves da cascata de IA: tem os valores REAIS das chaves
+# escritos por extenso, pro Elias copiar e colar no painel da Vercel.
+_CONFIGURAR-CHAVES.md
+
+# Backups automáticos dos arquivos alterados + banco de provas da cascata
+# (o harness de teste lê as chaves do cofre e pode deixar rastro delas aqui).
+_BACKUP/

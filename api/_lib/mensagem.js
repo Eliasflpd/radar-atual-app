@@ -1,5 +1,9 @@
 export const config = { runtime: 'edge' };
 
+// IA pela CASCATA (Groq → Cerebras → Gemini → DeepSeek → OpenAI): uma conta secar não
+// tira mais a Mensagem para Pregar do ar. Ver api/_lib/ia.js.
+import { respostaStream, respostaErro } from './ia.js';
+
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 
 // ===== SKILL: MENSAGEM PARA PREGAR (sermão que arrebata) =====
@@ -26,60 +30,13 @@ export default async function handler(req) {
   try { const b = await req.json(); passagem = (b.passagem || '').toString().trim().slice(0, 400); } catch (_) {}
   if (!passagem) return new Response('Diga a passagem ou o tema para a mensagem.', { status: 400, headers: CORS });
 
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return new Response('IA não configurada (falta OPENAI_API_KEY).', { status: 500, headers: CORS });
+  const user = `Forje uma MENSAGEM PARA PREGAR sobre: ${passagem}
 
-  const user = `Forje uma MENSAGEM PARA PREGAR sobre: ${passagem}\n\nProsa contínua, densa de revelação (línguas originais reais, pérolas ocultas, tipologia), um fio condutor que cresce e desemboca em Cristo, e um fechamento curto que arrebata. Sem tópicos, sem cabeçalhos, sem marcações de palco. Se o assunto não for uma passagem, ancore a mensagem em textos bíblicos reais.`;
+Prosa contínua, densa de revelação (línguas originais reais, pérolas ocultas, tipologia), um fio condutor que cresce e desemboca em Cristo, e um fechamento curto que arrebata. Sem tópicos, sem cabeçalhos, sem marcações de palco. Se o assunto não for uma passagem, ancore a mensagem em textos bíblicos reais.`;
 
-  let upstream;
   try {
-    upstream = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        stream: true,
-        temperature: 0.9,
-        max_tokens: 3200,
-        messages: [{ role: 'system', content: SYS }, { role: 'user', content: user }],
-      }),
-    });
+    return await respostaStream({ sys: SYS, user, temperature: 0.9, max_tokens: 3200, tag: 'mensagem' }, CORS);
   } catch (e) {
-    return new Response('Falha ao conectar na IA.', { status: 502, headers: CORS });
+    return respostaErro(e, CORS);
   }
-  if (!upstream.ok || !upstream.body) {
-    const t = await upstream.text().catch(() => '');
-    return new Response('Erro da IA: ' + t.slice(0, 200), { status: 502, headers: CORS });
-  }
-
-  const enc = new TextEncoder();
-  const dec = new TextDecoder();
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-  (async () => {
-    const reader = upstream.body.getReader();
-    let buf = '';
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        let i;
-        while ((i = buf.indexOf('\n')) >= 0) {
-          const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
-          if (!line.startsWith('data:')) continue;
-          const data = line.slice(5).trim();
-          if (data === '[DONE]') { await writer.close(); return; }
-          try {
-            const j = JSON.parse(data);
-            const tok = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
-            if (tok) await writer.write(enc.encode(tok));
-          } catch (_) {}
-        }
-      }
-    } catch (e) {}
-    try { await writer.close(); } catch (_) {}
-  })();
-
-  return new Response(readable, { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
 }

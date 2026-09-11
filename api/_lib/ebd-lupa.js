@@ -38,27 +38,16 @@ module.exports = async (req,res) => {
   const revista=(b.revista==='juvenil'||b.revista==='jovem')?b.revista:'adulto';
   if(pergunta.length<3){ res.status(400).json({error:'pergunta curta'}); return; }
 
-  const KEY=process.env.OPENAI_API_KEY;
-  if(!KEY){ res.status(200).json({ok:false, err:'sem chave'}); return; }
-
   const licaoTxt = await textoLicao(revista, licao);
   const userMsg = `LIÇÃO ATUAL (nº ${licao}):\n${licaoTxt || '(texto da lição indisponível — responda com base na Bíblia e na sã doutrina)'}\n\n--- Pergunta do aluno: ${pergunta}`;
 
+  // IA pela CASCATA (Groq → Cerebras → Gemini → DeepSeek → OpenAI). Arquivo CommonJS,
+  // cascata ESM: por isso o import é dinâmico. Ver api/_lib/ia.js.
   try{
-    const r = await fetch('https://api.openai.com/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},
-      body:JSON.stringify({
-        model:'gpt-4o-mini',
-        temperature:0.3,
-        max_tokens:420,
-        messages:[{role:'system',content:SISTEMA},{role:'user',content:userMsg}]
-      })
-    });
-    const d = await r.json();
-    const resposta = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
-    if(!resposta){ res.status(200).json({ok:false, err:(d.error&&d.error.message)||'sem resposta'}); return; }
-    res.json({ok:true, resposta:resposta.trim()});
+    const { iaTexto } = await import('./ia.js');
+    const r = await iaTexto({ sys:SISTEMA, user:userMsg, temperature:0.3, max_tokens:420, tag:'ebd-lupa' });
+    if(!r.texto){ res.status(200).json({ok:false, err:'sem resposta'}); return; }
+    res.json({ok:true, resposta:r.texto.trim(), provedor:r.provedorNome, modelo:r.modelo});
   }catch(e){
     res.status(200).json({ok:false, err:String(e).slice(0,140)});
   }

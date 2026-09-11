@@ -1,5 +1,9 @@
 export const config = { runtime: 'edge' };
 
+// A IA não vem mais de uma conta só: passa pela CASCATA (Groq → Cerebras → Gemini →
+// DeepSeek → OpenAI). Se um provedor seca, o Escavador continua no ar. Ver api/_lib/ia.js.
+import { respostaStream, respostaErro } from './ia.js';
+
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 
 const SYS = `Você é o ESCAVADOR DE PÉROLAS BÍBLICAS, um sistema de análise bíblica profética que revela tesouros ocultos nas Escrituras.
@@ -39,61 +43,13 @@ export default async function handler(req) {
   try { const b = await req.json(); passagem = (b.passagem || '').toString().trim().slice(0, 400); } catch (_) {}
   if (!passagem) return new Response('Diga um assunto para escavar.', { status: 400, headers: CORS });
 
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) return new Response('IA não configurada (falta OPENAI_API_KEY).', { status: 500, headers: CORS });
+  const user = `Faça uma análise bíblica completa de: ${passagem}
 
-  const user = `Faça uma análise bíblica completa de: ${passagem}\n\nSiga a estrutura dos 13 elementos. Seja profundo e edificante, MAS não invente nada: se não tiver certeza de um detalhe (palavra no original, data, fato histórico), não o inclua — trabalhe com o que o texto realmente diz. Verdadeiro é melhor que impressionante. Se o assunto não for bíblico, mostre o que a Bíblia ensina sobre ele.`;
+Siga a estrutura dos 13 elementos. Seja profundo e edificante, MAS não invente nada: se não tiver certeza de um detalhe (palavra no original, data, fato histórico), não o inclua — trabalhe com o que o texto realmente diz. Verdadeiro é melhor que impressionante. Se o assunto não for bíblico, mostre o que a Bíblia ensina sobre ele.`;
 
-  let upstream;
   try {
-    upstream = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        stream: true,
-        temperature: 0.45,
-        max_tokens: 2000,
-        messages: [{ role: 'system', content: SYS }, { role: 'user', content: user }],
-      }),
-    });
+    return await respostaStream({ sys: SYS, user, temperature: 0.45, max_tokens: 2000, tag: 'perolas' }, CORS);
   } catch (e) {
-    return new Response('Falha ao conectar na IA.', { status: 502, headers: CORS });
+    return respostaErro(e, CORS);
   }
-  if (!upstream.ok || !upstream.body) {
-    const t = await upstream.text().catch(() => '');
-    return new Response('Erro da IA: ' + t.slice(0, 200), { status: 502, headers: CORS });
-  }
-
-  // Pipe SSE da OpenAI -> texto puro (padrão TransformStream da Vercel Edge)
-  const enc = new TextEncoder();
-  const dec = new TextDecoder();
-  const { readable, writable } = new TransformStream();
-  const writer = writable.getWriter();
-  (async () => {
-    const reader = upstream.body.getReader();
-    let buf = '';
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        let i;
-        while ((i = buf.indexOf('\n')) >= 0) {
-          const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
-          if (!line.startsWith('data:')) continue;
-          const data = line.slice(5).trim();
-          if (data === '[DONE]') { await writer.close(); return; }
-          try {
-            const j = JSON.parse(data);
-            const tok = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
-            if (tok) await writer.write(enc.encode(tok));
-          } catch (_) {}
-        }
-      }
-    } catch (e) {}
-    try { await writer.close(); } catch (_) {}
-  })();
-
-  return new Response(readable, { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
 }

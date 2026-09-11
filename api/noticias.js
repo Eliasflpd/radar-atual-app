@@ -1,5 +1,9 @@
 export const config = { runtime: 'edge' };
 
+// A tradução dos títulos também passa pela CASCATA de IA (Groq → Cerebras → Gemini →
+// DeepSeek → OpenAI). Se a IA falhar, as notícias continuam saindo em inglês, como já era.
+import { iaTexto } from './_lib/ia.js';
+
 const QUERIES = [
   'https://news.google.com/rss/search?q=Israel+Jerusalem+war+news&hl=en&gl=US&ceid=US:en',
   'https://news.google.com/rss/search?q=Israel+prophecy+Bible+temple&hl=en&gl=US&ceid=US:en',
@@ -36,18 +40,12 @@ export default async function handler(req) {
   }
   if (!arts.length) return new Response(JSON.stringify({ ok:false,items:[],error:'no_articles' }), { headers: CORS });
   let result = arts.map(a => ({ ...a, titulo_pt:a.title, resumo_pt:a.desc, ancora:'', categoria:'Sociedade', emoji:'🌍' }));
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (apiKey) {
+  {
     const titles = arts.map((a,i) => (i+1)+'. '+a.title).join(' | ');
     const prompt = 'Traduza cada título para PORTUGUÊS DO BRASIL e adicione versículo bíblico relacionado. Retorne SOMENTE um JSON array com ' + arts.length + ' objetos no formato: [{"t":"TITULO EM PORTUGUES","a":"Livro cap:v","c":"Categoria","e":"emoji"},...] Categorias válidas: Profecia|Arqueologia|Política|Povo Judeu|Conflito|Sociedade. IMPORTANTE: campo "t" deve ser o título TRADUZIDO para português, NÃO o original em inglês. Títulos: ' + titles;
     try {
-      const r = await fetch('https://api.openai.com/v1/chat/completions', {
-        method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+apiKey},
-        body: JSON.stringify({ model:'gpt-4o-mini', messages:[{role:'user',content:prompt}], max_tokens:800, temperature:0.1 }),
-        signal: AbortSignal.timeout(7000),
-      });
-      const d = await r.json();
-      const raw = (d.choices&&d.choices[0]&&d.choices[0].message ? d.choices[0].message.content : '').trim();
+      const d = await iaTexto({ user: prompt, max_tokens: 800, temperature: 0.1, tag: 'noticias' });
+      const raw = (d.texto || '').trim();
       const s = raw.indexOf('['), e = raw.lastIndexOf(']')+1;
       if (s>=0 && e>s) {
         const tr = JSON.parse(raw.slice(s,e));
