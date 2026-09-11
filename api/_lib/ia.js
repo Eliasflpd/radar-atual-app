@@ -52,7 +52,7 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 
 // Quanto esperamos pelos CABEÇALHOS da resposta. Depois que o cabeçalho chega, o
 // corpo (streaming) corre sem limite — senão cortaríamos o sermão no meio.
-const TIMEOUT_MS = 20000;
+const TIMEOUT_MS = 12000;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) OS DEGRAUS
@@ -69,6 +69,20 @@ export const DEGRAUS = [
     env: ['GROQ_API_KEYS', 'GROQ_API_KEY'],
     // gpt-oss-120b primeiro (testado 11/09 respondendo); qwen como reserva.
     modelos: ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b'],
+  },
+  {
+    // DeepSeek EM 2º (pago, barato, RÁPIDO e confiável) — rede de segurança logo cedo.
+    // O modo não-stream (Sala do Wagner) precisa de um provedor que devolva CONTEÚDO na
+    // certa e rápido; deixá-lo em 6º fazia os provedores lentos/de-raciocínio antes dele
+    // estourarem os 25s do Edge (504). Só é chamado quando o Groq grátis não atende, então
+    // o custo fica pertinho de zero. deepseek-chat = conteúdo limpo (flash é raciocínio).
+    id: 'deepseek',
+    nome: 'DeepSeek',
+    pago: true,
+    dialeto: 'openai',
+    url: 'https://api.deepseek.com/chat/completions',
+    modelos: ['deepseek-chat', 'deepseek-flash'],
+    env: ['DEEPSEEK_API_KEYS', 'DEEPSEEK_API_KEY'],
   },
   {
     // NOVO degrau grátis (11/09/2026): NVIDIA NIM hospeda DeepSeek V4 Flash de graça
@@ -114,18 +128,6 @@ export const DEGRAUS = [
     url: 'https://api.cerebras.ai/v1/chat/completions',
     env: ['CEREBRAS_API_KEYS', 'CEREBRAS_API_KEY'],
     modelos: ['gpt-oss-120b', 'qwen-3.8-27b'],
-  },
-  {
-    id: 'deepseek',
-    nome: 'DeepSeek',
-    pago: true,
-    dialeto: 'openai',
-    url: 'https://api.deepseek.com/chat/completions',
-    // deepseek-chat PRIMEIRO: devolve conteúdo LIMPO. O deepseek-flash é modelo de
-    // RACIOCÍNIO e no modo não-stream (Sala do Wagner) gastava tudo em reasoning e vinha
-    // com content vazio → a rede de segurança paga "falhava calada" e o pastor via 502.
-    modelos: ['deepseek-chat', 'deepseek-flash'],
-    env: ['DEEPSEEK_API_KEYS', 'DEEPSEEK_API_KEY'],
   },
   {
     id: 'openai',
