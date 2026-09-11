@@ -15,6 +15,21 @@
   .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
   h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.9rem;font-weight:800;margin:2px 0 6px}
   .sub{text-align:center;color:#6b7280;font-size:.98rem;margin-bottom:18px}
+  /* ── Estudos do Concílio (públicos, vindos do banco) — ficam ANTES do cadeado,
+        porque não são os livros privados do Elias; são as peças que ele mesmo publicou ── */
+  #pubEstudos{display:none;margin:0 0 16px}
+  #pubEstudos .cab{display:flex;align-items:baseline;gap:8px;margin:0 0 9px;padding-bottom:7px;border-bottom:2px solid #ecd9ad}
+  #pubEstudos .cab b{font-family:Georgia,serif;color:var(--navy);font-size:1.12rem}
+  #pubEstudos .cab span{color:#9aa1ad;font-size:.82rem;font-weight:700}
+  #pubEstudos a.pe{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--linha);
+    border-radius:14px;padding:12px 13px;margin-bottom:9px;box-shadow:0 2px 8px rgba(15,61,92,.06)}
+  #pubEstudos a.pe .lin{display:flex;gap:11px;align-items:center}
+  #pubEstudos a.pe .ic{width:46px;height:46px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;
+    justify-content:center;font-size:23px;background:linear-gradient(135deg,var(--teal),var(--dourado))}
+  #pubEstudos a.pe .tt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.06rem;line-height:1.25}
+  #pubEstudos a.pe .rf{color:var(--dourado);font-weight:800;font-size:.85rem;margin-top:1px}
+  #pubEstudos a.pe .fn{color:var(--teal);font-weight:700;font-size:.78rem;margin-top:1px}
+  #pubEstudos a.pe .ds{font-size:.94rem;color:#4b5563;margin-top:8px;text-align:justify;line-height:1.5}
   .cad{max-width:420px;margin:26px auto;background:#f2f7f8;border:1px solid #d5e6e8;border-radius:16px;padding:22px 18px;text-align:center}
   .cad .lock{font-size:44px;margin-bottom:6px}
   .cad p{color:#4b5563;font-size:.95rem;margin:6px 0 14px}
@@ -88,6 +103,9 @@
   <h1>Meu Estudo</h1>
   <div class="sub">Seus comentários, trancados com a sua senha</div>
 
+  <!-- ESTUDOS DO CONCÍLIO (públicos) — só aparece quando existe algum -->
+  <div id="pubEstudos"></div>
+
   <!-- CADEADO -->
   <div class="cad" id="cad">
     <div class="lock">🔒</div>
@@ -115,6 +133,31 @@
   </div>
 
 <script>
+/* ══ ESTUDOS DO CONCÍLIO ══════════════════════════════════════════════════════
+   Estudo terminado com um dos 42 servos + um clique = estudo publicado, e ele
+   aparece aqui em cima. É lista pública (nada a ver com os livros trancados
+   embaixo). Sem banco, o bloco simplesmente não aparece e a página fica igual. */
+(function(){
+  var cx=document.getElementById('pubEstudos'); if(!cx) return;
+  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  fetch('/api/publicacoes?tipo=estudo').then(function(r){return r.json()}).then(function(d){
+    if(!d||!d.ok||!d.itens||!d.itens.length) return;   // ordenados por data, mais novo em cima
+    cx.innerHTML='<div class="cab"><b>📚 Estudos do Concílio</b><span>'+d.itens.length+
+      (d.itens.length===1?' estudo publicado':' estudos publicados')+'</span></div>'+
+      d.itens.map(function(p){
+        var data=''; try{ data=new Date(p.criado_em).toLocaleDateString('pt-BR'); }catch(e){}
+        return '<a class="pe" href="/biblioteca/publicacao.html?s='+encodeURIComponent(p.slug)+'">'
+          +'<div class="lin"><div class="ic">'+esc(p.emoji||'📚')+'</div>'
+          +'<div><div class="tt">'+esc(p.titulo)+'</div>'
+          +(p.referencia?'<div class="rf">'+esc(p.referencia)+'</div>':'')
+          +'<div class="fn">✍️ '+esc(p.expositor_nome?('forjado com '+p.expositor_nome):'forjado no Concílio')
+          +(data?' · '+data:'')+'</div></div></div>'
+          +(p.resumo?'<div class="ds">'+esc(p.resumo)+'</div>':'')+'</a>';
+      }).join('');
+    cx.style.display='block';
+  }).catch(function(){ /* sem nuvem: segue tudo como sempre foi */ });
+})();
+
 let SENHA=null, MANIFEST=null, FS=parseInt(localStorage.getItem('estudo_fs')||'17',10);
 const $=id=>document.getElementById(id);
 
@@ -129,8 +172,17 @@ async function deriveKey(pass, salt, iter){
   return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:iter, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['decrypt']);
 }
 
+// Erro de BUSCAR o arquivo — separado do erro de DECIFRAR, senão a tela acusa
+// "senha errada" quando o problema é o servidor (foi o que aconteceu: o Blob
+// respondeu 403 "Your store is blocked" e o usuário ficou digitando a senha certa).
+class FalhaDeRede extends Error{ constructor(m){ super(m); this.name='FalhaDeRede'; } }
+
 async function decifrar(arquivo){
-  const buf=new Uint8Array(await (await fetch(arquivo,{cache:'force-cache'})).arrayBuffer());
+  let r;
+  try{ r=await fetch(arquivo,{cache:'force-cache'}); }
+  catch(e){ throw new FalhaDeRede('sem conexão'); }
+  if(!r.ok) throw new FalhaDeRede('servidor devolveu '+r.status);
+  const buf=new Uint8Array(await r.arrayBuffer());
   const salt=buf.slice(0,16), iv=buf.slice(16,28), ct=buf.slice(28);
   const key=await deriveKey(SENHA, salt, MANIFEST.iter);
   const pt=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct);
@@ -149,8 +201,16 @@ async function abrir(){
     if($('lembrar').checked) localStorage.setItem('estudo_pass', s); else localStorage.removeItem('estudo_pass');
     mostrarLista();
   }catch(e){
-    SENHA=null; localStorage.removeItem('estudo_pass');
-    $('erro').textContent='Senha errada. Tente de novo.';
+    SENHA=null;
+    if(e instanceof FalhaDeRede){
+      // NÃO apaga a senha guardada: ela pode estar certa; quem falhou foi o servidor.
+      // textContent (não innerHTML): esc() vive dentro de outro IIFE e não existe aqui.
+      $('erro').textContent='Não foi o seu erro — os livros não estão respondendo ('
+        +e.message+'). Sua senha continua guardada; tente de novo mais tarde.';
+    }else{
+      localStorage.removeItem('estudo_pass');
+      $('erro').textContent='Senha errada. Tente de novo.';
+    }
   }
   $('btn').textContent='Abrir meu estudo';
 }
@@ -170,6 +230,7 @@ function thumb(l){
 }
 function mostrarLista(){
   $('cad').style.display='none'; $('leitor').style.display='none';
+  var _pe=$('pubEstudos'); if(_pe && _pe.innerHTML.trim()) _pe.style.display='block';
   const L=$('lista'); L.style.display='block';
   const total=MANIFEST.livros.length;
   L.innerHTML=
@@ -298,6 +359,7 @@ function paginarBlocos(blocos, tam){
 async function abrirLivro(slug){
   const l=MANIFEST.livros.find(x=>x.slug===slug);
   $('lista').style.display='none';
+  { const _pe=$('pubEstudos'); if(_pe) _pe.style.display='none'; }
   $('leitor').style.display='block';
   $('ltit').textContent=l.titulo+' · '+l.autor;
   $('texto').textContent='Descriptografando… (uns segundos, é grande)';
