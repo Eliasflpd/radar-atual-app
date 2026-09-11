@@ -392,14 +392,14 @@ export default async function handler(req) {
       + user;
   }
 
-  const r = await chamarIA(sys, user, { max_tokens: 5000 });
+  const r = await chamarIA(sys, user, { max_tokens: 2600 });
   if (r.erro) return new Response(JSON.stringify({ ok: false, erro: r.erro }), { status: r.status, headers: JSONH });
 
   let { resposta, quadro } = separarQuadro(r.texto);
   // ILIMITADO: o pastor nunca pode voltar sem resposta. Se veio vazio, tenta mais uma vez;
   // se ainda assim vier vazio, devolve um pedido claro do gatilho — nunca uma bolha muda.
   if (!resposta || !resposta.trim()) {
-    const r2 = await chamarIA(sys, user + '\n\nResponda agora, pelo método, sem deixar em branco.', { max_tokens: 5000 });
+    const r2 = await chamarIA(sys, user + '\n\nResponda agora, pelo método, sem deixar em branco.', { max_tokens: 2600 });
     if (!r2.erro && r2.texto && r2.texto.trim()) {
       const s2 = separarQuadro(r2.texto);
       resposta = s2.resposta; quadro = s2.quadro; r.provedor = r2.provedor; r.modelo = r2.modelo;

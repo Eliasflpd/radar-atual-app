@@ -52,7 +52,7 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 
 // Quanto esperamos pelos CABEÇALHOS da resposta. Depois que o cabeçalho chega, o
 // corpo (streaming) corre sem limite — senão cortaríamos o sermão no meio.
-const TIMEOUT_MS = 45000;
+const TIMEOUT_MS = 20000;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) OS DEGRAUS
@@ -326,17 +326,22 @@ async function tentar(degrau, modelo, chave, p, stream) {
     clearTimeout(relogio);
     return { ok: false, status: 0, corpo: String((e && e.message) || e).slice(0, 200) };
   }
-  clearTimeout(relogio);
   if (!r.ok) {
+    clearTimeout(relogio);
     const corpo = await r.text().catch(() => '');
     return { ok: false, status: r.status, corpo };
   }
   if (stream) {
+    clearTimeout(relogio);   // streaming: depois do cabeçalho, o corpo corre sem prazo
     if (!r.body) return { ok: false, status: 0, corpo: 'provedor não devolveu corpo pra streaming' };
     return { ok: true, upstream: r };
   }
+  // NÃO-STREAM: mantém o relógio até o corpo inteiro chegar. Assim um provedor que manda
+  // o cabeçalho e depois arrasta a geração é ABORTADO em TIMEOUT_MS e a cascata tenta o
+  // próximo — em vez de arrastar até o Vercel matar a função aos 25s (o 504 do pastor).
   let j;
-  try { j = await r.json(); } catch (_) { return { ok: false, status: 0, corpo: 'resposta ilegível' }; }
+  try { j = await r.json(); } catch (_) { clearTimeout(relogio); return { ok: false, status: 0, corpo: 'resposta ilegível/abortada' }; }
+  clearTimeout(relogio);
   const texto = extrairTexto(degrau, j);
   // Resposta 200 com texto vazio (acontece no Gemini quando o "pensamento" comeu
   // o orçamento) conta como falha — senão o pastor recebia uma tela em branco.
