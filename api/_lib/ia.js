@@ -67,7 +67,44 @@ export const DEGRAUS = [
     dialeto: 'openai',
     url: 'https://api.groq.com/openai/v1/chat/completions',
     env: ['GROQ_API_KEYS', 'GROQ_API_KEY'],
-    modelos: ['qwen/qwen3.8-27b', 'openai/gpt-oss-120b'],
+    // gpt-oss-120b primeiro (testado 11/09 respondendo); qwen como reserva.
+    modelos: ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b'],
+  },
+  {
+    // NOVO degrau grátis (11/09/2026): NVIDIA NIM hospeda DeepSeek V4 Flash de graça
+    // (só verificação de telefone, sem cartão). Testado respondendo 200 com conteúdo
+    // LIMPO — entra logo depois do Groq pra tapar o buraco do Cerebras (sem cota) e do
+    // OpenAI (sem crédito). Chave: env NVIDIA_API_KEYS. Dialeto OpenAI.
+    id: 'nvidia',
+    nome: 'NVIDIA',
+    pago: false,
+    dialeto: 'openai',
+    url: 'https://integrate.api.nvidia.com/v1/chat/completions',
+    env: ['NVIDIA_API_KEYS', 'NVIDIA_API_KEY'],
+    modelos: ['deepseek-ai/deepseek-v4-flash-0731'],
+  },
+  {
+    id: 'gemini',
+    nome: 'Gemini',
+    pago: false,
+    dialeto: 'gemini',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models',
+    env: ['GEMINI_API_KEYS', 'GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+    // gemini-2.5-flash primeiro (o que responde de verdade); os "3.x" ficam de reserva
+    // porque o id do preview muda e às vezes dá 404 (a cascata pula sozinha, mas assim
+    // não gasta a 1ª tentativa num id instável).
+    modelos: ['gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview'],
+  },
+  {
+    // NOVO degrau grátis (11/09/2026): OpenRouter com modelo :free (contexto gigante).
+    // Testado 200. Chave: env OPENROUTER_API_KEYS. Dialeto OpenAI.
+    id: 'openrouter',
+    nome: 'OpenRouter',
+    pago: false,
+    dialeto: 'openai',
+    url: 'https://openrouter.ai/api/v1/chat/completions',
+    env: ['OPENROUTER_API_KEYS', 'OPENROUTER_API_KEY'],
+    modelos: ['nvidia/nemotron-3.5-lightning:free'],
   },
   {
     id: 'cerebras',
@@ -79,22 +116,16 @@ export const DEGRAUS = [
     modelos: ['gpt-oss-120b', 'qwen-3.8-27b'],
   },
   {
-    id: 'gemini',
-    nome: 'Gemini',
-    pago: false,
-    dialeto: 'gemini',
-    url: 'https://generativelanguage.googleapis.com/v1beta/models',
-    env: ['GEMINI_API_KEYS', 'GEMINI_API_KEY', 'GOOGLE_API_KEY'],
-    modelos: ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-3.5-flash'],
-  },
-  {
     id: 'deepseek',
     nome: 'DeepSeek',
     pago: true,
     dialeto: 'openai',
     url: 'https://api.deepseek.com/chat/completions',
+    // deepseek-chat PRIMEIRO: devolve conteúdo LIMPO. O deepseek-flash é modelo de
+    // RACIOCÍNIO e no modo não-stream (Sala do Wagner) gastava tudo em reasoning e vinha
+    // com content vazio → a rede de segurança paga "falhava calada" e o pastor via 502.
+    modelos: ['deepseek-chat', 'deepseek-flash'],
     env: ['DEEPSEEK_API_KEYS', 'DEEPSEEK_API_KEY'],
-    modelos: ['deepseek-flash', 'deepseek-v4-pro'],
   },
   {
     id: 'openai',
