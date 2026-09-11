@@ -44,9 +44,20 @@
   .cart li{margin-bottom:9px;font-size:var(--pulp)}
   .cart li b{color:#ffd98a}
   .cart .v{color:#9fc7d4;font-size:.8em}
-  .zoom{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
+  .zoom{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
   .zoom button{background:#eef2f4;color:var(--navy);border:1px solid var(--linha);border-radius:10px;
     padding:8px 16px;font-weight:800;font-family:inherit;cursor:pointer}
+  .zoom button.cp{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .podio{display:flex;gap:8px;align-items:center;justify-content:center;margin:2px 0 12px;flex-wrap:wrap}
+  .cron{font-family:Georgia,serif;font-weight:800;font-size:1.5rem;color:var(--navy);min-width:82px;text-align:center;
+    background:#eef2f4;border:1px solid var(--linha);border-radius:12px;padding:5px 14px;font-variant-numeric:tabular-nums}
+  .cron.run{color:var(--verde);border-color:#bfe6cf;background:#eefaf2}
+  .pbtn{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:10px 15px;font-weight:800;
+    font-family:inherit;cursor:pointer;font-size:.9rem}
+  .pbtn.sec{background:#eef2f4;color:var(--navy);border:1px solid var(--linha)}
+  .copiaTudo{margin:16px 0 4px}
+  .copiaTudo button{width:100%;background:var(--dourado);color:#fff;border:none;border-radius:14px;padding:15px;
+    font-size:1.02rem;font-weight:800;font-family:inherit;cursor:pointer}
   .tr-topo{text-align:center;margin-bottom:12px}
   .placar{font-weight:800;color:var(--teal)}
   .card{background:#fff;border:2px solid var(--linha);border-radius:18px;padding:26px 18px;text-align:center;
@@ -126,9 +137,14 @@ function montar(){
   +'</div>'
   +'<div id="v-mapa" class="vis on">'
   +  (R.fio?'<div class="fio">🧵 O Fio: '+esc(R.fio)+'</div>':'')
-  +  '<div id="estacoes"></div></div>'
+  +  '<div id="estacoes"></div>'
+  +  '<div class="copiaTudo"><button onclick="copiar(textoCompleto(),this)">📄 COPIAR TUDO</button></div></div>'
   +'<div id="v-cartao" class="vis">'
-  +  '<div class="zoom"><button onclick="zoom(-1)">A −</button><button onclick="zoom(1)">A +</button></div>'
+  +  '<div class="podio"><span class="cron" id="tmrView">00:00</span>'
+  +    '<button class="pbtn" id="tmrBtn" onclick="tToggle()">▶ Iniciar</button>'
+  +    '<button class="pbtn sec" onclick="tReset()">⟲ Zerar</button></div>'
+  +  '<div class="zoom"><button onclick="zoom(-1)">A −</button><button onclick="zoom(1)">A +</button>'
+  +    '<button class="cp" onclick="copiar(textoCartao(),this)">📋 Copiar cartão</button></div>'
   +  '<div class="cart"><h3>🎴 Cartão de Púlpito</h3><ol id="cartaoLista"></ol></div>'
   +  '<div class="nota">Um olhar rápido no púlpito. Cada palavra puxa o ponto inteiro — se você treinou.</div></div>'
   +'<div id="v-treino" class="vis">'
@@ -158,6 +174,53 @@ function aba(q){
   });
   if(q==='treino') iniciarTreino();
 }
+
+// COPIAR — texto pronto pra WhatsApp/bloco de notas/impressão (com fallback p/ webview)
+function flashBtn(b,txt){ if(!b)return; var o=b.textContent; b.textContent=txt; b.disabled=true;
+  setTimeout(function(){ b.textContent=o; b.disabled=false; }, 1400); }
+function copiar(texto,botao){
+  var ok=function(){ flashBtn(botao,'✅ Copiado'); };
+  var fb=function(){ try{ var t=document.createElement('textarea'); t.value=texto;
+      t.style.position='fixed'; t.style.left='-9999px'; document.body.appendChild(t);
+      t.focus(); t.select(); document.execCommand('copy'); t.remove(); ok(); }
+    catch(e){ prompt('Copie o texto:', texto); } };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(texto).then(ok, fb); }
+  else { fb(); }
+}
+function textoCompleto(){
+  var L=[]; L.push(R.titulo||''); if(R.ref) L.push(R.ref); L.push('');
+  if(R.fio){ L.push('O FIO: '+R.fio); L.push(''); }
+  (R.estacoes||[]).forEach(function(e,i){
+    var anc=String(e.anc||'').trim();
+    L.push((i+1)+'. '+(e.em?e.em+' ':'')+anc+(e.rf?'  ('+e.rf+')':''));
+    if(e.pu) L.push('   '+e.pu);
+    L.push('');
+  });
+  L.push('— Preparado no RADAR'); return L.join('\n').replace(/\n{3,}/g,'\n\n');
+}
+function textoCartao(){
+  var L=[(R.titulo||'')+' — Cartão de Púlpito',''];
+  (R.estacoes||[]).forEach(function(e,i){
+    var a=String(e.anc||'').split(' · ')[0];
+    L.push((i+1)+'. '+(e.em?e.em+' ':'')+a+(e.rf?' — '+e.rf:''));
+  });
+  return L.join('\n');
+}
+
+// CRONÔMETRO de púlpito (Podium Mode) — acompanha o tempo da pregação
+var tmr={ms:0,run:false,h:null};
+function tFmt(ms){ var s=Math.floor(ms/1000),m=Math.floor(s/60); s=s%60;
+  return (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
+function tShow(){ var v=$('tmrView'); if(v){ v.textContent=tFmt(tmr.ms); v.classList.toggle('run',tmr.run); } }
+function tToggle(){
+  var b=$('tmrBtn');
+  if(tmr.run){ clearInterval(tmr.h); tmr.run=false; if(b) b.textContent='▶ Continuar'; }
+  else { tmr.run=true; if(b) b.textContent='⏸ Pausar';
+    tmr.h=setInterval(function(){ tmr.ms+=1000; tShow(); },1000); }
+  tShow();
+}
+function tReset(){ clearInterval(tmr.h); tmr.run=false; tmr.ms=0;
+  var b=$('tmrBtn'); if(b) b.textContent='▶ Iniciar'; tShow(); }
 
 var tam=1.05;
 function zoom(d){

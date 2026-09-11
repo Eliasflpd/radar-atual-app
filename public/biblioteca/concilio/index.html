@@ -22,10 +22,10 @@
   h2.sec{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.35rem;font-weight:800;margin:26px 0 2px;padding-top:16px;border-top:1px solid #e8e8ee}
   .subsec{text-align:center;color:var(--teal);font-size:.9rem;font-weight:700;margin-bottom:14px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .m{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:9px 11px;box-shadow:0 2px 8px rgba(15,61,92,.05);cursor:pointer}
+  .m{background:#fff;border:1px solid #e4e7ec;border-radius:12px;padding:9px 11px;box-shadow:0 2px 8px rgba(15,61,92,.05);cursor:pointer;display:flex;flex-direction:column}
   .mh{display:flex;align-items:center;gap:8px;margin-bottom:2px}
   .mi{font-size:20px;flex-shrink:0} .mn{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:.96rem;line-height:1.15}
-  .mt{color:var(--dourado);font-weight:700;font-size:.8rem;margin:0;line-height:1.25}
+  .mt{color:var(--dourado);font-weight:700;font-size:.8rem;margin:0 0 8px;line-height:1.25}
   .ml{display:none}
   .chamar{display:none}
   .ex{background:#0f3d5c;color:#eef4f7;border-radius:16px;padding:18px 17px;margin:14px 0}
@@ -40,7 +40,7 @@
   <button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
   <div class="selo">✦ O Espírito guia a toda a verdade · João 16:13 ✦</div>
   <h1>Concílio dos Expositores</h1>
-  <div class="sub">41 vozes a serviço da Palavra — o <b>Espírito Santo</b> é o Mestre</div>
+  <div class="sub">42 vozes a serviço da Palavra — o <b>Espírito Santo</b> é o Mestre</div>
   <div class="divisor"></div>
 
   <div class="intro">
@@ -171,7 +171,7 @@
   var st = document.createElement('style');
   st.textContent = '.m{cursor:pointer;transition:border-color .12s,box-shadow .12s}'+
     '.m:hover{border-color:#a9791c;box-shadow:0 4px 14px rgba(169,121,28,.16)}'+
-    '.m .chamar{display:block;width:100%;margin-top:9px;background:#0f6d78;color:#fff;border:none;'+
+    '.m .chamar{display:block;width:100%;margin-top:auto;background:#0f6d78;color:#fff;border:none;'+
     'border-radius:10px;padding:9px;font-size:.88rem;font-weight:800;font-family:inherit;cursor:pointer}'+
     '.m .falar{display:block;width:100%;margin-top:6px;background:#fbf6ea;color:#a9791c;border:1.5px solid #ecd9ad;'+
     'border-radius:10px;padding:9px;font-size:.88rem;font-weight:800;font-family:inherit;cursor:pointer}'+
@@ -247,7 +247,7 @@
     if(lupa)   p.insertBefore(lupa, ref);
   }
 
-  // 3) os 41 expositores → escondidos atrás de UM botão (a Lupa já escolhe sozinha)
+  // 3) os 42 expositores → escondidos atrás de UM botão (a Lupa já escolhe sozinha)
   var hs=Array.prototype.slice.call(document.querySelectorAll('h2.sec'));
   var roster=[], exemplo=[];
   hs.forEach(function(h){
@@ -263,7 +263,7 @@
     anchor.parentNode.insertBefore(box, anchor);
     roster.forEach(function(els){ els.forEach(function(e){ box.appendChild(e); }); });
     var count=box.querySelectorAll('.m').length;
-    box.parentNode.insertBefore(toggleLine('👥 Ver os '+count+' expositores', box), box);
+    box.parentNode.insertBefore(toggleLine('📖 Ver os '+count+' expositores', box), box);
   }
   exemplo.forEach(function(els){
     var h=els[0];

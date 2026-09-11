@@ -142,6 +142,52 @@
     border-bottom:1px solid var(--linha);padding-bottom:3px}
   .intro-doc p{margin:0 0 12px}
   .intro-doc .fonte{margin-top:26px;text-align:center;color:var(--tinta2);font-size:12px;font-style:italic}
+
+  /* ---- tamanho de fonte dinâmico da leitura ---- */
+  .vtexto{font-size:var(--vfs,19px)}
+  /* ---- barra de ferramentas do leitor (A- A+ Copiar) ---- */
+  .leitor-tools{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap;
+    margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--linha)}
+  .leitor-tools button{border:1px solid var(--linha);background:#fff;color:var(--navy);
+    font-family:'Lora';font-weight:600;font-size:13.5px;padding:8px 12px;border-radius:10px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px}
+  .leitor-tools button:active{background:var(--papel2)}
+  .leitor-tools .fs{min-width:34px;justify-content:center;font-weight:700}
+  .leitor-tools .fsval{color:var(--tinta2);font-size:12.5px;min-width:44px;text-align:center}
+  .leitor-tools .cop{border-color:var(--ouro);color:var(--ouro)}
+  /* número do versículo agora é clicável para copiar */
+  .vtexto .vn{cursor:pointer}
+  /* ---- botão de busca no topo ---- */
+  .top .buscabtn{border:none;background:var(--papel2);color:var(--navy);width:40px;height:40px;
+    border-radius:12px;font-size:18px;cursor:pointer;flex-shrink:0;display:none;align-items:center;justify-content:center}
+  .top .buscabtn.on{display:flex}
+  /* ---- TELA DE BUSCA ---- */
+  #busca .busca-campo{display:flex;gap:8px;margin:2px 0 16px}
+  #busca .busca-campo input{flex:1;border:1px solid var(--linha);background:#fff;border-radius:12px;
+    padding:12px 14px;font-family:'Lora';font-size:16px;color:var(--tinta);outline:none}
+  #busca .busca-campo input:focus{border-color:var(--ouro2)}
+  #busca .busca-campo button{border:none;background:linear-gradient(135deg,var(--ouro2),var(--ouro));
+    color:#2a2008;font-family:'Lora';font-weight:600;font-size:15px;padding:0 18px;border-radius:12px;cursor:pointer}
+  #busca .busca-info{color:var(--tinta2);font-size:13px;margin:0 2px 12px;text-align:center}
+  #busca .res{background:#fff;border:1px solid var(--linha);border-radius:12px;padding:11px 14px;
+    margin-bottom:9px;cursor:pointer;transition:.12s}
+  #busca .res:active{background:var(--papel2)}
+  #busca .res .rref{font-family:'Playfair Display',serif;font-weight:700;color:var(--navy);font-size:14.5px;margin-bottom:3px}
+  #busca .res .rtxt{font-size:14.5px;line-height:1.55;color:#3a352c;text-align:left}
+  #busca .res .rtxt mark{background:rgba(201,165,74,.32);color:inherit;border-radius:3px;padding:0 2px}
+  /* ---- CARD "continuar lendo" na capa ---- */
+  .continuar{margin-top:22px;display:inline-flex;align-items:center;gap:10px;cursor:pointer;
+    background:#fff;border:1px solid var(--linha);border-left:3px solid var(--ouro);border-radius:14px;
+    padding:11px 16px;font-family:'Lora';color:var(--navy);font-weight:600;font-size:15px;
+    box-shadow:0 8px 20px rgba(10,25,40,.10)}
+  .continuar .cont-ic{color:var(--ouro)}
+  .continuar small{display:block;font-weight:400;font-size:11.5px;color:var(--tinta2);margin-top:1px}
+  /* ---- toast (aviso de copiado) ---- */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--navy);color:#f6edd6;font-family:'Lora';font-size:14px;font-weight:600;
+    padding:11px 20px;border-radius:30px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:90;
+    opacity:0;pointer-events:none;transition:.25s}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -149,7 +195,7 @@
   <div class="top" id="topbar" style="display:none">
     <button class="voltar" onclick="voltar()">‹</button>
     <div class="tit" id="topTit">Bíblia<small id="topSub">Almeida R.C.</small></div>
-    <div class="sp"></div>
+    <button class="buscabtn" id="btnBusca" onclick="abrirBusca()" title="Buscar na Bíblia" aria-label="Buscar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="7"></circle><line x1="20" y1="20" x2="15.5" y2="15.5"></line></svg></button>
   </div>
 
   <!-- CAPA -->
@@ -158,6 +204,10 @@
     <div class="nome-b">Bíblias de Estudo</div>
     <div class="sub-b">64 bíblias · toque para escolher e ler</div>
     <button class="btn-abrir" onclick="verBiblias()">Ver as Bíblias</button>
+    <div class="continuar" id="continuarCard" style="display:none" onclick="continuarLeitura()">
+      <span class="cont-ic">📖</span>
+      <span>Continuar lendo<small id="continuarRef"></small></span>
+    </div>
   </div>
 
   <!-- ESCOLHER BÍBLIA -->
@@ -178,7 +228,21 @@
 
   <!-- INTRODUÇÃO DO LIVRO -->
   <div id="introView" class="tela"></div>
+
+  <!-- BUSCA -->
+  <div id="busca" class="tela">
+    <div class="busca-campo">
+      <input id="buscaInput" type="search" placeholder="Buscar palavra ou frase…" autocomplete="off"
+        onkeydown="if(event.key==='Enter')fazerBusca()">
+      <button onclick="fazerBusca()">Buscar</button>
+    </div>
+    <div class="busca-info" id="buscaInfo">Digite uma palavra e toque em Buscar.</div>
+    <div id="buscaRes"></div>
+  </div>
 </div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <!-- PAINEL DA NOTA (por cima, não move o texto) -->
 <div id="notaModal" onclick="if(event.target===this)fecharNota()">
@@ -193,10 +257,37 @@ const NOMES=["Gênesis","Êxodo","Levítico","Números","Deuteronômio","Josué"
 let BIB=null, NOTAS=null, FONTE_NOTAS='', BIBLIAS=[], liv=0, cap=0;
 let INTROS={}, SUBS={};
 
+/* ---- tamanho da fonte de leitura (persistente) ---- */
+const FS_MIN=15, FS_MAX=30, FS_DEF=19;
+let VFS=FS_DEF;
+try{ var _fs=parseInt(localStorage.getItem('biblia_fs'),10); if(_fs>=FS_MIN&&_fs<=FS_MAX) VFS=_fs; }catch(e){}
+function aplicaFonte(){ document.documentElement.style.setProperty('--vfs',VFS+'px');
+  var el=document.getElementById('fsVal'); if(el) el.textContent=VFS+'px'; }
+function mudarFonte(d){ VFS=Math.min(FS_MAX,Math.max(FS_MIN,VFS+d)); aplicaFonte();
+  try{localStorage.setItem('biblia_fs',VFS);}catch(e){} }
+aplicaFonte();
+
+/* ---- toast ---- */
+let _toastT=null;
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(_toastT); _toastT=setTimeout(function(){t.classList.remove('on');},1600); }
+
+function copiar(txt,msg){
+  function ok(){ toast(msg||'Copiado!'); }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(ok).catch(fallback);
+  } else fallback();
+  function fallback(){ try{ var ta=document.createElement('textarea'); ta.value=txt;
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta); ok(); }catch(e){ toast('Não foi possível copiar'); } }
+}
+
 function mostrar(id){
   document.querySelectorAll('.tela').forEach(t=>t.classList.remove('on'));
   document.getElementById('capa').classList.remove('on');
   document.getElementById('topbar').style.display = id==='capa' ? 'none':'flex';
+  // botão de busca: disponível quando o texto bíblico está carregado e não na capa
+  document.getElementById('btnBusca').classList.toggle('on', id!=='capa' && id!=='busca' && !!BIB);
   if(id==='capa'){document.getElementById('capa').classList.add('on');}
   else document.getElementById(id).classList.add('on');
   window.scrollTo(0,0);
@@ -220,7 +311,7 @@ function renderEscolha(){
   }).join('');
 }
 async function escolherBiblia(i){
-  var b=BIBLIAS[i]; FONTE_NOTAS=b.temNotas?(b.fonte||'Bíblia de Estudo'):''; window._bibleFonte=FONTE_NOTAS; NOTAS={}; INTROS={}; SUBS={};
+  var b=BIBLIAS[i]; window._bibleIdx=i; FONTE_NOTAS=b.temNotas?(b.fonte||'Bíblia de Estudo'):''; window._bibleFonte=FONTE_NOTAS; NOTAS={}; INTROS={}; SUBS={};
   if(b.temNotas){
     try{ const rn=await fetch('/biblioteca/biblias/notas-'+b.id+'.json'); NOTAS=await rn.json(); }catch(e){ NOTAS={}; }
     try{ const ri=await fetch('/biblioteca/biblias/intros-'+b.id+'.json'); INTROS=await ri.json(); }catch(e){ INTROS={}; }
@@ -306,13 +397,19 @@ function lerCap(c){
   for(let v=0;v<versos.length;v++){
     const vn=v+1;
     if(subsCap[vn]) corpo+='<span class="secao"><span class="orn">❦</span>'+subsCap[vn]+'</span>';
-    corpo+='<span class="v"><span class="vn">'+vn+'</span>'+versos[v];
+    corpo+='<span class="v"><span class="vn" onclick="copiarVerso('+vn+')" title="Copiar este versículo">'+vn+'</span>'+versos[v];
     if(notasCap[vn]) corpo+=' <span class="notemk" onclick="abrirNota('+(c+1)+','+vn+')">✦ nota</span>';
     corpo+=' </span>';
   }
   const total=BIB[liv].chapters.length;
   document.getElementById('leitura').innerHTML=
     '<div class="cabec"><h2>'+NOMES[liv]+'</h2><div class="cap-n">Capítulo '+(c+1)+'</div><div class="orn">❦</div></div>'
+    +'<div class="leitor-tools">'
+    +'<button class="fs" onclick="mudarFonte(-1)" title="Diminuir letra">A−</button>'
+    +'<span class="fsval" id="fsVal"></span>'
+    +'<button class="fs" onclick="mudarFonte(1)" title="Aumentar letra">A+</button>'
+    +'<button class="cop" onclick="copiarCapitulo()" title="Copiar o capítulo inteiro">⧉ Copiar capítulo</button>'
+    +'</div>'
     +'<div class="vtexto">'+corpo+'</div>'
     +(temNotasLivro?'<div class="creditos">Notas de estudo: '+(window._bibleFonte||FONTE_NOTAS)+' — toque em “✦ nota”</div>':'')
     +'<div class="navcap">'
@@ -321,8 +418,82 @@ function lerCap(c){
     +'<button onclick="lerCap('+(c+1)+')" '+(c>=total-1?'disabled':'')+'>Próximo ›</button>'
     +'</div>';
   document.getElementById('topTit').innerHTML=NOMES[liv]+'<small>capítulo '+(c+1)+'</small>';
-  try{localStorage.setItem('biblia_pos',JSON.stringify({liv:liv,cap:c}));}catch(e){}
+  try{localStorage.setItem('biblia_pos',JSON.stringify({idx:(window._bibleIdx!=null?window._bibleIdx:null),nome:(window._bibleNome||''),liv:liv,cap:c}));}catch(e){}
   mostrar('leitura');
+  aplicaFonte();
+}
+
+/* ---- copiar versículo / capítulo ---- */
+function copiarVerso(vn){
+  var versos=BIB[liv].chapters[cap];
+  if(!versos||!versos[vn-1]) return;
+  var txt=NOMES[liv]+' '+(cap+1)+'.'+vn+' — '+versos[vn-1];
+  copiar(txt,'Versículo copiado');
+}
+function copiarCapitulo(){
+  var versos=BIB[liv].chapters[cap];
+  var linhas=[NOMES[liv]+' '+(cap+1)];
+  for(var v=0;v<versos.length;v++) linhas.push((v+1)+' '+versos[v]);
+  copiar(linhas.join('\n'),'Capítulo copiado');
+}
+
+/* ---- CONTINUAR LENDO (restaura última posição) ---- */
+function lerPos(){ try{ return JSON.parse(localStorage.getItem('biblia_pos')||'null'); }catch(e){ return null; } }
+function atualizaContinuar(){
+  var p=lerPos(), card=document.getElementById('continuarCard');
+  if(p && typeof p.liv==='number' && typeof p.cap==='number' && NOMES[p.liv]){
+    document.getElementById('continuarRef').textContent=(p.nome?p.nome+' · ':'')+NOMES[p.liv]+' '+(p.cap+1);
+    card.style.display='inline-flex';
+  } else card.style.display='none';
+}
+async function continuarLeitura(){
+  var p=lerPos(); if(!p) return;
+  await garantir();
+  if(p.idx!=null && BIBLIAS[p.idx]){ await escolherBiblia(p.idx); }
+  liv=p.liv; abrirLivro(liv); lerCap(p.cap);
+}
+
+/* ---- BUSCA no texto bíblico ---- */
+function abrirBusca(){
+  mostrar('busca');
+  document.getElementById('topTit').innerHTML='Buscar<small>'+(window._bibleNome||'na Bíblia')+'</small>';
+  var inp=document.getElementById('buscaInput'); setTimeout(function(){inp.focus();},60);
+}
+function escapeHtml(s){ return s.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+function tiraAcento(s){ return s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+function fazerBusca(){
+  var q=(document.getElementById('buscaInput').value||'').trim();
+  var info=document.getElementById('buscaInfo'), box=document.getElementById('buscaRes');
+  box.innerHTML='';
+  if(q.length<2){ info.textContent='Digite pelo menos 2 letras.'; return; }
+  if(!BIB){ info.textContent='Carregando o texto…'; return; }
+  var alvo=tiraAcento(q), res=[], MAX=300;
+  for(var b=0;b<BIB.length && res.length<MAX;b++){
+    var chaps=BIB[b].chapters;
+    for(var c=0;c<chaps.length && res.length<MAX;c++){
+      for(var v=0;v<chaps[c].length && res.length<MAX;v++){
+        var t=chaps[c][v];
+        if(tiraAcento(t).indexOf(alvo)>=0) res.push({b:b,c:c,v:v,t:t});
+      }
+    }
+  }
+  if(!res.length){ info.textContent='Nada encontrado para “'+escapeHtml(q)+'”.'; return; }
+  info.textContent=res.length+(res.length>=MAX?'+':'')+' resultado(s) para “'+escapeHtml(q)+'”';
+  var rx=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig');
+  box.innerHTML=res.map(function(r){
+    var safe=escapeHtml(r.t).replace(rx,'<mark>$1</mark>');
+    return '<div class="res" onclick="irResultado('+r.b+','+r.c+','+r.v+')">'
+      +'<div class="rref">'+NOMES[r.b]+' '+(r.c+1)+'.'+(r.v+1)+'</div>'
+      +'<div class="rtxt">'+safe+'</div></div>';
+  }).join('');
+}
+function irResultado(b,c,v){
+  liv=b; abrirLivro(b); lerCap(c);
+  setTimeout(function(){
+    var alvo=document.querySelectorAll('#leitura .vtexto .v')[v];
+    if(alvo){ alvo.scrollIntoView({block:'center'}); alvo.style.background='rgba(201,165,74,.16)';
+      alvo.style.borderRadius='8px'; setTimeout(function(){alvo.style.background='';},2200); }
+  },80);
 }
 function voltar(){
   if(document.getElementById('notaModal').classList.contains('on')){ fecharNota(); return; }
@@ -331,13 +502,27 @@ function voltar(){
   const indOn=document.getElementById('indice').classList.contains('on');
   const escOn=document.getElementById('escolha').classList.contains('on');
   const introOn=document.getElementById('introView').classList.contains('on');
-  if(introOn) abrirLivro(liv);
+  const buscaOn=document.getElementById('busca').classList.contains('on');
+  if(buscaOn){ if(document.getElementById('leitura').innerHTML.trim()) mostrar('leitura'); else irIndice(); }
+  else if(introOn) abrirLivro(liv);
   else if(leOn) abrirLivro(liv);
   else if(capOn) irIndice();
   else if(indOn) verBiblias();
   else if(escOn) mostrar('capa');
   else location.href='/?mod=manuais';
 }
+
+/* ---- navegação por teclado (PC): ← → troca capítulo na leitura ---- */
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('leitura').classList.contains('on')) return;
+  if(document.getElementById('notaModal').classList.contains('on')) return;
+  var total=(BIB&&BIB[liv])?BIB[liv].chapters.length:0;
+  if(e.key==='ArrowRight' && cap<total-1){ lerCap(cap+1); }
+  else if(e.key==='ArrowLeft' && cap>0){ lerCap(cap-1); }
+});
+
+/* ---- inicialização: mostra "continuar lendo" se houver posição salva ---- */
+atualizaContinuar();
 </script>
 </body>
 </html>

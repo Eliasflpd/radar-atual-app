@@ -95,6 +95,19 @@
   .pagbar button:disabled{opacity:.35}
   .pagbar span{font-weight:700;color:#4b5563;min-width:70px;text-align:center}
   .aviso{text-align:center;color:#9aa1ad;font-size:.82rem;margin-top:20px;border-top:1px solid var(--linha);padding-top:12px}
+  /* ── AUDITORIA: melhorias de leitura (progresso, copiar, buscar no livro, retomar) ── */
+  .barra{flex-wrap:wrap}
+  .prog{height:4px;background:#eef2f4;border-radius:3px;overflow:hidden;margin:0 0 10px}
+  .prog>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--dourado));transition:width .25s}
+  #texto mark{background:#fdeec2;color:#000;font-weight:700;border-radius:3px;padding:0 1px}
+  .findbar{display:none;gap:7px;align-items:center;margin:0 0 10px}
+  .findbar.on{display:flex}
+  .findbar input{flex:1;min-width:0;padding:9px 12px;border:1.5px solid var(--linha);border-radius:10px;font-size:1rem;font-family:inherit}
+  .findbar button{background:#eef2f4;border:1px solid var(--linha);border-radius:9px;padding:8px 11px;font-weight:800;font-family:inherit;cursor:pointer}
+  .findbar .cnt{color:#6b7280;font-size:.82rem;font-weight:700;min-width:52px;text-align:center;flex-shrink:0}
+  .toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f3d5c;color:#fff;padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:60;opacity:0;transition:opacity .3s;pointer-events:none;max-width:92%;text-align:center}
+  .toast.on{opacity:1}
+  @media(max-width:560px){ .barra .tit{order:-1;flex-basis:100%;white-space:normal;font-size:1.02rem;margin:0 0 2px} }
 </style>
 </head>
 <body>
@@ -125,9 +138,19 @@
       <button onclick="fecharLivro()">← Livros</button>
       <div class="tit" id="ltit"></div>
       <button onclick="abrirIndice()" title="Índice">📑</button>
-      <button onclick="fonte(-1)">A−</button>
-      <button onclick="fonte(1)">A+</button>
+      <button onclick="toggleFind()" title="Buscar neste livro">🔍</button>
+      <button onclick="copiarPagina(this)" title="Copiar esta página">📋 Copiar</button>
+      <button onclick="fonte(-1)" title="Diminuir letra">A−</button>
+      <button onclick="fonte(1)" title="Aumentar letra">A+</button>
     </div>
+    <div class="findbar" id="findbar">
+      <input id="findq" placeholder="Buscar neste livro…" autocomplete="off" enterkeyhint="search">
+      <span class="cnt" id="findcnt">—</span>
+      <button onclick="findGo(-1)" title="Anterior">◀</button>
+      <button onclick="findGo(1)" title="Próximo">▶</button>
+      <button onclick="toggleFind()" title="Fechar">✕</button>
+    </div>
+    <div class="prog"><i id="progf"></i></div>
     <div id="texto"></div>
     <div class="pagbar"><button id="pg-ant" onclick="irPag(-1)">◀</button><span id="pag-ind">—</span><button id="pg-prox" onclick="irPag(1)">▶</button></div>
   </div>
@@ -325,6 +348,7 @@ function abrirEmTrecho(slug,alvo){ _alvoTrecho=alvo? norm(alvo):null; abrirLivro
 
 let _paginas=[], _pag=0;
 let _indice=[];
+let _curSlug=null, _findTerm='', _findHits=[], _findAt=-1;
 // Limpa o lixo de OCR, junta linhas em parágrafos, detecta títulos de seção.
 function limparEstruturar(md, titulo, autor){
   const linhas=md.split(/\r?\n/); const blocos=[]; let para='';
@@ -366,6 +390,8 @@ async function abrirLivro(slug){
   $('pag-ind').textContent='—';
   window.scrollTo(0,0);
   await new Promise(r=>setTimeout(r,50));
+  _curSlug=slug; _findTerm=''; _findHits=[]; _findAt=-1;
+  { const _fb=$('findbar'); if(_fb) _fb.classList.remove('on'); const _fq=$('findq'); if(_fq) _fq.value=''; }
   try{
     const md=await decifrar(l.arquivo);
     const blocos=limparEstruturar(md, l.titulo, l.autor);
@@ -373,26 +399,77 @@ async function abrirLivro(slug){
     _paginas=paginarBlocos(blocos, 3000);
     _indice=[]; _paginas.forEach((pg,i)=>pg.forEach(b=>{ if(b.t==='h') _indice.push({titulo:b.x, pag:i}); }));
     _pag=0;
-    if(_alvoTrecho){
-      const alvo=_alvoTrecho; _alvoTrecho=null;
+    // RETOMAR: volta pra onde o Elias parou neste livro (guardado por slug)
+    let _resumed=false;
+    const _saved=parseInt(localStorage.getItem('estudo_pos_'+slug)||'0',10);
+    if(_saved>0 && _saved<_paginas.length){ _pag=_saved; _resumed=true; }
+    if(_alvoTrecho){   // busca no motor tem prioridade sobre o "retomar"
+      const alvo=_alvoTrecho; _alvoTrecho=null; _resumed=false;
       const idx=_paginas.findIndex(pg=>norm(pg.map(b=>b.x||'').join(' ')).includes(alvo));
       if(idx>=0) _pag=idx;
     }
     renderPagina();
+    if(_resumed) toast('Voltando de onde você parou · pág. '+(_pag+1));
   }catch(e){ $('texto').textContent='Erro ao abrir. Volte e tente de novo.'; }
+}
+function _hl(txt){   // realça o termo buscado dentro do parágrafo (texto já escapado)
+  if(!_findTerm) return txt;
+  try{ var re=new RegExp('('+_findTerm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); return txt.replace(re,'<mark>$1</mark>'); }
+  catch(e){ return txt; }
 }
 function renderPagina(){
   $('texto').style.fontSize=FS+'px';
   const pg=_paginas[_pag]||[];
   $('texto').innerHTML=pg.map(function(b){
-    if(b.t==='rosto') return '<div class="rosto"><div class="orn">❦</div><div class="rt">'+escapeH(b.x)+'</div><div class="ra">'+escapeH(b.autor||'')+'</div><div class="rl"></div></div>';
-    if(b.t==='h') return '<div class="cap">'+escapeH(b.x)+'</div>';
-    return '<p class="par'+(b.drop?' drop':'')+'">'+escapeH(b.x)+'</p>';
+    if(b.t==='rosto') return '<div class="rosto"><div class="orn">❦</div><div class="rt">'+_hl(escapeH(b.x))+'</div><div class="ra">'+escapeH(b.autor||'')+'</div><div class="rl"></div></div>';
+    if(b.t==='h') return '<div class="cap">'+_hl(escapeH(b.x))+'</div>';
+    return '<p class="par'+(b.drop?' drop':'')+'">'+_hl(escapeH(b.x))+'</p>';
   }).join('');
   $('pag-ind').textContent='— '+(_pag+1)+' de '+_paginas.length+' —';
   $('pg-ant').disabled=_pag<=0;
   $('pg-prox').disabled=_pag>=_paginas.length-1;
+  const pf=$('progf'); if(pf) pf.style.width=(_paginas.length?Math.round((_pag+1)/_paginas.length*100):0)+'%';
+  if(_curSlug) try{ localStorage.setItem('estudo_pos_'+_curSlug,_pag); }catch(e){}
   window.scrollTo(0,0);
+}
+// ── COPIAR a página atual (texto limpo) ──
+function copiarPagina(btn){
+  const pg=_paginas[_pag]||[];
+  const txt=pg.map(function(b){ return b.t==='rosto'?((b.x||'')+(b.autor?(' — '+b.autor):'')):(b.x||''); }).filter(Boolean).join('\n\n');
+  if(!txt){ toast('Nada para copiar.'); return; }
+  const ok=function(){ const o=btn.innerHTML; btn.innerHTML='✓ Copiado'; setTimeout(function(){btn.innerHTML=o;},1300); toast('Página copiada'); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(ok).catch(function(){_copyFallback(txt,ok);}); }
+  else _copyFallback(txt,ok);
+}
+function _copyFallback(txt,cb){
+  try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb&&cb(); }
+  catch(e){ toast('Não consegui copiar neste navegador.'); }
+}
+let _toastT=null;
+function toast(msg){
+  let t=document.getElementById('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.className='toast'; document.body.appendChild(t); }
+  t.textContent=msg; t.classList.add('on'); clearTimeout(_toastT);
+  _toastT=setTimeout(function(){ t.classList.remove('on'); },2200);
+}
+// ── BUSCAR dentro DESTE livro (offline, no conteúdo já decifrado) ──
+function toggleFind(){
+  const fb=$('findbar'); const on=fb.classList.toggle('on');
+  if(on){ setTimeout(function(){ $('findq').focus(); },50); }
+  else { _findTerm=''; _findHits=[]; _findAt=-1; $('findq').value=''; $('findcnt').textContent='—'; renderPagina(); }
+}
+function findRun(){
+  const termo=$('findq').value.trim();
+  if(termo.length<2){ _findTerm=''; _findHits=[]; _findAt=-1; $('findcnt').textContent='—'; renderPagina(); return; }
+  _findTerm=termo; const nt=norm(termo); _findHits=[];
+  _paginas.forEach(function(pg,i){ if(norm(pg.map(function(b){return b.x||'';}).join(' ')).includes(nt)) _findHits.push(i); });
+  if(!_findHits.length){ _findAt=-1; $('findcnt').textContent='0'; renderPagina(); return; }
+  let pos=_findHits.findIndex(function(p){return p>=_pag;}); _findAt=pos<0?0:pos;
+  _pag=_findHits[_findAt]; $('findcnt').textContent=(_findAt+1)+'/'+_findHits.length; renderPagina();
+}
+function findGo(d){
+  if(!_findHits.length) return;
+  _findAt=(_findAt+d+_findHits.length)%_findHits.length; _pag=_findHits[_findAt];
+  $('findcnt').textContent=(_findAt+1)+'/'+_findHits.length; renderPagina();
 }
 function irPag(d){ if(!_paginas.length)return; _pag=Math.max(0,Math.min(_paginas.length-1,_pag+d)); renderPagina(); }
 function abrirIndice(){
@@ -405,9 +482,21 @@ function abrirIndice(){
 }
 function irIndice(p){ _pag=p; renderPagina(); const o=$('idx-ov'); if(o)o.remove(); }
 
-function fecharLivro(){ $('leitor').style.display='none'; $('lista').style.display='block'; _paginas=[]; window.scrollTo(0,0); }
+function fecharLivro(){ $('leitor').style.display='none'; $('lista').style.display='block'; _paginas=[]; _findTerm='';_findHits=[];_findAt=-1; const fb=$('findbar'); if(fb)fb.classList.remove('on'); const fq=$('findq'); if(fq)fq.value=''; window.scrollTo(0,0); }
 function fonte(d){ FS=Math.max(13,Math.min(26,FS+d)); localStorage.setItem('estudo_fs',FS); if(_paginas.length) renderPagina(); else $('texto').style.fontSize=FS+'px'; }
 function sair(){ SENHA=null; localStorage.removeItem('estudo_pass'); location.reload(); }
+
+// ── Buscar-no-livro: liga o input; e virar página pelo teclado (uso no PC 1920×1080) ──
+document.addEventListener('DOMContentLoaded',function(){
+  const fq=document.getElementById('findq');
+  if(fq){ fq.addEventListener('input',findRun); fq.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); findGo(1); } }); }
+});
+document.addEventListener('keydown',function(e){
+  if($('leitor').style.display!=='block') return;
+  const tg=e.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA') return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){ irPag(1); e.preventDefault(); }
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){ irPag(-1); e.preventDefault(); }
+});
 </script>
 </body>
 </html>

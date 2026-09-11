@@ -65,6 +65,14 @@
     + '.pc-ger button{flex:1;min-width:132px;border:none;border-radius:11px;padding:10px 12px;font-size:.9rem;font-weight:800;font-family:inherit;cursor:pointer;color:#fff}'
     + '.pc-ger button.msg{background:linear-gradient(135deg,#8a1c1c,#a9791c)}'
     + '.pc-ger button.est{background:linear-gradient(135deg,#0f6d78,#0f3d5c)}'
+    /* reprovar/melhorar com o servo (vai-e-volta em cima da peça pronta) */
+    + '.pc-b.mel{background:#8a1c1c;color:#fff}'
+    + '.pc-mel{flex-shrink:0;display:none;flex-direction:column;gap:7px;background:#fbf6ea;border-top:1px solid #ecd9ad;padding:11px 12px}'
+    + '.pc-mel.on{display:flex}'
+    + '.pc-mel label{font-size:.84rem;font-weight:800;color:#8a1c1c;line-height:1.35}'
+    + '.pc-mel textarea{width:100%;resize:vertical;min-height:58px;max-height:150px;border:1.5px solid #ecd9ad;border-radius:12px;padding:9px 11px;font-family:inherit;font-size:1rem;line-height:1.4;color:#1c2230}'
+    + '.pc-mel textarea:focus{outline:none;border-color:#a9791c}'
+    + '.pc-mel .go{background:linear-gradient(135deg,#8a1c1c,#a9791c);color:#fff;border:none;border-radius:11px;padding:11px 12px;font-size:.94rem;font-weight:800;font-family:inherit;cursor:pointer}'
     + '@media(max-width:430px){.pc-ov{padding:0}.pc-cx{max-width:100%;border-radius:0;height:100%;max-height:100%}.pc-corpo h1{font-size:1.3rem}}'
     /* notebook 1366x768: a caixa nunca passa da tela — quem rola é o miolo, não a página.
        Só de 431px pra cima: no celular a janela é de borda a borda (regra acima). */
@@ -193,8 +201,12 @@
       + '<button class="pc-x" title="Fechar" aria-label="Fechar">✕</button></div>'
       + '<div class="pc-corpo"><div class="pc-espera">✍️ forjando a ' + esc(ROTULO[tipo].toLowerCase())
       + ' <i>·</i><i>·</i><i>·</i><br><span style="font-weight:600;color:#6b7280;font-size:.9rem">pode levar alguns segundos — ore enquanto isso 🙏</span></div></div>'
+      + '<div class="pc-mel"><label>✎ Reprove e melhore COM ele — aponte o que mudar:</label>'
+      + '<textarea class="pc-mel-t" placeholder="Ex.: o fecho ficou fraco; explique melhor a ligação da pomba com o Espírito; corte o ponto 3; puxe mais a prova real…"></textarea>'
+      + '<button class="go" type="button">✎ Melhorar com o servo</button></div>'
       + '<div class="pc-pe">'
       + '<button class="pc-b cop" disabled>📋 Copiar</button>'
+      + '<button class="pc-b mel" disabled>✎ Melhorar</button>'
       + '<button class="pc-b pub" disabled>🚀 Publicar no RADAR</button>'
       + '<button class="pc-b fec">✖ Fechar</button>'
       + '</div></div>';
@@ -239,29 +251,64 @@
       elCorpo.innerHTML = '<div class="pc-erro">Não deu certo agora: ' + esc(msg) + '<br>Tente de novo em instantes.</div>';
     }
 
-    /* ── 1) gerar ── */
-    fetch('/api/peca', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo: tipo, expositor: exp, estudo: op.estudo || '', tema: op.tema || '' })
-    }).then(function (r) {
-      if (!r.ok) return r.text().then(function (t) { throw new Error(t || ('erro ' + r.status)); });
-      if (!r.body || !r.body.getReader) return r.text().then(function (t) { bruto = t; pintar(); });
-      var lei = r.body.getReader(), dec = new TextDecoder();
-      elCorpo.innerHTML = '';
-      return (function puxa() {
-        return lei.read().then(function (x) {
-          if (x.done) return;
-          bruto += dec.decode(x.value, { stream: true });
-          pintar();
-          return puxa();
-        });
-      })();
-    }).then(function () {
-      if (!String(bruto).trim()) { erro('a IA devolveu vazio'); return; }
-      pronto = true; pintar();
-      bCop.disabled = false; bPub.disabled = false;
-    }).catch(function (e) { erro((e && e.message) || 'falha de conexão'); });
+    var bMel = ov.querySelector('.pc-b.mel');
+    var caixaMel = ov.querySelector('.pc-mel');
+    var txtMel = ov.querySelector('.pc-mel-t');
+    var goMel = ov.querySelector('.pc-mel .go');
+
+    /* ── gerar (1ª vez) e RE-gerar melhorando (reprovar → apontar → melhorar com ele) ──
+       `refino` = null na 1ª vez; { rascunho, criticas } quando o pastor manda melhorar. */
+    function gerar(refino) {
+      bruto = ''; pronto = false; peca = null;
+      bCop.disabled = true; bPub.disabled = true; bMel.disabled = true;
+      caixaMel.classList.remove('on');
+      var espera = refino
+        ? '✎ revendo a ' + esc(ROTULO[tipo].toLowerCase()) + ' com os seus apontamentos'
+        : '✍️ forjando a ' + esc(ROTULO[tipo].toLowerCase());
+      elCorpo.innerHTML = '<div class="pc-espera">' + espera + ' <i>·</i><i>·</i><i>·</i><br>'
+        + '<span style="font-weight:600;color:#6b7280;font-size:.9rem">pode levar alguns segundos — ore enquanto isso 🙏</span></div>';
+      var corpoReq = { tipo: tipo, expositor: exp, estudo: op.estudo || '', tema: op.tema || '' };
+      if (refino) { corpoReq.rascunho = refino.rascunho; corpoReq.criticas = refino.criticas; }
+      fetch('/api/peca', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(corpoReq)
+      }).then(function (r) {
+        if (!r.ok) return r.text().then(function (t) { throw new Error(t || ('erro ' + r.status)); });
+        if (!r.body || !r.body.getReader) return r.text().then(function (t) { bruto = t; pintar(); });
+        var lei = r.body.getReader(), dec = new TextDecoder();
+        elCorpo.innerHTML = '';
+        return (function puxa() {
+          return lei.read().then(function (x) {
+            if (x.done) return;
+            bruto += dec.decode(x.value, { stream: true });
+            pintar();
+            return puxa();
+          });
+        })();
+      }).then(function () {
+        if (!String(bruto).trim()) { erro('a IA devolveu vazio'); return; }
+        pronto = true; pintar();
+        bCop.disabled = false; bPub.disabled = false; bMel.disabled = false;
+        elCorpo.scrollTop = 0;
+      }).catch(function (e) { erro((e && e.message) || 'falha de conexão'); });
+    }
+    gerar(null);
+
+    /* ── reprovar / melhorar COM o servo (vai-e-volta em cima da peça pronta) ── */
+    bMel.addEventListener('click', function () {
+      if (!pronto) return;
+      caixaMel.classList.toggle('on');
+      if (caixaMel.classList.contains('on')) { txtMel.focus(); elCorpo.scrollTop = elCorpo.scrollHeight; }
+    });
+    goMel.addEventListener('click', function () {
+      var c = (txtMel.value || '').trim();
+      if (!c) { txtMel.focus(); return; }
+      if (!peca || !pronto) return;
+      var rascunho = paraTexto(peca, exp.nome);
+      txtMel.value = '';
+      gerar({ rascunho: rascunho, criticas: c });
+    });
 
     /* ── 2) copiar ── */
     bCop.addEventListener('click', function () {
@@ -297,6 +344,7 @@
           bPub.textContent = '📋 Copiar o link';
           bPub.disabled = false;
           bPub.onclick = function () { copiar(publicado.abs, bPub); };
+          bMel.disabled = true; caixaMel.classList.remove('on');   // publicou: encerra o loop de melhorar desta peça
           var pe = ov.querySelector('.pc-pe');
           var ver = document.createElement('button');
           ver.className = 'pc-b cop';

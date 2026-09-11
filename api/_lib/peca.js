@@ -99,7 +99,13 @@ export default async function handler(req) {
   const tema = String(b.tema || '').trim().slice(0, 300);
   const estudado = String(b.estudo || '').trim().slice(0, 14000);
 
-  if (!estudado && !tema) {
+  // REFINAR: o pastor leu a peça pronta, reprovou pontos e quer melhorar COM o servo.
+  // Chega o rascunho atual + os apontamentos dele; a gente reescreve a peça inteira melhor.
+  const rascunho = String(b.rascunho || '').trim().slice(0, 16000);
+  const criticas = String(b.criticas || '').trim().slice(0, 2500);
+  const refinando = !!(rascunho && criticas);
+
+  if (!estudado && !tema && !refinando) {
     return new Response('Não veio nada do estudo pra transformar em peça.', { status: 400, headers: CORS });
   }
 
@@ -119,7 +125,22 @@ ${CRIVO}
 ${tipo === 'estudo' ? FORMA_ESTUDO : FORMA_MENSAGEM}
 ${FORMATO_SAIDA}`;
 
-  const usuario =
+  const usuario = refinando
+    ?
+`Você JÁ escreveu a ${tipo === 'estudo' ? 'peça de estudo' : 'mensagem'} abaixo. O pastor LEU, REPROVOU pontos e quer que você MELHORE — junto com ele, no seu método, deixando as LIGAÇÕES do texto mais claras.
+
+${tema ? 'TEXTO/TEMA CENTRAL: ' + tema + '\n' : ''}
+══════ O QUE VOCÊ ESCREVEU (rascunho a melhorar) ══════
+${rascunho}
+══════ FIM ══════
+
+══════ O QUE O PASTOR REPROVOU / PEDIU PRA MELHORAR ══════
+${criticas}
+══════ FIM ══════
+
+Reescreva a ${tipo === 'estudo' ? 'PEÇA DE ESTUDO' : 'MENSAGEM'} INTEIRA, melhor que antes: atenda CADA ponto que o pastor levantou, sem perder o que já estava bom. Mantenha o rigor do método (gatilho concreto, ligação pela FUNÇÃO, dois pilares travados, prova real, aritmética conferível, fechar em ordem prática) e mostre as ligações com mais clareza. Se um pedido dele forçar uma ponte que o texto não sustenta, NÃO force: faça o melhor que o texto permite e diga com franqueza onde ele para. Confira cada referência bíblica.
+Responda SÓ no formato pedido (TITULO/REFERENCIA/EMOJI/RESUMO/CORPO).`
+    :
 `Abaixo está o estudo que acabou de ser feito com ${nome}. Transforme o que foi garimpado aqui numa ${tipo === 'estudo' ? 'PEÇA DE ESTUDO' : 'MENSAGEM'} pronta para o RADAR.
 
 ${tema ? 'TEMA/TEXTO CENTRAL: ' + tema + '\n' : ''}

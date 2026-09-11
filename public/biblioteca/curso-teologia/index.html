@@ -91,6 +91,45 @@
   .aula .txt small{display:block;color:var(--suave);font-size:.72rem;margin-top:1px}
   .vazio-mod{padding:14px 15px;color:var(--suave);font-size:.85rem}
 
+  /* ===== PROGRESSO (barra do curso) ===== */
+  .prog{margin-top:12px}
+  .prog .bar{height:8px;border-radius:6px;background:rgba(255,255,255,.22);overflow:hidden}
+  .prog .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--dourado));width:0;transition:width .35s}
+  .prog .lbl{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:.72rem;color:#e7f1f6}
+  .prog .lbl b{color:#ffd98a;font-weight:800}
+  /* barra em fundo claro (dentro do card de curso, nível 2) */
+  .ccard .prog{margin-top:9px}
+  .concluido-tag{display:inline-flex;align-items:center;gap:4px;background:#1a8a4a;color:#fff;font-size:.6rem;font-weight:800;letter-spacing:.4px;padding:4px 9px;border-radius:20px;text-transform:uppercase;margin-left:7px}
+  /* ===== CONTINUAR DE ONDE PAROU ===== */
+  .resume{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--teal),#0c5a63);color:#fff;border-radius:14px;padding:13px 15px;margin-bottom:14px;cursor:pointer;box-shadow:0 6px 18px rgba(15,109,120,.25);transition:transform .12s}
+  .resume:active{transform:scale(.99)}
+  .resume .ic{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .resume .rt{flex:1;min-width:0}
+  .resume .rt small{display:block;font-size:.68rem;letter-spacing:.5px;text-transform:uppercase;color:#d6f2f5;font-weight:800}
+  .resume .rt b{display:block;font-size:.98rem;line-height:1.25;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .resume .go{color:#fff;font-size:1.5rem;font-weight:700;flex-shrink:0}
+  /* ===== BUSCA DE AULA ===== */
+  .busca{position:relative;margin-bottom:14px}
+  .busca input{width:100%;border:1.6px solid var(--linha);border-radius:12px;padding:11px 38px 11px 38px;font-size:.95rem;font-family:inherit;background:#fff;color:var(--txt)}
+  .busca input:focus{outline:none;border-color:var(--teal)}
+  .busca .lupa{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--suave);font-size:1rem}
+  .busca .limpar{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--suave);font-size:1.1rem;cursor:pointer;display:none;padding:4px}
+  .busca.tem .limpar{display:block}
+  .aula.oculta{display:none}
+  .mod.busca-vazio{display:none}
+  .mod-h .cont{font-size:.72rem;color:var(--suave);white-space:nowrap;margin-left:auto;padding-left:8px}
+  .mod-h .cont b{color:#1a8a4a}
+  /* checkbox "concluída" na aula (Udemy-style) */
+  .aula .chk{width:24px;height:24px;border-radius:7px;border:2px solid #cfd6df;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:transparent;font-size:.9rem;font-weight:900;cursor:pointer;transition:all .12s}
+  .aula.vista .chk{background:#1a8a4a;border-color:#1a8a4a;color:#fff}
+  .aula .chk:active{transform:scale(.88)}
+  /* botão copiar (link do site) */
+  .copiar-btn{background:#eef4f8;border:1px solid #cfe0ee;color:#0f6d78;border-radius:9px;padding:7px 11px;font-weight:800;font-family:inherit;font-size:.8rem;cursor:pointer;flex-shrink:0}
+  .copiar-btn:active{transform:scale(.96)}
+  /* marcar concluída dentro do player */
+  #player .pbar .pchk{background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:9px;padding:8px 11px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;font-size:.82rem}
+  #player .pbar .pchk.on{background:#1a8a4a}
+
   /* ===== PLAYER ===== */
   #player{position:fixed;inset:0;background:#0a1420;z-index:50;display:none;flex-direction:column}
   #player.on{display:flex}
@@ -133,6 +172,7 @@
     <div class="pbar">
       <button onclick="fecharPlayer()">‹ Voltar</button>
       <div class="pt" id="p-titulo"></div>
+      <button class="pchk" id="p-chk" onclick="toggleVistaPlayer()">✓ Concluída</button>
     </div>
     <div class="vwrap"></div>
     <div class="prox">
@@ -167,10 +207,19 @@ const META={
 };
 function meta(slug){ return META[slug] || {titulo:slug, prof:'', foto:'', badge:'Curso'}; }
 
-function marcarVista(u,v){ try{ localStorage.setItem('curso_vista_'+btoa(unescape(encodeURIComponent(u))).slice(0,40), v?'1':''); }catch(_){} }
-function estaVista(u){ try{ return localStorage.getItem('curso_vista_'+btoa(unescape(encodeURIComponent(u))).slice(0,40))==='1'; }catch(_){ return false; } }
-function salvarPos(u,t){ try{ localStorage.setItem('curso_pos_'+btoa(unescape(encodeURIComponent(u))).slice(0,40), String(Math.floor(t))); }catch(_){} }
-function lerPos(u){ try{ return parseInt(localStorage.getItem('curso_pos_'+btoa(unescape(encodeURIComponent(u))).slice(0,40))||'0',10)||0; }catch(_){ return 0; } }
+// chave ÚNICA por vídeo (hash da URL inteira). O esquema antigo — btoa(url).slice(0,40) —
+// dava a MESMA chave pra todo link do Drive (o prefixo "https://drive.google.com/file/" é igual),
+// então marcar 1 aula marcava TODAS. Este hash é único por aula.
+function keyU(u){ u=String(u||''); let h=5381; for(let i=0;i<u.length;i++){ h=((h*33)^u.charCodeAt(i))>>>0; } return h.toString(36); }
+function marcarVista(u,v){ try{ localStorage.setItem('curso_vista_'+keyU(u), v?'1':''); }catch(_){} }
+function estaVista(u){ try{ return localStorage.getItem('curso_vista_'+keyU(u))==='1'; }catch(_){ return false; } }
+function salvarPos(u,t){ try{ localStorage.setItem('curso_pos_'+keyU(u), String(Math.floor(t))); }catch(_){} }
+function lerPos(u){ try{ return parseInt(localStorage.getItem('curso_pos_'+keyU(u))||'0',10)||0; }catch(_){ return 0; } }
+// última aula aberta por curso (pra "continuar de onde parou")
+function salvarUltima(slug,gi){ try{ localStorage.setItem('curso_ultima_'+slug, String(gi)); }catch(_){} }
+function lerUltima(slug){ try{ const v=localStorage.getItem('curso_ultima_'+slug); return v===null?-1:(parseInt(v,10)); }catch(_){ return -1; } }
+// progresso de um curso: {vistas,total,pct}
+function progressoCurso(cs){ let v=0,t=0; cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ t++; if(estaVista(a.url)) v++; })); return {vistas:v,total:t,pct:t?Math.round(v/t*100):0}; }
 
 async function entrar(){
   const s=$('senha').value.trim();
@@ -198,18 +247,23 @@ function render(){
   let html=`<div class="lista-tit">Meus cursos</div>`;
   cursos.forEach(cs=>{
     const m=meta(cs.curso);
-    let vistas=0; cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ if(estaVista(a.url)) vistas++; }));
+    const pg=progressoCurso(cs);
+    const feito = pg.total>0 && pg.vistas>=pg.total;
     html+=`
     <div class="ccard" onclick="abrirCurso('${cs.curso}')">
       <img class="cover" src="${m.foto}" alt="${m.titulo}" onerror="this.style.visibility='hidden'">
       <div class="info">
-        <span class="badge">${m.badge}</span>
+        <span class="badge">${m.badge}</span>${feito?'<span class="concluido-tag">✓ Concluído</span>':''}
         <h1>${m.titulo}</h1>
         <div class="prof">${m.prof}</div>
         <div class="stats">
           <div><b>${cs.modulos.length}</b>módulos</div>
           <div><b>${cs.total}</b>aulas</div>
-          <div><b>${vistas}</b>assistidas</div>
+          <div><b>${pg.vistas}</b>assistidas</div>
+        </div>
+        <div class="prog">
+          <div class="bar"><div class="fill" style="width:${pg.pct}%"></div></div>
+          <div class="lbl"><span>Seu progresso</span><b>${pg.pct}%</b></div>
         </div>
       </div>
       <span class="arr">›</span>
@@ -223,6 +277,76 @@ function cursoPorSlug(slug){
   return cursos.find(c=>c.curso===slug) || cursos[0];
 }
 
+// Banner "continuar de onde parou" / "começar" — escolhe a aula certa
+function proximaAlvo(cs){
+  const ult=lerUltima(cs.curso);
+  // 1ª aula não concluída (retoma o fluxo natural do curso)
+  let prim=-1;
+  cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ if(prim<0 && !estaVista(a.url)) prim=a._gi; }));
+  // se a última aula aberta ainda não foi concluída, retoma exatamente nela
+  if(ult>=0 && PLANO[ult] && !estaVista(PLANO[ult].a.url)) return ult;
+  if(prim>=0) return prim; // senão, 1ª aula ainda não concluída
+  return ult>=0?ult:0;     // tudo concluído: reabre a última
+}
+function bannerResume(cs){
+  if(!PLANO.length) return '';
+  const gi=proximaAlvo(cs); const p=PLANO[gi]; if(!p) return '';
+  const algum = cs.modulos.some(mo=>mo.aulas.some(a=>estaVista(a.url)));
+  const rot = algum? 'Continuar de onde parou' : 'Começar o curso';
+  const ic = algum? '▶' : '🎬';
+  return `<div class="resume" onclick="abrir(${gi})">
+    <div class="ic">${ic}</div>
+    <div class="rt"><small>${rot}</small><b>${limpaAula(p.a.titulo)}</b></div>
+    <div class="go">›</div></div>`;
+}
+// marcar/desmarcar aula concluída direto na lista (não abre o player)
+function toggleVistaAula(ev,gi){
+  ev.stopPropagation();
+  const p=PLANO[gi]; if(!p) return;
+  const nv=!estaVista(p.a.url); marcarVista(p.a.url,nv);
+  const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.toggle('vista',nv);
+  atualizarProgresso();
+}
+// recalcula e atualiza as barras/contadores sem re-renderizar tudo
+function atualizarProgresso(){
+  if(!CURSO_ATUAL) return;
+  const cs=cursoPorSlug(CURSO_ATUAL); if(!cs) return;
+  const pg=progressoCurso(cs);
+  const capa=$('prog-capa');
+  if(capa){ const f=capa.querySelector('.fill'); if(f) f.style.width=pg.pct+'%';
+    const lbl=capa.querySelector('.lbl'); if(lbl) lbl.innerHTML='<span>'+pg.vistas+' de '+pg.total+' aulas</span><b>'+pg.pct+'%</b>'; }
+  cs.modulos.forEach((m,mi)=>{ const feito=m.aulas.filter(a=>estaVista(a.url)).length;
+    const c=document.querySelector('.cont[data-mc="'+mi+'"]'); if(c) c.innerHTML='<b>'+feito+'</b>/'+m.aulas.length; });
+}
+// busca de aula (filtra as visíveis, abrindo os módulos com resultado)
+function filtrarAulas(q){
+  const box=$('busca-box'); if(box) box.classList.toggle('tem', !!q.trim());
+  const termo=(q||'').trim().toLowerCase();
+  document.querySelectorAll('.mod').forEach(mod=>{
+    const mi=mod.getAttribute('data-mi');
+    if(termo){ // garante que as aulas do módulo estão montadas
+      const cont=mod.querySelector('.aulas');
+      if(cont && !cont.dataset.pronto){ toggleMod(parseInt(mi,10)); }
+    }
+    let achou=0;
+    mod.querySelectorAll('.aula').forEach(a=>{
+      const t=a.getAttribute('data-t')||'';
+      const ok = !termo || t.indexOf(termo)>=0;
+      a.classList.toggle('oculta', !ok);
+      if(ok) achou++;
+    });
+    if(termo){ mod.classList.toggle('busca-vazio', achou===0); mod.classList.add('aberto'); }
+    else { mod.classList.remove('busca-vazio'); }
+  });
+}
+function limparBusca(){ const i=$('busca-aula'); if(i){ i.value=''; } filtrarAulas(''); }
+// copiar texto (link) com feedback no botão
+function copiarTxt(txt,btn){
+  const ok=()=>{ if(btn){ const o=btn.textContent; btn.textContent='Copiado ✓'; setTimeout(()=>btn.textContent=o,1400); } };
+  try{ navigator.clipboard.writeText(txt).then(ok,()=>fallbackCopy(txt,ok)); }catch(_){ fallbackCopy(txt,ok); }
+}
+function fallbackCopy(txt,ok){ try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok&&ok(); }catch(_){} }
+
 // NÍVEL 2 — dentro do curso: apostila + módulos/aulas
 function abrirCurso(slug){
   const cur=$('curso');
@@ -230,23 +354,37 @@ function abrirCurso(slug){
   const m0=meta(cs.curso);
   PLANO=[];
   cs.modulos.forEach(m=>{ m.aulas.forEach(a=>{ a._gi=PLANO.length; PLANO.push({m:m.nome,mo:m.ordem,a}); }); });
+  const pg=progressoCurso(cs);
+  const feito = pg.total>0 && pg.vistas>=pg.total;
   let html=`
     <button class="voltar-curso" onclick="render()">‹ Meus cursos</button>
     <div class="capa">
       <img class="foto" src="${m0.foto}" alt="${m0.titulo}" onerror="this.style.display='none'">
       <div class="info">
-        <span class="badge">${m0.badge}</span>
+        <span class="badge">${m0.badge}</span>${feito?'<span class="concluido-tag">✓ Concluído</span>':''}
         <h1>${m0.titulo}</h1>
         <div class="prof">${m0.prof}</div>
+        <div class="prog" id="prog-capa">
+          <div class="bar"><div class="fill" style="width:${pg.pct}%"></div></div>
+          <div class="lbl"><span>${pg.vistas} de ${pg.total} aulas</span><b>${pg.pct}%</b></div>
+        </div>
       </div>
+    </div>
+    ${bannerResume(cs)}
+    <div class="busca" id="busca-box">
+      <span class="lupa">🔎</span>
+      <input id="busca-aula" type="search" placeholder="Buscar aula por nome…" enterkeyhint="search" oninput="filtrarAulas(this.value)">
+      <button class="limpar" onclick="limparBusca()" aria-label="Limpar">✕</button>
     </div>
     <div class="sec-mod" style="margin-top:2px">Módulos e aulas</div>`;
   // LAZY: só os cabeçalhos dos módulos entram agora (abre instantâneo mesmo em celular fraco);
   // as aulas de cada módulo são montadas quando ele é aberto (toggleMod).
   cs.modulos.forEach((m,mi)=>{
+    const feitoMod=m.aulas.filter(a=>estaVista(a.url)).length;
     html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="toggleMod(${mi})">
       <div class="n">${m.ordem}</div>
       <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${m.aulas.length} aula${m.aulas.length>1?'s':''}</span></div>
+      <div class="cont" data-mc="${mi}"><b>${feitoMod}</b>/${m.aulas.length}</div>
       <div class="seta">›</div></div><div class="aulas">`;
     if(!m.aulas.length){ html+=`<div class="vazio-mod">Subindo os vídeos deste módulo…</div>`; }
     html+=`</div></div>`;
@@ -261,11 +399,11 @@ function abrirCurso(slug){
         <span style="color:#a9791c;font-size:1.2rem">›</span></a>`;
     }
     if(m0.site){
-      html+=`<a class="pdf-link" href="${m0.site.href}" target="_blank" style="background:#eef4f8;border-color:#cfe0ee">
+      html+=`<div class="pdf-link" style="background:#eef4f8;border-color:#cfe0ee">
         <span style="font-size:22px">🌐</span>
-        <span style="flex:1"><b style="display:block;font-size:1rem;color:#0f3d5c">Site oficial do curso</b>
-        <span style="font-size:.82rem;color:#41607a">${m0.site.label}</span></span>
-        <span style="color:#0f6d78;font-size:1.2rem">›</span></a>`;
+        <a href="${m0.site.href}" target="_blank" style="flex:1;text-decoration:none;color:inherit"><b style="display:block;font-size:1rem;color:#0f3d5c">Site oficial do curso</b>
+        <span style="font-size:.82rem;color:#41607a">${m0.site.label}</span></a>
+        <button class="copiar-btn" onclick="copiarTxt('${m0.site.href}',this)">Copiar</button></div>`;
     }
   }
   if(m0.mentor){
@@ -294,7 +432,8 @@ function toggleMod(mi){
   if(cont && !cont.dataset.pronto){
     const cs=cursoPorSlug(CURSO_ATUAL); const m=cs&&cs.modulos[mi];
     if(m && m.aulas.length){
-      cont.innerHTML=m.aulas.map(a=>`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${a._gi}" onclick="abrir(${a._gi})">
+      cont.innerHTML=m.aulas.map(a=>`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${a._gi}" data-t="${(limpaAula(a.titulo)||'').toLowerCase().replace(/"/g,'')}" onclick="abrir(${a._gi})">
+        <div class="chk" title="Marcar como concluída" onclick="toggleVistaAula(event,${a._gi})">✓</div>
         <div class="pl">▶</div>
         <div class="txt">${limpaAula(a.titulo)}<small>Aula ${a.ordem}</small></div></div>`).join('');
     }
@@ -306,6 +445,7 @@ function toggleMod(mi){
 function idDrive(url){ const m=(url||'').match(/\/d\/([^/]+)/)||(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
 function abrir(gi){
   atual=gi; const p=PLANO[gi]; if(!p) return;
+  salvarUltima(CURSO_ATUAL, gi);
   $('player').classList.add('on');
   $('p-titulo').textContent=limpaAula(p.a.titulo);
   $('p-mod').textContent=limpaModulo(p.m);
@@ -318,19 +458,23 @@ function abrir(gi){
     vw.innerHTML='<div class="vbox"><iframe src="'+emb+'" allow="autoplay; fullscreen" allowfullscreen playsinline></iframe></div>';
     marcarVista(url,true);
     const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista');
+    atualizarProgresso();
   } else {
     vw.innerHTML='<div class="vbox"><video id="vid" controls playsinline preload="metadata"></video></div>';
     const v=$('vid'); v.src=url;
     const pos=lerPos(url);
     v.onloadedmetadata=()=>{ if(pos>5 && pos<v.duration-10){ v.currentTime=pos; } };
     v.ontimeupdate=()=>{ if(v.currentTime>0) salvarPos(url,v.currentTime); };
-    v.onended=()=>{ marcarVista(url,true); const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista'); };
+    v.onended=()=>{ marcarVista(url,true); const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista'); syncPlayerChk(); atualizarProgresso(); };
     v.play().catch(()=>{});
   }
   $('p-prox').style.display = (gi+1<PLANO.length)?'inline-block':'none';
+  syncPlayerChk();
 }
+function syncPlayerChk(){ const p=PLANO[atual]; if(!p)return; const on=estaVista(p.a.url); const b=$('p-chk'); if(b){ b.classList.toggle('on',on); b.textContent=on?'✓ Concluída':'Marcar concluída'; } }
+function toggleVistaPlayer(){ const p=PLANO[atual]; if(!p)return; const nv=!estaVista(p.a.url); marcarVista(p.a.url,nv); const el=document.querySelector('.aula[data-gi="'+atual+'"]'); if(el) el.classList.toggle('vista',nv); syncPlayerChk(); atualizarProgresso(); }
 function proximaAula(){ if(atual+1<PLANO.length) abrir(atual+1); }
-function fecharPlayer(){ try{ const v=$('vid'); if(v){ v.pause(); v.src=''; } }catch(_){} const vw=document.querySelector('#player .vwrap'); if(vw) vw.innerHTML=''; $('player').classList.remove('on'); abrirCurso(); }
+function fecharPlayer(){ try{ const v=$('vid'); if(v){ v.pause(); v.src=''; } }catch(_){} const vw=document.querySelector('#player .vwrap'); if(vw) vw.innerHTML=''; $('player').classList.remove('on'); abrirCurso(CURSO_ATUAL); }
 
 // auto-desbloqueio (aparelho do Elias): se já entrou antes, não pede senha de novo
 (async function(){

@@ -140,9 +140,50 @@
   .esqueleto .txt{white-space:pre-wrap;margin:0;font-size:1.02rem}
   .vazio{text-align:center;color:#9aa1ad;padding:22px 0;font-size:.95rem}
   .rodape{text-align:center;color:#b3b9c4;font-size:.8rem;margin-top:34px;line-height:1.5}
+
+  /* continuar de onde parou (retomada) */
+  .continuar{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;border:none;border-radius:16px;padding:14px 16px;margin-bottom:16px;width:100%;text-align:left;cursor:pointer;box-shadow:0 4px 16px rgba(15,61,92,.18)}
+  .continuar .cic{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .continuar .ct{flex:1;min-width:0}
+  .continuar .ct .k{font-size:.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;opacity:.85}
+  .continuar .ct .v{font-family:Georgia,serif;font-weight:800;font-size:1.08rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .continuar .seta{font-size:1.3rem;flex-shrink:0;opacity:.9}
+  .card{transition:box-shadow .18s ease,transform .12s ease,border-color .18s ease}
+  .card.proximo{border-color:var(--dourado);box-shadow:0 4px 18px rgba(169,121,28,.18)}
+  .card .agora{display:inline-block;background:var(--dourado);color:#fff;font-size:.66rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;border-radius:999px;padding:3px 9px;margin-left:8px;vertical-align:middle}
+
+  /* autoavaliação do sermão (rubrica) */
+  .rubrica{background:var(--areia2);border:2px solid #ecd9ad;border-radius:16px;padding:16px 18px;margin-top:16px}
+  .rubrica .rot{font-family:Georgia,serif;font-weight:800;color:var(--dourado);font-size:.82rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+  .rubrica .sub{font-size:.88rem;color:#6b7280;margin-bottom:10px}
+  .rubrica label{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid #ecd9ad;cursor:pointer}
+  .rubrica label:first-of-type{border-top:none}
+  .rubrica input{width:21px;height:21px;flex-shrink:0;margin:1px 0 0;accent-color:var(--dourado);cursor:pointer}
+  .rubrica span{font-size:1rem;line-height:1.4}
+  .rubrica span b{color:var(--navy)}
+  .rubrica input:checked + span{color:#8a94a3}
+
   @media(min-width:760px){
     html{font-size:18px}
     .card .desc{font-size:.9rem}
+    .card:hover{box-shadow:0 8px 24px rgba(15,61,92,.13);transform:translateY(-2px)}
+    .continuar:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,61,92,.24)}
+  }
+  @media print{
+    body{max-width:none;padding:0}
+    body.imprimindo > *{display:none !important}
+    body.imprimindo #tela-modulo{display:block !important}
+    body.imprimindo #tela-modulo > .voltar,
+    body.imprimindo #wiz > .bloco > .cab,
+    body.imprimindo #wiz > .bloco > .cab-sub,
+    body.imprimindo .lista-rasc,
+    body.imprimindo .btn-linha,
+    body.imprimindo .campo,
+    body.imprimindo .m-selo,
+    body.imprimindo .divisor,
+    body.imprimindo .rubrica,
+    body.imprimindo .nav-mod{display:none !important}
+    body.imprimindo .esqueleto{border:none;background:#fff;padding:0;margin:0}
   }
 </style>
 </head>
@@ -165,6 +206,7 @@
     <div class="barra"><i id="barra-geral"></i></div>
   </div>
 
+  <div id="continuar-wrap"></div>
   <div id="lista-modulos"></div>
 
   <div class="rodape">
@@ -272,6 +314,8 @@ var MODULOS = [
     '<h2 class="sec"><span class="n">3</span>A GRANDE IDEIA do texto</h2>'+
     '<p>Depois de observar e interpretar, faça a pergunta mais importante de toda a preparação: <strong>qual é a única frase que resume o que este texto ensina?</strong> Todo trecho da Bíblia tem uma ideia central. Se você não consegue dizer em uma frase clara do que o texto trata, você ainda não está pronto para pregá-lo.</p>'+
     '<div class="destaque"><div class="rot">A regra do sermão de uma bala</div><p>Um sermão é uma bala, não um punhado de chumbo grosso. Uma ideia central, martelada de vários ângulos, marca mais que dez ideias soltas. Descubra a Grande Ideia — e todo o resto do sermão vai servir a ela.</p></div>'+
+
+    '<div class="destaque"><div class="rot">A ponte dos três degraus</div><p>Não pule direto do texto antigo para a vida de hoje. Desça a ponte por três degraus: <strong>o que significou</strong> (para quem recebeu primeiro), <strong>o que significa</strong> (a verdade eterna, que não muda) e <strong>o que exige</strong> (o que essa verdade pede de nós agora). O degrau do meio é o que segura a ponte — é a verdade permanente que liga o ontem ao hoje sem torcer o texto.</p></div>'+
 
     '<h2 class="sec"><span class="n">4</span>Aplicação — o que MUDA em nós hoje</h2>'+
     '<p>Só depois de entender o que o texto significou é que perguntamos o que ele exige de nós agora. A aplicação nasce da mesma verdade eterna do texto, traduzida para a vida do ouvinte: o que crer, o que abandonar, o que obedecer, quem imitar, o que evitar. Sem aplicação, o sermão é aula. Com aplicação, ele vira Palavra viva.</p>',
@@ -485,10 +529,36 @@ function progressoGeral(){
   });
   return t? Math.round(f/t*100) : 0;
 }
+/* qual é o próximo módulo a estudar (1º com checklist não 100%); -1 = tudo feito */
+function proximoModulo(){
+  for(var i=0;i<MODULOS.length;i++){
+    var p=progressoModulo(MODULOS[i]);
+    if(p && p.total>0 && p.feitos<p.total) return i;
+  }
+  return -1;
+}
 function renderIndice(){
   var pct=progressoGeral();
   document.getElementById('pct-geral').textContent=pct+'%';
   document.getElementById('barra-geral').style.width=pct+'%';
+  var prox=proximoModulo();
+  // barra "continuar de onde parou"
+  var cw=document.getElementById('continuar-wrap');
+  if(prox>=0){
+    var mp=MODULOS[prox];
+    var comecou=pct>0;
+    cw.innerHTML='<button class="continuar" onclick="abrirModulo('+prox+')">'
+      +'<div class="cic">'+(comecou?'▶':'✦')+'</div>'
+      +'<div class="ct"><div class="k">'+(comecou?'Continuar de onde parou':'Comece por aqui')+'</div>'
+      +'<div class="v">Módulo '+(prox+1)+' · '+esc(mp.titulo)+'</div></div>'
+      +'<div class="seta">→</div></button>';
+  } else {
+    cw.innerHTML='<button class="continuar" onclick="abrirModulo('+(MODULOS.length-1)+')" style="background:linear-gradient(135deg,var(--dourado),#7a5a12)">'
+      +'<div class="cic">✓</div>'
+      +'<div class="ct"><div class="k">Curso concluído — parabéns!</div>'
+      +'<div class="v">Agora monte seu sermão na prática</div></div>'
+      +'<div class="seta">→</div></button>';
+  }
   var box=document.getElementById('lista-modulos');
   box.innerHTML=MODULOS.map(function(m,idx){
     var p=progressoModulo(m);
@@ -502,10 +572,11 @@ function renderIndice(){
       var qtd=(loadJSON(LS_RASC).lista||[]).length;
       barra='<div class="stat" style="color:var(--dourado)">'+(qtd? qtd+' rascunho(s) salvo(s)':'monte seu 1º sermão aqui')+'</div>';
     }
-    return '<button class="card" onclick="abrirModulo('+idx+')">'
+    var ehProx=(idx===prox);
+    return '<button class="card'+(ehProx?' proximo':'')+'" onclick="abrirModulo('+idx+')">'
       +'<div class="top">'
       +'<div class="ic'+(feito?' feito':'')+'">'+(feito?'✓':m.emoji)+'</div>'
-      +'<div style="flex:1;min-width:0"><div class="tit">Módulo '+(idx+1)+' · '+esc(m.titulo)+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="tit">Módulo '+(idx+1)+' · '+esc(m.titulo)+(ehProx?'<span class="agora">agora</span>':'')+'</div>'
       +'<div class="ref">'+esc(m.sub)+'</div></div>'
       +'</div>'
       +'<div class="desc">'+esc(m.resumo)+'</div>'
@@ -698,11 +769,38 @@ function verEsqueleto(){
     +bloco('Clímax', x.climax)
     +bloco('Aplicação', x.aplica)
     +bloco('Apelo', x.apelo)
-    +'<div class="btn-linha" style="margin-top:16px"><button class="btn sec" onclick="copiarEsqueleto()">Copiar tudo</button></div>'
-    +'</div>';
+    +'<div class="btn-linha" style="margin-top:16px"><button class="btn sec" onclick="copiarEsqueleto()">Copiar tudo</button>'
+    +'<button class="btn sec" onclick="imprimirEsqueleto()">Imprimir / PDF</button></div>'
+    +'</div>'
+    +rubricaHTML();
   var el=document.getElementById('esqueleto-out');
   el.innerHTML=out;
   el.scrollIntoView({behavior:'smooth'});
+}
+/* rubrica de autoavaliação — o "feedback do grupo" (estilo Simeon Trust) para uso solo */
+var RUBRICA=[
+  {t:'Orei pelo texto, por mim e pelos ouvintes antes de montar?', m:'Módulo 1'},
+  {t:'A Grande Ideia cabe em UMA frase clara?', m:'Módulo 2'},
+  {t:'Cada ponto NASCE do texto — não foi colado por fora?', m:'Módulo 3'},
+  {t:'O sermão SOBE até um clímax, em vez de andar reto?', m:'Módulo 3'},
+  {t:'Há aplicação concreta para a vida da igreja hoje?', m:'Módulo 2'},
+  {t:'A ilustração ILUMINA a verdade (não se exibe)?', m:'Módulo 5'},
+  {t:'O apelo nasce da mensagem e persuade sem manipular?', m:'Módulo 6'},
+  {t:'Esta verdade já queimou primeiro na MINHA vida?', m:'Módulos 1 e 4'}
+];
+function rubricaHTML(){
+  var h='<div class="rubrica"><div class="rot">Autoavaliação do sermão</div>'
+    +'<div class="sub">Antes de pregar, seja o seu próprio revisor. Confira cada ponto com sinceridade.</div>';
+  RUBRICA.forEach(function(r){
+    h+='<label><input type="checkbox"><span>'+esc(r.t)+' <b>('+esc(r.m)+')</b></span></label>';
+  });
+  h+='</div>';
+  return h;
+}
+function imprimirEsqueleto(){
+  document.body.classList.add('imprimindo');
+  window.print();
+  setTimeout(function(){ document.body.classList.remove('imprimindo'); },400);
 }
 function copiarEsqueleto(){
   var d=rascStore(); var reg=d.lista.find(function(r){return r.id===_rascAtual;});

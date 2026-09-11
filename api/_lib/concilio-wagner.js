@@ -384,13 +384,31 @@ export default async function handler(req) {
       const conteudo = (m.content != null ? m.content : (m.texto != null ? m.texto : '')).toString().slice(0, 700);
       return (ehResposta ? 'VOCÊ RESPONDEU: ' : 'O PASTOR PERGUNTOU: ') + conteudo;
     }).filter((l) => l.replace(/^(VOCÊ RESPONDEU: |O PASTOR PERGUNTOU: )/, '').trim()).join('\n');
-    if (h) user = 'CONVERSA ATÉ AQUI:\n' + h + '\n\n' + user;
+    if (h) user = 'CONVERSA ATÉ AQUI:\n' + h + '\n\n'
+      + 'ISTO É UMA CONVERSA EM ANDAMENTO E ILIMITADA. O pastor pode concordar, discordar, CONTESTAR ou aprofundar. '
+      + 'Responda DIRETO ao ponto que ele levantou agora, no seu método — sustente com o texto se você estiver certo, '
+      + 'ou reconheça com honestidade se ele tiver razão (o crivo também reprova o que é seu). NUNCA devolva sem resposta: '
+      + 'se faltar material, raciocine pela Escritura e diga que não achou nas aulas. Não repita a resposta anterior; avance o garimpo.\n\n'
+      + user;
   }
 
-  const r = await chamarIA(sys, user, { max_tokens: 4000 });
+  const r = await chamarIA(sys, user, { max_tokens: 5000 });
   if (r.erro) return new Response(JSON.stringify({ ok: false, erro: r.erro }), { status: r.status, headers: JSONH });
 
-  const { resposta, quadro } = separarQuadro(r.texto);
+  let { resposta, quadro } = separarQuadro(r.texto);
+  // ILIMITADO: o pastor nunca pode voltar sem resposta. Se veio vazio, tenta mais uma vez;
+  // se ainda assim vier vazio, devolve um pedido claro do gatilho — nunca uma bolha muda.
+  if (!resposta || !resposta.trim()) {
+    const r2 = await chamarIA(sys, user + '\n\nResponda agora, pelo método, sem deixar em branco.', { max_tokens: 5000 });
+    if (!r2.erro && r2.texto && r2.texto.trim()) {
+      const s2 = separarQuadro(r2.texto);
+      resposta = s2.resposta; quadro = s2.quadro; r.provedor = r2.provedor; r.modelo = r2.modelo;
+    }
+  }
+  if (!resposta || !resposta.trim()) {
+    resposta = 'Irmão, me faça a pergunta de novo apontando o TEXTO que você quer cavar (livro, capítulo e versículo). '
+      + 'Sem o gatilho concreto do texto eu não invento tipologia — mas me dê o versículo e eu vou ao garimpo com você.';
+  }
   return new Response(JSON.stringify({
     ok: true,
     erudito: 'wagner-cordeiro',

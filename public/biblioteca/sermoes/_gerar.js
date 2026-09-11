@@ -58,7 +58,7 @@ function build(m){
     if(i === m.secs.length-1){ html += '\n  <div class="final">'+sec(s)+'</div>\n'; }
     else { html += '\n  '+sec(s)+'\n'; }
   });
-  html += '\n  <div class="assinatura">✦ Análise selada pelo Escavador de Pérolas Bíblicas ✦</div>\n</body>\n</html>\n';
+  html += '\n  <div class="assinatura">✦ Análise selada pelo Escavador de Pérolas Bíblicas ✦</div>\n  <script src="_sermao.js" defer></script>\n</body>\n</html>\n';
   return html;
 }
 

@@ -39,16 +39,57 @@
   .barra textarea{flex:1;resize:none;border:1.5px solid var(--linha);border-radius:20px;padding:11px 15px;font-size:1.05rem;font-family:inherit;max-height:120px;line-height:1.4}
   .barra button{background:var(--navy);color:#fff;border:none;border-radius:50%;width:48px;height:48px;font-size:1.3rem;cursor:pointer;flex-shrink:0}
   .barra button:disabled{opacity:.4}
+  /* ===== markdown-lite nas respostas do Claude (negrito, títulos, listas) ===== */
+  .b .md{white-space:normal}
+  .b .md p{margin:0 0 8px}
+  .b .md p:last-child{margin-bottom:0}
+  .b .md h4{margin:10px 0 4px;font-size:1rem;color:var(--navy);font-weight:800}
+  .b .md h4:first-child{margin-top:0}
+  .b .md .li{margin:2px 0 2px 2px;line-height:1.5}
+  .b .md strong{font-weight:800}
+  .b .md em{font-style:italic}
+  .b .md code{background:#eef2f4;border:1px solid var(--linha);border-radius:5px;padding:1px 5px;font-family:'Consolas',monospace;font-size:.92em}
+  .b .md a{color:var(--teal);word-break:break-word}
+  /* ===== rodapé com botão Copiar (Elias exige em toda resposta) ===== */
+  .b .rod{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+  .b .bcopia{background:#f0f5f6;color:var(--navy);border:1px solid var(--linha);border-radius:8px;
+    padding:4px 10px;font-size:.78rem;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s}
+  .b .bcopia:hover{background:#e4edf0}
+  /* ===== "digitando" com 3 pontinhos animados ===== */
+  #digitando .dots{display:inline-flex;gap:4px;align-items:center;height:16px;padding:2px 0}
+  #digitando .dots i{width:7px;height:7px;border-radius:50%;background:var(--teal);opacity:.4;animation:blink 1.2s infinite}
+  #digitando .dots i:nth-child(2){animation-delay:.2s}
+  #digitando .dots i:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+  /* ===== sugestões (chips) no estado vazio ===== */
+  .sugs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 12px 4px}
+  .sug{background:#fff;border:1.5px solid var(--linha);color:var(--navy);border-radius:16px;
+    padding:9px 14px;font-size:.9rem;font-family:inherit;font-weight:600;cursor:pointer;line-height:1.3;
+    box-shadow:0 1px 2px rgba(0,0,0,.05);transition:border-color .15s,background .15s}
+  .sug:hover{border-color:var(--teal);background:#f0f7f8}
+  /* ===== falha no envio: reenviar ===== */
+  .erro-env{align-self:flex-end;max-width:82%;background:#fdecec;border:1px solid #f3c0c0;color:var(--vinho);
+    border-radius:12px;padding:8px 12px;font-size:.85rem;display:flex;align-items:center;gap:10px}
+  .erro-env button{background:var(--vinho);color:#fff;border:none;border-radius:8px;padding:5px 11px;
+    font-weight:700;font-family:inherit;cursor:pointer;font-size:.8rem}
+  /* ===== rolar para o fim (aparece quando sobe a conversa) ===== */
+  #down{position:fixed;right:calc(50% - 400px);bottom:78px;width:42px;height:42px;border-radius:50%;
+    background:var(--navy);color:#fff;border:none;font-size:1.2rem;cursor:pointer;display:none;z-index:5;
+    box-shadow:0 3px 10px rgba(0,0,0,.25)}
+  #down.on{display:flex;align-items:center;justify-content:center}
+  @media(max-width:840px){#down{right:14px}}
 </style>
 </head>
 <body>
   <header>
     <div class="ico">🧙</div>
     <div class="t"><b>Claude (Mestre dos Magos)</b><span id="status"><i class="luz"></i>bate-papo do RADAR</span></div>
-    <button onclick="location.href='/'">🏠</button>
+    <button id="btudo" onclick="copiarTudo(this)" title="Copiar toda a conversa" aria-label="Copiar toda a conversa">📋</button>
+    <button onclick="location.href='/'" title="Início" aria-label="Voltar ao início">🏠</button>
   </header>
 
-  <div id="msgs"><div class="vazio" id="vazio">Carregando…</div></div>
+  <div id="msgs" role="log" aria-live="polite" aria-relevant="additions"><div class="vazio" id="vazio">Carregando…</div></div>
+  <button id="down" onclick="fim()" title="Ir para a última mensagem" aria-label="Ir para a última mensagem">⬇</button>
 
   <div class="barra">
     <textarea id="txt" rows="1" placeholder="Escreva pra mim… (peça, dúvida, tarefa)" enterkeyhint="send"></textarea>
@@ -61,15 +102,62 @@ const $=id=>document.getElementById(id);
 let ultimo=0;
 
 function hora(iso){ try{ const d=new Date(iso); return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return'';} }
-function esc(s){ return (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+/* markdown-lite (mesmo padrão do Concílio): negrito, itálico, `código`, títulos e listas.
+   As respostas da IA vêm com **negrito**, listas e títulos — sem isto viravam texto cru. */
+function inl(s){ return esc(s)
+  .replace(/`([^`]+?)`/g,'<code>$1</code>')
+  .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+  .replace(/(^|[\s(])\*(.+?)\*/g,'$1<em>$2</em>')
+  .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+function fmt(txt){
+  var linhas=String(txt||'').split(/\r?\n/), h='', para=[];
+  function solta(){ if(para.length){ h+='<p>'+inl(para.join(' '))+'</p>'; para=[]; } }
+  for(var i=0;i<linhas.length;i++){
+    var L=linhas[i].trim();
+    if(!L){ solta(); continue; }
+    var mH=L.match(/^#{1,4}\s*(.+)$/)||L.match(/^\*\*(.+?)\*\*:?\s*$/);
+    if(mH){ solta(); h+='<h4>'+inl(mH[1])+'</h4>'; continue; }
+    if(/^([•\-\*]|\d+[.)])\s+/.test(L)){ solta(); h+='<div class="li">◆ '+inl(L.replace(/^([•\-\*]|\d+[.)])\s+/,''))+'</div>'; continue; }
+    para.push(L);
+  }
+  solta();
+  return h||'<p>'+inl(txt||'')+'</p>';
+}
+
+/* Copiar (Elias exige em TODA resposta). writeText com queda pra execCommand. */
+function copiar(t,botao){
+  function fb(){ try{ var a=document.createElement('textarea'); a.value=t; a.style.position='fixed'; a.style.opacity='0';
+    document.body.appendChild(a); a.focus(); a.select(); document.execCommand('copy'); document.body.removeChild(a); }catch(e){} }
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(fb); else fb();
+  if(botao){ var o=botao.textContent; botao.textContent='✅ Copiado'; botao.disabled=true;
+    setTimeout(function(){ botao.textContent=o; botao.disabled=false; },1600); }
+}
+var HIST=[];  // guarda o texto cru pra "Copiar tudo"
+function copiarTudo(botao){
+  if(!HIST.length){ return; }
+  var linhas=HIST.map(function(m){ return (m.autor==='elias'?'Você':'Claude')+': '+m.texto; });
+  copiar(linhas.join('\n\n')+'\n\n— Bate-papo do RADAR', botao);
+}
 
 function pinta(m){
+  HIST.push({autor:m.autor,texto:m.texto});
   const div=document.createElement('div');
-  div.className='b '+(m.autor==='elias'?'elias':'claude');
-  div.innerHTML=`<div class="h">${m.autor==='elias'?'Você':'🧙 Claude'}</div>${esc(m.texto)}<div class="hora">${hora(m.criado_em)}</div>`;
+  const ehC=m.autor!=='elias';
+  div.className='b '+(ehC?'claude':'elias');
+  let corpo, rod='';
+  if(ehC){
+    corpo='<div class="md">'+fmt(m.texto)+'</div>';
+    rod='<div class="rod"><button class="bcopia" type="button">📋 Copiar</button></div>';
+  }else{
+    corpo=esc(m.texto);
+  }
+  div.innerHTML=`<div class="h">${ehC?'🧙 Claude':'Você'}</div>${corpo}<div class="hora">${hora(m.criado_em)}</div>${rod}`;
+  if(ehC){ const b=div.querySelector('.bcopia'); if(b) b.addEventListener('click',function(){ copiar(m.texto,b); }); }
   $('msgs').appendChild(div);
 }
-function fim(){ const e=$('msgs'); e.scrollTop=e.scrollHeight; }
+function fim(){ const e=$('msgs'); e.scrollTop=e.scrollHeight; var d=$('down'); if(d) d.classList.remove('on'); }
 
 /* ===== LUZ DO CLAUDE =====
    Aceso  = ele está trabalhando AGORA (responde na hora).
@@ -93,6 +181,27 @@ function avisar(txt){
   $('msgs').appendChild(d); fim();
 }
 
+/* Estado vazio: em vez de tela em branco, mostra partidas rápidas (chips). */
+const SUGESTOES=[
+  'Me dê uma ideia de pregação para o próximo culto',
+  'Explique João 3.16 com fidelidade à doutrina AD',
+  'Sugira um esboço de EBD para adolescentes',
+  'Como uso o RADAR para preparar uma mensagem?'
+];
+function mostraSugestoes(){
+  const v=$('vazio'); if(!v) return;
+  if(document.getElementById('sugs')) return;
+  v.textContent='Ainda não há mensagens. Me escreva aqui — ou toque numa ideia:';
+  const box=document.createElement('div'); box.className='sugs'; box.id='sugs';
+  SUGESTOES.forEach(function(s){
+    const b=document.createElement('button'); b.className='sug'; b.type='button'; b.textContent=s;
+    b.addEventListener('click',function(){ $('txt').value=s; enviar(); });
+    box.appendChild(b);
+  });
+  v.appendChild(box);
+}
+function tiraSugestoes(){ const s=document.getElementById('sugs'); if(s) s.remove(); const v=$('vazio'); if(v) v.remove(); }
+
 let _carregando=false;
 async function carregar(){
   if(_carregando) return;              // não sobrepõe requisições (evita travar)
@@ -106,10 +215,11 @@ async function carregar(){
     if(d && d.ok){
       if(d.msgs.length){
         if($('vazio')) $('vazio').remove();
+        const e=$('msgs'); const perto=e.scrollHeight-e.scrollTop-e.clientHeight < 120;
         d.msgs.forEach(m=>{ pinta(m); ultimo=Math.max(ultimo,m.id); });
-        fim();
+        if(perto) fim(); else $('down').classList.add('on');  // não arranca ele da leitura
       }else if(ultimo===0 && $('vazio')){
-        $('vazio').textContent='Ainda não há mensagens. Me escreva aqui — respondo na próxima rodada.';
+        mostraSugestoes();
       }
       pintaStatus(d.status);
     }
@@ -117,20 +227,23 @@ async function carregar(){
   finally{ _carregando=false; }
 }
 
-async function enviar(){
-  const t=$('txt').value.trim();
-  if(!t) return;
+function digitando(on){
+  var dd=document.getElementById('digitando'); if(dd) dd.remove();
+  if(on){
+    var dig=document.createElement('div'); dig.className='b claude'; dig.id='digitando';
+    dig.innerHTML='<div class="h">🧙 Claude</div><div class="dots"><i></i><i></i><i></i></div>';
+    $('msgs').appendChild(dig); fim();
+  }
+}
+// Envia (ou reenvia) uma mensagem já mostrada na tela. Separado pra o botão "Reenviar".
+async function postMsg(t){
   $('env').disabled=true;
-  $('txt').value='';
-  // mostra a msg do Elias na hora + "digitando…"
-  pinta({autor:'elias',texto:t,criado_em:new Date().toISOString()}); fim();
-  const dig=document.createElement('div'); dig.className='b claude'; dig.id='digitando';
-  dig.innerHTML='<div class="h">🧙 Claude</div><i>digitando…</i>'; $('msgs').appendChild(dig); fim();
+  digitando(true);
   try{
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({token:TOKEN,autor:'elias',texto:t})});
     const d=await r.json();
-    var dd=document.getElementById('digitando'); if(dd) dd.remove();
+    digitando(false);
     if(d.ok){
       if(d.msg) ultimo=Math.max(ultimo,d.msg.id);
       if(d.reply){ pinta(d.reply); ultimo=Math.max(ultimo,d.reply.id); fim(); }
@@ -141,15 +254,38 @@ async function enviar(){
         _jaAvisou=true;
         avisar('📌 Se isso for TAREFA no app (construir, mudar, consertar), já está anotado. O Claude do PC pega e volta aqui com a prova. A luz lá em cima fica VERDE quando ele estiver trabalhando ao vivo.');
       }
-    }
-  }catch(e){ var dd=document.getElementById('digitando'); if(dd) dd.remove(); dizStatus('','sem conexão…'); }
+    }else{ falhaEnvio(t); }
+  }catch(e){ digitando(false); dizStatus('','sem conexão…'); falhaEnvio(t); }
   $('env').disabled=false;
   $('txt').focus();
+}
+// Falhou o envio: NÃO some com a mensagem — mostra "Reenviar" (padrão dos apps de chat).
+function falhaEnvio(t){
+  var d=document.createElement('div'); d.className='erro-env';
+  d.innerHTML='<span>Não consegui enviar.</span>';
+  var b=document.createElement('button'); b.type='button'; b.textContent='↻ Reenviar';
+  b.addEventListener('click',function(){ d.remove(); postMsg(t); });
+  d.appendChild(b); $('msgs').appendChild(d); fim();
+}
+async function enviar(){
+  const t=$('txt').value.trim();
+  if(!t) return;
+  tiraSugestoes();
+  $('txt').value=''; $('txt').style.height='auto';
+  // mostra a msg do Elias na hora
+  pinta({autor:'elias',texto:t,criado_em:new Date().toISOString()}); fim();
+  postMsg(t);
 }
 let _jaAvisou=false;
 
 $('txt').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); enviar(); } });
 $('txt').addEventListener('input',e=>{ e.target.style.height='auto'; e.target.style.height=Math.min(120,e.target.scrollHeight)+'px'; });
+
+// Botão "ir ao fim": aparece só quando o Elias sobe a conversa pra ler algo mais antigo.
+$('msgs').addEventListener('scroll',function(){
+  const e=$('msgs'); const perto=e.scrollHeight-e.scrollTop-e.clientHeight < 120;
+  $('down').classList.toggle('on', !perto);
+});
 
 // Busca mensagens novas: de 3 em 3s quando o Claude está AO VIVO (pra resposta cair na hora),
 // de 8 em 8s quando não está (economiza bateria/dados do celular).

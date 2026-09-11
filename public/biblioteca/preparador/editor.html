@@ -46,6 +46,10 @@
   .mini.del{background:#fdecec;color:var(--vinho);border-color:#f3c9c9}
   .add{display:block;width:100%;background:var(--dourado);color:#fff;border:none;border-radius:14px;
     padding:14px;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer;margin-top:4px}
+  .modelos{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+  .modelos .ml{width:100%;text-align:center;color:#6b7280;font-size:.82rem;margin-bottom:2px}
+  .modelos button{background:#eef2f4;color:var(--navy);border:1px solid var(--linha);border-radius:999px;
+    padding:8px 14px;font-weight:800;font-size:.85rem;font-family:inherit;cursor:pointer}
   .vazio{text-align:center;color:#9aa1ad;padding:20px 10px;font-size:.95rem;border:1px dashed var(--linha);
     border-radius:14px;margin-bottom:13px}
   .barra{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--linha);
@@ -93,6 +97,12 @@
 
   <h2>🗺️ Estações</h2>
   <div class="h2sub">Cada estação é um ponto da pregação, na ordem</div>
+  <div class="modelos">
+    <div class="ml">🧩 Começar por um modelo (adiciona estações já rotuladas):</div>
+    <button onclick="modelo('exp')">Expositivo</button>
+    <button onclick="modelo('tem')">Temático (3 pontos)</button>
+    <button onclick="modelo('tex')">Textual</button>
+  </div>
   <div id="lista"></div>
   <button class="add" onclick="addEstacao()">➕ Adicionar estação</button>
 
@@ -156,6 +166,22 @@ function pinta(){
 }
 
 function campo(i,k,v){ R.estacoes[i][k]=v; sujo=true; }
+
+// MODELOS de esqueleto — vence a "página em branco" (só ADICIONA, nunca apaga conteúdo)
+var MODELOS={
+  exp:[['🧭','CONTEXTO'],['🔑','VERSÍCULO-CHAVE'],['📖','EXPLICAÇÃO'],['💡','ILUSTRAÇÃO'],['🎯','APLICAÇÃO'],['🔥','APELO']],
+  tem:[['🚪','INTRODUÇÃO'],['1️⃣','PONTO 1'],['2️⃣','PONTO 2'],['3️⃣','PONTO 3'],['🎯','APLICAÇÃO'],['🔥','APELO']],
+  tex:[['🚪','INTRODUÇÃO'],['✳️','DIVISÃO 1'],['✳️','DIVISÃO 2'],['✳️','DIVISÃO 3'],['🧵','CONCLUSÃO'],['🔥','APELO']]
+};
+function modelo(t){
+  var base=MODELOS[t]; if(!base) return;
+  var temConteudo=R.estacoes.some(function(e){ return (e.anc||'').trim()||(e.pu||'').trim(); });
+  if(temConteudo && !confirm('Isso ADICIONA as estações do modelo ao fim das que já existem. Nada é apagado. Continuar?')) return;
+  R.estacoes=R.estacoes.filter(function(e){ return (e.anc||'').trim()||(e.pu||'').trim()||(e.rf||'').trim(); });
+  base.forEach(function(p){ R.estacoes.push({em:p[0],anc:p[1],rf:'',pu:''}); });
+  sujo=true; pinta(); window.scrollTo(0, document.body.scrollHeight);
+}
+
 function addEstacao(){
   R.estacoes.push({em:'',anc:'',rf:'',pu:''}); sujo=true; pinta();
   window.scrollTo(0, document.body.scrollHeight);
