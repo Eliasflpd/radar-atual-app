@@ -164,6 +164,16 @@ module.exports = async (req, res) => {
         return;
       }
 
+      // === ADMIN: renomear um módulo — POST {acao:'curso-mod-nome', token, curso, modulo_ordem, nome} ===
+      if(b.acao==='curso-mod-nome'){
+        if((b.token||'')!==ADM){ res.status(401).json({ok:false,erro:'token'}); return; }
+        const curso=(b.curso||'').toString().trim(); const ord=b.modulo_ordem|0; const nome=(b.nome||'').toString().trim();
+        if(!curso||!ord||!nome){ res.status(400).json({ok:false,erro:'faltam campos'}); return; }
+        const rd=await c.query('update curso_aulas set modulo_nome=$1 where curso=$2 and modulo_ordem=$3',[nome,curso,ord]);
+        res.status(200).json({ok:true, atualizadas:rd.rowCount, nome});
+        return;
+      }
+
       // === ADMIN: apagar progresso (limpeza) — POST {acao:'curso-prog-del', token, curso, perfil?} ===
       if(b.acao==='curso-prog-del'){
         if((b.token||'')!==ADM){ res.status(401).json({ok:false,erro:'token'}); return; }
