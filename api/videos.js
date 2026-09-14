@@ -164,6 +164,18 @@ module.exports = async (req, res) => {
         return;
       }
 
+      // === ADMIN: apagar progresso (limpeza) — POST {acao:'curso-prog-del', token, curso, perfil?} ===
+      if(b.acao==='curso-prog-del'){
+        if((b.token||'')!==ADM){ res.status(401).json({ok:false,erro:'token'}); return; }
+        const curso=(b.curso||'').toString().trim(); if(!curso){ res.status(400).json({ok:false,erro:'curso'}); return; }
+        let rd;
+        if(b.perfil){ rd=await c.query('delete from curso_progresso where curso=$1 and perfil=$2',[curso,(b.perfil||'').toString()]); }
+        else if(b.perfilLike){ rd=await c.query('delete from curso_progresso where curso=$1 and perfil like $2',[curso,(b.perfilLike||'').toString()]); }
+        else { rd=await c.query('delete from curso_progresso where curso=$1',[curso]); }
+        res.status(200).json({ok:true, apagados:rd.rowCount});
+        return;
+      }
+
       // === QUEM ESTÁ ESTUDANDO — conta pessoas (perfis) + progresso de cada uma ===
       // POST {acao:'curso-quem', curso}
       if(b.acao==='curso-quem'){
