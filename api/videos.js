@@ -137,6 +137,52 @@ module.exports = async (req, res) => {
         return;
       }
 
+      // === PROGRESSO POR PESSOA (perfil) — grava onde cada um parou (público) ===
+      // POST {acao:'curso-prog', itens:[{curso,perfil,nome,aula,pos?,vista?}]}
+      if(b.acao==='curso-prog'){
+        const itens=Array.isArray(b.itens)?b.itens:[];
+        await c.query(`create table if not exists curso_progresso(
+          curso text not null, perfil text not null, nome text, aula text not null,
+          pos int default 0, vista boolean default false, atualizado_em timestamptz default now(),
+          primary key(curso,perfil,aula))`);
+        let n=0;
+        for(const it of itens){
+          if(!it || !it.curso || !it.perfil || !it.aula) continue;
+          const pos=(it.pos!=null)?(parseInt(it.pos,10)||0):null;
+          const vista=(it.vista!=null)?(!!it.vista):null;
+          await c.query(`insert into curso_progresso(curso,perfil,nome,aula,pos,vista,atualizado_em)
+            values($1,$2,$3,$4,coalesce($5,0),coalesce($6,false),now())
+            on conflict(curso,perfil,aula) do update set
+              nome=coalesce(excluded.nome,curso_progresso.nome),
+              pos=coalesce($5,curso_progresso.pos),
+              vista=coalesce($6,curso_progresso.vista),
+              atualizado_em=now()`,
+            [it.curso.toString().slice(0,80), it.perfil.toString().slice(0,40), (it.nome||'').toString().slice(0,60), it.aula.toString().slice(0,40), pos, vista]);
+          n++;
+        }
+        res.status(200).json({ok:true, gravados:n});
+        return;
+      }
+
+      // === QUEM ESTÁ ESTUDANDO — conta pessoas (perfis) + progresso de cada uma ===
+      // POST {acao:'curso-quem', curso}
+      if(b.acao==='curso-quem'){
+        const curso=(b.curso||'').toString().trim();
+        await c.query(`create table if not exists curso_progresso(
+          curso text not null, perfil text not null, nome text, aula text not null,
+          pos int default 0, vista boolean default false, atualizado_em timestamptz default now(),
+          primary key(curso,perfil,aula))`);
+        const r=await c.query(`select perfil, max(nome) as nome,
+            count(*) filter (where vista) as vistas,
+            max(atualizado_em) as ultima
+          from curso_progresso where curso=$1 group by perfil order by ultima desc nulls last`,[curso]);
+        const agora=Date.now();
+        const pessoas=r.rows.map(x=>({nome:x.nome||'Alguém', vistas:parseInt(x.vistas,10)||0, ultima:x.ultima}));
+        const online=pessoas.filter(p=>p.ultima && (agora-new Date(p.ultima).getTime())<5*60000).length;
+        res.status(200).json({ok:true, total:pessoas.length, online, pessoas});
+        return;
+      }
+
       // === INSCREVER no push (qualquer pessoa que aceitar receber avisos) ===
       if(b.acao==='push-sub'){
         const sub=b.sub||{};

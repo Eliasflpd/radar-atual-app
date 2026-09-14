@@ -143,6 +143,15 @@
   #player .prox{padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:#0f1d2e;color:#cfe0ee;font-size:.85rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
   #player .prox button{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-family:inherit;cursor:pointer}
   .carregando{text-align:center;color:var(--suave);padding:40px 20px}
+  .quem-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 12px}
+  .quem-pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--linha);border-radius:999px;padding:7px 14px 7px 10px;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(15,61,92,.08)}
+  .quem-pill .qe{font-size:1.15rem;line-height:1}
+  .quem-pill .qn{color:#0f3d5c;font-size:.95rem}
+  .quem-pill .qc{color:#8aa;font-size:.9rem}
+  .quem-hint{font-size:.72rem;color:var(--suave)}
+  .cnt-pessoas{margin-top:8px;font-size:.8rem;color:#5b7186}
+  .cnt-pessoas.clik{cursor:pointer;text-decoration:underline dotted rgba(91,113,134,.5)}
+  .cnt-pessoas .agora{color:#1a8a4a;font-weight:700}
 </style>
 </head>
 <body>
@@ -183,7 +192,8 @@
 
 <script>
 const $=id=>document.getElementById(id);
-let DADOS=null, PLANO=[], atual=-1, CURSO_ATUAL='';
+let DADOS=null, PLANO=[], atual=-1, CURSO_ATUAL='', PERFIL='';
+let _syncQ={}, _syncT=null;
 
 // Metadados (capa/mentor) de cada curso — casa pelo slug 'curso' vindo do banco
 const META={
@@ -211,13 +221,44 @@ function meta(slug){ return META[slug] || {titulo:slug, prof:'', foto:'', badge:
 // dava a MESMA chave pra todo link do Drive (o prefixo "https://drive.google.com/file/" é igual),
 // então marcar 1 aula marcava TODAS. Este hash é único por aula.
 function keyU(u){ u=String(u||''); let h=5381; for(let i=0;i<u.length;i++){ h=((h*33)^u.charCodeAt(i))>>>0; } return h.toString(36); }
-function marcarVista(u,v){ try{ localStorage.setItem('curso_vista_'+keyU(u), v?'1':''); }catch(_){} }
-function estaVista(u){ try{ return localStorage.getItem('curso_vista_'+keyU(u))==='1'; }catch(_){ return false; } }
-function salvarPos(u,t){ try{ localStorage.setItem('curso_pos_'+keyU(u), String(Math.floor(t))); }catch(_){} }
-function lerPos(u){ try{ return parseInt(localStorage.getItem('curso_pos_'+keyU(u))||'0',10)||0; }catch(_){ return 0; } }
-// última aula aberta por curso (pra "continuar de onde parou")
-function salvarUltima(slug,gi){ try{ localStorage.setItem('curso_ultima_'+slug, String(gi)); }catch(_){} }
-function lerUltima(slug){ try{ const v=localStorage.getItem('curso_ultima_'+slug); return v===null?-1:(parseInt(v,10)); }catch(_){ return -1; } }
+
+// ===== PERFIS: cada pessoa da casa tem o SEU progresso (estilo Netflix) =====
+function perfis(){ try{ return JSON.parse(localStorage.getItem('curso_perfis')||'[]'); }catch(_){ return []; } }
+function salvarPerfis(a){ try{ localStorage.setItem('curso_perfis', JSON.stringify(a)); }catch(_){} }
+function perfilAtivo(){ return perfis().find(p=>p.id===PERFIL) || perfis()[0] || null; }
+function novoIdPerfil(){ return 'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function definirPerfil(id){ PERFIL=id; try{ localStorage.setItem('curso_perfil_ativo', id); sessionStorage.setItem('curso_perfil_escolhido','1'); }catch(_){} }
+function migrarProgressoAntigo(id){ // 1º uso: leva o progresso já existente (sem perfil) pro 1º perfil
+  try{ const mv=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
+      if(k && /^curso_(vista|pos|ultima)_/.test(k)) mv.push(k); }
+    mv.forEach(k=>{ const v=localStorage.getItem(k);
+      const nk=k.replace(/^curso_(vista|pos|ultima)_/,(m,p)=>'curso_'+p+'_'+id+'_');
+      if(!localStorage.getItem(nk)) localStorage.setItem(nk,v); }); }catch(_){}
+}
+function initPerfis(){
+  let ps=perfis();
+  if(!ps.length){ const id=novoIdPerfil(); ps=[{id,nome:'Eu',emoji:'👤'}]; salvarPerfis(ps); migrarProgressoAntigo(id); definirPerfil(id); }
+  let ativo=''; try{ ativo=localStorage.getItem('curso_perfil_ativo')||''; }catch(_){}
+  PERFIL = ativo || ps[0].id;
+  if(!perfis().find(p=>p.id===PERFIL)) PERFIL=perfis()[0].id;
+}
+
+function marcarVista(u,v){ try{ localStorage.setItem('curso_vista_'+PERFIL+'_'+keyU(u), v?'1':''); }catch(_){} syncProg(u,{vista:!!v}); }
+function estaVista(u){ try{ return localStorage.getItem('curso_vista_'+PERFIL+'_'+keyU(u))==='1'; }catch(_){ return false; } }
+function salvarPos(u,t){ try{ localStorage.setItem('curso_pos_'+PERFIL+'_'+keyU(u), String(Math.floor(t))); }catch(_){} syncProg(u,{pos:Math.floor(t)}); }
+function lerPos(u){ try{ return parseInt(localStorage.getItem('curso_pos_'+PERFIL+'_'+keyU(u))||'0',10)||0; }catch(_){ return 0; } }
+// última aula aberta por curso (pra "continuar de onde parou") — por perfil
+function salvarUltima(slug,gi){ try{ localStorage.setItem('curso_ultima_'+PERFIL+'_'+slug, String(gi)); }catch(_){} }
+function lerUltima(slug){ try{ const v=localStorage.getItem('curso_ultima_'+PERFIL+'_'+slug); return v===null?-1:(parseInt(v,10)); }catch(_){ return -1; } }
+
+// ===== NUVEM: grava onde cada pessoa parou + serve pra contar quem está estudando =====
+function syncProg(u,ch){ if(!CURSO_ATUAL||!PERFIL) return; const p=perfilAtivo(); if(!p) return;
+  const key=keyU(u); _syncQ[key]=Object.assign(_syncQ[key]||{curso:CURSO_ATUAL,perfil:PERFIL,nome:p.nome,aula:key}, ch);
+  clearTimeout(_syncT); _syncT=setTimeout(flushSync,1500); }
+function flushSync(){ const itens=Object.values(_syncQ); _syncQ={}; if(!itens.length) return;
+  try{ fetch('/api/videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'curso-prog',itens})}).catch(()=>{}); }catch(_){} }
+async function contarPessoas(slug){ try{ const r=await fetch('/api/videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'curso-quem',curso:slug})}); const d=await r.json(); return (d&&d.ok)?d:null; }catch(_){ return null; } }
+initPerfis();
 // progresso de um curso: {vistas,total,pct}
 function progressoCurso(cs){ let v=0,t=0; cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ t++; if(estaVista(a.url)) v++; })); return {vistas:v,total:t,pct:t?Math.round(v/t*100):0}; }
 
@@ -244,7 +285,12 @@ function render(){
   $('gate').style.display='none';
   const cur=$('curso'); cur.style.display='block';
   const cursos = DADOS.cursos || (DADOS.modulos ? [{curso:DADOS.curso||'escatologia-ivan-santos', total:DADOS.total, modulos:DADOS.modulos}] : []);
-  let html=`<div class="lista-tit">Meus cursos</div>`;
+  const pa=perfilAtivo()||{nome:'Eu',emoji:'👤'};
+  let html=`<div class="quem-bar">
+    <button class="quem-pill" onclick="abrirQuem()"><span class="qe">${pa.emoji||'👤'}</span><b class="qn">${pa.nome}</b><span class="qc">⌄</span></button>
+    <span class="quem-hint">toque no nome pra trocar quem está estudando</span>
+  </div>
+  <div class="lista-tit">Meus cursos</div>`;
   cursos.forEach(cs=>{
     const m=meta(cs.curso);
     const pg=progressoCurso(cs);
@@ -265,12 +311,74 @@ function render(){
           <div class="bar"><div class="fill" style="width:${pg.pct}%"></div></div>
           <div class="lbl"><span>Seu progresso</span><b>${pg.pct}%</b></div>
         </div>
+        <div class="cnt-pessoas" id="pess-${cs.curso}"></div>
       </div>
       <span class="arr">›</span>
     </div>`;
   });
   cur.innerHTML=html;
   window.scrollTo(0,0);
+  // contador de quem está estudando (nuvem) — enche cada card sem travar a tela
+  cursos.forEach(cs=>{ contarPessoas(cs.curso).then(d=>{ const el=$('pess-'+cs.curso); if(!el||!d) return;
+    if(!d.total){ el.innerHTML='👥 seja o primeiro a estudar'; return; }
+    el.innerHTML='👥 <b>'+d.total+'</b> '+(d.total===1?'pessoa estudando':'pessoas estudando')+(d.online?' · <span class="agora">'+d.online+' agora</span>':'');
+    el.classList.add('clik'); el.onclick=function(e){ e.stopPropagation(); verPessoas(cs.curso); };
+  }); });
+  // primeira vez com 2+ perfis nesta sessão: pergunta quem é
+  if(perfis().length>1 && !(function(){ try{ return sessionStorage.getItem('curso_perfil_escolhido'); }catch(_){ return 0; } })()) abrirQuem();
+}
+// overlay "Quem está estudando?" (trocar/criar perfil)
+function abrirQuem(){
+  let ov=document.getElementById('quem-ov');
+  if(!ov){ ov=document.createElement('div'); ov.id='quem-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:70;background:rgba(8,18,28,.72);display:none;align-items:center;justify-content:center;padding:20px';
+    ov.onclick=function(e){ if(e.target===ov) ov.style.display='none'; };
+    document.body.appendChild(ov);
+  }
+  const ps=perfis();
+  ov.innerHTML='<div style="background:#fff;border-radius:18px;max-width:430px;width:100%;padding:22px 18px 18px;box-shadow:0 18px 50px rgba(0,0,0,.4)">'
+    +'<h3 style="margin:0 0 4px;text-align:center;color:#0f3d5c;font-size:1.18rem">Quem está estudando?</h3>'
+    +'<p style="margin:0 0 18px;text-align:center;color:#6b7c8c;font-size:.85rem">Cada pessoa continua de onde parou</p>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:12px">'
+    + ps.map(p=>'<button onclick="escolherPerfil(\''+p.id+'\')" style="background:'+(p.id===PERFIL?'#eaf4fb':'#f4f7fa')+';border:2px solid '+(p.id===PERFIL?'#2f88c4':'transparent')+';border-radius:14px;padding:14px 6px;cursor:pointer;font-family:inherit">'
+        +'<div style="font-size:2.1rem;line-height:1">'+(p.emoji||'👤')+'</div>'
+        +'<div style="font-size:.83rem;font-weight:800;color:#12405e;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.nome+'</div></button>').join('')
+    +'<button onclick="novoPerfil()" style="background:#f4f7fa;border:2px dashed #c3d2de;border-radius:14px;padding:14px 6px;cursor:pointer;font-family:inherit">'
+      +'<div style="font-size:2.1rem;line-height:1;color:#9ab">＋</div><div style="font-size:.83rem;font-weight:800;color:#4a6377;margin-top:6px">Novo</div></button>'
+    +'</div>'
+    + (ps.length>1?'<button onclick="removerPerfilUI()" style="display:block;margin:18px auto 0;background:none;border:none;color:#b04a4a;font-size:.82rem;font-family:inherit;cursor:pointer">Remover um perfil</button>':'')
+    +'</div>';
+  ov.style.display='flex';
+}
+function escolherPerfil(id){ definirPerfil(id); const ov=document.getElementById('quem-ov'); if(ov) ov.style.display='none'; render(); }
+function novoPerfil(){ const nome=(prompt('Nome de quem vai estudar:')||'').trim(); if(!nome) return;
+  const emojis=['🧑','👩','👨','🧔','👧','👦','🧓','👵','👴','🙋','📖','👤']; const em=emojis[perfis().length % emojis.length];
+  const ps=perfis(); const id=novoIdPerfil(); ps.push({id,nome:nome.slice(0,20),emoji:em}); salvarPerfis(ps); definirPerfil(id);
+  const ov=document.getElementById('quem-ov'); if(ov) ov.style.display='none'; render(); }
+function removerPerfilUI(){ const ps=perfis(); if(ps.length<2) return;
+  const nome=prompt('Digite o NOME do perfil a remover:\n('+ps.map(p=>p.nome).join(', ')+')'); if(!nome) return;
+  const alvo=ps.find(p=>p.nome.toLowerCase()===nome.trim().toLowerCase()); if(!alvo){ alert('Perfil não encontrado.'); return; }
+  const rest=ps.filter(p=>p.id!==alvo.id); salvarPerfis(rest);
+  if(PERFIL===alvo.id) definirPerfil(rest[0].id);
+  const ov=document.getElementById('quem-ov'); if(ov) ov.style.display='none'; render(); }
+// detalhe: quem está estudando e quanto cada um já viu
+async function verPessoas(slug){ const d=await contarPessoas(slug); if(!d) return;
+  let ov=document.getElementById('pessoas-ov');
+  if(!ov){ ov=document.createElement('div'); ov.id='pessoas-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:70;background:rgba(8,18,28,.72);display:none;align-items:center;justify-content:center;padding:20px';
+    ov.onclick=function(e){ if(e.target===ov) ov.style.display='none'; };
+    document.body.appendChild(ov);
+  }
+  const linhas=(d.pessoas||[]).map(p=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-top:1px solid #eef2f6">'
+    +'<span style="font-weight:700;color:#12405e">'+(p.nome||'Alguém')+'</span>'
+    +'<span style="font-size:.85rem;color:#5b7186"><b style="color:#1a8a4a">'+p.vistas+'</b> aula'+(p.vistas===1?'':'s')+'</span></div>').join('') || '<p style="color:#6b7c8c;text-align:center;margin:14px 0">Ainda ninguém começou.</p>';
+  ov.innerHTML='<div style="background:#fff;border-radius:18px;max-width:430px;width:100%;padding:20px 18px 16px;box-shadow:0 18px 50px rgba(0,0,0,.4)">'
+    +'<h3 style="margin:0 0 2px;text-align:center;color:#0f3d5c;font-size:1.12rem">👥 '+d.total+' '+(d.total===1?'pessoa estudando':'pessoas estudando')+'</h3>'
+    +(d.online?'<p style="margin:0 0 10px;text-align:center;color:#1a8a4a;font-size:.85rem;font-weight:700">'+d.online+' online agora</p>':'<p style="margin:0 0 10px"></p>')
+    +linhas
+    +'<button onclick="document.getElementById(\'pessoas-ov\').style.display=\'none\'" style="display:block;margin:16px auto 0;background:var(--navy);color:#fff;border:none;border-radius:10px;padding:10px 22px;font-weight:800;font-family:inherit;cursor:pointer">Fechar</button>'
+    +'</div>';
+  ov.style.display='flex';
 }
 function cursoPorSlug(slug){
   const cursos = DADOS.cursos || [{curso:DADOS.curso, total:DADOS.total, modulos:DADOS.modulos}];
@@ -368,6 +476,7 @@ function abrirCurso(slug){
           <div class="bar"><div class="fill" style="width:${pg.pct}%"></div></div>
           <div class="lbl"><span>${pg.vistas} de ${pg.total} aulas</span><b>${pg.pct}%</b></div>
         </div>
+        <div class="cnt-pessoas" id="pess-capa"></div>
       </div>
     </div>
     ${bannerResume(cs)}
@@ -421,6 +530,12 @@ function abrirCurso(slug){
   }
   cur.innerHTML=html;
   window.scrollTo(0,0);
+  // quem está estudando (nuvem) na capa
+  contarPessoas(cs.curso).then(d=>{ const el=$('pess-capa'); if(!el||!d) return;
+    if(!d.total){ el.innerHTML='👥 seja o primeiro a estudar'; return; }
+    el.innerHTML='👥 <b>'+d.total+'</b> '+(d.total===1?'pessoa estudando':'pessoas estudando')+(d.online?' · <span class="agora">'+d.online+' agora</span>':'');
+    el.classList.add('clik'); el.onclick=function(){ verPessoas(cs.curso); };
+  });
   // GIOM: índice só texto (não auto-abre; toca no módulo -> capa cheia -> aulas).
   // Outros cursos: abre o 1º módulo automaticamente (feedback imediato).
   if(cs.curso!=='giom-teologia' && cs.modulos.length && cs.modulos[0].aulas.length) toggleMod(0);
