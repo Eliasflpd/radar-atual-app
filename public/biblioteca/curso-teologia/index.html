@@ -152,6 +152,16 @@
   .cnt-pessoas{margin-top:8px;font-size:.8rem;color:#5b7186}
   .cnt-pessoas.clik{cursor:pointer;text-decoration:underline dotted rgba(91,113,134,.5)}
   .cnt-pessoas .agora{color:#1a8a4a;font-weight:700}
+  /* módulos com miniatura de capa (pôster) — visual de plataforma de curso */
+  .mod-cap .mod-h{padding:10px 12px;gap:13px}
+  .mod-h .mthumb{position:relative;width:47px;height:84px;border-radius:9px;overflow:hidden;flex-shrink:0;background:var(--navy);box-shadow:0 3px 8px rgba(20,40,70,.22)}
+  .mod-h .mthumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .mod-h .mthumb .mnum{position:absolute;left:4px;top:4px;min-width:18px;height:18px;padding:0 4px;border-radius:6px;background:rgba(10,20,32,.85);color:#fff;font-size:.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+  .mod-h .mthumb.semimg{display:flex;align-items:center;justify-content:center}
+  .mod-h .mthumb.semimg .mnum{position:static;background:transparent;font-size:1.1rem}
+  .mod-cap .mod-h .ti b{font-size:1.02rem;font-weight:800}
+  .mod-h .ti .mbar{height:4px;border-radius:3px;background:#e6ebf1;margin-top:8px;overflow:hidden;max-width:190px}
+  .mod-h .ti .mbar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),#1a8a4a);border-radius:3px;transition:width .25s}
 </style>
 </head>
 <body>
@@ -424,7 +434,8 @@ function atualizarProgresso(){
   if(capa){ const f=capa.querySelector('.fill'); if(f) f.style.width=pg.pct+'%';
     const lbl=capa.querySelector('.lbl'); if(lbl) lbl.innerHTML='<span>'+pg.vistas+' de '+pg.total+' aulas</span><b>'+pg.pct+'%</b>'; }
   cs.modulos.forEach((m,mi)=>{ const feito=m.aulas.filter(a=>estaVista(a.url)).length;
-    const c=document.querySelector('.cont[data-mc="'+mi+'"]'); if(c) c.innerHTML='<b>'+feito+'</b>/'+m.aulas.length; });
+    const c=document.querySelector('.cont[data-mc="'+mi+'"]'); if(c) c.innerHTML='<b>'+feito+'</b>/'+m.aulas.length;
+    const bar=document.querySelector('[data-mb="'+mi+'"]'); if(bar) bar.style.width=(m.aulas.length?Math.round(feito/m.aulas.length*100):0)+'%'; });
 }
 // busca de aula (filtra as visíveis, abrindo os módulos com resultado)
 function filtrarAulas(q){
@@ -488,12 +499,17 @@ function abrirCurso(slug){
     <div class="sec-mod" style="margin-top:2px">Módulos e aulas</div>`;
   // LAZY: só os cabeçalhos dos módulos entram agora (abre instantâneo mesmo em celular fraco);
   // as aulas de cada módulo são montadas quando ele é aberto (toggleMod).
+  const temCapas = cs.curso==='giom-teologia';
   cs.modulos.forEach((m,mi)=>{
     const feitoMod=m.aulas.filter(a=>estaVista(a.url)).length;
-    html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="moduloTap(${mi})">
-      <div class="n">${m.ordem}</div>
-      <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${m.aulas.length} aula${m.aulas.length>1?'s':''}</span></div>
-      <div class="cont" data-mc="${mi}"><b>${feitoMod}</b>/${m.aulas.length}</div>
+    const nA=m.aulas.length; const pctM=nA?Math.round(feitoMod/nA*100):0;
+    const esq = temCapas
+      ? `<div class="mthumb"><img src="/biblioteca/curso-teologia/capas/mod-${String(mi+1).padStart(2,'0')}.jpg" alt="" loading="lazy" onerror="this.style.display='none';this.parentNode.classList.add('semimg')"><span class="mnum">${m.ordem}</span></div>`
+      : `<div class="n">${m.ordem}</div>`;
+    html+=`<div class="mod${temCapas?' mod-cap':''}" data-mi="${mi}"><div class="mod-h" onclick="moduloTap(${mi})">
+      ${esq}
+      <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${nA} aula${nA>1?'s':''}</span>${temCapas?`<div class="mbar"><i data-mb="${mi}" style="width:${pctM}%"></i></div>`:''}</div>
+      <div class="cont" data-mc="${mi}"><b>${feitoMod}</b>/${nA}</div>
       <div class="seta">›</div></div><div class="aulas">`;
     if(!m.aulas.length){ html+=`<div class="vazio-mod">Subindo os vídeos deste módulo…</div>`; }
     html+=`</div></div>`;
