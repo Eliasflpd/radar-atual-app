@@ -40,19 +40,49 @@
   .capa .stats{display:flex;gap:18px;margin-top:12px;font-size:.8rem;color:#e7f1f6}
   .capa .stats b{display:block;font-size:1.15rem;color:#ffd98a}
   /* ===== CARD: imagem 16:9 na ESQUERDA + títulos na DIREITA ===== */
-  .ccard{display:flex;gap:2px;align-items:center;background:linear-gradient(135deg,var(--navy),#14507a);border-radius:16px;padding:11px 13px 11px 10px;margin-bottom:14px;cursor:pointer;box-shadow:0 8px 22px rgba(15,61,92,.20);transition:transform .12s;position:relative;overflow:hidden}
+  /* CARD estilo HERO: foto colada à esquerda + gradiente dissolvendo pra direita + título */
+  .ccard{position:relative;display:block;min-height:206px;background:linear-gradient(135deg,var(--navy),#14507a);border-radius:16px;margin-bottom:14px;cursor:pointer;box-shadow:0 8px 22px rgba(15,61,92,.20);transition:transform .12s;overflow:hidden}
   .ccard:active{transform:scale(.99)}
-  .ccard .cover{width:132px;height:110px;border-radius:12px 0 0 12px;object-fit:cover;object-position:center top;flex-shrink:0;
-    -webkit-mask-image:linear-gradient(to right,#000 52%,rgba(0,0,0,.35) 78%,transparent 100%);
-    mask-image:linear-gradient(to right,#000 52%,rgba(0,0,0,.35) 78%,transparent 100%)}
-  .ccard .info{flex:1;min-width:0;color:#fff;padding-right:8px}
+  .ccard .cover{position:absolute;left:0;top:0;height:100%;width:58%;object-fit:cover;object-position:center top;z-index:0;
+    -webkit-mask-image:linear-gradient(to right,#000 48%,rgba(0,0,0,.4) 72%,transparent 100%);
+    mask-image:linear-gradient(to right,#000 48%,rgba(0,0,0,.4) 72%,transparent 100%)}
+  .ccard::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(90deg,rgba(15,61,92,0) 20%,rgba(15,61,92,.5) 42%,var(--navy) 62%)}
+  .ccard .info{position:relative;z-index:2;width:54%;margin-left:auto;color:#fff;padding:16px 18px 16px 4px}
   .ccard .info .badge{display:inline-block;background:rgba(255,255,255,.16);color:#ffe4a8;font-size:.62rem;font-weight:800;letter-spacing:.4px;padding:4px 9px;border-radius:20px;text-transform:uppercase}
-  .ccard .info h1{margin:7px 0 2px;font-size:1.18rem;line-height:1.13}
-  .ccard .info .prof{color:#cfe3ec;font-size:.82rem}
-  .ccard .info .stats{display:flex;gap:13px;margin-top:9px;font-size:.66rem;color:#e7f1f6}
+  .ccard .info h1{margin:8px 0 2px;font-size:1.32rem;line-height:1.13;font-weight:800}
+  .ccard .info .prof{color:#cfe3ec;font-size:.84rem}
+  .ccard .info .stats{display:flex;gap:13px;margin-top:11px;font-size:.66rem;color:#e7f1f6}
   .ccard .info .stats b{display:block;font-size:1rem;color:#ffd98a;line-height:1}
-  .ccard .arr{position:absolute;top:50%;right:9px;transform:translateY(-50%);color:#ffd98a;font-size:1.5rem;font-weight:700;opacity:.85}
-  @media(max-width:360px){ .ccard .info h1{font-size:1.06rem} .ccard .cover{width:116px;height:98px} }
+  .ccard .arr{position:absolute;top:50%;right:8px;transform:translateY(-50%);color:#ffd98a;font-size:1.4rem;font-weight:700;opacity:.8;z-index:3}
+  @media(max-width:360px){ .ccard .info h1{font-size:1.18rem} .ccard{min-height:188px} }
+  /* ===== CARD HERO (só GIOM): retrato à esquerda com brilho azul + títulos à direita ===== */
+  .ccard.hero{background:linear-gradient(120deg,#02375e 0%,#0a4a7d 100%);min-height:212px}
+  .ccard.hero .hglow{position:absolute;left:-4%;top:-6%;width:64%;height:96%;z-index:0;pointer-events:none;
+    background:radial-gradient(52% 46% at 44% 40%,rgba(40,110,230,.55) 0%,rgba(40,110,230,.18) 46%,transparent 70%)}
+  .ccard.hero .hfoto{position:absolute;left:-14px;bottom:0;height:112%;width:auto;max-width:none;z-index:1;
+    object-fit:contain;object-position:left bottom;pointer-events:none;
+    -webkit-mask-image:linear-gradient(to right,#000 72%,rgba(0,0,0,.35) 90%,transparent 100%);
+    mask-image:linear-gradient(to right,#000 72%,rgba(0,0,0,.35) 90%,transparent 100%)}
+  .ccard.hero .hinfo{position:relative;z-index:2;width:55%;margin-left:auto;color:#fff;padding:15px 16px 14px 4px}
+  .ccard.hero .hpill{display:inline-block;background:rgba(255,255,255,.16);color:#f0c24b;font-size:.6rem;font-weight:800;letter-spacing:.7px;padding:5px 12px;border-radius:20px;text-transform:uppercase}
+  .ccard.hero h1{margin:9px 0 3px;font-size:1.35rem;line-height:1.1;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(2,25,45,.45)}
+  .ccard.hero .hprof{color:#cfe0ee;font-size:.86rem;text-shadow:0 1px 4px rgba(2,25,45,.4)}
+  .ccard.hero .hstats{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .ccard.hero .hstats .st{text-align:left}
+  .ccard.hero .hstats .st b{display:block;font-size:1.18rem;color:#f0c24b;line-height:1;font-weight:800}
+  .ccard.hero .hstats .st span{display:block;font-size:.6rem;color:#e7f1f6;margin-top:3px;white-space:nowrap}
+  .ccard.hero .hstats .dv{width:1px;height:28px;background:rgba(255,255,255,.26);flex-shrink:0}
+  .ccard.hero .hprog{margin-top:13px}
+  .ccard.hero .hbar{height:7px;border-radius:6px;background:rgba(255,255,255,.18);overflow:hidden}
+  .ccard.hero .hfill{height:100%;border-radius:6px;background:linear-gradient(90deg,#2f9e8f,#1a8a4a);transition:width .35s}
+  .ccard.hero .hlbl{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:.75rem;color:#e7f1f6}
+  .ccard.hero .hlbl b{color:#f0c24b;font-weight:800}
+  .ccard.hero .hcnt{margin-top:9px;color:#cfe0ee;font-size:.76rem}
+  .ccard.hero .hcnt.clik{text-decoration:underline dotted rgba(207,224,238,.5)}
+  .ccard.hero .harr{position:absolute;top:50%;right:9px;transform:translateY(-50%);color:#f0c24b;font-size:1.4rem;font-weight:700;opacity:.85;z-index:3}
+  @media(max-width:430px){ .ccard.hero .hinfo{width:57%} .ccard.hero h1{font-size:1.22rem} }
+  @media(max-width:360px){ .ccard.hero{min-height:196px} .ccard.hero h1{font-size:1.1rem} .ccard.hero .hstats{gap:7px} .ccard.hero .hstats .st b{font-size:1.02rem} }
   .pdf-link{display:flex;align-items:center;gap:10px;background:#fff8e6;border:1px solid #f0dcaa;color:#6b551f;border-radius:12px;padding:11px 13px;margin-bottom:14px;text-decoration:none;font-weight:700;font-size:.92rem}
   .lista-tit{font-size:.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#8a91a0;margin:2px 2px 12px}
   .capa-click{cursor:pointer;position:relative;transition:transform .12s}
@@ -305,7 +335,33 @@ function render(){
     const m=meta(cs.curso);
     const pg=progressoCurso(cs);
     const feito = pg.total>0 && pg.vistas>=pg.total;
-    html+=`
+    if(cs.curso==='giom-teologia'){
+      // CARD HERO — retrato do Dr. Wagner com brilho azul; números 100% dinâmicos
+      html+=`
+    <div class="ccard hero" onclick="abrirCurso('${cs.curso}')">
+      <div class="hglow"></div>
+      <img class="hfoto" src="/img/curso/wagner-hero.png" alt="${m.titulo}" onerror="this.style.display='none'">
+      <div class="hinfo">
+        <span class="hpill">${m.badge}</span>${feito?'<span class="concluido-tag">✓ Concluído</span>':''}
+        <h1>${m.titulo}</h1>
+        <div class="hprof">${m.prof}</div>
+        <div class="hstats">
+          <div class="st"><b>${cs.modulos.length}</b><span>módulos</span></div>
+          <div class="dv"></div>
+          <div class="st"><b>${cs.total}</b><span>aulas</span></div>
+          <div class="dv"></div>
+          <div class="st"><b>${pg.vistas}</b><span>assistidas</span></div>
+        </div>
+        <div class="hprog">
+          <div class="hbar"><div class="hfill" style="width:${pg.pct}%"></div></div>
+          <div class="hlbl"><span>Seu progresso</span><b>${pg.pct}%</b></div>
+        </div>
+        <div class="cnt-pessoas hcnt" id="pess-${cs.curso}"></div>
+      </div>
+      <span class="harr">›</span>
+    </div>`;
+    } else {
+      html+=`
     <div class="ccard" onclick="abrirCurso('${cs.curso}')">
       <img class="cover" src="${m.foto}" alt="${m.titulo}" onerror="this.style.visibility='hidden'">
       <div class="info">
@@ -325,6 +381,7 @@ function render(){
       </div>
       <span class="arr">›</span>
     </div>`;
+    }
   });
   cur.innerHTML=html;
   window.scrollTo(0,0);
