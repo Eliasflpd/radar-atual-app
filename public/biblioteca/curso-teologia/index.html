@@ -381,7 +381,7 @@ function abrirCurso(slug){
   // as aulas de cada módulo são montadas quando ele é aberto (toggleMod).
   cs.modulos.forEach((m,mi)=>{
     const feitoMod=m.aulas.filter(a=>estaVista(a.url)).length;
-    html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="toggleMod(${mi})">
+    html+=`<div class="mod" data-mi="${mi}"><div class="mod-h" onclick="moduloTap(${mi})">
       <div class="n">${m.ordem}</div>
       <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${m.aulas.length} aula${m.aulas.length>1?'s':''}</span></div>
       <div class="cont" data-mc="${mi}"><b>${feitoMod}</b>/${m.aulas.length}</div>
@@ -421,8 +421,9 @@ function abrirCurso(slug){
   }
   cur.innerHTML=html;
   window.scrollTo(0,0);
-  // abre o 1º módulo automaticamente pra já mostrar aulas (feedback imediato)
-  if(cs.modulos.length && cs.modulos[0].aulas.length) toggleMod(0);
+  // GIOM: índice só texto (não auto-abre; toca no módulo -> capa cheia -> aulas).
+  // Outros cursos: abre o 1º módulo automaticamente (feedback imediato).
+  if(cs.curso!=='giom-teologia' && cs.modulos.length && cs.modulos[0].aulas.length) toggleMod(0);
 }
 function limpaModulo(s){ return (s||'').replace(/^M[ÓO]DULO\s*\d+\s*-\s*/i,'').replace(/\s+\d+$/,'').trim(); }
 function limpaAula(s){ return (s||'').replace(/\.(mkv|mp4)$/i,'').replace(/^AULA\s*[O0]?\d+\s*-\s*/i,'').trim(); }
@@ -440,6 +441,29 @@ function toggleMod(mi){
     cont.dataset.pronto='1';
   }
   el.classList.toggle('aberto');
+}
+// GIOM: toca no módulo -> abre a CAPA cheia; toca na capa -> mostra as aulas.
+// Outros cursos: abre as aulas direto (acordeão).
+function moduloTap(mi){
+  if(CURSO_ATUAL==='giom-teologia'){ abrirCapaModulo(mi); }
+  else { toggleMod(mi); }
+}
+function abrirCapaModulo(mi){
+  const src='/biblioteca/curso-teologia/capas/mod-'+String(mi+1).padStart(2,'0')+'.jpg';
+  let ov=document.getElementById('capa-mod-ov');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='capa-mod-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:60;background:#0a1420;display:none;cursor:pointer';
+    ov.innerHTML='<img id="capa-mod-img" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'
+      +'<button id="capa-mod-back" style="position:absolute;top:calc(10px + env(safe-area-inset-top));left:12px;z-index:3;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:999px;padding:9px 16px;font-weight:800;font-family:inherit;cursor:pointer">&lsaquo; Índice</button>'
+      +'<div style="position:absolute;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));text-align:center;z-index:3"><span style="display:inline-block;background:rgba(15,61,92,.9);color:#fff;padding:12px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.28);font-weight:800;font-size:1rem;box-shadow:0 6px 20px rgba(0,0,0,.4)">▶ Toque para ver as aulas</span></div>';
+    document.body.appendChild(ov);
+    document.getElementById('capa-mod-back').onclick=function(e){ e.stopPropagation(); ov.style.display='none'; };
+    ov.onclick=function(){ ov.style.display='none'; toggleMod(ov._mi); const el=document.querySelector('.mod[data-mi="'+ov._mi+'"]'); if(el) el.scrollIntoView({block:'start'}); };
+  }
+  ov._mi=mi;
+  document.getElementById('capa-mod-img').src=src;
+  ov.style.display='block';
 }
 
 function idDrive(url){ const m=(url||'').match(/\/d\/([^/]+)/)||(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
