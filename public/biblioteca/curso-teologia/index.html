@@ -460,12 +460,43 @@ function abrirCapaModulo(mi){
       +'<div style="position:absolute;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));text-align:center;z-index:3"><span style="display:inline-block;background:rgba(15,61,92,.9);color:#fff;padding:12px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.28);font-weight:800;font-size:1rem;box-shadow:0 6px 20px rgba(0,0,0,.4)">▶ Toque para ver as aulas</span></div>';
     document.body.appendChild(ov);
     document.getElementById('capa-mod-back').onclick=function(e){ e.stopPropagation(); ov.style.display='none'; };
-    ov.onclick=function(){ ov.style.display='none'; toggleMod(ov._mi); const el=document.querySelector('.mod[data-mi="'+ov._mi+'"]'); if(el) el.scrollIntoView({block:'start'}); };
+    // toque na capa -> abre SÓ as aulas desse módulo (tela dedicada), não o índice inteiro
+    ov.onclick=function(){ ov.style.display='none'; abrirModuloSolo(ov._mi); };
   }
   ov._mi=mi;
   document.getElementById('capa-mod-img').src=src;
   document.getElementById('capa-mod-bg').style.backgroundImage="url('"+src+"')";
   ov.style.display='block';
+}
+// Tela DEDICADA de UM módulo: mostra só o título + as aulas daquele estudo (nada do índice geral).
+function abrirModuloSolo(mi){
+  const cs=cursoPorSlug(CURSO_ATUAL); const m=cs&&cs.modulos[mi]; if(!m) return;
+  let ov=document.getElementById('mod-solo-ov');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='mod-solo-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:40;background:#eef3f7;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch';
+    ov.innerHTML='<div style="position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 12px">'
+      +'<button id="mod-solo-back" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:9px;padding:8px 13px;font-weight:800;font-family:inherit;cursor:pointer">&lsaquo; Índice</button>'
+      +'<div id="mod-solo-h" style="flex:1;min-width:0;font-weight:800;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div>'
+      +'<div id="mod-solo-body" style="padding:14px 12px calc(24px + env(safe-area-inset-bottom))"></div>';
+    document.body.appendChild(ov);
+    document.getElementById('mod-solo-back').onclick=function(){ ov.style.display='none'; };
+  }
+  document.getElementById('mod-solo-h').textContent=limpaModulo(m.nome);
+  const feito=m.aulas.filter(a=>estaVista(a.url)).length;
+  let body='<div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 4px 12px">'
+    +'<h2 style="margin:0;font-size:1.2rem;color:#0f3d5c">'+limpaModulo(m.nome)+'</h2>'
+    +'<span style="font-size:.85rem;color:#5b7186;font-weight:700"><b style="color:#1a8a4a">'+feito+'</b>/'+m.aulas.length+'</span></div>';
+  if(!m.aulas.length){
+    body+='<div class="vazio-mod">Subindo os vídeos deste módulo…</div>';
+  }else{
+    body+=m.aulas.map(a=>'<div class="aula '+(estaVista(a.url)?'vista':'')+'" data-gi="'+a._gi+'" onclick="abrir('+a._gi+')" style="background:#fff;margin-bottom:8px;border-radius:12px">'
+      +'<div class="chk" title="Marcar como concluída" onclick="toggleVistaAula(event,'+a._gi+')">✓</div>'
+      +'<div class="pl">▶</div>'
+      +'<div class="txt">'+limpaAula(a.titulo)+'<small>Aula '+a.ordem+'</small></div></div>').join('');
+  }
+  document.getElementById('mod-solo-body').innerHTML=body;
+  ov.style.display='block'; ov.scrollTop=0;
 }
 
 function idDrive(url){ const m=(url||'').match(/\/d\/([^/]+)/)||(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
