@@ -5132,6 +5132,7 @@ function renderManuais(){
   itens.push({onclick:"location.href='/biblioteca/mensagens/'", titulo:'Mensagens', autor:'Sermões em prosa', emoji:'🔥', cor:'#8a1c1c'});
   itens.push({onclick:"location.href='/biblioteca/concilio/'", titulo:'Concílio', autor:'42 expositores + Lupa', emoji:'📖', cor:'#0f3d5c'});
   itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', emoji:'🎓', cor:'#a9791c'});
+  itens.push({onclick:"location.href='/biblioteca/livros/'", titulo:'Livros', autor:'Biblioteca do obreiro', emoji:'📚', cor:'#2f6b4f'});
   itens.push({onclick:"location.href='/biblioteca/estudo/'", titulo:'Meu Estudo', autor:'Privado · senha', emoji:'🔒', cor:'#5b3a1a'});
   var box=document.getElementById('manuais-lista');
   box.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">'+itens.map(function(m){
@@ -5714,26 +5715,70 @@ function checkNovidade(){
     // descobre o que é novo (cards do carrossel que não existiam antes)
     var oldSet={}; (last.split('||')[0]||'').split(',').filter(Boolean).forEach(function(id){oldSet[id]=1;});
     var novos=getCarouselCards().filter(function(c){ return c.ativo!==false && !oldSet[c.id]; });
-    _novidadeAlvo = novos.length ? {tipo:'card', id:novos[0].id} : {tipo:'evento'};
+    _novidadeAlvo = novos.length ? {tipo:'lista', itens:novos.map(function(c){return {id:c.id,titulo:c.titulo,tipo:c.tipo};})} : {tipo:'evento'};
     localStorage.setItem('radar_novidade_sig',sig);
     mostrarNovidade();
   }
 }
-// leva a pessoa até a novidade (carrossel + slide novo) quando clica no balão
+// clicar no balão -> ABRE o painel de Novidades mostrando o que entrou (antes só piscava o carrossel)
 function irParaNovidade(){
   var t=document.querySelector('.nv-toast'); if(t){ t.classList.remove('show'); setTimeout(function(){ if(t) t.remove(); },400); }
+  var alvo=_novidadeAlvo;
+  var itens=(alvo && alvo.tipo==='lista' && alvo.itens) ? alvo.itens : [];
+  mostrarNovidadesPanel(itens);
+}
+function novidadeLabel(tp){
+  if(tp==='flyer'||tp==='imagem') return {ic:'🖼️',txt:'Novo cartaz'};
+  if(tp==='mp4'||tp==='video'||tp==='localvideo'||tp==='linkvideo'||tp==='fbvideo') return {ic:'🎬',txt:'Novo vídeo'};
+  if(tp==='aviso') return {ic:'📢',txt:'Novo aviso'};
+  if(tp==='notapesar') return {ic:'🕊️',txt:'Nota de pesar'};
+  if(tp==='licaobanner') return {ic:'📖',txt:'Lição nova'};
+  return {ic:'✨',txt:'Novidade'};
+}
+// leva ao carrossel e destaca o card novo
+function irParaCard(id){
   if(!document.getElementById('home').classList.contains('ativa')){ try{ voltarHome(); }catch(_){} }
   setTimeout(function(){
-    var alvo=_novidadeAlvo;
-    if(alvo && alvo.tipo==='card'){
-      var cards=getCarouselCards().filter(function(c){ return c.ativo!==false; });
-      var idx=-1; cards.forEach(function(c,i){ if(c.id===alvo.id) idx=i; });
-      if(idx>=0) irSlide(idx);
-    }
+    var cards=getCarouselCards().filter(function(c){ return c.ativo!==false; });
+    var idx=-1; cards.forEach(function(c,i){ if(c.id===id) idx=i; });
+    if(idx>=0) irSlide(idx);
     var sc=document.querySelector('.home-scroll'); if(sc) sc.scrollTo({top:0,behavior:'smooth'});
     var car=document.getElementById('home-carousel');
-    if(car){ car.style.transition='box-shadow .3s'; car.style.boxShadow='0 0 0 3px var(--gold)'; setTimeout(function(){ car.style.boxShadow=''; },1500); }
+    if(car){ car.style.transition='box-shadow .3s'; car.style.boxShadow='0 0 0 3px var(--gold)'; setTimeout(function(){ car.style.boxShadow=''; },1800); }
   }, 80);
+}
+// painel que MOSTRA as novidades (lista com botão pra ver cada uma)
+function mostrarNovidadesPanel(itens){
+  var ov=document.getElementById('nv-panel'); if(ov) ov.remove();
+  ov=document.createElement('div'); ov.id='nv-panel';
+  ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(8,12,20,.72);display:flex;align-items:center;justify-content:center;padding:20px';
+  var corpo;
+  if(itens && itens.length){
+    corpo=itens.map(function(it){
+      var L=novidadeLabel(it.tipo); var nome=(it.titulo&&String(it.titulo).trim())?it.titulo:L.txt;
+      return '<button class="nvp-item" data-id="'+it.id+'" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#f4f7fa;border:1px solid #e3e9ef;border-radius:14px;padding:12px 14px;margin-bottom:10px;cursor:pointer;font-family:inherit">'
+        +'<span style="font-size:1.6rem">'+L.ic+'</span>'
+        +'<span style="flex:1;min-width:0"><b style="display:block;color:#12324e;font-size:.98rem;line-height:1.2">'+nome+'</b><small style="color:#7488a0;font-size:.76rem">'+L.txt+' · toque para ver</small></span>'
+        +'<span style="color:#C8A24A;font-size:1.3rem;font-weight:800">&rsaquo;</span></button>';
+    }).join('');
+  } else {
+    corpo='<p style="margin:0 0 14px;text-align:center;color:#54627a;font-size:.9rem;line-height:1.4">Entrou conteúdo novo na <b>tela inicial</b>. Toque abaixo para conferir.</p>'
+      +'<button id="nvp-home" style="display:block;width:100%;background:linear-gradient(90deg,#C8A24A,#F2D98A);color:#241a0a;border:none;border-radius:14px;padding:13px;font-weight:800;font-family:inherit;font-size:.95rem;cursor:pointer">Ver na tela inicial</button>';
+  }
+  ov.innerHTML='<div style="background:#fff;border-radius:18px;max-width:420px;width:100%;padding:20px 18px 16px;box-shadow:0 18px 50px rgba(0,0,0,.45)">'
+    +'<div style="text-align:center;margin-bottom:4px;font-size:2rem">🔔</div>'
+    +'<h3 style="margin:0 0 3px;text-align:center;color:#12324e;font-size:1.2rem">Novidades no RADAR</h3>'
+    +'<p style="margin:0 0 16px;text-align:center;color:#7488a0;font-size:.85rem">Isto acabou de entrar:</p>'
+    + corpo
+    +'<button id="nvp-close" style="display:block;margin:10px auto 0;background:none;border:none;color:#7488a0;font-size:.86rem;font-family:inherit;cursor:pointer">Fechar</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  var cl=document.getElementById('nvp-close'); if(cl) cl.onclick=function(){ ov.remove(); };
+  var hm=document.getElementById('nvp-home'); if(hm) hm.onclick=function(){ ov.remove(); try{ voltarHome(); }catch(_){} var sc=document.querySelector('.home-scroll'); if(sc) sc.scrollTo({top:0,behavior:'smooth'}); };
+  Array.prototype.forEach.call(ov.querySelectorAll('.nvp-item'),function(btn){
+    btn.onclick=function(){ var id=btn.getAttribute('data-id'); ov.remove(); irParaCard(id); };
+  });
 }
 
 // ══ ESCAVADOR DE PÉROLAS BÍBLICAS ══

@@ -1,0 +1,166 @@
+<!doctype html><html lang="pt-br"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Livros — RADAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0f3d5c;--gold:#C8A24A;--tinta:#22303c;--papel:#f6f3ec;--suave:#7488a0;--linha:#e4e7ec}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Lora,Georgia,serif;background:#eef3f7;color:var(--tinta);-webkit-text-size-adjust:100%}
+  header{background:var(--navy);color:#fff;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 12px;position:sticky;top:0;z-index:10}
+  header .voltar{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:9px;width:38px;height:38px;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+  header .tit{flex:1;min-width:0}
+  header .tit b{font-family:'Playfair Display',serif;font-size:1.15rem;display:block;line-height:1.1}
+  header .tit span{font-size:.76rem;opacity:.85}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px calc(40px + env(safe-area-inset-bottom))}
+  /* PRATELEIRA */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .livro{background:#fff;border:1px solid var(--linha);border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:0 3px 10px rgba(15,61,92,.08);transition:transform .12s}
+  .livro:active{transform:scale(.98)}
+  .livro .capa{height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px 12px;position:relative;color:#fff}
+  .livro .capa .ico{font-size:2rem;margin-bottom:8px;opacity:.9}
+  .livro .capa .ct{font-family:'Playfair Display',serif;font-weight:800;font-size:.98rem;line-height:1.15;text-shadow:0 1px 6px rgba(0,0,0,.35)}
+  .livro .meta{padding:8px 11px 11px}
+  .livro .meta b{display:block;font-size:.9rem;color:var(--navy);font-family:'Playfair Display',serif;line-height:1.15}
+  .livro .meta span{font-size:.75rem;color:var(--suave)}
+  .livro .barra{height:4px;background:#eef1f4;border-radius:3px;margin-top:7px;overflow:hidden}
+  .livro .barra i{display:block;height:100%;background:var(--gold);width:0}
+  .sec{font-family:'Playfair Display',serif;color:var(--navy);font-size:1.05rem;margin:2px 2px 12px}
+  /* LEITOR */
+  #leitor{display:none}
+  #leitor.on{display:block}
+  #lista.off{display:none}
+  .ferramentas{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .ferramentas button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;width:34px;height:34px;font-size:1rem;cursor:pointer}
+  .conteudo{background:var(--papel);border-radius:14px;padding:22px 20px 30px;box-shadow:0 4px 16px rgba(15,61,92,.08);font-size:var(--fs,17px);line-height:1.75}
+  .conteudo h1{font-family:'Playfair Display',serif;font-size:1.5em;color:var(--navy);margin:26px 0 14px;text-align:center;line-height:1.2}
+  .conteudo h1:first-child{margin-top:4px}
+  .conteudo h2{font-family:'Playfair Display',serif;font-size:1.22em;color:#6b4a1e;margin:24px 0 10px}
+  .conteudo h3{font-size:1.05em;font-weight:700;color:#8a6a2f;margin:18px 0 8px}
+  .conteudo p{margin:0 0 15px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+  .conteudo blockquote{border-left:3px solid var(--gold);padding:2px 0 2px 14px;margin:0 0 15px;color:#4a5a2e;font-style:italic}
+  .conteudo li{margin:0 0 8px 4px;list-style:none;position:relative;padding-left:16px}
+  .conteudo li:before{content:'•';color:var(--gold);position:absolute;left:0;font-weight:700}
+  .conteudo .sep{height:1px;background:#dfd8c6;margin:22px 10%}
+  .carregando{text-align:center;color:var(--suave);padding:50px 20px}
+  .capfim{text-align:center;color:var(--suave);font-size:.85rem;margin-top:26px}
+</style></head>
+<body>
+  <header>
+    <button class="voltar" id="btn-voltar" aria-label="Voltar">‹</button>
+    <div class="tit"><b id="h-tit">📚 Livros</b><span id="h-sub">Biblioteca do obreiro</span></div>
+    <div class="ferramentas" id="ferramentas" style="display:none">
+      <button onclick="fonte(-1)" aria-label="Diminuir letra">A−</button>
+      <button onclick="fonte(1)" aria-label="Aumentar letra">A+</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div id="lista">
+      <div class="sec">Coleção Rebecca Brown</div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div id="leitor"><div class="conteudo" id="conteudo"></div><div class="capfim" id="capfim"></div></div>
+  </div>
+
+<script>
+var LIVROS=[
+  {slug:'ele-veio-libertar-cativos', titulo:'Ele Veio para Libertar os Cativos', autor:'Rebecca Brown', cor:'#5b1a1a', ico:'⛓️'},
+  {slug:'prepara-te-para-guerra',    titulo:'Prepara-te para a Guerra',        autor:'Rebecca Brown', cor:'#2f4a6b', ico:'⚔️'},
+  {slug:'vaso-para-honra',           titulo:'Vaso para a Honra',                autor:'Rebecca Brown', cor:'#7a5a1e', ico:'🏺'},
+  {slug:'maldicoes-nao-quebradas',   titulo:'Maldições Não Quebradas',          autor:'Rebecca Brown', cor:'#4a2f5a', ico:'🔗'},
+  {slug:'em-busca-vontade-deus',     titulo:'Em Busca da Vontade de Deus',      autor:'Rebecca Brown', cor:'#2f6b4f', ico:'🧭'}
+];
+var $=function(id){return document.getElementById(id);};
+var atual=null;
+
+function progresso(slug){ try{ return parseFloat(localStorage.getItem('livro_prog_'+slug)||'0')||0; }catch(_){ return 0; } }
+function renderLista(){
+  $('grid').innerHTML=LIVROS.map(function(l){
+    var pg=Math.round(progresso(l.slug)*100);
+    return '<div class="livro" onclick="abrirLivro(\''+l.slug+'\')">'
+      +'<div class="capa" style="background:linear-gradient(150deg,'+l.cor+',#1a1220)">'
+      +'<div class="ico">'+l.ico+'</div><div class="ct">'+l.titulo+'</div></div>'
+      +'<div class="meta"><b>'+l.titulo+'</b><span>'+l.autor+'</span>'
+      +'<div class="barra"><i style="width:'+pg+'%"></i></div></div></div>';
+  }).join('');
+}
+
+function fonte(d){
+  var fs=parseInt(localStorage.getItem('livro_fs')||'17',10)+d*1;
+  fs=Math.max(14,Math.min(24,fs));
+  localStorage.setItem('livro_fs',fs);
+  document.documentElement.style.setProperty('--fs',fs+'px');
+}
+(function(){ document.documentElement.style.setProperty('--fs',(localStorage.getItem('livro_fs')||'17')+'px'); })();
+
+// mini-conversor Markdown -> HTML (seguro)
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inl(s){ s=esc(s);
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*]+)\*/g,'$1<i>$2</i>');
+  return s;
+}
+function mdHtml(md){
+  md=md.replace(/^---[\s\S]*?---\s*/,'');          // tira frontmatter
+  var linhas=md.split(/\r?\n/), out=[], buf=[], liOpen=false;
+  function flushP(){ if(buf.length){ out.push('<p>'+inl(buf.join(' '))+'</p>'); buf=[]; } }
+  function closeLi(){ if(liOpen){ out.push('</ul>'); liOpen=false; } }
+  for(var i=0;i<linhas.length;i++){
+    var L=linhas[i].trim();
+    if(!L){ flushP(); closeLi(); continue; }
+    if(/^(\*\s*){3,}$/.test(L)||/^(-\s*){3,}$/.test(L)||L==='***'||L==='---'){ flushP(); closeLi(); out.push('<div class="sep"></div>'); continue; }
+    var h=L.match(/^(#{1,3})\s+(.*)$/);
+    if(h){ flushP(); closeLi(); var n=h[1].length; out.push('<h'+n+'>'+inl(h[2])+'</h'+n+'>'); continue; }
+    if(/^>\s?/.test(L)){ flushP(); closeLi(); out.push('<blockquote>'+inl(L.replace(/^>\s?/,''))+'</blockquote>'); continue; }
+    if(/^[-•]\s+/.test(L)){ flushP(); if(!liOpen){ out.push('<ul>'); liOpen=true; } out.push('<li>'+inl(L.replace(/^[-•]\s+/,''))+'</li>'); continue; }
+    buf.push(L);
+  }
+  flushP(); closeLi();
+  return out.join('');
+}
+
+function abrirLivro(slug){
+  var l=LIVROS.filter(function(x){return x.slug===slug;})[0]; if(!l) return;
+  atual=l;
+  $('lista').classList.add('off'); $('leitor').classList.add('on');
+  $('ferramentas').style.display='flex';
+  $('h-tit').textContent=l.titulo; $('h-sub').textContent=l.autor;
+  $('conteudo').innerHTML='<div class="carregando">📖 Abrindo o livro…</div>';
+  $('capfim').textContent='';
+  window.scrollTo(0,0);
+  fetch(slug+'.md',{cache:'no-cache'}).then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(t){
+    $('conteudo').innerHTML=mdHtml(t);
+    $('capfim').textContent='— fim —';
+    // retoma leitura
+    var p=progresso(slug);
+    if(p>0.01){ setTimeout(function(){ var y=(document.body.scrollHeight-window.innerHeight)*p; window.scrollTo(0,y); },60); }
+    ligarProgresso(slug);
+  }).catch(function(){
+    $('conteudo').innerHTML='<div class="carregando">Este livro está sendo preparado.<br>Volte em instantes. 📚</div>';
+  });
+}
+var _pt=null;
+function ligarProgresso(slug){
+  window.onscroll=function(){
+    if(_pt) return; _pt=setTimeout(function(){ _pt=null;
+      var max=document.body.scrollHeight-window.innerHeight;
+      var p=max>0?Math.min(1,window.scrollY/max):0;
+      try{ localStorage.setItem('livro_prog_'+slug,String(p)); }catch(_){}
+    },400);
+  };
+}
+function voltarLista(){
+  window.onscroll=null;
+  $('leitor').classList.remove('on'); $('lista').classList.remove('off');
+  $('ferramentas').style.display='none';
+  $('h-tit').textContent='📚 Livros'; $('h-sub').textContent='Biblioteca do obreiro';
+  renderLista(); window.scrollTo(0,0); atual=null;
+}
+$('btn-voltar').onclick=function(){
+  if(atual){ voltarLista(); }
+  else { location.href='/?mod=manuais'; }
+};
+renderLista();
+</script>
+</body></html>
