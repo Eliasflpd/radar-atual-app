@@ -2054,6 +2054,14 @@ function checkAuth(){
 }
 
 function foneSoDigitos(s){ return (s||'').replace(/\D/g,''); }
+// No Brasil o numero tem 10 ou 11 digitos. Qualquer outro tamanho SEM o '+'
+// e' gente de fora que esqueceu o codigo do pais — e sem ele o WhatsApp nao chega.
+function precisaCodigoPais(bruto){
+  var v=foneSoDigitos(bruto);
+  var temMais=(bruto||'').trim().charAt(0)==='+';
+  if(temMais) return false;
+  return !(v.length===10 || v.length===11);
+}
 // aceita numero de fora do Brasil (Angola +244, EUA +1, Portugal +351...)
 // brasileiro digita igual a sempre e continua saindo (99) 99999-9999
 function mascaraFone(el){
@@ -2078,6 +2086,7 @@ async function submitCadastro(){
   err.style.display='none';
   if(!nome){err.textContent='Digite seu nome.';err.style.display='block';document.getElementById('cad-nome').focus();return;}
   if(!cargo){err.textContent='Selecione seu cargo na igreja.';err.style.display='block';return;}
+  if(precisaCodigoPais(document.getElementById('cad-fone').value)){err.textContent='Esse número não parece do Brasil. Se você é de fora, comece com + e o código do país — ex.: +244 923 000 000 (Angola), +1 305 867 5309 (EUA). Sem isso o WhatsApp não chega até você.';err.style.display='block';document.getElementById('cad-fone').focus();return;}
   if(fone.length<8||fone.length>15){err.textContent='WhatsApp inválido. No Brasil: (99) 99999-9999. Fora do Brasil, use o código do país: +244 923 000 000';err.style.display='block';document.getElementById('cad-fone').focus();return;}
   const btn=document.getElementById('btn-cad-enviar');
   btn.textContent='Entrando...';btn.disabled=true;
@@ -2094,7 +2103,7 @@ function salvarNuvem(nome,cargo,fone){
 // "Já cadastrado?" — restaura pelo WhatsApp
 async function jaCadastrado(){
   var fone=prompt('Digite seu WhatsApp (com DDD):'); if(!fone) return;
-  fone=fone.replace(/\D/g,''); if(fone.length<8||fone.length>15){ alert('WhatsApp inválido.\nBrasil: (99) 99999-9999\nFora do Brasil: com o código do país, ex. 244923000000'); return; }
+  var _bruto=fone; fone=fone.replace(/\D/g,''); if(precisaCodigoPais(_bruto)){ alert('Esse número não parece do Brasil.\nSe você é de fora, digite com o código do país.\nEx.: +244 923 000 000 (Angola), +1 305 867 5309 (EUA).'); return; } if(fone.length<8||fone.length>15){ alert('WhatsApp inválido.\nBrasil: (99) 99999-9999\nFora do Brasil: com o código do país, ex. +244923000000'); return; }
   try{
     var r=await fetch('/api/cadastros?phone='+fone); var d=await r.json();
     if(d && d.cadastro){

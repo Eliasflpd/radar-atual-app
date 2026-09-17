@@ -30,7 +30,12 @@ module.exports = async (req, res) => {
       let avisado = false;
       const FT = process.env.FONNTE_TOKEN;
       if (FT && whatsapp) {
-        let alvo = whatsapp; if (!alvo.startsWith('55')) alvo = '55' + alvo; // Brasil
+        let alvo = String(whatsapp || '').replace(/\D/g, '');
+        // 10 ou 11 digitos = Brasil sem o codigo do pais -> completa com 55.
+        // 12 ou mais = ja veio com codigo de pais (55 ou de fora) -> NAO mexe,
+        // senao numero de Angola (244...) virava 55244... e a mensagem nunca chega.
+        const ehBrasilCurto = (alvo.length === 10 || alvo.length === 11);
+        if (ehBrasilCurto) alvo = '55' + alvo;
         const primeiroNome = nome.split(/\s+/)[0];
         const msg = 'Ola ' + primeiroNome + '! ✅ Seu cadastro no *RADAR* foi feito com sucesso.'
           + (cargo ? ('\nCargo: ' + cargo) : '')
@@ -39,7 +44,8 @@ module.exports = async (req, res) => {
           const fr = await fetch('https://api.fonnte.com/send', {
             method: 'POST',
             headers: { 'Authorization': FT, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ target: alvo, message: msg, countryCode: '55' })
+            body: JSON.stringify(Object.assign({ target: alvo, message: msg },
+              alvo.startsWith('55') ? { countryCode: '55' } : {}))
           });
           const fj = await fr.json().catch(() => ({}));
           avisado = !!(fj && (fj.status === true || fj.status === 'true'));
