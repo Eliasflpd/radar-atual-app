@@ -59,6 +59,40 @@ module.exports = async (req,res) => {
   const cs=process.env.RADAR_DB;
   if(!cs){ res.status(200).json({ok:false,off:true}); return; }
 
+  // ===== KITTEL — fonte privada do Concílio (nunca vai pro navegador) =====
+  if(q.fn==='kittel'){
+    const ADMK=process.env.RADAR_ADMIN_TOKEN;
+    if(ADMK && q.token!==ADMK){ res.status(403).json({ok:false,err:'token'}); return; }
+    const semAcento=(s)=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+      .replace(/[\u00f5\u00f4\u014d]/g,'o').replace(/[\u00ea\u0113\u1e17]/g,'e')
+      .replace(/[\u00e1\u00e0\u00e2\u0101]/g,'a').replace(/[\u00ed\u00ec\u00ee\u012b]/g,'i')
+      .replace(/[\u00fa\u00f9\u00fb\u016b]/g,'u');
+    const PARE=new Set(('sobre para como qual quais quando onde porque pastor texto tema '
+      +'versiculo capitulo palavra significa significado explica explique fale falar '
+      +'mensagem sermao estudo biblia senhor deus jesus cristo esse essa isso aquilo '
+      +'quero preciso pode voce mais muito ainda entre depois antes').split(' '));
+    const palavras=[...new Set(semAcento(q.q||'').split(/[^a-z0-9]+/)
+      .filter(w=>w.length>=4 && !PARE.has(w)))].slice(0,8);
+    if(!palavras.length){ res.status(200).json({ok:true,total:0,itens:[]}); return; }
+
+    const quantos=Math.min(parseInt(q.n||'2',10)||2,4);
+    const casos=palavras.map((_,i)=>`(case when busca like $${i+1} then 4 else 0 end)`).join('+');
+    const ors=palavras.map((_,i)=>`busca like $${i+1}`).join(' or ');
+    const vals=palavras.map(w=>'%'+w+'%');
+
+    const c=new Client({connectionString:cs, ssl:{rejectUnauthorized:false}});
+    try{
+      await c.connect();
+      const r=await c.query(
+        `select termos,glosas,volume,pagina,tdnt,left(texto,2600) as texto, (${casos}) as peso
+           from kittel_verbetes where ${ors}
+          order by peso desc, length(texto) desc limit ${quantos}`, vals);
+      res.status(200).json({ok:true,total:r.rowCount,itens:r.rows});
+    }catch(e){ res.status(200).json({ok:false,err:String(e.message||e).slice(0,120)}); }
+    finally{ try{ await c.end(); }catch(_){} }
+    return;
+  }
+
   // ===== MOTOR SEMÂNTICO (versículos ligados por sentido) — PÚBLICO, é só a Bíblia =====
   if(q.sem){
     const limit=Math.min(parseInt(q.limit||'8',10)||8,25);

@@ -58,66 +58,32 @@ const LEI = `⛔ TRAVAS INEGOCIÁVEIS (valem mais que impressionar):
 - Em ponto disputado, sinalize com humildade e mande confirmar com o pastor.
 - Português do Brasil, prosa densa e pastoral, parágrafos de verdade (nada de lista solta sem carne). Use **negrito** só nos destaques.`;
 
-// ── KITTEL: dicionário do grego do NT como FONTE de consulta ──────────────
-// O Concílio consulta sozinho quando a pergunta toca uma palavra do original.
-// NUNCA copia: a LEI acima já obriga texto novo e original.
-let _kittelIdx = null;
-async function kittelIndice(origem) {
-  if (_kittelIdx) return _kittelIdx;
-  try {
-    const r = await fetch(origem + '/biblioteca/concilio/kittel/_indice.json');
-    _kittelIdx = r.ok ? await r.json() : [];
-  } catch (_) { _kittelIdx = []; }
-  return _kittelIdx;
-}
-const _sa = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  .replace(/[\u00f5\u00f4\u014d]/g, 'o').replace(/[\u00ea\u0113\u1e17]/g, 'e')
-  .replace(/[\u00e1\u00e0\u00e2\u0101]/g, 'a').replace(/[\u00ed\u00ec\u00ee\u012b]/g, 'i')
-  .replace(/[\u00fa\u00f9\u00fb\u016b]/g, 'u');
-
-const _PARE = new Set(('sobre para como qual quais quando onde porque porquê pastor '
-  + 'texto tema versiculo versículo capitulo capítulo palavra significa significado '
-  + 'explica explique fale falar sobre mensagem sermao sermão estudo bíblia biblia '
-  + 'senhor deus jesus cristo esse essa isso aquilo quero preciso pode você voce').split(' '));
-
+// ── KITTEL: fonte privada do Concílio (fica no banco do pastor, nunca no navegador)
+// O verbete NUNCA aparece na tela: entra no prompt como fonte e sai mensagem pronta.
 async function kittelFonte(pergunta, origem, quantos) {
-  quantos = quantos || 2;
-  if (!origem) return '';
-  const idx = await kittelIndice(origem);
-  if (!idx || !idx.length) return '';
-  const palavras = _sa(pergunta).split(/[^a-z0-9]+/)
-    .filter((w) => w.length >= 4 && !_PARE.has(w));
-  if (!palavras.length) return '';
-  const pontos = [];
-  for (const v of idx) {
-    let p = 0;
-    const pedacos = v.b.split(/[^a-z0-9]+/);
-    for (const w of palavras) {
-      if (pedacos.includes(w)) p += 4;
-      else if (v.b.indexOf(w) >= 0) p += 1;
-    }
-    if (p >= 4) pontos.push([p, v]);
-  }
-  if (!pontos.length) return '';
-  pontos.sort((a, b) => b[0] - a[0]);
-  const partes = [];
-  for (const par of pontos.slice(0, quantos)) {
-    try {
-      const r = await fetch(origem + '/biblioteca/concilio/kittel/' + par[1].f + '.json');
-      if (!r.ok) continue;
-      const d = await r.json();
-      partes.push('■ ' + (d.t || []).join(' · ') + ' — ' + (d.g || []).join(', ')
-        + '\n(Kittel, vol. ' + d.v + ', p. ' + d.p + ')\n' + (d.c || '').slice(0, 2600));
-    } catch (_) {}
-  }
-  if (!partes.length) return '';
-  return '\n\n📕 CONSULTA AO KITTEL (Dicionário Teológico do NT — material de estudo do pastor):\n"""\n'
-    + partes.join('\n\n— — —\n\n')
-    + '\n"""\n⚠️ Isto é FONTE, não texto pronto. NÃO copie nem parafraseie de perto: pegue o SENTIDO da palavra no original e escreva com as suas próprias palavras, em prosa sua. Se a informação entrar no texto, pode indicar a origem assim: (Kittel, vol. X, p. Y). Se o verbete não tiver a ver com a pergunta, ignore-o por completo.';
+  if (!origem || !pergunta) return '';
+  try {
+    const tk = process.env.RADAR_ADMIN_TOKEN || '';
+    const u = origem + '/api/estudo-busca?fn=kittel&n=' + (quantos || 2)
+      + '&q=' + encodeURIComponent(String(pergunta).slice(0, 300))
+      + (tk ? '&token=' + encodeURIComponent(tk) : '');
+    const r = await fetch(u);
+    if (!r.ok) return '';
+    const d = await r.json();
+    if (!d || !d.ok || !d.itens || !d.itens.length) return '';
+    const partes = d.itens.map((v) =>
+      '■ ' + (v.termos || []).join(' · ') + ' — ' + (v.glosas || []).join(', ')
+      + '\n(Kittel, vol. ' + (v.volume || '') + ', p. ' + (v.pagina || '') + ')\n'
+      + (v.texto || ''));
+    return '\n\n📕 CONSULTA AO KITTEL (Dicionário Teológico do NT — material de estudo do pastor):\n"""\n'
+      + partes.join('\n\n— — —\n\n')
+      + '\n"""\n⚠️ Isto é FONTE, não texto pronto. NÃO copie nem parafraseie de perto: pegue o SENTIDO da palavra no original e escreva com as suas próprias palavras. Se a informação entrar no texto, pode indicar a origem assim: (Kittel, vol. X, p. Y). Se o verbete não tiver a ver com a pergunta, ignore-o por completo.';
+  } catch (_) { return ''; }
 }
 function _origemDe(req) {
   try { return new URL(req.url).origin; } catch (_) { return ''; }
 }
+
 
 // ── Streaming genérico de chat (reaproveitado por consulta, sermão e mensagem) ──
 // Continua com a MESMA assinatura de antes, pra nenhuma tela precisar mudar. O que
