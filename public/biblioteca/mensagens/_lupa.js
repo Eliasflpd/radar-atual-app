@@ -19,7 +19,12 @@
   var css = ''
   + '.lm-fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;'
   + 'background:linear-gradient(135deg,#0f6d78,#0f3d5c);color:#fff;border:none;border-radius:999px;padding:13px 20px;font-size:.98rem;'
-  + 'font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 6px 20px rgba(15,61,92,.35)}'
+  + 'font-weight:800;font-family:inherit;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 6px 20px rgba(15,61,92,.35)}'
+  + '.lm-fab.lm-arrastando{cursor:grabbing;opacity:.92;box-shadow:0 10px 26px rgba(15,61,92,.5)}'
+  + '.lm-fab.lm-bola{padding:0;width:58px;height:58px;border-radius:50%;font-size:1.6rem;line-height:1}'
+  + '.lm-fab.lm-bola .lm-txt{display:none}'
+  + '.lm-fab .lm-ico{margin-right:7px}'
+  + '.lm-fab.lm-bola .lm-ico{margin:0}'
   + '.lm-back{position:fixed;inset:0;background:rgba(10,22,36,.5);z-index:70;display:none}'
   + '.lm-back.on{display:block}'
   + '.lm-panel{position:fixed;left:0;right:0;bottom:0;z-index:71;background:#fff;border-radius:20px 20px 0 0;max-width:820px;margin:0 auto;'
@@ -44,7 +49,7 @@
   + '.lm-foot .lm-send:disabled{opacity:.5}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
-  var fab = document.createElement('button'); fab.className='lm-fab'; fab.id='lm-fab'; fab.textContent='🔎 Perguntar sobre esta mensagem';
+  var fab = document.createElement('button'); fab.className='lm-fab'; fab.id='lm-fab'; fab.innerHTML='<span class="lm-ico">🔎</span><span class="lm-txt">Perguntar sobre esta mensagem</span>'; fab.title='Arraste para mudar de lugar';
   var back = document.createElement('div'); back.className='lm-back'; back.id='lm-back';
   var panel = document.createElement('div'); panel.className='lm-panel'; panel.id='lm-panel';
   panel.innerHTML =
@@ -66,7 +71,70 @@
 
   function abrir(){ back.classList.add('on'); panel.classList.add('on'); setTimeout(function(){ q.focus(); },260); }
   function fechar(){ back.classList.remove('on'); panel.classList.remove('on'); }
-  fab.onclick=abrir; back.onclick=fechar; el('lm-x').onclick=fechar;
+  back.onclick=fechar; el('lm-x').onclick=fechar;
+
+  // ── botao arrastavel: o pastor coloca onde nao atrapalha a leitura ──
+  (function(){
+    var CHAVE='lm_fab_pos', segurando=false, arrastou=false, dx=0, dy=0;
+
+    function colocar(x,y){
+      var r=fab.getBoundingClientRect();
+      var maxX=window.innerWidth-r.width-8, maxY=window.innerHeight-r.height-8;
+      x=Math.max(8,Math.min(x,Math.max(8,maxX)));
+      y=Math.max(8,Math.min(y,Math.max(8,maxY)));
+      fab.style.left=x+'px'; fab.style.top=y+'px';
+      fab.style.right='auto'; fab.style.bottom='auto'; fab.style.transform='none';
+      return {x:x,y:y};
+    }
+    function guardar(p){ try{ localStorage.setItem(CHAVE, JSON.stringify(p)); }catch(e){} }
+
+    fab.addEventListener('pointerdown', function(e){
+      segurando=true; arrastou=false;
+      var r=fab.getBoundingClientRect();
+      dx=e.clientX-r.left; dy=e.clientY-r.top;
+      try{ fab.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    fab.addEventListener('pointermove', function(e){
+      if(!segurando) return;
+      var r=fab.getBoundingClientRect();
+      var nx=e.clientX-dx, ny=e.clientY-dy;
+      if(!arrastou && (Math.abs(nx-r.left)>6 || Math.abs(ny-r.top)>6)){
+        arrastou=true; fab.classList.add('lm-arrastando'); fab.classList.add('lm-bola');
+        // encolheu no meio do arrasto: o dedo passa a segurar o centro da bolinha
+        var rb=fab.getBoundingClientRect(); dx=rb.width/2; dy=rb.height/2;
+      }
+      if(arrastou){ e.preventDefault(); colocar(nx,ny); }
+    });
+    function soltar(e){
+      if(!segurando) return;
+      segurando=false;
+      fab.classList.remove('lm-arrastando');
+      try{ fab.releasePointerCapture(e.pointerId); }catch(_){}
+      if(arrastou){
+        var r=fab.getBoundingClientRect();
+        guardar(colocar(r.left,r.top));
+        setTimeout(function(){ arrastou=false; }, 60);
+      } else {
+        abrir();
+      }
+    }
+    fab.addEventListener('pointerup', soltar);
+    fab.addEventListener('pointercancel', function(e){ segurando=false; arrastou=false; fab.classList.remove('lm-arrastando'); });
+    fab.addEventListener('click', function(e){ e.preventDefault(); });
+
+    // virar a tela nao pode jogar o botao pra fora
+    window.addEventListener('resize', function(){
+      if(!fab.style.left) return;
+      var r=fab.getBoundingClientRect();
+      guardar(colocar(r.left,r.top));
+    });
+
+    // volta pro lugar onde o pastor deixou
+    try{
+      var p=JSON.parse(localStorage.getItem(CHAVE)||'null');
+      if(p && typeof p.x==='number'){ fab.classList.add('lm-bola'); setTimeout(function(){ colocar(p.x,p.y); },0); }
+    }catch(e){}
+  })();
   q.addEventListener('input',function(){ q.style.height='auto'; q.style.height=Math.min(q.scrollHeight,120)+'px'; });
   q.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); enviar(); } });
   send.onclick=enviar;

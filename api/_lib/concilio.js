@@ -58,6 +58,67 @@ const LEI = `⛔ TRAVAS INEGOCIÁVEIS (valem mais que impressionar):
 - Em ponto disputado, sinalize com humildade e mande confirmar com o pastor.
 - Português do Brasil, prosa densa e pastoral, parágrafos de verdade (nada de lista solta sem carne). Use **negrito** só nos destaques.`;
 
+// ── KITTEL: dicionário do grego do NT como FONTE de consulta ──────────────
+// O Concílio consulta sozinho quando a pergunta toca uma palavra do original.
+// NUNCA copia: a LEI acima já obriga texto novo e original.
+let _kittelIdx = null;
+async function kittelIndice(origem) {
+  if (_kittelIdx) return _kittelIdx;
+  try {
+    const r = await fetch(origem + '/biblioteca/concilio/kittel/_indice.json');
+    _kittelIdx = r.ok ? await r.json() : [];
+  } catch (_) { _kittelIdx = []; }
+  return _kittelIdx;
+}
+const _sa = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  .replace(/[\u00f5\u00f4\u014d]/g, 'o').replace(/[\u00ea\u0113\u1e17]/g, 'e')
+  .replace(/[\u00e1\u00e0\u00e2\u0101]/g, 'a').replace(/[\u00ed\u00ec\u00ee\u012b]/g, 'i')
+  .replace(/[\u00fa\u00f9\u00fb\u016b]/g, 'u');
+
+const _PARE = new Set(('sobre para como qual quais quando onde porque porquê pastor '
+  + 'texto tema versiculo versículo capitulo capítulo palavra significa significado '
+  + 'explica explique fale falar sobre mensagem sermao sermão estudo bíblia biblia '
+  + 'senhor deus jesus cristo esse essa isso aquilo quero preciso pode você voce').split(' '));
+
+async function kittelFonte(pergunta, origem, quantos) {
+  quantos = quantos || 2;
+  if (!origem) return '';
+  const idx = await kittelIndice(origem);
+  if (!idx || !idx.length) return '';
+  const palavras = _sa(pergunta).split(/[^a-z0-9]+/)
+    .filter((w) => w.length >= 4 && !_PARE.has(w));
+  if (!palavras.length) return '';
+  const pontos = [];
+  for (const v of idx) {
+    let p = 0;
+    const pedacos = v.b.split(/[^a-z0-9]+/);
+    for (const w of palavras) {
+      if (pedacos.includes(w)) p += 4;
+      else if (v.b.indexOf(w) >= 0) p += 1;
+    }
+    if (p >= 4) pontos.push([p, v]);
+  }
+  if (!pontos.length) return '';
+  pontos.sort((a, b) => b[0] - a[0]);
+  const partes = [];
+  for (const par of pontos.slice(0, quantos)) {
+    try {
+      const r = await fetch(origem + '/biblioteca/concilio/kittel/' + par[1].f + '.json');
+      if (!r.ok) continue;
+      const d = await r.json();
+      partes.push('■ ' + (d.t || []).join(' · ') + ' — ' + (d.g || []).join(', ')
+        + '\n(Kittel, vol. ' + d.v + ', p. ' + d.p + ')\n' + (d.c || '').slice(0, 2600));
+    } catch (_) {}
+  }
+  if (!partes.length) return '';
+  return '\n\n📕 CONSULTA AO KITTEL (Dicionário Teológico do NT — material de estudo do pastor):\n"""\n'
+    + partes.join('\n\n— — —\n\n')
+    + '\n"""\n⚠️ Isto é FONTE, não texto pronto. NÃO copie nem parafraseie de perto: pegue o SENTIDO da palavra no original e escreva com as suas próprias palavras, em prosa sua. Se a informação entrar no texto, pode indicar a origem assim: (Kittel, vol. X, p. Y). Se o verbete não tiver a ver com a pergunta, ignore-o por completo.';
+}
+function _origemDe(req) {
+  try { return new URL(req.url).origin; } catch (_) { return ''; }
+}
+
 // ── Streaming genérico de chat (reaproveitado por consulta, sermão e mensagem) ──
 // Continua com a MESMA assinatura de antes, pra nenhuma tela precisar mudar. O que
 // mudou por dentro: em vez de um fetch cravado na OpenAI, agora é a cascata.
@@ -126,7 +187,8 @@ ${LEI}
 Comece direto no TÍTULO (sem saudação e sem "claro!").`;
 
 // ── LUPA DO CONCÍLIO — o mago-mestre roteia sozinho + pesquisa na web ──
-async function lupaWeb(pergunta, contexto, historico) {
+async function lupaWeb(pergunta, contexto, historico, origem) {
+  const fonteK = await kittelFonte(pergunta, origem);
   const roster = ERUDITOS.map((e) => `- ${e.nome} (${e.tag}) — forte em: ${e.forte}`).join('\n');
   const SYS_MSG = `Você é o CONCÍLIO DOS EXPOSITORES do app RADAR (Assembleias de Deus, Brasil), conversando com o pastor Elias SOBRE uma mensagem/pregação que ele está lendo.
 
@@ -141,7 +203,7 @@ Sua tarefa: responder as perguntas do pastor sobre ESTA mensagem, APROFUNDANDO e
 
 Responda direto, em prosa pastoral, curto e denso (o pastor lê no celular). Sem cabeçalhos com emoji, sem "claro!".
 
-${LEI}`;
+${LEI}${fonteK}`;
   const SYS = contexto ? SYS_MSG : `Você é o MAGO-MESTRE do CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil).
 
 O pastor faz UMA pergunta. Sua tarefa:
@@ -199,17 +261,19 @@ export default async function handler(req) {
   if (acao === 'perola') {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
     if (!tema) return new Response('Diga o texto ou o tema do sermão.', { status: 400, headers: CORS });
-    return streamChat(SYS_PEROLA, 'TEXTO / TEMA DO PASTOR: ' + tema, { temperature: 0.6, max_tokens: 3600 });
+    const fonteP = await kittelFonte(tema, _origemDe(req));
+    return streamChat(SYS_PEROLA + fonteP, 'TEXTO / TEMA DO PASTOR: ' + tema, { temperature: 0.6, max_tokens: 3600 });
   }
   if (acao === 'mensagem') {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
     if (!tema) return new Response('Diga o texto ou o tema da mensagem.', { status: 400, headers: CORS });
-    return streamChat(SYS_MENSAGEM, 'TEXTO / TEMA DO PASTOR: ' + tema, { temperature: 0.65, max_tokens: 3600 });
+    const fonteM = await kittelFonte(tema, _origemDe(req));
+    return streamChat(SYS_MENSAGEM + fonteM, 'TEXTO / TEMA DO PASTOR: ' + tema, { temperature: 0.65, max_tokens: 3600 });
   }
   if (acao === 'lupa') {
     const pergunta = (b.pergunta || b.tema || b.passagem || '').toString().trim().slice(0, 500);
     if (!pergunta) return new Response('Escreva a sua pergunta.', { status: 400, headers: CORS });
-    return lupaWeb(pergunta);
+    return lupaWeb(pergunta, null, null, _origemDe(req));
   }
   if (acao === 'lupa-msg') {
     const pergunta = (b.pergunta || '').toString().trim().slice(0, 500);
