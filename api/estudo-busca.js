@@ -93,6 +93,70 @@ module.exports = async (req,res) => {
     return;
   }
 
+  // ===== AVALIAÇÃO DA MENSAGEM — ✅ aprovei / ❌ reprovei + o porquê, por escrito =====
+  // O pastor lê a mensagem, marca o estado e escreve a observação dele. Reavaliar
+  // SOBRESCREVE (chave única slug+user_key) — o parecer é um só, sempre o último.
+  //   ?fn=avaliacao&slug=..&user=..&token=..                 -> lê o parecer daquela mensagem
+  //   ?fn=avaliacao&acao=salvar&slug=..&user=..&estado=..&obs=..&token=..  -> grava
+  //   ?fn=avaliacao&acao=listar&user=..&token=..             -> tudo que ele já avaliou
+  if(q.fn==='avaliacao'){
+    const ADMA=process.env.RADAR_ADMIN_TOKEN;
+    if(ADMA && q.token!==ADMA){ res.status(403).json({ok:false,err:'token'}); return; }
+
+    const acao=(q.acao||'ler').toString().trim().toLowerCase();
+    // O whatsapp é gravado SÓ COM DÍGITOS em radar_cadastros (índice uq_cad_whats usa
+    // regexp_replace). Se a tela mandar "(11) 99999-0000" num dia e "11999990000" no
+    // outro, viram dois pareceres pra mesma mensagem. Normalizamos aqui, na entrada.
+    const userBruto=(q.user||'').toString().trim().slice(0,60);
+    const user=/^[\d\s().+-]+$/.test(userBruto)
+      ? userBruto.replace(/\D/g,'')
+      : userBruto.toLowerCase();
+    const slug=(q.slug||'').toString().trim().slice(0,200);
+    if(!user){ res.status(400).json({ok:false,err:'sem user'}); return; }
+    if(acao!=='listar' && !slug){ res.status(400).json({ok:false,err:'sem slug'}); return; }
+
+    // '', 'null', 'limpar' apagam o estado sem apagar a observação.
+    let estado=(q.estado==null?'':q.estado.toString().trim().toLowerCase());
+    if(estado==='null'||estado==='limpar'||estado==='') estado=null;
+    if(acao==='salvar' && estado!==null && estado!=='aprovado' && estado!=='reprovado'){
+      res.status(400).json({ok:false,err:'estado'}); return;
+    }
+    const obs=(q.obs==null?null:q.obs.toString().slice(0,4000));
+
+    const c=new Client({connectionString:cs, ssl:{rejectUnauthorized:false}});
+    try{
+      await c.connect();
+      if(acao==='salvar'){
+        const r=await c.query(
+          `insert into mensagem_avaliacao (slug,user_key,estado,obs)
+                values ($1,$2,$3,$4)
+           on conflict (slug,user_key) do update
+                  set estado=excluded.estado,
+                      obs=coalesce(excluded.obs, mensagem_avaliacao.obs),
+                      atualizado_em=now()
+             returning id,slug,user_key,estado,obs,criado_em,atualizado_em`,
+          [slug,user,estado,obs]);
+        res.status(200).json({ok:true,salvo:true,item:r.rows[0]});
+        return;
+      }
+      if(acao==='listar'){
+        const r=await c.query(
+          `select id,slug,user_key,estado,obs,criado_em,atualizado_em
+             from mensagem_avaliacao
+            where user_key=$1 and (estado is not null or coalesce(obs,'')<>'')
+            order by atualizado_em desc limit 500`, [user]);
+        res.status(200).json({ok:true,total:r.rowCount,itens:r.rows});
+        return;
+      }
+      const r=await c.query(
+        `select id,slug,user_key,estado,obs,criado_em,atualizado_em
+           from mensagem_avaliacao where slug=$1 and user_key=$2 limit 1`, [slug,user]);
+      res.status(200).json({ok:true,achou:r.rowCount>0,item:r.rows[0]||null});
+    }catch(e){ res.status(200).json({ok:false,err:String(e.message||e).slice(0,160)}); }
+    finally{ try{ await c.end(); }catch(_){} }
+    return;
+  }
+
   // ===== MOTOR SEMÂNTICO (versículos ligados por sentido) — PÚBLICO, é só a Bíblia =====
   if(q.sem){
     const limit=Math.min(parseInt(q.limit||'8',10)||8,25);

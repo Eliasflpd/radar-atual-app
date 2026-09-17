@@ -94,6 +94,10 @@ async function streamChat(SYS, user, opts) {
     return await respostaStream({
       sys: SYS,
       user,
+      // Conversa com histórico (ação 'conversar'). Quando vem `messages`, a cascata
+      // ignora o `user` — por isso as ações antigas, que não mandam nada aqui,
+      // continuam exatamente como sempre foram.
+      ...(Array.isArray(opts.messages) && opts.messages.length ? { messages: opts.messages } : {}),
       temperature: opts.temperature != null ? opts.temperature : 0.5,
       max_tokens: opts.max_tokens || 2200,
       tag: opts.tag || 'concilio',
@@ -216,6 +220,127 @@ ${LEI}`;
 }
 
 
+// ── FICHA DE UM MESTRE — o bloco que ensina a IA a trabalhar no MÉTODO dele ──
+// Sempre na 3ª pessoa: a LEI já proíbe fingir ser a pessoa. O Wagner Cordeiro não
+// está no array (ele tem corpus próprio), então entra por um caminho separado.
+function fichaMestre(id) {
+  const e = ERUDITOS.find((x) => x.id === id);
+  if (!e) return null;
+  const filtro = e.id === 'david-flusser'
+    ? `\n🚨 ATENÇÃO: este consultor é um erudito judeu que NÃO crê na divindade de Cristo. Aproveite SÓ o pano de fundo do 2º Templo. A Pessoa e a obra de Cristo ficam com a fé cristã e a doutrina AD — NUNCA reproduza a negação dele.`
+    : '';
+  return {
+    nome: e.nome,
+    bloco: `▪ SERVO: ${e.nome}\n▪ QUEM FOI: ${e.tag}\n▪ O QUE ELE CRÊ: ${e.cre}\n▪ FORTE EM: ${e.forte}${filtro}`,
+  };
+}
+
+// O Dr. Wagner tem material de verdade atrás (aulas + Caderno de Pérolas). Quando o
+// pastor escolhe ele, buscamos os trechos que casam com o pedido e mandamos junto.
+async function fonteWagner(pergunta) {
+  try {
+    const { buscarContexto } = await import('./concilio-wagner.js');
+    const ctx = buscarContexto(String(pergunta || '').slice(0, 600), 6000);
+    if (!ctx || !ctx.texto) return '';
+    return `\n\n📗 MATERIAL DO PRÓPRIO DR. WAGNER (aulas e Caderno de Pérolas), escolhido pelo pedido:\n"""\n${ctx.texto}\n"""\n⚠️ É MATÉRIA-PRIMA, não texto pronto: NÃO copie, reescreva com suas palavras. Se não cobrir o pedido, ignore.`;
+  } catch (_) { return ''; }
+}
+
+// ── REESCREVER — o pastor manda mudar e diz COMO ─────────────────────────────
+// ⚠️ NÃO confunda com a lupa: a lupa é PROIBIDA de mexer na mensagem (ela só
+// acrescenta nota à margem). ESTA ação é o contrário — ela devolve a mensagem
+// INTEIRA reescrita, pronta pra substituir a que está na tela.
+async function reescreverStream(texto, instrucao, mestreId, origem) {
+  const fonteK = await kittelFonte(instrucao + ' ' + String(texto).slice(0, 600), origem, 2);
+  const ficha = fichaMestre(mestreId);
+  const fonteW = mestreId === 'wagner-cordeiro' ? await fonteWagner(instrucao + ' ' + String(texto).slice(0, 600)) : '';
+
+  const metodo = ficha
+    ? `\n\n🧙 MÉTODO PEDIDO: o pastor quer a reescrita no MÉTODO deste servo:\n${ficha.bloco}\nEscreva do jeito que ELE cavaria: o olhar dele, as perguntas dele, a ênfase dele, o tipo de aplicação dele. Na 3ª pessoa — você NÃO finge ser ${ficha.nome}, você trabalha no método dele.`
+    : (mestreId === 'wagner-cordeiro'
+      ? `\n\n🧙 MÉTODO PEDIDO: reescreva no método do Dr. Wagner Cordeiro — garimpo tipológico, a figura do Antigo Testamento desaguando em Cristo, detalhe do texto que ninguém repara. Na 3ª pessoa, sem fingir ser ele.`
+      : '');
+
+  const SYS = `Você é o REESCRITOR de mensagens do app RADAR, do pastor Elias (Assembleias de Deus, Brasil).
+
+O pastor já tem uma mensagem escrita. Ele NÃO quer uma mensagem nova do zero e NÃO quer comentário sobre ela: ele quer ESTA MESMA mensagem, com a mudança que ele mandou fazer.
+
+📌 AS 4 ORDENS:
+1) OBEDEÇA A INSTRUÇÃO DELE AO PÉ DA LETRA. Se ele mandou trocar o final, troque o final. Se mandou encurtar, encurte. Se mandou tirar uma palavra, ela não pode sobrar em lugar nenhum. Se mandou acrescentar, acrescente ali onde faz sentido. A instrução dele vence o seu gosto.
+2) PRESERVE TUDO QUE ELE NÃO MANDOU MUDAR. Título, referência, ordem das ideias, ilustrações, versículos e o jeito dele de falar continuam iguais. Você não "melhora" o que não foi pedido. Mexer onde não foi mandado é ERRO.
+3) DEVOLVA A MENSAGEM INTEIRA, do começo ao fim, pronta pra substituir a que está na tela. Nada de trecho solto, nada de "mudei o parágrafo 3", nada de marcar o que mudou.
+4) O FINAL TEM QUE QUEIMAR: o fecho é CRESCENDO, não resumo. Frases curtas de martelo, 2ª pessoa no imperativo, exalta o NOME de Jesus, e uma última linha-grito curta. (A menos que a instrução do pastor peça outra coisa — aí manda ele.)
+
+Mantenha o padrão da casa: prosa densa em parágrafos de verdade (não vira lista), **negrito** nas palavras do original e nas ênfases, português do Brasil. Se a mensagem começa com as linhas TÍTULO: e REFERÊNCIA:, devolva essas linhas também.
+
+⚠️ REGRA DA GRAFIA: palavra do hebraico ou do grego SÓ transliterada em letras latinas (ex.: *tamid*, *chesed*, *dorea*). NÃO escreva no alfabeto hebraico nem no grego — um acento trocado vira erro no púlpito.${metodo}
+
+${LEI}
+
+Comece DIRETO no texto da mensagem reescrita. Sem saudação, sem "claro!", sem explicar o que você fez, sem comentário no fim.${fonteK}${fonteW}`;
+
+  const user = `MENSAGEM ATUAL (é esta que deve ser reescrita, inteira):
+"""
+${String(texto || '').slice(0, 14000)}
+"""
+
+O QUE O PASTOR MANDOU MUDAR:
+"""
+${String(instrucao || '').slice(0, 1200)}
+"""
+
+Agora devolva a mensagem inteira, já com essa mudança feita.`;
+
+  return streamChat(SYS, user, { temperature: 0.55, max_tokens: 4000, tag: 'reescrever' });
+}
+
+// ── CONVERSAR — bate-papo fiel com UM mestre do Concílio ─────────────────────
+// Ele responde DENTRO do que sabe e do que crê. Se o pastor perguntar fora da
+// praia dele, ele diz que aquilo não é a praia dele em vez de chutar.
+async function conversarStream(mestreId, pergunta, contexto, historico, origem) {
+  const ficha = fichaMestre(mestreId);
+  const ehWagner = mestreId === 'wagner-cordeiro';
+  if (!ficha && !ehWagner) return lupaWeb(pergunta, contexto, historico, origem);
+
+  const nome = ficha ? ficha.nome : 'Dr. Wagner Cordeiro';
+  const bloco = ficha ? ficha.bloco
+    : '▪ SERVO: Dr. Wagner Cordeiro\n▪ QUEM É: garimpeiro de tipologia — acha a figura de Cristo escondida no detalhe do Antigo Testamento\n▪ O QUE ELE CRÊ: pentecostal AD; toda a Escritura aponta pra Cristo\n▪ FORTE EM: tipologia, o detalhe do texto que ninguém repara, aplicação que arde';
+
+  const fonteK = await kittelFonte(pergunta, origem, 2);
+  const fonteW = ehWagner ? await fonteWagner(pergunta) : '';
+
+  const blocoCtx = contexto
+    ? `\n\n📄 A MENSAGEM QUE O PASTOR ESTÁ LENDO (é sobre ELA que ele conversa — use como base e NÃO a repita inteira; você comenta, não reescreve):\n"""\n${String(contexto).slice(0, 9000)}\n"""`
+    : '';
+
+  const SYS = `Você é o CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil), num BATE-PAPO com ele.
+
+Nesta conversa quem responde é UM servo só, e a resposta tem que ser FIEL a ele:
+
+${bloco}
+
+📌 COMO RESPONDER:
+- Responda com o CONHECIMENTO e a CONVICÇÃO deste servo — o que ele leu, o que ele enfatiza, o tipo de pergunta que ele faz ao texto, o tipo de aplicação que ele tira.
+- Se o pastor perguntar algo FORA da praia dele, diga com honestidade que aquilo não é o forte deste servo, responda o que dá pela Escritura e sugira ouvir outro servo do Concílio.
+- Na 3ª pessoa: você NÃO finge ser ${nome} e NÃO diz "eu, ${nome}". Você responde NO MÉTODO dele.
+- É CONVERSA: leve em conta o que já foi dito antes, responda direto ao que ele perguntou agora, em prosa pastoral, curto e denso (o pastor lê no celular). Sem cabeçalho com emoji, sem "claro!", sem repetir a pergunta.
+- ⚠️ REGRA DA GRAFIA: palavra do hebraico ou do grego SÓ transliterada em letras latinas (ex.: *tamid*, *chesed*, *dorea*). NÃO escreva no alfabeto hebraico nem no grego — um acento trocado vira erro no púlpito.
+
+⚖️ AUTORIDADE: a Bíblia e a sã doutrina AD (pentecostal clássica). Nada inventado — nem versículo, nem etimologia. Cristo no centro. Em ponto disputado, sinalize com humildade e mande confirmar com a Palavra.${blocoCtx}
+
+${LEI}${fonteK}${fonteW}`;
+
+  const conversa = (Array.isArray(historico) ? historico.slice(-8) : [])
+    .map((m) => ({ role: m && m.role === 'assistant' ? 'assistant' : 'user', content: String((m && m.content) || '').slice(0, 2000) }))
+    .filter((m) => m.content);
+
+  return streamChat(SYS, pergunta, {
+    messages: [...conversa, { role: 'user', content: pergunta }],
+    temperature: 0.5, max_tokens: 2200, tag: 'conversar',
+  });
+}
+
+
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
   if (req.method !== 'POST') return new Response('POST apenas', { status: 405, headers: CORS });
@@ -245,6 +370,22 @@ export default async function handler(req) {
     const pergunta = (b.pergunta || '').toString().trim().slice(0, 500);
     if (!pergunta) return new Response('Escreva a sua pergunta.', { status: 400, headers: CORS });
     return lupaWeb(pergunta, (b.contexto || '').toString(), b.historico);
+  }
+  // REESCREVER — devolve a mensagem INTEIRA já mudada do jeito que o pastor mandou.
+  if (acao === 'reescrever') {
+    const texto = (b.texto || b.mensagem || b.contexto || '').toString().trim();
+    const instrucao = (b.instrucao || b.pedido || b.pergunta || '').toString().trim();
+    if (!texto) return new Response('Não recebi a mensagem que devo reescrever.', { status: 400, headers: CORS });
+    if (!instrucao) return new Response('Diga o que você quer mudar na mensagem.', { status: 400, headers: CORS });
+    const mestre = (b.mestre || b.erudito || '').toString().trim().slice(0, 60);
+    return reescreverStream(texto, instrucao, mestre, _origemDe(req));
+  }
+  // CONVERSAR — bate-papo com UM mestre específico (sem mestre, cai na lupa de hoje).
+  if (acao === 'conversar') {
+    const pergunta = (b.pergunta || '').toString().trim().slice(0, 1000);
+    if (!pergunta) return new Response('Escreva a sua pergunta.', { status: 400, headers: CORS });
+    const mestre = (b.mestre || b.erudito || '').toString().trim().slice(0, 60);
+    return conversarStream(mestre, pergunta, (b.contexto || '').toString(), b.historico, _origemDe(req));
   }
 
   const id = (b.erudito || '').toString().trim().slice(0, 60);
