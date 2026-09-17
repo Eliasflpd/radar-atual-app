@@ -1972,7 +1972,7 @@ html[data-fs="3"] .prl-out{font-size:20px}
     </div>
     <div class="cad-field">
       <label>WhatsApp (com DDD)</label>
-      <input id="cad-fone" type="tel" placeholder="(99) 99999-9999" autocomplete="tel" oninput="mascaraFone(this)" inputmode="numeric">
+      <input id="cad-fone" type="tel" placeholder="(99) 99999-9999" autocomplete="tel" oninput="mascaraFone(this)" inputmode="tel"><div style="font-size:.78rem;color:#6b7a89;margin-top:3px;line-height:1.35">Fora do Brasil? Comece com <b>+</b> e o código do país — ex.: <b>+244</b> (Angola), <b>+1</b> (EUA), <b>+351</b> (Portugal).</div>
     </div>
     <button class="btn-cad" id="btn-cad-enviar" onclick="submitCadastro()">ACESSAR O APP</button>
     <div id="cad-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
@@ -2053,9 +2053,18 @@ function checkAuth(){
   return false;
 }
 
+function foneSoDigitos(s){ return (s||'').replace(/\D/g,''); }
+// aceita numero de fora do Brasil (Angola +244, EUA +1, Portugal +351...)
+// brasileiro digita igual a sempre e continua saindo (99) 99999-9999
 function mascaraFone(el){
-  let v=el.value.replace(/\D/g,'');
-  if(v.length>11)v=v.slice(0,11);
+  var bruto=el.value||'';
+  var v=foneSoDigitos(bruto);
+  var internacional = bruto.trim().charAt(0)==='+' || v.length>11;
+  if(internacional){
+    if(v.length>15) v=v.slice(0,15);          // 15 e o maximo que existe no mundo
+    el.value = v.length ? '+'+v : '';
+    return;
+  }
   if(v.length<=2)el.value=v.length?'('+v:v;
   else if(v.length<=7)el.value='('+v.slice(0,2)+') '+v.slice(2);
   else el.value='('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
@@ -2069,7 +2078,7 @@ async function submitCadastro(){
   err.style.display='none';
   if(!nome){err.textContent='Digite seu nome.';err.style.display='block';document.getElementById('cad-nome').focus();return;}
   if(!cargo){err.textContent='Selecione seu cargo na igreja.';err.style.display='block';return;}
-  if(fone.length<10){err.textContent='WhatsApp inválido. Ex: (99) 99999-9999';err.style.display='block';document.getElementById('cad-fone').focus();return;}
+  if(fone.length<8||fone.length>15){err.textContent='WhatsApp inválido. No Brasil: (99) 99999-9999. Fora do Brasil, use o código do país: +244 923 000 000';err.style.display='block';document.getElementById('cad-fone').focus();return;}
   const btn=document.getElementById('btn-cad-enviar');
   btn.textContent='Entrando...';btn.disabled=true;
   const uid='u_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -2085,7 +2094,7 @@ function salvarNuvem(nome,cargo,fone){
 // "Já cadastrado?" — restaura pelo WhatsApp
 async function jaCadastrado(){
   var fone=prompt('Digite seu WhatsApp (com DDD):'); if(!fone) return;
-  fone=fone.replace(/\D/g,''); if(fone.length<10){ alert('WhatsApp inválido. Ex: (99) 99999-9999'); return; }
+  fone=fone.replace(/\D/g,''); if(fone.length<8||fone.length>15){ alert('WhatsApp inválido.\nBrasil: (99) 99999-9999\nFora do Brasil: com o código do país, ex. 244923000000'); return; }
   try{
     var r=await fetch('/api/cadastros?phone='+fone); var d=await r.json();
     if(d && d.cadastro){
