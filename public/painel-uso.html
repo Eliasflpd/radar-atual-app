@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel de Uso — RADAR</title>
+<link rel="icon" href="/icon-192.png">
+<style>
+:root{
+  --navy:#0f3d5c; --navy2:#17557d; --teal:#0f6d78; --gold:#a9791c; --vinho:#8a1c1c;
+  --tinta:#16324a; --cinza:#5b6b7a; --linha:#e2e8ef; --fundo:#f5f8fb; --branco:#fff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--fundo);color:var(--tinta);
+  font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;overflow-x:hidden}
+body{padding-bottom:26px}
+.wrap{max-width:1680px;margin:0 auto;padding:0 clamp(10px,1.6vw,26px)}
+
+/* ── topo ── */
+.topo{background:linear-gradient(135deg,var(--navy) 0%,var(--teal) 100%);color:#fff;
+  padding:clamp(12px,2vw,20px) 0 clamp(14px,2.2vw,22px);box-shadow:0 2px 14px rgba(15,61,92,.22)}
+.topo-linha{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn-voltar{background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.4);
+  border-radius:11px;padding:9px 14px;font:inherit;font-weight:700;font-size:.88rem;
+  cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0}
+.btn-voltar:active{background:rgba(255,255,255,.3)}
+.topo h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(1.25rem,3.4vw,2rem);
+  margin:0;font-weight:700;letter-spacing:.2px;flex:1;min-width:0}
+.topo .sub{opacity:.9;font-size:clamp(.76rem,1.6vw,.93rem);margin-top:6px}
+.topo .sub b{color:#ffd98a}
+
+/* ── caixas ── */
+.card{background:var(--branco);border:1px solid var(--linha);border-radius:16px;
+  padding:clamp(13px,1.7vw,20px);box-shadow:0 1px 5px rgba(15,61,92,.06)}
+.titulo{font-family:Georgia,serif;color:var(--navy);font-size:clamp(1.02rem,2.1vw,1.32rem);
+  font-weight:700;margin:0 0 3px}
+.legenda{color:var(--cinza);font-size:clamp(.76rem,1.5vw,.88rem);line-height:1.45;margin:0 0 12px}
+
+/* ── a resposta (topo grande) ── */
+.resposta{margin-top:clamp(12px,1.8vw,18px)}
+.veredito{font-family:Georgia,serif;font-size:clamp(1.3rem,3.6vw,2.15rem);font-weight:700;
+  color:var(--navy);line-height:1.22;margin:0 0 4px}
+.veredito .destaque{color:var(--vinho)}
+.veredito-sub{color:var(--cinza);font-size:clamp(.82rem,1.7vw,1rem);line-height:1.5;margin:0}
+
+.numeros{display:grid;gap:clamp(8px,1.1vw,14px);margin-top:clamp(12px,1.6vw,18px);
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.num{background:var(--branco);border:1px solid var(--linha);border-left:5px solid var(--navy);
+  border-radius:14px;padding:clamp(11px,1.5vw,17px);min-width:0}
+.num.t{border-left-color:var(--teal)} .num.g{border-left-color:var(--gold)}
+.num.v{border-left-color:var(--vinho)}
+.num b{display:block;font-family:Georgia,serif;font-size:clamp(1.7rem,4.4vw,2.6rem);
+  line-height:1;color:var(--navy);font-weight:700}
+.num.t b{color:var(--teal)} .num.g b{color:var(--gold)} .num.v b{color:var(--vinho)}
+.num span{display:block;color:var(--cinza);font-size:clamp(.72rem,1.4vw,.85rem);
+  margin-top:7px;line-height:1.35;font-weight:600}
+
+/* ── aviso honesto ── */
+.aviso{border-radius:14px;padding:clamp(11px,1.5vw,16px);margin-top:clamp(11px,1.5vw,16px);
+  font-size:clamp(.79rem,1.5vw,.92rem);line-height:1.55;
+  background:#fff8e8;border:1px solid #edd9a8;border-left:5px solid var(--gold);color:#5f4408}
+.aviso b{color:var(--gold)}
+.aviso.vermelho{background:#fdf0f0;border-color:#efc9c9;border-left-color:var(--vinho);color:#6a1414}
+.aviso.vermelho b{color:var(--vinho)}
+
+/* ── grade principal ── */
+.grade{display:grid;gap:clamp(10px,1.3vw,16px);margin-top:clamp(11px,1.5vw,16px);
+  grid-template-columns:1fr}
+.grade>*{min-width:0;max-width:100%}
+.numeros>*{min-width:0;max-width:100%}
+.grade .cheia{grid-column:1/-1}
+@media(min-width:900px){ .grade{grid-template-columns:1fr 1fr} .grade .larga{grid-column:1/-1} }
+@media(min-width:1400px){ .grade{grid-template-columns:1fr 1fr 1fr} .grade .larga{grid-column:span 2} }
+
+/* ── barras CSS puro ── */
+.barra{margin-bottom:11px}
+.barra:last-child{margin-bottom:0}
+.barra-topo{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  font-size:clamp(.78rem,1.5vw,.9rem);margin-bottom:5px}
+.barra-topo .nome{font-weight:700;color:var(--navy);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;min-width:0;flex:1}
+.barra-topo .val{color:var(--teal);font-weight:800;flex-shrink:0;font-variant-numeric:tabular-nums}
+.trilho{height:11px;background:#eaf0f6;border-radius:99px;overflow:hidden}
+.preenche{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--navy));
+  min-width:4px;transition:width .5s ease}
+.preenche.ouro{background:linear-gradient(90deg,#c99a3a,var(--gold))}
+
+/* ── lista de pessoas ── */
+.busca{width:100%;border:1.5px solid var(--linha);border-radius:11px;padding:10px 13px;
+  font:inherit;font-size:.93rem;margin-bottom:11px;background:#fbfcfe}
+.busca:focus{outline:none;border-color:var(--teal)}
+.pessoas{max-height:min(62vh,620px);overflow-y:auto;overflow-x:hidden;
+  border:1px solid var(--linha);border-radius:12px}
+.pes{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #eef2f6;
+  background:#fff}
+.pes:last-child{border-bottom:none}
+.pes:nth-child(even){background:#fafcfe}
+.pes .av{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-weight:800;color:#fff;font-size:.9rem;background:var(--navy)}
+.pes .meio{flex:1;min-width:0}
+.pes .nm{font-weight:700;color:var(--navy);font-size:clamp(.85rem,1.6vw,.95rem);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pes .det{color:var(--cinza);font-size:clamp(.7rem,1.4vw,.8rem);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pes .lado{text-align:right;flex-shrink:0;font-size:clamp(.68rem,1.35vw,.78rem);line-height:1.4}
+.tag{display:inline-block;border-radius:99px;padding:2px 9px;font-weight:800;
+  font-size:clamp(.63rem,1.25vw,.72rem);white-space:nowrap}
+.tag.ok{background:#e4f4f1;color:#0b5c53}
+.tag.sumiu{background:#fdeaea;color:var(--vinho)}
+.tag.nada{background:#f0f3f7;color:#6b7a89}
+/* no celular o nome ganha a linha inteira e o status desce pra baixo */
+@media(max-width:600px){
+  .pes{display:grid;grid-template-columns:38px minmax(0,1fr);
+    grid-template-areas:'av meio' 'lado lado';gap:5px 10px;align-items:center}
+  .pes .av{grid-area:av} .pes .meio{grid-area:meio}
+  .pes .lado{grid-area:lado;text-align:left;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pes .lado>div{margin-top:0 !important}
+}
+
+/* ── cargos ── */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:#eef4f9;border:1px solid #d8e5f0;color:var(--navy);border-radius:99px;
+  padding:6px 12px;font-size:clamp(.74rem,1.45vw,.85rem);font-weight:600}
+.chip b{color:var(--teal);font-weight:800}
+
+/* ── copiar ── */
+.resumo-txt{width:100%;min-height:150px;border:1.5px solid var(--linha);border-radius:12px;
+  padding:12px;font:inherit;font-size:.84rem;line-height:1.55;background:#fbfcfe;color:var(--tinta);
+  resize:vertical;white-space:pre-wrap}
+.btn{border:none;border-radius:12px;padding:12px 16px;font:inherit;font-weight:800;
+  cursor:pointer;font-size:.92rem;color:#fff;background:var(--teal);width:100%;margin-top:9px;
+  display:block;text-align:center}
+.btn:active{filter:brightness(.92)}
+.btn.navy{background:var(--navy)} .btn.ouro{background:var(--gold)}
+@media(min-width:760px){
+  .card.cheia .btn{width:auto;min-width:250px;display:inline-block;margin-right:10px}
+}
+
+/* ── porta (token) ── */
+#porta{position:fixed;inset:0;background:linear-gradient(135deg,var(--navy),var(--teal));
+  display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
+.porta-cx{background:#fff;border-radius:18px;padding:26px 22px;max-width:370px;width:100%;
+  text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.28)}
+.porta-cx h2{font-family:Georgia,serif;color:var(--navy);margin:8px 0 4px;font-size:1.25rem}
+.porta-cx p{color:var(--cinza);font-size:.86rem;margin:0 0 15px}
+.porta-cx input{width:100%;border:1.6px solid #dbe6f2;border-radius:12px;padding:13px;
+  text-align:center;font:inherit;font-size:1rem}
+#porta-erro{color:var(--vinho);font-weight:700;font-size:.85rem;margin-top:9px;min-height:18px}
+.carregando{text-align:center;color:var(--cinza);padding:34px;font-size:.95rem}
+.vazio{color:var(--cinza);font-size:.85rem;line-height:1.5;padding:6px 0}
+</style>
+</head>
+<body>
+
+<!-- ══ PORTA ══ -->
+<div id="porta">
+  <div class="porta-cx">
+    <div style="font-size:42px">🔒</div>
+    <h2>Painel de Uso</h2>
+    <p>Só o pastor entra aqui. Digite a senha de administrador.</p>
+    <input id="porta-token" type="password" placeholder="Senha admin" autocomplete="current-password">
+    <button class="btn navy" onclick="entrar()">Entrar</button>
+    <div id="porta-erro"></div>
+  </div>
+</div>
+
+<!-- ══ TOPO ══ -->
+<header class="topo">
+  <div class="wrap topo-linha">
+    <a class="btn-voltar" href="/">← Início</a>
+    <h1>Painel de Uso — RADAR</h1>
+  </div>
+  <div class="wrap"><div class="sub" id="topo-sub">Carregando…</div></div>
+</header>
+
+<div class="wrap" id="corpo">
+  <div class="carregando">Buscando no banco…</div>
+</div>
+
+<script>
+var D=null;
+
+/* ── helpers ── */
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function dt(v){ if(!v) return '—'; var d=new Date(v); if(isNaN(d)) return '—';
+  return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear(); }
+function pct(a,b){ return b>0?Math.round(a*100/b):0; }
+function ini(n){ var p=String(n||'?').trim().split(/\s+/);
+  return ((p[0]||'?')[0]+((p[1]||'')[0]||'')).toUpperCase(); }
+function tempo(min){ if(!min) return '0 min';
+  if(min<60) return min+' min'; var h=Math.floor(min/60); return h+'h'+('0'+(min%60)).slice(-2); }
+
+/* ── porta ── */
+function entrar(){
+  var t=document.getElementById('porta-token').value.trim();
+  if(!t){ return; }
+  document.getElementById('porta-erro').textContent='Conferindo…';
+  carregar(t,true);
+}
+document.getElementById('porta-token').addEventListener('keydown',function(e){
+  if(e.key==='Enter') entrar(); });
+
+function carregar(token,daPorta){
+  fetch('/api/dados?fn=painel&token='+encodeURIComponent(token))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !d.ok){
+        if(daPorta){ document.getElementById('porta-erro').textContent =
+          (d && d.err==='token') ? 'Senha incorreta.' : 'Erro: '+((d&&d.err)||'sem resposta'); }
+        else { localStorage.removeItem('radar_adm'); document.getElementById('porta').style.display='flex';
+               document.getElementById('porta-erro').textContent='Senha expirou. Digite de novo.'; }
+        return;
+      }
+      localStorage.setItem('radar_adm',token);
+      document.getElementById('porta').style.display='none';
+      D=d; desenhar();
+    })
+    .catch(function(){
+      if(daPorta) document.getElementById('porta-erro').textContent='Sem conexão com o servidor.';
+      else document.getElementById('corpo').innerHTML=
+        '<div class="carregando">Sem conexão com o servidor.</div>';
+    });
+}
+
+/* ══ DESENHO ══ */
+function desenhar(){
+  var R=D.resumo, P=D.pessoas||[], T=D.telas||[], C=D.contadores||[];
+  var n=R.cadastrados;
+
+  document.getElementById('topo-sub').innerHTML =
+    '<b>'+n+' pessoas cadastradas</b> — de '+dt(R.primeiro_cadastro)+' a '+dt(R.ultimo_cadastro)+
+    ' · atualizado agora ('+dt(D.gerado_em)+')';
+
+  var h='';
+
+  /* ── 1. A RESPOSTA ── */
+  var temSinal = R.ativos30>0;
+  var v7 = R.ativos7===1 ? 'voltou' : 'voltaram';
+  var v30 = R.ativos30===1 ? 'teve' : 'tiveram';
+  var veredito, vsub;
+  if(D.sem_dados && !temSinal){
+    veredito='Ainda <span class="destaque">não dá pra dizer</span> se está sendo usado.';
+    vsub='O app ainda não media o tempo de cada pessoa. O que temos hoje são os cadastros e '
+       + 'pouquíssimos rastros de uso. A partir de agora o marcador começa a registrar.';
+  } else if(R.ativos7===0){
+    veredito='Está sendo usado, mas <span class="destaque">ninguém voltou nos últimos 7 dias</span>.';
+    vsub=R.ativos30+' de '+n+' '+v30+' algum sinal de uso nos últimos 30 dias.';
+  } else {
+    veredito='<span style="color:var(--teal)">'+R.ativos7+' de '+n+'</span> '+v7
+           + ' nos últimos 7 dias.';
+    vsub=R.ativos30+' de '+n+' '+v30+' algum sinal de uso nos últimos 30 dias · '
+       + R.nunca_usaram+' ainda não deixaram nenhum rastro.';
+  }
+
+  h+='<div class="card resposta">'
+   +  '<p class="veredito">'+veredito+'</p>'
+   +  '<p class="veredito-sub">'+vsub+'</p>'
+   +  '<div class="numeros">'
+   +    '<div class="num"><b>'+n+'</b><span>pessoas cadastradas</span></div>'
+   +    '<div class="num t"><b>'+R.ativos7+'</b><span>'+v7+' nos últimos 7 dias</span></div>'
+   +    '<div class="num g"><b>'+R.ativos30+'</b><span>com algum sinal em 30 dias</span></div>'
+   +    '<div class="num v"><b>'+R.nunca_usaram+'</b><span>sem nenhum rastro ainda</span></div>'
+   +    (R.minutos_total
+        ? '<div class="num t"><b>'+tempo(R.minutos_total).replace(' min','<small style="font-size:.4em"> min</small>')
+          + '</b><span>tempo total medido no app</span></div>' : '')
+   +  '</div>'
+   +'</div>';
+
+  /* ── 2. O NÚMERO QUE DÓI ── */
+  var pLe=pct(R.leram_capitulo,n), pAu=pct(R.viram_aula,n);
+  h+='<div class="aviso vermelho"><b>A verdade nua:</b> só <b>'+R.leram_capitulo+' de '+n
+   + '</b> ('+pLe+'%) '+(R.leram_capitulo===1?'marcou':'marcaram')+' um capítulo lido na Bíblia'
+   + ', e <b>'+R.viram_aula+' de '+n+'</b> ('+pAu+'%) '
+   + (R.viram_aula===1?'aparece':'aparecem')+' assistindo aula de curso '
+   + 'pelo próprio cadastro. Cadastrar é fácil; voltar é que é difícil.';
+  if(D.curso_global && D.curso_global.perfis){
+    h+=' <span style="opacity:.85">(No curso há '+D.curso_global.perfis+' perfil(s) de aparelho com '
+     + D.curso_global.aulas_vistas+' aula(s) vista(s), mas o curso grava por aparelho, não pelo '
+     + 'WhatsApp — por isso nem sempre dá pra dizer quem foi.)</span>';
+  }
+  h+='</div>';
+
+  /* ── 3. AVISO DO MARCADOR ── */
+  if(D.sem_dados){
+    h+='<div class="aviso"><b>O marcador de tempo foi ligado agora.</b> '
+     + (D.marcador && D.marcador.motivo ? esc(D.marcador.motivo)+' ' : '')
+     + 'Por isso as colunas de <b>tempo de tela</b>, <b>onde ficaram mais</b> e <b>o que gostaram</b> '
+     + 'ainda estão vazias — não vou desenhar gráfico de mentira. Estes números começam a encher '
+     + 'a partir de agora, conforme as pessoas forem abrindo o app.</div>';
+  } else {
+    h+='<div class="aviso"><b>Como ler o tempo:</b> o marcador começou a registrar em '
+     + dt(D.gerado_em)+'. Foram <b>'+tempo(R.minutos_total)+'</b> de tela medidos até agora, '
+     + 'em '+R.telas_medidas+' tela(s) diferentes. Tudo que estiver antes disso não foi medido — '
+     + 'e por isso não aparece.</div>';
+  }
+  if(R.anonimos){
+    h+='<div class="aviso"><b>'+R.anonimos+' aparelho(s) usando sem cadastro.</b> '
+     + 'Somaram '+tempo(R.anonimos_minutos)+' de tela, mas abriram o app sem estar ligados a '
+     + 'um nome da lista (visitante, aparelho novo ou quem ainda não colocou o WhatsApp). '
+     + 'Esse tempo entra nos totais gerais, mas não consigo dizer de quem é.</div>';
+  }
+
+  /* ── 4. GRADE ── */
+  h+='<div class="grade">';
+
+  /* 4a. ONDE FICARAM MAIS */
+  h+='<div class="card"><h2 class="titulo">Onde ficaram mais</h2>'
+   + '<p class="legenda">Ranking por <b>tempo de tela</b> — não por clique. Mostra o que realmente prendeu a atenção.</p>';
+  if(T.length){
+    var porTela={};
+    T.forEach(function(t){ porTela[t.tela]=(porTela[t.tela]||0)+(t.minutos||0); });
+    var lista=Object.keys(porTela).map(function(k){return {tela:k,min:porTela[k]};})
+      .sort(function(a,b){return b.min-a.min;}).slice(0,12);
+    var topo=lista.length?Math.max(lista[0].min,1):1;
+    lista.forEach(function(t){
+      h+='<div class="barra"><div class="barra-topo"><span class="nome">'+esc(nomeTela(t.tela))
+       + '</span><span class="val">'+tempo(t.min)+'</span></div>'
+       + '<div class="trilho"><div class="preenche" style="width:'+Math.max(2,pct(t.min,topo))+'%"></div></div></div>';
+    });
+  } else {
+    h+='<div class="vazio">Sem nenhum minuto medido ainda. O marcador acabou de ser ligado — '
+     + 'volte aqui depois que a galera abrir o app.</div>';
+  }
+  h+='</div>';
+
+  /* 4b. O QUE GOSTARAM */
+  h+='<div class="card"><h2 class="titulo">O que gostaram 👍</h2>'
+   + '<p class="legenda">Só entra aqui o que alguém marcou com o joinha dentro do app.</p>';
+  var gost=T.filter(function(t){return (t.gostaram||0)>0;})
+            .sort(function(a,b){return b.gostaram-a.gostaram;}).slice(0,10);
+  if(gost.length){
+    var tg=Math.max(gost[0].gostaram,1);
+    gost.forEach(function(t){
+      h+='<div class="barra"><div class="barra-topo"><span class="nome">'
+       + esc(t.rotulo||nomeTela(t.tela))+'</span><span class="val">'+t.gostaram+' 👍'
+       + ((t.nao_gostaram||0)?(' · '+t.nao_gostaram+' 👎'):'')+'</span></div>'
+       + '<div class="trilho"><div class="preenche ouro" style="width:'+Math.max(2,pct(t.gostaram,tg))+'%"></div></div></div>';
+    });
+  } else {
+    h+='<div class="vazio">Ninguém deu joinha ainda. Quando alguém marcar, aparece aqui — '
+     + 'e não vou inventar nenhum antes disso.</div>';
+  }
+  h+='</div>';
+
+  /* 4c. CONTADORES ANTIGOS (dado REAL que já existe) */
+  h+='<div class="card"><h2 class="titulo">Contador antigo do app</h2>'
+   + '<p class="legenda">Este contador é <b>global e anônimo</b>: ele conta aberturas, '
+   + 'mas <b>não</b> diz quem abriu. É o único número de uso que já existia antes de hoje.</p>';
+  var cts=C.filter(function(x){return !/^teste/i.test(x.chave);});
+  if(cts.length){
+    var tc=Math.max(cts[0].views,1);
+    cts.slice(0,12).forEach(function(x){
+      h+='<div class="barra"><div class="barra-topo"><span class="nome">'+esc(nomeTela(x.chave))
+       + '</span><span class="val">'+x.views+' aberturas</span></div>'
+       + '<div class="trilho"><div class="preenche" style="width:'+Math.max(2,pct(x.views,tc))+'%"></div></div>'
+       + '<div style="font-size:.7rem;color:var(--cinza);margin-top:3px">última vez: '+dt(x.ultimo)+'</div></div>';
+    });
+  } else { h+='<div class="vazio">Nenhum contador registrado.</div>'; }
+  h+='</div>';
+
+  /* 4d. CARGOS */
+  h+='<div class="card"><h2 class="titulo">Quem são eles</h2>'
+   + '<p class="legenda">Cargo que cada um informou no cadastro.</p><div class="chips">';
+  (D.cargos||[]).forEach(function(c){
+    h+='<span class="chip">'+esc(c.cargo)+' <b>'+c.n+'</b></span>'; });
+  h+='</div></div>';
+
+  /* 4e. PESSOAS */
+  h+='<div class="card larga"><h2 class="titulo">As '+n+' pessoas cadastradas</h2>'
+   + '<p class="legenda">Quem entrou, quando entrou e qual foi o último sinal de vida dentro do app. '
+   + 'Quem está há mais de 15 dias sem aparecer fica marcado de vermelho.</p>'
+   + '<input class="busca" id="busca" placeholder="🔎 Procurar por nome, cargo ou telefone…" oninput="filtrar()">'
+   + '<div class="pessoas" id="lista"></div></div>';
+
+  /* 4f. COPIAR */
+  h+='<div class="card cheia"><h2 class="titulo">Resumo pra mandar no WhatsApp</h2>'
+   + '<p class="legenda">Toque em copiar e cole na conversa.</p>'
+   + '<textarea class="resumo-txt" id="resumo" readonly></textarea>'
+   + '<button class="btn ouro" onclick="copiar()" id="btn-copiar">📋 Copiar resumo</button>'
+   + '<a class="btn navy" href="/" style="text-align:center;text-decoration:none">← Voltar ao Início</a>'
+   + '</div>';
+
+  h+='</div>'; /* /grade */
+
+  document.getElementById('corpo').innerHTML=h;
+  desenharPessoas(P);
+  document.getElementById('resumo').value=montarResumo();
+}
+
+function nomeTela(k){
+  var M={home:'Início',biblia:'Bíblia',harpa:'Harpa',mensagem:'Mensagens para pregar',
+    estudo:'Meu Estudo',curso:'Cursos em vídeo',concilio:'Concílio dos Expositores',
+    ebd:'EBD — Escola Bíblica',quiz:'Quiz bíblico',historinhas:'Historinhas',
+    manuais:'Manuais',outro:'Outros',desafiomateus:'Desafio Mateus',templo:'Templo'};
+  return M[k]||k;
+}
+
+function desenharPessoas(P){
+  var box=document.getElementById('lista'); if(!box) return;
+  if(!P.length){ box.innerHTML='<div class="vazio" style="padding:14px">Ninguém cadastrado.</div>'; return; }
+  var h='';
+  P.forEach(function(p){
+    var tag, det;
+    if(p.ultima_visita){
+      var d=p.dias_sumido;
+      tag = d>15 ? '<span class="tag sumiu">sumiu há '+d+' dias</span>'
+                 : '<span class="tag ok">'+(d<=1?'apareceu hoje':'há '+d+' dias')+'</span>';
+      det = 'último sinal: '+dt(p.ultima_visita);
+    } else {
+      tag='<span class="tag nada">sem rastro</span>';
+      det='nenhum sinal de uso registrado';
+    }
+    var extra=[];
+    if(p.minutos) extra.push(tempo(p.minutos)+' no app');
+    if(p.capitulos_lidos) extra.push(p.capitulos_lidos+' cap. lidos');
+    if(p.aulas_vistas) extra.push(p.aulas_vistas+' aulas');
+    h+='<div class="pes" data-b="'+esc((p.nome+' '+p.cargo+' '+p.whatsapp).toLowerCase())+'">'
+     + '<div class="av">'+esc(ini(p.nome))+'</div>'
+     + '<div class="meio"><div class="nm">'+esc(p.nome)+'</div>'
+     + '<div class="det">'+esc(p.cargo||'—')+' · entrou '+dt(p.criado_em)
+     + (extra.length?(' · '+esc(extra.join(' · '))):'')+'</div></div>'
+     + '<div class="lado">'+tag+'<div style="color:var(--cinza);margin-top:3px">'+esc(det)+'</div></div>'
+     + '</div>';
+  });
+  box.innerHTML=h;
+}
+
+function filtrar(){
+  var t=(document.getElementById('busca').value||'').toLowerCase().trim();
+  var it=document.querySelectorAll('#lista .pes');
+  for(var i=0;i<it.length;i++){
+    it[i].style.display = (!t || it[i].getAttribute('data-b').indexOf(t)>=0) ? '' : 'none';
+  }
+}
+
+function montarResumo(){
+  var R=D.resumo, n=R.cadastrados, L=[];
+  L.push('📊 RADAR — como está o uso ('+dt(D.gerado_em)+')');
+  L.push('');
+  L.push('👥 '+n+' pessoas cadastradas (de '+dt(R.primeiro_cadastro)+' a '+dt(R.ultimo_cadastro)+')');
+  L.push('🔁 '+R.ativos7+(R.ativos7===1?' voltou':' voltaram')+' nos últimos 7 dias');
+  L.push('📅 '+R.ativos30+(R.ativos30===1?' teve':' tiveram')+' algum sinal nos últimos 30 dias');
+  L.push('🕳️ '+R.nunca_usaram+' ainda não deixaram nenhum rastro');
+  L.push('');
+  L.push('📖 Só '+R.leram_capitulo+' de '+n+' ('+pct(R.leram_capitulo,n)+'%) '
+       + (R.leram_capitulo===1?'marcou':'marcaram')+' capítulo lido');
+  L.push('🎥 Só '+R.viram_aula+' de '+n+' ('+pct(R.viram_aula,n)+'%) '
+       + (R.viram_aula===1?'aparece':'aparecem')+' em aula de curso pelo cadastro');
+  L.push('');
+  (D.cargos||[]).forEach(function(c){ L.push('• '+c.cargo+': '+c.n); });
+  var cts=(D.contadores||[]).filter(function(x){return !/^teste/i.test(x.chave);});
+  if(cts.length){
+    L.push(''); L.push('📲 Contador do app (global e anônimo):');
+    cts.slice(0,6).forEach(function(x){ L.push('• '+nomeTela(x.chave)+': '+x.views+' aberturas'); });
+  }
+  if(D.sem_dados){
+    L.push('');
+    L.push('⏱️ O marcador de tempo de tela foi ligado hoje. Os números de "quanto tempo" e '
+         + '"onde ficaram mais" começam a encher a partir de agora.');
+  } else {
+    L.push(''); L.push('⏱️ Tempo total medido: '+tempo(R.minutos_total)+' em '+R.telas_medidas+' tela(s).');
+  }
+  if(R.anonimos){
+    L.push('👤 '+R.anonimos+' aparelho(s) usaram sem cadastro ('+tempo(R.anonimos_minutos)+').');
+  }
+  return L.join('\n');
+}
+
+function copiar(){
+  var ta=document.getElementById('resumo'), b=document.getElementById('btn-copiar');
+  function ok(){ b.textContent='✅ Copiado!'; setTimeout(function(){ b.textContent='📋 Copiar resumo'; },1800); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(ok).catch(function(){ manual(); });
+  } else manual();
+  function manual(){ ta.removeAttribute('readonly'); ta.select(); ta.setSelectionRange(0,999999);
+    try{ document.execCommand('copy'); ok(); }catch(e){ b.textContent='Selecione e copie'; }
+    ta.setAttribute('readonly','readonly'); }
+}
+
+/* ── entrada ── */
+(function(){
+  var t=localStorage.getItem('radar_adm');
+  if(t){ document.getElementById('porta').style.display='none'; carregar(t,false); }
+})();
+</script>
+</body>
+</html>

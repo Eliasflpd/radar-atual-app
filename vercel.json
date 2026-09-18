@@ -9,6 +9,7 @@
     { "source": "/api/manual",   "destination": "/api/dados?fn=manual" },
     { "source": "/api/leitura",  "destination": "/api/dados?fn=leitura" },
     { "source": "/api/publicacoes", "destination": "/api/dados?fn=publicacoes" },
+    { "source": "/api/painel",   "destination": "/api/dados?fn=painel" },
     { "source": "/api/peca",     "destination": "/api/edge?fn=peca" },
     { "source": "/api/perolas",  "destination": "/api/edge?fn=perolas" },
     { "source": "/api/mensagem", "destination": "/api/edge?fn=mensagem" },
