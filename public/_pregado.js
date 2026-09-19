@@ -115,13 +115,23 @@
       });
     }
   });
-  var NOME_LIVRO = {};
-  BASE.concat([['1sm','1 Samuel'],['2sm','2 Samuel'],['1rs','1 Reis'],['2rs','2 Reis'],
-    ['1cr','1 Crônicas'],['2cr','2 Crônicas'],['1co','1 Coríntios'],['2co','2 Coríntios'],
-    ['1ts','1 Tessalonicenses'],['2ts','2 Tessalonicenses'],['1tm','1 Timóteo'],['2tm','2 Timóteo'],
-    ['1pe','1 Pedro'],['2pe','2 Pedro'],['1jo','1 João'],['2jo','2 João'],['3jo','3 João']])
-    .forEach(function(p){ if(!NOME_LIVRO[p[0]]) NOME_LIVRO[p[0]] = p[1].charAt(0).toUpperCase()+p[1].slice(1); });
-  NOME_LIVRO['job']='Jó'; NOME_LIVRO['jo']='João'; NOME_LIVRO['sl']='Salmos'; NOME_LIVRO['ct']='Cânticos';
+  // o nome que o pastor lê na tela — escrito certo, com acento
+  var NOME_LIVRO = {
+    gn:'Gênesis', ex:'Êxodo', lv:'Levítico', nm:'Números', dt:'Deuteronômio',
+    js:'Josué', jz:'Juízes', rt:'Rute', '1sm':'1 Samuel', '2sm':'2 Samuel',
+    '1rs':'1 Reis', '2rs':'2 Reis', '1cr':'1 Crônicas', '2cr':'2 Crônicas',
+    ed:'Esdras', ne:'Neemias', et:'Ester', job:'Jó', sl:'Salmos', pv:'Provérbios',
+    ec:'Eclesiastes', ct:'Cânticos', is:'Isaías', jr:'Jeremias', lm:'Lamentações',
+    ez:'Ezequiel', dn:'Daniel', os:'Oseias', jl:'Joel', am:'Amós', ob:'Obadias',
+    jn:'Jonas', mq:'Miqueias', na:'Naum', hc:'Habacuque', sf:'Sofonias',
+    ag:'Ageu', zc:'Zacarias', ml:'Malaquias',
+    mt:'Mateus', mc:'Marcos', lc:'Lucas', jo:'João', at:'Atos', rm:'Romanos',
+    '1co':'1 Coríntios', '2co':'2 Coríntios', gl:'Gálatas', ef:'Efésios',
+    fp:'Filipenses', cl:'Colossenses', '1ts':'1 Tessalonicenses', '2ts':'2 Tessalonicenses',
+    '1tm':'1 Timóteo', '2tm':'2 Timóteo', tt:'Tito', fm:'Filemom', hb:'Hebreus',
+    tg:'Tiago', '1pe':'1 Pedro', '2pe':'2 Pedro', '1jo':'1 João', '2jo':'2 João',
+    '3jo':'3 João', jd:'Judas', ap:'Apocalipse'
+  };
 
   /* referência escrita -> chaves "gn 28" (e "gn" quando não tem capítulo) */
   function chavesDaRef(txt){
@@ -710,6 +720,10 @@
     apagar: apagar,
     painel: painel,
     peca: lerPeca,
+    // serve pra conferir o aviso sem abrir tela (scripts de prova) e pra outra
+    // página montar a faixa por conta própria
+    confronto: confrontar,
+    avisoHTML: function(peca, sem){ return faixaHTML(peca, confrontar(peca, REGISTROS||[]), sem); },
     checar: function(texto){
       var p = { slug:'', titulo:texto, ref:texto, chaves:chavesDaRef(texto), palavras:palavrasFortes(texto) };
       return carregar().then(function(l){ return confrontar(p, l); });
