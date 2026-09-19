@@ -21,7 +21,7 @@ export const config = { runtime: 'edge' };
 import { iaTexto, iaStreamTexto } from './ia.js';
 // A máquina de CITAR A FONTE é uma só pro Concílio inteiro (marcador [F#] → fonte real,
 // mais a conferência anti-invenção). Mora no concilio.js, que é o dono da lista de obras.
-import { blocoDeFontes, trocarFontes, conferirFontes, fluxoComFontes } from './concilio.js';
+import { blocoDeFontes, trocarFontes, conferirFontes, fluxoComFontes, rodapeConsultado } from './concilio.js';
 
 import CORPUS from './wagner-corpus.js';
 
@@ -276,9 +276,11 @@ function montarPrompt(pergunta, ctx) {
   // DE ONDE VEM: o bloco que ensina a apontar a fonte com marcador. É o mesmo do resto
   // do Concílio — a IA APONTA, o servidor ESCREVE a fonte. Assim não existe aula
   // inventada, minuto inventado nem pérola inventada.
-  const sys = METODO + '\n\n' + blocoDeFontes('F', ctx.rotulos,
+  // A ordem importa: o bloco de CITAR A FONTE vai por ÚLTIMO, depois do FORMATO.
+  // Colocado antes, os modelos rápidos da cascata seguiam o formato e esqueciam a fonte.
+  const sys = METODO + '\n\n' + FORMATO + blocoDeFontes('F', ctx.rotulos,
     'Estes são os pedaços do acervo do PRÓPRIO Dr. Wagner que casaram com a pergunta — aulas do Instituto GIOM e o Caderno de Pérolas. Cada pedaço do MATERIAL DE APOIO abaixo vem com o seu marcador:',
-    'aplicando o método do Dr. Wagner') + '\n\n' + FORMATO;
+    'aplicando o método do Dr. Wagner');
   const user =
     (ctx.texto
       ? `MATERIAL DE APOIO — trechos do garimpo do próprio Dr. Wagner (Caderno de Pérolas, tipologias catalogadas e transcrição das aulas), selecionados pela pergunta.
@@ -290,7 +292,10 @@ ${ctx.texto}
 
 `
       : 'OBSERVAÇÃO: não encontrei nada no material das aulas sobre isso. Responda pelo método, com a Escritura, e AVISE ao pastor que o assunto não aparece no material do Dr. Wagner que temos aqui.\n\n') +
-    'PERGUNTA DO PASTOR: ' + pergunta;
+    'PERGUNTA DO PASTOR: ' + pergunta +
+    (ctx.rotulos && ctx.rotulos.length
+      ? `\n\nANTES DE MANDAR: confira se você pôs pelo menos UM marcador de fonte ([F1] … [F${ctx.rotulos.length}]) no fim da frase que ele sustenta. Sem marcador, o pastor não sabe de onde veio — e é isso que estamos consertando. Não escreva o nome da aula: só o marcador.`
+      : '');
   return { sys, user };
 }
 
@@ -404,7 +409,7 @@ export async function wagnerStream(passagem, ordemDoTipo) {
       'X-IA-Modelo': String(r.modelo || '?'),
       'Access-Control-Expose-Headers': 'X-IA-Provedor, X-IA-Modelo',
     },
-  }), ctx.rotulos);
+  }), ctx.rotulos, rodapeConsultado(ctx.rotulos));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -467,6 +472,9 @@ export default async function handler(req) {
   // DE ONDE VEM: marcador → fonte real. O que não estiver na lista é apagado e contado.
   const tr = trocarFontes(resposta, ctx.rotulos);
   resposta = tr.texto;
+  // Piso: a resposta nunca sai muda sobre a origem. Se nada foi apontado, mostramos o
+  // que foi ABERTO no acervo — que é verdade conferível, e não citação de afirmação.
+  if (!tr.usadas.length) resposta += rodapeConsultado(ctx.rotulos);
   if (quadro) { // o quadro também pode ter marcador dentro dos itens
     for (const k of ['titulo', 'ponte', 'conta', 'provaReal', 'ordem']) {
       if (typeof quadro[k] === 'string') quadro[k] = trocarFontes(quadro[k], ctx.rotulos).texto;

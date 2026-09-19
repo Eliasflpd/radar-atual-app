@@ -95,8 +95,10 @@ ${lista}
 
 COMO CITAR (leia devagar):
 • Depois de uma afirmação de peso que venha de um desses itens, escreva SÓ o marcador, colado no fim da frase: [${letra}1]. Nada além do marcador.
+• EXEMPLO do jeito CERTO:  "A figura só fecha porque a função é a mesma, e não a imagem. [${letra}1]"
+  EXEMPLO do jeito ERRADO: "Como se vê na obra tal, página 42, ele afirma que…"  ← inventado, proibido.
 • NÃO escreva o nome da obra/aula você mesmo. O sistema troca o marcador pela fonte real. Se você escrever de cabeça, vira invenção.
-• Use no máximo 4 marcadores na resposta inteira. Marcador é para o que sustenta, não para enfeitar.
+• 📌 OBRIGATÓRIO: a resposta tem que sair com PELO MENOS UM marcador — e no máximo 4. Marcador é para o que sustenta, não para enfeitar. Escolha o item da lista que realmente sustenta o seu ponto mais forte e marque ali.
 
 ⛔ PROIBIDO (isto é pior do que não citar):
 • Inventar obra, aula, capítulo, página, ano, tomo, edição ou "minuto tal". Se não está na lista acima, não existe.
@@ -151,14 +153,19 @@ export function conferirFontes(texto, inventados) {
  * Segura um rabo de até 8 caracteres porque o marcador pode chegar partido entre
  * dois pedaços do stream — sem isso, "[O" e "2]" sairiam crus na tela do pastor.
  */
-export function fluxoComFontes(resp, rotulos) {
+export function fluxoComFontes(resp, rotulos, rodapeSeVazio) {
   if (!resp || !resp.body || !rotulos || !rotulos.length) return resp;
   const enc = new TextEncoder(), dec = new TextDecoder();
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   (async () => {
     const reader = resp.body.getReader();
-    let buf = '';
+    let buf = '', citou = false;
+    const solta = async (pedaco) => {
+      const t = trocarFontes(pedaco, rotulos);
+      if (t.usadas.length) citou = true;
+      await writer.write(enc.encode(t.texto));
+    };
     try {
       for (;;) {
         const { done, value } = await reader.read();
@@ -167,13 +174,27 @@ export function fluxoComFontes(resp, rotulos) {
         let corte = buf.length;
         const i = Math.max(buf.lastIndexOf('['), buf.lastIndexOf('【'));
         if (i >= 0 && buf.length - i <= 8 && !/[\]】]/.test(buf.slice(i))) corte = i;
-        if (corte > 0) { await writer.write(enc.encode(trocarFontes(buf.slice(0, corte), rotulos).texto)); buf = buf.slice(corte); }
+        if (corte > 0) { await solta(buf.slice(0, corte)); buf = buf.slice(corte); }
       }
-      if (buf) await writer.write(enc.encode(trocarFontes(buf, rotulos).texto));
+      if (buf) await solta(buf);
+      // Piso de transparência: se a IA não marcou nada, o pastor ainda vê o que foi
+      // consultado. Não dizemos "isto sustenta a afirmação X" — dizemos o que entrou
+      // na mesa, que é a verdade conferível.
+      if (!citou && rodapeSeVazio) await writer.write(enc.encode(rodapeSeVazio));
     } catch (_) {}
     try { await writer.close(); } catch (_) {}
   })();
   return new Response(readable, { status: resp.status, headers: resp.headers });
+}
+
+// O rodapé honesto: o que foi aberto no acervo pra responder. Vale quando a IA não
+// apontou nada — melhor "consultei isto" do que a tela muda sobre a origem.
+export function rodapeConsultado(rotulos) {
+  // sem repetir: vários pedaços do mesmo bloco de tipologias dariam a mesma etiqueta
+  const tres = [...new Set(rotulos || [])].slice(0, 3);
+  if (!tres.length) return '';
+  return '\n\n📚 CONSULTADO NO ACERVO: ' + tres.map((r) => `(📚 ${r})`).join(' ')
+    + '\nEstas são as fontes que foram abertas para responder — não uma citação palavra por palavra.';
 }
 
 // Os rótulos de UM mestre: "João Calvino, Institutas da Religião Cristã".
@@ -521,14 +542,18 @@ ${bloco}
 
 ⚖️ AUTORIDADE: a Bíblia e a sã doutrina AD (pentecostal clássica). Nada inventado — nem versículo, nem etimologia. Cristo no centro. Em ponto disputado, sinalize com humildade e mande confirmar com a Palavra.${blocoCtx}
 
-${LEI}${fontes}${fonteK}${fonteW}`;
+${LEI}${fonteK}${fonteW}${fontes}`;
 
   const conversa = (Array.isArray(historico) ? historico.slice(-8) : [])
     .map((m) => ({ role: m && m.role === 'assistant' ? 'assistant' : 'user', content: String((m && m.content) || '').slice(0, 2000) }))
     .filter((m) => m.content);
 
-  return fluxoComFontes(await streamChat(SYS, pergunta, {
-    messages: [...conversa, { role: 'user', content: pergunta }],
+  const perguntaFinal = pergunta + (rotulos.length
+    ? `\n\n(ANTES DE MANDAR: ponha pelo menos UM marcador de fonte no fim da frase que ele sustenta — só o marcador, do jeito que foi explicado. Se nada da lista sustentar, escreva "aplicando o método de ${nome}".)`
+    : '');
+
+  return fluxoComFontes(await streamChat(SYS, perguntaFinal, {
+    messages: [...conversa, { role: 'user', content: perguntaFinal }],
     temperature: 0.5, max_tokens: 2200, tag: 'conversar',
   }), rotulos);
 }
@@ -621,11 +646,14 @@ Sua tarefa nesta resposta é forjar um texto NOVO usando o MÉTODO de um servo e
 
 Escreva do jeito que ELE cavaria o texto — o olhar dele, as perguntas dele, a ênfase dele, o tipo de aplicação dele. Se o método dele for grego e estrutura, faça isso. Se for calor pastoral e frase que gruda, faça isso. Se for pano de fundo judaico, faça isso.${filtro}
 
-${LEI}${fontes}
+${LEI}
 
-FORMATO: use os cabeçalhos com emoji exatamente como pedidos abaixo. Comece direto no conteúdo (sem saudação e sem "claro!").`;
+FORMATO: use os cabeçalhos com emoji exatamente como pedidos abaixo. Comece direto no conteúdo (sem saudação e sem "claro!").${fontes}`;
 
-  const user = `${t.ordem}\n\nTEXTO / ASSUNTO DO PASTOR: ${passagem}`;
+  // O lembrete vai também no fim do pedido: os modelos rápidos da cascata seguem o
+  // formato e esquecem a fonte quando ela fica só lá em cima, no sistema.
+  const user = `${t.ordem}\n\nTEXTO / ASSUNTO DO PASTOR: ${passagem}`
+    + (rotulos.length ? `\n\nANTES DE MANDAR: confira se você pôs pelo menos UM marcador de obra ([O1] … [O${rotulos.length}]) no fim da frase que ele sustenta. Se nenhuma obra da lista sustentar o ponto, escreva "aplicando o método de ${e.nome}" e não marque nada.` : '');
 
   // Mesmo streaming de antes, só que agora servido pela cascata (streamChat) e com
   // os marcadores de fonte já trocados pela obra real no caminho até a tela.
