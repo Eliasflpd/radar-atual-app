@@ -104,6 +104,22 @@ acerta('CERTO · resposta sem referência bíblica nenhuma',
 acerta('CERTO · citação curta demais pra julgar (João 6:35, outra tradução)',
 `Jesus afirma em João 6:35: "Eu sou o pão vivo".`);
 
+// Este acendeu de verdade na Sala, em produção, e era alarme falso em dobro: a
+// ancoragem veio do TÍTULO de uma pérola do acervo ("pérola: Salmo 23"), que é
+// metadado do app e não citação bíblica; e a frase estava NEGANDO que existisse
+// forma grega, não afirmando. Rodapé de fontes fora da análise + guarda de negação.
+acerta('CERTO · rodapé de fontes do acervo não é exegese (alarme falso de produção)',
+`Nenhum dos materiais de apoio citados ( (📚 Aula de Bibliologia 01 — pérola: “Antigamente”)‑ (📚 Aula de Escatologia Bíblica 02 — pérola: Salmo 23)) trata especificamente da forma grega desses termos.
+
+📚 DE ONDE VEM
+aplicando o método do Dr. Wagner — o material das aulas não cobre este ponto.`);
+
+acerta('CERTO · negar que exista palavra grega no texto hebraico não é erro',
+`O texto hebraico original de Gênesis 1:1 não contém a raiz grega ποιέω; ele usa בָּרָא.`);
+
+erra('AINDA ACENDE · negação que NÃO é de inexistência ("não é o hebraico, é o grego")',
+`Em Gênesis 1:1 não é o hebraico bará: é o grego ποιεῖν que está por trás de "criou".`);
+
 /* ─────────── UM AVISO POR REFERÊNCIA, NUNCA DOIS ───────────
    Em produção a mesma invenção de Levítico 23:10-12 saiu duas vezes na resposta —
    uma como Ref – "texto" e outra como "texto" (Ref) — e o aviso apareceu DUPLICADO

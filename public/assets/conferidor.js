@@ -249,6 +249,24 @@
   // "Eli, Eli, lemá sabactâni" (Mt 27:46), "Abba" (Rm 8:15), e toda citação do AT.
   var PERDAO_NT = /aramaic|siríac|siriac|hebraísmo|hebraismo|septuaginta|\bLXX\b|antigo testamento|\bA\.?T\.?\b|cita[çc]|citando|citad[oa]|alus[ãa]o|transliter|eco d|remete a|remonta a/i;
 
+  // NEGAÇÃO — "não há palavra grega aqui", "nenhum material trata da forma grega".
+  // Dizer que NÃO existe é o contrário de afirmar; acusar isso é alarme falso puro.
+  // A lista é curta de propósito: "não é o hebraico bará, é o grego ποιεῖν" continua
+  // acendendo, porque "é" não entra aqui — só os verbos de inexistência.
+  var NEGACAO = /\b(?:n[ãa]o)\s+(?:h[áa]|existe|existem|cont[ée]m|trata|tratam|menciona|mencionam|aborda|abordam|aparece|aparecem|us[ao]|usam|traz|trazem)\b|\bnenhum[ao]?\b|\bsem\s+(?:respaldo|base|apoio)\b/i;
+
+  // O RODAPÉ DE FONTES NÃO É EXEGESE. O servidor carimba a origem em texto puro:
+  //   (📚 Aula de Escatologia Bíblica 02 — pérola: Salmo 23)
+  // Isso é metadado do acervo, não afirmação sobre a Bíblia — mas traz nome de livro
+  // e capítulo dentro, e foi exatamente aí que a trava deu o primeiro alarme falso em
+  // produção: ancorou "forma grega" num "Salmo 23" que era só o TÍTULO de uma pérola.
+  // Fora o marcador, fora também a cauda "DE ONDE VEM" / "CONSULTADO NO ACERVO".
+  var RE_FONTE = /\(\s*📚[^()]{0,200}\)/g;
+  var RE_CAUDA = /\n[^\n]{0,20}📚\s*(?:DE ONDE VEM|CONSULTADO NO ACERVO)[\s\S]*$/i;
+  function limpar(txt) {
+    return String(txt || '').replace(RE_CAUDA, '\n').replace(RE_FONTE, ' ');
+  }
+
   function temGrego(s) { RE_GREGO.lastIndex = 0; return (s.match(RE_GREGO) || []).length >= 2; }
   function temHebraico(s) { RE_HEBRAICO.lastIndex = 0; return (s.match(RE_HEBRAICO) || []).length >= 2; }
   function amostraGrego(s) { var m = s.match(/[Ͱ-Ͽἀ-῿][Ͱ-Ͽἀ-῿̀-ͅ᾽-῾'’]{1,26}/); return m ? m[0] : ''; }
@@ -279,7 +297,8 @@
     return out.filter(function (f) { return f.trim(); });
   }
 
-  function conferirIdioma(txt) {
+  function conferirIdioma(bruto) {
+    var txt = limpar(bruto);
     var avisos = [], vistos = {};
     // parágrafo = bloco separado por linha em branco. É o alcance do "perdão"
     // (Septuaginta, citação do AT), porque o contexto que legitima o idioma
@@ -296,6 +315,7 @@
           var h = temHebraico(f) || DIZ_HEBRAICO.test(f);
           if (!g && !h) continue;
           if (g && h) continue;                     // nomeou os dois: está comparando, não errando
+          if (NEGACAO.test(f)) continue;            // está NEGANDO que exista — não é afirmação
 
           // escopo: a própria frase; se ela não traz referência, herda a anterior
           var escopo = f, refs = refsDe(f);
@@ -338,11 +358,14 @@
   /* ─────────────────────────────────────────────────────────────────────────
      5) O LAUDO
      ───────────────────────────────────────────────────────────────────────── */
-  function analisar(txt) {
+  function analisar(bruto) {
     return aquecer().then(function (ok) {
       if (!ok) return null;                        // Bíblia não veio: nenhum palpite
+      // fora o rodapé de fontes: o título de uma pérola ("pérola: Salmo 23") não é
+      // citação bíblica, e já tinha feito a trava acusar o que não era pra acusar.
+      var txt = limpar(bruto);
       var achados = [], vistos = {};
-      conferirAspas(String(txt || ''), achados, vistos);
+      conferirAspas(txt, achados, vistos);
 
       // toda referência com capítulo:versículo precisa ao menos EXISTIR
       var inexistentes = [], vis2 = {}, existem = 0, m2;
