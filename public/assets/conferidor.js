@@ -214,9 +214,13 @@
     if (!refRaw) return;
     if (pal(quote).length < MASSA) return;
     var loc = localizar(refRaw); if (!loc) return;
-    // dedup tolerante: o modelo troca hífen comum por hífen não-separável e acento,
-    // então a MESMA citação aparecia várias vezes na lista.
-    var chave = norm(refRaw) + '|' + pal(quote).slice(0, 8).join('');
+    // DEDUP pela referência JÁ RESOLVIDA, nunca pelo texto cru.
+    // Em produção a mesma citação inventada de Levítico 23:10-12 apareceu duas
+    // vezes na resposta — uma no formato "texto" (Ref) e outra Ref – "texto" — e o
+    // aviso saiu DUPLICADO na tela, porque num lado o traço era hífen comum e no
+    // outro o não-separável (U+2011), então as chaves não batiam. rotulo(loc) é o
+    // mesmo rótulo canônico para as duas, e acabou a duplicata.
+    var chave = loc.ab + '|' + loc.c + '|' + (loc.v || '') + '|' + (loc.v2 || '') + '|' + pal(quote).slice(0, 8).join('');
     if (vistos[chave]) { vistos[chave]++; return; }
     vistos[chave] = 1;
     if (loc.texto == null) { achados.push({ tipo: 'nao-existe', rot: refRaw }); return; }
@@ -351,8 +355,18 @@
       }
 
       var idioma = conferirIdioma(txt);
-      var erros = achados.filter(function (a) { return a.tipo === 'erro' || a.tipo === 'nao-existe'; });
-      var duvidas = achados.filter(function (a) { return a.tipo === 'duvida'; });
+      // UM AVISO POR REFERÊNCIA. Se a IA repete a mesma invenção com outras palavras,
+      // o pastor não precisa ler o mesmo alerta três vezes — ele precisa ler uma vez
+      // e conferir. Aviso repetido vira ruído, e ruído a gente ignora.
+      function umPorRef(lista) {
+        var ja = {}, out = [];
+        lista.forEach(function (a) { if (ja[a.rot]) return; ja[a.rot] = 1; out.push(a); });
+        return out;
+      }
+      var erros = umPorRef(achados.filter(function (a) { return a.tipo === 'erro' || a.tipo === 'nao-existe'; }));
+      var jaAcusado = {}; erros.forEach(function (a) { jaAcusado[a.rot] = 1; });
+      // se a referência já foi acusada de erro, não repete ela como "parafraseada"
+      var duvidas = umPorRef(achados.filter(function (a) { return a.tipo === 'duvida' && !jaAcusado[a.rot]; }));
       var ok2 = achados.filter(function (a) { return a.tipo === 'ok'; }).length;
 
       return {

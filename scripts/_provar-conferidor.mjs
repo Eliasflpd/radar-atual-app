@@ -104,6 +104,15 @@ acerta('CERTO · resposta sem referência bíblica nenhuma',
 acerta('CERTO · citação curta demais pra julgar (João 6:35, outra tradução)',
 `Jesus afirma em João 6:35: "Eu sou o pão vivo".`);
 
+/* ─────────── UM AVISO POR REFERÊNCIA, NUNCA DOIS ───────────
+   Em produção a mesma invenção de Levítico 23:10-12 saiu duas vezes na resposta —
+   uma como Ref – "texto" e outra como "texto" (Ref) — e o aviso apareceu DUPLICADO
+   na tela, porque num lado o traço era hífen comum e no outro o não-separável.
+   Aviso repetido vira ruído, e ruído o pastor ignora. */
+const REPETIDA = `⛏️ O GATILHO — “tomar o primeiro fruto da colheita, o cordeiro, a oferta movida de duas ovelhas, e o pão da oferta das primícias” (Levítico 23:10-12).
+
+🔒 OS DOIS PILARES — Texto de saída (AT): Levítico 23:10‑12 – “tomar o primeiro fruto da colheita, o cordeiro, a oferta movida de duas ovelhas, e o pão da oferta das primícias”.`;
+
 /* ─────────── RODA ─────────── */
 let falhas = 0;
 for (const c of CASOS) {
@@ -119,5 +128,11 @@ for (const c of CASOS) {
     for (const a of L.inexistentes) console.log('         ↳ inexistente: ' + a);
   }
 }
-console.log('\n' + (CASOS.length - falhas) + '/' + CASOS.length + ' passaram · ' + falhas + ' falha(s)');
+const dup = await C.analisar(REPETIDA);
+const nAvisos = dup.erros.length + dup.duvidas.length + dup.idioma.length;
+const dupOk = nAvisos === 1;
+if (!dupOk) falhas++;
+console.log((dupOk ? '  ok  ' : ' FALHA') + ' │ ' + nAvisos + ' aviso  │ a MESMA citação inventada duas vezes acende UM aviso só');
+
+console.log('\n' + (CASOS.length + 1 - falhas) + '/' + (CASOS.length + 1) + ' passaram · ' + falhas + ' falha(s)');
 process.exit(falhas ? 1 : 0);
