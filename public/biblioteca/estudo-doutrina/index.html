@@ -260,8 +260,10 @@
       while((m=RE.exec(txt))){
         var quote=m[1], refRaw=m[2].replace(/[*_]/g,'').trim();
         var loc=cfLocalizar(refRaw); if(!loc) continue;
-        var chave=refRaw+'|'+quote.slice(0,40);
-        if(vistos[chave]) continue; vistos[chave]=1;
+        // dedup tolerante: o modelo troca hífen por hífen-não-separável e acento,
+        // então a MESMA citação aparecia várias vezes na lista.
+        var chave=cfNorm(refRaw)+'|'+cfPal(quote).slice(0,8).join('');
+        if(vistos[chave]){ vistos[chave]++; continue; } vistos[chave]=1;
         if(loc.texto==null){ achados.push({tipo:'nao-existe', rot:refRaw}); continue; }
         var A=cfPal(quote), S={}; cfPal(loc.texto).forEach(function(w){S[w]=1;});
         var h=0; A.forEach(function(w){ if(S[w]) h++; });
@@ -308,6 +310,15 @@
       });
       if(inexistentes.length){
         h+='<div class="cf-item cf-erro">❌ Não existe(m) na Bíblia: <b>'+inexistentes.map(escH).join(', ')+'</b>. Corrija antes de usar.</div>';
+      }
+      // Volume falso: quando a IA repete o mesmo versículo pra alcançar o tamanho,
+      // o estudo parece grande e é raso. O pastor tem que saber ANTES de subir.
+      var repetidos=[];
+      for(var kk in vistos){ if(vistos[kk]>=3) repetidos.push(vistos[kk]); }
+      if(repetidos.length){
+        var maior=Math.max.apply(null,repetidos);
+        h+='<div class="cf-item cf-erro">⚠️ A IA <b>repetiu o mesmo versículo '+maior+' vezes</b> para encher o estudo. '
+          +'O tamanho aqui é falso e o conteúdo é raso — <b>gere de novo</b>, ou escolha um tamanho menor.</div>';
       }
       if(!ruins.length && !duvidas.length && !inexistentes.length && ok){
         h+='<div class="cf-item cf-duv" style="background:#f0fdf4;border-color:#bbf7d0;color:#14532d">✅ Todas as citações batem com o texto bíblico. Ainda assim, leia antes de pregar.</div>';

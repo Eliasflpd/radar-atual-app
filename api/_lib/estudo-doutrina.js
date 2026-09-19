@@ -59,10 +59,14 @@ const SECOES = [
 // pedir "1100 a 1500 palavras" no topo do prompt não segura — testado em produção,
 // curto/médio/longo davam 575/630/637 palavras, praticamente o mesmo texto. O que
 // funciona é cobrar o tamanho DENTRO de cada parte, onde o modelo está escrevendo.
+// ⚠️ Piso alto demais faz MAIS mal que piso baixo: com 900 palavras na parte 3 o
+// modelo entrou em loop e repetiu Romanos 12:2 vinte e nove vezes, com o mesmo
+// comentário reescrito, pra bater a meta. Volume falso é pior que estudo curto.
+// Estes números são os que ele preenche com conteúdo de verdade.
 const PISOS = {
   curto: [90, 90, 330, 110, 90],
   medio: [150, 160, 560, 180, 130],
-  longo: [230, 250, 900, 270, 180],
+  longo: [200, 220, 700, 240, 170],
 };
 
 function esqueleto(chave) {
@@ -86,6 +90,7 @@ TRAVA DE QUALIDADE (se quebrar uma, o estudo não presta — refaça antes de en
 4. FIEL AO TEXTO: a verdade nasce da Escritura, não é imposta sobre ela.
 5. TERMINA EM CRISTO. Sempre.
 6. NADA DE ENCHIMENTO. Cada parágrafo entrega algo novo. Se a frase não acrescenta, corte.
+6b. PROIBIDO REPETIR PARA ENCHER. Cada versículo transcrito aparece UMA ÚNICA VEZ no estudo inteiro — se você já citou, não cite de novo. Nunca reescreva o mesmo parágrafo com outras palavras para alcançar o tamanho. Se faltar conteúdo para o piso de palavras, AVANCE: traga outro texto bíblico, responda uma objeção nova, desça ao detalhe concreto. Estudo curto e honesto vale mil vezes mais que estudo inchado de repetição — e a repetição é percebida na hora por quem está ouvindo.
 7. PORTUGUÊS DO BRASIL, reverente e claro. O leitor é pregador e igreja, não academia.
 8. SEM DATA DE VALIDADE CURTA: trate o assunto pela raiz. Não invente notícia, estatística, nome de pessoa, caso recente nem pesquisa. Se não sabe um dado, fale do fenômeno sem o dado.`;
 
