@@ -254,7 +254,9 @@
       var achados=[], inexistentes=[], vistos={};
 
       // 1) citação entre aspas seguida da referência entre parênteses
-      var RE=/[“"]([^”"]{15,600})[”"]\s*[(]\s*([^)]{3,45}?)\s*[)]/g, m;
+      // a IA costuma itaicizar a citação (*"texto"* (Ref)), então tolera o * e o _
+      // entre a aspa de fecho e o parêntese — sem isso o conferidor não via nada.
+      var RE=/[“"]([^”"]{15,600})[”"][*_\s]*[(]\s*([^)]{3,45}?)\s*[)]/g, m;
       while((m=RE.exec(txt))){
         var quote=m[1], refRaw=m[2].replace(/[*_]/g,'').trim();
         var loc=cfLocalizar(refRaw); if(!loc) continue;
