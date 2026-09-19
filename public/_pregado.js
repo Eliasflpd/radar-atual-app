@@ -229,7 +229,10 @@
     if(r.__p) return r;
     r.__p = 1;
     if(!r.livros || !r.livros.length) r.livros = chavesDaRef(r.ref||'');
-    r.__pal = palavrasFortes((r.titulo||'') + ' ' + (r.tema||'') + ' ' + (r.angulo||''));
+    // A comparação por tema olha só o TÍTULO e o ÂNGULO. O parágrafo de abertura
+    // fica de fora de propósito: prosa longa acha parecença em tudo e o aviso
+    // viraria alarme falso toda hora.
+    r.__pal = palavrasFortes((r.titulo||'') + ' ' + (r.angulo||''));
     return r;
   }
 
@@ -487,10 +490,9 @@
     if(ref && !chavesDaRef(ref).length) ref = '';   // "Escavador de Pérolas" não é referência
     var titulo = lim(h1.textContent);
     if(!titulo) return null;
-    var desc = lim((document.querySelector('.intro, .sub, p')||{}).textContent||'', 400);
     return {
-      slug: arq, titulo: titulo, ref: ref, tema: desc,
-      chaves: chavesDaRef(ref), palavras: palavrasFortes(titulo+' '+desc)
+      slug: arq, titulo: titulo, ref: ref, tema: '',
+      chaves: chavesDaRef(ref), palavras: palavrasFortes(titulo)
     };
   }
 
