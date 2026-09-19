@@ -8,41 +8,64 @@
 // Este módulo é o ponto único por onde passa toda IA do app: ele tenta provedor
 // por provedor, chave por chave, e só entrega erro quando TODOS falharem.
 //
-// ORDEM DOS DEGRAUS (grátis primeiro, pago só no fim):
-//   1. Groq       — grátis, o mais rápido (~1s)
-//   2. Cerebras   — grátis (quando a conta tem cota)
-//   3. Gemini     — grátis
-//   4. DeepSeek   — PAGO, com saldo
-//   5. OpenAI     — PAGO, só se ainda houver OPENAI_API_KEY configurada (rede final)
+// ORDEM DOS DEGRAUS (velocidade COM qualidade; grátis primeiro, pago como rede rápida):
+//   1. Groq       — grátis, ~2,0s   (o degrau que atende quase sempre)
+//   2. DeepSeek   — PAGO, ~3,4s     (rede de segurança RÁPIDA, custo perto de zero)
+//   3. Gemini     — grátis, ~5,2s
+//   4. Z.ai       — grátis, LENTO   (só quando os de cima caírem)
+//   5. NVIDIA     — grátis          (dorminhoco hoje; volta sozinho)
+//   6. OpenRouter — grátis          (último recurso)
 //
 // ⚠️ ARMADILHA DO CLOUDFLARE: Groq e Cerebras ficam atrás do Cloudflare e devolvem
 // 403 "error code 1010" quando a requisição não tem User-Agent de navegador. Parece
 // chave morta e NÃO é. Por isso TODA chamada daqui manda o UA de Chrome (const UA).
 //
 // ─────────────────────────────────────────────────────────────────────────────
-// MODELOS VALIDADOS DE VERDADE (testado chamando a API, não copiado de doc):
-//   Data do teste: 11/09/2026
-//   Groq      ✅ qwen/qwen3.8-27b        0,8s  · português limpo, sem "reasoning"
-//             ✅ openai/gpt-oss-120b     0,9s  · funciona, mas gasta parte do
-//                                              max_tokens com raciocínio interno
-//                                              (campo delta.reasoning) — por isso é
-//                                              o 2º da fila, não o 1º.
-//             ❌ llama-3.1-8b-instant / llama3.x — APOSENTADOS, não existem mais.
-//   Cerebras  ⚠️ gpt-oss-120b, qwen-3.8-27b existem no catálogo, MAS as 3 chaves do
-//                cofre responderam HTTP 402 "Payment required" em 11/09/2026.
-//                (O diagnóstico antigo marcou "chave viva" por engano: ele testava
-//                 `llama3.1-8b`, que não existe mais, e o 404 de modelo foi lido
-//                 como "chave boa". O degrau fica montado e volta a funcionar
-//                 sozinho no dia em que a conta tiver cota.)
-//             ❌ gemma-4-31b — 404, a chave não tem acesso.
-//   Gemini    ✅ gemini-3-flash-preview  2,8s  · o mais rápido dos que respondem
-//             ✅ gemini-2.5-flash       20,1s  · lento, mas estável
-//             ✅ gemini-3.5-flash       26,8s  · lento
-//             ❌ gemini-3.8-flash / gemini-3.6-flash — 503 "high demand" o tempo todo
-//             ❌ gemini-2.5-flash-lite — 404, aposentado
-//   DeepSeek  ✅ deepseek-flash          1,9s  · PAGO
-//             ✅ deepseek-v4-pro        10,7s  · PAGO, mais caro/lento
-//             ❌ deepseek-chat / deepseek-reasoner — nomes antigos, não existem mais.
+// MEDIÇÃO DE 19/09/2026 — a MESMA pergunta real ("Explique em 2 frases a tipologia
+// da arca de Noé"), com o prompt INTEIRO do Wagner (sys 7.554 + contexto 9.216
+// caracteres), max_tokens 2600, 3 a 4 rodadas por modelo. Tempo = resposta completa.
+//
+//   PROVEDOR / MODELO                     MÉDIA     OK     LIMPA?  SEÇÕES
+//   Groq  gpt-oss-20b  reasoning=low      1,56s    4/4     sim     5/5
+//   Groq  gpt-oss-120b reasoning=low      2,02s    3/4     sim     5/5   ← 1º
+//   Groq  qwen3.8-27b                     2,32s    1/4     sim     5/5
+//   Groq  gpt-oss-120b (sem reasoning)    3,85s    2/3     sim     5/5   ← era o que rodava
+//   DeepSeek deepseek-chat (PAGO)         3,44s    3/3     sim      —
+//   Gemini gemini-3.5-flash-lite          5,18s    4/4     sim     5/5
+//   Gemini gemini-2.5-flash               6,04s    3/3     sim     5/5
+//   Z.ai   glm-4.7-flash                 28,52s    3/4     sim     5/5   ← lento demais
+//   Z.ai   glm-4.5-flash                 22,46s    3/3     sim      —
+//
+//   MORTOS HOJE (medidos, não chutados) — tirados do caminho quente:
+//   ❌ Cerebras        HTTP 402 "Payment required" (free tier acabou, exige cartão)
+//   ❌ OpenAI          HTTP 429 "You have no credits remaining"
+//   ❌ NVIDIA direto   deepseek-v4-flash e nemotron-3-ultra: TIMEOUT 3/3 (60s)
+//   ❌ OpenRouter      nemotron-3.5-lightning:free e os outros :free: timeout ou 429
+//   ❌ Cloudflare      @cf/google/gemma-4-26b-a4b-it: HTTP 200 com corpo VAZIO 3/3
+//   ❌ SambaNova       HTTP 402, saldo zerado
+//
+// 🔍 A DESCOBERTA QUE DEU A VELOCIDADE: o gargalo NÃO era o tamanho do prompt nem o
+// cold start da função. Medido lado a lado no mesmo modelo:
+//     contexto 9.000 → 2,02s  ·  contexto 6.000 → 1,92s  ·  contexto 4.000 → 2,16s
+// Ou seja: cortar o material de apoio do garimpo NÃO acelera nada (está no ruído) e
+// só empobreceria a resposta. O que pesava era o RACIOCÍNIO INTERNO do gpt-oss:
+//     reasoning_effort ausente → 3,85s   ·   'medium' → 3,27s   ·   'low' → 2,02s
+// Por isso o contexto continua em 9.000 caracteres, intocado, e o que mudou foi o knob.
+//
+// 🧊 COLD START: medido separado, em produção. Um POST sem pergunta (o handler
+// responde 400 antes de tocar na IA) volta em 0,20s — praticamente o mesmo que servir
+// um arquivo estático do mesmo domínio (0,19s). O bundle de 1,2 MB do corpus do Wagner
+// NÃO está custando espera. A normalização do corpus custa 0,38s UMA vez por instância
+// (depois, 0,02s por pergunta). Conclusão: a demora era do provedor, não da Vercel.
+//
+// ⚠️ ARMADILHAS DE PARÂMETRO (esquecer qualquer uma põe raciocínio em inglês na tela
+// do aluno, ou devolve resposta vazia). Cada uma vive no `extra` do modelo:
+//   Z.ai            "thinking": {"type":"disabled"}          senão volta VAZIO
+//   NVIDIA nemotron "chat_template_kwargs": {"thinking":false} senão despeja o
+//                                                            raciocínio em inglês
+//   Gemini 2.5      thinkingConfig.thinkingBudget = 0        senão trunca o sermão
+//   Gemini 3.5-lite NÃO aceita thinkingConfig — manda 400 "invalid argument".
+//                   (Era isso que derrubava o modelo mais confiável das 3 chaves.)
 //
 // 🔑 CHAVES: NUNCA no código. Só em variável de ambiente da Vercel, em lista
 // separada por vírgula. Ver D:\RADAR-APP\_CONFIGURAR-CHAVES.md (não vai pro git).
@@ -52,7 +75,19 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 
 // Quanto esperamos pelos CABEÇALHOS da resposta. Depois que o cabeçalho chega, o
 // corpo (streaming) corre sem limite — senão cortaríamos o sermão no meio.
+// Cada degrau pode ter o SEU prazo (campo `timeout`): num degrau que mede 2s, esperar
+// 12s é jogar 10s fora antes de tentar o próximo. Este valor é só o padrão.
 const TIMEOUT_MS = 12000;
+
+// Prazo da CASCATA inteira. A função Edge da Vercel morre aos 25s e o pastor leva 504.
+// Aos 20s a gente para de abrir degrau novo e devolve um erro legível, que é melhor
+// que uma tela de gateway. (Não corta resposta em andamento — só impede tentar mais.)
+const PRAZO_TOTAL_MS = 20000;
+
+// Açucar pra declarar modelo com os parâmetros próprios dele.
+// `extra` entra no corpo do pedido: na RAIZ no dialeto OpenAI, dentro de
+// `generationConfig` no dialeto Gemini.
+const M = (id, extra) => ({ id, extra: extra || null });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) OS DEGRAUS
@@ -61,83 +96,124 @@ const TIMEOUT_MS = 12000;
 // ─────────────────────────────────────────────────────────────────────────────
 export const DEGRAUS = [
   {
+    // 1º — Groq. Mediu 2,02s com o prompt inteiro do Wagner e atende praticamente
+    // sempre (7 chaves em rodízio). O `reasoning_effort: 'low'` é o que tirou 1,8s:
+    // sem ele o gpt-oss gasta metade do orçamento pensando antes de escrever.
+    // O LIMITE DE COTA DO GROQ É POR MODELO ("Rate limit reached for model X"), então
+    // o 20b não é só reserva de qualidade: ele tem cota PRÓPRIA e salva o degrau
+    // inteiro quando o 120b bate no teto de tokens por minuto.
+    // ⚠️ o qwen fica por último de propósito: com o contexto de 9.000 ele às vezes
+    // devolve "Request too large" (o teto por pedido dele é menor que o do gpt-oss).
     id: 'groq',
     nome: 'Groq',
     pago: false,
     dialeto: 'openai',
     url: 'https://api.groq.com/openai/v1/chat/completions',
     env: ['GROQ_API_KEYS', 'GROQ_API_KEY'],
-    // gpt-oss-120b primeiro (testado 11/09 respondendo); qwen como reserva.
-    modelos: ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b'],
+    timeout: 9000,
+    modelos: [
+      M('openai/gpt-oss-120b', { reasoning_effort: 'low' }),
+      M('openai/gpt-oss-20b', { reasoning_effort: 'low' }),
+      M('qwen/qwen3.8-27b'),
+    ],
   },
   {
-    // DeepSeek EM 2º (pago, barato, RÁPIDO e confiável) — rede de segurança logo cedo.
-    // O modo não-stream (Sala do Wagner) precisa de um provedor que devolva CONTEÚDO na
-    // certa e rápido; deixá-lo em 6º fazia os provedores lentos/de-raciocínio antes dele
-    // estourarem os 25s do Edge (504). Só é chamado quando o Groq grátis não atende, então
-    // o custo fica pertinho de zero. deepseek-chat = conteúdo limpo (flash é raciocínio).
+    // 2º — DeepSeek (pago, barato, 3,44s e 3/3 nas medições). Rede de segurança logo
+    // cedo: o modo não-stream (Sala do Wagner) precisa de um provedor que devolva
+    // CONTEÚDO na certa e rápido; empurrá-lo pro fim fazia os lentos antes dele
+    // estourarem os 25s do Edge (o 504 do pastor). Só é chamado quando o Groq não
+    // atende, então o custo fica pertinho de zero.
+    // deepseek-chat = conteúdo limpo. O `flash` manda raciocínio antes do texto.
     id: 'deepseek',
     nome: 'DeepSeek',
     pago: true,
     dialeto: 'openai',
     url: 'https://api.deepseek.com/chat/completions',
-    modelos: ['deepseek-chat', 'deepseek-flash'],
     env: ['DEEPSEEK_API_KEYS', 'DEEPSEEK_API_KEY'],
+    timeout: 12000,
+    modelos: [M('deepseek-chat'), M('deepseek-flash')],
   },
   {
-    // NOVO degrau grátis (11/09/2026): NVIDIA NIM hospeda DeepSeek V4 Flash de graça
-    // (só verificação de telefone, sem cartão). Testado respondendo 200 com conteúdo
-    // LIMPO — entra logo depois do Groq pra tapar o buraco do Cerebras (sem cota) e do
-    // OpenAI (sem crédito). Chave: env NVIDIA_API_KEYS. Dialeto OpenAI.
-    id: 'nvidia',
-    nome: 'NVIDIA',
-    pago: false,
-    dialeto: 'openai',
-    url: 'https://integrate.api.nvidia.com/v1/chat/completions',
-    env: ['NVIDIA_API_KEYS', 'NVIDIA_API_KEY'],
-    modelos: ['deepseek-ai/deepseek-v4-flash-0731'],
-  },
-  {
+    // 3º — Gemini, o melhor degrau GRÁTIS depois do Groq (5,18s, 4/4).
+    // ⚠️ A ORDEM DOS MODELOS MUDOU E ISSO IMPORTA: testado chave por chave hoje,
+    //    gemini-3.5-flash-lite responde 200 nas TRÊS chaves;
+    //    gemini-2.5-flash dá 404 na conta nova ("no longer available to new users");
+    //    gemini-3.8-flash dá 503 "high demand" em 2 das 3 chaves.
+    // ⚠️ E o flash-lite só entrou porque descobrimos que ele RECUSA thinkingConfig
+    //    (HTTP 400 "invalid argument"). Por isso o knob agora é por modelo.
     id: 'gemini',
     nome: 'Gemini',
     pago: false,
     dialeto: 'gemini',
     url: 'https://generativelanguage.googleapis.com/v1beta/models',
     env: ['GEMINI_API_KEYS', 'GEMINI_API_KEY', 'GOOGLE_API_KEY'],
-    // gemini-2.5-flash primeiro (o que responde de verdade); os "3.x" ficam de reserva
-    // porque o id do preview muda e às vezes dá 404 (a cascata pula sozinha, mas assim
-    // não gasta a 1ª tentativa num id instável).
-    modelos: ['gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview'],
+    timeout: 14000,
+    modelos: [
+      M('gemini-3.5-flash-lite'),
+      M('gemini-2.5-flash', { thinkingConfig: { thinkingBudget: 0 } }),
+      M('gemini-3.8-flash'),
+    ],
   },
   {
-    // NOVO degrau grátis (11/09/2026): OpenRouter com modelo :free (contexto gigante).
-    // Testado 200. Chave: env OPENROUTER_API_KEYS. Dialeto OpenAI.
+    // 4º — Z.ai (GLM). GRÁTIS permanente e com 200K de contexto, mas HOJE é LENTO:
+    // 28,5s de média no glm-4.7-flash (e 429 "1305 temporarily overloaded" em parte
+    // das tentativas). Fica como degrau tardio justamente por isso — é rede, não é
+    // atalho. O prazo dele é maior que o dos outros porque com 9s ele nunca chegaria.
+    // ⚠️ sem "thinking: disabled" a Z.ai devolve 200 com o corpo VAZIO.
+    id: 'zai',
+    nome: 'Z.ai',
+    pago: false,
+    dialeto: 'openai',
+    url: 'https://api.z.ai/api/paas/v4/chat/completions',
+    env: ['ZAI_API_KEYS', 'ZAI_API_KEY'],
+    timeout: 18000,
+    modelos: [
+      M('glm-4.7-flash', { thinking: { type: 'disabled' } }),
+      M('glm-4.5-flash', { thinking: { type: 'disabled' } }),
+    ],
+  },
+  {
+    // 5º — NVIDIA. Hoje os dois modelos deram TIMEOUT em 3/3 (60s sem responder), então
+    // saiu do 3º lugar e veio pro fim, com prazo curto pra não custar caro quando está
+    // dormindo. O degrau fica montado porque volta sozinho quando o NIM desafoga — e o
+    // nemotron-3-ultra (550B) é o nosso degrau de QUALIDADE quando os rápidos falharem.
+    // ⚠️ sem "chat_template_kwargs: {thinking:false}" o nemotron despeja o raciocínio
+    //    dele em INGLÊS no lugar da resposta — o aluno do Elias veria isso na tela.
+    id: 'nvidia',
+    nome: 'NVIDIA',
+    pago: false,
+    dialeto: 'openai',
+    url: 'https://integrate.api.nvidia.com/v1/chat/completions',
+    env: ['NVIDIA_API_KEYS', 'NVIDIA_API_KEY'],
+    timeout: 8000,
+    modelos: [
+      M('nvidia/nemotron-3-ultra-550b-a55b', { chat_template_kwargs: { thinking: false } }),
+      M('deepseek-ai/deepseek-v4-flash-0731'),
+    ],
+  },
+  {
+    // 6º — OpenRouter, último recurso. Medido hoje: nemotron-3.5-lightning:free dá
+    // timeout 3/3 e os outros :free ou não existem mais ou devolvem 429 do provedor
+    // de trás. Custa pouco (o 429 volta em ~0,3s) e um dia desafoga. Os ids abaixo
+    // foram conferidos contra /api/v1/models — os antigos já tinham sido aposentados.
     id: 'openrouter',
     nome: 'OpenRouter',
     pago: false,
     dialeto: 'openai',
     url: 'https://openrouter.ai/api/v1/chat/completions',
     env: ['OPENROUTER_API_KEYS', 'OPENROUTER_API_KEY'],
-    modelos: ['nvidia/nemotron-3.5-lightning:free'],
+    timeout: 8000,
+    modelos: [
+      M('nvidia/nemotron-3-super-120b-a12b:free'),
+      M('qwen/qwen3.8-27b:free'),
+      M('google/gemma-4-31b-it:free'),
+    ],
   },
-  {
-    id: 'cerebras',
-    nome: 'Cerebras',
-    pago: false,
-    dialeto: 'openai',
-    url: 'https://api.cerebras.ai/v1/chat/completions',
-    env: ['CEREBRAS_API_KEYS', 'CEREBRAS_API_KEY'],
-    modelos: ['gpt-oss-120b', 'qwen-3.8-27b'],
-  },
-  {
-    id: 'openai',
-    nome: 'OpenAI',
-    pago: true,
-    dialeto: 'openai',
-    url: 'https://api.openai.com/v1/chat/completions',
-    env: ['OPENAI_API_KEYS', 'OPENAI_API_KEY'],
-    modelos: ['gpt-4o-mini', 'gpt-4o'],
-  },
+  // DEGRAUS APOSENTADOS em 19/09/2026 (medidos mortos, não chutados) — não voltam sem
+  // medição nova, porque degrau morto não é "rede de segurança", é atraso:
+  //   • Cerebras — HTTP 402 "Payment required": o free tier acabou e agora exige cartão.
+  //   • OpenAI   — HTTP 429 "You have no credits remaining": a conta está sem crédito.
+  //     (A variável OPENAI_API_KEY continua na Vercel, intocada, pro dia em que recarregar.)
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -174,7 +250,15 @@ const castigar = (id, ms) => CASTIGO.set(id, Date.now() + ms);
 //    'parar'  = problema do NOSSO pedido (prompt malformado) → é bug nosso,
 //               tem que aparecer, não pode ser mascarado por fallback.
 // ─────────────────────────────────────────────────────────────────────────────
-const PROBLEMA_DE_MODELO = /model[_\s-]?not[_\s-]?found|does not exist|decommission|no longer|unsupported|not supported|max_tokens|maxoutputtokens|context length|too many tokens|too large/i;
+// ⚠️ A lista cresceu em 19/09/2026 por causa dos knobs de "thinking". Agora mandamos
+// parâmetros que só ALGUNS modelos aceitam (reasoning_effort no gpt-oss, thinking na
+// Z.ai, chat_template_kwargs no nemotron, thinkingConfig no gemini-2.5). Se um provedor
+// mudar e recusar o knob, o 400 dele NÃO pode ser lido como "bug nosso" — isso abortaria
+// a cascata inteira e derrubaria o app por causa de um parâmetro opcional. É problema
+// DAQUELE MODELO: pula pro próximo e segue a vida.
+// (Foi exatamente assim que o gemini-3.5-flash-lite ficava fora: ele responde
+//  400 "Request contains an invalid argument" quando recebe thinkingConfig.)
+const PROBLEMA_DE_MODELO = /model[_\s-]?not[_\s-]?found|does not exist|decommission|no longer|unsupported|not supported|max_tokens|maxoutputtokens|context length|too many tokens|too large|invalid argument|reasoning_effort|chat_template_kwargs|thinking|is not a valid model/i;
 
 // ⚠️ PEGADINHA REAL: o Gemini devolve HTTP **400** (não 401) quando a chave é ruim
 // — "API key not valid. Please pass a valid API key.". Sem esta lista, um 400 desses
@@ -199,6 +283,14 @@ export function classificar(status, corpo) {
   if (status === 404) return { acao: 'pular', motivo: 'modelo/rota inexistente', alvo: 'modelo', castigo: 1800000 };
   if (status === 408) return { acao: 'pular', motivo: 'timeout do provedor', alvo: null };
   if (status === 429) {
+    // O Groq limita POR MODELO ("Rate limit reached for model openai/gpt-oss-120b") e
+    // também recusa pedido grande POR MODELO ("Request too large for model qwen/..."),
+    // com o mesmo código 429. Nos dois casos a CHAVE continua ótima — castigar a chave
+    // aqui jogaria fora as outras cotas dela (cada modelo do Groq tem a sua). Só o
+    // modelo fica de molho, e o próximo da fila atende na hora.
+    if (/for model|too large/i.test(txt)) {
+      return { acao: 'pular', motivo: 'modelo no teto de cota (429)', alvo: 'modelo', castigo: 30000 };
+    }
     const cota = /spending cap|quota|exceeded|insufficient|billing/i.test(txt);
     return { acao: 'pular', motivo: cota ? 'cota estourada' : 'limite de uso (429)', alvo: 'chave', castigo: cota ? 600000 : 30000 };
   }
@@ -244,10 +336,13 @@ function corpoOpenAI(degrau, modelo, p, stream) {
   const { sys, conversa } = normalizarMensagens(p);
   const msgs = sys ? [{ role: 'system', content: sys }, ...conversa] : conversa;
   const b = {
-    model: modelo,
+    model: modelo.id,
     messages: msgs,
     temperature: p.temperature != null ? p.temperature : 0.5,
     max_tokens: p.max_tokens || 2200,
+    // Os parâmetros próprios do modelo (reasoning_effort do gpt-oss, thinking da Z.ai,
+    // chat_template_kwargs do nemotron). Ver as ARMADILHAS lá no topo do arquivo.
+    ...(modelo.extra || {}),
   };
   if (stream) b.stream = true;
   return { url: degrau.url, body: b, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + p.__chave, 'User-Agent': UA, Accept: stream ? 'text/event-stream' : 'application/json' } };
@@ -260,21 +355,26 @@ function corpoGemini(degrau, modelo, p, stream) {
     generationConfig: {
       temperature: p.temperature != null ? p.temperature : 0.5,
       maxOutputTokens: Math.round((p.max_tokens || 2200) * 1.5), // folga: o português acentuado rende mais token
-      // ⚠️ ISTO AQUI NÃO É ENFEITE. Sem `thinkingBudget: 0`, o Gemini gasta o
-      // orçamento inteiro "pensando" e entrega o sermão cortado no meio da frase.
-      // Medido em 11/09/2026 com gemini-2.5-flash e maxOutputTokens=1000:
+      // ⚠️ O `thinkingConfig` AGORA VEM DO MODELO, não daqui — e isso não é frescura.
+      // Sem `thinkingBudget: 0`, o gemini-2.5-flash gasta o orçamento inteiro "pensando"
+      // e entrega o sermão cortado no meio da frase. Medido em 11/09/2026 com
+      // maxOutputTokens=1000:
       //   sem o knob        → 958 tokens de pensamento, 38 de saída, 135 caracteres,
       //                       finishReason=MAX_TOKENS (texto truncado)
       //   thinkingLevel:low → IGUAL de ruim (958 tokens de pensamento) — não resolve
       //   thinkingBudget:0  → 0 de pensamento, 519 de saída, 2012 caracteres, STOP ✅
-      thinkingConfig: { thinkingBudget: 0 },
+      // MAS em 19/09/2026 medimos o outro lado da moeda: o gemini-3.5-flash-lite, que é
+      // o único que responde 200 nas TRÊS chaves, RECUSA esse campo com HTTP 400
+      // "Request contains an invalid argument". Mandar o knob pra todo mundo estava
+      // matando o melhor modelo grátis que temos. Por isso é por modelo.
+      ...(modelo.extra || {}),
     },
   };
   if (sys) b.systemInstruction = { parts: [{ text: sys }] };
   // Busca na web de verdade (usada só pela Lupa do Concílio, via p.web).
   if (p.__comBusca) b.tools = [{ google_search: {} }];
   const metodo = stream ? 'streamGenerateContent?alt=sse&key=' : 'generateContent?key=';
-  return { url: `${degrau.url}/${modelo}:${metodo}${encodeURIComponent(p.__chave)}`, body: b, headers: { 'Content-Type': 'application/json', 'User-Agent': UA, Accept: stream ? 'text/event-stream' : 'application/json' } };
+  return { url: `${degrau.url}/${modelo.id}:${metodo}${encodeURIComponent(p.__chave)}`, body: b, headers: { 'Content-Type': 'application/json', 'User-Agent': UA, Accept: stream ? 'text/event-stream' : 'application/json' } };
 }
 
 const montar = (degrau, modelo, p, stream) => (degrau.dialeto === 'gemini' ? corpoGemini : corpoOpenAI)(degrau, modelo, p, stream);
@@ -320,7 +420,11 @@ async function tentar(degrau, modelo, chave, p, stream) {
   const ctrl = new AbortController();
   // Só o cabeçalho tem prazo. Assim que ele chega a gente solta o cronômetro e
   // deixa o corpo (o sermão) sair inteiro, no tempo que precisar.
-  const relogio = setTimeout(() => { try { ctrl.abort(); } catch (_) {} }, TIMEOUT_MS);
+  // O prazo é DO DEGRAU: num provedor que mede 2s, esperar 12s antes de desistir é
+  // jogar 10 segundos fora na cara do pastor. Num lento de propósito (Z.ai), é o
+  // contrário: com 9s ele nunca chegaria a responder.
+  const prazo = degrau.timeout || TIMEOUT_MS;
+  const relogio = setTimeout(() => { try { ctrl.abort(); } catch (_) {} }, prazo);
   let r;
   try {
     r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: ctrl.signal });
@@ -371,12 +475,12 @@ async function cascataComBusca(p, stream, tentativas) {
     const chave = chaves[(inicio + i) % chaves.length];
     if (castigado('busca|' + marcaChave(chave))) continue;
     for (const modelo of degrau.modelos) {
-      if (castigado('busca@' + modelo)) continue;
+      if (castigado('busca@' + modelo.id)) continue;
       const r = await tentar(degrau, modelo, chave, { ...p, __comBusca: true }, stream);
-      if (r.ok) return { ...r, provedor: 'gemini', provedorNome: 'Gemini (com busca na web)', modelo, pago: false, comBusca: true };
+      if (r.ok) return { ...r, provedor: 'gemini', provedorNome: 'Gemini (com busca na web)', modelo: modelo.id, pago: false, comBusca: true };
       const c = classificar(r.status, r.corpo);
-      tentativas.push(`busca-web ${modelo} ${marcaChave(chave)}: ${c.motivo}`);
-      if (c.alvo === 'modelo' && c.castigo) castigar('busca@' + modelo, c.castigo);
+      tentativas.push(`busca-web ${modelo.id} ${marcaChave(chave)}: ${c.motivo}`);
+      if (c.alvo === 'modelo' && c.castigo) castigar('busca@' + modelo.id, c.castigo);
       if (c.alvo === 'chave') { if (c.castigo) castigar('busca|' + marcaChave(chave), c.castigo); break; }
     }
   }
@@ -386,6 +490,7 @@ async function cascataComBusca(p, stream, tentativas) {
 async function cascata(p, stream) {
   const tentativas = [];
   const tag = p.tag || 'ia';
+  const comecou = Date.now();
 
   if (p.web) {
     const r = await cascataComBusca(p, stream, tentativas);
@@ -400,6 +505,13 @@ async function cascata(p, stream) {
   const pular = (p.__pular || []);
 
   for (const degrau of DEGRAUS) {
+    // Vale a pena abrir MAIS UM degrau? Se já queimamos o prazo, não: o Edge da Vercel
+    // corta a função aos 25s e o pastor leva um 504 mudo. Um erro escrito em português
+    // é melhor que uma tela de gateway.
+    if (Date.now() - comecou > PRAZO_TOTAL_MS) {
+      tentativas.push(`parou em ${degrau.id}: estourou o prazo da cascata (${PRAZO_TOTAL_MS}ms)`);
+      break;
+    }
     if (pular.includes(degrau.id)) { tentativas.push(`${degrau.id}: pulado (já devolveu vazio)`); continue; }
     const chaves = lerChaves(degrau);
     if (!chaves.length) { tentativas.push(`${degrau.id}: sem chave configurada`); continue; }
@@ -415,23 +527,23 @@ async function cascata(p, stream) {
       vivas++;
 
       for (const modelo of degrau.modelos) {
-        if (castigado(degrau.id + '@' + modelo)) continue;
+        if (castigado(degrau.id + '@' + modelo.id)) continue;
         const t0 = Date.now();
         const r = await tentar(degrau, modelo, chave, p, stream);
         const ms = Date.now() - t0;
 
         if (r.ok) {
           if (tentativas.length) {
-            console.log(`[IA:${tag}] TROCA DE DEGRAU — atendido por ${degrau.nome}/${modelo} (${ms}ms) depois de: ${tentativas.join(' | ')}`);
+            console.log(`[IA:${tag}] TROCA DE DEGRAU — atendido por ${degrau.nome}/${modelo.id} (${ms}ms) depois de: ${tentativas.join(' | ')}`);
           }
           if (degrau.pago) {
-            console.warn(`[IA:${tag}] ⚠️ CAINDO NO PAGO — ${degrau.nome}/${modelo}. Os provedores grátis não atenderam: ${tentativas.join(' | ') || '(nenhum configurado)'}`);
+            console.warn(`[IA:${tag}] ⚠️ CAINDO NO PAGO — ${degrau.nome}/${modelo.id}. Os provedores grátis não atenderam: ${tentativas.join(' | ') || '(nenhum configurado)'}`);
           }
-          return { ...r, provedor: degrau.id, provedorNome: degrau.nome, modelo, pago: !!degrau.pago, ms, tentativas };
+          return { ...r, provedor: degrau.id, provedorNome: degrau.nome, modelo: modelo.id, pago: !!degrau.pago, ms, tentativas };
         }
 
         const c = classificar(r.status, r.corpo);
-        const linha = `${degrau.id}/${modelo} ${marcaChave(chave)}: ${c.motivo}`;
+        const linha = `${degrau.id}/${modelo.id} ${marcaChave(chave)}: ${c.motivo}`;
         tentativas.push(linha);
 
         // Bug NOSSO (prompt malformado): não mascarar com fallback — tem que estourar.
@@ -440,7 +552,7 @@ async function cascata(p, stream) {
           throw new IaError(c.motivo, 400, tentativas);
         }
         if (c.alvo === 'modelo') {
-          if (c.castigo) castigar(degrau.id + '@' + modelo, c.castigo);
+          if (c.castigo) castigar(degrau.id + '@' + modelo.id, c.castigo);
           continue; // chave continua boa — tenta o próximo modelo dela
         }
         if (c.alvo === 'chave') {
