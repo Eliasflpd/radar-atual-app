@@ -96,8 +96,11 @@ function rotuloDaFonte(f, s) {
   const cabeca = (p[0] || '').trim();
   const mAula = cabeca.match(/^(.+?)\s*—\s*Aula\s*(\d+)/i);
   const aula = mAula ? `${mAula[1].trim()} ${mAula[2]}` : cabeca.replace(/\s*—\s*$/, '');
-  let perola = (p[1] || '').trim().replace(/\s*[–—-]\s*$/, '');
-  if (perola.length > 95) perola = perola.slice(0, 92).replace(/\s\S*$/, '') + '…';
+  // curto de propósito: a etiqueta é lida no celular, e título de pérola de 100
+  // caracteres vira uma parede cinza no meio do texto. O subtítulo depois do travessão
+  // quase sempre só repete o que já foi dito — sai fora.
+  let perola = (p[1] || '').trim().split(/\s+[–—]\s+/)[0].replace(/\s*[–—-]\s*$/, '');
+  if (perola.length > 58) perola = perola.slice(0, 55).replace(/\s\S*$/, '') + '…';
   return perola ? `Aula de ${aula} — pérola: ${perola}` : `Aula de ${aula}`;
 }
 

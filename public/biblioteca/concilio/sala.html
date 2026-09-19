@@ -42,12 +42,10 @@
   .ele strong{color:var(--vinho)} .ele em{color:var(--teal)}
   /* ── DE ONDE VEM: a fonte citada. Discreta, não rouba a leitura; toque abre inteira.
      O servidor manda em texto puro "(📚 Aula de …)" — aqui isso vira etiqueta. ── */
-  .ele .fnt{display:inline;background:#f4f7f8;border:1px solid #dfe6e9;border-radius:8px;
-    color:#5b6672;font-size:.74rem;font-weight:700;padding:1px 6px;margin:0 2px;cursor:pointer;
-    white-space:nowrap;max-width:15ch;overflow:hidden;text-overflow:ellipsis;vertical-align:baseline;
-    display:inline-block;line-height:1.5}
-  .ele .fnt:hover{background:#e6f1f3;border-color:#cfe6e9;color:var(--teal)}
-  .ele .fnt.abr{max-width:none;white-space:normal;color:var(--teal);background:#eef6f7;border-color:#cfe6e9}
+  .ele .fnt{display:inline-block;background:#f4f7f8;border:1px solid #dfe6e9;border-radius:8px;
+    color:#5b6672;font-size:.72rem;font-weight:700;padding:1px 7px;margin:2px 3px 2px 0;cursor:pointer;
+    max-width:100%;vertical-align:baseline;line-height:1.45;text-align:left}
+  .ele .fnt:hover,.ele .fnt:active{background:#e6f1f3;border-color:#cfe6e9;color:var(--teal)}
   .ele .li{padding-left:4px;margin:0 0 6px;text-align:left}
   .rod{display:flex;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid var(--linha)}
   .rod button{background:#f2f7f8;border:1px solid #d5e6e8;color:var(--teal);border-radius:10px;
@@ -146,16 +144,12 @@ function inl(s){ return fonteChip(esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</s
 
 /* DE ONDE VEM — o servidor escreve a fonte em texto puro: "(📚 Aula de Parakletologia — pérola: …)".
    Texto puro de propósito: quando o Elias copia a resposta, a fonte vai junto e legível.
-   Aqui ela vira uma etiqueta discreta; um toque abre o rótulo inteiro no celular. */
+   Aqui ela vira uma etiqueta discreta — inteira, porque "Aula de P…" não diz nada a ninguém. */
 function fonteChip(h){
   return String(h).replace(/\(📚\s*([^)<>]{3,180})\)/g, function(_m,r){
     return '<span class="fnt" title="' + r.replace(/"/g,'&quot;') + '">📚 ' + r + '</span>';
   });
 }
-document.addEventListener('click', function(ev){
-  var f = ev.target && ev.target.closest && ev.target.closest('.fnt');
-  if (f) f.classList.toggle('abr');
-});
 
 /* markdown-lite igual ao da Lupa do Concílio */
 function fmt(txt){
