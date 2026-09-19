@@ -1,5 +1,5 @@
-const V='radar-v145';
-const CACHE=['/','/manifest.json']; // capa.png (2MB) fora do precache — não atrasa o 1º load; é cacheada sob demanda
+const V='radar-v146';
+const CACHE=['/','/manifest.json']; // capa.jpg (2MB) fora do precache — não atrasa o 1º load; é cacheada sob demanda
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(V).then(c=>Promise.all(CACHE.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()));

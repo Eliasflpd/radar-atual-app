@@ -18,7 +18,7 @@
 
 <!-- SPLASH -->
 <div class="tela ativa" id="splash" onclick="irHome()">
-  <img src="/capa.png" alt="RADAR ATUAL">
+  <img src="/capa.jpg" alt="RADAR ATUAL" loading="lazy" decoding="async">
 </div>
 
 <!-- ══ VITRINE 3×3 — NOVO VISUAL DA HOME (azul claro + dourado) ══ -->
@@ -51,59 +51,59 @@
         <!-- TIRADO DA VITRINE a pedido do Elias (17/09/2026): nao serve pro uso dele.
      O codigo e os dados continuam intactos — pra voltar, e so tirar este comentario.
 <div class="vit-card" onclick="abrirCartazes()">
-          <div class="vit-ico"><img src="/img/home/cartazes.png" alt="" onerror="this.parentNode.textContent='🖼️'"></div>
+          <div class="vit-ico">📢</div>
           <div class="vit-nome">Eventos e Mídias</div><div class="vit-desc">Cartazes, vídeos e avisos</div>
         </div> -->
         <div class="vit-card" onclick="mostrarTela('tela-informativo')">
-          <div class="vit-ico"><img src="/img/home/informativo.png" alt="" onerror="this.parentNode.textContent='📢'"></div>
+          <div class="vit-ico">📣</div>
           <div class="vit-nome">Informativo</div><div class="vit-desc">Agendas e avisos</div>
         </div>
         <div class="vit-card" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)">
-          <div class="vit-ico"><img src="/img/home/biblia.png" alt="" onerror="this.parentNode.textContent='📖'"></div>
+          <div class="vit-ico">📖</div>
           <div class="vit-nome">Bíblia e Harpa</div><div class="vit-desc">Palavra e louvores</div>
         </div>
         <div class="vit-card" onclick="abrirMod('manuais')">
-          <div class="vit-ico"><img src="/img/home/biblioteca.png" alt="" onerror="this.parentNode.textContent='📚'"></div>
+          <div class="vit-ico">📚</div>
           <div class="vit-nome">Biblioteca</div><div class="vit-desc">Bíblias de Estudo, Concílio e mais</div>
         </div>
         <div class="vit-card" onclick="location.href='/biblioteca/curso-teologia/'">
-          <div class="vit-ico"><img src="/img/home/teologia.png" alt="" onerror="this.parentNode.textContent='🎓'"></div>
+          <div class="vit-ico">🎓</div>
           <div class="vit-nome">Curso de Teologia</div><div class="vit-desc">Estude a fé a fundo</div>
         </div>
         <div class="vit-card" onclick="location.href='/biblioteca/sermoes/'">
-          <div class="vit-ico"><img src="/img/home/sermoes.png" alt="" onerror="this.parentNode.textContent='🕊️'"></div>
+          <div class="vit-ico">📜</div>
           <div class="vit-nome">Sermões</div><div class="vit-desc">Mensagens que inspiram</div>
         </div>
 
         <div class="vit-card" onclick="location.href='/biblioteca/mensagens/'">
-          <div class="vit-ico"><img src="/img/home/pregacoes.png" alt="" onerror="this.parentNode.textContent='🎙️'"></div>
+          <div class="vit-ico">🎙️</div>
           <div class="vit-nome">Pregações</div><div class="vit-desc">Pregações poderosas</div>
         </div>
         <div class="vit-card" onclick="abrirHistorinhas()">
-          <div class="vit-ico"><img src="/img/home/historinhas.png" alt="" onerror="this.parentNode.textContent='👧'"></div>
+          <div class="vit-ico">🧒</div>
           <div class="vit-nome">Historinhas Infantis</div><div class="vit-desc">Conteúdo para crianças</div>
         </div>
         <div class="vit-card" onclick="abrirMod('desafiomateus')">
-          <div class="vit-ico"><img src="/img/home/quiz.png" alt="" onerror="this.parentNode.textContent='❓'"></div>
+          <div class="vit-ico">🧠</div>
           <div class="vit-nome">Quiz Bíblico</div><div class="vit-desc">Desafie seu conhecimento</div>
         </div>
 
         <div class="vit-card" onclick="abrirEbd()">
-          <div class="vit-ico"><img src="/img/home/ebd.png" alt="" onerror="this.parentNode.textContent='🔎'"></div>
+          <div class="vit-ico">🏫</div>
           <div class="vit-nome">EBD Completo</div><div class="vit-desc">Estudos para todas as idades</div>
         </div>
         <div class="vit-card" onclick="location.href='/biblioteca/preparador/'">
-          <div class="vit-ico"><img src="/img/home/preparador.png" alt="" onerror="this.parentNode.textContent='📝'"></div>
+          <div class="vit-ico">📝</div>
           <div class="vit-nome">Preparador de Sermões</div><div class="vit-desc">Organize e prepare suas mensagens</div>
         </div>
         <div class="vit-card" onclick="location.href='/biblioteca/escola-pregacao/'">
-          <div class="vit-ico"><img src="/img/home/pregar.png" alt="" onerror="this.parentNode.textContent='🙌'"></div>
+          <div class="vit-ico">🔥</div>
           <div class="vit-nome">Aprenda a Pregar</div><div class="vit-desc">Dicas e ferramentas para o ministério</div>
         </div>
         <!-- TIRADO DA VITRINE a pedido do Elias (17/09/2026): nao serve pro uso dele.
      O codigo e os dados continuam intactos — pra voltar, e so tirar este comentario.
 <div class="vit-card" onclick="abrirEnviarMidia()">
-          <div class="vit-ico"><img src="/img/home/publicar.png" alt="" onerror="this.parentNode.textContent='➕'"></div>
+          <div class="vit-ico">📤</div>
           <div class="vit-nome">Publicar</div><div class="vit-desc">Envie sua mídia</div>
         </div> -->
       </div>
@@ -378,7 +378,7 @@
   <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-informativo')">‹</button>
     <div class="std-hinfo"><div class="std-titulo">Projeto Silas</div><div class="std-sub">Documentos e agendas</div></div>
     <button onclick="event.stopPropagation();compartilharApp('Projeto Silas')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
-    <img src="img/ceadema.png" style="width:32px;height:32px;object-fit:contain;border-radius:8px;background:#fff;padding:2px;flex-shrink:0"></div>
+    <img src="img/ceadema.png" style="width:32px;height:32px;object-fit:contain;border-radius:8px;background:#fff;padding:2px;flex-shrink:0" loading="lazy" decoding="async"></div>
   <div class="agv-scroll">
     <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
     <div class="agv-hub-card" onclick="abrirCeadema('estadual')">
@@ -660,7 +660,7 @@
     <div class="bh-secao" style="margin-top:14px">🔜 Próximo trimestre</div>
     <div onclick="abrirEbdTurma('adulto4')" style="background:linear-gradient(160deg,#0a2a3a,#123a52);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3);margin-bottom:10px">
       <div style="display:flex;gap:12px;padding:12px;align-items:center">
-        <img src="/ebd/adulto4/img/licao-01.jpg" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">
+        <img src="/ebd/adulto4/img/licao-01.jpg" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'" loading="lazy" decoding="async">
         <div style="min-width:0">
           <div style="display:inline-block;background:rgba(0,0,0,.5);color:#f0d488;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:999px;margin-bottom:6px">🔒 EM BREVE · OUT 2026</div>
           <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;line-height:1.15">O Deus da Aliança</div>
@@ -671,7 +671,7 @@
     </div>
     <div onclick="abrirEbdTurma('jovem4')" style="background:linear-gradient(160deg,#08272a,#0f4038);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
       <div style="display:flex;gap:12px;padding:12px;align-items:center">
-        <img src="/ebd/jovem4/img/licao-01.jpg" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">
+        <img src="/ebd/jovem4/img/licao-01.jpg" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'" loading="lazy" decoding="async">
         <div style="min-width:0">
           <div style="display:inline-block;background:rgba(0,0,0,.5);color:#f0d488;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:999px;margin-bottom:6px">🔒 EM BREVE · OUT 2026</div>
           <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;line-height:1.15">Alegria em Cristo — Filipenses</div>
@@ -792,7 +792,7 @@
     <a class="std-back" id="ppt-dl-btn" href="" target="_blank" style="font-size:17px;text-decoration:none;opacity:.5" title="Em breve">↓</a>
   </div>
   <div class="ppt-viewer" id="ppt-viewer">
-    <img class="ppt-slide" id="ppt-slide-img" alt="slide">
+    <img class="ppt-slide" id="ppt-slide-img" alt="slide" loading="lazy" decoding="async">
     <div class="ppt-nav ppt-nav-prev" onclick="pptSlide(-1)">‹</div>
     <div class="ppt-nav ppt-nav-next" onclick="pptSlide(1)">›</div>
     <div class="ppt-counter-bar" id="ppt-counter">1 / 1</div>
@@ -839,7 +839,7 @@
       <div class="std-sub" id="leitor-fonte-h"></div>
     </div>
   </div>
-  <img class="not-leitor-img" id="leitor-img" alt="" style="display:none">
+  <img class="not-leitor-img" id="leitor-img" alt="" style="display:none" loading="lazy" decoding="async">
   <div class="not-leitor-body">
     <span class="not-badge" id="leitor-badge" style="display:none;margin-bottom:10px"></span>
     <div style="font-size:18px;font-weight:900;line-height:1.35;margin-bottom:8px" id="leitor-titulo"></div>
@@ -1233,7 +1233,7 @@
   </div>
   <div class="np-scroll dash-scroll" style="padding:0;background:#fff">
     <div style="background:linear-gradient(120deg,#112155,#3a78b5);padding:16px;display:flex;align-items:center;gap:12px">
-      <img src="img/ceadema.png" style="width:58px;height:58px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:50%;padding:3px">
+      <img src="img/ceadema.png" style="width:58px;height:58px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:50%;padding:3px" loading="lazy" decoding="async">
       <div style="color:#fff;min-width:0">
         <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:21px;letter-spacing:2px">CEADEMA</div>
         <div style="font-size:9.5px;font-weight:700;line-height:1.35;color:#dbe8fb">CONVENÇÃO ESTADUAL DAS IGREJAS EVANGÉLICAS ASSEMBLEIAS DE DEUS NO MARANHÃO</div>
