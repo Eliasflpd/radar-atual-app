@@ -287,7 +287,7 @@
       var h='<div class="cf-tit">🔎 Conferência das referências</div>';
       var partes=[];
       if(existem) partes.push('<span class="cf-ok">✅ '+existem+' referência'+(existem>1?'s':'')+' existe'+(existem>1?'m':'')+' na Bíblia</span>');
-      if(ok) partes.push('<span class="cf-ok">✅ '+ok+' citação'+(ok>1?'ões':'')+' bate'+(ok>1?'m':'')+' com o texto</span>');
+      if(ok) partes.push('<span class="cf-ok">✅ '+ok+(ok>1?' citações batem':' citação bate')+' com o texto</span>');
       if(duvidas.length) partes.push('🔎 '+duvidas.length+' parafraseada'+(duvidas.length>1?'s':''));
       if(ruins.length) partes.push('⚠️ '+ruins.length+' para corrigir');
       if(inexistentes.length) partes.push('❌ '+inexistentes.length+' que não existe'+(inexistentes.length>1?'m':''));
