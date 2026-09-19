@@ -8,8 +8,9 @@ import mensagem from './_lib/mensagem.js';
 import concilio from './_lib/concilio.js';
 import concilioWagner from './_lib/concilio-wagner.js';
 import peca from './_lib/peca.js';
+import estudoDoutrina from './_lib/estudo-doutrina.js';
 
-const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca };
+const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina };
 
 export default async function handler(req) {
   const fn = new URL(req.url).searchParams.get('fn') || '';
