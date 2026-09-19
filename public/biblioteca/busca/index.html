@@ -162,7 +162,12 @@ var SUGESTOES = [
 ];
 
 function voltar(){ if(history.length>1) history.back(); else location.href='/?mod=manuais'; }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// As ASPAS TÊM que entrar aqui. Sem elas, o versículo (que a gente copia entre
+// aspas) fechava o atributo data-t no meio e o botão Copiar copiava o vazio.
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 function el(id){ return document.getElementById(id); }
 
 function aviso(txt){
