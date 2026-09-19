@@ -268,13 +268,14 @@
       }
 
       // 2) toda referência do estudo (mesmo sem citação) tem que existir
-      var RE2=/([123])?\s*([A-Za-zÀ-ÿçÇ]{2,20})\.?\s*(\d{1,3}):(\d{1,3})(?:\s*[-–—‑]\s*(\d{1,3}))?/g, m2, vis2={};
+      var RE2=/([123])?\s*([A-Za-zÀ-ÿçÇ]{2,20})\.?\s*(\d{1,3}):(\d{1,3})(?:\s*[-–—‑]\s*(\d{1,3}))?/g, m2, vis2={}, existem=0;
       while((m2=RE2.exec(txt))){
         var cru=m2[0].replace(/[*_]/g,'').trim();
         if(vis2[cfNorm(cru)]) continue; vis2[cfNorm(cru)]=1;
         var cands=cfResolver((m2[1]||'')+m2[2]); if(!cands) continue;
         var loc2=cfLocalizar(cru);
-        if(loc2 && loc2.texto==null) inexistentes.push(cru);
+        if(!loc2) continue;
+        if(loc2.texto==null) inexistentes.push(cru); else existem++;
       }
 
       var ok=achados.filter(function(a){return a.tipo==='ok';}).length;
@@ -283,12 +284,16 @@
 
       var h='<div class="cf-tit">🔎 Conferência das referências</div>';
       var partes=[];
-      if(ok) partes.push('<span class="cf-ok">✅ '+ok+' citação'+(ok>1?'ões':'')+' conferida'+(ok>1?'s':'')+' na Bíblia</span>');
+      if(existem) partes.push('<span class="cf-ok">✅ '+existem+' referência'+(existem>1?'s':'')+' existe'+(existem>1?'m':'')+' na Bíblia</span>');
+      if(ok) partes.push('<span class="cf-ok">✅ '+ok+' citação'+(ok>1?'ões':'')+' bate'+(ok>1?'m':'')+' com o texto</span>');
       if(duvidas.length) partes.push('🔎 '+duvidas.length+' parafraseada'+(duvidas.length>1?'s':''));
       if(ruins.length) partes.push('⚠️ '+ruins.length+' para corrigir');
-      if(inexistentes.length) partes.push('❌ '+inexistentes.length+' referência'+(inexistentes.length>1?'s':'')+' que não existe'+(inexistentes.length>1?'m':''));
-      if(!partes.length) partes.push('Nenhuma citação entre aspas para conferir neste estudo.');
+      if(inexistentes.length) partes.push('❌ '+inexistentes.length+' que não existe'+(inexistentes.length>1?'m':''));
+      if(!partes.length) partes.push('Este estudo não trouxe referência nenhuma para conferir.');
       h+='<div class="cf-res">'+partes.join(' · ')+'</div>';
+      if(existem && !ok && !duvidas.length && !ruins.length){
+        h+='<div class="cf-item cf-duv">🔎 As referências existem, mas o estudo não transcreveu os versículos — então não dá para conferir a transcrição. Toque em cada referência para abrir o texto e ler antes de pregar.</div>';
+      }
 
       ruins.forEach(function(a){
         h+='<div class="cf-item cf-erro">⚠️ <b>'+escH(a.rot)+'</b> — o texto citado <b>não é dessa referência</b>.'

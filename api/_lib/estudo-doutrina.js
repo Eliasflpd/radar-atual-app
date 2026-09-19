@@ -46,7 +46,7 @@ const SECOES = [
   { n: 2, cab: '## 2 🪝 O QUE É VERDADE E SERVE DE ISCA',
     ordem: 'A CONCESSÃO HONESTA — esta é a parte que dá autoridade ao estudo inteiro. Diga o caroço de verdade REAL que existe no assunto e que é justamente o que dá combustível ao erro: a dor legítima, o fato documentado, a desconfiança que se justifica. Dizer "é tudo mentira" é tão desonesto quanto acreditar em tudo. Reconheça o que é fato — e depois mostre por que o fato não sustenta a conclusão errada que tiraram dele.' },
   { n: 3, cab: '## 3 📖 O QUE A BÍBLIA DIZ DE FATO',
-    ordem: 'Doutrina firme. A parte mais longa do estudo. Puxe os textos que realmente tratam do assunto (referência conferida: livro capítulo:versículo) e exponha o que eles ensinam. Traga 1 a 3 palavras no hebraico/grego SOMENTE quando o original muda o sentido — e só termos que você tem certeza absoluta que existem. Diga o que está escrito, o que é dedução e o que é tradição. Doutrina evangélica pentecostal clássica (Assembleia de Deus).' },
+    ordem: 'Doutrina firme. A parte MAIS LONGA do estudo — no mínimo metade dele. TRANSCREVA entre aspas pelo menos 3 versículos-chave, cada um seguido da referência entre parênteses, exatamente neste formato: "texto do versículo" (Efésios 6:12). É assim que o irmão acompanha de Bíblia aberta. Puxe os textos que realmente tratam do assunto e exponha o que eles ensinam. Traga 1 a 3 palavras no hebraico/grego SOMENTE quando o original muda o sentido — e só termos que você tem certeza absoluta que existem. Diga o que está escrito, o que é dedução e o que é tradição. Doutrina evangélica pentecostal clássica (Assembleia de Deus).' },
   { n: 4, cab: '## 4 ⚠️ A TROCA PERIGOSA',
     ordem: 'O erro exato que se comete. Formule como TROCA: o crente larga uma verdade bíblica e pega no lugar uma falsificação parecida com ela. Escreva no formato "trocar X por Y" e mostre por que a falsificação é parecida o bastante para enganar e diferente o bastante para matar.' },
   { n: 5, cab: '## 5 🧪 O TESTE QUE RESOLVE NO ATACADO',
@@ -127,7 +127,7 @@ function montarPrompt(tema, publico, tam) {
 O QUE VOCÊ FAZ: pega um assunto ATUAL — desses que a igreja está vivendo, vendo no celular e discutindo no grupo — e trata com PROFUNDIDADE BÍBLICA. Não é opinião de púlpito. Não é desabafo. É doutrina aplicada ao que está acontecendo agora.
 
 ${lerPublico(publico)}
-TAMANHO: ${tam.palavras}. A parte 3 (o que a Bíblia diz) é a mais longa; as partes 1, 2 e 4 são médias; a 5 é enxuta; a 6 é uma linha só.
+TAMANHO: ${tam.palavras} — este tamanho é PISO, não teto. Um estudo curto demais não dá culto. A parte 3 (o que a Bíblia diz) sozinha leva metade do estudo; as partes 1, 2 e 4 são médias; a 5 é enxuta; a 6 é uma linha só.
 ${TRAVA_QUALIDADE}
 ${NORMA_FEROZ}
 
