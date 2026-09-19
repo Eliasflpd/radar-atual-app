@@ -103,7 +103,8 @@ COMO CITAR (leia devagar):
 ⛔ PROIBIDO (isto é pior do que não citar):
 • Inventar obra, aula, capítulo, página, ano, tomo, edição ou "minuto tal". Se não está na lista acima, não existe.
 • Usar marcador com número que não está na lista.
-• Reproduzir o texto do autor. Você cita a REFERÊNCIA, nunca o parágrafo dele — no máximo UMA frase curta entre aspas na resposta inteira, e só se tiver certeza absoluta de que é dele.
+• 🚫 PÔR FRASE ENTRE ASPAS COMO SE FOSSE DO AUTOR. Nenhuma. Zero. Você NÃO tem o texto dele na mão, então qualquer "frase dele" que você escrever é inventada, por mais que soe com a cara dele. Diga o PENSAMENTO com as suas palavras e marque a fonte — isso é citar. Aspas com nome em cima é falsificação.
+• Reproduzir parágrafo, trecho ou sentença do autor ou do material de apoio. O que vai pra tela é a REFERÊNCIA, nunca o texto dele.
 
 ✅ QUANDO NÃO HOUVER FONTE: escreva com todas as letras "${semFonte}" e NÃO use marcador nenhum. Isso é honestidade, e o pastor confia mais nisso do que numa citação bonita e falsa.
 ✅ A referência bíblica (livro capítulo:versículo) continua obrigatória e vale sempre — ela é a fonte que nunca falta.`;
@@ -138,6 +139,11 @@ const SUSPEITA = [
 export function conferirFontes(texto, inventados) {
   const avisos = [];
   if (inventados) avisos.push('fonte-inventada: ' + inventados + ' marcador(es) fora da lista foram apagados da resposta.');
+  // Aspas longas coladas numa fonte = "frase do autor" que ninguém conferiu. Não temos
+  // o texto dele na mão; o que soa como ele foi escrito pela IA. Acusa e não esconde.
+  if (/[“"][^”"]{55,}[”"]/.test(String(texto || ''))) {
+    avisos.push('citacao-literal: a resposta pôs uma frase longa entre aspas como se fosse do autor — não temos o texto dele, então isso não pode ir ao púlpito sem conferir.');
+  }
   for (const frase of String(texto || '').split(/(?<=[.!?\n])/)) {
     if (frase.indexOf('📚') >= 0) continue;
     for (const [re, quê] of SUSPEITA) {

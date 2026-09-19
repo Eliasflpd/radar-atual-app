@@ -278,7 +278,19 @@ function montarPrompt(pergunta, ctx) {
   // inventada, minuto inventado nem pérola inventada.
   // A ordem importa: o bloco de CITAR A FONTE vai por ÚLTIMO, depois do FORMATO.
   // Colocado antes, os modelos rápidos da cascata seguiam o formato e esqueciam a fonte.
-  const sys = METODO + '\n\n' + FORMATO + blocoDeFontes('F', ctx.rotulos,
+  //
+  // E a fonte virou SEÇÃO do formato. Motivo medido em produção: pedir "ponha o
+  // marcador na frase" não pegava nos modelos rápidos (gpt-oss-20b/120b) — eles
+  // seguiam a lista de cabeçalhos e ignoravam o resto. Transformada em cabeçalho
+  // obrigatório, entra junto com as outras seções.
+  const secaoFonte = ctx.rotulos && ctx.rotulos.length
+    ? `\n\n📌 MAIS UMA SEÇÃO, OBRIGATÓRIA, logo depois de ✅ A ORDEM e ANTES do bloco ===QUADRO===:
+📚 DE ONDE VEM — escreva SOMENTE os marcadores do acervo que sustentam o garimpo desta resposta, de 1 a 3 deles, separados por espaço. Exemplo exato do que deve aparecer nessa linha: [F1] [F4]
+   Nada de escrever o nome da aula, nem da pérola, nem "segundo o Dr. Wagner": SÓ os marcadores — o sistema escreve a fonte por você.
+   Se de verdade nada do material sustentar o que você cavou, escreva nessa seção, em vez dos marcadores: "aplicando o método do Dr. Wagner — o material das aulas não cobre este ponto."`
+    : '';
+
+  const sys = METODO + '\n\n' + FORMATO + secaoFonte + blocoDeFontes('F', ctx.rotulos,
     'Estes são os pedaços do acervo do PRÓPRIO Dr. Wagner que casaram com a pergunta — aulas do Instituto GIOM e o Caderno de Pérolas. Cada pedaço do MATERIAL DE APOIO abaixo vem com o seu marcador:',
     'aplicando o método do Dr. Wagner');
   const user =
@@ -294,7 +306,7 @@ ${ctx.texto}
       : 'OBSERVAÇÃO: não encontrei nada no material das aulas sobre isso. Responda pelo método, com a Escritura, e AVISE ao pastor que o assunto não aparece no material do Dr. Wagner que temos aqui.\n\n') +
     'PERGUNTA DO PASTOR: ' + pergunta +
     (ctx.rotulos && ctx.rotulos.length
-      ? `\n\nANTES DE MANDAR: confira se você pôs pelo menos UM marcador de fonte ([F1] … [F${ctx.rotulos.length}]) no fim da frase que ele sustenta. Sem marcador, o pastor não sabe de onde veio — e é isso que estamos consertando. Não escreva o nome da aula: só o marcador.`
+      ? `\n\nANTES DE MANDAR: a resposta TEM QUE terminar com a seção 📚 DE ONDE VEM, contendo só os marcadores do acervo (de [F1] a [F${ctx.rotulos.length}]) que sustentam o garimpo. Sem isso, o pastor não sabe de onde veio — e é exatamente isso que estamos consertando. Não escreva o nome da aula: só o marcador.`
       : '');
   return { sys, user };
 }
