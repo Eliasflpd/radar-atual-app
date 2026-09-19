@@ -1,4 +1,4 @@
-const V='radar-v144';
+const V='radar-v145';
 const CACHE=['/','/manifest.json']; // capa.png (2MB) fora do precache — não atrasa o 1º load; é cacheada sob demanda
 
 self.addEventListener('install',e=>{
@@ -12,17 +12,26 @@ self.addEventListener('activate',e=>
 // permite ao app mandar trocar o SW velho na hora
 self.addEventListener('message',e=>{ if(e.data&&e.data.type==='SKIP_WAITING') self.skipWaiting(); });
 
-// documento (página HTML) = SEMPRE tenta a rede primeiro; cache só se a rede falhar (offline)
+// documento (página HTML) = ABRE NA HORA com o que já está guardado e busca a versão
+// nova POR TRÁS (stale-while-revalidate). Antes era rede-primeiro com espera de até 5s:
+// o app ficava em branco esperando a internet mesmo já estando instalado no celular.
+// Primeira visita (sem cache) = rede normal.
 function documento(req){
-  return new Promise(resolve=>{
-    let resolvido=false;
-    const cair=()=>caches.match(req).then(r=>{ if(!resolvido){ resolvido=true; resolve(r||fetch(req)); } });
-    const t=setTimeout(cair, 5000); // internet ruim: até 5s esperando o fresco, senão mostra o que tem
-    fetch(req).then(r=>{
-      resolvido=true; clearTimeout(t);
-      const clone=r.clone(); caches.open(V).then(c=>c.put(req,clone));
-      resolve(r);
-    }).catch(()=>{ clearTimeout(t); cair(); });
+  return caches.match(req).then(guardado=>{
+    const rede = fetch(req).then(r=>{
+      if(r && r.ok){
+        const clone=r.clone();
+        caches.open(V).then(c=>c.put(req,clone)).catch(()=>{});
+        // avisa a tela aberta que chegou versão nova (ela decide se recarrega sozinha)
+        if(guardado){
+          self.clients.matchAll({type:'window'}).then(ls=>{
+            ls.forEach(c=>c.postMessage({type:'VERSAO_NOVA', url:req.url}));
+          });
+        }
+      }
+      return r;
+    }).catch(()=>guardado);
+    return guardado || rede;   // tem no cache? desenha JÁ. Não tem? espera a rede.
   });
 }
 
