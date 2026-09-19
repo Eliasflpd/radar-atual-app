@@ -32,9 +32,29 @@
   .aviso p:last-child{margin-bottom:0}
   /* Depois que a conversa começa ele não pode ler nada dirigindo: o aviso encolhe
      pra uma tarja e devolve a tela inteira pro globo. Encolhe, não some. */
-  body.ligado .aviso{padding:6px 12px;border-left-width:5px}
+  body.ligado .aviso{padding:5px 12px;border-left-width:5px;margin-bottom:8px;flex:0 0 auto}
   body.ligado .aviso p,body.ligado .selo,body.ligado h1,body.ligado .sub,body.ligado .divisor,body.ligado .provaVoz{display:none}
-  body.ligado .aviso .t{font-size:.86rem;margin:0;font-weight:700}
+  body.ligado .aviso .t{font-size:.84rem;margin:0;font-weight:700}
+
+  /* ══ COM A CONVERSA LIGADA, O GLOBO É O DONO DA TELA ══
+     Dirigindo, ele olha de RELANCE: o globo é o painel de estado (pulsando =
+     ouvindo ou falando; parado = caiu). Se virar parede de texto, ele tem que
+     LER no volante — que é exatamente o que não pode.
+     Então a tela vira uma coluna travada na altura do aparelho: globo fixo no
+     lugar, e a transcrição rolando por BAIXO, dentro da própria caixa. O texto
+     nunca empurra nem cobre o globo. */
+  body.ligado{
+    height:100dvh;overflow:hidden;
+    display:flex;flex-direction:column;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  }
+  body.ligado .topo{flex:0 0 auto;margin-bottom:8px}
+  body.ligado .palco{flex:0 0 auto;margin:0}
+  body.ligado #globo{width:min(84vw,46vh);height:min(84vw,46vh);max-width:none;max-height:none}
+  body.ligado .barra{flex:0 0 auto;margin-top:10px}
+  /* min-height:0 é o que permite a caixa encolher dentro do flex e rolar sozinha */
+  body.ligado #conversa{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-top:10px;padding-right:2px}
+  body.ligado #conversa .vazio{padding:10px 0}
 
   /* ── PROVA DE VOZ (só parado, antes de ligar) ── */
   .provaVoz{display:none;margin:0 0 12px;border:1px solid #e4e7ec;border-radius:12px;padding:9px 11px;background:#f8fafb}
@@ -306,7 +326,13 @@
     S.fase='ouvindo'; estado('👂 PODE FALAR','O mestre está ouvindo.');
   }
   function limpaVazio(){ var v=elConversa.querySelector('.vazio'); if(v) v.remove(); }
-  function rolar(){ window.scrollTo(0,document.body.scrollHeight); }
+  // Rola A CAIXA da conversa, NUNCA a página. Rolar a página era o que fazia o
+  // globo subir e sumir assim que ele começava a falar — a tela virava parede de
+  // texto e ele perdia o painel de estado no meio do trânsito.
+  function rolar(){
+    if(document.body.classList.contains('ligado')) elConversa.scrollTop=elConversa.scrollHeight;
+    else window.scrollTo(0,document.body.scrollHeight);
+  }
   function bolha(classe,quem){
     limpaVazio();
     var d=document.createElement('div'); d.className='bolha '+classe;
