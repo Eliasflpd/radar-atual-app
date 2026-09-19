@@ -237,10 +237,16 @@ function ranquear(idx, pergunta, quantos){
 }
 
 /* ── a pergunta vira vetor (única ida ao servidor) ───────────────────────── */
+// Sem servidor não existe busca por SIGNIFICADO — a pergunta precisa virar
+// vetor, e isso mora na chave da API. Quando não dá, o erro sai marcado
+// (semServidor) e quem chamou cai na busca por palavra, aqui no aparelho.
+function semServidor(){ var x=new Error('sem servidor'); x.semServidor=true; return x; }
 function vetorDaPergunta(texto){
+  if(!navigator.onLine) return Promise.reject(semServidor());
   return fetch('/api/busca-vetor?q='+encodeURIComponent(texto))
-    .then(function(r){ return r.json(); })
+    .then(function(r){ return r.json(); }, function(){ throw semServidor(); })
     .then(function(d){
+      if(d && d.offline) throw semServidor();
       if(!d || !d.ok || !d.v) throw new Error((d&&d.erro)||'não consegui entender a pergunta');
       return Float32Array.from(d.v);
     });
@@ -363,16 +369,198 @@ function buscar(pronta){
     el('btnIr').disabled=false;
     window.scrollTo({top:el('saida').offsetTop-70,behavior:'smooth'});
   }).catch(function(e){
+    if(e && e.semServidor){ buscaPorPalavra(texto); return; }
     el('saida').innerHTML='<div class="erro"><b>Não deu pra buscar agora.</b><br>'+esc(e.message||e)
       +'<br><br>Confira a internet e tente de novo.</div>';
     el('btnIr').disabled=false;
   });
 }
 
+/* ════════════════════════════════════════════════════════════════════════════
+   PLANO B — BUSCA POR PALAVRA, 100% no aparelho.
+   Não é a busca por significado: aqui a gente procura as palavras que o irmão
+   escreveu, do jeito que ele escreveu. É pior — e é MUITO melhor que um botão
+   que não faz nada. A tela diz com todas as letras que é busca simples.
+   ════════════════════════════════════════════════════════════════════════════ */
+var BIBNORM=null;   // Bíblia já sem acento (montada uma vez, só se precisar)
+
+function normal(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+var PARADAS={};
+('de a o que e do da em um para com nao uma os no se na por mais as dos como mas ao ele das seu sua ou '
++'quando muito nos ja eu tambem so pelo pela ate isso ela entre era depois sem mesmo aos seus quem nas me '
++'esse eles voce essa num nem suas meu minha teu tua nosso nossa dela delas esta este estes estas isto '
++'aquele aquela aquilo ser tem foi sao esta estao ter seja pra pro sobre').split(' ')
+  .forEach(function(p){ PARADAS[p]=1; });
+
+function termosDa(texto){
+  var t=normal(texto).replace(/[^a-z0-9\s]/g,' ').split(/\s+/);
+  var bons=t.filter(function(p){ return p.length>=3 && !PARADAS[p]; });
+  return bons.length?bons:t.filter(function(p){ return p.length>=2; });
+}
+
+function pontuar(txtNormal, termos){
+  var pts=0, casou=0;
+  for(var k=0;k<termos.length;k++){
+    var p=termos[k], n=0, i=txtNormal.indexOf(p);
+    while(i>=0){ n++; i=txtNormal.indexOf(p,i+p.length); }
+    if(n){ casou++; pts+=1+Math.min(n-1,3)*0.3; }
+  }
+  if(!casou) return 0;
+  return pts*(casou/termos.length)*(casou===termos.length?1.4:1);  // casar tudo vale mais
+}
+
+function grifar(txt, termos){
+  var saida=esc(txt);
+  termos.forEach(function(p){
+    try{
+      var re=new RegExp('('+p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+      saida=saida.replace(re,'<em>$1</em>');
+    }catch(x){}
+  });
+  return saida;
+}
+
+function montarBibNorm(){
+  if(BIBNORM) return BIBNORM;
+  BIBNORM=[];
+  for(var l=0;l<BIBTXT.length;l++){
+    var caps=[];
+    for(var c=0;c<BIBTXT[l].chapters.length;c++){
+      var vs=BIBTXT[l].chapters[c], nv=new Array(vs.length);
+      for(var v=0;v<vs.length;v++) nv[v]=normal(vs[v]);
+      caps.push(nv);
+    }
+    BIBNORM.push(caps);
+  }
+  return BIBNORM;
+}
+
+function cartaoMensagemPalavra(r,termos){
+  var doc=ACERVO.meta.docs[ACERVO.meta.itens[r.i][0]];
+  var trecho=ACERVO.meta.itens[r.i][2];
+  var alvo='/biblioteca/mensagens/'+doc.a;
+  var paraCopiar=trecho+'\n\n— '+doc.t+' ('+doc.r+')\nApp RADAR: '+location.origin+alvo;
+  return '<div class="res">'
+    +'<div class="de"><div class="ic">'+esc(doc.e||'📖')+'</div>'
+    +'<div style="min-width:0"><div class="tit">'+esc(doc.t)+'</div><div class="ref">'+esc(doc.r)+'</div></div>'
+    +'<div class="pct" title="busca por palavra">🔤</div></div>'
+    +'<p class="txt">'+grifar(trecho,termos)+(trecho.length>=460?'…':'')+'</p>'
+    +'<div class="acoes">'
+    +'<a class="primario" href="'+esc(alvo)+'">📖 Abrir a mensagem</a>'
+    +'<button onclick="copiar(this.dataset.t)" data-t="'+esc(paraCopiar)+'">📋 Copiar</button>'
+    +'</div></div>';
+}
+
+function cartaoBibliaPalavra(it,termos){
+  var L=BIBTXT[it[0]];
+  var ref=L.name+' '+(it[1]+1)+':'+(it[2]+1);
+  var txt=L.chapters[it[1]][it[2]];
+  var paraCopiar='"'+txt+'"\n— '+ref+'\n(Bíblia · App RADAR)';
+  return '<div class="res">'
+    +'<div class="de"><div class="ic" style="background:linear-gradient(135deg,#0f3d5c,#0f6d78)">📖</div>'
+    +'<div style="min-width:0"><div class="tit">'+esc(ref)+'</div><div class="ref">Bíblia Sagrada</div></div>'
+    +'<div class="pct" title="busca por palavra">🔤</div></div>'
+    +'<p class="txt">'+grifar(txt,termos)+'</p>'
+    +'<div class="acoes">'
+    +'<button onclick="copiar(this.dataset.t)" data-t="'+esc(paraCopiar)+'">📋 Copiar</button>'
+    +'</div></div>';
+}
+
+function buscaPorPalavra(texto){
+  var termos=termosDa(texto);
+  var aviso='<div class="estado" style="margin:0 0 14px;border-left:4px solid #C9A14A">'
+    +'<b>🔤 Busca simples, por palavra.</b><br>'
+    +(navigator.onLine
+      ? 'O servidor da busca por significado não respondeu agora, então procurei as palavras exatas aqui no seu aparelho.'
+      : 'Você está <b>sem internet</b>. A busca por <i>significado</i> precisa do servidor; '
+        +'esta aqui procura as <b>palavras exatas</b> que você escreveu, no que já está guardado no aparelho.')
+    +'</div>';
+
+  if(!termos.length){
+    el('saida').innerHTML=aviso+'<div class="vazio">Escreva pelo menos uma palavra com 3 letras.</div>';
+    el('btnIr').disabled=false; return;
+  }
+
+  var t0=performance.now(), html='', achou=false, nada=[];
+
+  if(ACERVO){
+    var brutos=[], it=ACERVO.meta.itens;
+    for(var i=0;i<it.length;i++){
+      var s=pontuar(normal(it[i][2]),termos);
+      if(s>0) brutos.push({i:i,s:s});
+    }
+    brutos.sort(function(a,b){ return b.s-a.s; });
+    var vistos={}, mens=[];
+    for(var j=0;j<brutos.length && mens.length<5;j++){
+      var d=it[brutos[j].i][0];
+      if(vistos[d]) continue; vistos[d]=1; mens.push(brutos[j]);
+    }
+    if(mens.length){
+      achou=true;
+      html+='<div class="secao"><div class="secao-tit">📜 Nas suas mensagens'
+        +'<small>'+ACERVO.meta.docs.length+' mensagens · palavra exata</small></div>'
+        +mens.map(function(r){ return cartaoMensagemPalavra(r,termos); }).join('')+'</div>';
+    } else nada.push('nas suas mensagens');
+  } else nada.push('nas mensagens (o índice não está guardado)');
+
+  if(BIBTXT){
+    var N=montarBibNorm(), achados=[];
+    for(var l=0;l<N.length;l++){
+      for(var c=0;c<N[l].length;c++){
+        var vs=N[l][c];
+        for(var v=0;v<vs.length;v++){
+          var p=pontuar(vs[v],termos);
+          if(p>0) achados.push({it:[l,c,v],s:p});
+        }
+      }
+    }
+    achados.sort(function(a,b){ return b.s-a.s; });
+    var bib=achados.slice(0,8);
+    if(bib.length){
+      achou=true;
+      html+='<div class="secao"><div class="secao-tit">📖 Na Bíblia'
+        +'<small>'+achados.length.toLocaleString('pt-BR')+' versículo(s) com essas palavras</small></div>'
+        +bib.map(function(r){ return cartaoBibliaPalavra(r.it,termos); }).join('')+'</div>';
+    } else nada.push('na Bíblia');
+  } else {
+    nada.push('na Bíblia (ela ainda não está guardada neste aparelho)');
+  }
+
+  var ms=Math.round(performance.now()-t0);
+  if(!achou){
+    html='<div class="vazio"><b>Não achei essas palavras no que está guardado aqui.</b><br>'
+      +'Busca por palavra acha o que está escrito igualzinho. Tente outra palavra — '
+      +'ou volte quando pegar sinal, que aí ela procura pelo <i>sentido</i> da pergunta.</div>';
+  } else {
+    if(nada.length) html+='<div class="dica" style="text-align:center">Nada '+nada.join(' nem ')+'.</div>';
+    html+='<div class="dica" style="text-align:center;margin-top:10px">Procurado em '+ms+' ms, aqui no seu aparelho, sem internet.</div>';
+  }
+
+  if(!BIBTXT){
+    html+='<div class="estado" style="margin-top:14px">📖 Para a busca alcançar a <b>Bíblia inteira</b> mesmo sem sinal, '
+      +'abra o app com internet e toque em <b>“📥 Deixar disponível sem internet”</b> na tela inicial.</div>';
+  }
+
+  el('saida').innerHTML=aviso+html;
+  el('btnIr').disabled=false;
+  window.scrollTo({top:el('saida').offsetTop-70,behavior:'smooth'});
+}
+
 /* ── ligar tudo ──────────────────────────────────────────────────────────── */
 function pintarEstado(){
   var e=el('estado');
   if(BAIXANDO) return;
+  if(!navigator.onLine){
+    // sem rede a pergunta não vira vetor: diga isso ANTES de ele digitar
+    e.innerHTML='📡 <b>Você está sem internet.</b> A busca por <i>significado</i> precisa do servidor. '
+      +'Aqui vai funcionar a <b>busca por palavra</b>'
+      +(ACERVO?' nas <b>'+ACERVO.meta.docs.length+' mensagens</b>':'')
+      +(BIBTXT?' e na <b>Bíblia inteira</b>':'')+' que estão guardadas no aparelho.'
+      +((!ACERVO&&!BIBTXT)?'<div style="margin-top:6px">Nada foi guardado ainda — abra o app com internet e toque em <b>“📥 Deixar disponível sem internet”</b>.</div>':'');
+    return;
+  }
   if(ACERVO && BIBLIA && BIBTXT){
     e.innerHTML='✅ Pronto: <b>'+ACERVO.meta.docs.length+' mensagens</b> do acervo e a <b>Bíblia inteira</b> '
       +'('+BIBLIA.meta.total.toLocaleString('pt-BR')+' passagens) prontas para busca — e guardadas no aparelho.';
@@ -388,6 +576,15 @@ function pintarEstado(){
 var MB_BIBLIA='3,9';   // biblia.vec.bin = 3,72 MB + catálogo 190 KB (medido)
 function ligarBiblia(){
   if(BAIXANDO || (BIBLIA&&BIBTXT)) return;
+  // sem rede não adianta prometer download: pega só o TEXTO que já está
+  // guardado (pacote offline) e libera a busca por palavra na Bíblia inteira.
+  if(!navigator.onLine){
+    if(BIBTXT){ pintarEstado(); return; }
+    fetch('/biblia.json').then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(t){ BIBTXT=t; })['catch'](function(){})
+      .then(function(){ pintarEstado(); });
+    return;
+  }
   BAIXANDO=true;
   var e=el('estado');
   e.innerHTML='📖 Baixando a Bíblia para a busca… <span id="pc">0%</span><div class="barra"><i id="bi"></i></div>'
@@ -405,8 +602,18 @@ function ligarBiblia(){
     BAIXANDO=false; pintarEstado();
   }).catch(function(err){
     BAIXANDO=false;
-    el('estado').innerHTML='<span style="color:#8a1c1c">Não consegui baixar a Bíblia agora ('+esc(err.message||err)+').</span>'
-      +'<button class="btnBaixar" onclick="ligarBiblia()">Tentar de novo</button>';
+    // Os vetores (3,7 MB) podem não estar guardados, mas o TEXTO da Bíblia pode
+    // estar — é ele que o pacote offline baixa. Sem os vetores não há busca por
+    // significado, mas a busca por PALAVRA já alcança a Bíblia inteira.
+    (BIBTXT?Promise.resolve(BIBTXT):fetch('/biblia.json').then(function(r){
+      if(!r.ok) throw 0; return r.json();
+    })).then(function(txt){
+      BIBTXT=txt; pintarEstado();
+    })['catch'](function(){
+      el('estado').innerHTML='<span style="color:#8a1c1c">Não consegui baixar a Bíblia agora'
+        +(navigator.onLine?' ('+esc(err.message||err)+')':' — você está sem internet')+'.</span>'
+        +'<button class="btnBaixar" onclick="ligarBiblia()">Tentar de novo</button>';
+    });
   });
 }
 
@@ -431,6 +638,8 @@ function internetMagra(){
     var jaQuis=false; try{ jaQuis=localStorage.getItem('busca_biblia_on')==='1'; }catch(x){}
     if(jaQuis || !internetMagra()) setTimeout(ligarBiblia,300);
   }).catch(function(e){
+    // sem índice do acervo ainda dá pra buscar na Bíblia guardada — não morra aqui
+    if(!navigator.onLine){ pintarEstado(); ligarBiblia(); return; }
     el('estado').innerHTML='<span style="color:#8a1c1c">Índice do acervo não carregou: '+esc(e.message||e)+'</span>';
   });
 

@@ -1611,7 +1611,21 @@ function abrirBiblia(){
   document.getElementById('bib-search-wrap').style.display='none';
   document.getElementById('bib-pos-bar').style.display='none';
   fetch('/biblia.json').then(r=>r.json()).then(d=>{bibData=d;bibMostrarLivros();}).catch(()=>{
-    document.getElementById('bib-body').innerHTML='<div class="bib-loading"><span style="color:var(--red)">Erro ao carregar.</span></div>';
+    // "Erro ao carregar" não explica nada pra quem está sem sinal no ônibus.
+    var semRede = !navigator.onLine;
+    document.getElementById('bib-body').innerHTML=
+      '<div style="padding:26px 20px;text-align:center;line-height:1.6">'
+      +'<div style="font-size:40px;margin-bottom:8px">'+(semRede?'📡':'⚠️')+'</div>'
+      +'<div style="font-weight:800;font-size:16px;margin-bottom:7px">'
+      +(semRede?'A Bíblia ainda não está guardada neste aparelho':'Não consegui carregar a Bíblia agora')+'</div>'
+      +'<div style="color:#9fb0bd;font-size:14px;margin-bottom:16px">'
+      +(semRede
+        ? 'Você está sem internet. Quando pegar sinal, toque em <b>“📥 Deixar disponível sem internet”</b> na tela inicial — depois disso ela abre sempre, com ou sem rede.'
+        : 'Pode ser a internet oscilando. Tente de novo.')
+      +'</div>'
+      +'<button onclick="abrirBiblia()" style="background:#C9A14A;color:#15202b;border:none;border-radius:11px;padding:12px 20px;font-weight:800;font-size:14.5px;font-family:inherit;cursor:pointer">🔄 Tentar de novo</button>'
+      +'<button onclick="voltarHome()" style="display:block;margin:10px auto 0;background:none;color:#9fb0bd;border:1px solid #2b3a4a;border-radius:11px;padding:11px 20px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer">← Voltar ao Início</button>'
+      +'</div>';
   });
 }
 
@@ -1793,7 +1807,20 @@ async function abrirHarpa(){
     document.getElementById('harpa-lista-sub').textContent=`${harpaData.length} hinos`;
     renderHarpaLista(harpaData);
   }catch(e){
-    document.getElementById('harpa-lista').innerHTML='<div class="bib-loading"><span style="color:var(--red)">Erro ao carregar.</span></div>';
+    var semRede = !navigator.onLine;
+    document.getElementById('harpa-lista').innerHTML=
+      '<div style="padding:26px 20px;text-align:center;line-height:1.6">'
+      +'<div style="font-size:40px;margin-bottom:8px">'+(semRede?'📡':'⚠️')+'</div>'
+      +'<div style="font-weight:800;font-size:16px;margin-bottom:7px">'
+      +(semRede?'A Harpa ainda não está guardada neste aparelho':'Não consegui carregar a Harpa agora')+'</div>'
+      +'<div style="color:#9fb0bd;font-size:14px;margin-bottom:16px">'
+      +(semRede
+        ? 'Você está sem internet. Quando pegar sinal, toque em <b>“📥 Deixar disponível sem internet”</b> na tela inicial — depois disso os 640 hinos abrem sempre.'
+        : 'Pode ser a internet oscilando. Tente de novo.')
+      +'</div>'
+      +'<button onclick="abrirHarpa()" style="background:#C9A14A;color:#15202b;border:none;border-radius:11px;padding:12px 20px;font-weight:800;font-size:14.5px;font-family:inherit;cursor:pointer">🔄 Tentar de novo</button>'
+      +'<button onclick="voltarHome()" style="display:block;margin:10px auto 0;background:none;color:#9fb0bd;border:1px solid #2b3a4a;border-radius:11px;padding:11px 20px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer">← Voltar ao Início</button>'
+      +'</div>';
   }
 }
 
@@ -5340,3 +5367,235 @@ const _crmInitMap = {
   'tela-adm-relatorios': ()=>renderRelatorios(),
   'tela-adm-usuarios': ()=>renderUsuarios(),
 };
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MODO SEM INTERNET — o irmão no ônibus, no porão do templo, no interior.
+   Três coisas: (1) diz na tela quando está sem rede e o que ainda funciona,
+   (2) deixa ele BAIXAR o conteúdo pesado de propósito, com tamanho e progresso,
+   (3) nunca deixa um botão morrer calado.
+   O pacote mora num cache separado do shell: subir a versão do app NÃO apaga
+   os MB que ele baixou com o plano de dados dele.
+   ════════════════════════════════════════════════════════════════════════════ */
+(function(){
+  var PACOTE='radar-pacote-v1';
+  var MARCA='radar_pacote_ok';           // carimbo local: pacote já baixado
+  var baixando=false;
+
+  function temCache(){ return ('caches' in window); }
+  function esta(n){ return document.getElementById(n); }
+  function mb(b){ return (b/1048576).toFixed(1).replace('.',',')+' MB'; }
+
+  /* ── o que entra no pacote ────────────────────────────────────────────────
+     Lista montada na hora a partir dos índices de Mensagens e Sermões: quando
+     o Elias publicar mensagem nova, ela entra no pacote sozinha — ninguém
+     precisa lembrar de mexer aqui. */
+  var FIXOS=[
+    '/',                                  // a casa
+    '/capa.jpg',                          // splash
+    '/biblia.json',                       // O CORAÇÃO — a Bíblia inteira
+    '/harpa.json',                        // 640 hinos
+    '/ebd/previa.json',
+    '/_pregado.js',                       // usado pelas páginas de mensagem
+    '/busca/mensagens.idx.json',          // dá busca por palavra offline
+    // ATENÇÃO: o app navega para a PASTA ('/biblioteca/mensagens/'), não para
+    // o index.html. Chave de cache é a URL inteira — guardar só o index.html
+    // deixaria a lista de mensagens sem abrir offline. Guardamos as duas formas.
+    '/biblioteca/busca/',            '/biblioteca/busca/index.html',
+    '/biblioteca/mensagens/',        '/biblioteca/mensagens/index.html',
+    '/biblioteca/mensagens/_leitura.js',
+    '/biblioteca/mensagens/_lupa.js',
+    '/biblioteca/mensagens/_refs.js',
+    '/biblioteca/sermoes/',          '/biblioteca/sermoes/index.html',
+    '/biblioteca/sermoes/_sermao.js'
+  ];
+
+  function lerIndice(url, base){
+    return fetch(url).then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(t){
+      var out=[], re=/arquivo\s*:\s*['"]([^'"]+\.html)['"]/g, m;
+      while((m=re.exec(t))) out.push(base+m[1]);
+      return out;
+    }).catch(function(){ return []; });
+  }
+
+  function licoesDaVez(){
+    var n=0; try{ n=(typeof licaoDaSemana==='function')?licaoDaSemana():0; }catch(e){}
+    if(!(n>=1)) return [];
+    var out=[];
+    ['adulto','jovem','adulto4','jovem4'].forEach(function(t){
+      [n-1,n,n+1].forEach(function(k){
+        if(k<1||k>13) return;
+        var nn=(k<10?'0':'')+k;
+        out.push('/ebd/'+t+'/html/licao-'+nn+'.html');
+        out.push('/ebd/'+t+'/html/apoio-'+nn+'.html');
+      });
+    });
+    return out;   // o que não existir dá 404 e é pulado — não quebra o pacote
+  }
+
+  function montarLista(){
+    return Promise.all([
+      lerIndice('/biblioteca/mensagens/index.html','/biblioteca/mensagens/'),
+      lerIndice('/biblioteca/sermoes/index.html','/biblioteca/sermoes/')
+    ]).then(function(r){
+      var todos=FIXOS.concat(r[0]).concat(r[1]).concat(licoesDaVez());
+      var vistos={}, lim=[];
+      todos.forEach(function(u){ if(!vistos[u]){ vistos[u]=1; lim.push(u); } });
+      return lim;
+    });
+  }
+
+  /* ── baixar ─────────────────────────────────────────────────────────────── */
+  function baixarPacote(){
+    if(baixando || !temCache()) return;
+    if(!navigator.onLine){ pintarPainel('sem-rede'); return; }
+    baixando=true; pintarPainel('baixando',{feitos:0,total:0,bytes:0});
+    var cache, lista, bytes=0, feitos=0, falhas=0;
+
+    caches.open(PACOTE).then(function(c){ cache=c; return montarLista(); }).then(function(l){
+      lista=l;
+      pintarPainel('baixando',{feitos:0,total:lista.length,bytes:0});
+      var fila=lista.slice(), ativos=0, POR_VEZ=4;
+
+      return new Promise(function(pronto){
+        function proximo(){
+          if(!fila.length){ if(ativos===0) pronto(); return; }
+          var u=fila.shift(); ativos++;
+          fetch(u,{cache:'reload'}).then(function(r){
+            if(!r||!r.ok) throw 0;
+            bytes+=(+(r.headers.get('content-length')||0));
+            return cache.put(u,r);
+          }).catch(function(){ falhas++; }).then(function(){
+            ativos--; feitos++;
+            pintarPainel('baixando',{feitos:feitos,total:lista.length,bytes:bytes});
+            proximo();
+          });
+        }
+        for(var i=0;i<POR_VEZ;i++) proximo();
+      });
+    }).then(function(){
+      baixando=false;
+      try{ localStorage.setItem(MARCA,JSON.stringify({em:Date.now(),arquivos:feitos-falhas,bytes:bytes})); }catch(e){}
+      pintarPainel('pronto',{arquivos:feitos-falhas,bytes:bytes});
+    })['catch'](function(){
+      baixando=false;
+      pintarPainel('falhou');
+    });
+  }
+
+  function apagarPacote(){
+    if(!temCache()) return;
+    if(!confirm('Apagar o conteúdo guardado no aparelho? O app volta a precisar de internet para a Bíblia, as mensagens e os sermões.')) return;
+    caches['delete'](PACOTE).then(function(){
+      try{ localStorage.removeItem(MARCA); }catch(e){}
+      pintarPainel('novo');
+    });
+  }
+
+  function jaBaixado(){
+    try{ return JSON.parse(localStorage.getItem(MARCA)||'null'); }catch(e){ return null; }
+  }
+
+  /* ── o painel na home ───────────────────────────────────────────────────── */
+  function criarPainel(){
+    var alvo=document.querySelector('#home .home-scroll');
+    if(!alvo || esta('off-painel')) return null;
+    var d=document.createElement('div');
+    d.id='off-painel';
+    d.style.cssText='margin:14px 14px 22px;padding:15px 15px 16px;border-radius:16px;'
+      +'background:linear-gradient(160deg,#16222f,#101821);border:1px solid rgba(201,161,74,.28);'
+      +'box-shadow:0 10px 26px rgba(0,0,0,.28);font-size:14px;line-height:1.5;color:#e8eef5';
+    alvo.appendChild(d);
+    return d;
+  }
+
+  function pintarPainel(estado, info){
+    var d=esta('off-painel')||criarPainel(); if(!d) return;
+    info=info||{};
+    var topo='<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">'
+      +'<span style="font-size:20px">📥</span>'
+      +'<b style="font-size:15px;color:#C9A14A">Usar o RADAR sem internet</b></div>';
+    var bt='background:#C9A14A;color:#15202b;border:none;border-radius:11px;padding:12px 16px;'
+      +'font-weight:800;font-size:14.5px;font-family:inherit;cursor:pointer;width:100%;margin-top:11px';
+
+    if(estado==='baixando'){
+      var pc=info.total?Math.round(info.feitos/info.total*100):0;
+      d.innerHTML=topo
+        +'<div style="color:#9fb0bd">Guardando no aparelho… <b style="color:#e8eef5">'+pc+'%</b>'
+        +(info.total?' · '+info.feitos+' de '+info.total+' arquivos':'')
+        +(info.bytes?' · '+mb(info.bytes):'')+'</div>'
+        +'<div style="height:8px;background:#0a0c10;border-radius:5px;overflow:hidden;margin-top:9px">'
+        +'<i style="display:block;height:100%;width:'+pc+'%;background:#C9A14A;transition:width .25s"></i></div>'
+        +'<div style="color:#7f8c99;font-size:12.5px;margin-top:8px">Pode deixar o app aberto. É só desta vez.</div>';
+      return;
+    }
+    if(estado==='pronto'){
+      d.innerHTML=topo
+        +'<div style="color:#34c77b"><b>✅ Pronto.</b> Bíblia, Harpa, mensagens e sermões estão no seu aparelho'
+        +(info.bytes?' ('+mb(info.bytes)+')':'')+'.</div>'
+        +'<div style="color:#9fb0bd;font-size:13px;margin-top:7px">Pode ficar sem sinal que eles abrem do mesmo jeito. '
+        +'Continuam pedindo internet: Concílio, geradores de mensagem e sermão, busca por significado, vídeos e o quiz.</div>'
+        +'<button style="'+bt+';background:#233244;color:#c7d3de" onclick="radarBaixarPacote()">🔄 Atualizar o conteúdo guardado</button>'
+        +'<button style="'+bt+';background:none;color:#7f8c99;border:1px solid #2b3a4a;margin-top:7px" onclick="radarApagarPacote()">🗑️ Apagar e liberar espaço</button>';
+      return;
+    }
+    if(estado==='falhou'){
+      d.innerHTML=topo
+        +'<div style="color:#e06b6b">Não consegui terminar o download agora.</div>'
+        +'<button style="'+bt+'" onclick="radarBaixarPacote()">Tentar de novo</button>';
+      return;
+    }
+    if(estado==='sem-rede'){
+      d.innerHTML=topo
+        +'<div style="color:#e0a76b">Você está sem internet agora. Para guardar o conteúdo preciso de rede uma vez só.</div>'
+        +'<button style="'+bt+'" onclick="radarBaixarPacote()">Tentar de novo</button>';
+      return;
+    }
+    d.innerHTML=topo
+      +'<div style="color:#9fb0bd">Baixe uma vez e leia a <b style="color:#e8eef5">Bíblia inteira</b>, a <b style="color:#e8eef5">Harpa</b>, '
+      +'as <b style="color:#e8eef5">mensagens</b>, os <b style="color:#e8eef5">sermões</b> e a <b style="color:#e8eef5">lição da EBD</b> '
+      +'sem gastar mais nada de internet.</div>'
+      +'<div style="color:#7f8c99;font-size:12.5px;margin-top:7px">São cerca de <b style="color:#c7d3de">5,5 MB</b>. '
+      +'Faça no wi-fi se o seu plano for curto.</div>'
+      +'<button style="'+bt+'" onclick="radarBaixarPacote()">📥 Deixar disponível sem internet</button>';
+  }
+
+  /* ── a tarja de "você está sem internet" ────────────────────────────────── */
+  function tarja(){
+    var t=esta('off-tarja');
+    if(navigator.onLine){ if(t) t.remove(); return; }
+    if(t) return;
+    t=document.createElement('div');
+    t.id='off-tarja';
+    t.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#3a2a12;'
+      +'color:#f0d9a8;border-top:1px solid #C9A14A;padding:9px 14px;font-size:13px;line-height:1.45;'
+      +'display:flex;align-items:center;gap:10px;font-family:inherit';
+    t.innerHTML='<span style="font-size:17px">📡</span>'
+      +'<span style="flex:1"><b>Sem internet.</b> <span id="off-tarja-txt"></span></span>'
+      +'<button onclick="this.parentNode.remove()" '
+      +'style="background:none;border:none;color:#f0d9a8;font-size:19px;cursor:pointer;padding:0 4px">&times;</button>';
+    document.body.appendChild(t);
+    var p=jaBaixado();
+    var tx=esta('off-tarja-txt');
+    if(tx) tx.innerHTML = p
+      ? 'Bíblia, Harpa, mensagens e sermões abrem normal. Concílio, geradores e vídeos voltam com o sinal.'
+      : 'Funciona o que você já abriu antes. Para ter a Bíblia sempre, toque em <b>“Deixar disponível sem internet”</b> na tela inicial quando pegar sinal.';
+  }
+
+  window.radarBaixarPacote=baixarPacote;
+  window.radarApagarPacote=apagarPacote;
+  window.radarPacoteOk=function(){ return !!jaBaixado(); };
+
+  window.addEventListener('online',function(){ tarja(); });
+  window.addEventListener('offline',function(){ tarja(); });
+
+  function iniciar(){
+    if(!temCache()) return;
+    caches.has(PACOTE).then(function(tem){
+      var p=jaBaixado();
+      pintarPainel(tem&&p?'pronto':'novo', p||{});
+    })['catch'](function(){ pintarPainel('novo'); });
+    tarja();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',iniciar);
+  else setTimeout(iniciar,60);
+})();
