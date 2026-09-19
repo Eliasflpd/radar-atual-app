@@ -256,17 +256,27 @@
     flush();
     saida.innerHTML=h;
   }
+  /* A TRAVA "não empurra besteira" (assets/conferidor.js): confere cada versículo
+     entre aspas contra a Bíblia de verdade e checa se o idioma do original bate com
+     o testamento do texto citado. Só aparece quando há o que dizer. */
+  function conferir(txt){
+    if(!window.RadarConferidor) return;
+    try{ window.RadarConferidor.caixa(txt, saida); }catch(e){}
+  }
   function forjar(){
     var t=tema.value.trim(); if(!t||ocupado) return;
     ocupado=true; btn.disabled=true; btn.textContent='✍️ Forjando…'; raw=''; saida.innerHTML=''; acoes.style.display='none';
     quem.textContent=PENSANDO;
+    if(window.RadarConferidor){ try{ window.RadarConferidor.aquecer(); }catch(e){} }   // Bíblia baixando enquanto o sermão é forjado
     fetch('/api/concilio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:ACAO,tema:t})})
     .then(function(r){
       if(!r.body||!r.body.getReader) return r.text().then(function(x){ raw=x; render(raw); });
       var reader=r.body.getReader(), dec=new TextDecoder();
       return (function pump(){ return reader.read().then(function(x){ if(x.done) return; raw+=dec.decode(x.value,{stream:true}); render(raw); return pump(); }); })();
     })
-    .then(function(){ quem.textContent=''; if(raw.trim()) acoes.style.display='flex'; })
+    // o sermão sai em streaming (render roda a cada pedaço); a conferência só no FIM,
+    // com o texto inteiro na mão — senão acusaria citação que ainda estava chegando.
+    .then(function(){ quem.textContent=''; if(raw.trim()){ acoes.style.display='flex'; conferir(raw); } })
     .catch(function(e){ quem.textContent=''; saida.innerHTML='<p style="color:#b91c1c">Não deu certo agora: '+escH(e.message||'falha')+'. Tente de novo.</p>'; })
     .then(function(){ ocupado=false; btn.disabled=false; btn.textContent=LABEL; });
   }
@@ -312,6 +322,7 @@
   };
 })();
 </script>
+<script src="/assets/conferidor.js"></script>
 <script src="/_pregado.js?v=1" defer></script>
 </body>
 </html>

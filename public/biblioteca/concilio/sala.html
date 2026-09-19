@@ -118,6 +118,7 @@
   </div>
 
 <script src="/biblioteca/_peca.js"></script>
+<script src="/assets/conferidor.js"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════════════
    SALA DE PERGUNTAS DO CONCÍLIO — genérica por dentro.
@@ -199,7 +200,21 @@ function bolha(item){
                   '<div class="rod"><button class="bcopia">📋 Copiar</button></div>';
     var b = d.querySelector('.bcopia');
     b.addEventListener('click', function(){ copiaTexto(item.texto + assinatura(), b); });
+    conferir(item.texto, d);
   }
+
+/* ─── A TRAVA "NÃO EMPURRA BESTEIRA" ───
+   Duas invenções que escaparam em produção mesmo com a fonte já travada:
+     • "criou", em Gênesis 1:1, seria o grego ποιεῖν — Gênesis é HEBRAICO;
+     • Levítico 23:10-12 entre aspas listando maná e altar, que não estão lá.
+   Prompt não segura isso. Então o conferidor (assets/conferidor.js) abre a Bíblia
+   de verdade e confronta a resposta DEPOIS que ela já está na tela — não atrasa
+   nada, não apaga nada. O aviso entra acima dos botões e só aparece quando há o
+   que dizer: silêncio aqui quer dizer "passou". */
+function conferir(texto, bolhaEl){
+  if (!window.RadarConferidor) return;
+  try { window.RadarConferidor.caixa(texto, bolhaEl, bolhaEl.querySelector('.rod')); } catch(e){}
+}
   $('msgs').appendChild(d);
   return d;
 }
@@ -312,6 +327,9 @@ function perguntar(){
   var er = $('msgs').querySelectorAll('.erro'); for (var i=0;i<er.length;i++) er[i].remove();
 
   ocupado = true; $('env').disabled = true;
+  // a Bíblia começa a baixar AGORA, enquanto o servo pensa (1,8 a 2,8s). Quando a
+  // resposta chega, o conferidor já está armado — e o download fica em cache.
+  if (window.RadarConferidor) { try { window.RadarConferidor.aquecer(); } catch(e){} }
   $('txt').value = ''; $('txt').style.height = 'auto';
   guarda('eu', t); bolha(HIST[HIST.length-1]); fim();
   pensando(true);

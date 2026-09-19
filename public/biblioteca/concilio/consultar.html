@@ -242,6 +242,7 @@ document.getElementById('forjar').addEventListener('click',function(){
   document.getElementById('quem').innerHTML='<div class="qn">'+esc(sel.icone+' '+sel.nome)+'</div><div class="qt">'+esc(tn+' · '+passagem)+'</div>';
   var saida=document.getElementById('saida');
   saida.textContent='Buscando… 🙏';
+  if(window.RadarConferidor){ try{ window.RadarConferidor.aquecer(); }catch(e){} }   // Bíblia baixando enquanto o servo forja
   document.getElementById('res').scrollIntoView({behavior:'smooth',block:'start'});
 
   fetch('/api/concilio',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -267,11 +268,22 @@ document.getElementById('forjar').addEventListener('click',function(){
   });
 });
 
+/* A TRAVA "não empurra besteira" (assets/conferidor.js) — confere os versículos
+   entre aspas contra a Bíblia de verdade e checa se o idioma do original bate com
+   o testamento do texto citado. Entra acima dos botões, só quando há o que dizer.
+   (Nome próprio: aqui já existe um conferir(), que é a validação do formulário.) */
+function travaDaVerdade(){
+  if(!window.RadarConferidor) return;
+  var res=document.getElementById('res'), saida=document.getElementById('saida');
+  try{ window.RadarConferidor.caixa(saida.textContent||'', res, document.getElementById('acoes')); }catch(e){}
+}
+
 function terminar(ok){
   ocupado=false;
   document.getElementById('forjar').textContent='✍️ Forjar agora';
   document.getElementById('acoes').style.display=ok?'flex':'none';
   mostrarBotoesDaPeca(ok);
+  if(ok) travaDaVerdade();
   conferir();
 }
 
@@ -318,6 +330,7 @@ document.getElementById('bOutro').addEventListener('click',function(){
   document.getElementById('busca').focus();
 });
 </script>
+<script src="/assets/conferidor.js"></script>
 <script src="/_uso.js?v=1" defer></script>
 </body>
 </html>

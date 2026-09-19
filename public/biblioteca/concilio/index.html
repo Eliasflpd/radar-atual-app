@@ -103,6 +103,9 @@
       saida.innerHTML=h;
       $('lp-copiar').addEventListener('click',copiar);
       $('lp-outro').addEventListener('click',function(){ saida.innerHTML=''; tema.value=''; tema.focus(); });
+      // a mesma trava da Sala: confere as citações e o idioma do original contra a
+      // Bíblia de verdade, e avisa ACIMA dos botões quando a IA inventou algo.
+      if(window.RadarConferidor){ try{ window.RadarConferidor.caixa(txt, saida, saida.querySelector('.lp-acoes')); }catch(e){} }
     }
     function copiar(){
       var t=(saida.querySelector('.lp-in')||saida).innerText||'';
@@ -113,6 +116,7 @@
     function perguntar(){
       var t=tema.value.trim(); if(!t||ocupado) return;
       ocupado=true; btn.disabled=true; btn.textContent='🔎 Consultando…'; raw=''; saida.innerHTML='';
+      if(window.RadarConferidor){ try{ window.RadarConferidor.aquecer(); }catch(e){} }   // Bíblia baixando enquanto o Concílio pesquisa
       quem.textContent='O mestre está escolhendo o servo e pesquisando na web…';
       fetch('/api/concilio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:'lupa',pergunta:t})})
       .then(function(r){
@@ -274,6 +278,7 @@
   });
 })();
 </script>
+<script src="/assets/conferidor.js"></script>
 <script src="/_uso.js?v=1" defer></script>
 </body>
 </html>

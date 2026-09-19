@@ -326,6 +326,16 @@
       if(!ruins.length && !duvidas.length && !inexistentes.length && ok){
         h+='<div class="cf-item cf-duv" style="background:#f0fdf4;border-color:#bbf7d0;color:#14532d">✅ Todas as citações batem com o texto bíblico. Ainda assim, leia antes de pregar.</div>';
       }
+      // TRAVA DE IDIOMA DO ORIGINAL (assets/conferidor.js) — grego colado em texto
+      // do Antigo Testamento, ou hebraico colado em texto do Novo, é erro grosseiro
+      // e destrói a autoridade do estudo no púlpito. Esta parte não usa a Bíblia
+      // baixada: é leitura de texto pura, custo zero, e roda em cima do estudo pronto.
+      if(window.RadarConferidor){
+        try{
+          var hi=window.RadarConferidor.avisoIdiomaHtml(txt);
+          if(hi){ window.RadarConferidor.estiloCaixa(); h+=hi; }
+        }catch(e){}
+      }
       cx.innerHTML=h;
 
       // toda referência vira um toque que abre o versículo (o mesmo módulo das mensagens)
@@ -391,6 +401,7 @@
   });
 })();
 </script>
+<script src="/assets/conferidor.js"></script>
 <script src="/_pregado.js?v=1" defer></script>
 </body>
 </html>
