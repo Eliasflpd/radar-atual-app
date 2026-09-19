@@ -10,8 +10,9 @@ import concilioWagner from './_lib/concilio-wagner.js';
 import peca from './_lib/peca.js';
 import estudoDoutrina from './_lib/estudo-doutrina.js';
 import buscaVetor from './_lib/busca-vetor.js';
+import voz from './_lib/voz.js';
 
-const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor };
+const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor, voz };
 
 export default async function handler(req) {
   const fn = new URL(req.url).searchParams.get('fn') || '';

@@ -116,7 +116,10 @@ function documento(req){
 
 // Estes NUNCA podem sair do cache: são login, cobrança e a trava dos 30 dias.
 // Servir um "expirado" velho offline seria bloquear irmão que já pagou.
-const API_NUNCA_GUARDA=/^\/api\/(acesso|verify-otp|send-otp|assinar|cadastros|pix|asaas)/;
+// `voz` entra aqui porque devolve TOKEN EFÊMERO da conversa ao vivo: um token de
+// ontem servido do cache não conecta em nada e deixa o pastor com a tela morta
+// no meio da estrada. Token é sempre da rede ou não é.
+const API_NUNCA_GUARDA=/^\/api\/(acesso|verify-otp|send-otp|assinar|cadastros|pix|asaas|voz)/;
 
 function api(req,url){
   const guardavel=!API_NUNCA_GUARDA.test(url.pathname);

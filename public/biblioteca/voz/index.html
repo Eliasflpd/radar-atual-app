@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f3d5c">
+<title>Conversa com o Mestre — Concílio dos Expositores</title>
+<style>
+  :root{
+    --branco:#fff;--texto:#1c2230;
+    --navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;
+  }
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{
+    margin:0 auto;max-width:820px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.55;
+    padding:14px 13px calc(26px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased;
+  }
+  .topo{display:flex;gap:8px;margin-bottom:11px}
+  .voltar{display:inline-block;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .voltar.casa{background:var(--navy)}
+  .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.45rem;font-weight:800;margin:2px 0 3px}
+  .sub{text-align:center;color:#6b7280;font-size:.95rem;margin-bottom:6px}
+  .divisor{height:3px;width:60px;background:var(--dourado);border-radius:3px;margin:0 auto 12px}
+
+  /* ── AVISO DE PRIVACIDADE — exigência do Elias: visível, em texto normal, ANTES de começar ── */
+  .aviso{border:2px solid var(--dourado);border-left-width:7px;border-radius:13px;background:#fdf8ef;padding:10px 13px;margin:0 0 13px}
+  .aviso .t{font-family:Georgia,serif;font-weight:800;color:#7a5510;font-size:1rem;margin-bottom:3px}
+  .aviso p{margin:0 0 5px;font-size:.92rem;color:#4a3a1c;line-height:1.4}
+  .aviso p:last-child{margin-bottom:0}
+  /* Depois que a conversa começa ele não pode ler nada dirigindo: o aviso encolhe
+     pra uma tarja e devolve a tela inteira pro globo. Encolhe, não some. */
+  body.ligado .aviso{padding:6px 12px;border-left-width:5px}
+  body.ligado .aviso p,body.ligado .selo,body.ligado h1,body.ligado .sub,body.ligado .divisor,body.ligado .provaVoz{display:none}
+  body.ligado .aviso .t{font-size:.86rem;margin:0;font-weight:700}
+
+  /* ── PROVA DE VOZ (só parado, antes de ligar) ── */
+  .provaVoz{display:none;margin:0 0 12px;border:1px solid #e4e7ec;border-radius:12px;padding:9px 11px;background:#f8fafb}
+  .provaVoz .t{font-size:.83rem;font-weight:800;color:var(--navy);letter-spacing:.4px;margin-bottom:6px}
+  .provaVoz .linha{display:flex;gap:6px;flex-wrap:wrap}
+  .provaVoz button{flex:1 1 0;min-width:74px;border:1px solid #d7dde3;background:#fff;color:var(--navy);border-radius:9px;padding:8px 4px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;line-height:1.25}
+  .provaVoz button b{display:block;font-size:.88rem}
+  .provaVoz button.atual{border-color:var(--dourado);background:#fdf8ef;color:#7a5510}
+  .provaVoz .obs{font-size:.78rem;color:#7b8794;margin-top:6px}
+
+  /* ── O GLOBO ── */
+  .palco{text-align:center;margin:2px 0 4px}
+  #globo{
+    display:block;margin:0 auto;width:272px;height:272px;max-width:82vw;max-height:82vw;
+    border:none;background:transparent;padding:0;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  }
+  #globo:disabled{cursor:default}
+  #estado{font-family:Georgia,serif;font-size:1.3rem;font-weight:800;color:var(--navy);margin:6px 0 1px;min-height:1.4em;letter-spacing:.2px}
+  #dica{color:#6b7280;font-size:.95rem;min-height:1.3em}
+  #estado.alerta{color:var(--vinho)}
+  #estado.espera{color:var(--dourado)}
+
+  .barra{display:flex;gap:9px;margin:13px 0 0}
+  .barra button{flex:1;border-radius:13px;padding:15px 10px;font-size:1.02rem;font-weight:800;font-family:inherit;cursor:pointer;border:1px solid #e4e7ec}
+  #encerrar{background:var(--vinho);color:#fff;border-color:transparent;flex:1.5}
+  #encerrar:disabled{opacity:.4;cursor:default}
+  #copiar{background:rgba(15,61,92,.07);color:var(--navy)}
+
+  /* ── A CONVERSA ESCRITA ── */
+  #conversa{margin-top:15px}
+  .bolha{border-radius:14px;padding:10px 13px;margin-bottom:9px;font-size:1rem;line-height:1.5}
+  .bolha .quem{font-size:.74rem;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;margin-bottom:3px}
+  .eu{background:#eef4f5;border:1px solid #dbe7e9}
+  .eu .quem{color:var(--teal)}
+  .mestre{background:#fff;border:1px solid #e4e7ec;box-shadow:0 2px 10px rgba(15,61,92,.06)}
+  .mestre .quem{color:var(--dourado)}
+  .mestre .txt{font-family:Georgia,serif}
+  .nota{background:#f6f7f9;border:1px dashed #cfd6dd;color:#5b6472;font-size:.88rem;text-align:center}
+  .vazio{text-align:center;color:#9aa1ad;padding:18px 0;font-size:.94rem}
+  .erro{background:#fdeceb;border:1px solid #f3c3bf;color:var(--vinho);border-radius:12px;padding:11px 13px;margin-top:11px;font-size:.97rem}
+
+  @media (max-width:380px){
+    html{font-size:16px}
+    #globo{width:238px;height:238px}
+    h1{font-size:1.3rem}
+    #estado{font-size:1.2rem}
+  }
+</style>
+</head>
+<body>
+
+  <div class="topo">
+    <button class="voltar" onclick="history.length>1?history.back():location.href='/'">← Voltar</button>
+    <button class="voltar casa" onclick="location.href='/'">🏠 Início</button>
+  </div>
+
+  <div class="selo">Concílio dos Expositores</div>
+  <h1>Conversa com o Mestre</h1>
+  <div class="sub">Dr. Wagner Cordeiro · pela voz, ao vivo</div>
+  <div class="divisor"></div>
+
+  <div class="aviso">
+    <div class="t">⚠️ Esta conversa NÃO é privada</div>
+    <p>No plano gratuito do Gemini, pelos termos oficiais do Google, <b>revisores humanos podem
+    ouvir e processar o que for falado aqui</b>, e o conteúdo pode ser usado para treinar os modelos deles.</p>
+    <p>Fale de texto bíblico e de estudo à vontade. <b>Não fale nome de membro, segredo de
+    aconselhamento nem assunto sigiloso da igreja.</b> Quem estiver no carro está sendo gravado junto.</p>
+    <p style="color:#6b6350">O áudio vai do seu celular direto para o Google. O RADAR não grava nada.</p>
+  </div>
+
+  <div class="provaVoz" id="provaVoz">
+    <div class="t">🔊 OUÇA AS VOZES E ESCOLHA (faça isso parado)</div>
+    <div class="linha" id="linhaVozes"></div>
+    <div class="obs">Toque para ouvir. A escolhida fica valendo nesta conversa.</div>
+  </div>
+
+  <div class="palco">
+    <canvas id="globo" width="272" height="272" role="button" tabindex="0"
+            aria-label="Globo. Toque para começar a conversa com o mestre."></canvas>
+    <div id="estado">Toque no globo para começar</div>
+    <div id="dica">Uma vez só. Depois é só falar — não precisa tocar mais.</div>
+  </div>
+
+  <div class="barra">
+    <button id="encerrar" disabled>⏹ ENCERRAR</button>
+    <button id="copiar">📋 Copiar</button>
+  </div>
+
+  <div id="conversa"><div class="vazio">A conversa aparece aqui, escrita, enquanto vocês falam.</div></div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // COMO ISTO FUNCIONA (pra quem mexer aqui depois)
+  //
+  // O áudio NÃO passa pelo servidor do RADAR. A Vercel corta função em 300s e a
+  // conversa morreria no meio da frase. Então:
+  //   1. pedimos um TOKEN EFÊMERO em /api/voz (a chave real nunca sai do servidor);
+  //   2. o NAVEGADOR abre o WebSocket direto no Google com esse token;
+  //   3. mandamos PCM 16 bits / 16 kHz / mono; recebemos PCM 16 bits / 24 kHz.
+  // A persona do mestre, o modelo e a voz vêm TRAVADOS dentro do token — esta
+  // página não consegue trocar nem que queira. É por isso que o setup que ela
+  // manda é pobre: o Google ignora e usa o que o servidor assinou.
+  //
+  // ISTO É FEITO PRA ESTRADA. As três coisas que matam uma conversa no carro:
+  //   • a tela apagar  -> Screen Wake Lock, REPEDIDO toda vez que a aba volta;
+  //   • a sessão cair  -> reconexão sozinha, sem fim, com o fio do assunto;
+  //   • ficar mudo     -> o globo SEMPRE diz o que está acontecendo.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  var $ = function(id){ return document.getElementById(id); };
+  var cv=$('globo'), elEstado=$('estado'), elDica=$('dica'), elConversa=$('conversa'),
+      btnEncerrar=$('encerrar'), btnCopiar=$('copiar'), elProva=$('provaVoz'), elLinha=$('linhaVozes');
+
+  var TAXA_ENVIO = 16000;   // o que o Gemini Live aceita de entrada
+  var TAXA_VOLTA = 24000;   // o que ele devolve
+
+  // Voz: padrão Orus (rótulo "Firm" do Google — o timbre de professor).
+  // Dá pra trocar por ?voz=Charon, ou tocando nos botões de prova aqui em cima.
+  var VOZES = [
+    { id:'Orus',       rotulo:'Firme' },
+    { id:'Charon',     rotulo:'Expositiva' },
+    { id:'Sadaltager', rotulo:'Douta' },
+    { id:'Gacrux',     rotulo:'Madura' }
+  ];
+  function vozDaURL(){
+    var q=(location.search.match(/[?&]voz=([^&]+)/)||[])[1];
+    q = q ? decodeURIComponent(q) : '';
+    for(var i=0;i<VOZES.length;i++) if(VOZES[i].id.toLowerCase()===q.toLowerCase()) return VOZES[i].id;
+    return 'Orus';
+  }
+
+  var S = {
+    ligado:false, ws:null, stream:null,
+    ctxMic:null, noMic:null, worklet:null, script:null, analiseMic:null, bufMic:null,
+    ctxSom:null, analiseSom:null, bufSom:null, proximoSom:0, tocando:[],
+    handle:null, handleRuim:0, abertoEm:0,
+    tentativas:0, fechandoDeProposito:false, reconectando:false, agendado:null,
+    euFalando:false, eleFalando:false, garimpando:false, fimFala:null,
+    bolhaEu:null, bolhaMestre:null,
+    texto:[], wake:null, voz:vozDaURL(),
+    fase:'pronto', nivel:0, escala:0.80, giro:0, relogio:0, amostra:null
+  };
+
+  // ════════════════════════════════════════════════════════════════════════
+  // O GLOBO — desenhado à mão em Canvas, nas cores do RADAR.
+  // A pulsação NÃO é animação em loop: o raio vem do VOLUME REAL, medido por
+  // AnalyserNode. Enquanto ele fala, manda o microfone; enquanto o mestre
+  // responde, manda o áudio que está saindo. Quem fala manda no pulso.
+  // ════════════════════════════════════════════════════════════════════════
+  var CORES = {
+    pronto:       { a:'#0f3d5c', b:'#0f6d78', linha:'#a9791c', aura:'15,61,92'   },
+    ouvindo:      { a:'#0f3d5c', b:'#0f6d78', linha:'#a9791c', aura:'15,109,120' },
+    euFalo:       { a:'#0f6d78', b:'#17909c', linha:'#f0d9a6', aura:'15,109,120' },
+    eleFala:      { a:'#8a6113', b:'#a9791c', linha:'#ffeec4', aura:'169,121,28' },
+    garimpo:      { a:'#7a5510', b:'#a9791c', linha:'#ffeec4', aura:'169,121,28' },
+    reconectando: { a:'#3d4a57', b:'#6b7c88', linha:'#a9791c', aura:'107,124,136'},
+    semRede:      { a:'#3d4a57', b:'#5b6b77', linha:'#8b98a3', aura:'91,107,119' },
+    erro:         { a:'#5e1414', b:'#8a1c1c', linha:'#f0b9b5', aura:'138,28,28'  }
+  };
+
+  function medir(analise, buf){
+    if(!analise) return 0;
+    analise.getByteTimeDomainData(buf);
+    var soma=0;
+    for(var i=0;i<buf.length;i++){ var v=(buf[i]-128)/128; soma+=v*v; }
+    var rms=Math.sqrt(soma/buf.length);
+    // rms de fala vive na faixa 0.02–0.35. Esticamos pra 0–1 com raiz, senão
+    // o globo mal se mexe em voz normal.
+    return Math.min(1, Math.sqrt(rms*3.4));
+  }
+
+  function pintar(){
+    requestAnimationFrame(pintar);
+    var dpr=Math.min(2, window.devicePixelRatio||1);
+    var lado=cv.clientWidth||272;
+    if(cv.width!==Math.round(lado*dpr)){ cv.width=Math.round(lado*dpr); cv.height=Math.round(lado*dpr); }
+    var g=cv.getContext('2d'), L=cv.width, meio=L/2;
+    g.clearRect(0,0,L,L);
+
+    S.relogio+=1/60;
+
+    // ── de onde vem o pulso agora ──────────────────────────────────────────
+    var alvo=0;
+    if(S.fase==='eleFala'||S.fase==='garimpo') alvo=medir(S.analiseSom,S.bufSom);
+    else if(S.ligado) alvo=medir(S.analiseMic,S.bufMic);
+    if(S.fase==='reconectando'||S.fase==='semRede'||S.fase==='erro'){
+      // sem áudio nenhum pra medir: aí sim uma respiração lenta, só pra ele
+      // ver de longe que a coisa está VIVA tentando voltar, não travada.
+      alvo=0.30+0.30*Math.sin(S.relogio*2.1);
+    }
+    S.nivel += (alvo-S.nivel)*0.30;
+
+    var escAlvo = S.ligado ? 1 : 0.80;
+    S.escala += (escAlvo-S.escala)*0.10;      // o globo CRESCE quando ele toca
+    S.giro += 0.0042 + S.nivel*0.010;          // e gira um tico mais rápido na voz
+
+    var c=CORES[S.fase]||CORES.pronto;
+    var R = (L*0.30) * S.escala * (1 + S.nivel*0.085);
+
+    // ── auréola: anéis que respiram no volume ──────────────────────────────
+    for(var k=3;k>=1;k--){
+      var rr=R*(1+k*0.13+S.nivel*0.30*k);
+      g.beginPath(); g.arc(meio,meio,rr,0,6.2832);
+      g.fillStyle='rgba('+c.aura+','+(0.052*(4-k)*(0.35+S.nivel*0.85)).toFixed(3)+')';
+      g.fill();
+    }
+
+    // ── corpo da esfera ────────────────────────────────────────────────────
+    var lum=g.createRadialGradient(meio-R*0.34,meio-R*0.36,R*0.06, meio,meio,R*1.06);
+    lum.addColorStop(0,c.b); lum.addColorStop(0.62,c.a); lum.addColorStop(1,'#08222f');
+    g.beginPath(); g.arc(meio,meio,R,0,6.2832); g.fillStyle=lum; g.fill();
+
+    // ── a malha do globo: paralelos e meridianos, em dourado ──────────────
+    g.save();
+    g.beginPath(); g.arc(meio,meio,R*0.995,0,6.2832); g.clip();   // nada vaza da bola
+    g.translate(meio,meio); g.rotate(-0.22);                       // eixo inclinado
+    g.lineWidth=Math.max(1,L*0.0032);
+
+    // paralelos (as latitudes): elipses achatadas subindo e descendo
+    for(var p=-4;p<=4;p++){
+      var fi=p*(Math.PI/10), y=Math.sin(fi)*R, rx=Math.cos(fi)*R;
+      g.beginPath(); g.ellipse(0,y,rx,rx*0.20,0,0,6.2832);
+      g.strokeStyle=c.linha; g.globalAlpha=(p===0?0.50:0.24)*(0.55+S.nivel*0.55); g.stroke();
+    }
+    // meridianos (as longitudes): a largura muda com o giro — é isso que dá
+    // a sensação de esfera rodando, não de desenho parado.
+    for(var m=0;m<6;m++){
+      var f=S.giro+m*(Math.PI/6), larg=Math.abs(Math.sin(f))*R;
+      if(larg<R*0.035) continue;
+      g.beginPath(); g.ellipse(0,0,larg,R,0,0,6.2832);
+      g.strokeStyle=c.linha; g.globalAlpha=0.22*(0.55+S.nivel*0.55); g.stroke();
+    }
+    g.globalAlpha=1; g.restore();
+
+    // ── borda e brilho de cima ─────────────────────────────────────────────
+    g.beginPath(); g.arc(meio,meio,R,0,6.2832);
+    g.lineWidth=Math.max(1.6,L*0.0062); g.strokeStyle=c.linha; g.globalAlpha=0.72; g.stroke();
+    g.globalAlpha=1;
+    var bri=g.createRadialGradient(meio-R*0.36,meio-R*0.42,0, meio-R*0.36,meio-R*0.42,R*0.80);
+    bri.addColorStop(0,'rgba(255,255,255,.30)'); bri.addColorStop(1,'rgba(255,255,255,0)');
+    g.beginPath(); g.arc(meio,meio,R,0,6.2832); g.fillStyle=bri; g.fill();
+
+    // ── anel tracejado girando: só quando está tentando voltar ────────────
+    if(S.fase==='reconectando'||S.fase==='garimpo'||S.fase==='semRede'){
+      g.save(); g.translate(meio,meio); g.rotate(S.relogio*1.5);
+      g.beginPath(); g.arc(0,0,R*1.26,0,6.2832);
+      g.setLineDash([L*0.030,L*0.038]); g.lineWidth=Math.max(2,L*0.0085);
+      g.strokeStyle=c.linha; g.globalAlpha=0.80; g.stroke(); g.restore();
+    }
+  }
+  requestAnimationFrame(pintar);
+
+  // ── pintura da tela (palavras) ────────────────────────────────────────────
+  function estado(t,dica,tom){
+    elEstado.textContent=t;
+    elEstado.className = tom||'';
+    if(dica!=null) elDica.textContent=dica;
+  }
+  function fase(){
+    if(!S.ligado){ S.fase = (S.fase==='erro') ? 'erro' : 'pronto'; return; }
+    if(S.reconectando){ S.fase = navigator.onLine===false ? 'semRede' : 'reconectando'; return; }
+    if(S.garimpando){ S.fase='garimpo'; estado('⛏️ Buscando no material','O mestre foi ver nas aulas do Dr. Wagner.'); return; }
+    if(S.eleFalando){ S.fase='eleFala'; estado('🔊 O MESTRE FALA','Pode cortar. É só falar por cima.'); return; }
+    if(S.euFalando){ S.fase='euFalo'; estado('🎤 OUVINDO VOCÊ','Pode continuar, ele está ouvindo.'); return; }
+    S.fase='ouvindo'; estado('👂 PODE FALAR','O mestre está ouvindo.');
+  }
+  function limpaVazio(){ var v=elConversa.querySelector('.vazio'); if(v) v.remove(); }
+  function rolar(){ window.scrollTo(0,document.body.scrollHeight); }
+  function bolha(classe,quem){
+    limpaVazio();
+    var d=document.createElement('div'); d.className='bolha '+classe;
+    d.innerHTML='<div class="quem"></div><div class="txt"></div>';
+    d.querySelector('.quem').textContent=quem;
+    elConversa.appendChild(d); rolar();
+    return d.querySelector('.txt');
+  }
+  function nota(t){ limpaVazio(); var d=document.createElement('div'); d.className='bolha nota'; d.textContent=t; elConversa.appendChild(d); rolar(); }
+  function erro(t){ limpaVazio(); var d=document.createElement('div'); d.className='erro'; d.textContent=t; elConversa.appendChild(d); rolar(); }
+
+  // ── base64 <-> PCM ────────────────────────────────────────────────────────
+  function paraBase64(bytes){
+    var s='',PEDACO=0x8000;                      // string gigante de uma vez estoura a pilha
+    for(var i=0;i<bytes.length;i+=PEDACO) s+=String.fromCharCode.apply(null,bytes.subarray(i,i+PEDACO));
+    return btoa(s);
+  }
+  function deBase64(b64){
+    var bin=atob(b64),n=bin.length,out=new Uint8Array(n);
+    for(var i=0;i<n;i++) out[i]=bin.charCodeAt(i);
+    return out;
+  }
+
+  // ── TOCAR a voz do mestre (PCM 24k enfileirado, sem buraco entre os pedaços) ──
+  function tocar(b64){
+    if(!S.ctxSom) return;
+    var bytes=deBase64(b64), amostras=bytes.length>>1;
+    var pcm=new Int16Array(bytes.buffer,bytes.byteOffset,amostras);
+    var buf=S.ctxSom.createBuffer(1,amostras,TAXA_VOLTA), ch=buf.getChannelData(0);
+    for(var i=0;i<amostras;i++) ch[i]=pcm[i]/32768;
+    var src=S.ctxSom.createBufferSource(); src.buffer=buf;
+    src.connect(S.analiseSom);                    // passa pelo medidor: é o que faz o globo pulsar
+    var agora=S.ctxSom.currentTime;
+    if(S.proximoSom<agora+0.03) S.proximoSom=agora+0.03;   // remonta a fila se atrasou
+    src.start(S.proximoSom); S.proximoSom+=buf.duration;
+    S.tocando.push(src);
+    S.eleFalando=true; S.garimpando=false; fase();
+    src.onended=function(){
+      var i=S.tocando.indexOf(src); if(i>=0) S.tocando.splice(i,1);
+      // O áudio chega em rajadas com micro-pausas. Se apagássemos o indicador na
+      // primeira pausa, a tela ficaria piscando durante a MESMA frase.
+      if(!S.tocando.length){
+        clearTimeout(S.fimFala);
+        S.fimFala=setTimeout(function(){ if(!S.tocando.length){ S.eleFalando=false; fase(); } },320);
+      }
+    };
+  }
+  // O CORTE: o mestre está falando, o Elias fala por cima -> cala AGORA e joga
+  // fora o que já estava agendado. Sem isto, o áudio velho sairia por segundos.
+  function calarMestre(){
+    clearTimeout(S.fimFala);
+    for(var i=0;i<S.tocando.length;i++){ try{ S.tocando[i].onended=null; S.tocando[i].stop(); }catch(e){} }
+    S.tocando=[]; S.proximoSom=0; S.eleFalando=false; fase();
+  }
+
+  // ── MANDAR o que ele fala (PCM 16k) ───────────────────────────────────────
+  function mandarAudio(f32){
+    if(!S.ws||S.ws.readyState!==1) return;
+    var n=f32.length,pcm=new Int16Array(n),soma=0;
+    for(var i=0;i<n;i++){
+      var v=f32[i]; if(v>1)v=1; else if(v<-1)v=-1;
+      pcm[i]=v<0?v*32768:v*32767; soma+=v*v;
+    }
+    var rms=Math.sqrt(soma/n), falando=rms>0.018;
+    if(falando!==S.euFalando && !S.eleFalando){ S.euFalando=falando; fase(); }
+    else S.euFalando=falando;
+    S.ws.send(JSON.stringify({ realtimeInput:{ audio:{
+      data: paraBase64(new Uint8Array(pcm.buffer)),
+      mimeType:'audio/pcm;rate='+TAXA_ENVIO
+    }}}));
+  }
+
+  // O worklet roda na thread de áudio: não engasga quando a tela está ocupada.
+  var CODIGO_WORKLET =
+    'class P extends AudioWorkletProcessor{'+
+    ' constructor(){super();this.b=new Float32Array(2048);this.i=0;}'+
+    ' process(e){var c=e[0]&&e[0][0];if(!c)return true;'+
+    '  for(var k=0;k<c.length;k++){this.b[this.i++]=c[k];'+
+    '   if(this.i===this.b.length){this.port.postMessage(this.b.slice(0));this.i=0;}}'+
+    '  return true;}}'+
+    'registerProcessor("captura",P);';
+
+  async function abrirMicrofone(){
+    // SEM restrição de dispositivo, de propósito: em carro com Bluetooth o
+    // navegador escolhe a entrada, e amarrar num deviceId só faz quebrar.
+    var pedido={ audio:{ channelCount:1,
+      echoCancellation:true,   // sem isto o mestre se ouve no alto-falante e se interrompe sozinho
+      noiseSuppression:true,   // motor, vento e rádio
+      autoGainControl:true } };
+    try{
+      S.stream=await navigator.mediaDevices.getUserMedia(pedido);
+    }catch(e){
+      // Carro velho / fone esquisito que não aceita os tratamentos: tenta pelado.
+      if(e && /Overconstrained|NotFound|NotReadable/i.test(e.name||'')){
+        S.stream=await navigator.mediaDevices.getUserMedia({ audio:true });
+      } else throw e;
+    }
+
+    var AC=window.AudioContext||window.webkitAudioContext;
+    S.ctxMic=new AC({ sampleRate:TAXA_ENVIO });   // o navegador reamostra melhor que a gente
+    if(S.ctxMic.state==='suspended') await S.ctxMic.resume();
+    S.noMic=S.ctxMic.createMediaStreamSource(S.stream);
+
+    // O medidor da VOZ DELE — é daqui que sai o pulso do globo enquanto ele fala.
+    S.analiseMic=S.ctxMic.createAnalyser();
+    S.analiseMic.fftSize=512; S.analiseMic.smoothingTimeConstant=0.35;
+    S.bufMic=new Uint8Array(S.analiseMic.fftSize);
+    S.noMic.connect(S.analiseMic);
+
+    var usouWorklet=false;
+    if(S.ctxMic.audioWorklet){
+      try{
+        var url=URL.createObjectURL(new Blob([CODIGO_WORKLET],{type:'application/javascript'}));
+        await S.ctxMic.audioWorklet.addModule(url); URL.revokeObjectURL(url);
+        S.worklet=new AudioWorkletNode(S.ctxMic,'captura');
+        S.worklet.port.onmessage=function(e){ mandarAudio(e.data); };
+        S.noMic.connect(S.worklet);
+        var mudo=S.ctxMic.createGain(); mudo.gain.value=0;   // mantém o grafo vivo
+        S.worklet.connect(mudo); mudo.connect(S.ctxMic.destination);
+        usouWorklet=true;
+      }catch(e){ usouWorklet=false; }
+    }
+    if(!usouWorklet){   // navegador velho: o jeito antigo ainda funciona
+      S.script=S.ctxMic.createScriptProcessor(2048,1,1);
+      S.script.onaudioprocess=function(e){ mandarAudio(e.inputBuffer.getChannelData(0)); };
+      S.noMic.connect(S.script);
+      var m2=S.ctxMic.createGain(); m2.gain.value=0;
+      S.script.connect(m2); m2.connect(S.ctxMic.destination);
+    }
+  }
+
+  // ── A TELA NÃO PODE APAGAR ────────────────────────────────────────────────
+  // O navegador SOLTA o wake lock sozinho toda vez que a aba sai de vista (uma
+  // ligação entrando, ele trocar de app no semáforo). Pedir uma vez só não serve
+  // de nada numa viagem de três horas: tem que REPEDIR quando a aba volta.
+  function segurarTela(){
+    if(!S.ligado || !navigator.wakeLock || !navigator.wakeLock.request) return;
+    if(S.wake && !S.wake.released) return;
+    navigator.wakeLock.request('screen').then(function(w){
+      S.wake=w;
+      w.addEventListener('release',function(){ if(S.ligado) setTimeout(segurarTela,400); });
+    }).catch(function(){ /* bateria fraca ou navegador sem suporte: não é motivo pra parar a conversa */ });
+  }
+  function soltarTela(){ try{ if(S.wake) S.wake.release(); }catch(e){} S.wake=null; }
+
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState!=='visible' || !S.ligado) return;
+    segurarTela();                                   // a tela volta a ficar presa
+    if(S.ctxSom && S.ctxSom.state==='suspended') S.ctxSom.resume().catch(function(){});
+    if(S.ctxMic && S.ctxMic.state==='suspended') S.ctxMic.resume().catch(function(){});
+    // se a linha morreu enquanto a tela estava apagada, volta agora, sem ele tocar
+    if(!S.ws || S.ws.readyState>1) reconectar(true);
+  });
+
+  // ── o servidor: token e garimpo ───────────────────────────────────────────
+  async function pedir(corpo){
+    // cache:'no-store' é cinto e suspensório: o service worker já foi instruído a
+    // nunca guardar /api/voz, mas token vencido = tela morta na estrada.
+    var r=await fetch('/api/voz',{method:'POST',cache:'no-store',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo)});
+    var j=await r.json().catch(function(){ return {ok:false,erro:'resposta inválida do servidor'}; });
+    if(!j.ok) throw new Error(j.erro||('HTTP '+r.status));
+    return j;
+  }
+
+  // ── O FIO DO ASSUNTO ──────────────────────────────────────────────────────
+  // O jeito bom de retomar é o handle do Google (a sessão inteira volta). Mas
+  // handle expira e às vezes é recusado. Quando isso acontece, a gente não deixa
+  // o mestre começar do zero perguntando "em que posso ajudar": reinjetamos um
+  // resumo curto do que já foi dito, SEM pedir resposta (turnComplete:false).
+  function resumoCurto(){
+    if(!S.texto.length) return '';
+    var linhas=S.texto.slice(-8), t=linhas.join(' | ');
+    if(t.length>1100) t=t.slice(t.length-1100);
+    return t;
+  }
+  function reinjetarFio(){
+    var r=resumoCurto(); if(!r||!S.ws||S.ws.readyState!==1) return;
+    S.ws.send(JSON.stringify({ clientContent:{ turns:[{ role:'user', parts:[{
+      text:'(Contexto: a ligação caiu e voltou. Vocês já vinham conversando. Resumo do que já foi dito: '
+        + r + ' — continue de onde pararam, sem cumprimentar de novo e sem recomeçar o assunto.)'
+    }]}], turnComplete:false }}));
+  }
+
+  // ── a linha com o Google ──────────────────────────────────────────────────
+  function conectar(){
+    return pedir({ acao:'token', voz:S.voz, handle:S.handle||undefined }).then(function(t){
+      return new Promise(function(ok,falhou){
+        var ws;
+        try{ ws=new WebSocket(t.url+'?access_token='+encodeURIComponent(t.token)); }
+        catch(e){ falhou(e); return; }
+        var abriu=false;
+        ws.onopen=function(){
+          abriu=true; S.ws=ws; S.abertoEm=Date.now();
+          // setup pobre de propósito: modelo, voz, persona e ferramenta já vêm
+          // travados dentro do token (o Google ignora o que mandarmos aqui).
+          ws.send(JSON.stringify({ setup:{ model:t.modelo } }));
+          ok(ws);
+        };
+        ws.onmessage=function(ev){ receber(ev); };
+        ws.onerror=function(){ if(!abriu) falhou(new Error('não consegui abrir a linha de voz')); };
+        ws.onclose=function(e){ aoFechar(e); };
+      });
+    });
+  }
+
+  async function receber(ev){
+    var txt=(typeof ev.data==='string')?ev.data:await ev.data.text();
+    var m; try{ m=JSON.parse(txt); }catch(e){ return; }
+
+    if(m.setupComplete){
+      if(S.reconectando){
+        S.reconectando=false; S.tentativas=0;
+        // o handle não voltou a conversa? então reinjeta o resumo na mão.
+        if(!S.handle) reinjetarFio();
+        nota('— a linha caiu e voltou; a conversa continua —');
+      }
+      fase();
+      return;
+    }
+
+    // o mestre pediu o material das aulas -> buscamos no servidor e devolvemos
+    if(m.toolCall){
+      var chamadas=m.toolCall.functionCalls||[];
+      S.garimpando=true; fase();
+      for(var i=0;i<chamadas.length;i++){
+        (function(fc){
+          pedir({ acao:'garimpo', assunto:(fc.args&&fc.args.assunto)||'' })
+          .then(function(r){ responderFerramenta(fc,{ achou:r.achou, material:r.texto||'' }); })
+          .catch(function(){ responderFerramenta(fc,{ achou:false, material:'', erro:'a busca no material falhou agora' }); });
+        })(chamadas[i]);
+      }
+      return;
+    }
+
+    var sc=m.serverContent;
+    if(sc){
+      if(sc.interrupted) calarMestre();      // ele cortou: cala o alto-falante na hora
+      var partes=(sc.modelTurn&&sc.modelTurn.parts)||[];
+      for(var k=0;k<partes.length;k++){
+        var d=partes[k].inlineData;
+        if(d&&d.data) tocar(d.data);
+      }
+      if(sc.inputTranscription&&sc.inputTranscription.text){
+        if(!S.bolhaEu) S.bolhaEu=bolha('eu','Você');
+        S.bolhaEu.textContent+=sc.inputTranscription.text; rolar();
+      }
+      if(sc.outputTranscription&&sc.outputTranscription.text){
+        if(!S.bolhaMestre) S.bolhaMestre=bolha('mestre','Dr. Wagner Cordeiro');
+        S.bolhaMestre.textContent+=sc.outputTranscription.text; rolar();
+      }
+      if(sc.turnComplete){
+        if(S.bolhaEu&&S.bolhaEu.textContent) S.texto.push('Pastor: '+S.bolhaEu.textContent);
+        if(S.bolhaMestre&&S.bolhaMestre.textContent) S.texto.push('Mestre: '+S.bolhaMestre.textContent);
+        S.bolhaEu=null; S.bolhaMestre=null;
+      }
+    }
+
+    // o handle é o que deixa retomar a conversa exatamente de onde parou
+    if(m.sessionResumptionUpdate&&m.sessionResumptionUpdate.newHandle){
+      S.handle=m.sessionResumptionUpdate.newHandle; S.handleRuim=0;
+    }
+    // o Google avisando que vai encerrar esta conexão: reconecta ANTES de cair
+    if(m.goAway){ try{ S.ws.close(4001,'goAway'); }catch(e){} }
+  }
+
+  function responderFerramenta(fc,resposta){
+    if(S.ws&&S.ws.readyState===1)
+      S.ws.send(JSON.stringify({ toolResponse:{ functionResponses:[{ id:fc.id, name:fc.name, response:resposta }] }}));
+  }
+
+  // ── RECONEXÃO SOZINHA, SEM FIM ────────────────────────────────────────────
+  // A viagem é de 3 horas e a sessão do Gemini não chega perto disso. Cair é o
+  // normal aqui, não a exceção: então isto NÃO desiste. Ele não vai tocar em
+  // nada com a família no carro.
+  function aoFechar(e){
+    if(!S.ligado||S.fechandoDeProposito) return;
+    // Caiu em menos de 4 segundos duas vezes seguidas? O handle provavelmente
+    // azedou. Joga ele fora e recomeça limpo — o resumo segura o assunto.
+    if(Date.now()-S.abertoEm < 4000){
+      if(++S.handleRuim>=2 && S.handle){ S.handle=null; S.handleRuim=0; }
+    }
+    calarMestre();
+    reconectar(false);
+  }
+
+  function reconectar(agora){
+    if(!S.ligado||S.fechandoDeProposito) return;
+    clearTimeout(S.agendado);
+    S.reconectando=true; S.ws=null; fase();
+
+    if(navigator.onLine===false){
+      // Sem dados na estrada: não adianta martelar. Avisa no globo e espera o
+      // sinal voltar — o evento 'online' chama a gente de novo.
+      estado('📡 SEM INTERNET','Assim que o sinal voltar, eu retomo sozinho.','alerta');
+      return;
+    }
+    S.tentativas++;
+    estado('🔄 RECONECTANDO','Segurando o fio do assunto. Não precisa tocar em nada.','espera');
+    // 0,8s, 1,6s, 3,2s… com teto de 12s. Teto baixo pra voltar rápido ao sair do túnel.
+    var espera = agora ? 200 : Math.min(12000, 800*Math.pow(2,Math.min(4,S.tentativas-1)));
+    S.agendado=setTimeout(function(){
+      if(!S.ligado||S.fechandoDeProposito) return;
+      conectar().catch(function(){ reconectar(false); });
+    }, espera);
+  }
+
+  window.addEventListener('online',function(){ if(S.ligado){ S.tentativas=0; reconectar(true); } });
+  window.addEventListener('offline',function(){ if(S.ligado){ S.reconectando=true; fase(); estado('📡 SEM INTERNET','Assim que o sinal voltar, eu retomo sozinho.','alerta'); } });
+
+  // ── ligar / desligar ──────────────────────────────────────────────────────
+  async function ligar(){
+    if(S.ligado) return;
+    cv.disabled=true;
+    S.fase='pronto';
+    estado('⏳ Abrindo a linha…','Autorize o microfone quando o celular pedir.');
+    try{
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error('SEM_MIC_NO_NAVEGADOR');
+      if(!window.WebSocket) throw new Error('SEM_WEBSOCKET');
+
+      var AC=window.AudioContext||window.webkitAudioContext;
+      S.ctxSom=new AC({ sampleRate:TAXA_VOLTA });
+      if(S.ctxSom.state==='suspended') await S.ctxSom.resume();
+      // O medidor da VOZ DO MESTRE — o áudio dele passa por aqui antes do alto-falante.
+      S.analiseSom=S.ctxSom.createAnalyser();
+      S.analiseSom.fftSize=512; S.analiseSom.smoothingTimeConstant=0.35;
+      S.bufSom=new Uint8Array(S.analiseSom.fftSize);
+      S.analiseSom.connect(S.ctxSom.destination);
+
+      await abrirMicrofone();
+
+      S.ligado=true; S.handle=null; S.handleRuim=0; S.tentativas=0;
+      S.fechandoDeProposito=false; S.reconectando=false;
+      document.body.classList.add('ligado');
+      btnEncerrar.disabled=false;
+      cv.setAttribute('aria-label','Conversa ligada. O globo pulsa com a voz.');
+      segurarTela();
+
+      await conectar();
+      fase();
+    }catch(e){
+      S.ligado=false; document.body.classList.remove('ligado');
+      var nome=(e&&e.name)||'', msg=(e&&e.message)||'falhou';
+      var recado;
+      if(nome==='NotAllowedError'||/denied|not allowed|permission/i.test(msg)){
+        recado='Você não liberou o microfone. Toque no cadeado ao lado do endereço, permita o microfone para este site e tente de novo.';
+      }else if(nome==='NotReadableError'||nome==='NotFoundError'||nome==='OverconstrainedError'||/SEM_MIC/.test(msg)){
+        // O caso do carro: alguns sistemas de som tomam o microfone pra si quando
+        // entram em modo chamada, e o navegador fica sem nada pra capturar.
+        recado='Não consegui o microfone. Desconecte o Bluetooth do carro, tente de novo, e só depois reconecte o Bluetooth.';
+      }else if(/SEM_WEBSOCKET/.test(msg)){
+        recado='Este navegador não suporta a conversa ao vivo. Abra pelo Chrome.';
+      }else{
+        recado=msg;
+      }
+      S.fase='erro';
+      erro('Não deu pra começar: '+recado);
+      estado('⚠️ Não consegui começar','Toque no globo para tentar de novo.','alerta');
+      desligar(true);
+    }
+    cv.disabled=false;
+  }
+
+  function desligar(silencioso){
+    S.fechandoDeProposito=true; S.ligado=false; S.reconectando=false;
+    clearTimeout(S.agendado);
+    calarMestre();
+    try{ if(S.ws) S.ws.close(1000,'encerrado pelo pastor'); }catch(e){}
+    S.ws=null;
+    try{ if(S.worklet){ S.worklet.port.onmessage=null; S.worklet.disconnect(); } }catch(e){}
+    try{ if(S.script){ S.script.onaudioprocess=null; S.script.disconnect(); } }catch(e){}
+    try{ if(S.noMic) S.noMic.disconnect(); }catch(e){}
+    try{ if(S.stream) S.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+    try{ if(S.ctxMic) S.ctxMic.close(); }catch(e){}
+    try{ if(S.ctxSom) S.ctxSom.close(); }catch(e){}
+    soltarTela();
+    S.worklet=S.script=S.noMic=S.stream=S.ctxMic=S.ctxSom=null;
+    S.analiseMic=S.analiseSom=S.bufMic=S.bufSom=null;
+    S.euFalando=S.eleFalando=S.garimpando=false;
+    S.bolhaEu=S.bolhaMestre=null;
+    document.body.classList.remove('ligado');
+    btnEncerrar.disabled=true;
+    cv.setAttribute('aria-label','Globo. Toque para começar a conversa com o mestre.');
+    if(!silencioso){ S.fase='pronto'; estado('Conversa encerrada','Toque no globo para conversar de novo.'); }
+  }
+
+  // O alvo de toque é O GLOBO INTEIRO. Nada de botãozinho.
+  cv.addEventListener('click',function(){ S.ligado?desligar():ligar(); });
+  cv.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); S.ligado?desligar():ligar(); } });
+  btnEncerrar.addEventListener('click',function(){ desligar(); });
+
+  btnCopiar.addEventListener('click',function(){
+    var linhas=S.texto.slice();
+    if(S.bolhaEu&&S.bolhaEu.textContent) linhas.push('Pastor: '+S.bolhaEu.textContent);
+    if(S.bolhaMestre&&S.bolhaMestre.textContent) linhas.push('Mestre: '+S.bolhaMestre.textContent);
+    var t=linhas.join('\n\n')||'(nada foi falado ainda)';
+    function fb(){ var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';
+      document.body.appendChild(a);a.focus();a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a); }
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(fb); else fb();
+    var o=btnCopiar.textContent; btnCopiar.textContent='✅ Copiado'; setTimeout(function(){ btnCopiar.textContent=o; },1500);
+  });
+
+  // ── PROVA DE VOZ (aparece só se as amostras existirem no servidor) ────────
+  (function(){
+    fetch('vozes/orus.wav',{method:'HEAD'}).then(function(r){
+      if(!r.ok) return;
+      VOZES.forEach(function(v){
+        var b=document.createElement('button');
+        b.innerHTML='<b>'+v.id+'</b>'+v.rotulo;
+        if(v.id===S.voz) b.className='atual';
+        b.addEventListener('click',function(){
+          S.voz=v.id;
+          Array.prototype.forEach.call(elLinha.children,function(x){ x.className=''; });
+          b.className='atual';
+          try{ if(S.amostra){ S.amostra.pause(); } }catch(e){}
+          S.amostra=new Audio('vozes/'+v.id.toLowerCase()+'.wav');
+          S.amostra.play().catch(function(){});
+        });
+        elLinha.appendChild(b);
+      });
+      elProva.style.display='block';
+    }).catch(function(){});
+  })();
+
+  // sair da página sem deixar o microfone aberto
+  window.addEventListener('pagehide',function(){ if(S.ligado) desligar(true); });
+})();
+</script>
+</body>
+</html>
