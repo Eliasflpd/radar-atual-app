@@ -160,7 +160,15 @@
       var mA=L.match(/^TEMA:\s*(.*)$/i);      if(mA){ flush(); h+='<div class="ed-tema">'+escH(mA[1])+'</div>'; continue; }
       var mH=L.match(/^#{1,3}\s*(.+)$/);      if(mH){ flush(); var n=(mH[1].match(/^(\d)/)||[])[1]||''; h+='<h2 class="c'+n+'">'+inl(mH[1])+'</h2>'; continue; }
       var mQ=L.match(/^>\s*(.+)$/);           if(mQ){ flush(); h+='<blockquote>'+inl(mQ[1])+'</blockquote>'; continue; }
-      if(/^[•\-\*]\s+/.test(L)||/^\d+[\.\)]\s+/.test(L)){ flush(); h+='<div class="ed-li">'+inl(L.replace(/^[•\-\*]\s+/,'').replace(/^\d+[\.\)]\s+/,''))+'</div>'; continue; }
+      if(/^[•\-\*]\s+/.test(L)||/^\d+[\.\)]\s+/.test(L)){
+        flush();
+        // as vezes a IA empilha marcador em cima de marcador ("- **- pergunta**"),
+        // e o traço sobrava aparecendo dentro do negrito. Descasca até limpar.
+        var it=L;
+        for(var k=0;k<3;k++){ it=it.replace(/^[•\-\*]\s+/,'').replace(/^\d+[\.\)]\s+/,''); }
+        it=it.replace(/^(\*\*)\s*[-•\*]\s+/,'$1');
+        h+='<div class="ed-li">'+inl(it)+'</div>'; continue;
+      }
       para.push(L);
     }
     flush();

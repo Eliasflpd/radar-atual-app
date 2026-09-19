@@ -64,6 +64,7 @@ const ESQUELETO = SECOES.map((s) => s.cab + '\n(' + s.ordem + ')').join('\n\n');
 const TRAVA_QUALIDADE = `
 TRAVA DE QUALIDADE (se quebrar uma, o estudo não presta — refaça antes de entregar):
 1. TODA REFERÊNCIA BÍBLICA CORRETA e conferida: livro, capítulo e versículo reais, e o versículo tem que dizer MESMO o que você afirma que ele diz. Na dúvida, troque por outro que você tenha certeza. NUNCA cite versículo que não existe.
+1b. A TRANSCRIÇÃO TEM QUE BATER COM A REFERÊNCIA. Se você colocar o versículo entre aspas, as palavras citadas precisam ser DAQUELA referência exata. Transcrever o texto de um versículo e etiquetar com a referência de outro é o erro mais comum e o mais grave — o pastor lê no púlpito, a igreja abre a Bíblia e não acha. Se você lembra da frase mas não tem certeza absoluta do capítulo e versículo, NÃO TRANSCREVA: só remeta à referência e explique com as suas palavras o que ela ensina.
 2. NENHUM SIGNIFICADO DE PALAVRA INVENTADO. Só hebraico/grego real e defensável. Se não tem certeza do termo, NÃO USE — o estudo fica ótimo sem ele e morre com um inventado.
 3. DOUTRINA ASSEMBLEIA DE DEUS (pentecostal clássica) intacta: nada de prosperidade torta, alegoria sem base, achismo teológico, nem sincretismo.
 4. FIEL AO TEXTO: a verdade nasce da Escritura, não é imposta sobre ela.
