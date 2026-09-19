@@ -340,6 +340,152 @@ async function uso(req, res){
   }finally{ try{ await c.end(); }catch(_){} }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// AVISO DE REPETIÇÃO — o caderno do que o pastor JÁ PREGOU.
+//   GET  /api/dados?fn=pregado&user=<chave>            -> lista o que já pregou
+//   POST /api/dados?fn=pregado                          -> registra
+//        { user, slug, titulo, ref, livros:['gn 28'], tema, angulo, publico, data }
+//   POST /api/dados?fn=pregado  { acao:'apagar', user, id }
+//
+// Mora AQUI DENTRO de propósito: a Vercel Hobby está em 11/12 funções — nenhum
+// arquivo novo pode nascer em api/. Mesmo estilo do fn=uso logo acima.
+// O AVISO em si (comparar texto bíblico e tema) acontece no celular, em
+// public/_pregado.js — aqui só se guarda e se devolve a memória.
+// ═══════════════════════════════════════════════════════════════════════════
+const PREG_MAX_TXT = 220;
+const PREG_MAX_LIV = 40;      // no máximo 40 chaves "livro capítulo" por peça
+
+function pregTexto(v, max){
+  return (v==null ? '' : String(v)).replace(/\s+/g,' ').trim().slice(0, max || PREG_MAX_TXT);
+}
+function pregData(v){
+  const s = pregTexto(v, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;   // null => o banco põe hoje
+}
+function pregLivros(v){
+  let arr = v;
+  if(typeof arr === 'string') arr = arr.split('|');
+  if(!Array.isArray(arr)) arr = [];
+  const vistos = {}, out = [];
+  arr.forEach(x => {
+    const k = pregTexto(x, 24).toLowerCase();
+    if(k && !vistos[k]){ vistos[k] = 1; out.push(k); }
+  });
+  return out.slice(0, PREG_MAX_LIV);
+}
+function pregLinha(r){
+  return {
+    id: Number(r.id),
+    slug: r.slug || '',
+    titulo: r.titulo || '',
+    ref: r.ref || '',
+    livros: (r.livros || '').split('|').filter(Boolean),
+    tema: r.tema || '',
+    angulo: r.angulo || '',
+    publico: r.publico || '',
+    data: r.pregado_em ? new Date(r.pregado_em).toISOString().slice(0,10) : '',
+    criado_em: r.criado_em
+  };
+}
+
+async function pregTabela(c){
+  await c.query(`create table if not exists radar_pregacoes(
+    id bigserial primary key,
+    user_key text not null default '',
+    slug text,
+    titulo text not null,
+    ref text,
+    livros text,
+    tema text,
+    angulo text,
+    publico text,
+    pregado_em date default current_date,
+    criado_em timestamptz default now()
+  )`);
+  try{ await c.query(`create index if not exists radar_pregacoes_user on radar_pregacoes(user_key)`); }catch(_){}
+}
+
+async function pregado(req, res){
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type');
+  res.setHeader('Cache-Control','no-store');
+  if(req.method === 'OPTIONS'){ res.status(200).end(); return; }
+
+  const q = req.query || {};
+  let b = req.body;
+  if(typeof b === 'string'){ try{ b = JSON.parse(b); }catch(_){ b = {}; } }
+  if(Buffer.isBuffer(b)){ try{ b = JSON.parse(b.toString('utf8')); }catch(_){ b = {}; } }
+  b = b || {};
+
+  const chave = chaveDe(req.method === 'POST' ? (b.user != null ? b.user : b.user_key) : q.user).slice(0,60);
+  if(!chave){
+    // sem dono não há caderno — e não se devolve o caderno dos outros
+    res.status(200).json({ ok:true, itens:[], sem_dono:true });
+    return;
+  }
+
+  const cs = process.env.RADAR_DB;
+  if(!cs){ res.status(200).json({ ok:true, itens:[], off:true, salvo:false }); return; }
+
+  const c = new Client({ connectionString: cs, ssl:{ rejectUnauthorized:false } });
+  try{
+    await c.connect();
+    await pregTabela(c);
+
+    // ── apagar (desmarcar "já preguei") ──────────────────────────────────────
+    if(req.method === 'POST' && b.acao === 'apagar'){
+      const id = parseInt(b.id, 10);
+      if(!(id > 0)){ res.status(400).json({ ok:false, err:'id' }); return; }
+      const d = await c.query(
+        `delete from radar_pregacoes where id=$1 and user_key=$2`, [id, chave]);
+      res.status(200).json({ ok:true, apagado:d.rowCount });
+      return;
+    }
+
+    // ── registrar ────────────────────────────────────────────────────────────
+    if(req.method === 'POST'){
+      const titulo = pregTexto(b.titulo);
+      if(!titulo){ res.status(400).json({ ok:false, err:'título obrigatório' }); return; }
+      const slug   = pregTexto(b.slug, 160);
+      const data   = pregData(b.data);
+      const livros = pregLivros(b.livros).join('|');
+
+      // não duplica: mesma peça, mesmo dia, mesma pessoa = o mesmo registro
+      const ja = await c.query(
+        `select * from radar_pregacoes
+          where user_key=$1
+            and coalesce(nullif(slug,''), titulo) = $2
+            and pregado_em = coalesce($3::date, current_date)
+          limit 1`, [chave, slug || titulo, data]);
+      if(ja.rowCount){
+        res.status(200).json({ ok:true, salvo:true, ja:true, item: pregLinha(ja.rows[0]) });
+        return;
+      }
+
+      const r = await c.query(
+        `insert into radar_pregacoes(user_key,slug,titulo,ref,livros,tema,angulo,publico,pregado_em)
+         values($1,$2,$3,$4,$5,$6,$7,$8, coalesce($9::date, current_date))
+         returning *`,
+        [chave, slug, titulo, pregTexto(b.ref), livros, pregTexto(b.tema, 400),
+         pregTexto(b.angulo, 400), pregTexto(b.publico, 120), data]);
+      res.status(200).json({ ok:true, salvo:true, item: pregLinha(r.rows[0]) });
+      return;
+    }
+
+    // ── listar ───────────────────────────────────────────────────────────────
+    const l = await c.query(
+      `select * from radar_pregacoes
+        where user_key=$1
+        order by pregado_em desc, id desc
+        limit 500`, [chave]);
+    res.status(200).json({ ok:true, total:l.rowCount, itens: l.rows.map(pregLinha) });
+  }catch(e){
+    // igual ao fn=uso: erro de banco NUNCA pode travar a tela do pastor
+    res.status(200).json({ ok:true, itens:[], salvo:false, err:String(e && e.message || e).slice(0,160) });
+  }finally{ try{ await c.end(); }catch(_){} }
+}
+
 const HANDLERS = {
   hit:          require('./_lib/hit.js'),
   hist:         require('./_lib/hist.js'),
@@ -350,7 +496,8 @@ const HANDLERS = {
   leitura:      require('./_lib/leitura.js'),
   publicacoes:  require('./_lib/publicacoes.js'),
   painel:       painel,
-  uso:          uso
+  uso:          uso,
+  pregado:      pregado
 };
 
 module.exports = async (req, res) => {
