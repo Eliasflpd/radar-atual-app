@@ -19,6 +19,9 @@
 export const config = { runtime: 'edge' };
 
 import { iaTexto, iaStreamTexto } from './ia.js';
+// A máquina de CITAR A FONTE é uma só pro Concílio inteiro (marcador [F#] → fonte real,
+// mais a conferência anti-invenção). Mora no concilio.js, que é o dono da lista de obras.
+import { blocoDeFontes, trocarFontes, conferirFontes, fluxoComFontes } from './concilio.js';
 
 import CORPUS from './wagner-corpus.js';
 
@@ -67,15 +70,50 @@ function termosDaPergunta(pergunta) {
   return out.slice(0, 14);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DE ONDE VEM: o rótulo humano de cada pedaço do acervo.
+// O corpus já guarda a origem em `c.s` ("Parakletologia (o Espírito Santo) — Aula 01
+// · A Tríplice Envio da Pomba"). Aqui isso vira a etiqueta que o pastor lê na tela.
+// Sem parênteses: o front acha a fonte pelo padrão "(📚 … )".
+// ─────────────────────────────────────────────────────────────────────────────
+function rotuloDaFonte(f, s) {
+  // fora o parêntese explicativo do título da disciplina; fora qualquer parêntese
+  // solto (a etiqueta "(📚 …)" do front não pode ter parêntese dentro).
+  const limpo = String(s || '').replace(/\([^)]*\)/g, '').replace(/[()]/g, '').replace(/\s{2,}/g, ' ').trim();
+  if (f === 'T') return 'Caderno de Pérolas do Dr. Wagner — tipologias catalogadas';
+  if (f === 'X') {
+    // "Aula: 01 - Parakletologia - Aula 01" → "Aula de Parakletologia 01 — transcrição"
+    const m = limpo.match(/^Aula:\s*\d+\s*-\s*(.+?)\s*-\s*Aula\s*(\d+)/i);
+    if (!m) return 'Aula do Dr. Wagner Cordeiro — Instituto GIOM';
+    // o nome vem do arquivo da transcrição, que é salvo sem acento — devolvemos o acento
+    // antes de a fonte aparecer na tela do pastor.
+    const ACENTO = { Biblica: 'Bíblica', Tabernaculo: 'Tabernáculo', Primicias: 'Primícias', Etica: 'Ética', Angeologia: 'Angelologia' };
+    const nome = m[1].trim().split(' ').map((p) => ACENTO[p] || p).join(' ');
+    return `Aula de ${nome} ${m[2]} — transcrição, Instituto GIOM`;
+  }
+  // Caderno: "Parakletologia (o Espírito Santo) — Aula 01 · A Tríplice Envio da Pomba"
+  const p = limpo.split('·');
+  const cabeca = (p[0] || '').trim();
+  const mAula = cabeca.match(/^(.+?)\s*—\s*Aula\s*(\d+)/i);
+  const aula = mAula ? `${mAula[1].trim()} ${mAula[2]}` : cabeca.replace(/\s*—\s*$/, '');
+  let perola = (p[1] || '').trim().replace(/\s*[–—-]\s*$/, '');
+  if (perola.length > 95) perola = perola.slice(0, 92).replace(/\s\S*$/, '') + '…';
+  return perola ? `Aula de ${aula} — pérola: ${perola}` : `Aula de ${aula}`;
+}
+
 /**
- * Acha os trechos mais pertinentes e devolve { texto, fontes }.
+ * Acha os trechos mais pertinentes e devolve { texto, fontes, rotulos }.
  * @param {string} pergunta  o que o pastor perguntou
  * @param {number} teto      orçamento de caracteres de contexto
+ * @param {{marcar?:boolean}} [opts]  marcar=true põe [F1], [F2]… em cada pedaço, pro
+ *        modelo poder APONTAR a fonte sem escrevê-la (é o sistema que escreve).
+ *        Sem opts, o formato é o mesmo de sempre — api/_lib/voz.js depende disso.
  */
-export function buscarContexto(pergunta, teto) {
+export function buscarContexto(pergunta, teto, opts) {
   teto = teto || 9000;
+  const marcar = !!(opts && opts.marcar);
   const termos = termosDaPergunta(pergunta);
-  if (!termos.length) return { texto: '', fontes: [], termos: [] };
+  if (!termos.length) return { texto: '', fontes: [], termos: [], rotulos: [] };
   const N = CORPUS.length;
   const norm = corpusNormalizado();
 
@@ -117,7 +155,7 @@ export function buscarContexto(pergunta, teto) {
   // fala crua da aula (932 pedaços) engole o espaço do material destilado.
   const tetoX = Math.floor(teto * 0.45);
   let usado = 0, usadoX = 0;
-  const partes = [], fontes = [];
+  const partes = [], fontes = [], rotulos = [];
   for (const [pontos, i] of ranking) {
     if (usado >= teto) break;
     const c = CORPUS[i];
@@ -126,17 +164,24 @@ export function buscarContexto(pergunta, teto) {
     if (usado + tam > teto) continue;
     usado += tam;
     if (c.f === 'X') usadoX += tam;
-    partes.push(`[${c.s}]\n${c.t}`);
+    if (marcar) {
+      rotulos.push(rotuloDaFonte(c.f, c.s));
+      partes.push(`[F${rotulos.length}] ${c.s}\n${c.t}`);
+    } else {
+      partes.push(`[${c.s}]\n${c.t}`);
+    }
     fontes.push({ fonte: c.f === 'T' ? 'tipologias' : c.f === 'C' ? 'caderno' : 'transcricao', titulo: c.s, pontos: Math.round(pontos * 10) / 10 });
   }
-  return { texto: partes.join('\n\n---\n\n'), fontes, termos };
+  return { texto: partes.join('\n\n---\n\n'), fontes, termos, rotulos };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2) O MÉTODO (fonte de verdade: D:\SKILL\wagner-cordeiro\SKILL.md)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const METODO = `Você responde no CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil), usando o MÉTODO do Dr. Wagner Cordeiro (Instituto Teológico GIOM) — o garimpeiro de tipologias.
+// exportado porque a CONVERSA POR VOZ (api/_lib/voz.js) usa o MESMO método e as MESMAS
+// travas doutrinárias — copiar seria deixar as duas versões divergirem com o tempo.
+export const METODO = `Você responde no CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil), usando o MÉTODO do Dr. Wagner Cordeiro (Instituto Teológico GIOM) — o garimpeiro de tipologias.
 
 Você NÃO finge ser ele. Não escreva "eu, Wagner". Você faz o TRABALHO dele e escreve em português do Brasil.
 
@@ -228,11 +273,17 @@ TAMANHO: densidade sim, comprimento infinito não. Entregue tudo em até ~1100 p
 // ─────────────────────────────────────────────────────────────────────────────
 
 function montarPrompt(pergunta, ctx) {
-  const sys = METODO + '\n\n' + FORMATO;
+  // DE ONDE VEM: o bloco que ensina a apontar a fonte com marcador. É o mesmo do resto
+  // do Concílio — a IA APONTA, o servidor ESCREVE a fonte. Assim não existe aula
+  // inventada, minuto inventado nem pérola inventada.
+  const sys = METODO + '\n\n' + blocoDeFontes('F', ctx.rotulos,
+    'Estes são os pedaços do acervo do PRÓPRIO Dr. Wagner que casaram com a pergunta — aulas do Instituto GIOM e o Caderno de Pérolas. Cada pedaço do MATERIAL DE APOIO abaixo vem com o seu marcador:',
+    'aplicando o método do Dr. Wagner') + '\n\n' + FORMATO;
   const user =
     (ctx.texto
       ? `MATERIAL DE APOIO — trechos do garimpo do próprio Dr. Wagner (Caderno de Pérolas, tipologias catalogadas e transcrição das aulas), selecionados pela pergunta.
 Use como MATÉRIA-PRIMA e como confirmação do método. NÃO copie os trechos: reescreva. Se o material não cobrir a pergunta, diga isso.
+Cada pedaço começa com o SEU MARCADOR ([F1], [F2]…): quando a ligação vier daquele pedaço, ponha o marcador no fim da frase.
 """
 ${ctx.texto}
 """
@@ -298,7 +349,7 @@ async function chamarIA(sys, user, opts) {
 // streaming. Exportamos isto pra aquela tela cair no método certo em vez de dar 400.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function wagnerStream(passagem, ordemDoTipo) {
-  const ctx = buscarContexto(passagem, 8000);
+  const ctx = buscarContexto(passagem, 8000, { marcar: true });
   const { sys, user } = montarPrompt(passagem, ctx);
   const userFinal = ordemDoTipo ? user + '\n\nFORMATO PEDIDO PELO PASTOR:\n' + ordemDoTipo : user;
 
@@ -341,7 +392,10 @@ export async function wagnerStream(passagem, ordemDoTipo) {
     try { await writer.close(); } catch (_) {}
   })();
 
-  return new Response(readable, {
+  // Segunda passada no mesmo fluxo: troca [F3] pela fonte de verdade ("(📚 Aula de
+  // Parakletologia — pérola: …)"). Marcador que não existe na lista é apagado aqui,
+  // então fonte inventada NÃO chega ao pastor nem em streaming.
+  return fluxoComFontes(new Response(readable, {
     headers: {
       ...CORS,
       'Content-Type': 'text/plain; charset=utf-8',
@@ -350,7 +404,7 @@ export async function wagnerStream(passagem, ordemDoTipo) {
       'X-IA-Modelo': String(r.modelo || '?'),
       'Access-Control-Expose-Headers': 'X-IA-Provedor, X-IA-Modelo',
     },
-  });
+  }), ctx.rotulos);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -367,7 +421,7 @@ export default async function handler(req) {
   const pergunta = (b.pergunta || b.duvida || b.passagem || b.tema || '').toString().trim().slice(0, 600);
   if (!pergunta) return new Response(JSON.stringify({ ok: false, erro: 'Escreva a sua pergunta.' }), { status: 400, headers: JSONH });
 
-  const ctx = buscarContexto(pergunta, 9000);
+  const ctx = buscarContexto(pergunta, 9000, { marcar: true });
   let { sys, user } = montarPrompt(pergunta, ctx);
 
   // Conversa continuada: só as últimas trocas, resumidas, pra não estourar o prompt
@@ -409,6 +463,19 @@ export default async function handler(req) {
     resposta = 'Irmão, me faça a pergunta de novo apontando o TEXTO que você quer cavar (livro, capítulo e versículo). '
       + 'Sem o gatilho concreto do texto eu não invento tipologia — mas me dê o versículo e eu vou ao garimpo com você.';
   }
+
+  // DE ONDE VEM: marcador → fonte real. O que não estiver na lista é apagado e contado.
+  const tr = trocarFontes(resposta, ctx.rotulos);
+  resposta = tr.texto;
+  if (quadro) { // o quadro também pode ter marcador dentro dos itens
+    for (const k of ['titulo', 'ponte', 'conta', 'provaReal', 'ordem']) {
+      if (typeof quadro[k] === 'string') quadro[k] = trocarFontes(quadro[k], ctx.rotulos).texto;
+    }
+    for (const k of ['at', 'nt']) {
+      if (Array.isArray(quadro[k])) quadro[k] = quadro[k].map((x) => (typeof x === 'string' ? trocarFontes(x, ctx.rotulos).texto : x));
+    }
+  }
+
   return new Response(JSON.stringify({
     ok: true,
     erudito: 'wagner-cordeiro',
@@ -417,8 +484,9 @@ export default async function handler(req) {
     temQuadro: !!quadro,   // o front pode usar isso pra oferecer "ver o quadro"
     quadro,
     fontes: ctx.fontes.map((f) => ({ fonte: f.fonte, titulo: f.titulo })),
+    citadas: tr.usadas,     // as fontes que realmente foram citadas nesta resposta
     termos: ctx.termos,
-    avisos: conferirTravas(resposta),
+    avisos: conferirTravas(resposta).concat(conferirFontes(resposta, tr.inventados)),
     provedor: r.provedor,   // quem da cascata atendeu
     modelo: r.modelo,
   }), { headers: JSONH });

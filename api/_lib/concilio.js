@@ -10,6 +10,180 @@ const CORS = { 'Access-Control-Allow-Origin': '*' };
 // 41 eruditos do Concílio — gerado a partir de public/biblioteca/concilio/eruditos.json
 const ERUDITOS = [{"id": "stanley-m-horton", "nome": "Stanley M. Horton", "tag": "Decano da teologia pentecostal (AD)", "cre": "Doutrina AD clássica; batismo no Espírito com línguas; dons e sobrenatural pra hoje", "forte": "Definir a ortodoxia pentecostal com rigor de seminário; Espírito Santo; Atos; Apocalipse"}, {"id": "gordon-d-fee", "nome": "Gordon D. Fee", "tag": "Exegeta pentecostal do texto grego", "cre": "Alta visão da Escritura; o Espírito que capacita; feroz contra o evangelho da prosperidade", "forte": "Rigor no grego, crítica textual, o Espírito nas cartas de Paulo, hermenêutica séria"}, {"id": "craig-s-keener", "nome": "Craig S. Keener", "tag": "O gigante do pano de fundo e dos milagres", "cre": "Continuísta; raiz nas Assembleias de Deus; defende os milagres com erudição", "forte": "Mundo do 1º século, contexto judaico/greco-romano, Atos, defender o sobrenatural"}, {"id": "french-l-arrington", "nome": "French L. Arrington", "tag": "O dogmata do Espírito", "cre": "Pentecostal clássico; batismo no Espírito com evidência; dons pra hoje", "forte": "A doutrina do Espírito Santo com base exegética; Lucas, Atos, Coríntios"}, {"id": "roger-stronstad", "nome": "Roger Stronstad", "tag": "A chave da pneumatologia lucana", "cre": "O dom do Espírito em Lucas-Atos é capacitação pra missão, subsequente à conversão", "forte": "Defesa exegética do batismo no Espírito; 'o sacerdócio profético de todos os crentes'"}, {"id": "myer-pearlman", "nome": "Myer Pearlman", "tag": "O pai da sistemática pentecostal", "cre": "Pentecostal clássico; as grandes doutrinas ditas de forma simples e ordenada", "forte": "Panorama de cada livro da Bíblia; fundamentos de doutrina AD claros"}, {"id": "donald-c-stamps", "nome": "Donald C. Stamps", "tag": "As notas que o Brasil inteiro lê (Bíblia de Estudo Pentecostal)", "cre": "Pentecostal; batismo no Espírito, dons, cura; forte ênfase em santidade e separação do mundo", "forte": "Nota de estudo utilizável no púlpito; artigos temáticos pentecostais"}, {"id": "antonio-gilberto", "nome": "Antônio Gilberto", "tag": "O didata-mor da CPAD", "cre": "Pentecostal AD; 'erudição e piedade'; inspiração da Escritura", "forte": "COMO ensinar a Bíblia na Escola Dominical; bibliologia; formar professores"}, {"id": "esequias-soares", "nome": "Esequias Soares", "tag": "Os originais e a apologética", "cre": "Pentecostal AD; inerrância; ortodoxia trinitariana firme", "forte": "Hebraico e grego; defesa da fé contra seitas (T. de Jeová, espiritismo, modismos)"}, {"id": "elienai-cabral", "nome": "Elienai Cabral", "tag": "O expositor paulino da CPAD", "cre": "Pentecostal AD; ênfase na vida cristã, conduta e mordomia", "forte": "Exposição das cartas de Paulo (Efésios, Romanos); vida prática da igreja"}, {"id": "severino-pedro-da-silva", "nome": "Severino Pedro da Silva", "tag": "Hebreus e as últimas coisas", "cre": "Pentecostal AD; premilenista; tipologia cristocêntrica", "forte": "Hebreus verso a verso; Apocalipse; escatologia; a superioridade de Cristo"}, {"id": "frank-m-boyd", "nome": "Frank M. Boyd", "tag": "O pioneiro doutrinário da AG", "cre": "Pentecostal AD; dispensacionalista; escatologia clássica", "forte": "As eras/dispensações; arrebatamento, tribulação, milênio; panorama do plano de Deus"}, {"id": "joao-calvino", "nome": "João Calvino", "tag": "O padrão-ouro da exegese reformada", "cre": "Reformado; soberania de Deus; graça soberana; autoridade suprema da Escritura", "forte": "Exegese clara e disciplinada (brevitas); revelar a mente do autor sagrado"}, {"id": "martinho-lutero", "nome": "Martinho Lutero", "tag": "O fogo da Reforma", "cre": "Luterano; justificação só pela fé, só pela graça, só Cristo, só a Escritura", "forte": "Lei e Evangelho; Cristo no centro; graça contra mérito; Gálatas, Gênesis"}, {"id": "john-owen", "nome": "John Owen", "tag": "O teólogo dos teólogos (puritano)", "cre": "Puritano reformado; expiação definida; a obra de Cristo; mortificação do pecado", "forte": "Profundidade sem fundo num texto; Hebreus; santidade; comunhão com Deus"}, {"id": "jonathan-edwards", "nome": "Jonathan Edwards", "tag": "A mente mais penetrante da América", "cre": "Reformado; a supremacia e a beleza de Deus; graça soberana; afetos santos", "forte": "Tipologia intensa; a glória de Deus; conexões teológicas que ninguém vê"}, {"id": "matthew-henry", "nome": "Matthew Henry", "tag": "O devocional-pastoral", "cre": "Puritano; glorificar a Deus em toda a vida; a Escritura como alimento da alma", "forte": "Lição prática e devocional de cada versículo; calor pastoral; aforismos que grudam"}, {"id": "charles-spurgeon", "nome": "Charles Spurgeon", "tag": "O Príncipe dos Pregadores", "cre": "Batista reformado; graça soberana; paixão evangelística", "forte": "Achar Cristo em cada texto; imagem viva; apelo à alma; frase inesquecível"}, {"id": "john-gill", "nome": "John Gill", "tag": "O erudito hebraico e rabínico", "cre": "Batista particular (calvinista); graça soberana; línguas a serviço da fé", "forte": "O fundo judaico-rabínico do texto; o Antigo Testamento aberto com chaves judaicas"}, {"id": "j-c-ryle", "nome": "J.C. Ryle", "tag": "A clareza fiel", "cre": "Anglicano evangélico; justificação pela fé; santidade prática", "forte": "Explicar com clareza simples e viril; santidade real; franqueza contra o pecado"}, {"id": "alexander-maclaren", "nome": "Alexander Maclaren", "tag": "O Príncipe dos Expositores", "cre": "Batista evangélico; exposição fiel ao texto original", "forte": "Transformar exegese em sermão bem estruturado; as divisões naturais do texto"}, {"id": "martyn-lloyd-jones", "nome": "Martyn Lloyd-Jones", "tag": "'The Doctor'", "cre": "Reformado experimental; soberania de Deus; anseio por avivamento e poder do Espírito", "forte": "Lógica + doutrina + experiência ('logic on fire'); diagnóstico da alma"}, {"id": "john-stott", "nome": "John Stott", "tag": "O equilíbrio e a aplicação", "cre": "Anglicano evangélico; centralidade da cruz; evangelicalismo sério", "forte": "Ponte entre o texto antigo e o mundo de hoje; sempre pergunta 'e daí?'"}, {"id": "d-a-carson", "nome": "D.A. Carson", "tag": "O bisturi exegético", "cre": "Batista reformado; inerrância; unidade canônica da Escritura", "forte": "Grego, estrutura, teologia bíblica; desmontar falácias exegéticas"}, {"id": "f-f-bruce", "nome": "F.F. Bruce", "tag": "O historiador da confiabilidade", "cre": "Evangélico conservador; confiabilidade histórica do NT", "forte": "Contexto histórico; Atos; provar que os documentos do NT são confiáveis"}, {"id": "john-macarthur", "nome": "John MacArthur", "tag": "Exposição verso a verso", "cre": "Batista reformado; inerrância e suficiência; salvação senhorial (é cessacionista)", "forte": "Precisão verso a verso; contexto gramatical-histórico; doutrina firme"}, {"id": "leon-morris", "nome": "Leon Morris", "tag": "O teólogo da cruz", "cre": "Anglicano evangélico; expiação substitutiva e propiciação", "forte": "A doutrina da cruz; o significado do sangue; João; Romanos"}, {"id": "r-c-sproul", "nome": "R.C. Sproul", "tag": "A santidade de Deus", "cre": "Presbiteriano reformado; soberania e santidade de Deus; inerrância", "forte": "Explicar doutrina densa de forma clara; ensino que leva à adoração"}, {"id": "douglas-moo", "nome": "Douglas Moo", "tag": "O especialista paulino", "cre": "Evangélico reformado; justificação forense pela fé", "forte": "Romanos e a justificação; defesa da leitura clássica contra a Nova Perspectiva"}, {"id": "g-k-beale", "nome": "G.K. Beale", "tag": "O uso do AT no NT", "cre": "Reformado; unidade da Escritura; a nova criação como alvo", "forte": "Tipologia e cumprimento; temas canônicos (templo, Éden); Apocalipse pelo AT"}, {"id": "warren-wiersbe", "nome": "Warren Wiersbe", "tag": "'Seja…' — o prático", "cre": "Batista evangélico; exposição fiel e acessível pro crente comum", "forte": "Estrutura clara, pontos memoráveis, palavra-chave que amarra o capítulo"}, {"id": "william-hendriksen", "nome": "William Hendriksen", "tag": "A espinha reformada", "cre": "Reformado; graça soberana; escatologia amilenista sóbria", "forte": "Exposição reformada clara; Apocalipse sem sensacionalismo"}, {"id": "j-alec-motyer", "nome": "J. Alec Motyer", "tag": "O profeta do AT", "cre": "Anglicano evangélico; o AT cristocêntrico; o Servo Sofredor", "forte": "Isaías e os profetas; as promessas do AT cumpridas em Cristo"}, {"id": "derek-kidner", "nome": "Derek Kidner", "tag": "O cirurgião conciso", "cre": "Anglicano evangélico; sensibilidade literária; exegese conservadora", "forte": "Salmos, Gênesis, Provérbios; o essencial afiado em pouco espaço"}, {"id": "bruce-waltke", "nome": "Bruce Waltke", "tag": "O hebraísta", "cre": "Reformado; inerrância; teologia do AT cristocêntrica", "forte": "Hebraico (sintaxe, palavra); Provérbios; a sabedoria e o temor do Senhor"}, {"id": "alfred-edersheim", "nome": "Alfred Edersheim", "tag": "A lente judaica dos Evangelhos", "cre": "Judeu convertido a Cristo; alta visão da Escritura; Jesus é o Messias prometido a Israel", "forte": "O NT dentro do 2º Templo — Templo, festas, sinagoga e costumes que abrem os Evangelhos"}, {"id": "david-h-stern", "nome": "David H. Stern", "tag": "As raízes judaicas do Novo Testamento", "cre": "Judeu messiânico; crê em Yeshua; alta visão da Escritura", "forte": "Ler o NT como documento judaico; nomes hebraicos; a unidade entre o Tanakh e o NT"}, {"id": "arnold-fruchtenbaum", "nome": "Arnold Fruchtenbaum", "tag": "Israel na profecia e a mente messiânica", "cre": "Judeu messiânico; hermenêutica literal-gramatical-histórica; pré-milenista", "forte": "Israel no plano de Deus; as festas de Levítico 23 como profecia; tipologia e escatologia"}, {"id": "michael-l-brown", "nome": "Michael L. Brown", "tag": "O hebraísta que responde às objeções", "cre": "Judeu messiânico; hebraísta (PhD/NYU); continuísta/carismático", "forte": "O hebraico do AT; as profecias messiânicas; responder às objeções judaicas a Jesus"}, {"id": "michael-rydelnik", "nome": "Michael Rydelnik", "tag": "O caçador do Messias no AT", "cre": "Judeu messiânico; professor do Moody; a Bíblia Hebraica é diretamente messiânica", "forte": "A esperança messiânica; Cristo direto no Antigo Testamento (Gênesis 3:15, Salmo 22)"}, {"id": "david-flusser", "nome": "David Flusser", "tag": "O mundo do 2º Templo (usado com filtro)", "cre": "Erudito judeu de Jerusalém — NÃO cristão; honra Jesus como mestre judeu, mas nega Sua divindade", "forte": "O mundo do 2º Templo e o Jesus histórico — a Pessoa de Cristo fica com a fé cristã e o Espírito"}];
 
+// ═════════════════════════════════════════════════════════════════════════════
+// CITAR A FONTE — o que separa este Concílio de um concorrente de graça
+// ═════════════════════════════════════════════════════════════════════════════
+// O problema: a resposta saía no método do mestre, mas sem dizer DE ONDE VEM.
+// A solução NÃO pode ser "mande a IA citar" — IA solta inventa obra, capítulo e
+// página com a maior cara de santa. Então a fonte não é escrita pela IA: ela é
+// escrita por NÓS. A IA só aponta, com um marcador ([O2], [F3]), para um item de
+// uma lista fechada que mandamos no prompt; o servidor troca o marcador pelo
+// texto real da fonte. Marcador fora da lista some e vira aviso.
+//
+// ⚖️ LIMITE DE DIREITO AUTORAL: citamos a REFERÊNCIA (autor, obra, aula), NUNCA o
+// texto do autor. O corpus é material de estudo privado do pastor; o que vai pra
+// tela é a etiqueta da fonte, não o parágrafo dela.
+
+// As OBRAS REAIS de cada servo. Fonte de verdade: o campo `obras_reais` das fichas
+// em C:\Users\mc1ar\.claude\commands\expositores\agents\*.md.
+// ⚠️ Esta lista é a ÚNICA coisa que o Concílio pode citar como obra. Não tem item
+// aqui? Então o mestre diz que está aplicando o MÉTODO dele — e não cita nada.
+// ⚠️ SEM PARÊNTESES nos rótulos: o front acha a fonte por "(📚 ... )" e um parêntese
+// no meio do rótulo cortaria a etiqueta pela metade.
+const OBRAS = {
+  'stanley-m-horton': ['Teologia Sistemática — perspectiva pentecostal', 'Doutrinas Bíblicas, com W. Menzies', 'O que a Bíblia diz sobre o Espírito Santo', 'Isaías: o Profeta Messiânico', 'O Livro de Atos: o Vento do Espírito'],
+  'gordon-d-fee': ['1 Coríntios — NICNT', 'Filipenses — NICNT', "God's Empowering Presence: o Espírito nas cartas de Paulo", 'Entendes o que lês?, com Douglas Stuart', 'The Disease of the Health and Wealth Gospels'],
+  'craig-s-keener': ['Acts: An Exegetical Commentary, 4 vols.', 'Comentário do Contexto Bíblico — Novo Testamento, IVP', 'Comentário de João', 'Miracles, 2 vols.', 'Spirit Hermeneutics'],
+  'french-l-arrington': ['Encountering the Holy Spirit', 'Christian Doctrine: A Pentecostal Perspective, 3 vols.', 'Comentários de Lucas, Atos, 1-2 Coríntios e 1 Timóteo'],
+  'roger-stronstad': ['The Charismatic Theology of St. Luke', 'The Prophethood of All Believers'],
+  'myer-pearlman': ['Conhecendo as Doutrinas da Bíblia', 'Através da Bíblia Livro por Livro', 'O Dom Celestial'],
+  'donald-c-stamps': ['Bíblia de Estudo Pentecostal — notas de estudo', 'Bíblia de Estudo Pentecostal — os 77 artigos temáticos'],
+  'antonio-gilberto': ['Manual da Escola Dominical', 'A Bíblia Através dos Séculos', 'Crescimento em Cristo', 'A Prática do Evangelismo Pessoal', 'Verdades Pentecostais'],
+  'esequias-soares': ['Manual de Apologética Cristã', 'Heresias e Modismos', 'Como Responder às Testemunhas de Jeová', 'Estudo nos Evangelhos Sinóticos', 'Teologia Sistemática Pentecostal — capítulo A Doutrina de Deus'],
+  'elienai-cabral': ['Comentário Bíblico de Efésios', 'Comentário Bíblico de Romanos', 'A Defesa do Apostolado de Paulo', 'Parábolas de Jesus', 'O Tabernáculo', 'O Pregador Eficaz', 'Mordomia Cristã'],
+  'severino-pedro-da-silva': ['Comentário Bíblico — Epístola aos Hebreus', 'Apocalipse Versículo por Versículo', 'Escatologia — Doutrina das Últimas Coisas', 'Homilética', 'O Pregador e o Sermão', 'A Existência e a Pessoa do Espírito Santo'],
+  'frank-m-boyd': ['Ages and Dispensations — As Eras e Dispensações', 'Studies in the Revelation of Jesus Christ', 'Estudos do Antigo Testamento, 3 vols.'],
+  'joao-calvino': ['Comentários bíblicos de Calvino — quase toda a Bíblia', 'Harmonia dos Evangelhos Sinóticos', 'Institutas da Religião Cristã'],
+  'martinho-lutero': ['Comentário à Epístola aos Gálatas — preleções de 1531', 'Comentário sobre Gênesis', 'A Liberdade do Cristão'],
+  'john-owen': ['An Exposition of the Epistle to the Hebrews, 7 vols.', 'A Mortificação do Pecado', 'Sobre a Comunhão com Deus', 'A Glória de Cristo'],
+  'jonathan-edwards': ['Notes on Scripture', 'a Blank Bible — mais de 5.000 anotações', 'A Dissertation Concerning the End for Which God Created the World', 'Afetos Religiosos', 'Pecadores nas Mãos de um Deus Irado'],
+  'matthew-henry': ['Comentário Bíblico de Matthew Henry — Exposition of the Old and New Testaments'],
+  'charles-spurgeon': ['The Treasury of David — comentário dos Salmos', 'Metropolitan Tabernacle Pulpit — os sermões', 'Lectures to My Students', 'Commenting and Commentaries', 'All of Grace'],
+  'john-gill': ['An Exposition of the Entire Bible, 9 vols.', 'A Body of Doctrinal and Practical Divinity'],
+  'j-c-ryle': ['Expository Thoughts on the Gospels, 7 vols.', 'Santidade — Holiness', 'Practical Religion'],
+  'alexander-maclaren': ['Expositions of Holy Scripture'],
+  'martyn-lloyd-jones': ['Estudos em Romanos, 14 vols.', 'Estudos em Efésios, 8 vols.', 'Estudos no Sermão do Monte', 'Depressão Espiritual', 'Pregação e Pregadores'],
+  'john-stott': ['Série A Bíblia Fala Hoje — Romanos, Atos, Gálatas, Efésios, Sermão do Monte', 'Cristianismo Básico', 'A Cruz de Cristo'],
+  'd-a-carson': ['The Gospel According to John — PNTC', "Comentário de Mateus — Expositor's Bible Commentary", 'New Bible Commentary, como coeditor', 'Exegetical Fallacies'],
+  'f-f-bruce': ['The Book of the Acts — NICNT', 'The Epistle to the Hebrews — NICNT', 'Comentário de Gálatas — NIGTC', 'Os Documentos do Novo Testamento: São Confiáveis?'],
+  'john-macarthur': ['The MacArthur New Testament Commentary, 34 vols.', 'Bíblia de Estudo MacArthur'],
+  'leon-morris': ['The Gospel According to John — NICNT', 'Comentário de Romanos — PNTC', 'The Apostolic Preaching of the Cross'],
+  'r-c-sproul': ['A Santidade de Deus', 'Eleitos por Deus', 'Todos são Teólogos', "Comentário de Romanos — série St. Andrew's"],
+  'douglas-moo': ['The Epistle to the Romans — NICNT', 'Comentário de Tiago — PNTC', 'Colossenses e Filemom — PNTC'],
+  'g-k-beale': ['The Book of Revelation — NIGTC', 'A New Testament Biblical Theology', 'Handbook on the New Testament Use of the Old Testament'],
+  'warren-wiersbe': ['Série Seja / Be — 50 vols. cobrindo toda a Bíblia', 'The Bible Exposition Commentary'],
+  'william-hendriksen': ['New Testament Commentary — série NTC', 'Mais que Vencedores — Apocalipse'],
+  'j-alec-motyer': ['The Prophecy of Isaiah', 'A Mensagem de Amós — série A Bíblia Fala Hoje', 'The Message of Exodus'],
+  'derek-kidner': ['Salmos — Tyndale, 2 vols.', 'Gênesis — Tyndale', 'Provérbios — Tyndale', 'Esdras e Neemias — Tyndale', 'A Mensagem de Jeremias'],
+  'bruce-waltke': ['The Book of Proverbs — NICOT, 2 vols.', 'An Old Testament Theology', 'Genesis: A Commentary', 'An Introduction to Biblical Hebrew Syntax'],
+  'alfred-edersheim': ['A Vida e os Tempos de Jesus, o Messias', 'O Templo: seu ministério e seus serviços no tempo de Jesus', 'Esboços da Vida Social Judaica', 'Bible History: Old Testament'],
+  'david-h-stern': ['Novo Testamento Judaico', 'Comentário Judaico do Novo Testamento', 'Bíblia Judaica Completa', 'Restoring the Jewishness of the Gospel'],
+  'arnold-fruchtenbaum': ['Israelology: The Missing Link in Systematic Theology', 'As Pegadas do Messias — The Footsteps of the Messiah', 'Messianic Christology', "Ariel's Bible Commentary", 'The Feasts and Fasts of Israel', 'Yeshua: The Life of Messiah'],
+  'michael-l-brown': ['Answering Jewish Objections to Jesus, 5 vols.', "Israel's Divine Healer", "Comentário de Jeremias — Expositor's Bible Commentary", 'Verbetes no NIDOTTE', 'The Real Kosher Jesus'],
+  'michael-rydelnik': ['The Messianic Hope: Is the Hebrew Bible Really Messianic?', 'The Moody Bible Commentary, como coeditor', 'The Moody Handbook of Messianic Prophecy, como editor-geral'],
+  'david-flusser': ['Jesus — reeditado como The Sage from Galilee', 'Judaism and the Origins of Christianity', 'Judaism of the Second Temple Period', 'The Didache'],
+};
+
+// Parêntese dentro do rótulo quebraria a etiqueta "(📚 …)" que o front desenha.
+const limparRotulo = (s) => String(s || '').replace(/\s*\(/g, ' — ').replace(/\)/g, '').replace(/\s{2,}/g, ' ').trim();
+
+/**
+ * Monta o bloco de prompt que ENSINA a citar e entrega a lista fechada de fontes.
+ * @param {string} letra  'O' para obra de mestre, 'F' para pedaço do acervo do Wagner
+ * @param {string[]} rotulos  os rótulos já prontos, na ordem (índice 0 = marcador 1)
+ * @param {string} cabeca  a frase que apresenta a lista
+ * @param {string} semFonte  o que escrever quando NÃO houver fonte apontável
+ */
+export function blocoDeFontes(letra, rotulos, cabeca, semFonte) {
+  if (!rotulos || !rotulos.length) {
+    return `\n\n════ CITAR A FONTE ════\nNesta resposta você NÃO tem nenhuma fonte catalogada em mãos. Então NÃO cite obra, aula, página nem minuto de coisa nenhuma — você inventaria. Escreva "${semFonte}" quando a afirmação for fruto do método, e sustente tudo na referência bíblica, que continua obrigatória.`;
+  }
+  const lista = rotulos.map((r, i) => `[${letra}${i + 1}] ${r}`).join('\n');
+  return `\n\n════ CITAR A FONTE — é isto que separa este Concílio de um chute ════
+${cabeca}
+${lista}
+
+COMO CITAR (leia devagar):
+• Depois de uma afirmação de peso que venha de um desses itens, escreva SÓ o marcador, colado no fim da frase: [${letra}1]. Nada além do marcador.
+• NÃO escreva o nome da obra/aula você mesmo. O sistema troca o marcador pela fonte real. Se você escrever de cabeça, vira invenção.
+• Use no máximo 4 marcadores na resposta inteira. Marcador é para o que sustenta, não para enfeitar.
+
+⛔ PROIBIDO (isto é pior do que não citar):
+• Inventar obra, aula, capítulo, página, ano, tomo, edição ou "minuto tal". Se não está na lista acima, não existe.
+• Usar marcador com número que não está na lista.
+• Reproduzir o texto do autor. Você cita a REFERÊNCIA, nunca o parágrafo dele — no máximo UMA frase curta entre aspas na resposta inteira, e só se tiver certeza absoluta de que é dele.
+
+✅ QUANDO NÃO HOUVER FONTE: escreva com todas as letras "${semFonte}" e NÃO use marcador nenhum. Isso é honestidade, e o pastor confia mais nisso do que numa citação bonita e falsa.
+✅ A referência bíblica (livro capítulo:versículo) continua obrigatória e vale sempre — ela é a fonte que nunca falta.`;
+}
+
+/**
+ * Troca [O2] / [F7] pelo texto real da fonte. Marcador fora da lista é APAGADO
+ * (nunca chega ao pastor) e sai contado em `inventados`.
+ */
+export function trocarFontes(texto, rotulos) {
+  let inventados = 0;
+  const usadas = [];
+  const out = String(texto || '').replace(/[\[【]\s*([OF])\s*[-–]?\s*(\d{1,2})\s*[\]】]/gi, (_m, _l, n) => {
+    const r = rotulos && rotulos[Number(n) - 1];
+    if (!r) { inventados++; return ''; }
+    if (usadas.indexOf(r) < 0) usadas.push(r);
+    return ` (📚 ${r})`;
+  }).replace(/ {2,}/g, ' ').replace(/\s+([,.;:!?])/g, '$1');
+  return { texto: out, usadas, inventados };
+}
+
+// Rede anti-invenção: a IA pode tentar citar fonte POR FORA do marcador ("na aula de
+// Escatologia ele mostra…", "página 340", "no minuto 12"). Tudo que for citação de
+// fonte e não tiver a etiqueta 📚 do sistema ao lado é suspeito e vira aviso.
+const SUSPEITA = [
+  [/\b(?:n[ao]s?|d[ao]s?)\s+aulas?\s+(?:de|sobre|do|da)\s+\S/i, 'citou uma aula sem marcador'],
+  [/\bem\s+(?:seu|sua)\s+(?:livro|obra|coment[áa]rio|tratado)\b/i, 'citou "seu livro/comentário" sem marcador'],
+  [/\bp[áa]g(?:ina)?s?\.?\s*\d/i, 'citou número de página'],
+  [/\bminuto\s*\d/i, 'citou minuto de aula'],
+  [/\b(?:vol(?:ume)?\.?|tomo)\s*[\dIVX]/i, 'citou volume/tomo'],
+];
+export function conferirFontes(texto, inventados) {
+  const avisos = [];
+  if (inventados) avisos.push('fonte-inventada: ' + inventados + ' marcador(es) fora da lista foram apagados da resposta.');
+  for (const frase of String(texto || '').split(/(?<=[.!?\n])/)) {
+    if (frase.indexOf('📚') >= 0) continue;
+    for (const [re, quê] of SUSPEITA) {
+      if (re.test(frase)) { avisos.push('fonte-solta: ' + quê + ' — confira antes de pregar.'); break; }
+    }
+    if (avisos.length > 3) break;
+  }
+  return avisos;
+}
+
+/**
+ * Mesma troca, só que EM CIMA DO FLUXO (as telas do Concílio recebem streaming).
+ * Segura um rabo de até 8 caracteres porque o marcador pode chegar partido entre
+ * dois pedaços do stream — sem isso, "[O" e "2]" sairiam crus na tela do pastor.
+ */
+export function fluxoComFontes(resp, rotulos) {
+  if (!resp || !resp.body || !rotulos || !rotulos.length) return resp;
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  (async () => {
+    const reader = resp.body.getReader();
+    let buf = '';
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let corte = buf.length;
+        const i = Math.max(buf.lastIndexOf('['), buf.lastIndexOf('【'));
+        if (i >= 0 && buf.length - i <= 8 && !/[\]】]/.test(buf.slice(i))) corte = i;
+        if (corte > 0) { await writer.write(enc.encode(trocarFontes(buf.slice(0, corte), rotulos).texto)); buf = buf.slice(corte); }
+      }
+      if (buf) await writer.write(enc.encode(trocarFontes(buf, rotulos).texto));
+    } catch (_) {}
+    try { await writer.close(); } catch (_) {}
+  })();
+  return new Response(readable, { status: resp.status, headers: resp.headers });
+}
+
+// Os rótulos de UM mestre: "João Calvino, Institutas da Religião Cristã".
+export function rotulosDoMestre(id) {
+  const e = ERUDITOS.find((x) => x.id === id);
+  const obras = OBRAS[id];
+  if (!e || !obras) return [];
+  return obras.map((o) => limparRotulo(e.nome + ', ' + o));
+}
+
 const TIPOS = {
   estudo: {
     nome: 'Estudo do texto',
@@ -237,13 +411,18 @@ function fichaMestre(id) {
 
 // O Dr. Wagner tem material de verdade atrás (aulas + Caderno de Pérolas). Quando o
 // pastor escolhe ele, buscamos os trechos que casam com o pedido e mandamos junto.
+// Devolve { bloco, rotulos }: o bloco vai pro prompt já com os marcadores [F1], [F2]…
+// e os rótulos ficam aqui pra trocar o marcador pela fonte de verdade na saída.
 async function fonteWagner(pergunta) {
   try {
     const { buscarContexto } = await import('./concilio-wagner.js');
-    const ctx = buscarContexto(String(pergunta || '').slice(0, 600), 6000);
-    if (!ctx || !ctx.texto) return '';
-    return `\n\n📗 MATERIAL DO PRÓPRIO DR. WAGNER (aulas e Caderno de Pérolas), escolhido pelo pedido:\n"""\n${ctx.texto}\n"""\n⚠️ É MATÉRIA-PRIMA, não texto pronto: NÃO copie, reescreva com suas palavras. Se não cobrir o pedido, ignore.`;
-  } catch (_) { return ''; }
+    const ctx = buscarContexto(String(pergunta || '').slice(0, 600), 6000, { marcar: true });
+    if (!ctx || !ctx.texto) return null;
+    return {
+      rotulos: ctx.rotulos || [],
+      bloco: `\n\n📗 MATERIAL DO PRÓPRIO DR. WAGNER (aulas e Caderno de Pérolas), escolhido pelo pedido. Cada pedaço vem com o marcador da sua fonte:\n"""\n${ctx.texto}\n"""\n⚠️ É MATÉRIA-PRIMA, não texto pronto: NÃO copie, reescreva com suas palavras. Se não cobrir o pedido, ignore.`,
+    };
+  } catch (_) { return null; }
 }
 
 // ── REESCREVER — o pastor manda mudar e diz COMO ─────────────────────────────
@@ -253,7 +432,8 @@ async function fonteWagner(pergunta) {
 async function reescreverStream(texto, instrucao, mestreId, origem) {
   const fonteK = await kittelFonte(instrucao + ' ' + String(texto).slice(0, 600), origem, 2);
   const ficha = fichaMestre(mestreId);
-  const fonteW = mestreId === 'wagner-cordeiro' ? await fonteWagner(instrucao + ' ' + String(texto).slice(0, 600)) : '';
+  const wg = mestreId === 'wagner-cordeiro' ? await fonteWagner(instrucao + ' ' + String(texto).slice(0, 600)) : null;
+  const fonteW = wg ? wg.bloco : '';
 
   const metodo = ficha
     ? `\n\n🧙 MÉTODO PEDIDO: o pastor quer a reescrita no MÉTODO deste servo:\n${ficha.bloco}\nEscreva do jeito que ELE cavaria: o olhar dele, as perguntas dele, a ênfase dele, o tipo de aplicação dele. Na 3ª pessoa — você NÃO finge ser ${ficha.nome}, você trabalha no método dele.`
@@ -291,7 +471,10 @@ ${String(instrucao || '').slice(0, 1200)}
 
 Agora devolva a mensagem inteira, já com essa mudança feita.`;
 
-  return streamChat(SYS, user, { temperature: 0.55, max_tokens: 4000, tag: 'reescrever' });
+  // Aqui NÃO pedimos citação (é a mensagem DELE sendo reescrita). Mas se um marcador
+  // do material de apoio escapar no meio do texto, ele sai como fonte de verdade em
+  // vez de "[F3]" cru na tela do pastor.
+  return fluxoComFontes(await streamChat(SYS, user, { temperature: 0.55, max_tokens: 4000, tag: 'reescrever' }), wg ? wg.rotulos : []);
 }
 
 // ── CONVERSAR — bate-papo fiel com UM mestre do Concílio ─────────────────────
@@ -307,7 +490,17 @@ async function conversarStream(mestreId, pergunta, contexto, historico, origem) 
     : '▪ SERVO: Dr. Wagner Cordeiro\n▪ QUEM É: garimpeiro de tipologia — acha a figura de Cristo escondida no detalhe do Antigo Testamento\n▪ O QUE ELE CRÊ: pentecostal AD; toda a Escritura aponta pra Cristo\n▪ FORTE EM: tipologia, o detalhe do texto que ninguém repara, aplicação que arde';
 
   const fonteK = await kittelFonte(pergunta, origem, 2);
-  const fonteW = ehWagner ? await fonteWagner(pergunta) : '';
+  // DE ONDE VEM. Pro Wagner são os pedaços do acervo dele (aulas + Caderno de Pérolas);
+  // pros clássicos, as obras reais da ficha. Quem não tiver nada catalogado fica com a
+  // lista vazia — e aí o bloco manda NÃO citar obra nenhuma, em vez de deixar a IA solta.
+  const wg = ehWagner ? await fonteWagner(pergunta) : null;
+  const rotulos = ehWagner ? (wg ? wg.rotulos : []) : rotulosDoMestre(mestreId);
+  const fonteW = ehWagner && wg ? wg.bloco : '';
+  const fontes = blocoDeFontes(ehWagner ? 'F' : 'O', rotulos,
+    ehWagner
+      ? 'Estes são os pedaços do acervo do próprio Dr. Wagner que casaram com a pergunta — aulas do GIOM e o Caderno de Pérolas do pastor Elias:'
+      : `Estas são as OBRAS REAIS de ${nome}. É a ÚNICA lista de obras que você pode apontar:`,
+    `aplicando o método de ${nome}`);
 
   const blocoCtx = contexto
     ? `\n\n📄 A MENSAGEM QUE O PASTOR ESTÁ LENDO (é sobre ELA que ele conversa — use como base e NÃO a repita inteira; você comenta, não reescreve):\n"""\n${String(contexto).slice(0, 9000)}\n"""`
@@ -328,16 +521,16 @@ ${bloco}
 
 ⚖️ AUTORIDADE: a Bíblia e a sã doutrina AD (pentecostal clássica). Nada inventado — nem versículo, nem etimologia. Cristo no centro. Em ponto disputado, sinalize com humildade e mande confirmar com a Palavra.${blocoCtx}
 
-${LEI}${fonteK}${fonteW}`;
+${LEI}${fontes}${fonteK}${fonteW}`;
 
   const conversa = (Array.isArray(historico) ? historico.slice(-8) : [])
     .map((m) => ({ role: m && m.role === 'assistant' ? 'assistant' : 'user', content: String((m && m.content) || '').slice(0, 2000) }))
     .filter((m) => m.content);
 
-  return streamChat(SYS, pergunta, {
+  return fluxoComFontes(await streamChat(SYS, pergunta, {
     messages: [...conversa, { role: 'user', content: pergunta }],
     temperature: 0.5, max_tokens: 2200, tag: 'conversar',
-  });
+  }), rotulos);
 }
 
 
@@ -411,6 +604,12 @@ export default async function handler(req) {
     ? `\n\n🚨 ATENÇÃO ESPECIAL: este consultor é um erudito judeu que NÃO crê na divindade de Cristo. Use SOMENTE o que ele traz de pano de fundo do 2º Templo (costumes, Templo, festas, mundo judaico). A Pessoa, a divindade e a obra de Cristo ficam com a fé cristã e a doutrina AD — NUNCA reproduza a negação dele. Deixe isso claro numa linha no fim.`
     : '';
 
+  // DE ONDE VEM: as obras reais deste servo, e só elas.
+  const rotulos = rotulosDoMestre(e.id);
+  const fontes = blocoDeFontes('O', rotulos,
+    `Estas são as OBRAS REAIS de ${e.nome}. É a ÚNICA lista de obras que você pode apontar:`,
+    `aplicando o método de ${e.nome}`);
+
   const SYS = `Você trabalha no CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil).
 
 Sua tarefa nesta resposta é forjar um texto NOVO usando o MÉTODO de um servo específico que Deus usou:
@@ -422,12 +621,13 @@ Sua tarefa nesta resposta é forjar um texto NOVO usando o MÉTODO de um servo e
 
 Escreva do jeito que ELE cavaria o texto — o olhar dele, as perguntas dele, a ênfase dele, o tipo de aplicação dele. Se o método dele for grego e estrutura, faça isso. Se for calor pastoral e frase que gruda, faça isso. Se for pano de fundo judaico, faça isso.${filtro}
 
-${LEI}
+${LEI}${fontes}
 
 FORMATO: use os cabeçalhos com emoji exatamente como pedidos abaixo. Comece direto no conteúdo (sem saudação e sem "claro!").`;
 
   const user = `${t.ordem}\n\nTEXTO / ASSUNTO DO PASTOR: ${passagem}`;
 
-  // Mesmo streaming de antes, só que agora servido pela cascata (streamChat).
-  return streamChat(SYS, user, { temperature: 0.5, max_tokens: 2200, tag: 'concilio-erudito' });
+  // Mesmo streaming de antes, só que agora servido pela cascata (streamChat) e com
+  // os marcadores de fonte já trocados pela obra real no caminho até a tela.
+  return fluxoComFontes(await streamChat(SYS, user, { temperature: 0.5, max_tokens: 2200, tag: 'concilio-erudito' }), rotulos);
 }
