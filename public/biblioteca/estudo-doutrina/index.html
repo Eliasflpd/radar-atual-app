@@ -254,9 +254,12 @@
       var achados=[], inexistentes=[], vistos={};
 
       // 1) citação entre aspas seguida da referência entre parênteses
-      // a IA costuma itaicizar a citação (*"texto"* (Ref)), então tolera o * e o _
-      // entre a aspa de fecho e o parêntese — sem isso o conferidor não via nada.
-      var RE=/[“"]([^”"]{15,600})[”"][*_\s]*[(]\s*([^)]{3,45}?)\s*[)]/g, m;
+      // Entre a aspa de fecho e o parêntese a IA enfia itálico e pontuação:
+      //   *"texto"* (Ref)   e também   *"texto"*, (Ref)
+      // Sem tolerar isso o conferidor pulava a citação e emparelhava o texto com a
+      // referência ERRADA da frase seguinte — acusava o versículo certo e deixava
+      // passar o errado. Tolerância curta (até 4 caracteres) pra não pular frase.
+      var RE=/[“"]([^”"]{15,600})[”"][*_\s,;:.–—-]{0,4}[(]\s*([^)]{3,45}?)\s*[)]/g, m;
       while((m=RE.exec(txt))){
         var quote=m[1], refRaw=m[2].replace(/[*_]/g,'').trim();
         var loc=cfLocalizar(refRaw); if(!loc) continue;
