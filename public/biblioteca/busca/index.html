@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Busca por Significado — RADAR</title>
+<meta name="theme-color" content="#0f3d5c">
+<meta name="description" content="Pergunte com as suas palavras. O app acha pelo sentido, nas mensagens do acervo e na Bíblia inteira.">
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{
+    margin:0 auto;max-width:820px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
+    padding:16px 13px calc(46px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased;
+  }
+  .voltar{display:inline-block;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer}
+  h1{font-family:Georgia,'Times New Roman',serif;text-align:center;color:var(--navy);font-size:1.5rem;font-weight:800;margin:2px 0 4px}
+  .sub{text-align:center;color:#6b7280;font-size:.98rem;margin-bottom:8px}
+  .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 18px}
+
+  /* ── caixa de pergunta ─────────────────────────────────────────────── */
+  .caixa{display:flex;gap:8px;align-items:stretch}
+  #q{
+    flex:1;min-width:0;border:2px solid var(--linha);border-radius:14px;padding:13px 14px;
+    font-size:1.03rem;font-family:inherit;color:var(--texto);outline:none;background:#fcfcfd;
+  }
+  #q:focus{border-color:var(--teal);background:#fff}
+  #btnIr{
+    border:none;border-radius:14px;background:var(--teal);color:#fff;font-size:1.15rem;
+    padding:0 18px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;
+  }
+  #btnIr:disabled{opacity:.45}
+  .dica{color:#8a94a6;font-size:.86rem;margin:8px 2px 0;line-height:1.45}
+
+  /* ── sugestões prontas ─────────────────────────────────────────────── */
+  .sugs{display:flex;flex-wrap:wrap;gap:7px;margin:11px 0 4px}
+  .sug{
+    background:#f4f7f8;border:1px solid #dfe7e9;color:var(--teal);border-radius:999px;
+    padding:7px 12px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.2;
+  }
+
+  /* ── estado do índice ──────────────────────────────────────────────── */
+  .estado{
+    margin-top:14px;border:1px solid var(--linha);border-radius:14px;padding:11px 13px;
+    font-size:.87rem;color:#5b6472;background:#fbfbfc;
+  }
+  .estado b{color:var(--navy)}
+  .barra{height:6px;border-radius:99px;background:#e9edf0;margin-top:8px;overflow:hidden}
+  .barra i{display:block;height:100%;width:0;background:var(--dourado);transition:width .25s}
+  .btnBaixar{
+    margin-top:9px;width:100%;border:none;border-radius:11px;background:var(--navy);color:#fff;
+    padding:11px;font-size:.95rem;font-weight:800;font-family:inherit;cursor:pointer;
+  }
+
+  /* ── resultados ────────────────────────────────────────────────────── */
+  .secao{margin-top:24px}
+  .secao-tit{
+    font-family:Georgia,serif;color:var(--navy);font-size:1.12rem;font-weight:800;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;
+  }
+  .secao-tit small{font-family:'Segoe UI',system-ui,sans-serif;font-weight:700;color:#9aa1ad;font-size:.76rem}
+  .res{
+    background:#fff;border:1px solid var(--linha);border-radius:16px;padding:14px;margin-bottom:12px;
+    box-shadow:0 2px 10px rgba(15,61,92,.06);
+  }
+  .res .de{display:flex;align-items:flex-start;gap:9px;margin-bottom:7px}
+  .res .ic{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--vinho),var(--dourado));display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+  .res .tit{font-family:Georgia,serif;font-weight:800;font-size:1.03rem;color:var(--navy);line-height:1.25}
+  .res .ref{color:var(--dourado);font-weight:800;font-size:.83rem;margin-top:1px}
+  .res .pct{margin-left:auto;flex-shrink:0;background:#f1f6f7;color:var(--teal);border-radius:999px;padding:3px 9px;font-size:.76rem;font-weight:800}
+  .res .txt{font-size:1rem;color:#3d4655;text-align:justify;line-height:1.55;margin:4px 0 0}
+  .res .acoes{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+  .res .acoes button,.res .acoes a{
+    border:1px solid #dfe3e9;background:#fff;color:var(--navy);border-radius:10px;padding:8px 12px;
+    font-size:.85rem;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-block;
+  }
+  .res .acoes .primario{background:var(--teal);border-color:var(--teal);color:#fff}
+  .cap{margin-top:11px;border-top:1px dashed #dfe3e9;padding-top:10px;display:none}
+  .cap.on{display:block}
+  .cap .v{font-size:.98rem;margin-bottom:7px;line-height:1.55}
+  .cap .v b{color:var(--dourado);font-size:.78rem;vertical-align:super;margin-right:3px}
+  .cap .v.alvo{background:#fff8e6;border-left:3px solid var(--dourado);padding:5px 8px;border-radius:0 8px 8px 0}
+
+  .vazio{text-align:center;color:#9aa1ad;padding:26px 6px;font-size:.95rem;line-height:1.6}
+  .erro{background:#fdf3f3;border:1px solid #f0d6d6;color:var(--vinho);border-radius:12px;padding:12px;font-size:.9rem;margin-top:14px}
+  .carregando{text-align:center;color:var(--teal);font-weight:700;padding:22px 0;font-size:.95rem}
+  .tostada{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1c2230;color:#fff;
+    padding:11px 18px;border-radius:999px;font-size:.9rem;font-weight:700;z-index:99;opacity:0;
+    pointer-events:none;transition:opacity .2s;max-width:92vw;text-align:center;
+  }
+  .tostada.on{opacity:1}
+  @media(max-width:380px){ html{font-size:16px} .res{padding:12px} }
+</style>
+</head>
+<body>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <button class="voltar" onclick="voltar()">← Voltar</button>
+    <button class="voltar" style="background:#0f3d5c" onclick="location.href='/'">🏠 Início</button>
+  </div>
+
+  <h1>Busca por Significado</h1>
+  <div class="sub">Pergunte do seu jeito. O app acha pelo sentido.</div>
+  <div class="divisor"></div>
+
+  <div class="caixa">
+    <input id="q" type="search" enterkeyhint="search" autocomplete="off" autocapitalize="sentences"
+           placeholder="Ex.: perdoar quem não pediu perdão">
+    <button id="btnIr" onclick="buscar()">🔎</button>
+  </div>
+  <div class="dica">Não precisa acertar a palavra exata — escreva a dúvida como você falaria.
+  Quanto mais você contar, melhor ela acha.</div>
+
+  <div class="sugs" id="sugs"></div>
+
+  <div class="estado" id="estado">Preparando a busca…</div>
+
+  <div id="saida"></div>
+
+  <div class="tostada" id="tostada"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUSCA POR SIGNIFICADO — a conta acontece AQUI, no celular do irmão.
+
+   Como funciona, em três frases:
+   1) O índice (vetores de 256 números por trecho, 1 byte cada) foi calculado
+      no PC e vem como arquivo estático de /busca/. Baixa uma vez, o service
+      worker guarda, e depois funciona até offline.
+   2) A pergunta vira vetor em /api/busca-vetor (única ida ao servidor; a chave
+      do modelo fica lá, nunca aqui).
+   3) Comparar é produto escalar — soma de multiplicações. 15 mil passagens da
+      Bíblia saem em poucos milissegundos, sem banco de dados nenhum.
+
+   Por que não um banco vetorial: a Vercel do Elias é plano Hobby (12 funções,
+   11 ocupadas). Não cabia função nova — e, no fim, ficou melhor assim: busca
+   que não depende de servidor é busca que funciona com internet ruim.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+var ACERVO = null;   // {meta, vetores:Int8Array}
+var BIBLIA = null;
+var BIBTXT = null;   // /biblia.json — o texto que o app já tem
+var BAIXANDO = false;
+var ULTIMA = null;   // última lista de resultados (pro "Copiar tudo")
+
+/* PISO DE RELEVÂNCIA — medido nas buscas de prova, não chutado.
+   Acerto de verdade fica entre 48% e 66%; ruído se amontoa entre 36% e 44%.
+   Abaixo do piso a gente NÃO mostra: dizer "não achei" é honesto, encher a tela
+   de parágrafo que não tem nada a ver é enganar o pastor. */
+var PISO = 0.46;
+var PISO_FRACO = 0.52;   // achou, mas achou fraco: avisa pra ele detalhar a pergunta
+
+var SUGESTOES = [
+  'perdoar quem não pediu perdão',
+  'medo de morrer',
+  'Deus parece estar em silêncio',
+  'meu filho se afastou da igreja',
+  'a escada que Jacó viu'
+];
+
+function voltar(){ if(history.length>1) history.back(); else location.href='/?mod=manuais'; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function el(id){ return document.getElementById(id); }
+
+function aviso(txt){
+  var t=el('tostada'); t.textContent=txt; t.classList.add('on');
+  clearTimeout(t._tm); t._tm=setTimeout(function(){ t.classList.remove('on'); },2100);
+}
+
+function copiar(txt){
+  function caiuNoBraco(){
+    var a=document.createElement('textarea');
+    a.value=txt; a.style.position='fixed'; a.style.opacity='0';
+    document.body.appendChild(a); a.focus(); a.select();
+    try{ document.execCommand('copy'); aviso('📋 Copiado!'); }catch(e){ aviso('Não consegui copiar'); }
+    document.body.removeChild(a);
+  }
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(function(){ aviso('📋 Copiado!'); }, caiuNoBraco);
+  } else caiuNoBraco();
+}
+
+/* ── carregar um índice (catálogo .json + vetores .bin) ──────────────────── */
+function carregarIndice(nome, aoAndar){
+  // o .bin leva a data do catálogo na URL: catálogo e vetores nunca ficam
+  // um novo e o outro velho dentro do cache do service worker.
+  return fetch('/busca/'+nome+'.idx.json').then(function(r){
+    if(!r.ok) throw new Error('catálogo '+nome+' não encontrado');
+    return r.json();
+  }).then(function(meta){
+    return fetch('/busca/'+nome+'.vec.bin?v='+(meta.gerado||'1')).then(function(r){
+      if(!r.ok) throw new Error('vetores de '+nome+' não encontrados');
+      var total = +(r.headers.get('content-length')||0);
+      if(!r.body || !total || !aoAndar) return r.arrayBuffer();
+      // leitura em pedaços só pra mostrar a barrinha: internet fraca sem
+      // sinal de vida na tela é internet que o irmão acha que travou.
+      var leitor=r.body.getReader(), partes=[], lido=0;
+      return (function passo(){
+        return leitor.read().then(function(p){
+          if(p.done) { var b=new Uint8Array(lido),o=0; partes.forEach(function(x){b.set(x,o);o+=x.length;}); return b.buffer; }
+          partes.push(p.value); lido+=p.value.length; aoAndar(lido/total);
+          return passo();
+        });
+      })();
+    }).then(function(buf){
+      return { meta: meta, vet: new Int8Array(buf) };
+    });
+  });
+}
+
+/* ── comparar: produto escalar entre a pergunta e cada trecho ────────────── */
+function ranquear(idx, pergunta, quantos){
+  var D=idx.meta.dims, N=idx.meta.total, V=idx.vet;
+  var melhores=[];  // lista pequena ordenada — mais barato que ordenar 15 mil
+  var piso=-1e9;
+  for(var i=0;i<N;i++){
+    var base=i*D, s=0;
+    for(var j=0;j<D;j++) s+=pergunta[j]*V[base+j];
+    if(s<=piso && melhores.length>=quantos) continue;
+    var k=melhores.length;
+    melhores.push({i:i,s:s});
+    while(k>0 && melhores[k-1].s<melhores[k].s){ var t=melhores[k-1]; melhores[k-1]=melhores[k]; melhores[k]=t; k--; }
+    if(melhores.length>quantos) melhores.pop();
+    if(melhores.length>=quantos) piso=melhores[melhores.length-1].s;
+  }
+  var esc_=idx.meta.escala||1;
+  melhores.forEach(function(m){ m.cos=m.s*esc_; });
+  return melhores;
+}
+
+/* ── a pergunta vira vetor (única ida ao servidor) ───────────────────────── */
+function vetorDaPergunta(texto){
+  return fetch('/api/busca-vetor?q='+encodeURIComponent(texto))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !d.ok || !d.v) throw new Error((d&&d.erro)||'não consegui entender a pergunta');
+      return Float32Array.from(d.v);
+    });
+}
+
+/* ── desenhar ────────────────────────────────────────────────────────────── */
+function cartaoMensagem(r){
+  var doc=ACERVO.meta.docs[ACERVO.meta.itens[r.i][0]];
+  var trecho=ACERVO.meta.itens[r.i][2];
+  var alvo='/biblioteca/mensagens/'+doc.a;
+  // âncora de texto: o Chrome do Android abre a mensagem já rolada no parágrafo certo
+  var fatia=trecho.split(/\s+/).slice(0,8).join(' ');
+  var link=alvo+'#:~:text='+encodeURIComponent(fatia);
+  var paraCopiar=trecho+'\n\n— '+doc.t+' ('+doc.r+')\nApp RADAR: '+location.origin+alvo;
+  return '<div class="res">'
+    +'<div class="de"><div class="ic">'+esc(doc.e||'📖')+'</div>'
+    +'<div style="min-width:0"><div class="tit">'+esc(doc.t)+'</div><div class="ref">'+esc(doc.r)+'</div></div>'
+    +'<div class="pct">'+Math.round(r.cos*100)+'%</div></div>'
+    +'<p class="txt">'+esc(trecho)+(trecho.length>=460?'…':'')+'</p>'
+    +'<div class="acoes">'
+    +'<a class="primario" href="'+esc(link)+'">📖 Abrir a mensagem</a>'
+    +'<button onclick="copiar(this.dataset.t)" data-t="'+esc(paraCopiar)+'">📋 Copiar</button>'
+    +'</div></div>';
+}
+
+function refBiblia(it){
+  var L=BIBLIA.meta.livros[it[0]];
+  var fim=it[3], ini=it[2]+1;
+  return L.n+' '+(it[1]+1)+':'+ini+(fim>ini?'-'+fim:'');
+}
+function textoBiblia(it){
+  if(!BIBTXT) return '';
+  return BIBTXT[it[0]].chapters[it[1]].slice(it[2],it[3]).join(' ');
+}
+function cartaoBiblia(r,n){
+  var it=BIBLIA.meta.itens[r.i], ref=refBiblia(it), txt=textoBiblia(it);
+  var paraCopiar='"'+txt+'"\n— '+ref+'\n(Bíblia · App RADAR)';
+  return '<div class="res">'
+    +'<div class="de"><div class="ic" style="background:linear-gradient(135deg,#0f3d5c,#0f6d78)">📖</div>'
+    +'<div style="min-width:0"><div class="tit">'+esc(ref)+'</div><div class="ref">Bíblia Sagrada</div></div>'
+    +'<div class="pct">'+Math.round(r.cos*100)+'%</div></div>'
+    +'<p class="txt">'+esc(txt)+'</p>'
+    +'<div class="acoes">'
+    +'<button class="primario" onclick="verCapitulo('+n+','+r.i+',this)">📜 Ver o capítulo</button>'
+    +'<button onclick="copiar(this.dataset.t)" data-t="'+esc(paraCopiar)+'">📋 Copiar</button>'
+    +'</div><div class="cap" id="cap'+n+'"></div></div>';
+}
+
+function verCapitulo(n,i,botao){
+  var box=el('cap'+n);
+  if(box.classList.contains('on')){ box.classList.remove('on'); botao.textContent='📜 Ver o capítulo'; return; }
+  var it=BIBLIA.meta.itens[i], L=BIBTXT[it[0]], cap=L.chapters[it[1]];
+  box.innerHTML=cap.map(function(v,k){
+    var dentro=(k>=it[2] && k<it[3]);
+    return '<div class="v'+(dentro?' alvo':'')+'"><b>'+(k+1)+'</b>'+esc(v)+'</div>';
+  }).join('');
+  box.classList.add('on'); botao.textContent='▲ Fechar o capítulo';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ── a busca em si ───────────────────────────────────────────────────────── */
+function buscar(pronta){
+  var texto=(typeof pronta==='string'?pronta:el('q').value).trim();
+  if(texto.length<2){ el('q').focus(); return; }
+  el('q').value=texto; el('q').blur();
+  el('btnIr').disabled=true;
+  el('saida').innerHTML='<div class="carregando">Procurando pelo sentido…</div>';
+
+  vetorDaPergunta(texto).then(function(v){
+    var t0=performance.now();
+    var html='', achou=false, melhor=0, nada=[];
+
+    if(ACERVO){
+      // um trecho por mensagem: 5 parágrafos da mesma mensagem não é resultado, é repetição
+      var brutos=ranquear(ACERVO,v,40), vistos={}, mens=[];
+      brutos.forEach(function(r){
+        var d=ACERVO.meta.itens[r.i][0];
+        if(vistos[d]) return; vistos[d]=1; mens.push(r);
+      });
+      mens=mens.filter(function(r){ return r.cos>=PISO; }).slice(0,5);
+      if(mens.length){
+        achou=true; melhor=Math.max(melhor,mens[0].cos);
+        html+='<div class="secao"><div class="secao-tit">📜 Nas suas mensagens'
+          +'<small>'+ACERVO.meta.docs.length+' mensagens · '+ACERVO.meta.total+' trechos</small></div>'
+          +mens.map(cartaoMensagem).join('')+'</div>';
+      } else nada.push('nas suas '+ACERVO.meta.docs.length+' mensagens');
+    }
+
+    if(BIBLIA && BIBTXT){
+      var b=ranquear(BIBLIA,v,60), porCap={}, bib=[];
+      b.forEach(function(r){
+        var it=BIBLIA.meta.itens[r.i], ch=it[0]+'_'+it[1];
+        if(porCap[ch]) return; porCap[ch]=1; bib.push(r);   // no máximo 1 passagem por capítulo
+      });
+      bib=bib.filter(function(r){ return r.cos>=PISO; }).slice(0,6);
+      if(bib.length){
+        achou=true; melhor=Math.max(melhor,bib[0].cos);
+        html+='<div class="secao"><div class="secao-tit">📖 Na Bíblia'
+          +'<small>'+BIBLIA.meta.total.toLocaleString('pt-BR')+' passagens</small></div>'
+          +bib.map(function(r,n){ return cartaoBiblia(r,n); }).join('')+'</div>';
+        ULTIMA=bib;
+      } else nada.push('na Bíblia');
+    }
+
+    var ms=Math.round(performance.now()-t0);
+    if(!achou){
+      html='<div class="vazio"><b>Não achei nada que responda isso de verdade.</b><br>'
+        +'Preferi não mostrar trecho que não tem a ver.<br><br>'
+        +'Tente contar a dúvida com mais palavras — ex.: em vez de “perdão”, '
+        +'“como perdoar alguém que me magoou e nunca me pediu desculpa”.</div>';
+    } else {
+      if(melhor<PISO_FRACO){
+        html='<div class="estado" style="margin:0 0 14px"><b>Achei pouca coisa forte sobre isso.</b> '
+          +'Escrever a dúvida com mais detalhe costuma melhorar muito o resultado.</div>'+html;
+      }
+      if(nada.length) html+='<div class="dica" style="text-align:center">Nada relevante '+nada.join(' nem ')+'.</div>';
+      html+='<div class="dica" style="text-align:center;margin-top:10px">Comparado em '+ms+' ms, aqui no seu aparelho.</div>';
+    }
+    el('saida').innerHTML=html;
+    el('btnIr').disabled=false;
+    window.scrollTo({top:el('saida').offsetTop-70,behavior:'smooth'});
+  }).catch(function(e){
+    el('saida').innerHTML='<div class="erro"><b>Não deu pra buscar agora.</b><br>'+esc(e.message||e)
+      +'<br><br>Confira a internet e tente de novo.</div>';
+    el('btnIr').disabled=false;
+  });
+}
+
+/* ── ligar tudo ──────────────────────────────────────────────────────────── */
+function pintarEstado(){
+  var e=el('estado');
+  if(BAIXANDO) return;
+  if(ACERVO && BIBLIA && BIBTXT){
+    e.innerHTML='✅ Pronto: <b>'+ACERVO.meta.docs.length+' mensagens</b> do acervo e a <b>Bíblia inteira</b> '
+      +'('+BIBLIA.meta.total.toLocaleString('pt-BR')+' passagens) prontas para busca — e guardadas no aparelho.';
+  } else if(ACERVO){
+    e.innerHTML='✅ <b>'+ACERVO.meta.docs.length+' mensagens</b> do acervo prontas.'
+      +'<div style="margin-top:6px">📖 A Bíblia inteira também pode entrar na busca — são <b>'+MB_BIBLIA+' MB</b>, baixados uma vez só e guardados no aparelho.</div>'
+      +'<button class="btnBaixar" onclick="ligarBiblia()">📖 Ativar a busca na Bíblia</button>';
+  } else {
+    e.innerHTML='⏳ Preparando a busca…';
+  }
+}
+
+var MB_BIBLIA='3,9';   // biblia.vec.bin = 3,72 MB + catálogo 190 KB (medido)
+function ligarBiblia(){
+  if(BAIXANDO || (BIBLIA&&BIBTXT)) return;
+  BAIXANDO=true;
+  var e=el('estado');
+  e.innerHTML='📖 Baixando a Bíblia para a busca… <span id="pc">0%</span><div class="barra"><i id="bi"></i></div>'
+    +'<div style="margin-top:7px;font-size:.82rem">Só desta vez. Depois fica guardado no aparelho, funciona até sem internet.</div>';
+  var andar=function(f){
+    var p=Math.round(f*90); var bi=el('bi'), pc=el('pc');
+    if(bi) bi.style.width=p+'%'; if(pc) pc.textContent=p+'%';
+  };
+  Promise.all([
+    carregarIndice('biblia', andar),
+    (BIBTXT?Promise.resolve(BIBTXT):fetch('/biblia.json').then(function(r){return r.json();}))
+  ]).then(function(r){
+    BIBLIA=r[0]; BIBTXT=r[1];
+    try{ localStorage.setItem('busca_biblia_on','1'); }catch(x){}
+    BAIXANDO=false; pintarEstado();
+  }).catch(function(err){
+    BAIXANDO=false;
+    el('estado').innerHTML='<span style="color:#8a1c1c">Não consegui baixar a Bíblia agora ('+esc(err.message||err)+').</span>'
+      +'<button class="btnBaixar" onclick="ligarBiblia()">Tentar de novo</button>';
+  });
+}
+
+function internetMagra(){
+  var c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(!c) return false;
+  if(c.saveData) return true;
+  return /^(slow-)?2g$/.test(c.effectiveType||'');
+}
+
+(function inicio(){
+  el('sugs').innerHTML=SUGESTOES.map(function(s){
+    return '<button class="sug" onclick="buscar(this.textContent)">'+esc(s)+'</button>';
+  }).join('');
+
+  el('q').addEventListener('keydown',function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); buscar(); } });
+
+  carregarIndice('mensagens').then(function(idx){
+    ACERVO=idx; pintarEstado();
+    // Bíblia entra sozinha quando a internet permite. Em 2G ou com "economia de
+    // dados" ligada, espera o irmão mandar — 4 MB sem avisar é falta de respeito.
+    var jaQuis=false; try{ jaQuis=localStorage.getItem('busca_biblia_on')==='1'; }catch(x){}
+    if(jaQuis || !internetMagra()) setTimeout(ligarBiblia,300);
+  }).catch(function(e){
+    el('estado').innerHTML='<span style="color:#8a1c1c">Índice do acervo não carregou: '+esc(e.message||e)+'</span>';
+  });
+
+  var qs=new URLSearchParams(location.search).get('q');
+  if(qs) { el('q').value=qs; setTimeout(function(){ buscar(qs); }, 900); }
+  else if(!/Android|iPhone|iPad/i.test(navigator.userAgent)) el('q').focus();
+})();
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){});
+</script>
+</body>
+</html>

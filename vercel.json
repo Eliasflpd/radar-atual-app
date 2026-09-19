@@ -15,7 +15,8 @@
     { "source": "/api/mensagem", "destination": "/api/edge?fn=mensagem" },
     { "source": "/api/concilio-wagner", "destination": "/api/edge?fn=concilio-wagner" },
     { "source": "/api/estudo-doutrina", "destination": "/api/edge?fn=estudo-doutrina" },
-    { "source": "/api/concilio", "destination": "/api/edge?fn=concilio" }
+    { "source": "/api/concilio", "destination": "/api/edge?fn=concilio" },
+    { "source": "/api/busca-vetor", "destination": "/api/edge?fn=busca-vetor" }
   ],
   "headers": [
     {

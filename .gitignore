@@ -23,3 +23,8 @@ _CONFIGURAR-CHAVES.md
 # Backups automáticos dos arquivos alterados + banco de provas da cascata
 # (o harness de teste lê as chaves do cofre e pode deixar rastro delas aqui).
 _BACKUP/
+
+# Checkpoint do indexador da Busca por Significado (vetores crus em float32).
+# São ~15 MB de arquivo binário que só servem pra retomar a indexação no PC.
+# O que vai pro app é o resultado compacto em public/busca/.
+scripts/.cache-busca/
