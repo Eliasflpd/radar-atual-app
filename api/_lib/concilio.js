@@ -117,7 +117,9 @@ COMO CITAR (leia devagar):
 export function trocarFontes(texto, rotulos) {
   let inventados = 0;
   const usadas = [];
-  const out = String(texto || '').replace(/[\[【]\s*([OF])\s*[-–]?\s*(\d{1,2})\s*[\]】]/gi, (_m, _l, n) => {
+  // Aceita [F3], 【F3】 e também (F3): visto em produção, o modelo troca o colchete
+  // por parêntese na metade das vezes. Sem isto, "(F7)" vazava cru pra tela.
+  const out = String(texto || '').replace(/[[【(]\s*([OF])\s*[-–]?\s*(\d{1,2})\s*[\]】)]/gi, (_m, _l, n) => {
     const r = rotulos && rotulos[Number(n) - 1];
     if (!r) { inventados++; return ''; }
     if (usadas.indexOf(r) < 0) usadas.push(r);
@@ -139,10 +141,17 @@ const SUSPEITA = [
 export function conferirFontes(texto, inventados) {
   const avisos = [];
   if (inventados) avisos.push('fonte-inventada: ' + inventados + ' marcador(es) fora da lista foram apagados da resposta.');
-  // Aspas longas coladas numa fonte = "frase do autor" que ninguém conferiu. Não temos
-  // o texto dele na mão; o que soa como ele foi escrito pela IA. Acusa e não esconde.
-  if (/[“"][^”"]{55,}[”"]/.test(String(texto || ''))) {
+  // Aspas longas = "frase do autor" que ninguém conferiu. Não temos o texto dele na
+  // mão; o que soa como ele foi escrito pela IA. Acusa e não esconde.
+  // ⚠️ Citar a ESCRITURA entre aspas é legítimo e acontece o tempo todo — por isso só
+  // acusamos quando não há referência bíblica (cap:verso) por perto das aspas.
+  const t = String(texto || '');
+  const aspas = /[“"][^”"]{55,}[”"]/g;
+  for (let m; (m = aspas.exec(t));) {
+    const volta = t.slice(Math.max(0, m.index - 90), m.index + m[0].length + 90);
+    if (/\d+\s*[:.]\s*\d+/.test(volta)) continue;   // é versículo, não é fala de autor
     avisos.push('citacao-literal: a resposta pôs uma frase longa entre aspas como se fosse do autor — não temos o texto dele, então isso não pode ir ao púlpito sem conferir.');
+    break;
   }
   for (const frase of String(texto || '').split(/(?<=[.!?\n])/)) {
     if (frase.indexOf('📚') >= 0) continue;
