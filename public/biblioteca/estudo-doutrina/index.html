@@ -61,6 +61,17 @@
   #ed-acoes{display:flex;gap:9px;margin-top:18px}
   .ed-sec{flex:1;background:rgba(15,61,92,.07);border:1px solid #e4e7ec;color:var(--navy);border-radius:12px;padding:12px 8px;font-size:.98rem;font-weight:800;font-family:inherit;cursor:pointer}
   .erro{color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px;font-size:.98rem}
+
+  /* ── conferência automática das referências ── */
+  #ed-confere{margin-top:18px;border:1px solid #e4e7ec;border-radius:14px;padding:13px 14px;background:#fbfcfd}
+  #ed-confere .cf-tit{font-family:Georgia,serif;color:var(--navy);font-weight:800;font-size:1.02rem;margin-bottom:3px}
+  #ed-confere .cf-res{font-size:.94rem;color:#4b5563;margin-bottom:2px}
+  #ed-confere .cf-ok{color:var(--teal);font-weight:800}
+  #ed-confere .cf-item{margin-top:10px;padding:10px 12px;border-radius:11px;font-size:.95rem;line-height:1.5}
+  #ed-confere .cf-erro{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}
+  #ed-confere .cf-duv{background:#fffbeb;border:1px solid #fde68a;color:#78350f}
+  #ed-confere .cf-item b{font-weight:800}
+  #ed-confere .cf-diz{display:block;margin-top:5px;font-style:italic;color:#1c2230}
   @media(max-width:380px){ html{font-size:16px} .chip{font-size:.86rem;padding:7px 11px} }
 </style>
 </head>
@@ -105,6 +116,7 @@
   <button id="ed-btn">⚖️ Gerar estudo</button>
   <div id="ed-quem"></div>
   <div id="ed-saida"></div>
+  <div id="ed-confere" style="display:none"></div>
   <div id="ed-acoes" style="display:none">
     <button id="ed-copiar" class="ed-sec">📋 Copiar</button>
     <button id="ed-outro" class="ed-sec">🔁 Outro tema</button>
@@ -175,12 +187,143 @@
     saida.innerHTML=h;
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // CONFERIDOR DE REFERÊNCIAS — a trava "não empurra besteira", automática.
+  //
+  // Por que existe: nos testes em produção a IA transcreveu Provérbios 1:7 e
+  // etiquetou como Provérbios 14:15, e transcreveu 1 Tessalonicenses 5:21 como
+  // 1 Timóteo 5:21. Transcrição certa com referência errada é o pior erro que
+  // existe aqui — o pastor lê no púlpito e a igreja abre a Bíblia e não acha.
+  // Prompt sozinho não resolve. Então a página CONFERE, versículo por versículo,
+  // contra a Bíblia de verdade (/biblia.json, Almeida — a mesma que o app usa).
+  //
+  // Como julga: compara as palavras da citação com as do versículo real.
+  //   ≥45% batendo  → confere
+  //   25% a 45%     → paráfrase, vale um olhar
+  //   <25%          → o texto citado NÃO é dessa referência (erro de verdade)
+  // Nos testes, as duas trocas reais deram 0% e a citação boa mais fraca deu 44%.
+  // ══════════════════════════════════════════════════════════════════════════
+  var CF_MAP={genesis:'gn',gn:'gn',exodo:'ex',ex:'ex',levitico:'lv',lv:'lv',numeros:'nm',nm:'nm',deuteronomio:'dt',dt:'dt',josue:'js',js:'js',juizes:'jz',jz:'jz',rute:'rt',rt:'rt','1samuel':'1sm','1sm':'1sm','2samuel':'2sm','2sm':'2sm','1reis':'1rs','1rs':'1rs','2reis':'2rs','2rs':'2rs','1cronicas':'1cr','1cr':'1cr','2cronicas':'2cr','2cr':'2cr',esdras:'ed',ed:'ed',neemias:'ne',ne:'ne',ester:'et',et:'et',salmos:'sl',salmo:'sl',sl:'sl',sal:'sl',proverbios:'pv',pv:'pv',prov:'pv',eclesiastes:'ec',ec:'ec',cantares:'ct',canticos:'ct',ct:'ct',isaias:'is',is:'is',jeremias:'jr',jr:'jr',lamentacoes:'lm',lm:'lm',ezequiel:'ez',ez:'ez',daniel:'dn',dn:'dn',oseias:'os',os:'os',joel:'jl',jl:'jl',amos:'am',am:'am',obadias:'ob',ob:'ob',jonas:'jn',jn:'jn',miqueias:'mq',mq:'mq',naum:'na',na:'na',habacuque:'hc',hc:'hc',sofonias:'sf',sf:'sf',ageu:'ag',ag:'ag',zacarias:'zc',zc:'zc',malaquias:'ml',ml:'ml',mateus:'mt',mt:'mt',marcos:'mc',mc:'mc',lucas:'lc',lc:'lc',joao:'jo',atos:'atos',at:'atos',romanos:'rm',rm:'rm','1corintios':'1co','1co':'1co','1cor':'1co','2corintios':'2co','2co':'2co','2cor':'2co',galatas:'gl',gl:'gl',efesios:'ef',ef:'ef',filipenses:'fp',fp:'fp',fil:'fp',colossenses:'cl',cl:'cl','1tessalonicenses':'1ts','1ts':'1ts','2tessalonicenses':'2ts','2ts':'2ts','1timoteo':'1tm','1tm':'1tm','2timoteo':'2tm','2tm':'2tm',tito:'tt',tt:'tt',filemom:'fm',fm:'fm',hebreus:'hb',hb:'hb',heb:'hb',tiago:'tg',tg:'tg','1pedro':'1pe','1pe':'1pe','2pedro':'2pe','2pe':'2pe','1joao':'1jo','1jo':'1jo','2joao':'2jo','2jo':'2jo','3joao':'3jo','3jo':'3jo',judas:'jd',jd:'jd',apocalipse:'ap',ap:'ap'};
+  var CF_NOMES={gn:'Gênesis',ex:'Êxodo',lv:'Levítico',nm:'Números',dt:'Deuteronômio',js:'Josué',jz:'Juízes',rt:'Rute','1sm':'1 Samuel','2sm':'2 Samuel','1rs':'1 Reis','2rs':'2 Reis','1cr':'1 Crônicas','2cr':'2 Crônicas',ed:'Esdras',ne:'Neemias',et:'Ester','jó':'Jó',sl:'Salmos',pv:'Provérbios',ec:'Eclesiastes',ct:'Cantares',is:'Isaías',jr:'Jeremias',lm:'Lamentações',ez:'Ezequiel',dn:'Daniel',os:'Oseias',jl:'Joel',am:'Amós',ob:'Obadias',jn:'Jonas',mq:'Miqueias',na:'Naum',hc:'Habacuque',sf:'Sofonias',ag:'Ageu',zc:'Zacarias',ml:'Malaquias',mt:'Mateus',mc:'Marcos',lc:'Lucas',jo:'João',atos:'Atos',rm:'Romanos','1co':'1 Coríntios','2co':'2 Coríntios',gl:'Gálatas',ef:'Efésios',fp:'Filipenses',cl:'Colossenses','1ts':'1 Tessalonicenses','2ts':'2 Tessalonicenses','1tm':'1 Timóteo','2tm':'2 Timóteo',tt:'Tito',fm:'Filemom',hb:'Hebreus',tg:'Tiago','1pe':'1 Pedro','2pe':'2 Pedro','1jo':'1 João','2jo':'2 João','3jo':'3 João',jd:'Judas',ap:'Apocalipse'};
+
+  var BIB=null, BIDX=null, carregandoBib=null;
+  function carregarBiblia(){
+    if(BIB) return Promise.resolve();
+    if(carregandoBib) return carregandoBib;
+    carregandoBib=fetch('/biblia.json').then(function(r){return r.text();}).then(function(t){
+      BIB=JSON.parse(t.replace(/^﻿/,''));
+      BIDX={}; BIB.forEach(function(b,i){ BIDX[b.abbrev]=i; });
+    });
+    return carregandoBib;
+  }
+  function cfNorm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[.\s]/g,''); }
+  function cfPal(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(function(w){return w.length>=4;}); }
+  function cfVersos(ab,c,v,v2){
+    var bi=BIDX[ab]; if(bi==null) return null;
+    var ch=BIB[bi].chapters[c-1]; if(!ch) return null;
+    var i=v?+v:1, f=v2?+v2:(v?+v:ch.length);
+    if(i<1||i>ch.length) return null;
+    if(f>ch.length) f=ch.length;
+    return ch.slice(i-1,f).join(' ');
+  }
+  // "Jo" no Brasil é João; "Jó" é o livro de Jó. Sem acento, tenta João e cai pra Jó.
+  function cfResolver(livroBruto){
+    var k=cfNorm(livroBruto);
+    if(k==='jo') return /ó|ó/i.test(livroBruto) ? ['jó','jo'] : ['jo','jó'];
+    var ab=CF_MAP[k];
+    return ab?[ab]:null;
+  }
+  var CF_REF=/([123])?\s*([A-Za-zÀ-ÿçÇ]{2,20})\.?\s*(\d{1,3})(?::(\d{1,3})(?:\s*[-–—‑]\s*(\d{1,3}))?)?/;
+
+  function cfLocalizar(refRaw){
+    var r=refRaw.match(CF_REF); if(!r) return null;
+    var cands=cfResolver((r[1]||'')+r[2]); if(!cands) return null;
+    for(var i=0;i<cands.length;i++){
+      var txt=cfVersos(cands[i], +r[3], r[4], r[5]);
+      if(txt!=null) return {ab:cands[i], c:+r[3], v:r[4], v2:r[5], texto:txt};
+    }
+    return {ab:cands[0], c:+r[3], v:r[4], v2:r[5], texto:null};
+  }
+  function cfRotulo(x){ return (CF_NOMES[x.ab]||x.ab)+' '+x.c+(x.v?(':'+x.v+(x.v2?'-'+x.v2:'')):''); }
+
+  function conferir(txt){
+    var cx=$('ed-confere');
+    cx.style.display='block';
+    cx.innerHTML='<div class="cf-tit">🔎 Conferindo as referências…</div><div class="cf-res">Abrindo a Bíblia para checar cada versículo citado.</div>';
+    return carregarBiblia().then(function(){
+      var achados=[], inexistentes=[], vistos={};
+
+      // 1) citação entre aspas seguida da referência entre parênteses
+      var RE=/[“"]([^”"]{15,600})[”"]\s*[(]\s*([^)]{3,45}?)\s*[)]/g, m;
+      while((m=RE.exec(txt))){
+        var quote=m[1], refRaw=m[2].replace(/[*_]/g,'').trim();
+        var loc=cfLocalizar(refRaw); if(!loc) continue;
+        var chave=refRaw+'|'+quote.slice(0,40);
+        if(vistos[chave]) continue; vistos[chave]=1;
+        if(loc.texto==null){ achados.push({tipo:'nao-existe', rot:refRaw}); continue; }
+        var A=cfPal(quote), S={}; cfPal(loc.texto).forEach(function(w){S[w]=1;});
+        var h=0; A.forEach(function(w){ if(S[w]) h++; });
+        var o=A.length?h/A.length:1;
+        achados.push({tipo:(o>=0.45?'ok':(o>=0.25?'duvida':'erro')), rot:cfRotulo(loc), o:o, quote:quote, real:loc.texto});
+      }
+
+      // 2) toda referência do estudo (mesmo sem citação) tem que existir
+      var RE2=/([123])?\s*([A-Za-zÀ-ÿçÇ]{2,20})\.?\s*(\d{1,3}):(\d{1,3})(?:\s*[-–—‑]\s*(\d{1,3}))?/g, m2, vis2={};
+      while((m2=RE2.exec(txt))){
+        var cru=m2[0].replace(/[*_]/g,'').trim();
+        if(vis2[cfNorm(cru)]) continue; vis2[cfNorm(cru)]=1;
+        var cands=cfResolver((m2[1]||'')+m2[2]); if(!cands) continue;
+        var loc2=cfLocalizar(cru);
+        if(loc2 && loc2.texto==null) inexistentes.push(cru);
+      }
+
+      var ok=achados.filter(function(a){return a.tipo==='ok';}).length;
+      var ruins=achados.filter(function(a){return a.tipo==='erro'||a.tipo==='nao-existe';});
+      var duvidas=achados.filter(function(a){return a.tipo==='duvida';});
+
+      var h='<div class="cf-tit">🔎 Conferência das referências</div>';
+      var partes=[];
+      if(ok) partes.push('<span class="cf-ok">✅ '+ok+' citação'+(ok>1?'ões':'')+' conferida'+(ok>1?'s':'')+' na Bíblia</span>');
+      if(duvidas.length) partes.push('🔎 '+duvidas.length+' parafraseada'+(duvidas.length>1?'s':''));
+      if(ruins.length) partes.push('⚠️ '+ruins.length+' para corrigir');
+      if(inexistentes.length) partes.push('❌ '+inexistentes.length+' referência'+(inexistentes.length>1?'s':'')+' que não existe'+(inexistentes.length>1?'m':''));
+      if(!partes.length) partes.push('Nenhuma citação entre aspas para conferir neste estudo.');
+      h+='<div class="cf-res">'+partes.join(' · ')+'</div>';
+
+      ruins.forEach(function(a){
+        h+='<div class="cf-item cf-erro">⚠️ <b>'+escH(a.rot)+'</b> — o texto citado <b>não é dessa referência</b>.'
+          +(a.real?'<span class="cf-diz">'+escH(a.rot)+' diz: “'+escH(a.real.slice(0,230))+(a.real.length>230?'…':'')+'”</span>':'')
+          +'</div>';
+      });
+      duvidas.forEach(function(a){
+        h+='<div class="cf-item cf-duv">🔎 <b>'+escH(a.rot)+'</b> — a citação está <b>parafraseada</b>, vale conferir antes de pregar.'
+          +'<span class="cf-diz">'+escH(a.rot)+' diz: “'+escH(a.real.slice(0,230))+(a.real.length>230?'…':'')+'”</span></div>';
+      });
+      if(inexistentes.length){
+        h+='<div class="cf-item cf-erro">❌ Não existe(m) na Bíblia: <b>'+inexistentes.map(escH).join(', ')+'</b>. Corrija antes de usar.</div>';
+      }
+      if(!ruins.length && !duvidas.length && !inexistentes.length && ok){
+        h+='<div class="cf-item cf-duv" style="background:#f0fdf4;border-color:#bbf7d0;color:#14532d">✅ Todas as citações batem com o texto bíblico. Ainda assim, leia antes de pregar.</div>';
+      }
+      cx.innerHTML=h;
+
+      // toda referência vira um toque que abre o versículo (o mesmo módulo das mensagens)
+      if(!window.__refsInit){
+        var s=document.createElement('script'); s.src='/biblioteca/mensagens/_refs.js'; s.defer=true;
+        document.body.appendChild(s);
+      }
+    }).catch(function(){
+      cx.style.display='none';   // sem a Bíblia offline, o estudo continua de pé
+    });
+  }
+
   function gerar(){
     var t=tema.value.trim();
     if(!t){ tema.focus(); return; }
     if(ocupado) return;
     ocupado=true; btn.disabled=true; btn.textContent='⚖️ Preparando…';
     raw=''; saida.innerHTML=''; acoes.style.display='none';
+    $('ed-confere').style.display='none'; $('ed-confere').innerHTML='';
     quem.textContent='Abrindo a Palavra sobre o assunto… o estudo está vindo.';
     var t0=Date.now();
     fetch('/api/estudo-doutrina',{
@@ -199,7 +342,7 @@
     })
     .then(function(){
       quem.textContent = raw.trim() ? ('✅ Estudo pronto em '+Math.round((Date.now()-t0)/1000)+'s') : '';
-      if(raw.trim()) acoes.style.display='flex';
+      if(raw.trim()){ acoes.style.display='flex'; conferir(raw); }
     })
     .catch(function(e){
       quem.textContent='';
@@ -213,6 +356,7 @@
 
   $('ed-outro').addEventListener('click',function(){
     saida.innerHTML=''; acoes.style.display='none'; quem.textContent=''; raw='';
+    $('ed-confere').style.display='none'; $('ed-confere').innerHTML='';
     tema.value=''; Array.prototype.forEach.call(chips.querySelectorAll('.chip'),function(x){x.classList.remove('on');});
     window.scrollTo(0,0); tema.focus();
   });
