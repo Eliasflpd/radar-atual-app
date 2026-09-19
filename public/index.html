@@ -11,8 +11,8 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/radar.css?v=145">
-<link rel="preload" as="script" href="/assets/app.js?v=145">
+<link rel="stylesheet" href="/assets/radar.css?v=146">
+<link rel="preload" as="script" href="/assets/app.js?v=146">
 </head>
 <body>
 
@@ -41,10 +41,20 @@
           <div class="vit-tbtn" onclick="irPerfil()">👤</div>
           <div class="vit-tbtn" id="logo-tap" onclick="tapLogo()" title="Config">⚙️</div>
         </div>
+        <div class="vit-ola">Olá!</div>
         <div class="vit-bemvindo">Bem-vindo ao</div>
         <div class="vit-marca">Radar Atual</div>
-        <div class="vit-sub">Sua jornada espiritual completa em um só lugar.</div>
+        <div class="vit-sub">Conhecimento que edifica<br>em todas as áreas da sua vida.</div>
         <div class="vit-fio"></div>
+      </div>
+
+      <div class="vit-versiculo">
+        <span class="vit-aspas">&ldquo;</span>
+        <div class="vit-vbody">
+          <div class="vit-vtxt">Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.</div>
+          <div class="vit-vref">SALMOS 119:105</div>
+        </div>
+        <button class="vit-vseta" title="Abrir Bíblia e Harpa" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)">&rarr;</button>
       </div>
 
       <div class="vit-grade">
@@ -110,12 +120,6 @@
           <div class="vit-ico">📤</div>
           <div class="vit-nome">Publicar</div><div class="vit-desc">Envie sua mídia</div>
         </div> -->
-      </div>
-
-      <div class="vit-versiculo">
-        <span class="vit-aspas">&ldquo;</span>
-        <div class="vit-vtxt">Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.</div>
-        <div class="vit-vref">SALMOS 119:105</div>
       </div>
     </div>
 
@@ -982,7 +986,7 @@
   </div>
 </div>
 
-<script src="/assets/app.js?v=145"></script>
+<script src="/assets/app.js?v=146"></script>
 
 <!-- REF SHEET -->
 <div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#4C3418"/>
+<stop offset=".38" stop-color="#7C5626"/>
+<stop offset=".72" stop-color="#B8893F"/>
+<stop offset="1" stop-color="#D8AE63"/>
+</linearGradient>
+<radialGradient id="glow" cx=".70" cy=".46" r=".58">
+<stop offset="0" stop-color="#FFF0C4" stop-opacity=".98"/>
+<stop offset=".30" stop-color="#F6CE7C" stop-opacity=".68"/>
+<stop offset=".68" stop-color="#B4813A" stop-opacity=".22"/>
+<stop offset="1" stop-color="#6B4518" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="pg" x1=".5" y1="0" x2=".5" y2="1">
+<stop offset="0" stop-color="#FFFAEA"/>
+<stop offset=".55" stop-color="#F0DDB4"/>
+<stop offset="1" stop-color="#C79B5C"/>
+</linearGradient>
+<linearGradient id="ray" x1="0" y1="1" x2="0" y2="0">
+<stop offset="0" stop-color="#FFF3CE" stop-opacity=".62"/>
+<stop offset="1" stop-color="#FFF3CE" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="capa" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#5A3A15"/>
+<stop offset=".5" stop-color="#7C5321"/>
+<stop offset="1" stop-color="#5A3A15"/>
+</linearGradient>
+<radialGradient id="vig" cx=".62" cy=".5" r=".78">
+<stop offset=".40" stop-color="#301D08" stop-opacity="0"/>
+<stop offset="1" stop-color="#301D08" stop-opacity=".78"/>
+</radialGradient>
+<filter id="s1" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="4.4"/></filter>
+<filter id="s2" x="-35%" y="-35%" width="170%" height="170%"><feGaussianBlur stdDeviation="16"/></filter>
+</defs>
+
+<rect width="800" height="300" fill="url(#base)"/>
+<ellipse cx="562" cy="96" rx="330" ry="185" fill="url(#glow)" filter="url(#s2)"/>
+
+<!-- raios de luz descendo sobre a Biblia -->
+<g filter="url(#s2)" opacity=".55">
+  <path d="M548 208 L470 -40 L530 -40 Z" fill="url(#ray)"/>
+  <path d="M566 208 L576 -40 L626 -40 Z" fill="url(#ray)"/>
+  <path d="M584 208 L688 -40 L742 -40 Z" fill="url(#ray)"/>
+</g>
+
+<!-- BIBLIA ABERTA (perspectiva) -->
+<g filter="url(#s1)" transform="translate(0,-52)">
+  <ellipse cx="566" cy="248" rx="215" ry="26" fill="#3A2409" opacity=".55"/>
+  <!-- capa -->
+  <path d="M566 244 L352 216 Q336 224 352 233 L566 266 L780 233 Q796 224 780 216 Z" fill="url(#capa)"/>
+  <!-- bloco de paginas -->
+  <path d="M566 238 L360 212 Q348 218 362 225 L566 256 L770 225 Q784 218 772 212 Z" fill="#E8D3A6"/>
+  <!-- pagina esquerda -->
+  <path d="M566 236 L356 210 Q344 200 362 194 L566 160 Z" fill="url(#pg)"/>
+  <!-- pagina direita -->
+  <path d="M566 236 L776 210 Q788 200 770 194 L566 160 Z" fill="url(#pg)"/>
+  <!-- folhas soltas -->
+  <path d="M566 162 L462 178 Q470 168 498 162 L566 152 Z" fill="#FFFBEF" opacity=".85"/>
+  <path d="M566 162 L670 178 Q662 168 634 162 L566 152 Z" fill="#FFFBEF" opacity=".85"/>
+  <!-- lombada / sombra central -->
+  <path d="M566 160 L566 238" stroke="#9A7233" stroke-width="4" opacity=".4"/>
+  <ellipse cx="566" cy="200" rx="26" ry="40" fill="#A97F3C" opacity=".22"/>
+  <!-- linhas de texto -->
+  <g stroke="#A2793A" stroke-width="2" opacity=".34" stroke-linecap="round">
+    <path d="M414 200 L540 186"/><path d="M404 210 L540 195"/><path d="M396 219 L540 204"/><path d="M390 227 L512 214"/>
+    <path d="M718 200 L592 186"/><path d="M728 210 L592 195"/><path d="M736 219 L592 204"/><path d="M742 227 L620 214"/>
+  </g>
+  <!-- fita marcadora -->
+  <path d="M598 230 L604 268 L612 258 L620 272 L618 226 Z" fill="#C0392B" opacity=".55"/>
+</g>
+
+<!-- brilho quente saindo das paginas -->
+<ellipse cx="566" cy="130" rx="150" ry="52" fill="#FFF4D2" opacity=".55" filter="url(#s2)"/>
+<ellipse cx="566" cy="153" rx="90" ry="22" fill="#FFE9AE" opacity=".45" filter="url(#s2)"/>
+
+<!-- lado esquerdo mais escuro/quente pro texto respirar -->
+<rect width="800" height="300" fill="url(#vig)"/>
+<rect width="330" height="300" fill="#3B2409" opacity=".14"/>
+</svg>
