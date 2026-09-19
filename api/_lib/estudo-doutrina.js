@@ -55,7 +55,23 @@ const SECOES = [
     ordem: 'UMA linha curta, de martelo, que a igreja consegue repetir em voz alta e levar na memória. Escreva a linha começando com "> " (blockquote) e NADA depois dela. Ela aterrissa em Cristo, não no assunto. Nada de parágrafo de resumo.' },
 ];
 
-const ESQUELETO = SECOES.map((s) => s.cab + '\n(' + s.ordem + ')').join('\n\n');
+// O piso de palavras POR PARTE. Sem isto o estudo sai curto:
+// pedir "1100 a 1500 palavras" no topo do prompt não segura — testado em produção,
+// curto/médio/longo davam 575/630/637 palavras, praticamente o mesmo texto. O que
+// funciona é cobrar o tamanho DENTRO de cada parte, onde o modelo está escrevendo.
+const PISOS = {
+  curto: [90, 90, 330, 110, 90],
+  medio: [150, 160, 560, 180, 130],
+  longo: [230, 250, 900, 270, 180],
+};
+
+function esqueleto(chave) {
+  const p = PISOS[chave] || PISOS.medio;
+  return SECOES.map((s, i) => {
+    const piso = i < 5 ? ` [NO MÍNIMO ${p[i]} PALAVRAS NESTA PARTE]` : ' [UMA LINHA SÓ]';
+    return s.cab + piso + '\n(' + s.ordem + ')';
+  }).join('\n\n');
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2) AS TRAVAS — vêm da skill "mensagens-para-pregar" (SKILL.md).
@@ -97,9 +113,9 @@ REGRA DE OURO DESTA NORMA: o crente não é o que sabe mais segredos; é o que c
 // 3) TAMANHO E PÚBLICO
 // ─────────────────────────────────────────────────────────────────────────────
 const TAMANHOS = {
-  curto: { palavras: '700 a 950 palavras', tokens: 2600 },
-  medio: { palavras: '1100 a 1500 palavras', tokens: 3800 },
-  longo: { palavras: '1700 a 2300 palavras', tokens: 5200 },
+  curto: { chave: 'curto', palavras: '700 a 950 palavras', tokens: 2600 },
+  medio: { chave: 'medio', palavras: '1100 a 1500 palavras', tokens: 3800 },
+  longo: { chave: 'longo', palavras: '1700 a 2300 palavras', tokens: 5200 },
 };
 
 function lerTamanho(v) {
@@ -138,7 +154,9 @@ TEMA: (o assunto em 3 a 6 palavras · e as referências bíblicas centrais)
 
 Depois, as seis partes. Copie os seis cabeçalhos LETRA POR LETRA, cada um numa linha própria:
 
-${ESQUELETO}
+${esqueleto(tam.chave)}
+
+O PISO DE PALAVRAS DE CADA PARTE É PARA CUMPRIR. Um estudo curto demais não dá culto de doutrina: o pastor fica sem material no meio da mensagem. Desenvolva de verdade — explique, exemplifique, responda a objeção que o ouvinte faria. O que não vale é encher linguiça repetindo a mesma ideia com outras palavras.
 
 REGRAS DE ESCRITA:
 • Prosa de ensino, corrida — não é lista de tópicos soltos. Use "- " só na parte 5.
