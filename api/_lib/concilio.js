@@ -125,7 +125,13 @@ export function trocarFontes(texto, rotulos) {
     if (usadas.indexOf(r) < 0) usadas.push(r);
     return ` (📚 ${r})`;
   }).replace(/ {2,}/g, ' ').replace(/\s+([,.;:!?])/g, '$1');
-  return { texto: out, usadas, inventados };
+  // Vários pedaços da MESMA aula dão a mesma etiqueta; sem isto a seção "DE ONDE VEM"
+  // repetia "Aula X — transcrição" duas e três vezes seguidas. Uma linha, uma fonte.
+  const semRepetir = out.split('\n').map((linha) => {
+    const vistos = new Set();
+    return linha.replace(/ ?\(📚 ([^)]+)\)/g, (m, r) => (vistos.has(r) ? '' : (vistos.add(r), m)));
+  }).join('\n');
+  return { texto: semRepetir, usadas, inventados };
 }
 
 // Rede anti-invenção: a IA pode tentar citar fonte POR FORA do marcador ("na aula de
