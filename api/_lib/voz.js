@@ -324,9 +324,51 @@ function chaves() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// OS DOIS MODOS DE ESCUTA — quem decide que o pastor começou a falar
+//
+// 'maos'    MÃOS-LIVRES: o detector do Google decide. É o modo da ESTRADA, onde
+//           ele não pode tirar a mão do volante. Calibrado pra motor, vento e rádio.
+//
+// 'segurar' SEGURAR PRA FALAR: o detector fica DESLIGADO e quem abre e fecha o turno
+//           é o dedo dele (activityStart / activityEnd, mandados pelo navegador).
+//           É o modo do CULTO.
+//
+// Por que o culto quebrou o mãos-livres: noiseSuppression mata ruído CONSTANTE —
+// motor, vento, ar-condicionado. Não mata VOZ HUMANA. E num culto há voz o tempo
+// inteiro: pregação, louvor, congregação. O detector ouvia aquilo, concluía que era
+// o pastor falando, e como o activityHandling manda o mestre calar na hora, qualquer
+// "amém" mais alto o cortava no meio da frase. De brinde, o modo do culto fecha o
+// microfone enquanto o dedo não está no botão — e o culto para de ser transmitido,
+// que é exatamente o que o aviso de privacidade desta página pede.
+// ─────────────────────────────────────────────────────────────────────────────
+function escutaDoModo(modo) {
+  // Nos dois modos: falou por cima, o mestre CALA na hora (o pedido original do Elias).
+  const base = { activityHandling: 'START_OF_ACTIVITY_INTERRUPTS' };
+  if (escolherModo(modo) === 'segurar') {
+    return Object.assign({}, base, { automaticActivityDetection: { disabled: true } });
+  }
+  return Object.assign({}, base, {
+    automaticActivityDetection: {
+      // Exigir um tiquinho mais de fala antes de considerar "ele começou a falar" evita
+      // o mestre se calar por causa de barulho; e esperar um pouco mais de silêncio evita
+      // cortá-lo no meio de uma pausa de raciocínio.
+      prefixPaddingMs: 300,
+      silenceDurationMs: 900,
+      startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
+      endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
+    },
+  });
+}
+
+// Qual dos dois modos de escuta o token vai carregar. Default é o da estrada.
+function escolherModo(m) {
+  return String(m || '').trim().toLowerCase() === 'segurar' ? 'segurar' : 'maos';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 3) ASSINAR O TOKEN EFÊMERO
 // ─────────────────────────────────────────────────────────────────────────────
-function setupDaSessao(handle, voz) {
+function setupDaSessao(handle, voz, modo) {
   const setup = {
     model: MODELO,
     generationConfig: {
@@ -347,24 +389,12 @@ function setupDaSessao(handle, voz) {
     // falou e o que o mestre respondeu enquanto dirige. Não alteram o áudio.
     inputAudioTranscription: {},
     outputAudioTranscription: {},
-    realtimeInputConfig: {
-      // O CORAÇÃO DO PEDIDO DO ELIAS: falou por cima, o mestre CALA na hora.
-      activityHandling: 'START_OF_ACTIVITY_INTERRUPTS',
-      automaticActivityDetection: {
-        // Dentro do carro tem motor, vento e rádio. Exigir um tiquinho mais de fala antes
-        // de considerar "ele começou a falar" evita o mestre se calar por causa de barulho;
-        // e esperar um pouco mais de silêncio evita cortá-lo no meio de uma pausa de raciocínio.
-        prefixPaddingMs: 300,
-        silenceDurationMs: 900,
-        startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
-        endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
-      },
-    },
+    realtimeInputConfig: escutaDoModo(modo),
   };
   return setup;
 }
 
-async function assinarToken(handle, voz) {
+async function assinarToken(handle, voz, modo) {
   const ks = chaves();
   if (!ks.length) return { erro: 'Não há chave do Gemini configurada no servidor (GEMINI_API_KEYS).', status: 500 };
 
@@ -373,7 +403,7 @@ async function assinarToken(handle, voz) {
     uses: 1,                                                    // um token, uma conexão
     expireTime: new Date(agora + 30 * 60 * 1000).toISOString(), // a sessão morre em 30 min
     newSessionExpireTime: new Date(agora + 2 * 60 * 1000).toISOString(), // e só pode ABRIR nos próximos 2 min
-    bidiGenerateContentSetup: setupDaSessao(handle, voz),
+    bidiGenerateContentSetup: setupDaSessao(handle, voz, modo),
     // fieldMask ausente DE PROPÓSITO: trava o setup inteiro no token (ver cabeçalho).
   });
 
@@ -405,7 +435,7 @@ async function assinarToken(handle, voz) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4) O ENDPOINT
-// POST /api/voz  { acao:'token', handle? }     -> { ok, token, url, modelo, expiraEm }
+// POST /api/voz  { acao:'token', handle?, voz?, modo? } -> { ok, token, url, modelo, voz, modo }
 // POST /api/voz  { acao:'garimpo', assunto }   -> { ok, texto, fontes }
 // ─────────────────────────────────────────────────────────────────────────────
 export default async function handler(req) {
@@ -432,7 +462,11 @@ export default async function handler(req) {
   if (acao === 'token') {
     const handle = (b.handle || '').toString().slice(0, 4000) || null;
     const voz = escolherVoz(b.voz);
-    const r = await assinarToken(handle, voz);
+    // O modo de escuta entra AQUI porque ele vive dentro do token assinado: o
+    // navegador não consegue trocá-lo depois de aberta a linha. Trocar de modo
+    // na tela = pedir token novo. O handle segura o assunto, então não se perde nada.
+    const modo = escolherModo(b.modo);
+    const r = await assinarToken(handle, voz, modo);
     if (r.erro) return new Response(JSON.stringify({ ok: false, erro: r.erro }), { status: r.status, headers: JSONH });
     return new Response(JSON.stringify({
       ok: true,
@@ -441,6 +475,7 @@ export default async function handler(req) {
       voz,
       // O endpoint "Constrained" é o que aceita token efêmero no lugar da chave.
       url: 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained',
+      modo,
       retomando: !!handle,
       expiraEmMin: 30,
     }), { headers: JSONH });
