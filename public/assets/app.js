@@ -5379,6 +5379,7 @@ const _crmInitMap = {
 (function(){
   var PACOTE='radar-pacote-v1';
   var MARCA='radar_pacote_ok';           // carimbo local: pacote já baixado
+  var RECOLHIDO='radar_pacote_recolhido';// o irmão fechou o cartão: respeita
   var baixando=false;
 
   function temCache(){ return ('caches' in window); }
@@ -5475,7 +5476,11 @@ const _crmInitMap = {
     }).then(function(){
       baixando=false;
       try{ localStorage.setItem(MARCA,JSON.stringify({em:Date.now(),arquivos:feitos-falhas,bytes:bytes})); }catch(e){}
-      pintarPainel('pronto',{arquivos:feitos-falhas,bytes:bytes});
+      // Mostra o "✅ Pronto" inteiro AGORA — ele acabou de baixar e merece ver que deu
+      // certo. Mas já marca como recolhido: da próxima vez que abrir o app, isto aqui
+      // é uma linha fininha. Ele baixou uma vez; não precisa ser lembrado todo dia.
+      setRecolhido(true);
+      pintarPainel('pronto',{arquivos:feitos-falhas,bytes:bytes,agora:true});
     })['catch'](function(){
       baixando=false;
       pintarPainel('falhou');
@@ -5496,6 +5501,23 @@ const _crmInitMap = {
   }
 
   /* ── o painel na home ───────────────────────────────────────────────────── */
+  // ELE FECHA. O primeiro jeito não fechava: depois de baixar, o cartão virava
+  // "✅ Pronto" e morava na home pra sempre, reaparecendo a cada abertura. O
+  // irmão baixou uma vez — não precisa ser lembrado disso todo santo dia.
+  //
+  // Mas fechar não pode ESCONDER o que ele ainda precisa: atualizar o conteúdo
+  // e apagar pra liberar espaço. Então fechar RECOLHE, não apaga: vira uma linha
+  // fininha que ele toca pra abrir de novo. Nada some, nada se impõe.
+  var ROUPA_ABERTA='margin:14px 14px 22px;padding:15px 15px 16px;border-radius:16px;'
+    +'background:linear-gradient(160deg,#16222f,#101821);border:1px solid rgba(201,161,74,.28);'
+    +'box-shadow:0 10px 26px rgba(0,0,0,.28);font-size:14px;line-height:1.5;color:#e8eef5';
+  var ROUPA_FECHADA='margin:10px 14px 20px;padding:10px 13px;border-radius:12px;'
+    +'background:rgba(22,34,47,.6);border:1px solid rgba(201,161,74,.16);'
+    +'font-size:13px;line-height:1.4;color:#8fa0ae;cursor:pointer';
+
+  function recolhido(){ try{ return localStorage.getItem(RECOLHIDO)==='1'; }catch(e){ return false; } }
+  function setRecolhido(v){ try{ v?localStorage.setItem(RECOLHIDO,'1'):localStorage.removeItem(RECOLHIDO); }catch(e){} }
+
   function criarPainel(){
     var alvo=document.querySelector('#home .home-scroll');
     if(!alvo || esta('off-painel')) return null;
@@ -5511,9 +5533,28 @@ const _crmInitMap = {
   function pintarPainel(estado, info){
     var d=esta('off-painel')||criarPainel(); if(!d) return;
     info=info||{};
+
+    // RECOLHIDO: uma linha só. Enquanto baixa, NUNCA recolhe — ele tem que ver a barra.
+    if(recolhido() && estado!=='baixando' && !info.agora){
+      d.style.cssText=ROUPA_FECHADA;
+      d.setAttribute('role','button'); d.setAttribute('tabindex','0');
+      d.onclick=function(){ setRecolhido(false); pintarPainel(estado, info); };
+      d.innerHTML = (estado==='pronto')
+        ? '<span style="color:#34c77b">✅</span> Conteúdo guardado no aparelho. <b style="color:#c7d3de">Tocar para gerenciar</b>'
+        : '<span>📥</span> Usar o RADAR sem internet. <b style="color:#c7d3de">Tocar para ver</b>';
+      return;
+    }
+
+    d.style.cssText=ROUPA_ABERTA;
+    d.removeAttribute('role'); d.removeAttribute('tabindex'); d.onclick=null;
+
+    // O X. Some só enquanto baixa — fechar no meio do download confunde mais que ajuda.
+    var fechar = (estado==='baixando') ? ''
+      : '<button aria-label="Fechar" onclick="radarRecolherPainel()" style="background:none;border:none;'
+        +'color:#7f8c99;font-size:22px;line-height:1;cursor:pointer;padding:0 2px;margin:-4px -2px 0 0">&times;</button>';
     var topo='<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">'
       +'<span style="font-size:20px">📥</span>'
-      +'<b style="font-size:15px;color:#C9A14A">Usar o RADAR sem internet</b></div>';
+      +'<b style="font-size:15px;color:#C9A14A;flex:1">Usar o RADAR sem internet</b>'+fechar+'</div>';
     var bt='background:#C9A14A;color:#15202b;border:none;border-radius:11px;padding:12px 16px;'
       +'font-weight:800;font-size:14.5px;font-family:inherit;cursor:pointer;width:100%;margin-top:11px';
 
@@ -5583,6 +5624,14 @@ const _crmInitMap = {
 
   window.radarBaixarPacote=baixarPacote;
   window.radarApagarPacote=apagarPacote;
+  window.radarRecolherPainel=function(){
+    setRecolhido(true);
+    // Repinta no estado real de agora, já na roupa fechada.
+    var p=jaBaixado();
+    if(temCache()) caches.has(PACOTE).then(function(tem){ pintarPainel(tem&&p?'pronto':'novo', p||{}); })
+      ['catch'](function(){ pintarPainel('novo'); });
+    else pintarPainel(p?'pronto':'novo', p||{});
+  };
   window.radarPacoteOk=function(){ return !!jaBaixado(); };
 
   window.addEventListener('online',function(){ tarja(); });
