@@ -505,9 +505,55 @@ async function pesquisarTavily(consulta) {
   } catch (_) { return null; }
 }
 
+// ── EXA: a segunda perna da busca, por SIGNIFICADO ──────────────────────────
+// A Tavily busca por palavra, como um buscador comum. A Exa busca por SENTIDO —
+// ela entende a pergunta e acha a página que responde, mesmo sem as mesmas
+// palavras. Pra pergunta de pastor ("o que Daniel 12:4 realmente quer dizer")
+// isso muda o resultado: voltam comentários e estudos, não notícia com a palavra.
+// Entra como reserva da Tavily: ~1.400 buscas/mês (US$ 0,007 cada, US$ 10 que
+// renovam sozinhos, sem cartão). Testada 21/09: 1,25s, resultados em português.
+const EXA = () => (process.env.EXA_API_KEY || process.env.EXA_API_KEYS || '')
+  .split(',').map((s) => s.trim()).filter(Boolean);
+
+async function pesquisarExa(consulta) {
+  const chaves = EXA();
+  if (!chaves.length) return null;
+  const chave = chaves[Math.floor(Math.random() * chaves.length)];
+  try {
+    const r = await fetch('https://api.exa.ai/search', {
+      method: 'POST',
+      headers: { 'x-api-key': chave, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: String(consulta || '').slice(0, 380),
+        numResults: 5,
+        type: 'auto',                                   // ela decide entre neural e palavra-chave
+        contents: { text: { maxCharacters: 900 } }      // já vem com o texto, sem 2ª chamada
+      })
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const itens = (d.results || []).filter((x) => x && (x.text || '').trim());
+    if (!itens.length) return null;
+    const blocos = itens.slice(0, 5).map((x, i) =>
+      `[${i + 1}] ${x.title || ''}\n${(x.text || '').slice(0, 900)}\nFonte: ${x.url || ''}`).join('\n\n');
+    return { resumo: '', blocos, fontes: itens.map((x) => x.url).filter(Boolean) };
+  } catch (_) { return null; }
+}
+
+// Tavily primeiro (4.000/mês de graça), Exa como reserva (~1.400/mês).
+async function pesquisarWeb(consulta, tentativas) {
+  const t = await pesquisarTavily(consulta);
+  if (t) return { ...t, motor: 'Tavily' };
+  tentativas.push('busca-web: Tavily não respondeu');
+  const e = await pesquisarExa(consulta);
+  if (e) return { ...e, motor: 'Exa' };
+  tentativas.push('busca-web: Exa não respondeu');
+  return null;
+}
+
 async function cascataComBusca(p, stream, tentativas) {
-  // 1º degrau da busca: Tavily + a cascata inteira (rápida e independente do Gemini)
-  const achado = await pesquisarTavily(p.consultaWeb || p.user || '');
+  // 1º degrau da busca: Tavily/Exa + a cascata inteira (rápida e independente do Gemini)
+  const achado = await pesquisarWeb(p.consultaWeb || p.user || '', tentativas);
   if (achado) {
     const material = 'MATERIAL PESQUISADO NA WEB AGORA (use e CITE a fonte; se não sustentar o que '
       + 'você ia dizer, NÃO diga):\n\n'
@@ -515,11 +561,11 @@ async function cascataComBusca(p, stream, tentativas) {
     const comMaterial = { ...p, sys: [p.sys, material].filter(Boolean).join('\n\n'), web: false };
     const r = await cascata(comMaterial, stream);
     if (r && r.ok !== false) {
-      return { ...r, comBusca: true, fontesWeb: achado.fontes, provedorNome: (r.provedorNome || '') + ' + Tavily' };
+      return { ...r, comBusca: true, fontesWeb: achado.fontes, provedorNome: (r.provedorNome || '') + ' + ' + achado.motor };
     }
-    tentativas.push('busca-web: Tavily achou mas a cascata não respondeu');
+    tentativas.push('busca-web: ' + achado.motor + ' achou mas a cascata não respondeu');
   } else {
-    tentativas.push('busca-web: Tavily sem chave ou sem resultado');
+
   }
 
   // 2º degrau: o jeito antigo — Gemini com busca embutida
