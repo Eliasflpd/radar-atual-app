@@ -1403,7 +1403,14 @@
       x.setAttribute('aria-label','Fechar o aviso');
       b.appendChild(x);
       document.body.appendChild(b);
-      requestAnimationFrame(function(){ b.classList.add('entrou'); });
+      // O balão nasce em opacity:0 e só aparece quando ganha a classe. Depender
+      // só de requestAnimationFrame pra isso é furado: com a aba escondida (tela
+      // apagando no carro, notificação por cima, protetor de tela) o rAF NÃO
+      // roda, e o aviso ficaria invisível pra sempre — presente no DOM, mudo.
+      // Por isso o relógio também acende, e acender duas vezes não faz mal.
+      var acender=function(){ b.classList.add('entrou'); };
+      requestAnimationFrame(acender);
+      setTimeout(acender,60);
       x.addEventListener('click',function(){
         try{ localStorage.setItem(CHAVE,'1'); }catch(e){}
         b.remove();
