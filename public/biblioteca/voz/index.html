@@ -506,6 +506,7 @@
         S.proximoSom=inicio+buf.duration;
 
         var reg={src:src, inicio:inicio, fim:S.proximoSom};
+        if(S.registro) S.registro.push({inicio:inicio, fim:S.proximoSom});  // só na autoprova
         S.tocando.push(reg);
         if(S.tocando.length>S.picoAgendado) S.picoAgendado=S.tocando.length;
         src.onended=function(){
@@ -1225,6 +1226,127 @@
 
   // sair da página sem deixar o microfone aberto
   window.addEventListener('pagehide',function(){ if(S.ligado) desligar(true); });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // AUTOPROVA (?prova=1) — o motor se testa NO APARELHO DO ELIAS.
+  //
+  // Ninguém consegue OUVIR o áudio de fora pra dizer se ficou bom. Então o
+  // aparelho mede sozinho: despeja 8 segundos de áudio falso pela MESMA fila de
+  // reprodução de verdade, corta no meio três vezes, e responde a única
+  // pergunta que importa — DUAS FONTES CHEGARAM A SOAR JUNTAS?
+  // Roda no Web Audio real do A22, não em simulação.
+  // ══════════════════════════════════════════════════════════════════════════
+  function autoprova(){
+    var painel=document.createElement('div');
+    painel.style.cssText='position:fixed;inset:0;z-index:99;background:#0b1720;color:#d9f5e6;'
+      +'font:700 14px/1.6 ui-monospace,Consolas,monospace;padding:16px;overflow:auto;white-space:pre-wrap';
+    document.body.appendChild(painel);
+    var linhas=[];
+    function diz(t){ linhas.push(t); painel.textContent=linhas.join('\n'); }
+
+    diz('AUTOPROVA DO MOTOR DE VOZ');
+    diz('aparelho: '+(navigator.userAgent.match(/Android[^;)]*/)||['?'])[0]);
+    diz('');
+
+    // O Android só liga o áudio depois de um toque. Sem isto o relógio do
+    // contexto fica parado no zero e a medição não vale nada.
+    var bt=document.createElement('button');
+    bt.textContent='▶ TOCAR AQUI PARA PROVAR';
+    bt.style.cssText='display:block;width:100%;margin:10px 0 16px;padding:18px;border:none;'
+      +'border-radius:12px;background:#a9791c;color:#15202b;font:800 17px/1.2 inherit';
+    painel.appendChild(bt);
+    bt.addEventListener('click',function(){ bt.remove(); rodar(); });
+    return;
+
+    function rodar(){
+    var AC=window.AudioContext||window.webkitAudioContext;
+    try{ S.ctxSom=new AC({ sampleRate:TAXA_VOLTA, latencyHint:'playback' }); }
+    catch(e){ S.ctxSom=new AC({ sampleRate:TAXA_VOLTA }); }
+    S.analiseSom=S.ctxSom.createAnalyser();
+    S.analiseSom.fftSize=512; S.bufSom=new Uint8Array(512);
+    // sai no MUDO: a prova é de agendamento, não é pra assustar ninguém
+    var mudo=S.ctxSom.createGain(); mudo.gain.value=0;
+    mudo.connect(S.ctxSom.destination); S.analiseSom.connect(mudo);
+    S.fila=[]; S.sobra=new Float32Array(BUF_SAIDA); S.sobraN=0;
+    S.proximoSom=0; S.tocando=[]; S.tocandoAgora=false; S.turnoMudo=false;
+    S.registro=[];
+    novoGanho();
+    S.ctxSom.resume().catch(function(){});
+
+    diz('taxa real do aparelho: '+S.ctxSom.sampleRate+' Hz');
+    diz('bloco '+BUF_SAIDA+' · gordura '+ESPERA_INICIAL+'s · adiante '+AGENDAR_ADIANTE+'s');
+    diz('');
+
+    // pedaço de PCM 16 bits, `ms` milissegundos, em base64
+    function pedaco(ms){
+      var n=Math.round(TAXA_VOLTA*ms/1000), b=new Uint8Array(n*2), dv=new DataView(b.buffer);
+      for(var i=0;i<n;i++) dv.setInt16(i*2, Math.round(7000*Math.sin(i/9)), true);
+      return paraBase64(b);
+    }
+
+    // vigia rápido: olha 50x por segundo quantas fontes estão soando AGORA
+    var picoVivo=0, amostras=0;
+    var olho=setInterval(function(){
+      var v=audiveis(); amostras++;
+      if(v>picoVivo) picoVivo=v;
+    },20);
+
+    // o roteiro: fala corrida, corte, fala de novo, corte duplo
+    var passos=[], i;
+    for(i=0;i<26;i++) passos.push({audio:200, espera:130});      // ~5 s de fala
+    passos.push({corte:'ele cortou no meio'});
+    for(i=0;i<14;i++) passos.push({audio:200, espera:130});      // volta a falar
+    passos.push({corte:'corte em rajada 1'});
+    passos.push({audio:200, espera:60});
+    passos.push({corte:'corte em rajada 2'});
+    for(i=0;i<10;i++) passos.push({audio:200, espera:130});
+    passos.push({fim:true});
+
+    var p=0;
+    (function passo(){
+      if(p>=passos.length){ terminar(); return; }
+      var a=passos[p++];
+      if(a.corte){ calarMestre(a.corte); setTimeout(passo,120); return; }
+      if(a.fim){ despejarSobra(); setTimeout(terminar,2500); return; }
+      enfileirarPCM(pedaco(a.audio));
+      setTimeout(passo, a.espera);
+    })();
+
+    function terminar(){
+      clearInterval(olho);
+      var r=S.registro.slice().sort(function(x,y){ return x.inicio-y.inicio; });
+      var sobrepostos=0, pior=0, maiorBuraco=0, engasgos=0;
+      for(var k=1;k<r.length;k++){
+        var folga=r[k].inicio-r[k-1].fim;
+        if(folga<-0.000001){ sobrepostos++; if(folga<pior) pior=folga; }
+        else if(folga>1){ /* silêncio de corte, não é engasgo */ }
+        else { if(folga>maiorBuraco) maiorBuraco=folga; if(folga>0.020) engasgos++; }
+      }
+      var passou = (picoVivo<=1) && (sobrepostos===0) && (S.fila.length===0);
+      diz('fontes agendadas ......... '+r.length);
+      diz('medições ao vivo ......... '+amostras+' (a cada 20 ms)');
+      diz('');
+      diz('PICO DE FONTES SOANDO .... '+picoVivo+'   (tem que ser 1)');
+      diz('pares sobrepostos ........ '+sobrepostos+'   (tem que ser 0)');
+      diz('pior sobreposição ........ '+(pior*1000).toFixed(3)+' ms');
+      diz('');
+      diz('engasgos (buraco>20 ms) .. '+engasgos);
+      diz('maior buraco na fala ..... '+(maiorBuraco*1000).toFixed(1)+' ms');
+      diz('cortes executados ........ '+S.cortes);
+      diz('remendos do relógio ...... '+S.remendos);
+      diz('fila presa no fim ........ '+S.fila.length);
+      diz('sobra presa no fim ....... '+S.sobraN);
+      diz('');
+      painel.style.background = passou ? '#0c2a17' : '#3a0f0f';
+      diz(passou ? '✅ PASSOU — nunca duas vozes ao mesmo tempo.'
+                 : '🛑 FALHOU — ainda há sobreposição.');
+      S.registro=null;
+      try{ S.ctxSom.close(); }catch(e){}
+      S.ctxSom=null;
+    }
+    }   /* fim do rodar() */
+  }
+  if(/[?&]prova=1/.test(location.search)) setTimeout(autoprova,300);
 
   // ── ALÇA DE BANCADA (só com ?hud=1) ──────────────────────────────────────
   // Serve pra provar o motor sem precisar ouvir: um teste de bancada pega estas
