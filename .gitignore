@@ -28,3 +28,6 @@ _BACKUP/
 # São ~15 MB de arquivo binário que só servem pra retomar a indexação no PC.
 # O que vai pro app é o resultado compacto em public/busca/.
 scripts/.cache-busca/
+
+# node_modules NUNCA vai pro git (entrou por engano em 21/09/2026 com um "git add -A")
+node_modules/
