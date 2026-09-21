@@ -1,4 +1,4 @@
-const V='radar-v148';               // cache do SHELL — troca a cada versão do app
+const V='radar-v149';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
 
 // ═══ O SHELL: sem isto o app não pinta nada. Vai pro cache JÁ na instalação. ═══
@@ -78,8 +78,8 @@ function paginaOffline(){
     +'<h1>Esta página ainda não está guardada</h1>'
     +'<p>Você está <b>sem internet</b> e esta tela ainda não tinha sido aberta neste aparelho.</p>'
     +'<ul><li><b>Funciona agora:</b> a tela inicial e tudo que você já abriu antes.</li>'
-    +'<li><b>Funciona agora:</b> Bíblia, Harpa, mensagens e sermões — se você já tocou em '
-    +'<b>“Deixar disponível sem internet”</b> na tela inicial.</li>'
+    +'<li><b>Funciona agora:</b> Bíblia, Harpa, mensagens e sermões que você já abriu '
+    +'uma vez neste aparelho.</li>'
     +'<li><b>Só com internet:</b> Concílio, geradores de mensagem/sermão, busca por significado, vídeos e quiz.</li></ul>'
     +'<a href="/">Voltar ao Início</a></div></body></html>';
   return new Response(html,{status:200,headers:{'Content-Type':'text/html; charset=utf-8','X-Radar-Offline':'1'}});

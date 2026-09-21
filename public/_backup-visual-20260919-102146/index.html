@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080D1A">
+<title>RADAR ATUAL</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/radar.css?v=145">
+<link rel="preload" as="script" href="/assets/app.js?v=145">
+</head>
+<body>
+
+<!-- SPLASH -->
+<div class="tela ativa" id="splash" onclick="irHome()">
+  <img src="/capa.jpg" alt="RADAR ATUAL" loading="lazy" decoding="async">
+</div>
+
+<!-- ══ VITRINE 3×3 — NOVO VISUAL DA HOME (azul claro + dourado) ══ -->
+<!-- HOME -->
+<div class="tela" id="home">
+  <div class="home-search">
+    <div class="home-search-inner">
+      <span style="font-size:16px;opacity:.4">🔍</span>
+      <input id="home-busca" placeholder="Buscar na Bíblia, hinos, lições..." oninput="buscaGlobal(this.value)">
+    </div>
+  </div>
+  <div class="home-divider"></div>
+  <div class="home-scroll">
+
+    <!-- VITRINE 3×3 -->
+    <div class="vitrine">
+      <div class="vit-hero">
+        <div class="vit-topo">
+          <div class="vit-tbtn" onclick="document.getElementById('painel-hoje-wrap').scrollIntoView({behavior:'smooth',block:'center'})">🔔</div>
+          <div class="vit-tbtn" onclick="irPerfil()">👤</div>
+          <div class="vit-tbtn" id="logo-tap" onclick="tapLogo()" title="Config">⚙️</div>
+        </div>
+        <div class="vit-bemvindo">Bem-vindo ao</div>
+        <div class="vit-marca">Radar Atual</div>
+        <div class="vit-sub">Sua jornada espiritual completa em um só lugar.</div>
+        <div class="vit-fio"></div>
+      </div>
+
+      <div class="vit-grade">
+        <!-- TIRADO DA VITRINE a pedido do Elias (17/09/2026): nao serve pro uso dele.
+     O codigo e os dados continuam intactos — pra voltar, e so tirar este comentario.
+<div class="vit-card" onclick="abrirCartazes()">
+          <div class="vit-ico">📢</div>
+          <div class="vit-nome">Eventos e Mídias</div><div class="vit-desc">Cartazes, vídeos e avisos</div>
+        </div> -->
+        <div class="vit-card" onclick="mostrarTela('tela-informativo')">
+          <div class="vit-ico">📣</div>
+          <div class="vit-nome">Informativo</div><div class="vit-desc">Agendas e avisos</div>
+        </div>
+        <div class="vit-card" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)">
+          <div class="vit-ico">📖</div>
+          <div class="vit-nome">Bíblia e Harpa</div><div class="vit-desc">Palavra e louvores</div>
+        </div>
+        <div class="vit-card" onclick="abrirMod('manuais')">
+          <div class="vit-ico">📚</div>
+          <div class="vit-nome">Biblioteca</div><div class="vit-desc">Bíblias de Estudo, Concílio e mais</div>
+        </div>
+        <div class="vit-card" onclick="location.href='/biblioteca/curso-teologia/'">
+          <div class="vit-ico">🎓</div>
+          <div class="vit-nome">Curso de Teologia</div><div class="vit-desc">Estude a fé a fundo</div>
+        </div>
+        <div class="vit-card" onclick="location.href='/biblioteca/sermoes/'">
+          <div class="vit-ico">📜</div>
+          <div class="vit-nome">Sermões</div><div class="vit-desc">Mensagens que inspiram</div>
+        </div>
+
+        <div class="vit-card" onclick="location.href='/biblioteca/mensagens/'">
+          <div class="vit-ico">🎙️</div>
+          <div class="vit-nome">Pregações</div><div class="vit-desc">Pregações poderosas</div>
+        </div>
+        <div class="vit-card" onclick="abrirHistorinhas()">
+          <div class="vit-ico">🧒</div>
+          <div class="vit-nome">Historinhas Infantis</div><div class="vit-desc">Conteúdo para crianças</div>
+        </div>
+        <div class="vit-card" onclick="abrirMod('desafiomateus')">
+          <div class="vit-ico">🧠</div>
+          <div class="vit-nome">Quiz Bíblico</div><div class="vit-desc">Desafie seu conhecimento</div>
+        </div>
+
+        <div class="vit-card" onclick="abrirEbd()">
+          <div class="vit-ico">🏫</div>
+          <div class="vit-nome">EBD Completo</div><div class="vit-desc">Estudos para todas as idades</div>
+        </div>
+        <div class="vit-card" onclick="location.href='/biblioteca/preparador/'">
+          <div class="vit-ico">📝</div>
+          <div class="vit-nome">Preparador de Sermões</div><div class="vit-desc">Organize e prepare suas mensagens</div>
+        </div>
+        <div class="vit-card" onclick="location.href='/biblioteca/escola-pregacao/'">
+          <div class="vit-ico">🔥</div>
+          <div class="vit-nome">Aprenda a Pregar</div><div class="vit-desc">Dicas e ferramentas para o ministério</div>
+        </div>
+        <div class="vit-card" onclick="location.href='/biblioteca/estudo-doutrina/'">
+          <div class="vit-ico">⚖️</div>
+          <div class="vit-nome">Estudo de Doutrina</div><div class="vit-desc">Assuntos atuais com a Palavra</div>
+        </div>
+        <!-- TIRADO DA VITRINE a pedido do Elias (17/09/2026): nao serve pro uso dele.
+     O codigo e os dados continuam intactos — pra voltar, e so tirar este comentario.
+<div class="vit-card" onclick="abrirEnviarMidia()">
+          <div class="vit-ico">📤</div>
+          <div class="vit-nome">Publicar</div><div class="vit-desc">Envie sua mídia</div>
+        </div> -->
+      </div>
+
+      <div class="vit-versiculo">
+        <span class="vit-aspas">&ldquo;</span>
+        <div class="vit-vtxt">Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.</div>
+        <div class="vit-vref">SALMOS 119:105</div>
+      </div>
+    </div>
+
+    <div id="home-carousel" class="home-carousel"></div>
+    <div id="painel-hoje-wrap"></div>
+    <div id="devocional-home-wrap"></div>
+    <div id="continuar-wrap"></div>
+    <!-- Historinhas ja tem bloco proprio na vitrine 3x3 acima; card duplicado escondido (menos rolagem) -->
+    <div id="hist-home" onclick="abrirHistorinhas()" style="display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#1b3a6b,#122a52);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;margin-top:14px;cursor:pointer">
+      <span style="font-size:30px">📖</span>
+      <div style="flex:1"><b style="font-size:16px">Historinhas Infantil</b><div style="font-size:12.5px;color:#9fb0bd;margin-top:2px">Videos biblicos pras criancas - assista e compartilhe</div></div>
+      <span style="font-size:22px;color:#9fb0bd">&rsaquo;</span>
+    </div>
+    <div class="sec-label" style="margin-top:16px">Mais no RADAR</div>
+    <div class="modulos" id="modulos"></div>
+  </div>
+  <nav class="nav-bottom">
+    <button class="nav-btn on" id="nav-inicio"><span class="ni">🏠</span><span class="nl">Início</span></button>
+    <button class="nav-btn" onclick="focusBusca()" id="nav-buscar"><span class="ni">🔍</span><span class="nl">Buscar</span></button>
+    <button class="nav-btn" onclick="irFavoritos()" id="nav-fav"><span class="ni">⭐</span><span class="nl">Favoritos</span></button>
+    <button class="nav-btn" onclick="irPerfil()" id="nav-perfil"><span class="ni">👤</span><span class="nl">Perfil</span></button>
+  </nav>
+</div>
+
+<!-- MÓDULO GENÉRICO -->
+<div class="tela" id="tela-modulo">
+  <div class="std-header">
+    <button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="mod-titulo-h">—</div>
+      <div class="std-sub" id="mod-count-h">0 itens</div>
+    </div>
+    <span id="mod-icon-h" style="font-size:24px;flex-shrink:0">📋</span>
+  </div>
+  <div class="mod-toolbar">
+    <input class="mod-search" id="mod-busca" placeholder="Buscar..." oninput="renderMod()">
+    <button class="mod-add" onclick="abrirModal()">+ ADD</button>
+  </div>
+  <div class="mod-lista" id="mod-lista"></div>
+</div>
+
+<div class="tela" id="tela-historinhas">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
+    <div class="std-hinfo"><div class="std-titulo">📖 Historinhas Infantil</div><div class="std-sub" id="hist-sub">Videos pras criancas</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Historinhas Infantil')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <span style="font-size:24px;flex-shrink:0">📖</span>
+  </div>
+  <div class="home-scroll" style="padding-top:12px">
+    <div id="hist-lista"></div>
+    <button class="hist-adm-toggle" onclick="toggleHistAdm()">&#9881; Adicionar video (admin)</button>
+    <div id="hist-adm" style="display:none">
+      <input class="f-hist" id="hTit" placeholder="Titulo (ex: A Oracao de Jabez)">
+      <input class="f-hist" id="hVid" placeholder="Link YouTube/Facebook OU /videos/arquivo.mp4">
+      <button class="hist-add-btn" onclick="addHistAdm()">+ Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEVOCIONAL DIÁRIO — Palavra de Hoje -->
+<div class="tela" id="tela-devocional">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
+    <div class="std-hinfo"><div class="std-titulo">Devocional Diário</div><div class="std-sub">Uma palavra pra edificar seu dia</div></div>
+    <span style="font-size:24px;flex-shrink:0">🕊️</span></div>
+  <div class="dev-scroll">
+    <span class="dev-hoje-tag">✨ Palavra de hoje</span>
+    <div id="dev-leitura"></div>
+    <div class="dev-todos-label">Todos os devocionais</div>
+    <div id="dev-todos"></div>
+  </div>
+</div>
+
+<!-- PERFIL / AJUSTES -->
+<div class="tela" id="tela-perfil">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
+    <div class="std-hinfo"><div class="std-titulo">Meu Perfil</div><div class="std-sub">Seus dados e ajustes do app</div></div>
+    <span style="font-size:24px;flex-shrink:0">👤</span></div>
+  <div class="pf-scroll">
+    <div class="pf-user">
+      <div class="pf-avatar" id="pf-avatar">?</div>
+      <div class="pf-user-info">
+        <div class="pf-user-nome" id="pf-nome">Visitante</div>
+        <div class="pf-user-cargo" id="pf-cargo">—</div>
+        <div class="pf-user-fone" id="pf-fone"></div>
+      </div>
+    </div>
+
+    <div class="pf-sec">Tamanho da letra na leitura</div>
+    <div class="pf-card">
+      <div class="pf-fs-top">
+        <span class="pf-fs-tit">Ajuste a fonte da Bíblia e devocionais</span>
+        <span class="pf-fs-nivel" id="pf-fs-nivel">Normal</span>
+      </div>
+      <div class="pf-fs-ctrl">
+        <button class="pf-fs-btn" id="pf-fs-menos" onclick="mudarFs(-1)">A−</button>
+        <div class="pf-fs-sample" id="pf-fs-sample">O Senhor é o meu pastor; nada me faltará.</div>
+        <button class="pf-fs-btn" id="pf-fs-mais" onclick="mudarFs(1)">A+</button>
+      </div>
+    </div>
+
+    <div class="pf-sec">Bate-papo</div>
+    <div class="pf-card">
+      <div style="font-size:13px;color:var(--sub);line-height:1.5">Fale direto comigo (Claude) aqui dentro do app — peça, tire dúvida ou mande uma tarefa.</div>
+      <button class="pf-btn-lg pf-btn-share" style="background:#0f3d5c" onclick="location.href='/biblioteca/chat/'">💬 Abrir o bate-papo</button>
+    </div>
+
+    <div class="pf-sec">Administração (pastor)</div>
+    <div class="pf-card">
+      <div style="font-size:13px;color:var(--sub);line-height:1.5">Veja quem publicou (cadastros) e gerencie as publicações do mural “Eventos e Mídias”.</div>
+      <button class="pf-btn-lg pf-btn-share" style="background:#8a1c1c" onclick="abrirAdmin()">🔒 Abrir painel do pastor</button>
+    </div>
+
+    <div class="pf-sec">Compartilhar</div>
+    <div class="pf-card">
+      <div style="font-size:13px;color:var(--sub);line-height:1.5">Convide um irmão para usar o RADAR. É grátis e cheio de conteúdo pra edificar.</div>
+      <button class="pf-btn-lg pf-btn-share" onclick="compartilharApp()">📤 Compartilhar o app RADAR</button>
+    </div>
+
+    <div class="pf-foot">RADAR ATUAL · App da igreja<br>Bíblia · Harpa · EBD · Devocionais e mais</div>
+  </div>
+</div>
+
+<!-- PLANO DE LEITURA DA BÍBLIA -->
+<div class="tela" id="tela-plano">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">&lsaquo;</button>
+    <div class="std-hinfo"><div class="std-titulo">Plano de Leitura</div><div class="std-sub">Leia a Bíblia todo dia, sem se perder</div></div>
+    <span style="font-size:24px;flex-shrink:0">📅</span></div>
+  <div class="pl-scroll" id="pl-conteudo"></div>
+</div>
+
+<!-- PERFIL / AJUSTES -->
+<!-- SILAS HUB -->
+<!-- ESCAVADOR DE PÉROLAS BÍBLICAS -->
+<div class="tela" id="tela-perolas">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Descobrindo as Pérolas</div><div class="std-sub">Resposta sempre à luz da Bíblia</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Descobrindo as Pérolas')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <span style="font-size:24px">💎</span></div>
+  <div class="prl-scroll">
+    <div class="prl-intro">Digite <b>qualquer assunto</b> — bíblico ou não (ansiedade, dinheiro, Salmo 23, casamento, medo…). A resposta vem <b>sempre à luz da Bíblia</b>. 💎</div>
+    <div class="prl-modes" id="prl-modes">
+      <button type="button" class="prl-mode active" data-mode="perola" onclick="setPrlMode('perola')">💎 Escavar Pérola<span>estudo (13 camadas)</span></button>
+      <button type="button" class="prl-mode" data-mode="mensagem" onclick="setPrlMode('mensagem')">🔥 Mensagem pra Pregar<span>sermão em prosa</span></button>
+    </div>
+    <textarea id="prl-input" class="prl-input" rows="2" placeholder="Ex.: ansiedade, o dilúvio, Salmo 23, perdão…"></textarea>
+    <div class="prl-chips" id="prl-chips">
+      <span class="prl-chip" onclick="prlChip('Ansiedade')">Ansiedade</span>
+      <span class="prl-chip" onclick="prlChip('Salmo 23')">Salmo 23</span>
+      <span class="prl-chip" onclick="prlChip('Perdão')">Perdão</span>
+      <span class="prl-chip" onclick="prlChip('O dilúvio de Noé')">O dilúvio</span>
+      <span class="prl-chip" onclick="prlChip('Medo do futuro')">Medo</span>
+    </div>
+    <button class="prl-btn" id="prl-btn" onclick="escavarPerola()">💎 Escavar Pérola</button>
+    <div class="prl-out" id="prl-out"></div>
+  </div>
+</div>
+<!-- DESAFIO MATEUS (game) -->
+<div class="tela" id="tela-desafiomateus">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Maratona de Marcos</div><div class="std-sub">Evangelho de Marcos</div></div>
+    <span style="font-size:24px">🏆</span></div>
+  <div class="agv-scroll">
+    <div style="max-width:460px;margin:18px auto;padding:0 16px">
+      <div style="background:linear-gradient(160deg,#0c1e40,#0b1b3a 60%,#091531);border:1px solid rgba(217,182,90,.4);border-radius:22px;padding:28px 22px;text-align:center;box-shadow:0 16px 44px rgba(0,0,0,.45)">
+        <div style="font-size:56px;line-height:1;filter:drop-shadow(0 6px 16px rgba(217,182,90,.5))">🏆</div>
+        <div style="font-family:'Playfair Display',Georgia,serif;font-size:25px;font-weight:800;letter-spacing:1px;margin-top:8px;background:linear-gradient(180deg,#fff,#f2d98a);-webkit-background-clip:text;background-clip:text;color:transparent">MARATONA DE MARCOS</div>
+        <div style="font-size:11px;letter-spacing:4px;color:#d9b65a;text-transform:uppercase;font-weight:700;margin-top:5px">Marcos 1 a 5 · 10 modos</div>
+        <p style="color:#cdd8ee;font-size:15px;line-height:1.6;margin:18px 0 6px">Uma competição bíblica pelos <b style="color:#f2d98a">5 primeiros capítulos de Marcos</b>. Primeiro <b>leia</b> os capítulos, depois enfrente <b>10 modos de jogo</b> (Show do Cristão, Batalha, Duelo e mais) e dispute a pontuação.</p>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:14px 0 20px;color:#9fb2d4;font-size:12.5px">
+          <span>📖 Leitura obrigatória</span><span>🔊 Narração em voz</span><span>⚔️ Quiz + ranking</span>
+        </div>
+        <a href="https://quiz-marcos.vercel.app" target="_blank" rel="noopener"
+           style="display:block;text-decoration:none;padding:16px;border-radius:14px;font-weight:800;font-size:17px;font-family:'Playfair Display',Georgia,serif;letter-spacing:.5px;color:#2a1e06;background:linear-gradient(90deg,#f2d98a,#d9b65a);box-shadow:0 10px 26px rgba(217,182,90,.35)">▶ Abrir o jogo</a>
+        <button onclick="compartilharJogo(event)"
+           style="width:100%;margin-top:12px;padding:15px;border-radius:14px;font-weight:800;font-size:16px;font-family:inherit;cursor:pointer;color:#eaf0fb;background:rgba(255,255,255,.08);border:1px solid rgba(217,182,90,.4)">📲 Compartilhar o link</button>
+        <div style="font-size:12px;color:#9fb2d4;margin-top:14px;letter-spacing:.5px">quiz-marcos.vercel.app</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="tela" id="tela-slides">
+  <div id="slides-full" style="flex:1;overflow-y:auto;background:#eef3fa;padding:calc(10px + env(safe-area-inset-top)) 12px 6px"></div>
+  <div style="padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e4e7ec;flex-shrink:0">
+    <button onclick="irParaMenu()" style="width:100%;background:#0f3d5c;color:#fff;border:none;border-radius:14px;padding:16px;font-weight:800;font-size:1.08rem;font-family:inherit;cursor:pointer">Ir para o menu ›</button>
+  </div>
+</div>
+<div class="tela" id="tela-cartazes">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Eventos e Mídias</div><div class="std-sub">Cartazes, vídeos e avisos</div></div>
+    <button onclick="abrirEnviarMidia()" style="margin-left:auto;background:#0f3d5c;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">➕ Publicar</button>
+    <span style="font-size:22px;margin-left:8px">🖼️</span></div>
+  <div class="agv-scroll" style="padding:12px 14px 40px">
+    <div id="slideshow"></div>
+  </div>
+</div>
+<div class="tela" id="tela-enviar">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-cartazes')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Publicar mídia</div><div class="std-sub">Envie seu cartaz, vídeo ou aviso</div></div>
+    <span style="font-size:24px">➕</span></div>
+  <div class="agv-scroll" style="padding:14px 14px 40px">
+    <div style="background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:16px">
+      <div style="font-weight:800;color:#0f3d5c;margin-bottom:10px">📎 Sua mídia</div>
+      <label style="display:block;background:#eef4f8;border:2px dashed #a9c4d8;border-radius:12px;padding:18px;text-align:center;color:#0f3d5c;font-weight:700;cursor:pointer">
+        🖼️ Escolher imagem (cartaz)
+        <input id="mid-img" type="file" accept="image/*" style="display:none" onchange="_midPreview(this)">
+      </label>
+      <div id="mid-prev" style="margin-top:10px"></div>
+      <div style="text-align:center;color:#8a91a0;font-size:.85rem;margin:8px 0">— ou —</div>
+      <input id="mid-video" placeholder="🔗 Link de vídeo (YouTube, Instagram, Facebook)" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit">
+
+      <div style="font-weight:800;color:#0f3d5c;margin:18px 0 8px">📅 Data do evento</div>
+      <input id="mid-data" type="date" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;color:#1b2436">
+      <div style="font-size:.8rem;color:#8a91a0;margin-top:4px">Depois dessa data o cartaz sai sozinho do mural.</div>
+
+      <div style="font-weight:800;color:#0f3d5c;margin:18px 0 10px">📝 Sobre você</div>
+      <input id="mid-nome" placeholder="Seu nome *" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;margin-bottom:9px">
+      <input id="mid-cargo" placeholder="Cargo na igreja (ex: Diácono, Líder de jovens)" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;margin-bottom:9px">
+      <input id="mid-fone" placeholder="Telefone (com DDD) *" inputmode="tel" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;margin-bottom:9px">
+      <div style="display:flex;gap:9px;margin-bottom:9px">
+        <input id="mid-cidade" placeholder="Cidade" style="flex:1;min-width:0;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit">
+        <input id="mid-bairro" placeholder="Bairro" style="flex:1;min-width:0;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit">
+      </div>
+      <input id="mid-igreja" placeholder="Nome da igreja" style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;margin-bottom:9px">
+
+      <div style="font-weight:800;color:#0f3d5c;margin:18px 0 10px">💬 Texto / recado</div>
+      <textarea id="mid-texto" rows="5" placeholder="Cole aqui o texto do evento/aviso..." style="width:100%;box-sizing:border-box;border:1px solid #dbe6f2;border-radius:11px;padding:12px 14px;font-size:1rem;font-family:inherit;resize:vertical"></textarea>
+
+      <button id="mid-enviar" onclick="enviarMidia()" style="display:block;width:100%;background:#25D366;color:#fff;border:none;border-radius:13px;padding:15px;font-weight:800;font-size:1.05rem;font-family:inherit;cursor:pointer;margin-top:16px">📤 Publicar</button>
+      <div id="mid-status" style="text-align:center;margin-top:10px;font-weight:700;font-size:.92rem"></div>
+    </div>
+  </div>
+</div>
+<div class="tela" id="tela-cartaz">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-cartazes')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo" id="cartaz-tit">Cartaz</div><div class="std-sub" id="cartaz-sub"></div></div>
+    <span style="font-size:24px">📢</span></div>
+  <div class="agv-scroll" id="cartaz-body" style="padding:14px 14px 40px"></div>
+</div>
+<div class="tela" id="tela-admin">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-perfil')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Painel do Pastor</div><div class="std-sub">Cadastros e publicações</div></div>
+    <span style="font-size:24px">🔒</span></div>
+  <div class="agv-scroll" id="admin-body" style="padding:14px 14px 40px"></div>
+</div>
+<div class="tela" id="tela-informativo">
+  <div class="std-header"><button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Informativo</div><div class="std-sub">Agendas e avisos das igrejas</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Informativo')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <span style="font-size:24px">📢</span></div>
+  <div class="agv-scroll">
+    <div class="sec-label" style="margin:16px 14px 4px">CRMs</div>
+    <div class="agv-hub-card" onclick="mostrarTela('tela-templo')">
+      <div class="agv-hub-ic marrom">⛪</div>
+      <div><div class="agv-hub-nome">Templo Central</div><div class="agv-hub-sub">Tuntum - MA · Agenda + Cong. Monte Carmelo</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+    <div class="agv-hub-card" onclick="mostrarTela('tela-silas')">
+      <div class="agv-hub-ic">📅</div>
+      <div><div class="agv-hub-nome">Projeto Silas</div><div class="agv-hub-sub">CRM CEADEMA · Agenda Estadual e Regional 2026</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+  </div>
+</div>
+<div class="tela" id="tela-silas">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-informativo')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Projeto Silas</div><div class="std-sub">Documentos e agendas</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Projeto Silas')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <img src="img/ceadema.png" style="width:32px;height:32px;object-fit:contain;border-radius:8px;background:#fff;padding:2px;flex-shrink:0" loading="lazy" decoding="async"></div>
+  <div class="agv-scroll">
+    <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
+    <div class="agv-hub-card" onclick="abrirCeadema('estadual')">
+      <div class="agv-hub-ic">📅</div>
+      <div><div class="agv-hub-nome">CRM CEADEMA</div><div class="agv-hub-sub">Agenda Estadual e Regional 2026</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+  </div>
+</div>
+<!-- CEADEMA AGENDA -->
+<div class="tela" id="tela-ceadema">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-silas')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">CRM CEADEMA</div><div class="std-sub">Agenda 2026</div></div>
+    <span style="font-size:24px">📅</span></div>
+  <div class="agv-scroll" id="ceadema-body"></div>
+</div>
+<!-- TEMPLO HUB -->
+<div class="tela" id="tela-templo">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-informativo')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Templo Central</div><div class="std-sub">Tuntum - MA</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Templo Central Tuntum-MA')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <span style="font-size:24px">⛪</span></div>
+  <div class="agv-scroll">
+    <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
+    <div class="agv-hub-card" onclick="abrirTemploAg()">
+      <div class="agv-hub-ic marrom">📅</div>
+      <div><div class="agv-hub-nome">Agenda Bimestral</div><div class="agv-hub-sub">Julho / Agosto 2026 · IEADET</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+    <div class="agv-hub-card" onclick="abrirMonteCarmelo()">
+      <div class="agv-hub-ic marrom">⛪</div>
+      <div><div class="agv-hub-nome">Cong. Monte Carmelo</div><div class="agv-hub-sub">Ministérios da congregação</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONG. MONTE CARMELO (sub-hub) -->
+<div class="tela" id="tela-monte-carmelo">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-templo')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Cong. Monte Carmelo</div><div class="std-sub">Templo Central · Tuntum - MA</div></div>
+    <span style="font-size:24px">⛪</span></div>
+  <div class="agv-scroll">
+    <div class="sec-label" style="margin:16px 14px 4px">CRM</div>
+    <div class="agv-hub-card" onclick="abrirMcGrupo('jovem')">
+      <div class="agv-hub-ic marrom">🔥</div>
+      <div><div class="agv-hub-nome">Jovem em Busca de Mais Um</div><div class="agv-hub-sub">Ministério de Jovens</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+    <div class="agv-hub-card" onclick="abrirMcGrupo('vocal')">
+      <div class="agv-hub-ic marrom">🎙️</div>
+      <div><div class="agv-hub-nome">Vocal dos Homens</div><div class="agv-hub-sub">Ministério de Louvor</div></div>
+      <span style="margin-left:auto;color:var(--ink3);font-size:22px">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- GRUPO Monte Carmelo (Jovem / Vocal) -->
+<div class="tela" id="tela-mc-grupo">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-monte-carmelo')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo" id="mc-grupo-nome">Grupo</div><div class="std-sub">Cong. Monte Carmelo</div></div>
+    <span style="font-size:24px" id="mc-grupo-ic">⛪</span></div>
+  <div class="agv-scroll" style="background:var(--bg);padding:16px 14px">
+    <div id="mc-grupo-conteudo"></div>
+  </div>
+</div>
+
+<!-- READER de LOUVOR (fundo branco · título azul · letra preta) -->
+<div class="tela" id="tela-louvor">
+  <div class="std-header" style="background:#0b4aa2;border:none">
+    <button class="std-back" onclick="mostrarTela('tela-mc-grupo')" style="color:#fff">‹</button>
+    <div class="std-hinfo"><div class="std-titulo" id="louvor-hdr" style="color:#fff">Louvor</div><div class="std-sub" style="color:#cfe0f7">Jovem em Busca de Mais Um</div></div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="mudarFonteLouvor(-2)" title="Diminuir letra" style="background:rgba(255,255,255,.18);border:none;color:#fff;width:36px;height:34px;border-radius:9px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit">A−</button>
+      <button onclick="mudarFonteLouvor(2)" title="Aumentar letra" style="background:rgba(255,255,255,.18);border:none;color:#fff;width:36px;height:34px;border-radius:9px;font-size:19px;font-weight:800;cursor:pointer;font-family:inherit">A+</button>
+      <button onclick="compartilharLouvorAtual()" title="Compartilhar letra" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">📤</button>
+    </div>
+  </div>
+  <div class="agv-scroll" style="background:#fff">
+    <div id="louvor-conteudo" style="max-width:820px;margin:0 auto;padding:24px 20px 70px"></div>
+  </div>
+</div>
+<!-- TEMPLO AGENDA -->
+<div class="tela" id="tela-templo-ag">
+  <div class="std-header"><button class="std-back" onclick="mostrarTela('tela-templo')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">Agenda Bimestral</div><div class="std-sub">Julho / Agosto 2026</div></div>
+    <span style="font-size:24px">📅</span></div>
+  <div class="agv-scroll creme" id="templo-body"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-top">
+      <span class="modal-titulo" id="modal-label">Novo Item</span>
+      <button class="modal-x" onclick="fecharModal()">×</button>
+    </div>
+    <div class="field"><label>Título</label><input id="f-titulo" placeholder="Nome do item"></div>
+    <div class="field"><label>Subtítulo / Referência</label><input id="f-sub" placeholder="Ex: Capítulo 3, Atos 2.1..."></div>
+    <div class="field"><label>Data</label><input type="date" id="f-data"></div>
+    <div class="field"><label>Link / Arquivo</label><input id="f-link" placeholder="URL ou caminho"></div>
+    <div class="field"><label>Observações</label><textarea id="f-obs" placeholder="Anotações..."></textarea></div>
+    <button class="btn-salvar" onclick="salvarItem()">SALVAR</button>
+  </div>
+</div>
+
+<!-- BH LANDING -->
+<div class="tela" id="tela-bh-landing">
+  <div class="std-header">
+    <button class="std-back" onclick="voltarHome()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">Bíblia e Harpa Cristã</div>
+      <div class="std-sub">Leitor + CRM isolados</div>
+    </div>
+    <button onclick="event.stopPropagation();compartilharApp('Bíblia e Harpa Cristã')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <span style="font-size:22px;margin-left:8px">📖</span>
+  </div>
+  <div class="bh-scroll">
+
+    <div class="bh-hero">
+      <div class="h1">📖 A Palavra &amp; o Louvor 🎵</div>
+      <div class="h2">Leia a Bíblia e cante os hinos da Harpa Cristã — tudo num lugar só.</div>
+    </div>
+
+    <div class="bh-secao">Bíblia</div>
+    <div class="bh-tiles">
+      <div class="bh-tile" style="--tc:#C9A14A" onclick="abrirBiblia()">
+        <div class="bh-tile-icon">📖</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">BÍBLIA</div>
+          <div class="bh-tile-desc">Almeida Atualizada — 66 livros</div>
+        </div>
+        <span class="bh-tile-arr">›</span>
+      </div>
+    </div>
+
+    <div class="bh-secao">Harpa Cristã</div>
+    <div class="bh-tiles">
+      <div class="bh-tile" style="--tc:#F0B060" onclick="abrirHarpa()">
+        <div class="bh-tile-icon">🎵</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">HARPA CRISTÃ</div>
+          <div class="bh-tile-desc">640 hinos — estrofe e coro coloridos</div>
+        </div>
+        <span class="bh-tile-arr">›</span>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<!-- BÍBLIA -->
+<div class="tela" id="tela-biblia">
+  <div class="std-header">
+    <button class="std-back" id="bib-back-btn" onclick="bibVoltar()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="bib-titulo">Bíblia — Almeida Atualizada</div>
+      <div class="std-sub" id="bib-bread"></div>
+    </div>
+    <button class="std-back" onclick="abrirCRM('crm_biblia','Anotações da Bíblia','📋','biblia')" style="font-size:17px">📋</button>
+  </div>
+  <div class="bib-pos-bar" id="bib-pos-bar" style="display:none">
+    <span class="bib-pos-txt" id="bib-pos-txt"></span>
+    <div class="bib-pos-nav">
+      <button class="bib-nav-btn" onclick="bibCapAnterior()">‹ Cap</button>
+      <button class="bib-nav-btn" onclick="bibCapProximo()">Cap ›</button>
+    </div>
+  </div>
+  <div class="bib-search-wrap" id="bib-search-wrap">
+    <input class="bib-search" id="bib-search" placeholder="Buscar palavra ou referência (ex: Jo 3.16)..." oninput="bibBuscar()">
+  </div>
+  <div class="bib-body" id="bib-body">
+    <div class="bib-loading"><div class="bib-spinner"></div><span>Carregando Bíblia...</span></div>
+  </div>
+</div>
+
+<!-- HARPA LISTA -->
+<div class="tela" id="tela-harpa-lista">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharHarpaLista()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">Harpa Cristã</div>
+      <div class="std-sub" id="harpa-lista-sub">640 hinos</div>
+    </div>
+    <button class="std-back" onclick="abrirCRM('crm_harpa','Favoritos da Harpa','⭐','harpa-lista')" style="font-size:17px">⭐</button>
+  </div>
+  <div class="harpa-search-wrap">
+    <input class="harpa-search" id="harpa-search" placeholder="Número ou nome do hino..." oninput="filtrarHarpa()">
+  </div>
+  <div class="harpa-lista" id="harpa-lista"></div>
+</div>
+
+<!-- HARPA HINO -->
+<div class="tela" id="tela-harpa-hino">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharHarpaHino()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="harpa-hino-header-titulo">Hino</div>
+      <div class="std-sub" id="harpa-hino-header-sub">Harpa Cristã</div>
+    </div>
+  </div>
+  <div class="harpa-nav-bar">
+    <span class="harpa-nav-txt" id="harpa-nav-txt"></span>
+    <div class="harpa-nav-bts">
+      <button class="harpa-nav-bt" onclick="hinoAnterior()">‹ Hino</button>
+      <button class="harpa-nav-bt" onclick="hinoProximo()">Hino ›</button>
+    </div>
+  </div>
+  <div class="harpa-hino-scroll" id="harpa-hino-scroll">
+    <div class="harpa-hino-body" id="harpa-hino-body"></div>
+  </div>
+</div>
+
+<!-- EBD LANDING -->
+<div class="tela" id="tela-ebd">
+  <div class="std-header">
+    <button class="std-back" onclick="irHome()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">EBD</div>
+      <div class="std-sub">Escola Bíblica Dominical</div>
+    </div>
+    <button class="ebd-share-btn" onclick="compartilharEbd()" title="Compartilhar EBD">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+    </button>
+  </div>
+  <div class="bh-scroll">
+    <div class="bh-secao">Selecione a turma</div>
+    <div class="bh-tiles">
+      <div class="bh-tile" style="--tc:#34c77b" onclick="abrirEbdTurma('adulto')">
+        <div class="bh-tile-icon">👨</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">LIÇÃO ADULTO</div>
+          <div class="bh-tile-desc">13 lições — Atos dos Apóstolos</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(52,199,123,.12);color:#34c77b">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile" style="--tc:#f5a623" onclick="abrirEbdTurma('jovem')">
+        <div class="bh-tile-icon">🧑</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">LIÇÃO JOVEM</div>
+          <div class="bh-tile-desc">13 lições — Livro de Juízes</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(245,166,35,.12);color:#f5a623">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile" style="--tc:#3f8ce0" onclick="abrirEbdTurma('juvenis')">
+        <div class="bh-tile-icon">🧒</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">LIÇÃO JUVENIS</div>
+          <div class="bh-tile-desc">13 lições — Fundamentos da Fé nas Epístolas Gerais</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(63,140,224,.12);color:#3f8ce0">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile" style="--tc:#e0699a" onclick="abrirEbdTurma('adolescentes')">
+        <div class="bh-tile-icon">🧑‍🎓</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">LIÇÃO ADOLESCENTES</div>
+          <div class="bh-tile-desc">13 lições — Apóstolo Paulo, o Grande Missionário</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(224,105,154,.12);color:#e0699a">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile" style="--tc:#2bb673" onclick="abrirEbdTurma('juniores')">
+        <div class="bh-tile-icon">🧒</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">LIÇÃO JUNIORES</div>
+          <div class="bh-tile-desc">13 lições — O Tempo dos Juízes</div>
+        </div>
+        <span class="bh-tile-count" style="background:rgba(43,182,115,.12);color:#2bb673">13</span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+    </div>
+    <div class="bh-secao" style="margin-top:14px">🔜 Próximo trimestre</div>
+    <div onclick="abrirEbdTurma('adulto4')" style="background:linear-gradient(160deg,#0a2a3a,#123a52);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3);margin-bottom:10px">
+      <div style="display:flex;gap:12px;padding:12px;align-items:center">
+        <img src="/ebd/adulto4/img/licao-01.jpg" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'" loading="lazy" decoding="async">
+        <div style="min-width:0">
+          <div style="display:inline-block;background:rgba(0,0,0,.5);color:#f0d488;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:999px;margin-bottom:6px">🔒 EM BREVE · OUT 2026</div>
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;line-height:1.15">O Deus da Aliança</div>
+          <div style="font-size:12px;color:#cfe0ea;margin-top:2px">Adultos · 4º Tri 2026 · Deuteronômio</div>
+          <div style="font-size:11.5px;color:#f0d488;margin-top:6px;font-weight:700">Ver as 13 lições ›</div>
+        </div>
+      </div>
+    </div>
+    <div onclick="abrirEbdTurma('jovem4')" style="background:linear-gradient(160deg,#08272a,#0f4038);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
+      <div style="display:flex;gap:12px;padding:12px;align-items:center">
+        <img src="/ebd/jovem4/img/licao-01.jpg" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'" loading="lazy" decoding="async">
+        <div style="min-width:0">
+          <div style="display:inline-block;background:rgba(0,0,0,.5);color:#f0d488;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:999px;margin-bottom:6px">🔒 EM BREVE · OUT 2026</div>
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;line-height:1.15">Alegria em Cristo — Filipenses</div>
+          <div style="font-size:12px;color:#cfe0ea;margin-top:2px">Jovens · 4º Tri 2026 · Filipenses</div>
+          <div style="font-size:11.5px;color:#f0d488;margin-top:6px;font-weight:700">Ver as 13 lições ›</div>
+        </div>
+      </div>
+    </div>
+    <div class="bh-secao" style="margin-top:14px">Administração</div>
+    <div class="bh-tiles">
+      <div class="bh-tile" style="--tc:#2563eb" onclick="abrirEbdCrm()">
+        <div class="bh-tile-icon">👥</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">ALUNOS</div>
+          <div class="bh-tile-desc">CRM — cadastro da turma</div>
+        </div>
+        <span class="bh-tile-count" id="cnt-ebd-alunos" style="background:rgba(37,99,235,.12);color:#2563eb"></span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+      <div class="bh-tile" style="--tc:var(--gold)" onclick="abrirEventos('ebd')">
+        <div class="bh-tile-icon">📅</div>
+        <div class="bh-tile-info">
+          <div class="bh-tile-nome">EVENTOS</div>
+          <div class="bh-tile-desc">Agenda e lembretes da EBD</div>
+        </div>
+        <span class="bh-tile-count" id="cnt-ev-ebd" style="background:rgba(201,161,74,.12);color:var(--gold)"></span>
+        <span class="bh-tile-arr">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EVENTOS -->
+<div class="tela" id="tela-eventos">
+  <div class="std-header">
+    <button class="std-back" id="ev-back-btn" onclick="fecharEventos()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="ev-titulo">Eventos</div>
+      <div class="std-sub" id="ev-sub">0 eventos</div>
+    </div>
+    <div class="ebd-crm-filters" id="ev-filters" style="gap:6px;overflow-x:auto;max-width:160px">
+      <button class="ebd-crm-chip" data-mod="ebd" onclick="filtroEventos(this,'ebd')" style="display:none" id="ev-chip-ebd">EBD</button>
+      <button class="ebd-crm-chip" data-mod="biblia" onclick="filtroEventos(this,'biblia')" style="display:none" id="ev-chip-biblia">📖</button>
+      <button class="ebd-crm-chip" data-mod="harpa" onclick="filtroEventos(this,'harpa')" style="display:none" id="ev-chip-harpa">🎵</button>
+    </div>
+  </div>
+  <div class="ev-lista" id="ev-lista"></div>
+  <button class="ev-fab" onclick="abrirModalEvento(null)">+</button>
+</div>
+
+<!-- EBD CRM — alunos -->
+<div class="tela" id="tela-ebd-crm">
+  <div class="std-header">
+    <button class="std-back" onclick="ocultarTodas();document.getElementById('tela-ebd').classList.add('ativa')">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">Alunos EBD</div>
+      <div class="std-sub" id="ebd-crm-sub">0 alunos</div>
+    </div>
+  </div>
+  <div class="ebd-crm-toolbar">
+    <input class="mod-search" id="ebd-crm-busca" placeholder="Buscar aluno..." oninput="renderEbdCrm()">
+    <div class="ebd-crm-filters">
+      <button class="ebd-crm-chip ativa" data-turma="" onclick="filtroEbdCrm(this,'')">Todos</button>
+      <button class="ebd-crm-chip" data-turma="adulto" onclick="filtroEbdCrm(this,'adulto')">👨 Adulto</button>
+      <button class="ebd-crm-chip" data-turma="jovem" onclick="filtroEbdCrm(this,'jovem')">🧑 Jovem</button>
+      <button class="ebd-crm-chip" data-turma="crianca" onclick="filtroEbdCrm(this,'crianca')">👶 Criança</button>
+    </div>
+  </div>
+  <div class="ebd-crm-lista" id="ebd-crm-lista"></div>
+  <button class="ebd-crm-fab" onclick="abrirModalAluno(null)">+</button>
+</div>
+
+<!-- EBD TURMA — lista de lições -->
+<div class="tela" id="tela-ebd-turma">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharEbdTurma()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="ebd-turma-titulo">LIÇÃO ADULTO</div>
+      <div class="std-sub" id="ebd-turma-sub">13 lições</div>
+    </div>
+    <span id="ebd-turma-icon" style="font-size:22px">👨</span>
+  </div>
+  <div class="ebd-lista-scroll" id="ebd-turma-body"></div>
+</div>
+
+<!-- EBD DETALHE — materiais de uma lição -->
+<div class="tela" id="tela-ebd-detalhe">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharLicaoDetalhe()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="ebd-det-titulo">LIÇÃO 01</div>
+      <div class="std-sub" id="ebd-det-sub"></div>
+    </div>
+  </div>
+  <div class="ebd-lista-scroll" id="ebd-det-body"></div>
+</div>
+
+<!-- EBD READER — lição ou apoio inline -->
+<div class="tela" id="tela-ebd-reader">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharReader()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="reader-titulo">LIÇÃO</div>
+      <div class="std-sub" id="reader-sub"></div>
+    </div>
+  </div>
+  <iframe class="reader-frame" id="reader-frame" src="" allowfullscreen></iframe>
+</div>
+
+<!-- EBD PPT VIEWER -->
+<div class="tela" id="tela-ebd-ppt">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharPptViewer()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="ppt-titulo">PPT</div>
+      <div class="std-sub" id="ppt-sub">Lição Adulto</div>
+    </div>
+    <a class="std-back" id="ppt-dl-btn" href="" target="_blank" style="font-size:17px;text-decoration:none;opacity:.5" title="Em breve">↓</a>
+  </div>
+  <div class="ppt-viewer" id="ppt-viewer">
+    <img class="ppt-slide" id="ppt-slide-img" alt="slide" loading="lazy" decoding="async">
+    <div class="ppt-nav ppt-nav-prev" onclick="pptSlide(-1)">‹</div>
+    <div class="ppt-nav ppt-nav-next" onclick="pptSlide(1)">›</div>
+    <div class="ppt-counter-bar" id="ppt-counter">1 / 1</div>
+  </div>
+</div>
+
+<!-- VIDEO -->
+<div class="tela" id="tela-ebd-video">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharVideo()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="video-titulo">RESUMO EM VÍDEO</div>
+      <div class="std-sub" id="video-sub"></div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden">
+    <video id="ebd-video" controls playsinline style="width:100%;max-height:100%;outline:none"></video>
+  </div>
+</div>
+
+<!-- NOTÍCIAS DE ISRAEL -->
+<div class="tela" id="tela-noticias">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharNoticias()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo">📰 Notícias de Israel</div>
+      <div class="std-sub" id="not-sub">Mundo Bíblico em tempo real</div>
+    </div>
+    <button onclick="carregarNoticias(true)" style="background:rgba(255,255,255,.07);border:none;color:var(--sub);width:34px;height:34px;border-radius:10px;font-size:17px;display:grid;place-items:center;cursor:pointer">↺</button>
+  </div>
+  <div class="not-tabs">
+    <button class="not-tab on" id="not-tab-news" onclick="mudarAba('news')">📰 Notícias</button>
+    <button class="not-tab" id="not-tab-videos" onclick="mudarAba('videos')">▶️ Vídeos</button>
+  </div>
+  <div class="not-list" id="not-list"></div>
+</div>
+
+<!-- LEITOR DE NOTÍCIA -->
+<div class="tela" id="tela-noticia-leitor">
+  <div class="std-header">
+    <button class="std-back" onclick="fecharLeitor()">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="leitor-titulo-h">Notícia</div>
+      <div class="std-sub" id="leitor-fonte-h"></div>
+    </div>
+  </div>
+  <img class="not-leitor-img" id="leitor-img" alt="" style="display:none" loading="lazy" decoding="async">
+  <div class="not-leitor-body">
+    <span class="not-badge" id="leitor-badge" style="display:none;margin-bottom:10px"></span>
+    <div style="font-size:18px;font-weight:900;line-height:1.35;margin-bottom:8px" id="leitor-titulo"></div>
+    <div style="font-size:11px;color:var(--sub);margin-bottom:14px" id="leitor-meta"></div>
+    <div class="not-ancora-block" id="leitor-ancora-block" style="display:none">
+      <span class="not-ancora-label">📖 Âncora Bíblica</span>
+      <div class="not-ancora-val" id="leitor-ancora"></div>
+    </div>
+    <div class="not-resumo" id="leitor-resumo"></div>
+    <a class="not-btn-link" id="leitor-link" href="#" target="_blank">
+      <span>🔗</span><span>Ver notícia original</span>
+    </a>
+    <button class="not-btn-link" id="leitor-yt-btn" style="display:none;background:rgba(247,95,95,.1);border-color:rgba(247,95,95,.3);border:1px solid rgba(247,95,95,.3)">
+      <span>▶️</span><span style="color:#f75f5f">Ver vídeo relacionado</span>
+    </button>
+  </div>
+</div>
+
+<!-- PLAYER YOUTUBE IN-APP -->
+<div class="tela" id="tela-yt-player">
+  <div class="std-header" style="background:#111;border-color:#222">
+    <button class="std-back" onclick="fecharYT()" style="background:rgba(255,255,255,.1)">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" id="yt-titulo-h">Vídeo</div>
+      <div class="std-sub" id="yt-canal-h"></div>
+    </div>
+  </div>
+  <div class="yt-frame-wrap">
+    <iframe class="yt-frame" id="yt-iframe" src=""
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen></iframe>
+  </div>
+</div>
+
+<!-- ESTUDO: TETELESTAI -->
+<div class="tela" id="tela-tetelestai">
+  <div class="std-header" style="background:#fff;border-bottom:1px solid #eee">
+    <button class="std-back" onclick="voltarHome()" style="color:#9E2233;background:#faf3f4">‹</button>
+    <div class="std-hinfo">
+      <div class="std-titulo" style="color:#9E2233">Tetelestai</div>
+      <div class="std-sub" style="color:#8a6a2f">Estudo · João 19:30</div>
+    </div>
+  </div>
+  <div class="tt-scroll">
+    <div class="tt-cruz"></div>
+    <div class="tt-titulo">TETELESTAI</div>
+    <div class="tt-grego">τετέλεσται — “Está Consumado”</div>
+    <div class="tt-ref">JOÃO 19:30</div>
+    <p class="tt-intro">O caminho da dor até a vitória — do jardim à cruz, cada passo, um preço sendo pago por você.</p>
+    <div class="tt-sep"></div>
+
+    <div class="tt-item"><div class="tt-num">1</div><div class="tt-h">O Getsêmani — a batalha antes da batalha</div><p class="tt-p">Antes de qualquer soldado tocar nEle, Jesus já sangrava no jardim — o suor virou gotas de sangue <b>(Lc 22:44)</b>. A luta começou no “sim” ao Pai…</p></div>
+    <div class="tt-item"><div class="tt-num">2</div><div class="tt-h">A traição e a prisão</div><p class="tt-p">Um beijo de amigo O entregou <b>(Lc 22:48)</b>. Os que Ele curou fugiram, Pedro negou — o Filho de Deus ficou sozinho…</p></div>
+    <div class="tt-item"><div class="tt-num">3</div><div class="tt-h">Os julgamentos e as zombarias</div><p class="tt-p">De Anás a Caifás, de Pilatos a Herodes. Testemunhas falsas, cuspiram no seu rosto e bateram <b>(Mc 14:65)</b>…</p></div>
+    <div class="tt-item"><div class="tt-num">4</div><div class="tt-h">A flagelação</div><p class="tt-p">Veio o açoite romano, que rasgava a carne. Foi ali que “pelas suas pisaduras fomos sarados” <b>(Is 53:5)</b> se cumpriu…</p></div>
+    <div class="tt-item"><div class="tt-num">5</div><div class="tt-h">A coroa de espinhos</div><p class="tt-p">Puseram um manto de púrpura e cravaram espinhos na sua cabeça <b>(Jo 19:2)</b>, zombando: “Salve, Rei dos Judeus!” — sem saber que Ele era o Rei…</p></div>
+    <div class="tt-item"><div class="tt-num">6</div><div class="tt-h">A Via Dolorosa</div><p class="tt-p">Exausto e sangrando, Ele carregou a própria cruz pelas ruas, até as forças faltarem e Simão de Cirene ajudar <b>(Mc 15:21)</b>…</p></div>
+    <div class="tt-item"><div class="tt-num">7</div><div class="tt-h">O Gólgota — os pregos</div><p class="tt-p">No “Lugar da Caveira”, cravaram-lhe mãos e pés. E o primeiro som não foi vingança, foi graça: “Pai, perdoa-lhes” <b>(Lc 23:34)</b>…</p></div>
+    <div class="tt-item"><div class="tt-num">8</div><div class="tt-h">As últimas palavras — a caminho do brado final</div><p class="tt-p">Da cruz, sete vezes Ele falou. Cada frase, um passo rumo ao Tetelestai — inclusive o “Deus meu, por que me desamparaste?” <b>(Mt 27:46)</b>…</p></div>
+    <div class="tt-item"><div class="tt-num">9</div><div class="tt-h">O brado: <em>Tetelestai</em></div><p class="tt-p">Então, com o último fôlego, Ele não sussurrou — bradou: “ESTÁ CONSUMADO” <b>(Jo 19:30)</b>. Não “estou acabado”, mas “a obra está COMPLETA”…</p></div>
+    <div class="tt-item"><div class="tt-num">10</div><div class="tt-h">A entrega</div><p class="tt-p">E só então, por vontade própria, “inclinando a cabeça, entregou o espírito” <b>(Jo 19:30)</b>. Ninguém tirou a vida dEle — Ele a deu <b>(Jo 10:18)</b>…</p></div>
+
+    <div class="tt-fim"><div class="tt-frase">“Está consumado.”</div><div class="tt-sub">Do jardim à glória — não faltou mais nada a pagar por você. 🕊️</div></div>
+  </div>
+</div>
+<!-- CADASTRO -->
+<div class="tela" id="tela-cadastro">
+  <div class="cad-wrap">
+    <div class="cad-logo">
+      <svg width="60" height="60" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="18" stroke="#C9A14A" stroke-width="1.5" opacity=".4"/>
+        <circle cx="20" cy="20" r="12" stroke="#C9A14A" stroke-width="1.5" opacity=".6"/>
+        <circle cx="20" cy="20" r="6" stroke="#C9A14A" stroke-width="1.5"/>
+        <circle cx="20" cy="20" r="2" fill="#C9A14A"/>
+        <line x1="20" y1="20" x2="32" y2="8" stroke="#F5C842" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div style="font-size:19px;font-weight:900;color:var(--txt);margin-top:10px;letter-spacing:1px">RADAR ATUAL</div>
+      <div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:3px">EBD · ESCOLA BÍBLICA</div>
+    </div>
+    <div class="cad-titulo">Criar conta</div>
+    <div class="cad-sub">Preencha seus dados para acessar<br>as lições da Escola Bíblica Dominical.<br>Acesso imediato após o cadastro.</div>
+    <div class="cad-field">
+      <label>Seu nome completo</label>
+      <input id="cad-nome" type="text" placeholder="Ex: João da Silva" autocomplete="name">
+    </div>
+    <div class="cad-field">
+      <label>Cargo na Igreja</label>
+      <select id="cad-cargo">
+        <option value="">Selecione...</option>
+        <option>Pastor</option>
+        <option>Diácono / Diaconisa</option>
+        <option>Obreiro / Obreira</option>
+        <option>Presbítero / Presbitera</option>
+        <option>Professor(a) de EBD</option>
+        <option>Líder de Jovens</option>
+        <option>Evangelista</option>
+        <option>Membro</option>
+        <option>Visitante</option>
+      </select>
+    </div>
+    <div class="cad-field">
+      <label>WhatsApp (com DDD)</label>
+      <input id="cad-fone" type="tel" placeholder="(99) 99999-9999" autocomplete="tel" oninput="mascaraFone(this)" inputmode="tel"><div style="font-size:.78rem;color:#6b7a89;margin-top:3px;line-height:1.35">Fora do Brasil? Comece com <b>+</b> e o código do país — ex.: <b>+244</b> (Angola), <b>+1</b> (EUA), <b>+351</b> (Portugal).</div>
+    </div>
+    <button class="btn-cad" id="btn-cad-enviar" onclick="submitCadastro()">ACESSAR O APP</button>
+    <div id="cad-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
+    <div style="text-align:center;margin-top:18px;font-size:14px;color:var(--sub)">Já cadastrado? <a onclick="jaCadastrado()" style="color:var(--gold);font-weight:700;cursor:pointer;text-decoration:underline">Clique aqui</a></div>
+  </div>
+</div>
+
+<!-- OTP -->
+<div class="tela" id="tela-otp">
+  <div class="cad-wrap">
+    <div class="cad-logo">
+      <div style="font-size:52px">💬</div>
+      <div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:3px;margin-top:8px">VERIFICAÇÃO</div>
+    </div>
+    <div class="cad-titulo">Confirmar WhatsApp</div>
+    <div class="otp-phone-display">Código enviado para <b id="otp-fone-display">—</b></div>
+    <div class="cad-sub" style="margin-top:4px">Digite o código de 6 dígitos<br>que chegou no seu WhatsApp.</div>
+    <div class="otp-digits" id="otp-digits">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,0)" onkeydown="otpKey(event,0)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,1)" onkeydown="otpKey(event,1)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,2)" onkeydown="otpKey(event,2)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,3)" onkeydown="otpKey(event,3)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,4)" onkeydown="otpKey(event,4)">
+      <input class="otp-digit" maxlength="1" inputmode="numeric" oninput="otpInput(this,5)" onkeydown="otpKey(event,5)">
+    </div>
+    <button class="btn-cad" id="btn-otp-verificar" onclick="submitOtp()">VERIFICAR</button>
+    <div style="text-align:center;margin-top:14px">
+      <button class="btn-reenviar" onclick="reenviarOtp()">Reenviar código</button>
+      &nbsp;·&nbsp;
+      <button class="btn-reenviar" onclick="voltarCadastro()" style="color:var(--sub)">Corrigir número</button>
+    </div>
+    <div id="otp-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
+  </div>
+</div>
+
+<script src="/assets/app.js?v=145"></script>
+
+<!-- REF SHEET -->
+<div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>
+<div id="ref-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:901;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -4px 32px rgba(0,0,0,.2);max-height:65vh;overflow-y:auto">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 18px 8px;border-bottom:1px solid #eee">
+    <span id="ref-sheet-titulo" style="font-weight:900;color:#1d3a8a;font-size:13px;letter-spacing:1.5px;text-transform:uppercase"></span>
+    <button onclick="fecharRefSheet()" style="background:none;border:none;font-size:22px;color:#888;padding:0;line-height:1;cursor:pointer">✕</button>
+  </div>
+  <div id="ref-sheet-body" style="padding:16px 18px 36px"></div>
+</div>
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAINEL ADMINISTRATIVO — MENU PRINCIPAL       -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="tela" id="tela-painel-adm">
+  <div class="std-header">
+    <button class="std-back" onclick="irHome()">←</button>
+    <div class="std-hinfo"><div class="std-titulo">⚙️ Painel Adm.</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="adm-scroll">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800" id="adm-user-nome">—</div>
+        <div class="adm-nivel-badge" id="adm-nivel-badge">⚙️ ADMIN</div>
+      </div>
+      <div style="font-size:24px">⚙️</div>
+    </div>
+
+    <div class="adm-section-label">Pessoas</div>
+    <div class="adm-grid">
+      <div class="adm-tile" style="--tc:#25D366" onclick="abrirAdm('cadastros')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">📇</div>
+        <div class="adm-tile-nome">Cadastros</div>
+        <div class="adm-tile-cnt">Todos + WhatsApp</div>
+      </div>
+      <div class="adm-tile" style="--tc:#2563eb" onclick="abrirAdm('igrejas')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">⛪</div>
+        <div class="adm-tile-nome">Igrejas (CRM)</div>
+        <div class="adm-tile-cnt" id="adm-cnt-igrejas">Divulgação</div>
+      </div>
+      <div class="adm-tile" style="--tc:#4f8ef7" onclick="abrirAdm('visitantes')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">👤</div>
+        <div class="adm-tile-nome">Visitantes</div>
+        <div class="adm-tile-cnt" id="adm-cnt-visitantes">0 cadastrados</div>
+      </div>
+      <div class="adm-tile" style="--tc:#34c77b" onclick="abrirAdm('alunos')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">👥</div>
+        <div class="adm-tile-nome">Alunos EBD</div>
+        <div class="adm-tile-cnt" id="adm-cnt-alunos">0 cadastrados</div>
+      </div>
+      <div class="adm-tile" style="--tc:#0ea5e9" onclick="abrirAdm('turmas')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">🏫</div>
+        <div class="adm-tile-nome">Turmas</div>
+        <div class="adm-tile-cnt" id="adm-cnt-turmas">0 turmas</div>
+      </div>
+      <div class="adm-tile" style="--tc:#f59e0b" onclick="abrirAdm('presenca')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">✅</div>
+        <div class="adm-tile-nome">Presença</div>
+        <div class="adm-tile-cnt">Chamada EBD</div>
+      </div>
+    </div>
+
+    <div class="adm-section-label">Conteúdo</div>
+    <div class="adm-grid">
+      <div class="adm-tile" style="--tc:#f97316" onclick="abrirAdm('licoes')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">📝</div>
+        <div class="adm-tile-nome">Lições</div>
+        <div class="adm-tile-cnt">Gestão de lições</div>
+      </div>
+      <div class="adm-tile" style="--tc:#06b6d4" onclick="abrirAdm('eventos-adm')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">📅</div>
+        <div class="adm-tile-nome">Eventos</div>
+        <div class="adm-tile-cnt" id="adm-cnt-eventos">0 programados</div>
+      </div>
+      <div class="adm-tile" style="--tc:#eab308" onclick="abrirAdm('conteudos')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">🗂️</div>
+        <div class="adm-tile-nome">Conteúdos</div>
+        <div class="adm-tile-cnt">Avisos · Banners</div>
+      </div>
+      <div class="adm-tile" style="--tc:#e50914" onclick="abrirAdm('videos')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">🎬</div>
+        <div class="adm-tile-nome">Vídeos</div>
+        <div class="adm-tile-cnt" id="adm-cnt-videos">YouTube · Facebook</div>
+      </div>
+      <div class="adm-tile" style="--tc:#10b981" onclick="abrirAdm('comunicacao')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">💬</div>
+        <div class="adm-tile-nome">Comunicação</div>
+        <div class="adm-tile-cnt">Avisos · Notif.</div>
+      </div>
+    </div>
+
+    <div class="adm-section-label">Gestão</div>
+    <div class="adm-grid">
+      <div class="adm-tile" style="--tc:var(--gold);grid-column:1/-1" onclick="abrirAdm('dashboard')">
+        <div class="adm-tile-bar"></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="adm-tile-icon">📊</div>
+          <div>
+            <div class="adm-tile-nome">Dashboard</div>
+            <div class="adm-tile-cnt">Visão geral da igreja</div>
+          </div>
+        </div>
+      </div>
+      <div class="adm-tile" style="--tc:#0891b2" onclick="abrirAdm('relatorios')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">📈</div>
+        <div class="adm-tile-nome">Relatórios</div>
+        <div class="adm-tile-cnt">Exportar dados</div>
+      </div>
+      <div class="adm-tile" style="--tc:#f43f5e" onclick="abrirAdm('usuarios')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">👑</div>
+        <div class="adm-tile-nome">Usuários</div>
+        <div class="adm-tile-cnt">Níveis de acesso</div>
+      </div>
+      <div class="adm-tile" style="--tc:var(--sub)" onclick="abrirAdm('config')">
+        <div class="adm-tile-bar"></div>
+        <div class="adm-tile-icon">⚙️</div>
+        <div class="adm-tile-nome">Configurações</div>
+        <div class="adm-tile-cnt">App · Igreja</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADM: DASHBOARD ══ -->
+<div class="tela" id="tela-adm-cadastros">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📇 Cadastros</div><div class="std-sub" id="cad-adm-sub">carregando…</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:20px;padding:0;cursor:pointer;font-family:inherit;line-height:1" onclick="renderCadastros()">↻</button>
+  </div>
+  <div class="dash-scroll" style="padding:14px" id="cad-adm-lista"></div>
+</div>
+
+<!-- ══ IGREJAS PARCEIRAS (público) ══ -->
+<div class="tela" id="tela-igrejas">
+  <div class="std-header">
+    <button class="std-back" onclick="irHome()">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📣 Igrejas Parceiras</div><div class="std-sub">Conheça e divulgue</div></div>
+    <button onclick="event.stopPropagation();compartilharApp('Igrejas Parceiras')" style="margin-left:auto;background:#25D366;color:#fff;border:none;border-radius:10px;padding:8px 11px;font-weight:800;font-size:12.5px;font-family:inherit;cursor:pointer;flex-shrink:0">📤 Enviar</button>
+    <div style="width:36px"></div>
+  </div>
+  <div class="dash-scroll" style="padding:14px">
+    <button onclick="abrirCadastroIgreja()" style="width:100%;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:16px;box-shadow:0 6px 18px rgba(37,99,235,.35);display:flex;align-items:center;justify-content:center;gap:8px">📣 Divulgar minha igreja</button>
+    <div id="igrejas-lista"></div>
+  </div>
+</div>
+
+<!-- ══ IGREJA — DETALHE (público) ══ -->
+<div class="tela" id="tela-igreja-detalhe">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirIgrejas()">←</button>
+    <div class="std-hinfo"><div class="std-titulo" id="igr-det-titulo">Igreja</div><div class="std-sub" id="igr-det-cidade"></div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="dash-scroll" style="padding:0" id="igreja-detalhe"></div>
+</div>
+
+<!-- ══ CADASTRO / EDIÇÃO DE IGREJA ══ -->
+<div class="tela" id="tela-cadastro-igreja">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirIgrejas()">←</button>
+    <div class="std-hinfo"><div class="std-titulo" id="igr-form-titulo">Divulgar igreja</div><div class="std-sub">Preencha os dados da igreja</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="dash-scroll" style="padding:16px">
+    <input type="hidden" id="igr-id">
+    <div class="cad-field"><label>Nome da igreja *</label><input id="igr-nome" type="text" placeholder="Ex: Assembleia de Deus Central"></div>
+    <div class="cad-field"><label>Cidade / Estado</label><input id="igr-cidade" type="text" placeholder="Ex: Tuntum-MA"></div>
+    <div class="cad-field"><label>Endereço</label><input id="igr-endereco" type="text" placeholder="Rua, número, bairro"></div>
+    <div class="cad-field"><label>Responsável (quem divulga)</label><input id="igr-responsavel" type="text" placeholder="Ex: Pr. João da Silva"></div>
+    <div class="cad-field"><label>WhatsApp (com DDD)</label><input id="igr-whatsapp" type="tel" placeholder="(99) 99999-9999" oninput="mascaraFone(this)" inputmode="numeric"></div>
+
+    <div class="cad-field">
+      <label>Foto de capa</label>
+      <div id="igr-capa-prev" style="margin-bottom:8px"></div>
+      <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card2);border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--gold);font-weight:700;cursor:pointer;font-size:14px">📷 Escolher capa<input type="file" accept="image/*" style="display:none" onchange="igrejaSetCapa(this)"></label>
+    </div>
+
+    <div class="cad-field">
+      <label>Fotos / cards (até 8)</label>
+      <div id="igr-fotos-prev" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+      <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card2);border:1px dashed var(--line);border-radius:14px;padding:14px;color:var(--gold);font-weight:700;cursor:pointer;font-size:14px">🖼️ Adicionar foto<input type="file" accept="image/*" style="display:none" onchange="igrejaAddFoto(this)"></label>
+    </div>
+
+    <div class="cad-field">
+      <label>Vídeos (links do YouTube)</label>
+      <div id="igr-videos-lista" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="igr-video-in" type="text" placeholder="Cole o link do YouTube" style="flex:1">
+        <button onclick="igrejaAddVideo()" style="background:var(--gold);color:#000;border:none;border-radius:12px;padding:0 16px;font-weight:800;font-family:inherit;cursor:pointer">+</button>
+      </div>
+    </div>
+
+    <div class="cad-field">
+      <label>Avisos da igreja</label>
+      <div id="igr-avisos-lista" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="igr-aviso-in" type="text" placeholder="Ex: Culto de jovens sábado 19h" style="flex:1">
+        <button onclick="igrejaAddAviso()" style="background:var(--gold);color:#000;border:none;border-radius:12px;padding:0 16px;font-weight:800;font-family:inherit;cursor:pointer">+</button>
+      </div>
+    </div>
+
+    <button id="igr-btn-salvar" onclick="submitIgreja()" style="width:100%;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:8px">Publicar igreja</button>
+    <div id="igr-form-msg" style="text-align:center;font-size:13px;margin-top:12px;color:var(--sub)"></div>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<!-- ══ MANUAIS E AFINS (estante) ══ -->
+<div class="tela" id="tela-manuais">
+  <div class="std-header">
+    <button class="std-back" onclick="irHome()">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📚 Biblioteca</div><div class="std-sub">Livros e manuais do obreiro</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="dash-scroll" style="padding:14px" id="manuais-lista"></div>
+</div>
+
+<!-- ══ MANUAL — LEITOR ══ -->
+<div class="tela" id="tela-manual-leitor">
+  <div class="std-header">
+    <button class="std-back" onclick="voltarLeitor()">←</button>
+    <div class="std-hinfo"><div class="std-titulo" id="man-titulo">Manual</div><div class="std-sub" id="man-autor"></div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="dash-scroll" style="padding:0;background:#faf7f0">
+    <div id="manual-conteudo" lang="pt" oncontextmenu="return false" ondragstart="return false" oncopy="return false" style="background:#faf7f0;padding:24px 22px;font-family:'Lora',Georgia,serif;font-size:16.5px;line-height:1.85;color:#2b2620;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none"></div>
+    <div style="height:34px;background:#faf7f0"></div>
+  </div>
+  <button id="man-fab-top" onclick="manualTopo()" style="display:none;position:fixed;right:16px;bottom:22px;width:50px;height:50px;border-radius:50%;background:#6b4a1e;color:#fff;border:2px solid rgba(255,255,255,.35);font-size:22px;font-weight:800;cursor:pointer;z-index:60;box-shadow:0 6px 18px rgba(0,0,0,.4);line-height:1">↑</button>
+</div>
+
+<!-- ══ NOTA DE PESAR (CEADEMA) ══ -->
+<div class="tela" id="tela-nota-pesar">
+  <div class="std-header" style="background:#112155;border-bottom:1px solid rgba(255,255,255,.1)">
+    <button class="std-back" onclick="irHome()" style="color:#fff">←</button>
+    <div class="std-hinfo"><div class="std-titulo" style="color:#fff">Nota de Pesar</div><div class="std-sub" style="color:#bfe3f5">CEADEMA</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="np-scroll dash-scroll" style="padding:0;background:#fff">
+    <div style="background:linear-gradient(120deg,#112155,#3a78b5);padding:16px;display:flex;align-items:center;gap:12px">
+      <img src="img/ceadema.png" style="width:58px;height:58px;object-fit:contain;flex-shrink:0;background:#fff;border-radius:50%;padding:3px" loading="lazy" decoding="async">
+      <div style="color:#fff;min-width:0">
+        <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:21px;letter-spacing:2px">CEADEMA</div>
+        <div style="font-size:9.5px;font-weight:700;line-height:1.35;color:#dbe8fb">CONVENÇÃO ESTADUAL DAS IGREJAS EVANGÉLICAS ASSEMBLEIAS DE DEUS NO MARANHÃO</div>
+      </div>
+    </div>
+    <div style="height:4px;background:linear-gradient(90deg,#5dd8e3,#0857b3)"></div>
+    <div style="padding:22px 20px;border-left:5px solid #3a78b5;font-family:Georgia,'Lora',serif;color:#1a1a1a">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="font-size:24px">🕊️</div>
+        <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:#112155;letter-spacing:1px;margin-top:4px">NOTA DE PESAR</div>
+      </div>
+      <p style="text-align:justify;line-height:1.78;font-size:15.5px;margin:0 0 15px">A <b>Convenção Estadual das Igrejas Evangélicas Assembleias de Deus no Maranhão – CEADEMA</b>, na pessoa de seu presidente, pastor Francisco Soares Raposo Filho, juntamente com a Mesa Diretora e a União das Esposas de Obreiros – UNEOMAD na pessoa da missionária Albenisa Almeida Raposo, manifestam profundo sentimento pelo falecimento da mui digna missionária <b>MARIA ALVES DA SILVA</b>, viúva do saudoso pastor José Vieira da Silva.</p>
+      <p style="text-align:justify;line-height:1.78;font-size:15.5px;margin:0 0 15px">Rendemos a Deus toda honra e glória pela vida da serva do Senhor que aprouve a Ele chamá-la hoje ao descanso eterno. Que haja paz sobre sua memória e consolo divino à família enlutada.</p>
+      <div style="background:#eef5fb;border-left:4px solid #3a78b5;border-radius:8px;padding:14px 16px;margin:18px 0;font-style:italic;color:#243b66;line-height:1.7;font-size:15px">"Combati o bom combate, completei a carreira, guardei a fé. Desde agora, a coroa da justiça me está guardada, a qual o Senhor, justo Juiz, me dará naquele Dia; e não somente a mim, mas a todos os que amarem a sua vinda".<span style="display:block;text-align:right;font-style:normal;font-weight:700;color:#112155;margin-top:8px">2 Timóteo 4.7-8</span></div>
+      <p style="line-height:1.7;font-size:15.5px;margin:0 0 24px">No amor de Jesus Cristo, nossa viva esperança.</p>
+      <div style="text-align:right;font-size:14.5px;color:#333;margin-bottom:26px">São Luís – MA, 27 de julho de 2026.</div>
+      <div style="text-align:center">
+        <div style="width:190px;height:1px;background:#aaa;margin:0 auto 7px"></div>
+        <div style="font-weight:700;color:#112155;font-size:15px">Pr. Francisco Soares Raposo Filho</div>
+        <div style="font-size:13px;color:#555">Presidente da CEADEMA</div>
+      </div>
+    </div>
+    <div style="background:linear-gradient(120deg,#112155,#3a78b5);color:#dbe8fb;padding:16px 20px;font-size:11.5px;line-height:1.7">
+      <div>📍 Avenida Santos Dumont, 20-B, Anil, São Luís (MA) – CEP 65046-660</div>
+      <div>📞 (98) 3221-5954 &nbsp;·&nbsp; 🌐 www.ceadema.com</div>
+      <div>📷 @ceademaoficial &nbsp;·&nbsp; CNPJ: 07.510.878/0001-16</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADM: IGREJAS CRM ══ -->
+<div class="tela" id="tela-adm-igrejas">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">⛪ Igrejas (CRM)</div><div class="std-sub" id="igr-adm-sub">carregando…</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:20px;padding:0;cursor:pointer;font-family:inherit;line-height:1" onclick="renderIgrejasAdm()">↻</button>
+  </div>
+  <div class="dash-scroll" style="padding:14px" id="igr-adm-lista"></div>
+</div>
+
+<!-- ══ ADM: VÍDEOS (CRM) ══ -->
+<div class="tela" id="tela-adm-videos">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">🎬 Vídeos</div><div class="std-sub" id="vid-adm-sub">Aparecem no slide da home</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:20px;padding:0;cursor:pointer;font-family:inherit;line-height:1" onclick="renderVideosAdm()">↻</button>
+  </div>
+  <div class="dash-scroll" style="padding:14px">
+    <div style="background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-weight:800;color:var(--txt);font-size:15px;margin-bottom:4px">➕ Adicionar vídeo</div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:12px">Cole o link do <b>YouTube</b> ou <b>Facebook</b>. Ele aparece no slide da home pra todos.</div>
+      <input id="vid-url" type="text" placeholder="Cole o link aqui (YouTube ou Facebook)" style="width:100%;margin-bottom:9px">
+      <input id="vid-titulo" type="text" placeholder="Título (opcional)" style="width:100%;margin-bottom:12px">
+      <button onclick="addVideoAdm()" id="vid-btn-add" style="width:100%;background:#e50914;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer">➕ Adicionar ao slide</button>
+      <div id="vid-msg" style="text-align:center;font-size:12.5px;margin-top:10px;color:var(--sub)"></div>
+    </div>
+    <div style="font-weight:800;color:var(--txt);font-size:14px;margin:4px 2px 10px">Vídeos no slide</div>
+    <div id="vid-adm-lista"></div>
+  </div>
+</div>
+
+<div class="tela" id="tela-adm-dashboard">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📊 Dashboard</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:20px;padding:0;cursor:pointer;font-family:inherit;line-height:1" onclick="renderAdmDashboard()">↻</button>
+  </div>
+  <div class="dash-scroll" id="dash-scroll-content">
+    <!-- preenchido por renderAdmDashboard() -->
+  </div>
+</div>
+
+<!-- ══ ADM: VISITANTES CRM ══ -->
+<div class="tela" id="tela-adm-visitantes">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">👤 Visitantes</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="vis-toolbar">
+    <input type="search" id="vis-search" placeholder="🔍 Buscar visitante..." autocomplete="off"
+      style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--txt);font-size:14px;outline:none;font-family:inherit;width:100%"
+      oninput="renderVisitantes()">
+    <div class="vis-filters">
+      <button class="vis-chip ativa" data-status="todos" onclick="filtrarVisitantes(this)">Todos</button>
+      <button class="vis-chip" data-status="ativo" onclick="filtrarVisitantes(this)">Ativos</button>
+      <button class="vis-chip" data-status="retornou" onclick="filtrarVisitantes(this)">Retornaram</button>
+      <button class="vis-chip" data-status="sem_contato" onclick="filtrarVisitantes(this)">Sem contato</button>
+      <button class="vis-chip" data-status="arquivado" onclick="filtrarVisitantes(this)">Arquivados</button>
+    </div>
+  </div>
+  <div class="vis-lista" id="vis-lista">
+    <!-- preenchido por renderVisitantes() -->
+  </div>
+  <button class="vis-fab" onclick="abrirModalVisitante()">＋</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CRM 1 — ALUNOS EBD
+     FLUXO: Lista → busca/filtro turma → clica item
+            → modal editar (nome/turma/fone/nasc/resp/obs)
+            → salvar | deletar | WhatsApp
+     STORAGE: ebd_alunos
+══════════════════════════════════════════ -->
+<div class="tela" id="tela-adm-alunos">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">👥 Alunos EBD</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalAdmAluno()">＋</button>
+  </div>
+  <div class="crm-wrap">
+    <div class="crm-toolbar">
+      <input class="crm-search" id="admAluno-busca" placeholder="🔍 Buscar aluno..." oninput="renderAdmAlunos()">
+    </div>
+    <div class="crm-chips" id="admAluno-chips">
+      <button class="crm-chip ativo" onclick="filtrarAdmAluno(this,'')">Todos</button>
+      <button class="crm-chip" onclick="filtrarAdmAluno(this,'Adulto')">Adulto</button>
+      <button class="crm-chip" onclick="filtrarAdmAluno(this,'Jovem')">Jovem</button>
+      <button class="crm-chip" onclick="filtrarAdmAluno(this,'Adolescente')">Adolescente</button>
+      <button class="crm-chip" onclick="filtrarAdmAluno(this,'Infantil')">Infantil</button>
+    </div>
+    <div class="crm-list" id="admAluno-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalAdmAluno()">＋</button>
+  <!-- MODAL ALUNO ADM -->
+  <div class="crm-modal-bg" id="modal-admAluno-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-admAluno-titulo">Novo Aluno</span>
+        <button class="crm-modal-close" onclick="fecharModalAdmAluno()">✕</button>
+      </div>
+      <input type="hidden" id="admAluno-id">
+      <div class="crm-field"><label class="crm-label">Nome completo</label><input class="crm-input" id="admAluno-nome" placeholder="Nome do aluno"></div>
+      <div class="crm-field"><label class="crm-label">Turma</label>
+        <select class="crm-select" id="admAluno-turma">
+          <option value="">Selecione...</option>
+          <option>Adulto</option><option>Jovem</option><option>Adolescente</option><option>Infantil</option><option>Berçário</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Telefone / WhatsApp</label><input class="crm-input" id="admAluno-fone" placeholder="(99) 99999-9999" type="tel"></div>
+      <div class="crm-field"><label class="crm-label">Data de nascimento</label><input class="crm-input" id="admAluno-nasc" type="date"></div>
+      <div class="crm-field"><label class="crm-label">Responsável</label><input class="crm-input" id="admAluno-resp" placeholder="Nome do responsável (se menor)"></div>
+      <div class="crm-field"><label class="crm-label">Observações</label><textarea class="crm-textarea" id="admAluno-obs" placeholder="Anotações livres..."></textarea></div>
+      <div class="crm-field"><label class="crm-label">Status</label>
+        <select class="crm-select" id="admAluno-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
+      </div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-wpp" id="admAluno-btn-wpp" onclick="whatsappAdmAluno()" title="WhatsApp">💬</button>
+        <button class="crm-btn-del" id="admAluno-btn-del" onclick="deletarAdmAluno()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarAdmAluno()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CRM 2 — TURMAS
+     FLUXO: Lista de turmas → clica → modal
+            (nome/faixa/professor/sala/horário)
+            → salvar | deletar | ver alunos
+     STORAGE: radar_turmas
+══════════════════════════════════════════ -->
+<div class="tela" id="tela-adm-turmas">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">🏫 Turmas</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalTurma()">＋</button>
+  </div>
+  <div class="crm-wrap">
+    <div class="crm-list" style="padding-top:10px" id="turma-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalTurma()">＋</button>
+  <!-- MODAL TURMA -->
+  <div class="crm-modal-bg" id="modal-turma-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-turma-titulo">Nova Turma</span>
+        <button class="crm-modal-close" onclick="fecharModalTurma()">✕</button>
+      </div>
+      <input type="hidden" id="turma-id">
+      <div class="crm-field"><label class="crm-label">Nome da turma</label><input class="crm-input" id="turma-nome" placeholder="Ex: Adulto A, Jovem 1..."></div>
+      <div class="crm-field"><label class="crm-label">Faixa etária</label><input class="crm-input" id="turma-faixa" placeholder="Ex: 18 a 35 anos"></div>
+      <div class="crm-field"><label class="crm-label">Professor(a)</label><input class="crm-input" id="turma-professor" placeholder="Nome do professor"></div>
+      <div class="crm-field"><label class="crm-label">Sala</label><input class="crm-input" id="turma-sala" placeholder="Ex: Sala 3, Templo principal..."></div>
+      <div class="crm-field"><label class="crm-label">Horário</label><input class="crm-input" id="turma-horario" placeholder="Ex: Domingo 9h30"></div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-del" id="turma-btn-del" onclick="deletarTurma()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarTurma()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CRM 3 — PRESENÇA
+     FLUXO: Seleciona turma → seleciona data
+            → lista de alunos com toggle P/A/J
+            → botão "Salvar Chamada"
+     STORAGE: radar_presenca
+══════════════════════════════════════════ -->
+<div class="tela" id="tela-adm-presenca">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">✅ Chamada EBD</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="crm-wrap">
+    <div style="padding:12px 14px;display:flex;gap:10px;flex-shrink:0">
+      <select class="crm-select" id="pres-turma-sel" onchange="carregarChamada()" style="flex:1">
+        <option value="">Selecionar turma...</option>
+      </select>
+      <input type="date" class="crm-input" id="pres-data" onchange="carregarChamada()" style="width:140px">
+    </div>
+    <div id="pres-resumo" style="padding:0 14px 8px;font-size:12px;color:var(--sub);flex-shrink:0"></div>
+    <div class="crm-list" id="pres-lista" style="padding-bottom:100px"></div>
+    <div style="padding:12px 14px;flex-shrink:0" id="pres-salvar-wrap" style="display:none">
+      <button onclick="salvarChamada()" style="width:100%;background:var(--gold);border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:900;color:#080D1A;cursor:pointer;font-family:inherit">✅ Salvar Chamada</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CRM 4 — LIÇÕES
+     FLUXO: Lista → filtro turma/status
+            → modal (título/turma/data/links)
+            → publicar | rascunho | deletar
+     STORAGE: radar_licoes
+══════════════════════════════════════════ -->
+<div class="tela" id="tela-adm-licoes">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📝 Lições</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalLicao()">＋</button>
+  </div>
+  <div class="crm-wrap">
+    <div class="crm-chips" id="licao-chips" style="padding-top:10px">
+      <button class="crm-chip ativo" onclick="filtrarLicao(this,'')">Todas</button>
+      <button class="crm-chip" onclick="filtrarLicao(this,'publicado')">Publicadas</button>
+      <button class="crm-chip" onclick="filtrarLicao(this,'rascunho')">Rascunho</button>
+    </div>
+    <div class="crm-list" id="licao-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalLicao()">＋</button>
+  <!-- MODAL LIÇÃO -->
+  <div class="crm-modal-bg" id="modal-licao-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-licao-titulo">Nova Lição</span>
+        <button class="crm-modal-close" onclick="fecharModalLicao()">✕</button>
+      </div>
+      <input type="hidden" id="licao-id">
+      <div class="crm-field"><label class="crm-label">Título da lição</label><input class="crm-input" id="licao-titulo" placeholder="Ex: A Parábola do Filho Pródigo"></div>
+      <div class="crm-field"><label class="crm-label">Turma</label>
+        <select class="crm-select" id="licao-turma">
+          <option value="Geral">Geral (todas)</option>
+          <option>Adulto</option><option>Jovem</option><option>Adolescente</option><option>Infantil</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Data de publicação</label><input class="crm-input" id="licao-data" type="date"></div>
+      <div class="crm-field"><label class="crm-label">Link da Lição (PDF/Drive)</label><input class="crm-input" id="licao-link" placeholder="https://..."></div>
+      <div class="crm-field"><label class="crm-label">Link do PPT</label><input class="crm-input" id="licao-ppt" placeholder="https://..."></div>
+      <div class="crm-field"><label class="crm-label">Link de Apoio</label><input class="crm-input" id="licao-apoio" placeholder="https://..."></div>
+      <div class="crm-field"><label class="crm-label">Status</label>
+        <select class="crm-select" id="licao-status"><option value="rascunho">Rascunho</option><option value="publicado">Publicado</option></select>
+      </div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-del" id="licao-btn-del" onclick="deletarLicao()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarLicao()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CRM 5 — EVENTOS ADMIN
+     FLUXO: Lista → modal (título/data/hora/
+            local/tipo/descrição)
+            → salvar | deletar | WhatsApp lembrete
+     STORAGE: radar_eventos (já existe)
+══════════════════════════════════════════ -->
+<div class="tela" id="tela-adm-eventos-adm">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📅 Eventos</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalEvAdm()">＋</button>
+  </div>
+  <div class="crm-wrap">
+    <div class="crm-chips" style="padding-top:10px">
+      <button class="crm-chip ativo" onclick="filtrarEvAdm(this,'')">Todos</button>
+      <button class="crm-chip" onclick="filtrarEvAdm(this,'culto')">Culto</button>
+      <button class="crm-chip" onclick="filtrarEvAdm(this,'ebd')">EBD</button>
+      <button class="crm-chip" onclick="filtrarEvAdm(this,'especial')">Especial</button>
+    </div>
+    <div class="crm-list" id="evadm-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalEvAdm()">＋</button>
+  <!-- MODAL EVENTO -->
+  <div class="crm-modal-bg" id="modal-evadm-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-evadm-titulo">Novo Evento</span>
+        <button class="crm-modal-close" onclick="fecharModalEvAdm()">✕</button>
+      </div>
+      <input type="hidden" id="evadm-id">
+      <div class="crm-field"><label class="crm-label">Título</label><input class="crm-input" id="evadm-titulo" placeholder="Ex: Culto de Oração"></div>
+      <div style="display:flex;gap:10px">
+        <div class="crm-field" style="flex:1"><label class="crm-label">Data</label><input class="crm-input" id="evadm-data" type="date"></div>
+        <div class="crm-field" style="width:100px"><label class="crm-label">Hora</label><input class="crm-input" id="evadm-hora" type="time"></div>
+      </div>
+      <div class="crm-field"><label class="crm-label">Local</label><input class="crm-input" id="evadm-local" placeholder="Ex: Templo Central"></div>
+      <div class="crm-field"><label class="crm-label">Tipo</label>
+        <select class="crm-select" id="evadm-tipo">
+          <option value="culto">Culto</option><option value="ebd">EBD</option><option value="especial">Especial</option><option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Descrição</label><textarea class="crm-textarea" id="evadm-desc" placeholder="Detalhes do evento..."></textarea></div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-wpp" onclick="whatsappEvAdm()" title="Divulgar no WhatsApp">💬</button>
+        <button class="crm-btn-del" id="evadm-btn-del" onclick="deletarEvAdm()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarEvAdm()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CRM 6 — CONTEÚDOS
+     FLUXO: Lista por tipo (aviso/versículo/banner)
+            → modal (tipo/título/texto/link/ativo)
+            → toggle ativo | editar | deletar
+     STORAGE: radar_conteudos
+══════════════════════════════════════════ -->
+<div class="tela" id="tela-adm-conteudos">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">🗂️ Conteúdos</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalConteudo()">＋</button>
+  </div>
+  <div class="crm-wrap">
+    <div class="crm-chips" style="padding-top:10px">
+      <button class="crm-chip ativo" onclick="filtrarConteudo(this,'')">Todos</button>
+      <button class="crm-chip" onclick="filtrarConteudo(this,'aviso')">📢 Aviso</button>
+      <button class="crm-chip" onclick="filtrarConteudo(this,'versiculo')">📖 Versículo</button>
+      <button class="crm-chip" onclick="filtrarConteudo(this,'banner')">🖼️ Banner</button>
+    </div>
+    <div class="crm-list" id="conteudo-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalConteudo()">＋</button>
+  <!-- MODAL CONTEÚDO -->
+  <div class="crm-modal-bg" id="modal-conteudo-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-conteudo-titulo">Novo Conteúdo</span>
+        <button class="crm-modal-close" onclick="fecharModalConteudo()">✕</button>
+      </div>
+      <input type="hidden" id="conteudo-id">
+      <div class="crm-field"><label class="crm-label">Tipo</label>
+        <select class="crm-select" id="conteudo-tipo">
+          <option value="aviso">📢 Aviso</option><option value="versiculo">📖 Versículo</option><option value="banner">🖼️ Banner</option><option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Título</label><input class="crm-input" id="conteudo-titulo-inp" placeholder="Título do conteúdo"></div>
+      <div class="crm-field"><label class="crm-label">Texto / Mensagem</label><textarea class="crm-textarea" id="conteudo-texto" placeholder="Escreva aqui..."></textarea></div>
+      <div class="crm-field"><label class="crm-label">Link (opcional)</label><input class="crm-input" id="conteudo-link" placeholder="https://..."></div>
+      <div class="crm-field"><label class="crm-label">Status</label>
+        <select class="crm-select" id="conteudo-ativo"><option value="1">✅ Ativo</option><option value="0">🚫 Inativo</option></select>
+      </div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-del" id="conteudo-btn-del" onclick="deletarConteudo()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarConteudo()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CRM 7 — COMUNICAÇÃO
+     FLUXO: Escolhe destino (todos/turma/visitantes)
+            → compõe mensagem
+            → preview do texto
+            → "Copiar mensagem" ou abre WhatsApp
+     SEM STORAGE (ferramenta de envio)
+══════════════════════════════════════════ -->
+<div class="tela" id="tela-adm-comunicacao">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">💬 Comunicação</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="crm-wrap" style="overflow-y:auto;padding:14px">
+    <div class="crm-section-title">1. Destinatário</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer">
+        <input type="radio" name="com-dest" value="todos" onchange="atualizarPreviewCom()" style="accent-color:var(--gold)"> <span style="font-size:13px;font-weight:700">👥 Todos os alunos</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer">
+        <input type="radio" name="com-dest" value="turma" onchange="atualizarPreviewCom()"> <span style="font-size:13px;font-weight:700">🏫 Por turma:</span>
+        <select class="crm-select" id="com-turma-sel" style="flex:1;padding:4px 8px" onchange="atualizarPreviewCom()">
+          <option value="">Selecione...</option>
+          <option>Adulto</option><option>Jovem</option><option>Adolescente</option><option>Infantil</option>
+        </select>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer">
+        <input type="radio" name="com-dest" value="visitantes" onchange="atualizarPreviewCom()"> <span style="font-size:13px;font-weight:700">🙋 Todos os visitantes</span>
+      </label>
+    </div>
+    <div class="crm-section-title">2. Mensagem</div>
+    <textarea class="crm-textarea" id="com-mensagem" rows="5" placeholder="Digite a mensagem aqui..." oninput="atualizarPreviewCom()" style="margin-bottom:12px;min-height:100px"></textarea>
+    <div class="crm-section-title">3. Preview</div>
+    <div id="com-preview" style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px;line-height:1.6;color:var(--sub);margin-bottom:16px;white-space:pre-wrap">Preencha os campos acima para ver o preview.</div>
+    <div style="display:flex;gap:10px">
+      <button onclick="copiarMensagemCom()" style="flex:1;background:rgba(201,161,74,.12);border:1px solid rgba(201,161,74,.3);border-radius:12px;padding:13px;font-size:13px;font-weight:800;color:var(--gold);cursor:pointer;font-family:inherit">📋 Copiar</button>
+      <button onclick="enviarWppCom()" style="flex:1;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.25);border-radius:12px;padding:13px;font-size:13px;font-weight:800;color:#25d366;cursor:pointer;font-family:inherit">💬 WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CRM 8 — RELATÓRIOS
+     FLUXO: Cards de resumo (visitantes/alunos/
+            presença/eventos) → "Copiar relatório
+            para WhatsApp" por seção
+     SEM STORAGE (lê dados existentes)
+══════════════════════════════════════════ -->
+<div class="tela" id="tela-adm-relatorios">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">📈 Relatórios</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:13px;font-weight:800;cursor:pointer;padding:4px 8px" onclick="renderRelatorios()">↻</button>
+  </div>
+  <div class="crm-wrap" style="overflow-y:auto;padding:14px 14px 40px" id="relatorios-corpo"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CRM 9 — USUÁRIOS
+     FLUXO: Lista por nível → modal (nome/
+            contato/nível/ativo)
+            → salvar | deletar
+     STORAGE: radar_usuarios
+══════════════════════════════════════════ -->
+<div class="tela" id="tela-adm-usuarios">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
+    <div class="std-hinfo"><div class="std-titulo">👑 Usuários</div></div>
+    <button style="background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;padding:4px 8px" onclick="abrirModalUsuario()">＋</button>
+  </div>
+  <div class="crm-wrap">
+    <div class="crm-chips" style="padding-top:10px">
+      <button class="crm-chip ativo" onclick="filtrarUsuario(this,'')">Todos</button>
+      <button class="crm-chip" onclick="filtrarUsuario(this,'admin')">👑 Admin</button>
+      <button class="crm-chip" onclick="filtrarUsuario(this,'editor')">✏️ Editor</button>
+      <button class="crm-chip" onclick="filtrarUsuario(this,'professor')">🎓 Prof.</button>
+      <button class="crm-chip" onclick="filtrarUsuario(this,'secretaria')">📋 Secr.</button>
+    </div>
+    <div class="crm-list" id="usuario-lista"></div>
+  </div>
+  <button class="crm-fab" onclick="abrirModalUsuario()">＋</button>
+  <!-- MODAL USUÁRIO -->
+  <div class="crm-modal-bg" id="modal-usuario-bg">
+    <div class="crm-modal">
+      <div class="crm-modal-title">
+        <span id="modal-usuario-titulo">Novo Usuário</span>
+        <button class="crm-modal-close" onclick="fecharModalUsuario()">✕</button>
+      </div>
+      <input type="hidden" id="usuario-id">
+      <div class="crm-field"><label class="crm-label">Nome</label><input class="crm-input" id="usuario-nome" placeholder="Nome completo"></div>
+      <div class="crm-field"><label class="crm-label">Contato (fone ou email)</label><input class="crm-input" id="usuario-contato" placeholder="(99) 99999-9999 ou email@..."></div>
+      <div class="crm-field"><label class="crm-label">Nível de acesso</label>
+        <select class="crm-select" id="usuario-nivel">
+          <option value="admin">👑 Administrador — acesso total</option>
+          <option value="editor">✏️ Editor — lições e conteúdos</option>
+          <option value="professor">🎓 Professor — sua turma</option>
+          <option value="secretaria">📋 Secretaria — alunos e presença</option>
+        </select>
+      </div>
+      <div class="crm-field"><label class="crm-label">Status</label>
+        <select class="crm-select" id="usuario-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
+      </div>
+      <div class="crm-modal-btns">
+        <button class="crm-btn-del" id="usuario-btn-del" onclick="deletarUsuario()">Excluir</button>
+        <button class="crm-btn-salvar" onclick="salvarUsuario()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADM: CONFIGURAÇÕES — CARD MANAGER ══ -->
+<div class="tela" id="tela-adm-config">
+  <div class="std-header">
+    <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">‹</button>
+    <div class="std-hinfo"><div class="std-titulo">⚙️ Configurações</div></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="cfg-scroll">
+    <div class="cfg-topo">
+      <span class="cfg-total" id="cfg-total">0 cards</span>
+    </div>
+    <div class="cfg-strip" id="cfg-strip"></div>
+    <div class="cfg-divider"></div>
+    <div id="cfg-lista"></div>
+    <div class="cfg-add-wrap">
+      <button class="cfg-add-btn" onclick="abrirModalCfg()">＋ Novo card</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITOR DE CARD -->
+<div id="modal-cfg" onclick="if(event.target===this)fecharModalCfg()">
+  <div class="mcfg-box">
+    <div class="mcfg-tit">
+      <span id="mcfg-label">Novo Card</span>
+      <button onclick="fecharModalCfg()" style="background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer;line-height:1;padding:0">✕</button>
+    </div>
+    <div class="mcfg-tipos">
+      <button class="mcfg-tipo sel" data-tipo="imagem" onclick="selecionarTipoCfg(this)">🖼️ Imagem</button>
+      <button class="mcfg-tipo" data-tipo="video" onclick="selecionarTipoCfg(this)">▶️ Vídeo</button>
+      <button class="mcfg-tipo" data-tipo="texto" onclick="selecionarTipoCfg(this)">📝 Texto</button>
+    </div>
+    <div class="mcfg-field">
+      <div class="mcfg-lbl">Título (aparece sobre o card)</div>
+      <input class="mcfg-inp" id="mcfg-titulo" placeholder="Ex: Bem-vindos ao RADAR ATUAL" autocomplete="off">
+    </div>
+    <div class="mcfg-field" id="mcfg-f-imagem">
+      <div class="mcfg-lbl">URL da Imagem</div>
+      <input class="mcfg-inp" id="mcfg-imagem" type="url" placeholder="https://... (cole o link da imagem)">
+    </div>
+    <div class="mcfg-field" id="mcfg-f-video" style="display:none">
+      <div class="mcfg-lbl">URL do Vídeo (YouTube, etc.)</div>
+      <input class="mcfg-inp" id="mcfg-video" type="url" placeholder="https://youtube.com/watch?v=...">
+    </div>
+    <div class="mcfg-field" id="mcfg-f-texto" style="display:none">
+      <div class="mcfg-lbl">Texto / Conteúdo</div>
+      <textarea class="mcfg-ta" id="mcfg-texto" placeholder="Cole ou escreva o texto que aparece no card..."></textarea>
+      <div class="mcfg-lbl" style="margin-top:10px">Cor de fundo</div>
+      <div class="mcfg-cores" id="mcfg-cores">
+        <div class="mcfg-cor sel" data-cor="#0F1525" style="background:#0F1525" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#1a2a1a" style="background:#1a2a1a" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#1a1a2e" style="background:#1a1a2e" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#2a1a1a" style="background:#2a1a1a" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#0d2137" style="background:#0d2137" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#1c1400" style="background:#1c1400" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#C9A14A" style="background:#C9A14A" onclick="selecionarCor(this)"></div>
+        <div class="mcfg-cor" data-cor="#2d5a27" style="background:#2d5a27" onclick="selecionarCor(this)"></div>
+      </div>
+    </div>
+    <div class="mcfg-field">
+      <div class="mcfg-lbl">Link ao tocar (opcional)</div>
+      <input class="mcfg-inp" id="mcfg-link" type="url" placeholder="https://...">
+    </div>
+    <div class="mcfg-toggle-row">
+      <span style="font-size:13px;font-weight:700">Card ativo (aparece no carousel)</span>
+      <button class="mcfg-tgl on" id="mcfg-ativo" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <button class="mcfg-save" onclick="salvarCardCfg()">Salvar Card</button>
+    <button class="mcfg-del" id="mcfg-del-btn" onclick="deletarCardCfg()">Excluir card</button>
+  </div>
+</div>
+
+<!-- ══ MODAL VISITANTE ══ -->
+<div id="modal-visitante" onclick="if(event.target===this)fecharModalVisitante()">
+  <div class="mvis-box">
+    <div class="mvis-tit">
+      <span id="mvis-label">Novo Visitante</span>
+      <button onclick="fecharModalVisitante()" style="background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer;line-height:1;padding:0">✕</button>
+    </div>
+    <div class="mvis-field">
+      <div class="mvis-label">Nome completo *</div>
+      <input class="mvis-input" id="mvis-nome" type="text" placeholder="Ex: Maria da Silva" autocomplete="off">
+    </div>
+    <div class="mvis-row2">
+      <div class="mvis-field">
+        <div class="mvis-label">Telefone / WhatsApp</div>
+        <input class="mvis-input" id="mvis-fone" type="tel" placeholder="(99) 99999-9999" autocomplete="off">
+      </div>
+      <div class="mvis-field">
+        <div class="mvis-label">Data da 1ª visita</div>
+        <input class="mvis-input" id="mvis-data" type="date">
+      </div>
+    </div>
+    <div class="mvis-row2">
+      <div class="mvis-field">
+        <div class="mvis-label">Origem</div>
+        <select class="mvis-select" id="mvis-origem">
+          <option value="">Selecione</option>
+          <option>Convite de membro</option>
+          <option>Redes sociais</option>
+          <option>Passou em frente</option>
+          <option>Evento especial</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="mvis-field">
+        <div class="mvis-label">Status</div>
+        <select class="mvis-select" id="mvis-status">
+          <option value="ativo">Ativo (acompanhar)</option>
+          <option value="retornou">Retornou</option>
+          <option value="sem_contato">Sem contato</option>
+          <option value="arquivado">Arquivado</option>
+        </select>
+      </div>
+    </div>
+    <div class="mvis-field">
+      <div class="mvis-label">Responsável pelo acompanhamento</div>
+      <input class="mvis-input" id="mvis-responsavel" type="text" placeholder="Nome do responsável" autocomplete="off">
+    </div>
+    <div class="mvis-field">
+      <div class="mvis-label">Observações</div>
+      <textarea class="mvis-textarea" id="mvis-obs" placeholder="Histórico de contatos, pedidos de oração, etc."></textarea>
+    </div>
+    <button class="mvis-btn save" onclick="salvarVisitante()">Salvar</button>
+    <button class="mvis-btn wpp" id="mvis-btn-wpp" style="display:none" onclick="whatsappVisitante()">📱 Abrir WhatsApp</button>
+    <button class="mvis-btn del" id="mvis-btn-del" style="display:none" onclick="deletarVisitante()">Excluir visitante</button>
+  </div>
+</div>
+
+<!-- MODAL EVENTO -->
+<div id="modal-evento" onclick="if(event.target===this)fecharModalEvento()">
+  <div class="mev-box">
+    <div class="mev-tit">
+      <span id="mev-label">Novo Evento</span>
+      <button class="mev-x" onclick="fecharModalEvento()">✕</button>
+    </div>
+    <div class="mev-field">
+      <label>Título</label>
+      <input id="mev-titulo" type="text" placeholder="Ex: Estudo bíblico, Ensaio coral..." autocomplete="off">
+    </div>
+    <div class="mev-row">
+      <div class="mev-field">
+        <label>Módulo</label>
+        <select id="mev-modulo">
+          <option value="ebd">🏫 EBD</option>
+          <option value="biblia">📖 Bíblia</option>
+          <option value="harpa">🎵 Harpa</option>
+        </select>
+      </div>
+      <div class="mev-field">
+        <label>Ícone</label>
+        <input id="mev-icone" type="text" placeholder="📅" maxlength="2" style="text-align:center;font-size:20px">
+      </div>
+    </div>
+    <div class="mev-field">
+      <label>Tipo</label>
+      <select id="mev-tipo" onchange="toggleEvTipo()">
+        <option value="fixo">🔁 Semanal (toda semana)</option>
+        <option value="data">📆 Data específica</option>
+      </select>
+    </div>
+    <div class="mev-field" id="mev-dia-wrap">
+      <label>Dia da semana</label>
+      <select id="mev-dia">
+        <option value="0">Domingo</option>
+        <option value="1">Segunda-feira</option>
+        <option value="2">Terça-feira</option>
+        <option value="3">Quarta-feira</option>
+        <option value="4">Quinta-feira</option>
+        <option value="5">Sexta-feira</option>
+        <option value="6">Sábado</option>
+      </select>
+    </div>
+    <div class="mev-field" id="mev-data-wrap" style="display:none">
+      <label>Data</label>
+      <input id="mev-data" type="date">
+    </div>
+    <div class="mev-field">
+      <label>Horário (opcional)</label>
+      <input id="mev-hora" type="time">
+    </div>
+    <button class="mev-save" onclick="salvarEvento()">SALVAR EVENTO</button>
+  </div>
+</div>
+
+<!-- MODAL ALUNO EBD -->
+<div id="modal-aluno" onclick="if(event.target===this)fecharModalAluno()">
+  <div class="mal-box">
+    <div class="mal-tit">
+      <span id="mal-label">Novo Aluno</span>
+      <button class="mal-x" onclick="fecharModalAluno()">✕</button>
+    </div>
+    <div class="mal-field">
+      <label>Nome</label>
+      <input id="mal-nome" type="text" placeholder="Nome completo" autocomplete="off">
+    </div>
+    <div class="mal-field">
+      <label>Turma</label>
+      <select id="mal-turma">
+        <option value="adulto">👨 Adulto</option>
+        <option value="jovem">🧑 Jovem</option>
+        <option value="crianca">👶 Criança</option>
+      </select>
+    </div>
+    <div class="mal-field">
+      <label>Telefone (opcional)</label>
+      <input id="mal-fone" type="tel" placeholder="(99) 99999-9999" inputmode="numeric" oninput="mascaraFone(this)">
+    </div>
+    <div class="mal-field">
+      <label>Observações (opcional)</label>
+      <textarea id="mal-obs" placeholder="Anotações sobre o aluno..."></textarea>
+    </div>
+    <button class="mal-save" onclick="salvarAluno()">SALVAR ALUNO</button>
+  </div>
+</div>
+
+<script>
+function compartilharApp(nome){
+  var url='https://radar-atual.vercel.app';
+  var txt=(nome?('📖 '+nome+' — no RADAR (grátis, no celular): '):'📖 Conheça o RADAR — Bíblias de estudo, EBD, pregação e muito mais: ');
+  try{
+    if(navigator.share){ navigator.share({title:(nome||'RADAR'),text:txt,url:url}).catch(function(){}); }
+    else { window.open('https://wa.me/?text='+encodeURIComponent(txt+url),'_blank'); }
+  }catch(e){ window.open('https://wa.me/?text='+encodeURIComponent(txt+url),'_blank'); }
+}
+</script>
+<!-- Bate-papo com o Claude (reativado) -->
+<!-- bolha flutuante do bate-papo removida — agora fica no Perfil -->
+
+
+<!-- LUPA DA LIÇÃO — tutor de IA da EBD (só aparece lendo uma lição) -->
+<button id="lupa-btn" style="display:none;position:fixed;right:14px;
+   bottom:calc(84px + env(safe-area-inset-bottom));z-index:100000;background:linear-gradient(135deg,#a9791c,#0f3d5c);
+   color:#fff;border:2px solid #fff;border-radius:999px;padding:11px 17px;font-size:.95rem;font-weight:800;font-family:inherit;
+   box-shadow:0 6px 20px rgba(0,0,0,.35);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none">🔎 Tirar dúvida ⠿</button>
+
+<div id="lupa-ov" style="display:none;position:fixed;inset:0;z-index:100001;background:rgba(10,20,32,.55)" onclick="if(event.target===this)fecharLupa()">
+  <div style="position:absolute;left:0;right:0;bottom:0;max-width:820px;margin:0 auto;background:#fff;border-radius:18px 18px 0 0;max-height:88vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:9px;padding:14px 16px 8px;border-bottom:1px solid #e4e7ec">
+      <div style="font-size:22px">🔎</div>
+      <div style="flex:1"><div style="font-family:Georgia,serif;font-weight:800;color:#0f3d5c;font-size:1.1rem">Lupa da Lição</div>
+        <div style="font-size:.74rem;color:#8a1c1c;font-weight:700">Auxiliar de estudo · confirme sempre com seu pastor</div></div>
+      <button onclick="fecharLupa()" style="background:#eef2f4;border:none;border-radius:10px;width:34px;height:34px;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div id="lupa-corpo" style="flex:1;overflow-y:auto;padding:14px 16px">
+      <div id="lupa-chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px"></div>
+      <div id="lupa-resp" style="font-size:1.02rem;line-height:1.6;color:#1c2230;text-align:justify"></div>
+    </div>
+    <div style="display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #e4e7ec">
+      <input id="lupa-q" placeholder="Pergunte sobre a lição…" autocomplete="off" enterkeyhint="send"
+        style="flex:1;border:1.5px solid #e4e7ec;border-radius:20px;padding:12px 15px;font-size:1.02rem;font-family:inherit">
+      <button id="lupa-env" onclick="perguntarLupa()" style="background:#0f3d5c;color:#fff;border:none;border-radius:50%;width:48px;height:48px;font-size:1.2rem;cursor:pointer;flex-shrink:0">➤</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/lupa.js?v=145"></script>
+<script src="/_uso.js?v=1" defer></script>
+</body>
+</html>

@@ -1620,7 +1620,7 @@ function abrirBiblia(){
       +(semRede?'A Bíblia ainda não está guardada neste aparelho':'Não consegui carregar a Bíblia agora')+'</div>'
       +'<div style="color:#9fb0bd;font-size:14px;margin-bottom:16px">'
       +(semRede
-        ? 'Você está sem internet. Quando pegar sinal, toque em <b>“📥 Deixar disponível sem internet”</b> na tela inicial — depois disso ela abre sempre, com ou sem rede.'
+        ? 'Você está sem internet. Abra esta tela uma vez com sinal — depois disso ela abre sempre, com ou sem rede.'
         : 'Pode ser a internet oscilando. Tente de novo.')
       +'</div>'
       +'<button onclick="abrirBiblia()" style="background:#C9A14A;color:#15202b;border:none;border-radius:11px;padding:12px 20px;font-weight:800;font-size:14.5px;font-family:inherit;cursor:pointer">🔄 Tentar de novo</button>'
@@ -1815,7 +1815,7 @@ async function abrirHarpa(){
       +(semRede?'A Harpa ainda não está guardada neste aparelho':'Não consegui carregar a Harpa agora')+'</div>'
       +'<div style="color:#9fb0bd;font-size:14px;margin-bottom:16px">'
       +(semRede
-        ? 'Você está sem internet. Quando pegar sinal, toque em <b>“📥 Deixar disponível sem internet”</b> na tela inicial — depois disso os 640 hinos abrem sempre.'
+        ? 'Você está sem internet. Abra a Harpa uma vez com sinal — depois disso os 640 hinos abrem sempre.'
         : 'Pode ser a internet oscilando. Tente de novo.')
       +'</div>'
       +'<button onclick="abrirHarpa()" style="background:#C9A14A;color:#15202b;border:none;border-radius:11px;padding:12px 20px;font-weight:800;font-size:14.5px;font-family:inherit;cursor:pointer">🔄 Tentar de novo</button>'
@@ -5578,7 +5578,7 @@ const _crmInitMap = {
     var tx=esta('off-tarja-txt');
     if(tx) tx.innerHTML = p
       ? 'Bíblia, Harpa, mensagens e sermões abrem normal. Concílio, geradores e vídeos voltam com o sinal.'
-      : 'Funciona o que você já abriu antes. Para ter a Bíblia sempre, toque em <b>“Deixar disponível sem internet”</b> na tela inicial quando pegar sinal.';
+      : 'Funciona tudo o que você já abriu antes neste aparelho. O resto volta assim que o sinal voltar.';
   }
 
   window.radarBaixarPacote=baixarPacote;
@@ -5588,13 +5588,25 @@ const _crmInitMap = {
   window.addEventListener('online',function(){ tarja(); });
   window.addEventListener('offline',function(){ tarja(); });
 
+  /* ── 21/09/2026: O PAINEL DE DOWNLOAD SAIU DA TELA INICIAL ────────────────
+     Motivo (decisao do Elias, e ele tinha razao): so dava problema.
+       · ocupava a home inteira e empurrava os cards pra baixo
+       · depois de baixar, o botao de APAGAR nascia no MESMO lugar onde antes
+         estava o de BAIXAR — quem tocasse duas vezes apagava o que acabou de
+         guardar. Eu mesmo quase apaguei testando.
+       · mostrava "0,2 MB" quando tinha guardado 5,6 MB
+     O QUE **NAO** FOI MEXIDO (de proposito):
+       · o service worker (sw.js) continua inteiro — e ele que faz o app abrir
+         rapido e guardar o que o irmao ja visitou. Isso nunca foi o problema.
+       · toda a maquina do pacote continua aqui embaixo, viva e testada. Pra
+         religar e so voltar a chamar pintarPainel() nesta funcao. Nada foi
+         apagado — foi DESLIGADO DA TELA.
+     ──────────────────────────────────────────────────────────────────────── */
   function iniciar(){
     if(!temCache()) return;
-    caches.has(PACOTE).then(function(tem){
-      var p=jaBaixado();
-      pintarPainel(tem&&p?'pronto':'novo', p||{});
-    })['catch'](function(){ pintarPainel('novo'); });
-    tarja();
+    var velho=esta('off-painel');      // limpa o painel de quem ja tinha aberto antes
+    if(velho) velho.remove();
+    tarja();                            // a tarja fica: avisa quando cai o sinal
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',iniciar);
   else setTimeout(iniciar,60);
