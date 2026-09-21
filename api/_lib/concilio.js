@@ -245,7 +245,11 @@ const chaveLivro = (num, palavra) => {
 
 // Referência COM versículo ("Levítico 23:10-12", "1Co 15:20", "Gn 1.1"). Só com
 // versículo: é o que dá pra conferir contra o texto sagrado.
-const RE_REF = /(?:^|[^\wÀ-ÿ])([123]|I{1,3})?\s*[ªº°]?\s*([A-Za-zÀ-ÿ]{2,16})\.?\s*(\d{1,3})\s*[:.]\s*(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?/g;
+// ⚠️ O tracinho do intervalo NÃO é só o "-" do teclado: a IA escreve "João 1:1‑3"
+// com hífen não-separável e "Cl 1:16—17" com travessão. Pegar só o "-" cortava o
+// intervalo em 1:1, e aí a citação certa do versículo 3 era acusada de falsa.
+const TRACO = '[-‐-―−]';
+const RE_REF = new RegExp('(?:^|[^\\wÀ-ÿ])([123]|I{1,3})?\\s*[ªº°]?\\s*([A-Za-zÀ-ÿ]{2,16})\\.?\\s*(\\d{1,3})\\s*[:.]\\s*(\\d{1,3})(?:\\s*(?:' + TRACO + '|a)\\s*(\\d{1,3}))?', 'g');
 
 /** Toda referência bíblica resolvível dentro de um texto. */
 function acharReferencias(texto) {
@@ -474,17 +478,29 @@ export async function conferirVersiculos(texto, origem, assunto) {
     if (!perto.length) continue;
     const palavras = conteudo(m[1]);
     if (palavras.length < 4) continue;
+    const casa = (txt) => {
+      const bruto = ' ' + semAcentos(txt).toLowerCase().replace(/[^a-z0-9]/g, ' ') + ' ';
+      return palavras.filter((p) => bruto.indexOf(' ' + radical(p)) >= 0).length / palavras.length;
+    };
     let melhor = 0, alvo = perto[0];
     for (const r of perto) {
       const real = textoDoVersiculo(biblia, r);
       if (real === null) continue;
-      const bruto = ' ' + semAcentos(real).toLowerCase().replace(/[^a-z0-9]/g, ' ') + ' ';
-      const bate = palavras.filter((p) => bruto.indexOf(' ' + radical(p)) >= 0).length / palavras.length;
+      const bate = casa(real);
       if (bate > melhor) { melhor = bate; alvo = r; }
     }
     if (melhor < 0.55) {
-      const real = textoDoVersiculo(biblia, alvo);
-      avisos.push(`versiculo-nao-bate: a resposta pôs entre aspas, como sendo ${alvo.bruto}, um texto que NÃO está escrito lá. ${alvo.bruto} diz: "${String(real || '').slice(0, 190)}${(real || '').length > 190 ? '…' : ''}". Não pregue essa citação.`);
+      // Antes de acusar: o texto está no CAPÍTULO citado, só que em outro versículo?
+      // Aí não é invenção, é endereço torto — e o útil é dar o número certo.
+      const caps = (biblia[alvo.abbrev] || [])[alvo.cap - 1] || [];
+      let certo = 0, nCerto = 0;
+      for (let v = 0; v < caps.length; v++) { const b = casa(caps[v]); if (b > certo) { certo = b; nCerto = v + 1; } }
+      if (certo >= 0.6) {
+        avisos.push(`versiculo-trocado: o texto entre aspas não é ${alvo.bruto} — é ${LIVRO_NOME[alvo.abbrev]} ${alvo.cap}:${nCerto}. Corrija a referência antes de pregar.`);
+      } else {
+        const real = textoDoVersiculo(biblia, alvo);
+        avisos.push(`versiculo-nao-bate: a resposta pôs entre aspas, como sendo ${alvo.bruto}, um texto que NÃO está escrito lá. ${alvo.bruto} diz: "${String(real || '').slice(0, 190)}${(real || '').length > 190 ? '…' : ''}". Não pregue essa citação.`);
+      }
       if (avisos.length >= 4) return avisos;
     }
   }
@@ -572,9 +588,11 @@ export function fluxoComFontes(resp, rotulos, rodapeSeVazio, opts) {
       // na mesa, que é a verdade conferível.
       if (!citou && rodapeSeVazio) await writer.write(enc.encode(rodapeSeVazio));
       if (opts.conferir) {
-        const avisos = conferirOriginal(tudo, opts.assunto || '', transliterou)
-          .concat(await conferirVersiculos(tudo, opts.origem, opts.assunto || ''))
-          .concat(inventados ? ['fonte-inventada: ' + inventados + ' marcador(es) fora da lista foram apagados da resposta.'] : []);
+        // A conferência da FONTE já existia mas só rodava no handler JSON do Wagner;
+        // em streaming ninguém conferia. Agora as três rodam no mesmo lugar.
+        const avisos = conferirFontes(tudo, inventados)
+          .concat(conferirOriginal(tudo, opts.assunto || '', transliterou))
+          .concat(await conferirVersiculos(tudo, opts.origem, opts.assunto || ''));
         const rod = rodapeAvisos(avisos);
         if (rod) await writer.write(enc.encode(rod));
       }
