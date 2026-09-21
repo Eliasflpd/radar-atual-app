@@ -466,7 +466,63 @@ async function tentar(degrau, modelo, chave, p, stream) {
 // cai na cascata normal SEM busca — e aí o chamador troca o texto do prompt (p.sysSemWeb)
 // pra IA NÃO dizer que pesquisou. Prometer pesquisa que não houve é o caminho mais curto
 // pra fonte inventada, que é exatamente o que a LEI do app proíbe.
+// ── TAVILY: a busca na web que NÃO depende do Gemini (21/09/2026) ───────────
+// Antes, pesquisar na web só existia se o Gemini estivesse de bom humor: era o
+// único provedor da cascata com busca embutida. Quando ele negava, o app
+// simplesmente não pesquisava — e o gerador de Estudo de Doutrina, que promete
+// "assuntos atuais", virava um chute de memória do modelo.
+// A Tavily inverte isso: ela SÓ pesquisa (não escreve), devolve os trechos e um
+// resumo, e a gente entrega esse material pra QUALQUER motor da cascata. Ou seja,
+// agora o Groq — que responde em 2 segundos — também sabe da notícia de hoje.
+// 1.000 buscas por mês, renovando, sem cartão.
+const TAVILY = () => (process.env.TAVILY_API_KEY || process.env.TAVILY_API_KEYS || '')
+  .split(',').map((s) => s.trim()).filter(Boolean);
+
+async function pesquisarTavily(consulta) {
+  const chaves = TAVILY();
+  if (!chaves.length) return null;
+  const chave = chaves[Math.floor(Math.random() * chaves.length)];
+  try {
+    const r = await fetch('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + chave, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: String(consulta || '').slice(0, 380),
+        max_results: 5,
+        include_answer: true,      // devolve o resumo já mastigado, não só links
+        search_depth: 'basic'
+      })
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const itens = (d.results || []).slice(0, 5);
+    if (!itens.length && !d.answer) return null;
+    // O material vai pro prompt COM a fonte colada em cada trecho. Sem isso a IA
+    // resume tudo junto e a citação vira enfeite — impossível de conferir depois.
+    const blocos = itens.map((x, i) =>
+      `[${i + 1}] ${x.title || ''}\n${(x.content || '').slice(0, 900)}\nFonte: ${x.url || ''}`).join('\n\n');
+    return { resumo: d.answer || '', blocos, fontes: itens.map((x) => x.url).filter(Boolean) };
+  } catch (_) { return null; }
+}
+
 async function cascataComBusca(p, stream, tentativas) {
+  // 1º degrau da busca: Tavily + a cascata inteira (rápida e independente do Gemini)
+  const achado = await pesquisarTavily(p.consultaWeb || p.user || '');
+  if (achado) {
+    const material = 'MATERIAL PESQUISADO NA WEB AGORA (use e CITE a fonte; se não sustentar o que '
+      + 'você ia dizer, NÃO diga):\n\n'
+      + (achado.resumo ? 'Resumo: ' + achado.resumo + '\n\n' : '') + achado.blocos;
+    const comMaterial = { ...p, sys: [p.sys, material].filter(Boolean).join('\n\n'), web: false };
+    const r = await cascata(comMaterial, stream);
+    if (r && r.ok !== false) {
+      return { ...r, comBusca: true, fontesWeb: achado.fontes, provedorNome: (r.provedorNome || '') + ' + Tavily' };
+    }
+    tentativas.push('busca-web: Tavily achou mas a cascata não respondeu');
+  } else {
+    tentativas.push('busca-web: Tavily sem chave ou sem resultado');
+  }
+
+  // 2º degrau: o jeito antigo — Gemini com busca embutida
   const degrau = DEGRAUS.find((d) => d.id === 'gemini');
   const chaves = degrau ? lerChaves(degrau) : [];
   if (!chaves.length) { tentativas.push('busca-web: Gemini sem chave'); return null; }
