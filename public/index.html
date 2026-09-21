@@ -11,8 +11,39 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/radar.css?v=149">
-<link rel="preload" as="script" href="/assets/app.js?v=149">
+<link rel="stylesheet" href="/assets/radar.css?v=150">
+<link rel="preload" as="script" href="/assets/app.js?v=150">
+<script>
+/* ── A PELE DA HOME (bege ou azul) ──────────────────────────────────────────
+   Isto roda AQUI NO <head>, antes de o navegador pintar qualquer coisa.
+   Se fosse no app.js, a home apareceria bege por um instante e "piscava"
+   pro azul — aquele lampejo feio que todo app com tema tem. Aqui nao pisca.
+   O botao de trocar fica no topo da home (🎨), e a escolha fica no aparelho. */
+(function(){
+  var PELES=['bege','azul'];
+  var p;
+  try{ p=localStorage.getItem('radar_pele'); }catch(e){}
+  if(PELES.indexOf(p)<0) p='bege';                 // bege e o padrao
+  if(p!=='bege') document.documentElement.setAttribute('data-pele',p);
+
+  window.radarTrocarPele=function(){
+    var atual=document.documentElement.getAttribute('data-pele')||'bege';
+    var prox=PELES[(PELES.indexOf(atual)+1)%PELES.length];
+    if(prox==='bege') document.documentElement.removeAttribute('data-pele');
+    else document.documentElement.setAttribute('data-pele',prox);
+    try{ localStorage.setItem('radar_pele',prox); }catch(e){}
+    // a barra de status do Android acompanha a cor do topo da home
+    var m=document.querySelector('meta[name="theme-color"]');
+    if(m) m.setAttribute('content', prox==='azul' ? '#071A3A' : '#EFE5D6');
+    var b=document.getElementById('btn-pele');
+    if(b) b.title = prox==='azul' ? 'Trocar para Bege/Dourado' : 'Trocar para Azul';
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    var m=document.querySelector('meta[name="theme-color"]');
+    if(m) m.setAttribute('content', p==='azul' ? '#071A3A' : '#EFE5D6');
+  });
+})();
+</script>
 </head>
 <body>
 
@@ -37,6 +68,7 @@
     <div class="vitrine">
       <div class="vit-hero">
         <div class="vit-topo">
+          <div class="vit-tbtn" id="btn-pele" onclick="radarTrocarPele()" title="Trocar a cor do app">🎨</div>
           <div class="vit-tbtn" onclick="document.getElementById('painel-hoje-wrap').scrollIntoView({behavior:'smooth',block:'center'})">🔔</div>
           <div class="vit-tbtn" onclick="irPerfil()">👤</div>
           <div class="vit-tbtn" id="logo-tap" onclick="tapLogo()" title="Config">⚙️</div>
@@ -64,10 +96,13 @@
           <div class="vit-ico">📢</div>
           <div class="vit-nome">Eventos e Mídias</div><div class="vit-desc">Cartazes, vídeos e avisos</div>
         </div> -->
+        <!-- TIRADO DA VITRINE a pedido do Elias (21/09/2026). A tela
+     #tela-informativo e os dados continuam INTACTOS — pra voltar, e so
+     tirar este comentario.
         <div class="vit-card" onclick="mostrarTela('tela-informativo')">
           <div class="vit-ico">📣</div>
           <div class="vit-nome">Informativo</div><div class="vit-desc">Agendas e avisos</div>
-        </div>
+        </div> -->
         <div class="vit-card" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)">
           <div class="vit-ico">📖</div>
           <div class="vit-nome">Bíblia e Harpa</div><div class="vit-desc">Palavra e louvores</div>
@@ -89,10 +124,13 @@
           <div class="vit-ico">🎙️</div>
           <div class="vit-nome">Pregações</div><div class="vit-desc">Pregações poderosas</div>
         </div>
+        <!-- TIRADO DA VITRINE a pedido do Elias (21/09/2026). A tela das
+     historinhas e os videos continuam INTACTOS (abrirHistorinhas() segue
+     viva e o bloco #hist-home existe) — pra voltar, e so tirar este comentario.
         <div class="vit-card" onclick="abrirHistorinhas()">
           <div class="vit-ico">🧒</div>
           <div class="vit-nome">Historinhas Infantis</div><div class="vit-desc">Conteúdo para crianças</div>
-        </div>
+        </div> -->
         <div class="vit-card" onclick="abrirMod('desafiomateus')">
           <div class="vit-ico">🧠</div>
           <div class="vit-nome">Quiz Bíblico</div><div class="vit-desc">Desafie seu conhecimento</div>
@@ -986,7 +1024,7 @@
   </div>
 </div>
 
-<script src="/assets/app.js?v=149"></script>
+<script src="/assets/app.js?v=150"></script>
 
 <!-- REF SHEET -->
 <div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>
@@ -1984,7 +2022,7 @@ function compartilharApp(nome){
   </div>
 </div>
 
-<script src="/assets/lupa.js?v=145"></script>
-<script src="/_uso.js?v=1" defer></script>
+<script src="/assets/lupa.js?v=150"></script>
+<script src="/_uso.js?v=150" defer></script>
 </body>
 </html>

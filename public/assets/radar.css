@@ -1163,3 +1163,109 @@ html[data-fs="3"] .prl-out{font-size:20px}
   #home .vit-sub{max-width:340px;font-size:13.5px}
   #home .vit-grade{gap:12px}
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PELE "AZUL PROFISSIONAL — MODERNO E CONFIAVEL"  (modelo 2 do Elias)
+   21/09/2026.
+
+   COMO FUNCIONA: a pele BEGE continua sendo o padrao e NAO foi tocada.
+   Esta aqui so entra quando o <html> ganha data-pele="azul" (o botao 🎨
+   no topo poe e tira, e guarda a escolha no aparelho).
+   Escopo: SOMENTE html[data-pele="azul"] #home — nenhuma outra tela muda.
+   Pra criar a 3a/4a/5a pele: copiar este bloco, trocar as variaveis
+   de cor do topo e o nome da classe. O resto do CSS ja obedece.
+   ══════════════════════════════════════════════════════════════ */
+html[data-pele="azul"] #home{
+  --bege:#0C1F3F; --bege2:rgba(255,255,255,.14); --bege3:rgba(255,255,255,.22);
+  --cartao:#143257; --cartao2:#102B4C;
+  --dourado:#E7B84F; --dourado-escuro:#F0C862; --ambar:#E7B84F;
+  --marrom:#F2F6FC; --marrom2:#D3E2F4; --cinza:#9FB8D6;
+  background:var(--bege);
+  color:var(--marrom);
+}
+html[data-pele="azul"] #home .home-scroll{background:var(--bege)}
+
+/* a capa vira o ceu com a cruz, e a dissolucao acompanha o azul */
+html[data-pele="azul"] #home .vit-hero::before{
+  background-image:url(/img/home/hero-cruz.svg);
+  opacity:1;
+}
+html[data-pele="azul"] #home .vit-hero::after{
+  background:linear-gradient(180deg,rgba(12,31,63,.10) 0%,rgba(12,31,63,.30) 52%,rgba(12,31,63,.80) 84%,var(--bege) 100%);
+}
+
+/* no escuro, sombra de texto branca vira borrao: aqui ela escurece */
+html[data-pele="azul"] #home .vit-ola,
+html[data-pele="azul"] #home .vit-bemvindo,
+html[data-pele="azul"] #home .vit-sub{text-shadow:0 1px 3px rgba(4,14,32,.75)}
+html[data-pele="azul"] #home .vit-marca{
+  color:var(--dourado-escuro);
+  text-shadow:0 2px 10px rgba(4,14,32,.65),0 0 22px rgba(231,184,79,.25);
+}
+
+html[data-pele="azul"] #home .vit-tbtn{
+  background:rgba(20,50,87,.82);border:1px solid rgba(231,184,79,.40);
+  color:#F2F6FC;box-shadow:0 2px 8px rgba(3,12,28,.45);
+}
+html[data-pele="azul"] #home .vit-tbtn:active{background:#1B3F6B}
+
+html[data-pele="azul"] #home .vit-versiculo{
+  background:var(--cartao2);border:1px solid rgba(231,184,79,.22);
+  box-shadow:0 3px 14px rgba(3,12,28,.38);
+}
+html[data-pele="azul"] #home .vit-aspas{color:var(--dourado);opacity:.65}
+html[data-pele="azul"] #home .vit-vtxt{color:#EAF1FA}
+html[data-pele="azul"] #home .vit-vref{color:var(--dourado)}
+html[data-pele="azul"] #home .vit-vseta{
+  background:var(--dourado);color:#0C1F3F;
+  box-shadow:0 3px 10px rgba(231,184,79,.30);
+}
+html[data-pele="azul"] #home .vit-vseta:active{background:var(--dourado-escuro)}
+
+html[data-pele="azul"] #home .vit-card{
+  background:var(--cartao);border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 2px 8px rgba(3,12,28,.30);
+}
+html[data-pele="azul"] #home .vit-card:active{
+  border-color:var(--dourado);background:#1A3D68;
+  box-shadow:0 4px 16px rgba(231,184,79,.22);
+}
+html[data-pele="azul"] #home .vit-ico{filter:saturate(1.05) drop-shadow(0 2px 4px rgba(3,12,28,.5))}
+html[data-pele="azul"] #home .vit-nome{color:#F2F6FC}
+html[data-pele="azul"] #home .vit-desc{color:var(--cinza)}
+html[data-pele="azul"] #home .vit-vazio{background:rgba(20,50,87,.35);border:1.5px dashed rgba(255,255,255,.18)}
+
+html[data-pele="azul"] #home .nav-bottom{
+  background:rgba(8,22,45,.97);border-top:1px solid rgba(255,255,255,.10);
+  box-shadow:0 -2px 14px rgba(3,12,28,.45);
+}
+html[data-pele="azul"] #home .nav-btn .ni{filter:grayscale(.35) opacity(.72)}
+html[data-pele="azul"] #home .nav-btn .nl{color:var(--cinza)}
+html[data-pele="azul"] #home .nav-btn.on .ni{filter:none}
+html[data-pele="azul"] #home .nav-btn.on .nl{color:var(--dourado)}
+
+/* a barra de cima do celular acompanha (Android pinta pela meta theme-color,
+   trocada pelo JS; isto aqui cobre o resto) */
+html[data-pele="azul"] #home::selection{background:rgba(231,184,79,.35)}
+
+/* ── ZERO BURACO NA ULTIMA LINHA ────────────────────────────────────────────
+   A grade tem 3 colunas. Quando o numero de cartoes nao e multiplo de 3,
+   sobrava espaco morto no canto — e espaco vazio e coisa que o Elias nao
+   admite na tela dele (aconteceu em 21/09, ao tirar Informativo e
+   Historinhas: ficaram 10 cartoes e 2 buracos).
+   Regra que se conserta sozinha: se sobrar UM, ele ocupa a linha inteira;
+   se sobrarem DOIS, cada um pega metade. Tirar ou por cartao no HTML nao
+   exige mexer aqui de novo. */
+#home .vit-grade > .vit-card:last-child:nth-child(3n+1){grid-column:1 / -1}
+#home .vit-grade > .vit-card:nth-child(3n+2):nth-last-child(2),
+#home .vit-grade > .vit-card:nth-child(3n+2):nth-last-child(2) + .vit-card{
+  grid-column:span 1;
+}
+#home .vit-grade > .vit-card:last-child:nth-child(3n+2){grid-column:span 2}
+/* na linha inteira o cartao fica baixo demais: deita o conteudo */
+#home .vit-grade > .vit-card:last-child:nth-child(3n+1){
+  flex-direction:row;gap:14px;padding:10px 18px;text-align:left;justify-content:center;
+}
+#home .vit-grade > .vit-card:last-child:nth-child(3n+1) .vit-ico{margin-bottom:0;flex-shrink:0}
+#home .vit-grade > .vit-card:last-child:nth-child(3n+1) .vit-nome{text-align:left}
+#home .vit-grade > .vit-card:last-child:nth-child(3n+1) .vit-desc{text-align:left;margin-top:2px}

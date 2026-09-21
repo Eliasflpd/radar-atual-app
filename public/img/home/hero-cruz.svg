@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMid slice">
+<!-- Capa da pele AZUL PROFISSIONAL (modelo 2 do Elias).
+     Mesma medida da hero-biblia.svg (800x300, slice) pra encaixar no mesmo lugar.
+     Feito em SVG e nao em foto de proposito: 4 KB abrem na hora ate no 3G do interior,
+     e o arquivo acompanha a cor do tema sem precisar de outra imagem. -->
+<defs>
+  <linearGradient id="ceu" x1="0" y1="0" x2=".25" y2="1">
+    <stop offset="0"   stop-color="#071A3A"/>
+    <stop offset=".34" stop-color="#0E2F5E"/>
+    <stop offset=".68" stop-color="#17497F"/>
+    <stop offset="1"   stop-color="#2A6BA8"/>
+  </linearGradient>
+  <radialGradient id="luz" cx=".64" cy=".40" r=".62">
+    <stop offset="0"   stop-color="#E9F3FF" stop-opacity=".92"/>
+    <stop offset=".26" stop-color="#9FC8F0" stop-opacity=".55"/>
+    <stop offset=".62" stop-color="#3C7DBC" stop-opacity=".20"/>
+    <stop offset="1"   stop-color="#0B2247" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="cruz" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"   stop-color="#0A1E3E" stop-opacity=".96"/>
+    <stop offset="1"   stop-color="#061631" stop-opacity=".99"/>
+  </linearGradient>
+  <linearGradient id="nuvem" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#CFE3F8" stop-opacity=".38"/>
+    <stop offset="1" stop-color="#7FAAD8" stop-opacity=".10"/>
+  </linearGradient>
+  <filter id="suave" x="-20%" y="-40%" width="140%" height="180%">
+    <feGaussianBlur stdDeviation="9"/>
+  </filter>
+</defs>
+
+<rect width="800" height="300" fill="url(#ceu)"/>
+
+<!-- raios de luz saindo de tras da cruz -->
+<g opacity=".30">
+  <path d="M512 118 L800 -40 L800 40 Z"  fill="#BBD8F5"/>
+  <path d="M512 118 L800 60  L800 132 Z" fill="#9CC4EC" opacity=".8"/>
+  <path d="M512 118 L800 176 L800 240 Z" fill="#7FAEDF" opacity=".6"/>
+  <path d="M512 118 L330 -40 L420 -40 Z" fill="#A8CCEF" opacity=".55"/>
+</g>
+
+<rect width="800" height="300" fill="url(#luz)"/>
+
+<!-- nuvens baixas -->
+<g filter="url(#suave)">
+  <ellipse cx="180" cy="238" rx="210" ry="40" fill="url(#nuvem)"/>
+  <ellipse cx="430" cy="262" rx="260" ry="38" fill="url(#nuvem)"/>
+  <ellipse cx="690" cy="230" rx="180" ry="34" fill="url(#nuvem)" opacity=".7"/>
+  <ellipse cx="560" cy="88"  rx="150" ry="26" fill="url(#nuvem)" opacity=".45"/>
+</g>
+
+<!-- a cruz -->
+<g transform="translate(512 118)">
+  <rect x="-11" y="-92" width="22" height="268" rx="3" fill="url(#cruz)"/>
+  <rect x="-74" y="-36" width="148" height="21" rx="3" fill="url(#cruz)"/>
+  <!-- brilho na borda esquerda, como se a luz viesse de tras -->
+  <rect x="-13" y="-92" width="3"  height="268" rx="2" fill="#7FB3E6" opacity=".35"/>
+  <rect x="-74" y="-38" width="148" height="3"  rx="2" fill="#7FB3E6" opacity=".30"/>
+</g>
+
+<!-- vinheta pra letra branca nunca brigar com o fundo -->
+<rect width="800" height="300" fill="#05142C" opacity=".18"/>
+</svg>
