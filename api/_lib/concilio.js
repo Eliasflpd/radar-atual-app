@@ -216,7 +216,7 @@ const ABREV = {
   juizes: 'jz', jz: 'jz', rute: 'rt', rt: 'rt', '1samuel': '1sm', '1sm': '1sm', '1sam': '1sm',
   '2samuel': '2sm', '2sm': '2sm', '2sam': '2sm', '1reis': '1rs', '1rs': '1rs', '2reis': '2rs', '2rs': '2rs',
   '1cronicas': '1cr', '1cr': '1cr', '2cronicas': '2cr', '2cr': '2cr', esdras: 'ed', ed: 'ed', esd: 'ed',
-  neemias: 'ne', ne: 'ne', ester: 'et', et: 'et', job: 'jó', salmos: 'sl', salmo: 'sl', sl: 'sl', sal: 'sl',
+  neemias: 'ne', ne: 'ne', ester: 'et', et: 'et', job: 'jó', 'jó': 'jó', jo: 'jo', salmos: 'sl', salmo: 'sl', sl: 'sl', sal: 'sl',
   proverbios: 'pv', pv: 'pv', prov: 'pv', eclesiastes: 'ec', ec: 'ec', ecl: 'ec', cantares: 'ct',
   canticos: 'ct', cantico: 'ct', ct: 'ct', isaias: 'is', is: 'is', isa: 'is', jeremias: 'jr', jr: 'jr',
   jer: 'jr', lamentacoes: 'lm', lm: 'lm', ezequiel: 'ez', ez: 'ez', daniel: 'dn', dn: 'dn', dan: 'dn',
@@ -249,7 +249,11 @@ const chaveLivro = (num, palavra) => {
 // com hífen não-separável e "Cl 1:16—17" com travessão. Pegar só o "-" cortava o
 // intervalo em 1:1, e aí a citação certa do versículo 3 era acusada de falsa.
 const TRACO = '[-‐-―−]';
-const RE_REF = new RegExp('(?:^|[^\\wÀ-ÿ])([123]|I{1,3})?\\s*[ªº°]?\\s*([A-Za-zÀ-ÿ]{2,16})\\.?\\s*(\\d{1,3})\\s*[:.]\\s*(\\d{1,3})(?:\\s*(?:' + TRACO + '|a)\\s*(\\d{1,3}))?', 'g');
+// ⚠️ O numeral ROMANO ("I Coríntios") exige espaço depois. Sem essa trava o regex
+// comia o "I" de "Isaías" como se fosse "I saías", a referência não resolvia, e uma
+// citação inventada de Isaías 55:9 passava batida. O arábico ("1Co") não precisa.
+const PREFIXO = '(?:([123])\\s*[ªº°]?\\s*|(I{1,3})\\s*\\.?\\s+)?';
+const RE_REF = new RegExp('(?:^|[^\\wÀ-ÿ])' + PREFIXO + '([A-Za-zÀ-ÿ]{2,16})\\.?\\s*(\\d{1,3})\\s*[:.]\\s*(\\d{1,3})(?:\\s*(?:' + TRACO + '|a)\\s*(\\d{1,3}))?', 'g');
 
 /** Toda referência bíblica resolvível dentro de um texto. */
 function acharReferencias(texto) {
@@ -257,12 +261,12 @@ function acharReferencias(texto) {
   const t = String(texto || '');
   RE_REF.lastIndex = 0;
   for (let m; (m = RE_REF.exec(t));) {
-    const romano = { i: 1, ii: 2, iii: 3 }[String(m[1] || '').toLowerCase()];
-    const ab = ABREV[chaveLivro(romano || m[1], m[2])];
+    const romano = { i: 1, ii: 2, iii: 3 }[String(m[2] || '').toLowerCase()];
+    const ab = ABREV[chaveLivro(romano || m[1], m[3])];
     if (!ab) continue;
     const bruto = m[0].replace(/^[^\wÀ-ÿ]+/, '');
     out.push({
-      abbrev: ab, cap: +m[3], v1: +m[4], v2: m[5] ? +m[5] : +m[4],
+      abbrev: ab, cap: +m[4], v1: +m[5], v2: m[6] ? +m[6] : +m[5],
       bruto, ini: m.index + (m[0].length - bruto.length), fim: m.index + m[0].length,
     });
   }
@@ -281,12 +285,12 @@ function livrosCitados(texto) {
   const por = (ab) => { if (ab && LIVRO_NOME[ab] && achados.indexOf(ab) < 0) achados.push(ab); };
   // Duas passadas: (1) nome por extenso, que vale sozinho; (2) sigla curta, que só
   // vale com número colado e começando em maiúscula.
-  for (const re of [/(?:^|[^\wÀ-ÿ])([123]|I{1,3})?\s*[ªº°]?\s*([A-Za-zÀ-ÿ]{5,16})/g,
-    /(?:^|[^\wÀ-ÿ])([123]|I{1,3})?\s*[ªº°]?\s*([A-ZÀ-Ý][a-zà-ÿ]?[A-Za-zÀ-ÿ]{0,2})\.?\s*\d{1,3}\b/g]) {
+  for (const re of [new RegExp('(?:^|[^\\wÀ-ÿ])' + PREFIXO + '([A-Za-zÀ-ÿ]{5,16})', 'g'),
+    new RegExp('(?:^|[^\\wÀ-ÿ])' + PREFIXO + '([A-ZÀ-Ý][a-zà-ÿ]?[A-Za-zÀ-ÿ]{0,2})\\.?\\s*\\d{1,3}\\b', 'g')]) {
     re.lastIndex = 0;
     for (let m; (m = re.exec(t));) {
-      const romano = { i: 1, ii: 2, iii: 3 }[String(m[1] || '').toLowerCase()];
-      por(ABREV[chaveLivro(romano || m[1], m[2])]);
+      const romano = { i: 1, ii: 2, iii: 3 }[String(m[2] || '').toLowerCase()];
+      por(ABREV[chaveLivro(romano || m[1], m[3])]);
       if (achados.length >= 6) break;
     }
   }
@@ -483,8 +487,19 @@ export async function conferirVersiculos(texto, origem, assunto) {
   // b) aspas coladas numa referência: bate com o que está escrito?
   const aspas = /[“"]([^”"\n]{25,400})[”"]/g;
   for (let m; (m = aspas.exec(t));) {
-    const jan = { ini: Math.max(0, m.index - 130), fim: m.index + m[0].length + 130 };
-    const perto = acharReferencias(t.slice(jan.ini, jan.fim));
+    // ⚠️ A referência tem que estar GRUDADA na aspa pra gente poder dizer que a
+    // resposta atribuiu aquele texto àquela referência. Medido em produção: um
+    // "(cf. Romanos 3:22-24)." numa frase ANTERIOR fazia o servidor acusar de
+    // falsa uma citação correta de João 3:16. O que gruda é gap curto e sem fim
+    // de frase no meio — "Isaías 55:9 – ", "Levítico 23:10-12 diz: ", ' (Lv 23:10)'.
+    const grudado = (gap) => gap.length <= 40 && !/[.!?…]\s|\n/.test(gap);
+    const perto = [];
+    const antes = t.slice(Math.max(0, m.index - 70), m.index);
+    const rAntes = acharReferencias(antes);
+    if (rAntes.length && grudado(antes.slice(rAntes[rAntes.length - 1].fim))) perto.push(rAntes[rAntes.length - 1]);
+    const depoisTxt = t.slice(m.index + m[0].length, m.index + m[0].length + 60);
+    const rDepois = acharReferencias(depoisTxt);
+    if (rDepois.length && grudado(depoisTxt.slice(0, rDepois[0].ini))) perto.push(rDepois[0]);
     if (!perto.length) continue;
     const palavras = conteudo(m[1]);
     if (palavras.length < 4) continue;
