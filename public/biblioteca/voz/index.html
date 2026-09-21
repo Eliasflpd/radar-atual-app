@@ -78,11 +78,21 @@
   #estado.alerta{color:var(--vinho)}
   #estado.espera{color:var(--dourado)}
 
-  .barra{display:flex;gap:9px;margin:13px 0 0}
-  .barra button{flex:1;border-radius:13px;padding:15px 10px;font-size:1.02rem;font-weight:800;font-family:inherit;cursor:pointer;border:1px solid #e4e7ec}
+  .barra{display:flex;gap:7px;margin:13px 0 0}
+  .barra button{flex:1;border-radius:13px;padding:15px 6px;font-size:1.02rem;font-weight:800;font-family:inherit;cursor:pointer;border:1px solid #e4e7ec}
   #encerrar{background:var(--vinho);color:#fff;border-color:transparent;flex:1.5}
   #encerrar:disabled{opacity:.4;cursor:default}
-  #copiar{background:rgba(15,61,92,.07);color:var(--navy)}
+  #copiar{background:rgba(15,61,92,.07);color:var(--navy);font-size:.9rem;flex:.95}
+  /* O interruptor do VIVA-VOZ. No alto-falante o eco faz o mestre se cortar
+     sozinho — parece travamento. Aqui ele diz, com um toque, onde o som sai. */
+  #modo{background:#fdf8ef;border-color:#e2cfa6;color:#7a5510;font-size:.9rem;flex:1.05;line-height:1.2}
+  #modo b{display:block;font-size:.98rem}
+
+  /* ── O MEDIDOR (só com ?hud=1). É a prova de que não há duas vozes. ── */
+  #hud{position:fixed;left:6px;bottom:6px;z-index:9;max-width:calc(100vw - 12px);
+    background:rgba(10,20,28,.88);color:#9ff3c5;font:700 11px/1.45 ui-monospace,Consolas,monospace;
+    padding:6px 8px;border-radius:8px;white-space:pre;pointer-events:none}
+  #hud.mal{color:#ffb3ad}
 
   /* ── A CONVERSA ESCRITA ── */
   #conversa{margin-top:15px}
@@ -141,10 +151,13 @@
 
   <div class="barra">
     <button id="encerrar" disabled>⏹ ENCERRAR</button>
+    <button id="modo" title="Onde o som está saindo"><b>🔈</b>Viva-voz</button>
     <button id="copiar">📋 Copiar</button>
   </div>
 
   <div id="conversa"><div class="vazio">A conversa aparece aqui, escrita, enquanto vocês falam.</div></div>
+
+  <div id="hud" hidden></div>
 
 <script>
 (function(){
@@ -170,10 +183,29 @@
 
   var $ = function(id){ return document.getElementById(id); };
   var cv=$('globo'), elEstado=$('estado'), elDica=$('dica'), elConversa=$('conversa'),
-      btnEncerrar=$('encerrar'), btnCopiar=$('copiar'), elProva=$('provaVoz'), elLinha=$('linhaVozes');
+      btnEncerrar=$('encerrar'), btnCopiar=$('copiar'), btnModo=$('modo'),
+      elProva=$('provaVoz'), elLinha=$('linhaVozes'), elHud=$('hud');
 
   var TAXA_ENVIO = 16000;   // o que o Gemini Live aceita de entrada
   var TAXA_VOLTA = 24000;   // o que ele devolve
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // OS NÚMEROS DA RECEITA OFICIAL DO GOOGLE (AudioStreamer do Live API).
+  // Não invente outros: foram estes que pararam de engasgar.
+  //   BUF_SAIDA        — junta os pedacinhos que chegam em blocos de 7680
+  //                      amostras (320 ms a 24 kHz) antes de tocar. Pedaço
+  //                      grande = menos agendamento = menos engasgo.
+  //   ESPERA_INICIAL   — 0,1 s de gordura antes da PRIMEIRA nota sair. É o que
+  //                      absorve o soluço da rede no começo da frase.
+  //   AGENDAR_ADIANTE  — só agenda o que cabe nos próximos 0,2 s. Agendar a
+  //                      fila inteira de uma vez é o que fazia o corte deixar
+  //                      áudio velho preso no hardware, saindo por baixo.
+  //   FADE             — 0,1 s pra emudecer no corte. Cortar seco dá estalo.
+  // ══════════════════════════════════════════════════════════════════════════
+  var BUF_SAIDA = 7680, ESPERA_INICIAL = 0.10, AGENDAR_ADIANTE = 0.20, FADE = 0.10;
+
+  // Barge-in local no viva-voz: fala ALTA e SEGUIDA não é eco, é ele cortando.
+  var LIMIAR_CORTE = 0.090, CORTE_MS = 250;
 
   // Voz: padrão Orus (rótulo "Firm" do Google — o timbre de professor).
   // Dá pra trocar por ?voz=Charon, ou tocando nos botões de prova aqui em cima.
@@ -191,16 +223,38 @@
   }
 
   var S = {
-    ligado:false, ws:null, stream:null,
+    ligado:false, abrindo:false, ws:null, stream:null,
     ctxMic:null, noMic:null, worklet:null, script:null, analiseMic:null, bufMic:null,
-    ctxSom:null, analiseSom:null, bufSom:null, proximoSom:0, tocando:[],
+
+    // ── saída de som: contexto, ganho (pro fade do corte), medidor e A FILA ──
+    ctxSom:null, ganho:null, analiseSom:null, bufSom:null,
+    fila:[], sobra:null, sobraN:0,        // sobra = o pedaço ainda não cheio de 7680
+    proximoSom:0,                          // o scheduledTime da receita
+    tocando:[], agendaSom:null, tocandoAgora:false, turnoMudo:false,
+
+    // ── a linha com o Google: UMA só, sempre ──
+    geracao:0, conectando:null, fioTexto:Promise.resolve(),
     handle:null, handleRuim:0, abertoEm:0,
     tentativas:0, fechandoDeProposito:false, reconectando:false, agendado:null,
+
     euFalando:false, eleFalando:false, garimpando:false, fimFala:null,
     bolhaEu:null, bolhaMestre:null,
+
+    // ── viva-voz / fone ──
+    meioDuplex:true, manualDuplex:null, saidaNome:'(ainda não olhei)',
+    corteMs:0, mudoMs:0,
+
+    // ── o MEDIDOR: é isto que prova que a voz dupla morreu ──
+    wsVivos:0, picoWs:0, picoAudivel:0, picoAgendado:0,
+    cortes:0, cortesLocais:0, remendos:0, pedacos:0, vigia:null,
+
     texto:[], wake:null, voz:vozDaURL(),
     fase:'pronto', nivel:0, escala:0.80, giro:0, relogio:0, amostra:null
   };
+  var HUD_LIGADO = /[?&]hud=1/.test(location.search);
+  function diario(){
+    try{ console.log.apply(console, ['[VOZ]'].concat([].slice.call(arguments))); }catch(e){}
+  }
 
   // ════════════════════════════════════════════════════════════════════════
   // O GLOBO — desenhado à mão em Canvas, nas cores do RADAR.
@@ -321,7 +375,13 @@
     if(!S.ligado){ S.fase = (S.fase==='erro') ? 'erro' : 'pronto'; return; }
     if(S.reconectando){ S.fase = navigator.onLine===false ? 'semRede' : 'reconectando'; return; }
     if(S.garimpando){ S.fase='garimpo'; estado('⛏️ Buscando no material','O mestre foi ver nas aulas do Dr. Wagner.'); return; }
-    if(S.eleFalando){ S.fase='eleFala'; estado('🔊 O MESTRE FALA','Pode cortar. É só falar por cima.'); return; }
+    if(S.eleFalando){
+      S.fase='eleFala';
+      estado('🔊 O MESTRE FALA', S.meioDuplex
+        ? 'No viva-voz: espere ele parar, ou fale ALTO para cortar.'
+        : 'Pode cortar. É só falar por cima.');
+      return;
+    }
     if(S.euFalando){ S.fase='euFalo'; estado('🎤 OUVINDO VOCÊ','Pode continuar, ele está ouvindo.'); return; }
     S.fase='ouvindo'; estado('👂 PODE FALAR','O mestre está ouvindo.');
   }
@@ -356,53 +416,265 @@
     return out;
   }
 
-  // ── TOCAR a voz do mestre (PCM 24k enfileirado, sem buraco entre os pedaços) ──
-  function tocar(b64){
-    if(!S.ctxSom) return;
-    var bytes=deBase64(b64), amostras=bytes.length>>1;
-    var pcm=new Int16Array(bytes.buffer,bytes.byteOffset,amostras);
-    var buf=S.ctxSom.createBuffer(1,amostras,TAXA_VOLTA), ch=buf.getChannelData(0);
-    for(var i=0;i<amostras;i++) ch[i]=pcm[i]/32768;
-    var src=S.ctxSom.createBufferSource(); src.buffer=buf;
-    src.connect(S.analiseSom);                    // passa pelo medidor: é o que faz o globo pulsar
-    var agora=S.ctxSom.currentTime;
-    if(S.proximoSom<agora+0.03) S.proximoSom=agora+0.03;   // remonta a fila se atrasou
-    src.start(S.proximoSom); S.proximoSom+=buf.duration;
-    S.tocando.push(src);
-    S.eleFalando=true; S.garimpando=false; fase();
-    src.onended=function(){
-      var i=S.tocando.indexOf(src); if(i>=0) S.tocando.splice(i,1);
-      // O áudio chega em rajadas com micro-pausas. Se apagássemos o indicador na
-      // primeira pausa, a tela ficaria piscando durante a MESMA frase.
-      if(!S.tocando.length){
-        clearTimeout(S.fimFala);
-        S.fimFala=setTimeout(function(){ if(!S.tocando.length){ S.eleFalando=false; fase(); } },320);
-      }
-    };
-  }
-  // O CORTE: o mestre está falando, o Elias fala por cima -> cala AGORA e joga
-  // fora o que já estava agendado. Sem isto, o áudio velho sairia por segundos.
-  function calarMestre(){
-    clearTimeout(S.fimFala);
-    for(var i=0;i<S.tocando.length;i++){ try{ S.tocando[i].onended=null; S.tocando[i].stop(); }catch(e){} }
-    S.tocando=[]; S.proximoSom=0; S.eleFalando=false; fase();
+  // ══════════════════════════════════════════════════════════════════════════
+  // A FILA DE REPRODUÇÃO — a receita do Google, ao pé da letra.
+  //
+  // O QUE HAVIA AQUI ANTES E POR QUE DAVA DUAS VOZES E ENGASGO:
+  //   • cada pedacinho que chegava virava um BufferSource e ia pra frente com
+  //     apenas 30 ms de gordura. Qualquer atraso da rede (e no carro é o tempo
+  //     todo) estourava a margem e o som saía picado — o "travando".
+  //   • não havia fila: era agendamento solto. Quando duas origens de áudio
+  //     ficavam vivas ao mesmo tempo (duas conexões, ver adiante), as duas
+  //     empurravam no MESMO relógio e as falas se montavam UMA POR CIMA DA
+  //     OUTRA. É daí que nascia a voz dupla.
+  //   • o corte não zerava o relógio direito e não silenciava o que já estava
+  //     entregue ao hardware: a fala velha continuava saindo por baixo da nova.
+  //
+  // AGORA: um relógio só (proximoSom), fila única, e a linha que garante que
+  // duas notas NUNCA se sobrepõem:
+  //        inicio = Math.max(proximoSom, ctx.currentTime)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // O ganho é o que permite emudecer com fade. Ele é DESCARTADO a cada corte e
+  // nasce um novo: assim o áudio que vem depois do corte já nasce num canal
+  // limpo, sem pegar carona na rampa que está indo pra zero.
+  function novoGanho(){
+    if(!S.ctxSom||!S.analiseSom) return null;
+    var g=S.ctxSom.createGain();
+    g.gain.value=1;
+    g.connect(S.analiseSom);       // medidor -> alto-falante: é o que faz o globo pulsar
+    S.ganho=g;
+    return g;
   }
 
-  // ── MANDAR o que ele fala (PCM 16k) ───────────────────────────────────────
+  // Chegou áudio: NÃO toca na hora. Junta até fechar 7680 amostras.
+  function enfileirarPCM(b64){
+    if(!S.ctxSom||S.turnoMudo) return;
+    var bytes=deBase64(b64), n=bytes.length>>1;
+    if(!n) return;
+    var pcm=new Int16Array(bytes.buffer,bytes.byteOffset,n);
+    if(!S.sobra) S.sobra=new Float32Array(BUF_SAIDA);
+    for(var i=0;i<n;i++){
+      S.sobra[S.sobraN++]=pcm[i]/32768;
+      if(S.sobraN===BUF_SAIDA){ S.fila.push(S.sobra.slice(0)); S.sobraN=0; S.pedacos++; }
+    }
+    partir();
+  }
+  // Fim do turno: o resto vai mesmo sem completar o bloco, senão a última
+  // meia-palavra de cada resposta ficaria presa na sobra pra sempre.
+  function despejarSobra(){
+    if(S.sobraN>0 && S.sobra){ S.fila.push(S.sobra.slice(0,S.sobraN)); S.sobraN=0; S.pedacos++; partir(); }
+  }
+
+  function partir(){
+    if(!S.ctxSom) return;
+    // o globo já reage ao primeiro naco que chega, mesmo antes de fechar bloco
+    if(!S.eleFalando){ S.eleFalando=true; S.garimpando=false; fase(); }
+    // ainda juntando o primeiro bloco: NÃO acerta o relógio agora. Se acertasse,
+    // os 0,1 s de gordura venceriam antes de existir áudio pra tocar, e o
+    // primeiro bloco já nasceria atrasado — engasgo logo na primeira sílaba.
+    if(!S.fila.length) return;
+    if(!S.tocandoAgora){
+      S.tocandoAgora=true;
+      // a gordura de 0,1 s que segura o soluço da rede no começo da frase
+      S.proximoSom=Math.max(S.proximoSom, S.ctxSom.currentTime+ESPERA_INICIAL);
+    }
+    agendar();
+  }
+
+  function agendar(){
+    if(!S.ctxSom) return;
+    clearTimeout(S.agendaSom);
+    var ctx=S.ctxSom;
+    if(!S.ganho) novoGanho();
+
+    while(S.fila.length && S.proximoSom < ctx.currentTime + AGENDAR_ADIANTE){
+      (function(dados){
+        var buf=ctx.createBuffer(1,dados.length,TAXA_VOLTA);
+        buf.getChannelData(0).set(dados);
+        var src=ctx.createBufferSource();
+        src.buffer=buf; src.connect(S.ganho);
+
+        // ─── A LINHA DA RECEITA ───
+        // Se o relógio da fila ficou pra trás (aba escondida, aparelho travado),
+        // ele é puxado pra AGORA em vez de agendar no passado. Agendar no
+        // passado é o que fazia o navegador despejar tudo de uma vez — duas,
+        // três notas saindo juntas: a "voz dupla" na sua forma mais crua.
+        var inicio=Math.max(S.proximoSom, ctx.currentTime);
+        if(inicio>S.proximoSom+0.001) S.remendos++;
+        src.start(inicio);
+        S.proximoSom=inicio+buf.duration;
+
+        var reg={src:src, inicio:inicio, fim:S.proximoSom};
+        S.tocando.push(reg);
+        if(S.tocando.length>S.picoAgendado) S.picoAgendado=S.tocando.length;
+        src.onended=function(){
+          var i=S.tocando.indexOf(reg); if(i>=0) S.tocando.splice(i,1);
+        };
+      })(S.fila.shift());
+    }
+
+    if(S.fila.length){
+      // volta um pouco ANTES de a fila secar, pra nunca deixar buraco
+      var proxima=(S.proximoSom-ctx.currentTime)*1000-60;
+      S.agendaSom=setTimeout(agendar, Math.max(10, proxima));
+      return;
+    }
+    // fila vazia: só declara "ele parou de falar" depois que a última nota
+    // realmente terminou. Sem esta espera a tela piscava no meio da frase.
+    clearTimeout(S.fimFala);
+    var resta=(S.proximoSom-ctx.currentTime)*1000;
+    S.fimFala=setTimeout(function(){
+      if(!S.ctxSom) return;
+      if(S.fila.length){ agendar(); return; }
+      if(S.proximoSom > S.ctxSom.currentTime+0.02){ agendar(); return; }
+      S.tocandoAgora=false; S.eleFalando=false; S.proximoSom=0; S.corteMs=0;
+      fase();
+    }, Math.max(80, resta+280));
+  }
+
+  // ── O CORTE ───────────────────────────────────────────────────────────────
+  // Ele fala por cima -> o mestre cala AGORA. Emudece em 100 ms (sem estalo),
+  // joga fora a fila INTEIRA, mata as notas já entregues ao hardware e ZERA o
+  // relógio. Sem os quatro, a fala velha continua saindo por baixo da nova.
+  function calarMestre(motivo){
+    var tinha = S.tocando.length || S.fila.length || S.sobraN;
+    clearTimeout(S.agendaSom); clearTimeout(S.fimFala);
+    S.fila.length=0; S.sobraN=0; S.tocandoAgora=false;
+
+    if(S.ctxSom && S.ganho){
+      var velho=S.ganho, t=S.ctxSom.currentTime;
+      try{
+        velho.gain.cancelScheduledValues(t);
+        velho.gain.setValueAtTime(velho.gain.value, t);
+        velho.gain.linearRampToValueAtTime(0.0001, t+FADE);
+      }catch(e){}
+      var mortas=S.tocando; S.tocando=[];
+      novoGanho();                       // canal limpo pro que vier depois
+      setTimeout(function(){
+        for(var i=0;i<mortas.length;i++){
+          try{ mortas[i].src.onended=null; mortas[i].src.stop(); }catch(e){}
+        }
+        try{ velho.disconnect(); }catch(e){}
+      }, FADE*1000+40);
+    } else {
+      for(var i=0;i<S.tocando.length;i++){ try{ S.tocando[i].src.onended=null; S.tocando[i].src.stop(); }catch(e){} }
+      S.tocando=[];
+    }
+
+    S.proximoSom=0;                      // RESET do relógio — sem isto, voz dupla
+    S.eleFalando=false; S.corteMs=0;
+    if(tinha){ S.cortes++; diario('corte ('+(motivo||'?')+') nº'+S.cortes); }
+    fase();
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // O PORTEIRO DO MICROFONE — a armadilha do viva-voz.
+  //
+  // O cancelamento de eco do navegador NÃO dá conta quando o som sai pelo Web
+  // Audio no alto-falante do celular. O microfone ouve o próprio mestre falando,
+  // o detector de fala do Google entende que "alguém começou a falar" e — como o
+  // servidor está em START_OF_ACTIVITY_INTERRUPTS — ele INTERROMPE A SI MESMO.
+  // Visto de fora, é exatamente isto: o globo trava no meio da fala.
+  //
+  // Então: no viva-voz a conversa é MEIO-DUPLEX (o microfone fecha enquanto o
+  // mestre fala). Com fone ou Bluetooth não há eco: libera FULL-DUPLEX e ele
+  // pode cortar falando por cima, como antes.
+  // NA DÚVIDA, MEIO-DUPLEX: esperar meio segundo é muito melhor que travar.
+  // ══════════════════════════════════════════════════════════════════════════
+  function porteiroFechado(){
+    return S.meioDuplex && (S.eleFalando || S.tocandoAgora);
+  }
+
   function mandarAudio(f32){
-    if(!S.ws||S.ws.readyState!==1) return;
     var n=f32.length,pcm=new Int16Array(n),soma=0;
     for(var i=0;i<n;i++){
       var v=f32[i]; if(v>1)v=1; else if(v<-1)v=-1;
       pcm[i]=v<0?v*32768:v*32767; soma+=v*v;
     }
-    var rms=Math.sqrt(soma/n), falando=rms>0.018;
+    var rms=Math.sqrt(soma/n), dur=(n/TAXA_ENVIO)*1000;
+
+    if(porteiroFechado()){
+      S.mudoMs+=dur;
+      // BARGE-IN LOCAL: mesmo de porta fechada ele pode cortar. Eco de
+      // alto-falante chega fraco; voz dele no aparelho chega FORTE e SEGUIDA.
+      // Passou do limiar por 250 ms: não é eco, é ele. Calamos o mestre aqui
+      // mesmo e reabrimos a porta — sem o alto-falante tocando, o Google ouve
+      // limpo e o turno vira dele.
+      if(rms>LIMIAR_CORTE) S.corteMs+=dur; else S.corteMs=0;
+      if(S.corteMs>=CORTE_MS){
+        S.corteMs=0; S.cortesLocais++;
+        // o servidor ainda vai despejar o resto da fala dele: descarta até o
+        // turno virar, senão o áudio velho volta a tocar por baixo.
+        S.turnoMudo=true;
+        calarMestre('ele falou por cima no viva-voz');
+        diario('barge-in local nº'+S.cortesLocais+' (rms '+rms.toFixed(3)+')');
+      }
+      if(S.euFalando){ S.euFalando=false; }
+      return;                    // NADA sai pro Google enquanto o mestre fala
+    }
+
+    S.corteMs=0;
+    if(!S.ws||S.ws.readyState!==1) return;
+    var falando=rms>0.018;
     if(falando!==S.euFalando && !S.eleFalando){ S.euFalando=falando; fase(); }
     else S.euFalando=falando;
     S.ws.send(JSON.stringify({ realtimeInput:{ audio:{
       data: paraBase64(new Uint8Array(pcm.buffer)),
       mimeType:'audio/pcm;rate='+TAXA_ENVIO
     }}}));
+  }
+
+  // ── ONDE O SOM ESTÁ SAINDO? ───────────────────────────────────────────────
+  // O navegador é avarento com esta informação no celular. Então juntamos as
+  // pistas que existem — o rótulo do microfone escolhido, a lista de saídas e o
+  // sinkId quando o Chrome expõe — e, se nada convencer, ficamos no meio-duplex.
+  var RX_FONE=/headphone|headset|fone|earpiece|earbud|airpod|bluetooth|\bbt\b|hands.?free|wired|a2dp|\bsco\b|auricular|auscultador/i;
+  var RX_ALTO=/speaker|alto.?falante|viva.?voz|loud/i;
+
+  function detectarSaida(){
+    if(S.manualDuplex){                       // ele mandou na mão: a mão manda.
+      S.meioDuplex=(S.manualDuplex==='viva');
+      S.saidaNome='escolha do Elias';
+      pintarModo(); return Promise.resolve();
+    }
+    var comFone=false, nomes=[];
+    try{
+      var tr=S.stream&&S.stream.getAudioTracks&&S.stream.getAudioTracks()[0];
+      if(tr&&tr.label){
+        nomes.push('mic: '+tr.label);
+        if(RX_FONE.test(tr.label)&&!RX_ALTO.test(tr.label)) comFone=true;
+      }
+    }catch(e){}
+
+    var lista=(navigator.mediaDevices&&navigator.mediaDevices.enumerateDevices)
+      ? navigator.mediaDevices.enumerateDevices() : Promise.resolve([]);
+    return lista.then(function(ds){
+      var saidas=[],i;
+      for(i=0;i<ds.length;i++) if(ds[i].kind==='audiooutput') saidas.push(ds[i]);
+      var sink=(S.ctxSom&&typeof S.ctxSom.sinkId==='string')?S.ctxSom.sinkId:'';
+      for(i=0;i<saidas.length;i++){
+        var rot=saidas[i].label||'';
+        if(rot) nomes.push('saída: '+rot);
+        var eEsta = sink ? (saidas[i].deviceId===sink)
+                         : (saidas[i].deviceId==='default'||saidas.length===1);
+        if(eEsta && RX_FONE.test(rot) && !RX_ALTO.test(rot)) comFone=true;
+      }
+      S.saidaNome=nomes.join(' · ')||'(o navegador não conta)';
+      S.meioDuplex=!comFone;
+      diario('saída detectada: '+S.saidaNome+' -> '+(S.meioDuplex?'MEIO-DUPLEX (viva-voz)':'FULL-DUPLEX (fone)'));
+      pintarModo();
+    }).catch(function(){
+      S.meioDuplex=!comFone; S.saidaNome='(não deu pra olhar)'; pintarModo();
+    });
+  }
+
+  function pintarModo(){
+    if(!btnModo) return;
+    btnModo.innerHTML = S.meioDuplex ? '<b>🔈</b>Viva-voz' : '<b>🎧</b>Fone';
+    btnModo.title = S.meioDuplex
+      ? 'No alto-falante: o microfone fecha enquanto ele fala (evita o eco travar tudo). Toque para dizer que você está de fone.'
+      : 'Com fone: pode cortar falando por cima. Toque para dizer que está no viva-voz.';
   }
 
   // O worklet roda na thread de áudio: não engasga quando a tela está ocupada.
@@ -431,7 +703,17 @@
       } else throw e;
     }
 
+    // Agora que o microfone existe, o rótulo dele denuncia se há fone/Bluetooth.
+    detectarSaida();
+    try{
+      if(navigator.mediaDevices && 'ondevicechange' in navigator.mediaDevices){
+        navigator.mediaDevices.ondevicechange=function(){ if(S.ligado) detectarSaida(); };
+      }
+    }catch(e){}
+
     var AC=window.AudioContext||window.webkitAudioContext;
+    // Contexto de ENTRADA separado do de saída, de propósito: taxas diferentes
+    // (16 kHz sobe, 24 kHz desce) e unificar os dois só traz reamostragem torta.
     S.ctxMic=new AC({ sampleRate:TAXA_ENVIO });   // o navegador reamostra melhor que a gente
     if(S.ctxMic.state==='suspended') await S.ctxMic.resume();
     S.noMic=S.ctxMic.createMediaStreamSource(S.stream);
@@ -517,35 +799,95 @@
     }]}], turnComplete:false }}));
   }
 
-  // ── a linha com o Google ──────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════
+  // A LINHA COM O GOOGLE — UMA SÓ, SEMPRE. ESTA É A CAUSA-RAIZ DA VOZ DUPLA.
+  //
+  // O QUE ACONTECIA: `reconectar()` era chamado de quatro lugares (a queda, o
+  // erro do conectar, a aba voltando, o sinal voltando). Nenhum deles olhava se
+  // já havia uma conexão viva ou uma tentativa em voo. Resultado no carro, ao
+  // sair de um túnel: abriam DUAS conexões. `S.ws` apontava pra nova, mas a
+  // ANTIGA continuava com o `onmessage` grudado — e continuava despejando áudio
+  // na mesma fila. Duas conversas, duas vozes, ao mesmo tempo. Exatamente o que
+  // o Elias descreveu.
+  //
+  // A trava é dupla: uma GERAÇÃO (só a linha da geração atual é ouvida) e um
+  // cadeado de tentativa em voo (`S.conectando`).
+  // ══════════════════════════════════════════════════════════════════════════
+  function derrubar(ws,codigo,motivo){
+    if(!ws) return;
+    try{ ws.onopen=ws.onmessage=ws.onerror=ws.onclose=null; }catch(e){}
+    if(ws.__vivo){ ws.__vivo=false; S.wsVivos=Math.max(0,S.wsVivos-1); }
+    try{ if(ws.readyState<=1) ws.close(codigo||1000, motivo||'substituida'); }catch(e){}
+  }
+
   function conectar(){
-    return pedir({ acao:'token', voz:S.voz, handle:S.handle||undefined }).then(function(t){
+    if(S.conectando) return S.conectando;        // NUNCA duas tentativas em voo
+    var g = ++S.geracao;
+    derrubar(S.ws,1000,'trocando de linha');     // NUNCA duas linhas vivas
+    S.ws=null;
+
+    var p = pedir({ acao:'token', voz:S.voz, handle:S.handle||undefined }).then(function(t){
       return new Promise(function(ok,falhou){
+        if(g!==S.geracao){ falhou(new Error('geração vencida')); return; }
         var ws;
         try{ ws=new WebSocket(t.url+'?access_token='+encodeURIComponent(t.token)); }
         catch(e){ falhou(e); return; }
+        // ArrayBuffer em vez de Blob: `Blob.text()` é assíncrono e NÃO garante
+        // ordem entre mensagens. Duas respostas podiam ser lidas fora de ordem
+        // e o aviso de "fui interrompido" chegar DEPOIS do áudio que ele deveria
+        // cancelar — mais uma fábrica de voz dupla. Aqui a leitura é síncrona.
+        try{ ws.binaryType='arraybuffer'; }catch(e){}
         var abriu=false;
         ws.onopen=function(){
-          abriu=true; S.ws=ws; S.abertoEm=Date.now();
+          if(g!==S.geracao){ derrubar(ws,1000,'geração vencida'); falhou(new Error('geração vencida')); return; }
+          abriu=true; ws.__vivo=true; S.wsVivos++;
+          if(S.wsVivos>S.picoWs) S.picoWs=S.wsVivos;
+          S.ws=ws; S.abertoEm=Date.now();
+          diario('linha aberta · geração '+g+' · linhas vivas='+S.wsVivos);
           // setup pobre de propósito: modelo, voz, persona e ferramenta já vêm
           // travados dentro do token (o Google ignora o que mandarmos aqui).
           ws.send(JSON.stringify({ setup:{ model:t.modelo } }));
           ok(ws);
         };
-        ws.onmessage=function(ev){ receber(ev); };
+        ws.onmessage=function(ev){
+          // O PORTEIRO: linha velha não fala. Nem que ainda esteja aberta.
+          if(g!==S.geracao || S.ws!==ws) return;
+          var d=ev.data;
+          if(typeof d==='string'){ tratar(d,g,ws); return; }
+          if(d && d.byteLength!==undefined){
+            try{ tratar(new TextDecoder('utf-8').decode(new Uint8Array(d)),g,ws); }catch(e){}
+            return;
+          }
+          // navegador que ignorou o binaryType: lê em FILA, pra não trocar a ordem
+          S.fioTexto = S.fioTexto.then(function(){ return d.text(); })
+            .then(function(s){ if(g===S.geracao && S.ws===ws) tratar(s,g,ws); })
+            .catch(function(){});
+        };
         ws.onerror=function(){ if(!abriu) falhou(new Error('não consegui abrir a linha de voz')); };
-        ws.onclose=function(e){ aoFechar(e); };
+        ws.onclose=function(e){
+          if(ws.__vivo){ ws.__vivo=false; S.wsVivos=Math.max(0,S.wsVivos-1); }
+          if(g!==S.geracao) return;          // linha velha morrendo: não mexe em nada
+          aoFechar(e);
+        };
       });
     });
+
+    S.conectando = p.then(function(ws){ S.conectando=null; return ws; },
+                          function(e){ S.conectando=null; throw e; });
+    return S.conectando;
   }
 
-  async function receber(ev){
-    var txt=(typeof ev.data==='string')?ev.data:await ev.data.text();
+  function tratar(txt,g,ws){
+    if(g!==S.geracao || S.ws!==ws) return;
     var m; try{ m=JSON.parse(txt); }catch(e){ return; }
 
     if(m.setupComplete){
+      S.turnoMudo=false;
       if(S.reconectando){
         S.reconectando=false; S.tentativas=0;
+        // linha nova = fila velha não presta mais. Se sobrasse áudio da conexão
+        // anterior na fila, ele sairia misturado com o da nova: voz dupla.
+        calarMestre('linha nova');
         // o handle não voltou a conversa? então reinjeta o resumo na mão.
         if(!S.handle) reinjetarFio();
         nota('— a linha caiu e voltou; a conversa continua —');
@@ -570,11 +912,20 @@
 
     var sc=m.serverContent;
     if(sc){
-      if(sc.interrupted) calarMestre();      // ele cortou: cala o alto-falante na hora
+      // ele cortou: cala o alto-falante na hora e reabre o que tinha sido mutado
+      if(sc.interrupted){ calarMestre('o Google avisou interrupted'); S.turnoMudo=false; S.bolhaMestre=null; }
       var partes=(sc.modelTurn&&sc.modelTurn.parts)||[];
       for(var k=0;k<partes.length;k++){
         var d=partes[k].inlineData;
-        if(d&&d.data) tocar(d.data);
+        if(d&&d.data) enfileirarPCM(d.data);
+      }
+      // turno fechado: solta o pedaço que ainda não encheu o bloco de 7680,
+      // senão o fim de cada resposta ficaria engolido.
+      if(sc.generationComplete||sc.turnComplete){
+        despejarSobra(); S.turnoMudo=false;
+        // turno fechado sem áudio nenhum pendente: solta o microfone JÁ, senão o
+        // porteiro do viva-voz ficaria fechado esperando uma fala que não vem.
+        if(S.eleFalando && !S.tocandoAgora && !S.fila.length){ S.eleFalando=false; fase(); }
       }
       if(sc.inputTranscription&&sc.inputTranscription.text){
         if(!S.bolhaEu) S.bolhaEu=bolha('eu','Você');
@@ -615,13 +966,15 @@
     if(Date.now()-S.abertoEm < 4000){
       if(++S.handleRuim>=2 && S.handle){ S.handle=null; S.handleRuim=0; }
     }
-    calarMestre();
+    calarMestre('a linha caiu');
     reconectar(false);
   }
 
   function reconectar(agora){
     if(!S.ligado||S.fechandoDeProposito) return;
+    if(S.conectando) return;          // já tem tentativa em voo: não abre outra
     clearTimeout(S.agendado);
+    derrubar(S.ws,1000,'reconectando');
     S.reconectando=true; S.ws=null; fase();
 
     if(navigator.onLine===false){
@@ -640,13 +993,84 @@
     }, espera);
   }
 
-  window.addEventListener('online',function(){ if(S.ligado){ S.tentativas=0; reconectar(true); } });
+  // ATENÇÃO: só reconecta se a linha estiver REALMENTE morta. Antes, o sinal
+  // voltando (sai do túnel, entra na cidade) disparava uma conexão NOVA por cima
+  // de uma que estava viva e saudável — e as duas falavam juntas.
+  window.addEventListener('online',function(){
+    if(S.ligado && (!S.ws||S.ws.readyState>1)){ S.tentativas=0; reconectar(true); }
+  });
   window.addEventListener('offline',function(){ if(S.ligado){ S.reconectando=true; fase(); estado('📡 SEM INTERNET','Assim que o sinal voltar, eu retomo sozinho.','alerta'); } });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // O VIGIA — roda de 1 em 1 segundo enquanto a conversa está de pé.
+  //
+  // Duas funções:
+  //  (1) CONSERTAR SOZINHO o que trava na estrada: contexto de áudio suspenso
+  //      (o Android suspende quando a tela apaga ou entra ligação), fila parada
+  //      com áudio dentro, linha morta que ninguém percebeu.
+  //  (2) MEDIR. Como ninguém consegue ouvir o áudio de fora, o número é a prova:
+  //      `audíveis` conta as fontes que estão soando NO MESMO INSTANTE.
+  //      Se esse pico passar de 1, existe voz dupla. Tem que ficar em 1.
+  // ══════════════════════════════════════════════════════════════════════════
+  function audiveis(){
+    if(!S.ctxSom) return 0;
+    var t=S.ctxSom.currentTime, c=0;
+    for(var i=0;i<S.tocando.length;i++)
+      if(S.tocando[i].inicio<=t && t<S.tocando[i].fim) c++;
+    return c;
+  }
+
+  function vigiar(){
+    clearInterval(S.vigia);
+    S.vigia=setInterval(function(){
+      if(!S.ligado) return;
+
+      // (1) conserto
+      if(S.ctxSom && S.ctxSom.state==='suspended') S.ctxSom.resume().catch(function(){});
+      if(S.ctxMic && S.ctxMic.state==='suspended') S.ctxMic.resume().catch(function(){});
+      // fila com áudio parado e nada agendado à frente: reacende o agendador
+      if(S.ctxSom && S.fila.length && S.proximoSom < S.ctxSom.currentTime+0.02) agendar();
+      if(!S.ws && !S.conectando && !S.reconectando && !S.fechandoDeProposito) reconectar(true);
+      // PORTEIRO PRESO — o pior defeito possível: o microfone fechado esperando
+      // uma fala que já acabou. Três segundos sem NADA pendente e ele abre.
+      if(S.eleFalando && !S.tocandoAgora && !S.fila.length && !S.sobraN && !S.tocando.length){
+        S.gateVazio=(S.gateVazio||0)+1;
+        if(S.gateVazio>=3){ S.gateVazio=0; S.eleFalando=false; fase(); diario('porteiro preso — liberado pelo vigia'); }
+      } else S.gateVazio=0;
+
+      // (2) medição
+      var viva=audiveis();
+      if(viva>S.picoAudivel) S.picoAudivel=viva;
+      var adiante=S.ctxSom ? Math.max(0,S.proximoSom-S.ctxSom.currentTime) : 0;
+      var linha='audíveis='+viva+' pico='+S.picoAudivel
+        +' agendadas='+S.tocando.length+'/'+S.picoAgendado
+        +' fila='+S.fila.length+' sobra='+S.sobraN
+        +' adiante='+adiante.toFixed(2)+'s'
+        +' linhas='+S.wsVivos+'/'+S.picoWs
+        +' cortes='+S.cortes+'+'+S.cortesLocais
+        +' remendos='+S.remendos
+        +' modo='+(S.meioDuplex?'viva-voz':'fone');
+      diario(linha);
+      if(HUD_LIGADO && elHud){
+        elHud.hidden=false;
+        elHud.className = (S.picoAudivel>1||S.picoWs>1) ? 'mal' : '';
+        elHud.textContent = 'audíveis '+viva+'  PICO '+S.picoAudivel+'\n'
+          +'fila '+S.fila.length+'  agendadas '+S.tocando.length+'\n'
+          +'adiante '+adiante.toFixed(2)+'s  remendos '+S.remendos+'\n'
+          +'linhas '+S.wsVivos+' (pico '+S.picoWs+')\n'
+          +'cortes '+S.cortes+' / local '+S.cortesLocais+'\n'
+          +'modo '+(S.meioDuplex?'viva-voz (meio)':'fone (full)');
+      }
+    },1000);
+  }
 
   // ── ligar / desligar ──────────────────────────────────────────────────────
   async function ligar(){
-    if(S.ligado) return;
-    cv.disabled=true;
+    // `cv.disabled` não existe em <canvas> — não travava nada. Com dois toques
+    // rápidos no globo, DUAS sessões subiam: dois microfones, dois contextos,
+    // duas linhas com o Google. Mais uma nascente da voz dupla.
+    if(S.ligado||S.abrindo) return;
+    S.abrindo=true;
     S.fase='pronto';
     estado('⏳ Abrindo a linha…','Autorize o microfone quando o celular pedir.');
     try{
@@ -654,13 +1078,19 @@
       if(!window.WebSocket) throw new Error('SEM_WEBSOCKET');
 
       var AC=window.AudioContext||window.webkitAudioContext;
-      S.ctxSom=new AC({ sampleRate:TAXA_VOLTA });
+      // latencyHint:'playback' — pede ao navegador um buffer FOLGADO. Sem isto
+      // ele otimiza pra latência mínima e qualquer soluço vira engasgo.
+      try{ S.ctxSom=new AC({ sampleRate:TAXA_VOLTA, latencyHint:'playback' }); }
+      catch(e){ S.ctxSom=new AC({ sampleRate:TAXA_VOLTA }); }
       if(S.ctxSom.state==='suspended') await S.ctxSom.resume();
       // O medidor da VOZ DO MESTRE — o áudio dele passa por aqui antes do alto-falante.
       S.analiseSom=S.ctxSom.createAnalyser();
       S.analiseSom.fftSize=512; S.analiseSom.smoothingTimeConstant=0.35;
       S.bufSom=new Uint8Array(S.analiseSom.fftSize);
       S.analiseSom.connect(S.ctxSom.destination);
+      S.fila=[]; S.sobra=new Float32Array(BUF_SAIDA); S.sobraN=0;
+      S.proximoSom=0; S.tocando=[]; S.tocandoAgora=false; S.turnoMudo=false;
+      novoGanho();
 
       await abrirMicrofone();
 
@@ -668,6 +1098,7 @@
       S.fechandoDeProposito=false; S.reconectando=false;
       document.body.classList.add('ligado');
       btnEncerrar.disabled=false;
+      vigiar();
       cv.setAttribute('aria-label','Conversa ligada. O globo pulsa com a voz.');
       segurarTela();
 
@@ -693,29 +1124,48 @@
       estado('⚠️ Não consegui começar','Toque no globo para tentar de novo.','alerta');
       desligar(true);
     }
-    cv.disabled=false;
+    S.abrindo=false;
   }
 
+  // ── DESLIGAR DE VERDADE ───────────────────────────────────────────────────
+  // A limpeza pela metade era o 3º defeito: ele cortava o globo no meio e
+  // sobrava coisa viva — relógio agendado, fonte tocando, linha aberta. Aqui
+  // tudo morre na ordem certa: primeiro o som (com fade), depois a linha,
+  // depois o microfone, e só no fim os contextos — nunca ANTES do fade acabar,
+  // senão o último naco de fala saía estalando.
   function desligar(silencioso){
-    S.fechandoDeProposito=true; S.ligado=false; S.reconectando=false;
-    clearTimeout(S.agendado);
-    calarMestre();
-    try{ if(S.ws) S.ws.close(1000,'encerrado pelo pastor'); }catch(e){}
-    S.ws=null;
+    S.fechandoDeProposito=true; S.ligado=false; S.reconectando=false; S.abrindo=false;
+    clearTimeout(S.agendado); clearTimeout(S.agendaSom); clearTimeout(S.fimFala);
+    clearInterval(S.vigia); S.vigia=null;
+
+    calarMestre('encerrando');
+    S.geracao++;                       // nenhuma mensagem atrasada fala depois daqui
+    S.conectando=null;
+    derrubar(S.ws,1000,'encerrado pelo pastor'); S.ws=null;
+
     try{ if(S.worklet){ S.worklet.port.onmessage=null; S.worklet.disconnect(); } }catch(e){}
     try{ if(S.script){ S.script.onaudioprocess=null; S.script.disconnect(); } }catch(e){}
     try{ if(S.noMic) S.noMic.disconnect(); }catch(e){}
     try{ if(S.stream) S.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
     try{ if(S.ctxMic) S.ctxMic.close(); }catch(e){}
-    try{ if(S.ctxSom) S.ctxSom.close(); }catch(e){}
+    try{ if(navigator.mediaDevices) navigator.mediaDevices.ondevicechange=null; }catch(e){}
+
+    // o contexto de saída só fecha DEPOIS do fade de 100 ms terminar
+    var morrendo=S.ctxSom;
+    setTimeout(function(){ try{ if(morrendo) morrendo.close(); }catch(e){} }, FADE*1000+60);
+
     soltarTela();
-    S.worklet=S.script=S.noMic=S.stream=S.ctxMic=S.ctxSom=null;
+    S.worklet=S.script=S.noMic=S.stream=S.ctxMic=S.ctxSom=S.ganho=null;
     S.analiseMic=S.analiseSom=S.bufMic=S.bufSom=null;
+    S.fila=[]; S.sobra=null; S.sobraN=0; S.tocando=[]; S.tocandoAgora=false;
+    S.proximoSom=0; S.turnoMudo=false; S.corteMs=0;
     S.euFalando=S.eleFalando=S.garimpando=false;
     S.bolhaEu=S.bolhaMestre=null;
     document.body.classList.remove('ligado');
     btnEncerrar.disabled=true;
     cv.setAttribute('aria-label','Globo. Toque para começar a conversa com o mestre.');
+    diario('desligado · linhas vivas='+S.wsVivos+' · pico de linhas='+S.picoWs
+      +' · pico de fontes audíveis='+S.picoAudivel+' · cortes='+S.cortes);
     if(!silencioso){ S.fase='pronto'; estado('Conversa encerrada','Toque no globo para conversar de novo.'); }
   }
 
@@ -723,6 +1173,22 @@
   cv.addEventListener('click',function(){ S.ligado?desligar():ligar(); });
   cv.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); S.ligado?desligar():ligar(); } });
   btnEncerrar.addEventListener('click',function(){ desligar(); });
+
+  // ── o interruptor viva-voz / fone ─────────────────────────────────────────
+  // A detecção automática acerta na maioria dos casos, mas o Android esconde
+  // muita coisa. Um toque resolve — e a escolha dele fica guardada.
+  try{ S.manualDuplex=localStorage.getItem('voz.duplex')||null; }catch(e){}
+  if(S.manualDuplex) S.meioDuplex=(S.manualDuplex==='viva');
+  pintarModo();
+  btnModo.addEventListener('click',function(){
+    S.manualDuplex = S.meioDuplex ? 'fone' : 'viva';
+    S.meioDuplex = !S.meioDuplex;
+    try{ localStorage.setItem('voz.duplex',S.manualDuplex); }catch(e){}
+    // saiu do viva-voz no meio de uma fala? a porta abre na hora.
+    if(!S.meioDuplex) S.corteMs=0;
+    pintarModo(); fase();
+    diario('modo trocado na mão -> '+(S.meioDuplex?'MEIO-DUPLEX (viva-voz)':'FULL-DUPLEX (fone)'));
+  });
 
   btnCopiar.addEventListener('click',function(){
     var linhas=S.texto.slice();
@@ -759,6 +1225,16 @@
 
   // sair da página sem deixar o microfone aberto
   window.addEventListener('pagehide',function(){ if(S.ligado) desligar(true); });
+
+  // ── ALÇA DE BANCADA (só com ?hud=1) ──────────────────────────────────────
+  // Serve pra provar o motor sem precisar ouvir: um teste de bancada pega estas
+  // funções, despeja áudio falso, manda cortar no meio e confere que NUNCA há
+  // duas fontes soando ao mesmo tempo. É a medida que o Elias pediu.
+  if(HUD_LIGADO){
+    window.__VOZ={ S:S, enfileirar:enfileirarPCM, despejar:despejarSobra,
+      calar:calarMestre, agendar:agendar, audiveis:audiveis, tratar:tratar,
+      novoGanho:novoGanho, porteiroFechado:porteiroFechado };
+  }
 })();
 </script>
 </body>
