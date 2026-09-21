@@ -31,3 +31,7 @@ scripts/.cache-busca/
 
 # node_modules NUNCA vai pro git (entrou por engano em 21/09/2026 com um "git add -A")
 node_modules/
+
+# arquivos de teste com chave dentro (criados 21/09) — NUNCA pro git
+scripts/.env-teste
+scripts/.chaves-teste.json
