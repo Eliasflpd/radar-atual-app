@@ -49,25 +49,32 @@
   .engrenagem{width:40px;height:40px;border-radius:50%;font-size:1.05rem;line-height:1}
 
   /* ── O GLOBO É O DONO DA TELA ── */
+  /* ⚠️ flex:1 1 0 (base ZERO) de propósito, e overflow:hidden.
+     Com flex-basis:auto o palco tentava medir o conteúdo, o globo tinha altura
+     fixa em vh e NÃO encolhia: quando a transcrição aparecia, o palco encolhia,
+     o canvas transbordava e o estado/dica iam parar EM CIMA das bolhas — era o
+     texto embolado que o Elias viu. Com base zero a altura do palco é só a
+     sobra da tela, o JS mede essa sobra e dimensiona o globo pra caber. */
   .palco{
-    flex:1 1 auto;min-height:0;
+    flex:1 1 0;min-height:0;overflow:hidden;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
   }
   #globo{
     display:block;flex:0 0 auto;
-    width:min(94vw,48vh);height:min(94vw,48vh);
+    width:min(94vw,44vh);height:min(94vw,44vh);   /* só o 1º quadro; o JS assume */
     border:none;background:transparent;padding:0;cursor:pointer;
     -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-    transition:width .5s cubic-bezier(.2,.8,.2,1),height .5s cubic-bezier(.2,.8,.2,1);
+    transition:width .45s cubic-bezier(.2,.8,.2,1),height .45s cubic-bezier(.2,.8,.2,1);
   }
-  /* conversa ligada: ele CRESCE e toma quase todo o espaço */
-  body.ligado #globo{width:min(96vw,54vh);height:min(96vw,54vh)}
 
   #estado{
-    font-family:Georgia,serif;font-size:1.22rem;font-weight:800;
-    color:var(--texto);margin:12px 0 2px;min-height:1.4em;letter-spacing:.2px;text-align:center;
+    flex:0 0 auto;
+    font-family:Georgia,serif;font-size:1.18rem;font-weight:800;
+    color:var(--texto);margin:10px 0 2px;letter-spacing:.2px;text-align:center;
   }
-  #dica{color:var(--suave);font-size:.92rem;min-height:1.3em;text-align:center}
+  #dica{flex:0 0 auto;color:var(--suave);font-size:.9rem;text-align:center;
+    max-width:34ch;margin:0 auto}
+  #estado:empty,#dica:empty{display:none}
   #estado.alerta{color:#ff9a92}
   #estado.espera{color:var(--dourado)}
 
@@ -78,7 +85,7 @@
     margin:8px 0 0;padding-right:2px;
   }
   #conversa:empty{display:none}
-  body.ligado #conversa{max-height:22vh}
+  body.ligado #conversa{max-height:30vh}
   .bolha{border-radius:14px;padding:9px 12px;margin-bottom:8px;font-size:.97rem;line-height:1.45}
   .bolha .quem{font-size:.7rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
   .eu{background:rgba(79,179,192,.14);border:1px solid rgba(79,179,192,.3)}
@@ -381,8 +388,38 @@
     return Math.min(1, Math.sqrt(rms*3.4));
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // O TAMANHO DO GLOBO É MEDIDO, NÃO CHUTADO.
+  //
+  // Antes ele tinha altura fixa em vh. Enquanto a tela era só o globo, coube.
+  // Quando a transcrição apareceu, o palco encolheu, o globo NÃO, e o canvas
+  // transbordou por cima do estado, da dica e das bolhas — três textos no mesmo
+  // lugar, ilegíveis. Era esse o embolado.
+  //
+  // Agora: o palco tem base zero (a altura dele é a SOBRA da tela), a gente mede
+  // essa sobra, tira o que o estado e a dica ocupam, e o que restar é o globo.
+  // Resposta longa faz a caixa crescer até o teto dela; o globo cede o espaço em
+  // vez de atropelar. Nunca o contrário.
+  // ══════════════════════════════════════════════════════════════════════════
+  function dimensionarGlobo(){
+    var palco=cv.parentNode;
+    if(!palco) return;
+    var alturaPalco=palco.clientHeight;
+    if(alturaPalco<40) return;                    // ainda não há layout
+    var texto=(elEstado.offsetHeight||0)+(elDica.offsetHeight||0);
+    var sobra=alturaPalco-texto-10;
+    var lado=Math.floor(Math.min(sobra, palco.clientWidth*0.96, 560));
+    if(lado<110) lado=110;                        // nunca some de vez
+    if(Math.abs(lado-(S.ladoGlobo||0))<2) return; // nada mudou: não mexe
+    S.ladoGlobo=lado;
+    cv.style.width=lado+'px';
+    cv.style.height=lado+'px';
+  }
+  // o estado/dica trocam de texto e mudam de altura; a transcrição cresce.
+  // Uma medida por quadro é barata e mantém tudo no lugar sem laço de reflow.
   function pintar(){
     requestAnimationFrame(pintar);
+    dimensionarGlobo();
     var dpr=Math.min(2, window.devicePixelRatio||1);
     var lado=cv.clientWidth||272;
     if(cv.width!==Math.round(lado*dpr)){ cv.width=Math.round(lado*dpr); cv.height=Math.round(lado*dpr); }
@@ -497,9 +534,11 @@
     if(S.garimpando){ S.fase='garimpo'; estado('⛏️ Buscando no material','Foi conferir nas fontes.'); return; }
     if(S.eleFalando){
       S.fase='eleFala';
+      // dica curta de propósito: no viva-voz ela divide a tela com a resposta
+      // escrita, e frase comprida empurrava tudo pra cima do texto.
       estado('🔊 RESPONDENDO', S.meioDuplex
-        ? 'No viva-voz: espere parar, ou fale ALTO para cortar.'
-        : 'Pode cortar. É só falar por cima.');
+        ? 'Fale ALTO para cortar.'
+        : 'Pode falar por cima.');
       return;
     }
     if(S.euFalando){ S.fase='euFalo'; estado('🎤 OUVINDO VOCÊ','Pode continuar.'); return; }
@@ -1616,6 +1655,71 @@
     }   /* fim do rodar() */
   }
   if(/[?&]prova=1/.test(location.search)) setTimeout(autoprova,300);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // AUTOPROVA DA TELA (?prova=tela) — texto embolado nunca mais.
+  //
+  // Enche a tela do jeito que aperta: resposta LONGA, estado e dica no maior
+  // texto possível. Depois mede as caixas de verdade (getBoundingClientRect) e
+  // pergunta se alguma encosta na outra. Sobreposição = reprovado.
+  // ══════════════════════════════════════════════════════════════════════════
+  function provaDaTela(){
+    document.body.classList.add('ligado');
+    S.ligado=true; S.meioDuplex=true;
+    estado('🔊 RESPONDENDO','Fale ALTO para cortar.');
+    var b1=bolha('eu','Você'); b1.textContent='Explique Daniel 12:4';
+    var b2=bolha('mestre','Resposta');
+    b2.textContent='Tem uma coisa nesse versículo que quase ninguém percebe. '
+      +'O verbo que aparece ali não é "estudar", é "correr de um lado para o outro". '
+      +'E o que se multiplica não é a sabedoria: é o CONHECIMENTO. '
+      +'Repare na diferença, porque ela muda a leitura inteira do capítulo. '
+      +'O selo não é sobre esconder: é sobre guardar até a hora certa. '
+      +'Quando cai a ficha, você não lê mais esse texto do mesmo jeito. '
+      +'Vamos por partes, devagar, que isso aqui tem camada.';
+    rolar();
+
+    setTimeout(function(){
+      dimensionarGlobo();
+      setTimeout(medir,400);
+    },60);
+
+    function medir(){
+      var alvos=[
+        ['globo',cv],['estado',elEstado],['dica',elDica],
+        ['transcrição',elConversa],['barra',elBarra]
+      ];
+      var r=alvos.map(function(a){ var q=a[1].getBoundingClientRect();
+        return {nome:a[0], t:q.top, b:q.bottom, l:q.left, rt:q.right, h:q.height}; });
+
+      var choques=[], k, j;
+      for(k=0;k<r.length;k++) for(j=k+1;j<r.length;j++){
+        var A=r[k],B=r[j];
+        var cruzaY=Math.min(A.b,B.b)-Math.max(A.t,B.t);
+        var cruzaX=Math.min(A.rt,B.rt)-Math.max(A.l,B.l);
+        if(cruzaY>1 && cruzaX>1) choques.push(A.nome+' × '+B.nome+' ('+cruzaY.toFixed(0)+'px)');
+      }
+      var fundo=document.documentElement.clientHeight;
+      var vazaTela=r.filter(function(x){ return x.b>fundo+1 || x.t<-1; })
+                    .map(function(x){ return x.nome; });
+
+      var p=document.createElement('div');
+      p.style.cssText='position:fixed;inset:0;z-index:99;overflow:auto;padding:16px;'
+        +'font:700 13px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;'
+        +'background:'+((choques.length||vazaTela.length)?'#3a0f0f':'#0c2a17')+';color:#d9f5e6';
+      p.textContent='AUTOPROVA DA TELA (resposta longa)\n\n'
+        +r.map(function(x){ return x.nome.padEnd(13)+' topo '+x.t.toFixed(0).padStart(5)
+            +'  base '+x.b.toFixed(0).padStart(5)+'  altura '+x.h.toFixed(0).padStart(4); }).join('\n')
+        +'\n\naltura da tela ....... '+fundo
+        +'\nCAIXAS SOBREPOSTAS ... '+(choques.length?choques.join(' | '):'0')+'   (tem que ser 0)'
+        +'\nvazando da tela ...... '+(vazaTela.length?vazaTela.join(', '):'0')+'   (tem que ser 0)'
+        +'\ntranscrição rola ..... '+(elConversa.scrollHeight>elConversa.clientHeight?'sim (dentro da caixa)':'não precisou')
+        +'\n\n'+((choques.length||vazaTela.length)
+            ? '🛑 FALHOU — ainda há texto embolado.'
+            : '✅ PASSOU — cada um no seu lugar, nada por cima de nada.');
+      document.body.appendChild(p);
+    }
+  }
+  if(/[?&]prova=tela/.test(location.search)) setTimeout(provaDaTela,400);
 
   // ── ALÇA DE BANCADA (só com ?hud=1) ──────────────────────────────────────
   // Serve pra provar o motor sem precisar ouvir: um teste de bancada pega estas
