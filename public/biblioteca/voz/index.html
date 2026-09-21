@@ -4,89 +4,171 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f3d5c">
-<title>Conversa com o Mestre — Concílio dos Expositores</title>
+<title>Conversa por Voz — RADAR</title>
 <style>
+  /* ══════════════════════════════════════════════════════════════════════════
+     A TELA, na ordem do Elias:
+       "QUANDO CLICAR EM CONVERSA POR VOZ A ÚNICA COISA QUE DEVE APARECER É O
+        GLOBO, EM BAIXO AQUELE SIDEBAR QUE POSSO ESCREVER E INTERAGIR, O RESTO
+        FICA LÁ EM CONFIGURAÇÃO"
+     Então: globo + barra de escrever + "Início" discreto. Mais nada.
+     Sem nome de pessoa em lugar nenhum — nem no título da aba.
+     Identidade RADAR: azul-marinho profundo e dourado. ZERO roxo.
+     ══════════════════════════════════════════════════════════════════════════ */
   :root{
-    --branco:#fff;--texto:#1c2230;
-    --navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;
+    --dourado:#C9A14A; --texto:#e9f1f8; --suave:#93a8b8;
+    --teal:#4fb3c0; --vinho:#c0564f;
   }
   *{box-sizing:border-box;-webkit-text-size-adjust:100%}
   html{font-size:17px}
+
+  /* A PÁGINA NÃO ROLA. NUNCA.
+     Era isto que fazia "o globo subir e o texto passar": a página inteira
+     rolava e o globo saía de vista justo quando ele mais precisava olhar de
+     relance. Agora a altura é travada no aparelho (100dvh), o globo fica de
+     frente no lugar dele, e quem rola é a caixa da transcrição — sozinha. */
   body{
-    margin:0 auto;max-width:820px;background:var(--branco);color:var(--texto);
-    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.55;
-    padding:14px 13px calc(26px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased;
-  }
-  .topo{display:flex;gap:8px;margin-bottom:11px}
-  .voltar{display:inline-block;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer}
-  .voltar.casa{background:var(--navy)}
-  .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px}
-  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.45rem;font-weight:800;margin:2px 0 3px}
-  .sub{text-align:center;color:#6b7280;font-size:.95rem;margin-bottom:6px}
-  .divisor{height:3px;width:60px;background:var(--dourado);border-radius:3px;margin:0 auto 12px}
-
-  /* ── AVISO DE PRIVACIDADE — exigência do Elias: visível, em texto normal, ANTES de começar ── */
-  .aviso{border:2px solid var(--dourado);border-left-width:7px;border-radius:13px;background:#fdf8ef;padding:10px 13px;margin:0 0 13px}
-  .aviso .t{font-family:Georgia,serif;font-weight:800;color:#7a5510;font-size:1rem;margin-bottom:3px}
-  .aviso p{margin:0 0 5px;font-size:.92rem;color:#4a3a1c;line-height:1.4}
-  .aviso p:last-child{margin-bottom:0}
-  /* Depois que a conversa começa ele não pode ler nada dirigindo: o aviso encolhe
-     pra uma tarja e devolve a tela inteira pro globo. Encolhe, não some. */
-  body.ligado .aviso{padding:5px 12px;border-left-width:5px;margin-bottom:8px;flex:0 0 auto}
-  body.ligado .aviso p,body.ligado .selo,body.ligado h1,body.ligado .sub,body.ligado .divisor,body.ligado .provaVoz{display:none}
-  body.ligado .aviso .t{font-size:.84rem;margin:0;font-weight:700}
-
-  /* ══ COM A CONVERSA LIGADA, O GLOBO É O DONO DA TELA ══
-     Dirigindo, ele olha de RELANCE: o globo é o painel de estado (pulsando =
-     ouvindo ou falando; parado = caiu). Se virar parede de texto, ele tem que
-     LER no volante — que é exatamente o que não pode.
-     Então a tela vira uma coluna travada na altura do aparelho: globo fixo no
-     lugar, e a transcrição rolando por BAIXO, dentro da própria caixa. O texto
-     nunca empurra nem cobre o globo. */
-  body.ligado{
-    height:100dvh;overflow:hidden;
+    margin:0 auto;max-width:720px;height:100dvh;overflow:hidden;
     display:flex;flex-direction:column;
-    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+    background:
+      radial-gradient(115% 80% at 50% 8%, #16405a 0%, #0c2234 42%, #061019 100%);
+    color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:calc(8px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom));
   }
-  body.ligado .topo{flex:0 0 auto;margin-bottom:8px}
-  body.ligado .palco{flex:0 0 auto;margin:0}
-  body.ligado #globo{width:min(84vw,46vh);height:min(84vw,46vh);max-width:none;max-height:none}
-  body.ligado .barra{flex:0 0 auto;margin-top:10px}
-  /* min-height:0 é o que permite a caixa encolher dentro do flex e rolar sozinha */
-  body.ligado #conversa{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-top:10px;padding-right:2px}
-  body.ligado #conversa .vazio{padding:10px 0}
 
-  /* ── PROVA DE VOZ (só parado, antes de ligar) ── */
-  .provaVoz{display:none;margin:0 0 12px;border:1px solid #e4e7ec;border-radius:12px;padding:9px 11px;background:#f8fafb}
-  .provaVoz .t{font-size:.83rem;font-weight:800;color:var(--navy);letter-spacing:.4px;margin-bottom:6px}
-  .provaVoz .linha{display:flex;gap:6px;flex-wrap:wrap}
-  .provaVoz button{flex:1 1 0;min-width:74px;border:1px solid #d7dde3;background:#fff;color:var(--navy);border-radius:9px;padding:8px 4px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;line-height:1.25}
-  .provaVoz button b{display:block;font-size:.88rem}
-  .provaVoz button.atual{border-color:var(--dourado);background:#fdf8ef;color:#7a5510}
-  .provaVoz .obs{font-size:.78rem;color:#7b8794;margin-top:6px}
+  /* ── topo: só o caminho de volta e a engrenagem ── */
+  .topo{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between}
+  .voltar,.engrenagem{
+    background:rgba(255,255,255,.07);color:var(--texto);
+    border:1px solid rgba(255,255,255,.13);font-family:inherit;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .voltar{border-radius:999px;padding:8px 16px;font-size:.88rem;font-weight:700}
+  .engrenagem{width:40px;height:40px;border-radius:50%;font-size:1.05rem;line-height:1}
 
-  /* ── O GLOBO ── */
-  .palco{text-align:center;margin:2px 0 4px}
+  /* ── O GLOBO É O DONO DA TELA ── */
+  .palco{
+    flex:1 1 auto;min-height:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
   #globo{
-    display:block;margin:0 auto;width:272px;height:272px;max-width:82vw;max-height:82vw;
+    display:block;flex:0 0 auto;
+    width:min(94vw,48vh);height:min(94vw,48vh);
     border:none;background:transparent;padding:0;cursor:pointer;
     -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+    transition:width .5s cubic-bezier(.2,.8,.2,1),height .5s cubic-bezier(.2,.8,.2,1);
   }
-  #globo:disabled{cursor:default}
-  #estado{font-family:Georgia,serif;font-size:1.3rem;font-weight:800;color:var(--navy);margin:6px 0 1px;min-height:1.4em;letter-spacing:.2px}
-  #dica{color:#6b7280;font-size:.95rem;min-height:1.3em}
-  #estado.alerta{color:var(--vinho)}
+  /* conversa ligada: ele CRESCE e toma quase todo o espaço */
+  body.ligado #globo{width:min(96vw,54vh);height:min(96vw,54vh)}
+
+  #estado{
+    font-family:Georgia,serif;font-size:1.22rem;font-weight:800;
+    color:var(--texto);margin:12px 0 2px;min-height:1.4em;letter-spacing:.2px;text-align:center;
+  }
+  #dica{color:var(--suave);font-size:.92rem;min-height:1.3em;text-align:center}
+  #estado.alerta{color:#ff9a92}
   #estado.espera{color:var(--dourado)}
 
-  .barra{display:flex;gap:7px;margin:13px 0 0}
-  .barra button{flex:1;border-radius:13px;padding:15px 6px;font-size:1.02rem;font-weight:800;font-family:inherit;cursor:pointer;border:1px solid #e4e7ec}
-  #encerrar{background:var(--vinho);color:#fff;border-color:transparent;flex:1.5}
+  /* ── A TRANSCRIÇÃO: rola DENTRO da própria caixa, nunca empurra o globo ── */
+  #conversa{
+    flex:0 1 auto;min-height:0;max-height:26vh;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    margin:8px 0 0;padding-right:2px;
+  }
+  #conversa:empty{display:none}
+  body.ligado #conversa{max-height:22vh}
+  .bolha{border-radius:14px;padding:9px 12px;margin-bottom:8px;font-size:.97rem;line-height:1.45}
+  .bolha .quem{font-size:.7rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
+  .eu{background:rgba(79,179,192,.14);border:1px solid rgba(79,179,192,.3)}
+  .eu .quem{color:var(--teal)}
+  .mestre{background:rgba(255,255,255,.055);border:1px solid rgba(201,161,74,.3)}
+  .mestre .quem{color:var(--dourado)}
+  .mestre .txt{font-family:Georgia,serif}
+  .nota{background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.18);color:var(--suave);font-size:.85rem;text-align:center}
+  .erro{background:rgba(192,86,79,.15);border:1px solid rgba(192,86,79,.45);color:#ffb9b3;border-radius:12px;padding:10px 12px;margin-top:8px;font-size:.95rem}
+
+  /* ── A BARRA DE CONVERSA: escrever além de falar ── */
+  .barraConversa{
+    flex:0 0 auto;display:flex;align-items:center;gap:8px;margin-top:10px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+    border-radius:999px;padding:5px 5px 5px 18px;
+  }
+  #campo{
+    flex:1;min-width:0;background:transparent;border:none;outline:none;
+    color:var(--texto);font-family:inherit;font-size:1rem;padding:13px 0;
+  }
+  #campo::placeholder{color:#78909f}
+  .redondo{
+    flex:0 0 auto;width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
+    font-size:1.3rem;line-height:1;display:grid;place-items:center;
+    background:linear-gradient(160deg,#e0bd6b,#a9791c);color:#122029;
+    box-shadow:0 6px 18px rgba(201,161,74,.34);
+    -webkit-tap-highlight-color:transparent;transition:background .25s,box-shadow .25s;
+  }
+  .redondo.parar{background:linear-gradient(160deg,#d9756c,#8a1c1c);color:#fff;box-shadow:0 6px 18px rgba(138,28,28,.42)}
+
+  /* ── O BALÃO DO AVISO: flutua por cima, não empurra nada, e o X mata ele ── */
+  #balao{
+    position:fixed;left:12px;right:12px;margin-inline:auto;max-width:560px;
+    top:calc(env(safe-area-inset-top) + 60px);z-index:30;
+    display:flex;gap:10px;align-items:flex-start;
+    background:rgba(7,20,29,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border:1px solid rgba(201,161,74,.55);border-radius:16px;
+    padding:12px 12px 12px 14px;box-shadow:0 14px 34px rgba(0,0,0,.5);
+    opacity:0;transform:translateY(-12px);transition:opacity .5s ease,transform .5s ease;
+  }
+  #balao.entrou{opacity:1;transform:none}
+  #balao p{margin:0;font-size:14.5px;line-height:1.45;color:#e9f1f8}
+  #balao b{color:var(--dourado)}
+  #balao .x{
+    flex:0 0 auto;width:34px;height:34px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);
+    color:#fff;font-size:1rem;font-family:inherit;cursor:pointer;line-height:1;
+  }
+
+  /* ── A CONFIGURAÇÃO: é aqui que mora TODO o resto ── */
+  #config{
+    position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;
+    background:rgba(3,10,16,.7);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  }
+  #config[hidden]{display:none}
+  #config .folha{
+    width:100%;max-height:90dvh;overflow-y:auto;background:#0b1e2c;
+    border-top:2px solid var(--dourado);border-radius:20px 20px 0 0;
+    padding:14px 16px calc(20px + env(safe-area-inset-bottom));
+  }
+  #config .cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  #config .cab b{font-family:Georgia,serif;font-size:1.15rem;color:var(--dourado)}
+  #config h3{font-size:.74rem;letter-spacing:1.6px;text-transform:uppercase;color:var(--suave);margin:18px 0 7px;font-weight:800}
+  #fecharConfig{width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.09);color:var(--texto);font-size:1rem;font-family:inherit;cursor:pointer}
+  .linhaCfg{display:flex;gap:8px}
+  .linhaCfg button{
+    flex:1;border-radius:12px;padding:13px 8px;font-size:.9rem;font-weight:800;
+    font-family:inherit;cursor:pointer;line-height:1.25;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--texto);
+  }
+  #modo{background:rgba(201,161,74,.14);border-color:rgba(201,161,74,.4);color:#f0d9a6}
+  #modo b{display:block;font-size:1rem}
+  #encerrar{background:rgba(192,86,79,.18);border-color:rgba(192,86,79,.45);color:#ffb9b3}
   #encerrar:disabled{opacity:.4;cursor:default}
-  #copiar{background:rgba(15,61,92,.07);color:var(--navy);font-size:.9rem;flex:.95}
-  /* O interruptor do VIVA-VOZ. No alto-falante o eco faz o mestre se cortar
-     sozinho — parece travamento. Aqui ele diz, com um toque, onde o som sai. */
-  #modo{background:#fdf8ef;border-color:#e2cfa6;color:#7a5510;font-size:.9rem;flex:1.05;line-height:1.2}
-  #modo b{display:block;font-size:.98rem}
+
+  .provaVoz{display:none}
+  .provaVoz .linha{display:flex;gap:6px;flex-wrap:wrap}
+  .provaVoz button{
+    flex:1 1 0;min-width:74px;border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.06);color:var(--texto);border-radius:10px;
+    padding:9px 4px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;line-height:1.25;
+  }
+  .provaVoz button b{display:block;font-size:.88rem;color:var(--dourado)}
+  .provaVoz button.atual{border-color:var(--dourado);background:rgba(201,161,74,.16)}
+  .provaVoz .obs{font-size:.78rem;color:var(--suave);margin-top:7px}
+
+  .aviso{border:1px solid rgba(201,161,74,.4);border-left-width:5px;border-radius:13px;background:rgba(201,161,74,.07);padding:11px 13px}
+  .aviso .t{font-family:Georgia,serif;font-weight:800;color:var(--dourado);font-size:1rem;margin-bottom:5px}
+  .aviso p{margin:0 0 6px;font-size:.9rem;color:#d7e3ec;line-height:1.45}
+  .aviso p:last-child{margin-bottom:0;color:var(--suave)}
 
   /* ── O MEDIDOR (só com ?hud=1). É a prova de que não há duas vozes. ── */
   #hud{position:fixed;left:6px;bottom:6px;z-index:9;max-width:calc(100vw - 12px);
@@ -94,68 +176,77 @@
     padding:6px 8px;border-radius:8px;white-space:pre;pointer-events:none}
   #hud.mal{color:#ffb3ad}
 
-  /* ── A CONVERSA ESCRITA ── */
-  #conversa{margin-top:15px}
-  .bolha{border-radius:14px;padding:10px 13px;margin-bottom:9px;font-size:1rem;line-height:1.5}
-  .bolha .quem{font-size:.74rem;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;margin-bottom:3px}
-  .eu{background:#eef4f5;border:1px solid #dbe7e9}
-  .eu .quem{color:var(--teal)}
-  .mestre{background:#fff;border:1px solid #e4e7ec;box-shadow:0 2px 10px rgba(15,61,92,.06)}
-  .mestre .quem{color:var(--dourado)}
-  .mestre .txt{font-family:Georgia,serif}
-  .nota{background:#f6f7f9;border:1px dashed #cfd6dd;color:#5b6472;font-size:.88rem;text-align:center}
-  .vazio{text-align:center;color:#9aa1ad;padding:18px 0;font-size:.94rem}
-  .erro{background:#fdeceb;border:1px solid #f3c3bf;color:var(--vinho);border-radius:12px;padding:11px 13px;margin-top:11px;font-size:.97rem}
-
   @media (max-width:380px){
     html{font-size:16px}
-    #globo{width:238px;height:238px}
-    h1{font-size:1.3rem}
-    #estado{font-size:1.2rem}
+    #estado{font-size:1.12rem}
+  }
+  @media (min-height:900px){
+    #globo{width:min(70vw,38vh);height:min(70vw,38vh)}
+    body.ligado #globo{width:min(78vw,46vh);height:min(78vw,46vh)}
   }
 </style>
 </head>
 <body>
 
   <div class="topo">
-    <button class="voltar" onclick="history.length>1?history.back():location.href='/'">← Voltar</button>
-    <button class="voltar casa" onclick="location.href='/'">🏠 Início</button>
-  </div>
-
-  <div class="selo">Concílio dos Expositores</div>
-  <h1>Conversa com o Mestre</h1>
-  <div class="sub">Dr. Wagner Cordeiro · pela voz, ao vivo</div>
-  <div class="divisor"></div>
-
-  <div class="aviso">
-    <div class="t">⚠️ Esta conversa NÃO é privada</div>
-    <p>No plano gratuito do Gemini, pelos termos oficiais do Google, <b>revisores humanos podem
-    ouvir e processar o que for falado aqui</b>, e o conteúdo pode ser usado para treinar os modelos deles.</p>
-    <p>Fale de texto bíblico e de estudo à vontade. <b>Não fale nome de membro, segredo de
-    aconselhamento nem assunto sigiloso da igreja.</b> Quem estiver no carro está sendo gravado junto.</p>
-    <p style="color:#6b6350">O áudio vai do seu celular direto para o Google. O RADAR não grava nada.</p>
-  </div>
-
-  <div class="provaVoz" id="provaVoz">
-    <div class="t">🔊 OUÇA AS VOZES E ESCOLHA (faça isso parado)</div>
-    <div class="linha" id="linhaVozes"></div>
-    <div class="obs">Toque para ouvir. A escolhida fica valendo nesta conversa.</div>
+    <button class="voltar" id="inicio">← Início</button>
+    <button class="engrenagem" id="abrirConfig" aria-label="Configuração">⚙️</button>
   </div>
 
   <div class="palco">
-    <canvas id="globo" width="272" height="272" role="button" tabindex="0"
-            aria-label="Globo. Toque para começar a conversa com o mestre."></canvas>
+    <canvas id="globo" width="300" height="300" role="button" tabindex="0"
+            aria-label="Globo. Toque para começar a conversa."></canvas>
     <div id="estado">Toque no globo para começar</div>
-    <div id="dica">Uma vez só. Depois é só falar — não precisa tocar mais.</div>
+    <div id="dica">Ou escreva sua pergunta aqui embaixo.</div>
   </div>
 
-  <div class="barra">
-    <button id="encerrar" disabled>⏹ ENCERRAR</button>
-    <button id="modo" title="Onde o som está saindo"><b>🔈</b>Viva-voz</button>
-    <button id="copiar">📋 Copiar</button>
-  </div>
+  <div id="conversa"></div>
 
-  <div id="conversa"><div class="vazio">A conversa aparece aqui, escrita, enquanto vocês falam.</div></div>
+  <form class="barraConversa" id="barraConversa" autocomplete="off">
+    <input id="campo" type="text" placeholder="Escreva sua pergunta…" enterkeyhint="send" autocomplete="off">
+    <button type="submit" id="acao" class="redondo" aria-label="Começar a conversa por voz">🎤</button>
+  </form>
+
+  <!-- ═══ CONFIGURAÇÃO — todo o resto mora aqui dentro ═══ -->
+  <div id="config" hidden>
+    <div class="folha">
+      <div class="cab">
+        <b>Conversa por Voz</b>
+        <button id="fecharConfig" aria-label="Fechar">✕</button>
+      </div>
+
+      <h3>Onde o som está saindo</h3>
+      <div class="linhaCfg">
+        <button id="modo" title="Onde o som está saindo"><b>🔈</b>Viva-voz</button>
+      </div>
+      <div class="provaVoz obs" style="display:block;font-size:.8rem;color:var(--suave);margin-top:7px">
+        No viva-voz o microfone fecha enquanto ele fala — sem isso o eco faz a
+        conversa se cortar sozinha. Com fone, pode falar por cima à vontade.
+      </div>
+
+      <h3>A voz</h3>
+      <div class="provaVoz" id="provaVoz">
+        <div class="linha" id="linhaVozes"></div>
+        <div class="obs">Toque para ouvir. A escolhida fica valendo nesta conversa.</div>
+      </div>
+
+      <h3>A conversa</h3>
+      <div class="linhaCfg">
+        <button id="copiar">📋 Copiar</button>
+        <button id="encerrar" disabled>⏹ Encerrar</button>
+      </div>
+
+      <h3>Privacidade</h3>
+      <div class="aviso">
+        <div class="t">⚠️ Esta conversa NÃO é privada</div>
+        <p>No plano gratuito do Gemini, pelos termos oficiais do Google, <b>revisores humanos podem
+        ouvir e processar o que for falado aqui</b>, e o conteúdo pode ser usado para treinar os modelos deles.</p>
+        <p>Fale de texto bíblico e de estudo à vontade. <b>Não fale nome de membro, segredo de
+        aconselhamento nem assunto sigiloso da igreja.</b> Quem estiver no carro está sendo gravado junto.</p>
+        <p>O áudio vai do seu celular direto para o Google. O RADAR não grava nada.</p>
+      </div>
+    </div>
+  </div>
 
   <div id="hud" hidden></div>
 
@@ -184,7 +275,10 @@
   var $ = function(id){ return document.getElementById(id); };
   var cv=$('globo'), elEstado=$('estado'), elDica=$('dica'), elConversa=$('conversa'),
       btnEncerrar=$('encerrar'), btnCopiar=$('copiar'), btnModo=$('modo'),
-      elProva=$('provaVoz'), elLinha=$('linhaVozes'), elHud=$('hud');
+      elProva=$('provaVoz'), elLinha=$('linhaVozes'), elHud=$('hud'),
+      btnAcao=$('acao'), elCampo=$('campo'), elBarra=$('barraConversa'),
+      elConfig=$('config'), btnConfig=$('abrirConfig'), btnFecharConfig=$('fecharConfig'),
+      btnInicio=$('inicio');
 
   var TAXA_ENVIO = 16000;   // o que o Gemini Live aceita de entrada
   var TAXA_VOLTA = 24000;   // o que ele devolve
@@ -249,7 +343,7 @@
     cortes:0, cortesLocais:0, remendos:0, pedacos:0, vigia:null,
 
     texto:[], wake:null, voz:vozDaURL(),
-    fase:'pronto', nivel:0, escala:0.80, giro:0, relogio:0, amostra:null
+    fase:'pronto', nivel:0, escala:0.94, giro:0, relogio:0, amostra:null
   };
   var HUD_LIGADO = /[?&]hud=1/.test(location.search);
   function diario(){
@@ -262,15 +356,18 @@
   // AnalyserNode. Enquanto ele fala, manda o microfone; enquanto o mestre
   // responde, manda o áudio que está saindo. Quem fala manda no pulso.
   // ════════════════════════════════════════════════════════════════════════
+  // Num fundo escuro o globo tem que BRILHAR de dentro pra parecer corpo, não
+  // adesivo. Por isso cada fase tem um miolo claro (b), uma casca funda (a),
+  // a linha dourada da malha e a cor da atmosfera em volta.
   var CORES = {
-    pronto:       { a:'#0f3d5c', b:'#0f6d78', linha:'#a9791c', aura:'15,61,92'   },
-    ouvindo:      { a:'#0f3d5c', b:'#0f6d78', linha:'#a9791c', aura:'15,109,120' },
-    euFalo:       { a:'#0f6d78', b:'#17909c', linha:'#f0d9a6', aura:'15,109,120' },
-    eleFala:      { a:'#8a6113', b:'#a9791c', linha:'#ffeec4', aura:'169,121,28' },
-    garimpo:      { a:'#7a5510', b:'#a9791c', linha:'#ffeec4', aura:'169,121,28' },
-    reconectando: { a:'#3d4a57', b:'#6b7c88', linha:'#a9791c', aura:'107,124,136'},
-    semRede:      { a:'#3d4a57', b:'#5b6b77', linha:'#8b98a3', aura:'91,107,119' },
-    erro:         { a:'#5e1414', b:'#8a1c1c', linha:'#f0b9b5', aura:'138,28,28'  }
+    pronto:       { a:'#0e3b57', b:'#1d6f86', linha:'#C9A14A', aura:'20,90,120'   },
+    ouvindo:      { a:'#0e4257', b:'#2287a0', linha:'#C9A14A', aura:'25,120,150'  },
+    euFalo:       { a:'#0f6d78', b:'#35b6c4', linha:'#f0d9a6', aura:'50,180,195'  },
+    eleFala:      { a:'#8a6113', b:'#d9ab4a', linha:'#ffeec4', aura:'201,161,74'  },
+    garimpo:      { a:'#7a5510', b:'#c09235', linha:'#ffeec4', aura:'201,161,74'  },
+    reconectando: { a:'#2b3a46', b:'#5d7484', linha:'#C9A14A', aura:'93,116,132'  },
+    semRede:      { a:'#26323c', b:'#4a5b68', linha:'#8b98a3', aura:'74,91,104'   },
+    erro:         { a:'#4e1414', b:'#a33a33', linha:'#f0b9b5', aura:'163,58,51'   }
   };
 
   function medir(analise, buf){
@@ -305,57 +402,80 @@
     }
     S.nivel += (alvo-S.nivel)*0.30;
 
-    var escAlvo = S.ligado ? 1 : 0.80;
+    var escAlvo = S.ligado ? 1 : 0.94;
     S.escala += (escAlvo-S.escala)*0.10;      // o globo CRESCE quando ele toca
     S.giro += 0.0042 + S.nivel*0.010;          // e gira um tico mais rápido na voz
 
     var c=CORES[S.fase]||CORES.pronto;
-    var R = (L*0.30) * S.escala * (1 + S.nivel*0.085);
+    // 0,285 + halo de até 1,63x cabe justinho dentro do canvas sem cortar a auréola
+    var R = (L*0.385) * S.escala * (1 + S.nivel*0.055);
+    // a luz vem de cima à esquerda; é ela que dá volume à bola
+    var lx=meio-R*0.40, ly=meio-R*0.44;
 
-    // ── auréola: anéis que respiram no volume ──────────────────────────────
-    for(var k=3;k>=1;k--){
-      var rr=R*(1+k*0.13+S.nivel*0.30*k);
-      g.beginPath(); g.arc(meio,meio,rr,0,6.2832);
-      g.fillStyle='rgba('+c.aura+','+(0.052*(4-k)*(0.35+S.nivel*0.85)).toFixed(3)+')';
-      g.fill();
-    }
+    // ── 1. ATMOSFERA: halo macio que respira no volume ─────────────────────
+    var halo=g.createRadialGradient(meio,meio,R*0.88, meio,meio,R*(1.18+S.nivel*0.10));
+    halo.addColorStop(0,'rgba('+c.aura+','+(0.34+S.nivel*0.34).toFixed(3)+')');
+    halo.addColorStop(0.45,'rgba('+c.aura+','+(0.11+S.nivel*0.16).toFixed(3)+')');
+    halo.addColorStop(1,'rgba('+c.aura+',0)');
+    g.beginPath(); g.arc(meio,meio,R*(1.18+S.nivel*0.10),0,6.2832);
+    g.fillStyle=halo; g.fill();
 
-    // ── corpo da esfera ────────────────────────────────────────────────────
-    var lum=g.createRadialGradient(meio-R*0.34,meio-R*0.36,R*0.06, meio,meio,R*1.06);
-    lum.addColorStop(0,c.b); lum.addColorStop(0.62,c.a); lum.addColorStop(1,'#08222f');
+    // ── 2. CORPO: gradiente com a luz fora do centro = esfera, não círculo ──
+    var lum=g.createRadialGradient(lx,ly,R*0.05, meio,meio,R*1.30);
+    lum.addColorStop(0,c.b);
+    lum.addColorStop(0.42,c.a);
+    lum.addColorStop(0.88,'#0a2231');
+    lum.addColorStop(1,'#071a26');
     g.beginPath(); g.arc(meio,meio,R,0,6.2832); g.fillStyle=lum; g.fill();
 
-    // ── a malha do globo: paralelos e meridianos, em dourado ──────────────
+    // ── 3. A MALHA: paralelos e meridianos, dourados, por dentro da bola ───
     g.save();
-    g.beginPath(); g.arc(meio,meio,R*0.995,0,6.2832); g.clip();   // nada vaza da bola
+    g.beginPath(); g.arc(meio,meio,R*0.995,0,6.2832); g.clip();   // nada vaza
     g.translate(meio,meio); g.rotate(-0.22);                       // eixo inclinado
-    g.lineWidth=Math.max(1,L*0.0032);
-
-    // paralelos (as latitudes): elipses achatadas subindo e descendo
+    g.lineWidth=Math.max(1,L*0.0030);
     for(var p=-4;p<=4;p++){
       var fi=p*(Math.PI/10), y=Math.sin(fi)*R, rx=Math.cos(fi)*R;
       g.beginPath(); g.ellipse(0,y,rx,rx*0.20,0,0,6.2832);
-      g.strokeStyle=c.linha; g.globalAlpha=(p===0?0.50:0.24)*(0.55+S.nivel*0.55); g.stroke();
+      g.strokeStyle=c.linha; g.globalAlpha=(p===0?0.46:0.20)*(0.5+S.nivel*0.6); g.stroke();
     }
-    // meridianos (as longitudes): a largura muda com o giro — é isso que dá
-    // a sensação de esfera rodando, não de desenho parado.
+    // a largura do meridiano muda com o giro: é isso que dá esfera RODANDO
     for(var m=0;m<6;m++){
       var f=S.giro+m*(Math.PI/6), larg=Math.abs(Math.sin(f))*R;
       if(larg<R*0.035) continue;
       g.beginPath(); g.ellipse(0,0,larg,R,0,0,6.2832);
-      g.strokeStyle=c.linha; g.globalAlpha=0.22*(0.55+S.nivel*0.55); g.stroke();
+      g.strokeStyle=c.linha; g.globalAlpha=0.19*(0.5+S.nivel*0.6); g.stroke();
     }
     g.globalAlpha=1; g.restore();
 
-    // ── borda e brilho de cima ─────────────────────────────────────────────
-    g.beginPath(); g.arc(meio,meio,R,0,6.2832);
-    g.lineWidth=Math.max(1.6,L*0.0062); g.strokeStyle=c.linha; g.globalAlpha=0.72; g.stroke();
-    g.globalAlpha=1;
-    var bri=g.createRadialGradient(meio-R*0.36,meio-R*0.42,0, meio-R*0.36,meio-R*0.42,R*0.80);
-    bri.addColorStop(0,'rgba(255,255,255,.30)'); bri.addColorStop(1,'rgba(255,255,255,0)');
+    // ── 4. ESCURECIMENTO DA BORDA (limb darkening) ────────────────────────
+    // O truque que mais convence o olho: a beirada de uma esfera é sempre mais
+    // escura que o meio, porque a luz chega de raspão ali.
+    var beira=g.createRadialGradient(meio,meio,R*0.68, meio,meio,R);
+    beira.addColorStop(0,'rgba(0,0,0,0)');
+    beira.addColorStop(1,'rgba(0,0,0,.34)');
+    g.beginPath(); g.arc(meio,meio,R,0,6.2832); g.fillStyle=beira; g.fill();
+
+    // ── 5. LUZ DE CONTORNO ────────────────────────────────────────────────
+    // Um fio fino em volta da bola inteira (senão a beirada some no fundo
+    // escuro e o globo parece recortado), e um trecho mais forte embaixo à
+    // direita — do lado oposto à luz. É esse contraluz que arredonda.
+    g.save();
+    g.beginPath(); g.arc(meio,meio,R*0.99,0,6.2832);
+    g.lineWidth=Math.max(1,L*0.0032); g.strokeStyle=c.linha;
+    g.globalAlpha=0.20+S.nivel*0.15; g.stroke();
+    g.beginPath(); g.arc(meio,meio,R*0.985,Math.PI*0.13,Math.PI*0.90);
+    g.lineWidth=Math.max(1.4,L*0.0062); g.strokeStyle=c.linha;
+    g.globalAlpha=0.42+S.nivel*0.32; g.stroke();
+    g.restore();
+
+    // ── 6. BRILHO ESPECULAR: o reflexo da luz, pequeno e alto ─────────────
+    var bri=g.createRadialGradient(lx,ly,0, lx,ly,R*0.62);
+    bri.addColorStop(0,'rgba(255,255,255,'+(0.30+S.nivel*0.16).toFixed(3)+')');
+    bri.addColorStop(0.5,'rgba(255,255,255,.06)');
+    bri.addColorStop(1,'rgba(255,255,255,0)');
     g.beginPath(); g.arc(meio,meio,R,0,6.2832); g.fillStyle=bri; g.fill();
 
-    // ── anel tracejado girando: só quando está tentando voltar ────────────
+    // ── 7. anel tracejado girando: só quando está tentando voltar ─────────
     if(S.fase==='reconectando'||S.fase==='garimpo'||S.fase==='semRede'){
       g.save(); g.translate(meio,meio); g.rotate(S.relogio*1.5);
       g.beginPath(); g.arc(0,0,R*1.26,0,6.2832);
@@ -374,25 +494,25 @@
   function fase(){
     if(!S.ligado){ S.fase = (S.fase==='erro') ? 'erro' : 'pronto'; return; }
     if(S.reconectando){ S.fase = navigator.onLine===false ? 'semRede' : 'reconectando'; return; }
-    if(S.garimpando){ S.fase='garimpo'; estado('⛏️ Buscando no material','O mestre foi ver nas aulas do Dr. Wagner.'); return; }
+    if(S.garimpando){ S.fase='garimpo'; estado('⛏️ Buscando no material','Foi conferir nas fontes.'); return; }
     if(S.eleFalando){
       S.fase='eleFala';
-      estado('🔊 O MESTRE FALA', S.meioDuplex
-        ? 'No viva-voz: espere ele parar, ou fale ALTO para cortar.'
+      estado('🔊 RESPONDENDO', S.meioDuplex
+        ? 'No viva-voz: espere parar, ou fale ALTO para cortar.'
         : 'Pode cortar. É só falar por cima.');
       return;
     }
-    if(S.euFalando){ S.fase='euFalo'; estado('🎤 OUVINDO VOCÊ','Pode continuar, ele está ouvindo.'); return; }
-    S.fase='ouvindo'; estado('👂 PODE FALAR','O mestre está ouvindo.');
+    if(S.euFalando){ S.fase='euFalo'; estado('🎤 OUVINDO VOCÊ','Pode continuar.'); return; }
+    S.fase='ouvindo';
+    if(S.semMic) estado('⌨️ ESCREVA SUA PERGUNTA','Toque no microfone se quiser falar.');
+    else estado('👂 PODE FALAR','Estou ouvindo.');
   }
   function limpaVazio(){ var v=elConversa.querySelector('.vazio'); if(v) v.remove(); }
-  // Rola A CAIXA da conversa, NUNCA a página. Rolar a página era o que fazia o
-  // globo subir e sumir assim que ele começava a falar — a tela virava parede de
-  // texto e ele perdia o painel de estado no meio do trânsito.
-  function rolar(){
-    if(document.body.classList.contains('ligado')) elConversa.scrollTop=elConversa.scrollHeight;
-    else window.scrollTo(0,document.body.scrollHeight);
-  }
+  // ROLA A CAIXA DA CONVERSA, NUNCA A PÁGINA.
+  // Havia aqui um `window.scrollTo(0, document.body.scrollHeight)` a cada pedaço
+  // de transcrição — era ELE que fazia "o globo subir e o texto passar". A página
+  // agora nem rola (100dvh, overflow hidden), e esta função só mexe na caixa.
+  function rolar(){ elConversa.scrollTop=elConversa.scrollHeight; }
   function bolha(classe,quem){
     limpaVazio();
     var d=document.createElement('div'); d.className='bolha '+classe;
@@ -828,7 +948,7 @@
     if(S.conectando) return S.conectando;        // NUNCA duas tentativas em voo
     var g = ++S.geracao;
     derrubar(S.ws,1000,'trocando de linha');     // NUNCA duas linhas vivas
-    S.ws=null;
+    S.ws=null; S.pronto=false;
 
     var p = pedir({ acao:'token', voz:S.voz, handle:S.handle||undefined }).then(function(t){
       return new Promise(function(ok,falhou){
@@ -886,7 +1006,9 @@
     var m; try{ m=JSON.parse(txt); }catch(e){ return; }
 
     if(m.setupComplete){
-      S.turnoMudo=false;
+      S.turnoMudo=false; S.pronto=true;
+      // pergunta escrita que estava esperando o aperto de mão terminar
+      if(S.textoPendente){ var pend=S.textoPendente; S.textoPendente=null; setTimeout(function(){ mandarTexto(pend); },0); }
       if(S.reconectando){
         S.reconectando=false; S.tentativas=0;
         // linha nova = fila velha não presta mais. Se sobrasse áudio da conexão
@@ -936,12 +1058,12 @@
         S.bolhaEu.textContent+=sc.inputTranscription.text; rolar();
       }
       if(sc.outputTranscription&&sc.outputTranscription.text){
-        if(!S.bolhaMestre) S.bolhaMestre=bolha('mestre','Dr. Wagner Cordeiro');
+        if(!S.bolhaMestre) S.bolhaMestre=bolha('mestre','Resposta');
         S.bolhaMestre.textContent+=sc.outputTranscription.text; rolar();
       }
       if(sc.turnComplete){
-        if(S.bolhaEu&&S.bolhaEu.textContent) S.texto.push('Pastor: '+S.bolhaEu.textContent);
-        if(S.bolhaMestre&&S.bolhaMestre.textContent) S.texto.push('Mestre: '+S.bolhaMestre.textContent);
+        if(S.bolhaEu&&S.bolhaEu.textContent) S.texto.push('Você: '+S.bolhaEu.textContent);
+        if(S.bolhaMestre&&S.bolhaMestre.textContent) S.texto.push('Resposta: '+S.bolhaMestre.textContent);
         S.bolhaEu=null; S.bolhaMestre=null;
       }
     }
@@ -1069,16 +1191,18 @@
   }
 
   // ── ligar / desligar ──────────────────────────────────────────────────────
-  async function ligar(){
+  async function ligar(opc){
     // `cv.disabled` não existe em <canvas> — não travava nada. Com dois toques
     // rápidos no globo, DUAS sessões subiam: dois microfones, dois contextos,
     // duas linhas com o Google. Mais uma nascente da voz dupla.
     if(S.ligado||S.abrindo) return;
+    // semMic: ele só quer ESCREVER. Não faz sentido exigir microfone pra isso.
+    var semMic=!!(opc&&opc.semMic);
     S.abrindo=true;
     S.fase='pronto';
-    estado('⏳ Abrindo a linha…','Autorize o microfone quando o celular pedir.');
+    estado('⏳ Abrindo a linha…', semMic?'Já mando sua pergunta.':'Autorize o microfone quando o celular pedir.');
     try{
-      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error('SEM_MIC_NO_NAVEGADOR');
+      if(!semMic && (!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)) throw new Error('SEM_MIC_NO_NAVEGADOR');
       if(!window.WebSocket) throw new Error('SEM_WEBSOCKET');
 
       var AC=window.AudioContext||window.webkitAudioContext;
@@ -1096,18 +1220,20 @@
       S.proximoSom=0; S.tocando=[]; S.tocandoAgora=false; S.turnoMudo=false;
       novoGanho();
 
-      await abrirMicrofone();
+      if(!semMic) await abrirMicrofone();
+      S.semMic=semMic;
 
       S.ligado=true; S.handle=null; S.handleRuim=0; S.tentativas=0;
       S.fechandoDeProposito=false; S.reconectando=false;
       document.body.classList.add('ligado');
       btnEncerrar.disabled=false;
+      atualizarAcao();
       vigiar();
       cv.setAttribute('aria-label','Conversa ligada. O globo pulsa com a voz.');
       segurarTela();
 
       await conectar();
-      fase();
+      fase(); atualizarAcao();
     }catch(e){
       S.ligado=false; document.body.classList.remove('ligado');
       var nome=(e&&e.name)||'', msg=(e&&e.message)||'falhou';
@@ -1164,10 +1290,12 @@
     S.fila=[]; S.sobra=null; S.sobraN=0; S.tocando=[]; S.tocandoAgora=false;
     S.proximoSom=0; S.turnoMudo=false; S.corteMs=0;
     S.euFalando=S.eleFalando=S.garimpando=false;
+    S.semMic=false; S.pronto=false; S.textoPendente=null; S.abrindoMic=false;
     S.bolhaEu=S.bolhaMestre=null;
     document.body.classList.remove('ligado');
     btnEncerrar.disabled=true;
-    cv.setAttribute('aria-label','Globo. Toque para começar a conversa com o mestre.');
+    atualizarAcao();
+    cv.setAttribute('aria-label','Globo. Toque para começar a conversa.');
     diario('desligado · linhas vivas='+S.wsVivos+' · pico de linhas='+S.picoWs
       +' · pico de fontes audíveis='+S.picoAudivel+' · cortes='+S.cortes);
     if(!silencioso){ S.fase='pronto'; estado('Conversa encerrada','Toque no globo para conversar de novo.'); }
@@ -1176,7 +1304,110 @@
   // O alvo de toque é O GLOBO INTEIRO. Nada de botãozinho.
   cv.addEventListener('click',function(){ S.ligado?desligar():ligar(); });
   cv.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); S.ligado?desligar():ligar(); } });
-  btnEncerrar.addEventListener('click',function(){ desligar(); });
+  btnEncerrar.addEventListener('click',function(){ desligar(); elConfig.hidden=true; });
+
+  // ── O BOTÃO REDONDO muda de cara conforme o momento ──────────────────────
+  // escreveu algo -> vira ENVIAR. conversa de pé -> vira PARAR.
+  // parado -> é o microfone. Um botão só, sempre o certo.
+  function atualizarAcao(){
+    var temTexto=elCampo.value.trim().length>0;
+    if(temTexto){
+      btnAcao.textContent='➤'; btnAcao.className='redondo';
+      btnAcao.setAttribute('aria-label','Enviar a pergunta escrita');
+    }else if(S.ligado && S.semMic){
+      btnAcao.textContent='🎤'; btnAcao.className='redondo';
+      btnAcao.setAttribute('aria-label','Ligar o microfone');
+    }else if(S.ligado){
+      btnAcao.textContent='⏹'; btnAcao.className='redondo parar';
+      btnAcao.setAttribute('aria-label','Encerrar a conversa');
+    }else{
+      btnAcao.textContent='🎤'; btnAcao.className='redondo';
+      btnAcao.setAttribute('aria-label','Começar a conversa por voz');
+    }
+    btnEncerrar.disabled=!S.ligado;
+  }
+  elCampo.addEventListener('input',atualizarAcao);
+
+  elBarra.addEventListener('submit',function(e){
+    e.preventDefault();
+    var t=elCampo.value.trim();
+    if(t){ elCampo.value=''; atualizarAcao(); enviarTexto(t); return; }
+    if(S.ligado && S.semMic){ ligarMicrofone(); return; }   // estava só escrevendo
+    if(S.ligado){ desligar(); return; }
+    ligar();
+  });
+
+  // ── ESCREVER, além de falar ───────────────────────────────────────────────
+  // Dirigindo ele fala; parado, às vezes é mais fácil escrever. Escrever NÃO
+  // pede microfone: a linha sobe "surda" e ele liga o mic quando quiser.
+  function enviarTexto(t){
+    limpaVazio();
+    var b=bolha('eu','Você'); b.textContent=t; rolar();
+    S.texto.push('Você: '+t);
+    if(!S.ligado){
+      estado('⏳ Abrindo a linha…','Já mando sua pergunta.');
+      ligar({semMic:true}).then(function(){ mandarTexto(t); })
+                          .catch(function(){ S.textoPendente=t; });
+      return;
+    }
+    mandarTexto(t);
+  }
+  function mandarTexto(t){
+    // ainda não terminou o aperto de mão? guarda e manda no setupComplete
+    if(!S.ws||S.ws.readyState!==1||!S.pronto){ S.textoPendente=t; return; }
+    calarMestre('ele escreveu por cima');
+    S.turnoMudo=false;
+    S.ws.send(JSON.stringify({ clientContent:{
+      turns:[{ role:'user', parts:[{ text:t }] }], turnComplete:true }}));
+  }
+
+  // liga o microfone no meio de uma conversa que tinha começado só escrita
+  async function ligarMicrofone(){
+    if(!S.ligado||!S.semMic||S.abrindoMic) return;
+    S.abrindoMic=true;
+    estado('⏳ Abrindo o microfone…','Autorize quando o celular pedir.');
+    try{
+      await abrirMicrofone();
+      S.semMic=false; fase(); atualizarAcao();
+    }catch(e){
+      erro('Não consegui o microfone: '+((e&&e.message)||'falhou'));
+    }
+    S.abrindoMic=false;
+  }
+
+  // ── a engrenagem: é onde mora todo o resto ────────────────────────────────
+  btnInicio.addEventListener('click',function(){ location.href='/'; });
+  btnConfig.addEventListener('click',function(){ elConfig.hidden=false; });
+  btnFecharConfig.addEventListener('click',function(){ elConfig.hidden=true; });
+  elConfig.addEventListener('click',function(e){ if(e.target===elConfig) elConfig.hidden=true; });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // O BALÃO DO AVISO — flutua, não trava, e o X MATA.
+  // Nada de tela de aceite bloqueando a entrada: o globo aparece na hora. O
+  // balão chega depois, por cima, sem empurrar globo nem barra. Tocou no X:
+  // sai do DOM de verdade (nada invisível sobrando pra capturar toque) e nas
+  // próximas aberturas NEM CHEGA A SER CRIADO. O texto inteiro segue no ⚙️.
+  // ══════════════════════════════════════════════════════════════════════════
+  (function(){
+    var CHAVE='voz.aviso.lido';
+    try{ if(localStorage.getItem(CHAVE)) return; }catch(e){}
+    setTimeout(function(){
+      var b=document.createElement('div');
+      b.id='balao';
+      b.innerHTML='<p>⚠️ <b>Passa pelo Google</b> e pode ser ouvida por revisores. '
+        +'Não fale nome de membro nem segredo de aconselhamento.</p>';
+      var x=document.createElement('button');
+      x.type='button'; x.className='x'; x.textContent='✕';
+      x.setAttribute('aria-label','Fechar o aviso');
+      b.appendChild(x);
+      document.body.appendChild(b);
+      requestAnimationFrame(function(){ b.classList.add('entrou'); });
+      x.addEventListener('click',function(){
+        try{ localStorage.setItem(CHAVE,'1'); }catch(e){}
+        b.remove();
+      });
+    },900);
+  })();
 
   // ── o interruptor viva-voz / fone ─────────────────────────────────────────
   // A detecção automática acerta na maioria dos casos, mas o Android esconde
@@ -1184,6 +1415,7 @@
   try{ S.manualDuplex=localStorage.getItem('voz.duplex')||null; }catch(e){}
   if(S.manualDuplex) S.meioDuplex=(S.manualDuplex==='viva');
   pintarModo();
+  atualizarAcao();
   btnModo.addEventListener('click',function(){
     S.manualDuplex = S.meioDuplex ? 'fone' : 'viva';
     S.meioDuplex = !S.meioDuplex;
@@ -1196,8 +1428,8 @@
 
   btnCopiar.addEventListener('click',function(){
     var linhas=S.texto.slice();
-    if(S.bolhaEu&&S.bolhaEu.textContent) linhas.push('Pastor: '+S.bolhaEu.textContent);
-    if(S.bolhaMestre&&S.bolhaMestre.textContent) linhas.push('Mestre: '+S.bolhaMestre.textContent);
+    if(S.bolhaEu&&S.bolhaEu.textContent) linhas.push('Você: '+S.bolhaEu.textContent);
+    if(S.bolhaMestre&&S.bolhaMestre.textContent) linhas.push('Resposta: '+S.bolhaMestre.textContent);
     var t=linhas.join('\n\n')||'(nada foi falado ainda)';
     function fb(){ var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';
       document.body.appendChild(a);a.focus();a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a); }
