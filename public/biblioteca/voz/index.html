@@ -563,6 +563,9 @@
       S.tocando=[];
     }
 
+    // marca o corte na fita da autoprova: o silêncio DEPOIS de um corte é o
+    // comportamento certo, não um engasgo. Sem esta marca a medição mentiria.
+    if(S.registro) S.registro.push({ corte: S.ctxSom?S.ctxSom.currentTime:0 });
     S.proximoSom=0;                      // RESET do relógio — sem isto, voz dupla
     S.eleFalando=false; S.corteMs=0;
     if(tinha){ S.cortes++; diario('corte ('+(motivo||'?')+') nº'+S.cortes); }
@@ -1314,24 +1317,42 @@
 
     function terminar(){
       clearInterval(olho);
-      var r=S.registro.slice().sort(function(x,y){ return x.inicio-y.inicio; });
-      var sobrepostos=0, pior=0, maiorBuraco=0, engasgos=0;
-      for(var k=1;k<r.length;k++){
-        var folga=r[k].inicio-r[k-1].fim;
-        if(folga<-0.000001){ sobrepostos++; if(folga<pior) pior=folga; }
-        else if(folga>1){ /* silêncio de corte, não é engasgo */ }
-        else { if(folga>maiorBuraco) maiorBuraco=folga; if(folga>0.020) engasgos++; }
+      // A fita vem em ordem de agendamento (o início nunca anda pra trás), com
+      // marcas de corte no meio. Um corte encurta a nota anterior: o `fim`
+      // nominal dela não vale mais, vale o instante do corte.
+      var r=S.registro, notas=0;
+      var sobrepostos=0, pior=0, maiorBuraco=0, engasgos=0, retomadas=0, piorRetomada=0;
+      var ultimoFim=null, vindoDeCorte=false;
+      for(var k=0;k<r.length;k++){
+        if(r[k].corte!==undefined){
+          if(ultimoFim!==null) ultimoFim=Math.min(ultimoFim, r[k].corte);
+          vindoDeCorte=true; continue;
+        }
+        notas++;
+        if(ultimoFim!==null){
+          var folga=r[k].inicio-ultimoFim;
+          if(folga<-0.000001){ sobrepostos++; if(folga<pior) pior=folga; }
+          else if(vindoDeCorte){
+            // silêncio de retomada: ELE mandou calar. É o certo, não é defeito.
+            retomadas++; if(folga>piorRetomada) piorRetomada=folga;
+          }
+          else { if(folga>maiorBuraco) maiorBuraco=folga; if(folga>0.020) engasgos++; }
+        }
+        ultimoFim=r[k].fim; vindoDeCorte=false;
       }
-      var passou = (picoVivo<=1) && (sobrepostos===0) && (S.fila.length===0);
-      diz('fontes agendadas ......... '+r.length);
+      var passou = (picoVivo<=1) && (sobrepostos===0) && (S.fila.length===0) && (engasgos===0);
+      diz('fontes agendadas ......... '+notas);
       diz('medições ao vivo ......... '+amostras+' (a cada 20 ms)');
       diz('');
       diz('PICO DE FONTES SOANDO .... '+picoVivo+'   (tem que ser 1)');
       diz('pares sobrepostos ........ '+sobrepostos+'   (tem que ser 0)');
       diz('pior sobreposição ........ '+(pior*1000).toFixed(3)+' ms');
       diz('');
-      diz('engasgos (buraco>20 ms) .. '+engasgos);
+      diz('ENGASGOS na fala corrida .. '+engasgos+'   (tem que ser 0)');
       diz('maior buraco na fala ..... '+(maiorBuraco*1000).toFixed(1)+' ms');
+      diz('');
+      diz('retomadas depois de corte  '+retomadas+' (silêncio certo)');
+      diz('maior retomada ........... '+(piorRetomada*1000).toFixed(0)+' ms');
       diz('cortes executados ........ '+S.cortes);
       diz('remendos do relógio ...... '+S.remendos);
       diz('fila presa no fim ........ '+S.fila.length);
