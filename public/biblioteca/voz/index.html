@@ -1389,8 +1389,10 @@
   // próximas aberturas NEM CHEGA A SER CRIADO. O texto inteiro segue no ⚙️.
   // ══════════════════════════════════════════════════════════════════════════
   (function(){
-    var CHAVE='voz.aviso.lido';
-    try{ if(localStorage.getItem(CHAVE)) return; }catch(e){}
+    var CHAVE='voz.aviso.v2';
+    // ?aviso=1 traz o balão de volta pra quem quiser reler sem ir no ⚙️
+    var forcar=/[?&]aviso=1/.test(location.search);
+    if(!forcar){ try{ if(localStorage.getItem(CHAVE)) return; }catch(e){} }
     setTimeout(function(){
       var b=document.createElement('div');
       b.id='balao';
@@ -1408,6 +1410,13 @@
       });
     },900);
   })();
+
+  // com ?hud=1 dá pra ver, sem devtools, por que o balão apareceu ou não
+  if(HUD_LIGADO && elHud){
+    var marca='?';
+    try{ marca=localStorage.getItem('voz.aviso.v2')||'(nunca lido)'; }catch(e){ marca='(bloqueado)'; }
+    elHud.hidden=false; elHud.textContent='aviso.v2 = '+marca;
+  }
 
   // ── o interruptor viva-voz / fone ─────────────────────────────────────────
   // A detecção automática acerta na maioria dos casos, mas o Android esconde
