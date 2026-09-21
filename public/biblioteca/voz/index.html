@@ -349,6 +349,16 @@
     wsVivos:0, picoWs:0, picoAudivel:0, picoAgendado:0,
     cortes:0, cortesLocais:0, remendos:0, pedacos:0, vigia:null,
 
+    // ── a tela apagando (o buraco nº 1 na estrada) ──
+    // pausado      = o botão do volante mandou pausar (a linha CONTINUA de pé)
+    // falandoLocal = o aparelho está dizendo "voltei" (microfone fechado)
+    // elMudo       = o áudio quase mudo que mantém a aba viva como TOCADOR
+    // caiuNoEscuro = a linha caiu com a tela apagada -> ao voltar, avisa por voz
+    pausado:false, falandoLocal:false, escondidoEm:0, caiuNoEscuro:false,
+    elMudo:null, midiaArmada:false, ultimoVoltei:0, avisosVoltei:0,
+    wakePedidos:0, wakeSuporte:null, wakeErro:'', midiaErro:'', retomadasMidia:0,
+    dormidas:0, maiorSono:0, fita:[],
+
     texto:[], wake:null, voz:vozDaURL(),
     fase:'pronto', nivel:0, escala:0.94, giro:0, relogio:0, amostra:null
   };
@@ -374,6 +384,7 @@
     garimpo:      { a:'#7a5510', b:'#c09235', linha:'#ffeec4', aura:'201,161,74'  },
     reconectando: { a:'#2b3a46', b:'#5d7484', linha:'#C9A14A', aura:'93,116,132'  },
     semRede:      { a:'#26323c', b:'#4a5b68', linha:'#8b98a3', aura:'74,91,104'   },
+    pausado:      { a:'#233240', b:'#4c6274', linha:'#C9A14A', aura:'76,98,116'   },
     erro:         { a:'#4e1414', b:'#a33a33', linha:'#f0b9b5', aura:'163,58,51'   }
   };
 
@@ -530,6 +541,9 @@
   }
   function fase(){
     if(!S.ligado){ S.fase = (S.fase==='erro') ? 'erro' : 'pronto'; return; }
+    // pausa do volante / do controle de mídia: a linha continua de pé, só a boca
+    // e o ouvido é que fecharam. NÃO é encerrar — um toque volta.
+    if(S.pausado){ S.fase='pausado'; estado('⏸️ PAUSADO','Toque no globo, ou no play do carro, para voltar.','espera'); return; }
     if(S.reconectando){ S.fase = navigator.onLine===false ? 'semRede' : 'reconectando'; return; }
     if(S.garimpando){ S.fase='garimpo'; estado('⛏️ Buscando no material','Foi conferir nas fontes.'); return; }
     if(S.eleFalando){
@@ -750,6 +764,10 @@
   }
 
   function mandarAudio(f32){
+    // Pausado pelo volante, ou o aparelho dizendo "voltei": NADA sobe pro Google.
+    // Sem isto, o "voltei" do celular seria ouvido como pergunta, e a pausa do
+    // carro continuaria mandando áudio à toa.
+    if(S.pausado||S.falandoLocal) return;
     var n=f32.length,pcm=new Int16Array(n),soma=0;
     for(var i=0;i<n;i++){
       var v=f32[i]; if(v>1)v=1; else if(v<-1)v=-1;
@@ -909,27 +927,217 @@
     }
   }
 
-  // ── A TELA NÃO PODE APAGAR ────────────────────────────────────────────────
-  // O navegador SOLTA o wake lock sozinho toda vez que a aba sai de vista (uma
-  // ligação entrando, ele trocar de app no semáforo). Pedir uma vez só não serve
-  // de nada numa viagem de três horas: tem que REPEDIR quando a aba volta.
+  // ══════════════════════════════════════════════════════════════════════════
+  // A TELA APAGA — E A CONVERSA TEM QUE CONTINUAR. (o buraco nº 1 da estrada)
+  //
+  // O QUE ACONTECIA: o pastor punha o celular no suporte, começava a conversar,
+  // a tela apagava sozinha — e o Android SUSPENDIA a aba. O áudio parava, o
+  // AudioContext dormia, o WebSocket caía. Pra reviver ele tinha que PEGAR NO
+  // CELULAR DIRIGINDO. Perigoso, e matava a ideia inteira: o uso principal
+  // disto é justamente o carro.
+  //
+  // São TRÊS defesas em camada. Nenhuma sozinha basta — por isso as três:
+  //
+  //   1. WAKE LOCK — pede ao Android para não apagar a tela. O navegador SOLTA
+  //      esse pedido sozinho toda vez que a aba sai de vista (ligação entrando,
+  //      ele trocando de app no semáforo). Pedir uma vez numa viagem de três
+  //      horas não serve de nada: tem que ser REPEDIDO.
+  //
+  //   2. CANAL DE MÍDIA — áudio quase mudo em laço + Media Session. Com isso o
+  //      Android para de ver "uma aba de navegador" e passa a ver um TOCADOR DE
+  //      MÚSICA: não congela, não corta o som — e o botão do volante controla a
+  //      CONVERSA em vez de sequestrar o celular pra outro app.
+  //
+  //   3. RESSURREIÇÃO — se ainda assim dormir: religa o contexto de áudio,
+  //      reconecta a linha pelo caminho ÚNICO de reconexão (geração + cadeado,
+  //      NUNCA um atalho novo, senão volta a voz dupla) e AVISA POR VOZ que
+  //      voltou. Ele não tira a mão do volante nem olha a tela.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── 1. WAKE LOCK ─────────────────────────────────────────────────────────
   function segurarTela(){
-    if(!S.ligado || !navigator.wakeLock || !navigator.wakeLock.request) return;
+    if(!S.ligado) return;
+    if(!navigator.wakeLock || !navigator.wakeLock.request){
+      // Android velho / navegador sem a API: não é motivo pra parar a conversa.
+      // É exatamente pra este caso que existem as defesas 2 e 3.
+      S.wakeSuporte=false; return;
+    }
+    S.wakeSuporte=true;
     if(S.wake && !S.wake.released) return;
     navigator.wakeLock.request('screen').then(function(w){
-      S.wake=w;
+      S.wake=w; S.wakePedidos++; S.wakeErro='';
+      diario('wake lock conquistado (nº'+S.wakePedidos+')');
+      // o próprio navegador solta quando a aba esconde: quando ela volta, repede
       w.addEventListener('release',function(){ if(S.ligado) setTimeout(segurarTela,400); });
-    }).catch(function(){ /* bateria fraca ou navegador sem suporte: não é motivo pra parar a conversa */ });
+    }).catch(function(e){ S.wakeErro=(e&&e.name)||'negado'; });
   }
   function soltarTela(){ try{ if(S.wake) S.wake.release(); }catch(e){} S.wake=null; }
 
+  // ── 2. O CANAL DE MÍDIA ──────────────────────────────────────────────────
+  // ⚠️ NÃO APAGUE ISTO ACHANDO QUE É LIXO. Sem este áudio tocando, a tela
+  //    apagada volta a matar a conversa em menos de um minuto.
+  //
+  // O Android congela aba escondida, MAS abre exceção para quem está tocando
+  // mídia. Então a página toca, em laço, um som DE VERDADE — só que no volume
+  // de um fio de cabelo: amplitude 1 de 32768, uns -90 dB. Nenhum ouvido humano
+  // pega, nem no carro com o volume alto.
+  // NÃO PODE SER SILÊNCIO PURO: navegador que detecta faixa muda solta o foco de
+  // mídia, e aí o Android volta a congelar tudo. Por isso amplitude 1, não 0.
+  function wavQuaseMudo(segundos){
+    var taxa=8000, n=taxa*segundos, total=44+n*2;
+    var b=new ArrayBuffer(total), v=new DataView(b);
+    function txt(o,s){ for(var i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); }
+    txt(0,'RIFF');  v.setUint32(4,total-8,true);  txt(8,'WAVE');
+    txt(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+    v.setUint32(24,taxa,true); v.setUint32(28,taxa*2,true);
+    v.setUint16(32,2,true); v.setUint16(34,16,true);
+    txt(36,'data'); v.setUint32(40,n*2,true);
+    for(var i=0;i<n;i++) v.setInt16(44+i*2,(i&1)?1:-1,true);
+    return new Blob([b],{type:'audio/wav'});
+  }
+
+  function abrirCanalDeMidia(){
+    try{
+      if(!S.elMudo){
+        var a=document.createElement('audio');
+        a.loop=true; a.preload='auto'; a.volume=1;   // volume cheio; o CONTEÚDO é que é mudo
+        a.setAttribute('playsinline',''); a.setAttribute('aria-hidden','true');
+        a.style.cssText='position:fixed;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
+        a.src=URL.createObjectURL(wavQuaseMudo(10));
+        document.body.appendChild(a);
+        S.elMudo=a;
+      }
+      if(S.elMudo.paused){
+        var p=S.elMudo.play();
+        if(p&&p.catch) p.catch(function(e){ S.midiaErro=(e&&e.name)||'recusado'; });
+      }
+    }catch(e){ S.midiaErro=(e&&e.name)||'falhou'; }
+    armarControleDoCarro();
+  }
+  function fecharCanalDeMidia(){
+    try{ if(S.elMudo){ S.elMudo.pause(); S.elMudo.removeAttribute('src'); S.elMudo.load(); S.elMudo.remove(); } }catch(e){}
+    S.elMudo=null; S.midiaArmada=false;
+    try{
+      if('mediaSession' in navigator){
+        navigator.mediaSession.playbackState='none';
+        navigator.mediaSession.metadata=null;
+      }
+    }catch(e){}
+  }
+
+  // ── O CONTROLE DO CARRO ──────────────────────────────────────────────────
+  // Pedido do Elias, com todas as letras: "quando conectar no bluetooth do carro
+  // precisamos ter o cuidado de o som do carro não pegar o controle do celular".
+  //
+  // O QUE ACONTECE SEM ISTO: ao parear, o rádio dispara um PLAY. Quem atende é
+  // quem for o "tocador" do celular naquele momento — normalmente outro app de
+  // música. Esse app toma o foco de áudio e O GLOBO EMUDECE no meio da frase.
+  //
+  // O conserto é TOMAR a sessão de mídia pra nós: a aba vira o tocador oficial.
+  // Aí o PLAY do volante chega AQUI, e não no outro app. E a gente decide o que
+  // cada botão faz — de um jeito que nenhum deles derruba a conversa:
+  //   ▶ play  — retoma (e se já estava tocando, não faz mal nenhum)
+  //   ⏸ pause — SÓ emudece e fecha o microfone. A linha com o Google CONTINUA
+  //             de pé, o áudio de mídia CONTINUA tocando (senão a aba congela),
+  //             e um toque no globo volta. Pausa NÃO é encerrar.
+  //   ⏹ stop  — tratado como pausa, pelo mesmo motivo.
+  //   ⏭ ⏮ ⏩ ⏪ — registrados fazendo NADA, de propósito: assim o botão de
+  //             "próxima faixa" do volante não pula pra outro app do celular.
+  function armarControleDoCarro(){
+    if(!('mediaSession' in navigator)) return;
+    var ms=navigator.mediaSession;
+    try{
+      if(window.MediaMetadata){
+        ms.metadata=new MediaMetadata({
+          title:'Conversa por Voz',
+          artist:'RADAR',
+          album:'Estudo bíblico',
+          artwork:[{ src:location.origin+'/icon-192.png', sizes:'192x192', type:'image/png' },
+                   { src:location.origin+'/icon-512.png', sizes:'512x512', type:'image/png' }]
+        });
+      }
+    }catch(e){}
+    function pega(nome,fn){ try{ ms.setActionHandler(nome,fn); }catch(e){} }
+    pega('play',  function(){ retomarDoCarro(); });
+    pega('pause', function(){ pausarDoCarro(); });
+    pega('stop',  function(){ pausarDoCarro(); });
+    var nada=function(){};
+    pega('previoustrack',nada); pega('nexttrack',nada);
+    pega('seekbackward',nada);  pega('seekforward',nada); pega('seekto',nada);
+    S.midiaArmada=true;
+    pintarMidia();
+  }
+  function pintarMidia(){
+    try{
+      if('mediaSession' in navigator)
+        navigator.mediaSession.playbackState = S.ligado ? (S.pausado?'paused':'playing') : 'none';
+    }catch(e){}
+  }
+  function pausarDoCarro(){
+    if(!S.ligado||S.pausado) return;
+    S.pausado=true;
+    calarMestre('pausa pelo controle do carro');
+    // o áudio quase mudo CONTINUA tocando de propósito: é ele que segura a aba
+    // viva. Se parasse aqui, a pausa do volante viraria a morte da conversa.
+    pintarMidia(); fase(); atualizarAcao();
+    diario('pausado pelo controle de mídia');
+  }
+  function retomarDoCarro(){
+    if(!S.ligado) return;
+    if(S.pausado){ S.pausado=false; diario('retomado pelo controle de mídia'); }
+    abrirCanalDeMidia();          // o PLAY do carro também serve de reforço
+    pintarMidia(); fase(); atualizarAcao();
+  }
+
+  // ── 3. "VOLTEI" — o aviso POR VOZ ────────────────────────────────────────
+  // Quando a linha cai com a tela apagada e volta sozinha, a nota na tela não
+  // serve de nada: ele está dirigindo, olhando a estrada. Então o próprio
+  // aparelho fala. É voz DO CELULAR (speechSynthesis) — não passa pela fila de
+  // reprodução nem pela linha com o Google, então não tem como virar voz dupla.
+  // O microfone fecha durante o aviso, senão o Google ouve o "voltei" e responde.
+  function falarLocal(t){
+    if(!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
+    try{
+      var u=new SpeechSynthesisUtterance(t);
+      u.lang='pt-BR'; u.rate=1; u.volume=1;
+      S.falandoLocal=true;
+      var soltar=function(){ S.falandoLocal=false; };
+      u.onend=soltar; u.onerror=soltar;
+      setTimeout(soltar,4500);              // rede de segurança: nunca fica preso
+      speechSynthesis.speak(u);
+      return true;
+    }catch(e){ S.falandoLocal=false; return false; }
+  }
+  function avisarVoltei(){
+    var agora=Date.now();
+    if(agora-S.ultimoVoltei < 15000) return;      // não vira papagaio
+    S.ultimoVoltei=agora; S.avisosVoltei++;
+    falarLocal('Voltei. Pode continuar.');
+  }
+
+  // ── A ABA SUMIU E VOLTOU ─────────────────────────────────────────────────
   document.addEventListener('visibilitychange',function(){
-    if(document.visibilityState!=='visible' || !S.ligado) return;
-    segurarTela();                                   // a tela volta a ficar presa
+    if(document.visibilityState!=='visible'){
+      S.escondidoEm=Date.now();
+      // a aba vai sumir: reforça o canal de mídia AGORA, enquanto ainda roda
+      if(S.ligado){ S.dormidas++; abrirCanalDeMidia(); }
+      return;
+    }
+    var dormiu=S.escondidoEm?Date.now()-S.escondidoEm:0;
+    S.escondidoEm=0;
+    if(dormiu>S.maiorSono) S.maiorSono=dormiu;
+    if(!S.ligado) return;
+    diario('a aba voltou depois de '+(dormiu/1000).toFixed(1)+'s escondida · som='
+      +(S.ctxSom?S.ctxSom.state:'-')+' ws='+(S.ws?S.ws.readyState:'-'));
+    segurarTela();                                   // o lock se perde sozinho: repede
+    abrirCanalDeMidia();                             // e a mídia pode ter sido pausada
     if(S.ctxSom && S.ctxSom.state==='suspended') S.ctxSom.resume().catch(function(){});
     if(S.ctxMic && S.ctxMic.state==='suspended') S.ctxMic.resume().catch(function(){});
-    // se a linha morreu enquanto a tela estava apagada, volta agora, sem ele tocar
+    // Linha morta enquanto a tela estava apagada: volta agora, sem ele tocar.
+    // reconectar() é o caminho ÚNICO (geração + cadeado de tentativa). NÃO criar
+    // outro caminho aqui: foi exatamente isso que já deu voz dupla uma vez.
     if(!S.ws || S.ws.readyState>1) reconectar(true);
+    pintarMidia();
   });
 
   // ── o servidor: token e garimpo ───────────────────────────────────────────
@@ -1056,6 +1264,9 @@
         // o handle não voltou a conversa? então reinjeta o resumo na mão.
         if(!S.handle) reinjetarFio();
         nota('— a linha caiu e voltou; a conversa continua —');
+        // Caiu com a TELA APAGADA: a nota acima ele não vê, está dirigindo.
+        // O aparelho avisa por voz que voltou — sem ele tocar em nada.
+        if(S.caiuNoEscuro){ S.caiuNoEscuro=false; avisarVoltei(); }
       }
       fase();
       return;
@@ -1138,6 +1349,8 @@
   function reconectar(agora){
     if(!S.ligado||S.fechandoDeProposito) return;
     if(S.conectando) return;          // já tem tentativa em voo: não abre outra
+    // anota que a queda foi com a tela apagada: ao voltar, avisa POR VOZ
+    if(document.visibilityState!=='visible') S.caiuNoEscuro=true;
     clearTimeout(S.agendado);
     derrubar(S.ws,1000,'reconectando');
     S.reconectando=true; S.ws=null; fase();
@@ -1193,6 +1406,17 @@
       // (1) conserto
       if(S.ctxSom && S.ctxSom.state==='suspended') S.ctxSom.resume().catch(function(){});
       if(S.ctxMic && S.ctxMic.state==='suspended') S.ctxMic.resume().catch(function(){});
+      // O CANAL DE MÍDIA é o que impede o Android de congelar a aba com a tela
+      // apagada. Outro app (ou o rádio do carro ao parear) pode ter tomado o
+      // foco e pausado o nosso áudio: retoma na hora, sem ele tocar em nada.
+      if(S.elMudo && S.elMudo.paused && !S.fechandoDeProposito){
+        S.retomadasMidia++;
+        try{ var pr=S.elMudo.play(); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){}
+      }
+      // o wake lock se perde sozinho. Só dá pra repedir com a aba à vista —
+      // escondida o navegador recusa, e pedir mil vezes à toa só gasta bateria.
+      if(document.visibilityState==='visible' && (!S.wake||S.wake.released)) segurarTela();
+      pintarMidia();
       // fila com áudio parado e nada agendado à frente: reacende o agendador
       if(S.ctxSom && S.fila.length && S.proximoSom < S.ctxSom.currentTime+0.02) agendar();
       if(!S.ws && !S.conectando && !S.reconectando && !S.fechandoDeProposito) reconectar(true);
@@ -1207,6 +1431,25 @@
       var viva=audiveis();
       if(viva>S.picoAudivel) S.picoAudivel=viva;
       var adiante=S.ctxSom ? Math.max(0,S.proximoSom-S.ctxSom.currentTime) : 0;
+      // ── A FITA DA TELA APAGADA ──────────────────────────────────────────
+      // Estes seis campos são a PROVA do teste de 60 segundos: com a tela
+      // apagada ninguém consegue olhar a tela (é justamente esse o ponto), então
+      // o aparelho anota sozinho, de segundo em segundo, o que estava vivo.
+      // Sai no console (logcat: `chromium` no adb) e fica guardado em S.fita,
+      // que ?prova=escuro mostra inteirinha depois que a tela acende.
+      var foto={
+        t:Date.now(),
+        som:S.ctxSom?S.ctxSom.state:'-',          // running | suspended | closed
+        mic:S.ctxMic?S.ctxMic.state:'-',
+        ws:S.ws?S.ws.readyState:-1,               // 0 abrindo · 1 ABERTO · 2/3 morto
+        tela:document.visibilityState,
+        midia:S.elMudo?(S.elMudo.paused?'parada':'tocando'):'-',
+        wake:(S.wake&&!S.wake.released)?'preso':'solto',
+        audiveis:viva, pausado:S.pausado?1:0
+      };
+      S.fita.push(foto);
+      if(S.fita.length>900) S.fita.shift();       // 15 min de fita é de sobra
+
       var linha='audíveis='+viva+' pico='+S.picoAudivel
         +' agendadas='+S.tocando.length+'/'+S.picoAgendado
         +' fila='+S.fila.length+' sobra='+S.sobraN
@@ -1214,7 +1457,10 @@
         +' linhas='+S.wsVivos+'/'+S.picoWs
         +' cortes='+S.cortes+'+'+S.cortesLocais
         +' remendos='+S.remendos
-        +' modo='+(S.meioDuplex?'viva-voz':'fone');
+        +' modo='+(S.meioDuplex?'viva-voz':'fone')
+        +' | TELA-APAGADA som='+foto.som+' mic='+foto.mic+' ws='+foto.ws
+        +' tela='+foto.tela+' midia='+foto.midia+' wake='+foto.wake
+        +' dormidas='+S.dormidas+' voltei='+S.avisosVoltei;
       diario(linha);
       if(HUD_LIGADO && elHud){
         elHud.hidden=false;
@@ -1224,7 +1470,9 @@
           +'adiante '+adiante.toFixed(2)+'s  remendos '+S.remendos+'\n'
           +'linhas '+S.wsVivos+' (pico '+S.picoWs+')\n'
           +'cortes '+S.cortes+' / local '+S.cortesLocais+'\n'
-          +'modo '+(S.meioDuplex?'viva-voz (meio)':'fone (full)');
+          +'modo '+(S.meioDuplex?'viva-voz (meio)':'fone (full)')+'\n'
+          +'som '+foto.som+'  mic '+foto.mic+'  ws '+foto.ws+'\n'
+          +'mídia '+foto.midia+'  wake '+foto.wake+'  tela '+foto.tela;
       }
     },1000);
   }
@@ -1241,6 +1489,11 @@
     S.fase='pronto';
     estado('⏳ Abrindo a linha…', semMic?'Já mando sua pergunta.':'Autorize o microfone quando o celular pedir.');
     try{
+      // O CANAL DE MÍDIA PRIMEIRO, antes de qualquer `await`: o toque dele ainda
+      // está valendo aqui. Depois do await do microfone o Android já pode ter
+      // considerado o gesto "gasto" e recusado o play() do áudio — e sem esse
+      // áudio tocando a aba volta a congelar quando a tela apagar.
+      abrirCanalDeMidia();
       if(!semMic && (!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)) throw new Error('SEM_MIC_NO_NAVEGADOR');
       if(!window.WebSocket) throw new Error('SEM_WEBSOCKET');
 
@@ -1269,7 +1522,9 @@
       atualizarAcao();
       vigiar();
       cv.setAttribute('aria-label','Conversa ligada. O globo pulsa com a voz.');
-      segurarTela();
+      segurarTela();                 // 1. a tela não apaga
+      abrirCanalDeMidia();           // 2. e se apagar, a aba é "tocador de mídia"
+      pintarMidia();                 //    (agora com S.ligado, o carro vê "tocando")
 
       await conectar();
       fase(); atualizarAcao();
@@ -1324,6 +1579,9 @@
     setTimeout(function(){ try{ if(morrendo) morrendo.close(); }catch(e){} }, FADE*1000+60);
 
     soltarTela();
+    fecharCanalDeMidia();            // solta a sessão de mídia: o carro volta a mandar no que era dele
+    try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+    S.pausado=false; S.falandoLocal=false; S.caiuNoEscuro=false; S.escondidoEm=0;
     S.worklet=S.script=S.noMic=S.stream=S.ctxMic=S.ctxSom=S.ganho=null;
     S.analiseMic=S.analiseSom=S.bufMic=S.bufSom=null;
     S.fila=[]; S.sobra=null; S.sobraN=0; S.tocando=[]; S.tocandoAgora=false;
@@ -1341,8 +1599,13 @@
   }
 
   // O alvo de toque é O GLOBO INTEIRO. Nada de botãozinho.
-  cv.addEventListener('click',function(){ S.ligado?desligar():ligar(); });
-  cv.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); S.ligado?desligar():ligar(); } });
+  // pausado pelo controle do carro: o toque no globo RETOMA, não encerra.
+  function toqueNoGlobo(){
+    if(S.pausado){ retomarDoCarro(); return; }
+    S.ligado?desligar():ligar();
+  }
+  cv.addEventListener('click',toqueNoGlobo);
+  cv.addEventListener('keydown',function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toqueNoGlobo(); } });
   btnEncerrar.addEventListener('click',function(){ desligar(); elConfig.hidden=true; });
 
   // ── O BOTÃO REDONDO muda de cara conforme o momento ──────────────────────
@@ -1353,6 +1616,9 @@
     if(temTexto){
       btnAcao.textContent='➤'; btnAcao.className='redondo';
       btnAcao.setAttribute('aria-label','Enviar a pergunta escrita');
+    }else if(S.pausado){
+      btnAcao.textContent='▶'; btnAcao.className='redondo';
+      btnAcao.setAttribute('aria-label','Voltar a conversa (está pausada)');
     }else if(S.ligado && S.semMic){
       btnAcao.textContent='🎤'; btnAcao.className='redondo';
       btnAcao.setAttribute('aria-label','Ligar o microfone');
@@ -1371,6 +1637,7 @@
     e.preventDefault();
     var t=elCampo.value.trim();
     if(t){ elCampo.value=''; atualizarAcao(); enviarTexto(t); return; }
+    if(S.pausado){ retomarDoCarro(); return; }              // pausado pelo volante
     if(S.ligado && S.semMic){ ligarMicrofone(); return; }   // estava só escrevendo
     if(S.ligado){ desligar(); return; }
     ligar();
@@ -1721,14 +1988,168 @@
   }
   if(/[?&]prova=tela/.test(location.search)) setTimeout(provaDaTela,400);
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // AUTOPROVA DA TELA APAGADA (?prova=escuro)
+  //
+  // O problema de provar isto é que a prova acontece JUSTAMENTE quando ninguém
+  // pode olhar a tela. Então quem anota é o aparelho: a fita do vigia guarda,
+  // de segundo em segundo, o estado do contexto de áudio, do WebSocket, do
+  // áudio de mídia e do wake lock — com a marca de quando a tela sumiu.
+  //
+  // COMO USAR NO CELULAR (sem PC, sem cabo, sem devtools):
+  //   1. abra  /biblioteca/voz/?prova=escuro
+  //   2. toque no globo e comece a conversar
+  //   3. APAGUE a tela pelo botão lateral e conte 60 segundos
+  //   4. acenda: o quadro embaixo já está com o antes / durante / depois
+  //   5. "📋 Copiar" e manda pro Elias
+  // ══════════════════════════════════════════════════════════════════════════
+  function provaEscuro(){
+    var p=document.createElement('div');
+    p.style.cssText='position:fixed;left:0;right:0;bottom:0;max-height:62dvh;z-index:98;'
+      +'overflow:auto;background:#07141d;border-top:2px solid #C9A14A;color:#d9f5e6;'
+      +'font:700 12px/1.55 ui-monospace,Consolas,monospace;padding:10px 12px 14px';
+    var barra=document.createElement('div');
+    barra.style.cssText='display:flex;gap:6px;margin-bottom:8px';
+    function bt(rot){
+      var b=document.createElement('button');
+      b.type='button'; b.textContent=rot;
+      b.style.cssText='flex:1;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);'
+        +'color:#e9f1f8;border-radius:9px;padding:8px 4px;font:800 12px inherit';
+      barra.appendChild(b); return b;
+    }
+    var bCopiar=bt('📋 Copiar'), bLimpar=bt('🧹 Zerar fita'), bFechar=bt('✕ Fechar');
+    var corpo=document.createElement('div');
+    corpo.style.whiteSpace='pre-wrap';
+    p.appendChild(barra); p.appendChild(corpo);
+    document.body.appendChild(p);
+
+    function foto(x){
+      if(!x) return '(não houve)';
+      return 'som='+x.som+' · mic='+x.mic+' · ws='+rotuloWs(x.ws)
+           +' · mídia='+x.midia+' · wake='+x.wake;
+    }
+    function rotuloWs(n){
+      return n===1?'1 ABERTO':(n===0?'0 abrindo':(n<0?'— nenhum':n+' MORTO'));
+    }
+
+    function contarWake(){
+      if(S.wakeSuporte===null) return 'ainda não pedi';
+      if(!S.wakeSuporte) return 'ESTE ANDROID NÃO TEM a API (as defesas 2 e 3 seguram sozinhas)';
+      return 'sim, conquistado '+S.wakePedidos+'x' + (S.wakeErro?(' · último erro: '+S.wakeErro):'');
+    }
+    function contarMidia(){
+      if(!('mediaSession' in navigator)) return 'não existe neste navegador';
+      return S.midiaArmada?'armado':'disponível, ainda não armado';
+    }
+
+    function texto(){
+      var f=S.fita, i;
+      var cab='PROVA DA TELA APAGADA — '+new Date().toLocaleString('pt-BR')+'\n'
+        +'aparelho: '+(navigator.userAgent.match(/Android[^;)]*/)||['?'])[0]+'\n'
+        +'wake lock: '+contarWake()+'\n'
+        +'controle do carro (Media Session): '+contarMidia()+'\n'
+        +'áudio de mídia: '+(S.elMudo?(S.elMudo.paused?'PARADO':'tocando em laço'):'não criado')
+          +(S.midiaErro?(' (erro: '+S.midiaErro+')'):'')+' · retomado pelo vigia '+S.retomadasMidia+'x\n'
+        +'a tela apagou '+S.dormidas+'x · maior apagada: '+(S.maiorSono/1000).toFixed(1)+'s\n'
+        +'avisos "voltei" por voz: '+S.avisosVoltei+' · reconexões: '+S.tentativas+'\n'
+        +'linhas vivas agora: '+S.wsVivos+' (pico '+S.picoWs+', tem que ser 1)\n'
+        +'fotos na fita: '+f.length+'\n';
+      if(!f.length) return cab+'\nFITA VAZIA. Toque no globo e comece a conversar — a fita só corre com a conversa de pé.';
+
+      // acha o MAIOR trecho em que a tela esteve apagada
+      var ini=-1,fim=-1,mIni=-1,mFim=-1;
+      for(i=0;i<f.length;i++){
+        if(f[i].tela!=='visible'){ if(ini<0) ini=i; fim=i; }
+        else if(ini>=0){ if(mIni<0||(fim-ini)>(mFim-mIni)){ mIni=ini; mFim=fim; } ini=-1; }
+      }
+      if(ini>=0&&(mIni<0||(fim-ini)>(mFim-mIni))){ mIni=ini; mFim=fim; }
+      if(mIni<0) return cab+'\nA TELA AINDA NÃO FOI APAGADA. Aperte o botão lateral, conte 60 s e acenda.';
+
+      var antes=f[mIni-1]||null, depois=f[mFim+1]||f[f.length-1];
+      var dur=(f[mFim].t-f[mIni].t)/1000, n=mFim-mIni+1;
+      var somOk=0, wsOk=0, midiaOk=0;
+      for(i=mIni;i<=mFim;i++){
+        if(f[i].som==='running') somOk++;
+        if(f[i].ws===1) wsOk++;
+        if(f[i].midia==='tocando') midiaOk++;
+      }
+      // O NÚMERO QUE MAIS IMPORTA: a fita anda de 1 em 1 segundo. Se o Android
+      // tivesse congelado a aba, ela pararia de andar. Fotos ≈ segundos = aba viva.
+      var vivacidade = dur>0 ? (n/ (dur+1)) : 0;
+      var passou = (n>=5) && (vivacidade>0.55) && (depois&&depois.som==='running')
+                 && (depois&&depois.ws===1);
+      return cab
+        +'\n──────── O TESTE DOS 60 SEGUNDOS ────────\n'
+        +'tela apagada por ....... '+dur.toFixed(0)+' s\n'
+        +'fotos tiradas no escuro  '+n+'   (1 por segundo: '+(vivacidade*100).toFixed(0)+'% do esperado)\n'
+        +'   ↑ se a aba tivesse congelado, a fita PARAVA. Ela não parou.\n'
+        +'\nANTES  (última foto com a tela acesa)\n   '+foto(antes)
+        +'\nDURANTE (no escuro)\n   contexto de áudio rodando em '+somOk+'/'+n+' fotos'
+        +'\n   WebSocket aberto em '+wsOk+'/'+n+' fotos'
+        +'\n   áudio de mídia tocando em '+midiaOk+'/'+n+' fotos'
+        +'\nDEPOIS (tela acesa de novo)\n   '+foto(depois)
+        +'\n\n'+(passou
+            ? '✅ PASSOU — a conversa atravessou a tela apagada de pé.'
+            : '🛑 ATENÇÃO — olhe a fita abaixo: algo caiu e não voltou.')
+        +'\n\n──────── A FITA (mais recentes por último) ────────\n'
+        + f.slice(-90).map(function(x){
+            return new Date(x.t).toLocaleTimeString('pt-BR')
+              +(x.tela==='visible'?' 🔆':' 🌑')
+              +' som='+x.som.slice(0,7).padEnd(7)
+              +' ws='+String(x.ws).padEnd(2)
+              +' mídia='+x.midia.padEnd(7)
+              +' wake='+x.wake.padEnd(5)
+              +(x.pausado?' PAUSADO':'');
+          }).join('\n');
+    }
+
+    function pintarProva(){
+      var t=texto();
+      corpo.textContent=t;
+      p.style.background = /✅ PASSOU/.test(t) ? '#0b2a1b' : (/🛑/.test(t) ? '#2d1010' : '#07141d');
+    }
+    pintarProva();
+    setInterval(pintarProva,1000);
+
+    bCopiar.addEventListener('click',function(){
+      var t=texto();
+      function fb(){ var a=document.createElement('textarea'); a.value=t;
+        a.style.cssText='position:fixed;opacity:0'; document.body.appendChild(a);
+        a.focus(); a.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(a); }
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(fb); else fb();
+      bCopiar.textContent='✅ Copiado'; setTimeout(function(){ bCopiar.textContent='📋 Copiar'; },1500);
+    });
+    bLimpar.addEventListener('click',function(){
+      S.fita.length=0; S.dormidas=0; S.maiorSono=0; S.retomadasMidia=0; pintarProva();
+    });
+    bFechar.addEventListener('click',function(){ p.remove(); });
+  }
+  if(/[?&]prova=escuro/.test(location.search)) setTimeout(provaEscuro,500);
+
+  // A mesma fita, sem painel: serve pra ler por adb/console em qualquer momento.
+  window.__VOZDIAG=function(){
+    return { ligado:S.ligado, pausado:S.pausado,
+      som:S.ctxSom?S.ctxSom.state:'-', mic:S.ctxMic?S.ctxMic.state:'-',
+      ws:S.ws?S.ws.readyState:-1, linhasVivas:S.wsVivos, picoLinhas:S.picoWs,
+      wake:(S.wake&&!S.wake.released)?'preso':'solto', wakePedidos:S.wakePedidos,
+      midia:S.elMudo?(S.elMudo.paused?'parada':'tocando'):'-', midiaArmada:S.midiaArmada,
+      dormidas:S.dormidas, maiorSono:S.maiorSono, voltei:S.avisosVoltei,
+      fita:S.fita.slice(-120) };
+  };
+
   // ── ALÇA DE BANCADA (só com ?hud=1) ──────────────────────────────────────
   // Serve pra provar o motor sem precisar ouvir: um teste de bancada pega estas
   // funções, despeja áudio falso, manda cortar no meio e confere que NUNCA há
   // duas fontes soando ao mesmo tempo. É a medida que o Elias pediu.
-  if(HUD_LIGADO){
+  if(HUD_LIGADO || window.__VOZ_BANCADA){
     window.__VOZ={ S:S, enfileirar:enfileirarPCM, despejar:despejarSobra,
       calar:calarMestre, agendar:agendar, audiveis:audiveis, tratar:tratar,
-      novoGanho:novoGanho, porteiroFechado:porteiroFechado };
+      novoGanho:novoGanho, porteiroFechado:porteiroFechado,
+      // a bancada da TELA APAGADA precisa destes:
+      ligar:ligar, desligar:desligar, vigiar:vigiar,
+      segurarTela:segurarTela, abrirMidia:abrirCanalDeMidia, fecharMidia:fecharCanalDeMidia,
+      pausarCarro:pausarDoCarro, retomarCarro:retomarDoCarro,
+      reconectar:reconectar, mandarAudio:mandarAudio };
   }
 })();
 </script>

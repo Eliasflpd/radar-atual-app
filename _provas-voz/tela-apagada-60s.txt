@@ -1,0 +1,137 @@
+┌─ A PROVA DA TELA APAGADA ─────────────────────────────────────────┐
+│ JS real de public/biblioteca/voz/index.html, num Android de mentira │
+└────────────────────────────────────────────────────────────────────┘
+
+→ o pastor toca no globo e a conversa começa…
+[VOZ] saída detectada: mic: Microfone do aparelho -> FULL-DUPLEX (fone)
+[VOZ] wake lock conquistado (nº1)
+[VOZ] linha aberta · geração 1 · linhas vivas=1
+  conversa ligada        : true
+  wake lock pedido       : 1x
+  áudio de mídia tocando : true
+  controle do carro      : play, pause, stop, previoustrack, nexttrack, seekbackward, seekforward, seekto
+  o carro vê a aba como  : playing
+  contexto de áudio      : running / mic running
+  WebSocket              : readyState 1
+
+→ 🌑 A TELA APAGA. O Android faz o que sempre faz:
+   · soltou o wake lock (o navegador faz isso sozinho ao esconder a aba)
+   · suspendeu os contextos de áudio (o relógio do som congelou)
+   · derrubou o WebSocket (1006)
+   · e agora ficamos 60 segundos no escuro. Contando…
+
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=0/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=-1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=0
+[VOZ] linha aberta · geração 2 · linhas vivas=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+   10s no escuro · som=running mic=running ws=1 mídia=tocando fotos=10
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+   20s no escuro · som=running mic=running ws=1 mídia=tocando fotos=20
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+   30s no escuro · som=running mic=running ws=1 mídia=tocando fotos=30
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+   40s no escuro · som=running mic=running ws=1 mídia=tocando fotos=40
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+   50s no escuro · som=running mic=running ws=1 mídia=tocando fotos=50
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=hidden midia=tocando wake=solto dormidas=1 voltei=1
+
+→ 🔆 A tela acende de novo.
+[VOZ] a aba voltou depois de 60.1s escondida · som=running ws=1
+[VOZ] wake lock conquistado (nº2)
+[VOZ] audíveis=0 pico=0 agendadas=0/0 fila=0 sobra=0 adiante=0.00s linhas=1/1 cortes=0+0 remendos=0 modo=fone | TELA-APAGADA som=running mic=running ws=1 tela=visible midia=tocando wake=preso dormidas=1 voltei=1
+
+┌──────── OS NÚMEROS DOS 60 SEGUNDOS ────────┐
+  momento                 ctx SOM    ctx MIC    WebSocket mídia
+  ANTES (tela acesa)      running    running    ws 1   tocando  
+  DURANTE (no escuro)     running    running    ws 1   tocando  
+  DEPOIS (tela acesa)     running    running    ws 1   tocando  
+
+  fotos tiradas no escuro : 59 (1 por segundo esperado: 60)
+  o relógio do som andou  : 60.2 s
+  contextos religados     : som 1x · mic 1x
+  WebSockets criados      : 2 · PICO de linhas vivas: 1
+  wake lock               : 3 pedidos · 1 negados (aba escondida)
+  áudio de mídia retomado : 0x pelo vigia
+  avisos por voz          : ["Voltei. Pode continuar."]
+
+→ 🚗 o botão do volante: pausa e play.
+[VOZ] pausado pelo controle de mídia
+   pausado=true · linha ainda de pé=true · áudio de mídia=segue tocando · subiu áudio pro Google=false
+[VOZ] retomado pelo controle de mídia
+   play do volante -> pausado=false · o carro vê "playing"
+[VOZ] desligado · linhas vivas=0 · pico de linhas=1 · pico de fontes audíveis=0 · cortes=0
+
+┌──────── VEREDITO ────────┐
+  ✅ 1. wake lock pedido ao ligar   (1 pedido(s))
+  ✅ 2. áudio de mídia tocando em laço
+  ✅ 3. controle do carro armado (play/pause/stop/faixas)   (8 botões tomados do carro)
+  ✅ 4. o carro vê a aba como TOCANDO
+  ✅ 5. o carro vê o cartaz do RADAR
+  ✅ 6. linha aberta
+  ✅ 7. a aba NÃO congelou (a fita continuou correndo)   (59/60 fotos)
+  ✅ 8. o áudio de mídia nunca parou
+  ✅ 9. os contextos de áudio voltaram sozinhos, no escuro
+  ✅ 10. a linha reconectou sozinha
+  ✅ 11. NUNCA houve duas linhas vivas (voz dupla)   (pico 1)
+  ✅ 12. avisou "voltei" por voz, uma vez só   (1 aviso(s))
+  ✅ 13. wake lock repedido quando a aba voltou   (3 pedidos no total)
+  ✅ 14. pausa do volante NÃO derruba a linha
+  ✅ 15. pausado, nada sobe pro Google
+  ✅ 16. pausado, o áudio de mídia continua (senão a aba congela)
+  ✅ 17. o carro vê "pausado"
+  ✅ 18. play do volante retoma
+  ✅ 19. ao encerrar, solta a sessão de mídia (o carro volta a mandar no que é dele)
+  ✅ 20. ao encerrar, nenhuma linha fica viva
+
+✅ PASSOU — 20/20
