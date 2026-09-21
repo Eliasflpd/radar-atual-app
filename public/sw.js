@@ -1,4 +1,4 @@
-const V='radar-v150';               // cache do SHELL — troca a cada versão do app
+const V='radar-v151';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
 
 // ═══ O SHELL: sem isto o app não pinta nada. Vai pro cache JÁ na instalação. ═══
@@ -100,8 +100,22 @@ function jsonOffline(msg){
 
 // documento (página HTML / iframe de lição) = ABRE NA HORA com o que já está
 // guardado e busca a versão nova POR TRÁS (stale-while-revalidate).
+//
+// ⚠️ O BUG QUE ISTO CONSERTA (21/09/2026) — leia antes de "simplificar":
+// Antes daqui saía `daDespensa(req)`, que procura em TODOS os caches, inclusive
+// no `radar-pacote-v1`. E o pacote, de propósito, NUNCA é apagado quando a
+// versão sobe (são os MB que o irmão baixou com o plano de dados dele).
+// Resultado: o pacote guardava uma FOTOGRAFIA da home do dia do download, e era
+// ela que aparecia — para sempre. Publicávamos versão nova, o celular baixava
+// tudo certinho... e continuava desenhando a home velha. Foi exatamente a queixa
+// do Elias ("já atualizei e continua a mesma coisa"): três recargas no A22 e a
+// tela sem mudar, com o app novo já no ar e servido pela Vercel.
+//
+// A REGRA CERTA: para PÁGINA, ler só do cache do SHELL (V) — que é trocado a
+// cada versão. O pacote continua valendo, mas só quando a rede cai de verdade.
+// Assim a velocidade fica igual e a versão nova chega.
 function documento(req){
-  return daDespensa(req).then(guardado=>{
+  return caches.open(V).then(c=>c.match(req,{ignoreSearch:true})).then(guardado=>{
     const rede=fetch(req).then(r=>{
       if(r&&r.ok){
         const clone=r.clone();
@@ -109,8 +123,11 @@ function documento(req){
         if(guardado) avisaVersaoNova(req.url);
       }
       return r;
-    }).catch(()=>guardado||paginaOffline());
-    return guardado||rede;   // tem guardado? desenha JÁ. Não tem? espera a rede.
+    }).catch(()=>
+      // sem rede: agora sim vale tudo que houver guardado, inclusive o pacote
+      guardado||daDespensa(req).then(p=>p||paginaOffline()).catch(()=>paginaOffline())
+    );
+    return guardado||rede;   // tem guardado do shell? desenha JÁ. Não tem? espera a rede.
   });
 }
 
