@@ -21,7 +21,8 @@ export const config = { runtime: 'edge' };
 import { iaTexto, iaStreamTexto } from './ia.js';
 // A máquina de CITAR A FONTE é uma só pro Concílio inteiro (marcador [F#] → fonte real,
 // mais a conferência anti-invenção). Mora no concilio.js, que é o dono da lista de obras.
-import { blocoDeFontes, trocarFontes, conferirFontes, fluxoComFontes, rodapeConsultado } from './concilio.js';
+import { blocoDeFontes, trocarFontes, conferirFontes, fluxoComFontes, rodapeConsultado,
+  blocoDoOriginal, transliterarOriginal, conferirOriginal, conferirVersiculos, carregarBiblia } from './concilio.js';
 
 import CORPUS from './wagner-corpus.js';
 
@@ -238,7 +239,16 @@ NÃO espalhe bordão uniformemente e NÃO use mais de 3 no texto inteiro. Duro c
 ════ HONESTIDADE (inegociável) ════
 • NUNCA invente tipologia para agradar. Ponte forçada é o oposto do método.
 • NUNCA invente etimologia, palavra do original, versículo, data ou número. Se não conferiu, não afirme.
-  Escreva o original TRANSLITERADO em letras latinas (ex.: *ruach*, *kaphar*), nunca em alfabeto hebraico/grego.
+  🔤 Escreva o original TRANSLITERADO em letras latinas (ex.: *ruach*, *kaphar*, *aparche*), NUNCA em alfabeto
+  hebraico ou grego — o servidor translitera à força o que escapar. E o idioma tem que bater com o testamento:
+  Antigo Testamento é HEBRAICO (aramaico em partes de Daniel e Esdras), Novo Testamento é GREGO. Palavra grega
+  em texto do AT, ou hebraica em texto do NT, é invenção na cara do pastor.
+  Se você não souber o livro, capítulo e versículo EXATOS onde a palavra está, NÃO escreva palavra nenhuma do
+  original — cave pelo sentido do texto em português e diga que está fazendo assim.
+• 📖 VERSÍCULO ENTRE ASPAS: as palavras entre aspas têm que ser DAQUELA referência exata. O servidor abre a
+  Bíblia e confere — e ele também confere se o versículo que você apontou fala MESMO do assunto que você diz
+  que ele fala (apontar Levítico 23:1-3, que é o sábado, como se fosse primícias, é erro de endereço).
+  Na menor dúvida, não transcreva: remeta à referência e explique com as suas palavras.
 • NUNCA atribua a ele posição que não esteja nas travas acima.
 • ⚠️ QUANDO O TEXTO NÃO DIZ o que a tradição diz, AVISE COM TODAS AS LETRAS ("o texto não diz isso") e aponte
   a referência que realmente fecha o assunto — ou diga honestamente que não há.
@@ -293,7 +303,7 @@ function montarPrompt(pergunta, ctx) {
    Se de verdade nada do material sustentar o que você cavou, escreva nessa seção, em vez dos marcadores: "aplicando o método do Dr. Wagner — o material das aulas não cobre este ponto."`
     : '';
 
-  const sys = METODO + '\n\n' + FORMATO + secaoFonte + blocoDeFontes('F', ctx.rotulos,
+  const sys = METODO + blocoDoOriginal(pergunta) + '\n\n' + FORMATO + secaoFonte + blocoDeFontes('F', ctx.rotulos,
     'Estes são os pedaços do acervo do PRÓPRIO Dr. Wagner que casaram com a pergunta — aulas do Instituto GIOM e o Caderno de Pérolas. Cada pedaço do MATERIAL DE APOIO abaixo vem com o seu marcador:',
     'aplicando o método do Dr. Wagner');
   const user =
@@ -368,7 +378,10 @@ async function chamarIA(sys, user, opts) {
 // O /api/concilio (consultar.html) manda erudito=wagner-cordeiro e espera TEXTO em
 // streaming. Exportamos isto pra aquela tela cair no método certo em vez de dar 400.
 // ─────────────────────────────────────────────────────────────────────────────
-export async function wagnerStream(passagem, ordemDoTipo) {
+export async function wagnerStream(passagem, ordemDoTipo, origem) {
+  // A Bíblia é grande; começamos a carregar AGORA, em paralelo com a IA, pra ela já
+  // estar em memória quando o stream acabar e a conferência rodar.
+  if (origem) carregarBiblia(origem);
   const ctx = buscarContexto(passagem, 8000, { marcar: true });
   const { sys, user } = montarPrompt(passagem, ctx);
   const userFinal = ordemDoTipo ? user + '\n\nFORMATO PEDIDO PELO PASTOR:\n' + ordemDoTipo : user;
@@ -424,7 +437,7 @@ export async function wagnerStream(passagem, ordemDoTipo) {
       'X-IA-Modelo': String(r.modelo || '?'),
       'Access-Control-Expose-Headers': 'X-IA-Provedor, X-IA-Modelo',
     },
-  }), ctx.rotulos, rodapeConsultado(ctx.rotulos));
+  }), ctx.rotulos, rodapeConsultado(ctx.rotulos), { conferir: true, origem, assunto: passagem });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -440,6 +453,12 @@ export default async function handler(req) {
   try { b = await req.json(); } catch (_) {}
   const pergunta = (b.pergunta || b.duvida || b.passagem || b.tema || '').toString().trim().slice(0, 600);
   if (!pergunta) return new Response(JSON.stringify({ ok: false, erro: 'Escreva a sua pergunta.' }), { status: 400, headers: JSONH });
+
+  // A Bíblia entra a carregar já, em paralelo com a IA: quando a resposta chegar, a
+  // conferência de versículo não faz o pastor esperar.
+  let origem = '';
+  try { origem = new URL(req.url).origin; } catch (_) {}
+  if (origem) carregarBiblia(origem);
 
   const ctx = buscarContexto(pergunta, 9000, { marcar: true });
   let { sys, user } = montarPrompt(pergunta, ctx);
@@ -487,17 +506,28 @@ export default async function handler(req) {
   // DE ONDE VEM: marcador → fonte real. O que não estiver na lista é apagado e contado.
   const tr = trocarFontes(resposta, ctx.rotulos);
   resposta = tr.texto;
+  // GRAFIA: alfabeto grego/hebraico não chega ao pastor — vira letra latina aqui.
+  const gr = transliterarOriginal(resposta);
+  resposta = gr.texto;
   // Piso: a resposta nunca sai muda sobre a origem. Se nada foi apontado, mostramos o
   // que foi ABERTO no acervo — que é verdade conferível, e não citação de afirmação.
   if (!tr.usadas.length) resposta += rodapeConsultado(ctx.rotulos);
   if (quadro) { // o quadro também pode ter marcador dentro dos itens
+    const limpar = (s) => transliterarOriginal(trocarFontes(s, ctx.rotulos).texto).texto;
     for (const k of ['titulo', 'ponte', 'conta', 'provaReal', 'ordem']) {
-      if (typeof quadro[k] === 'string') quadro[k] = trocarFontes(quadro[k], ctx.rotulos).texto;
+      if (typeof quadro[k] === 'string') quadro[k] = limpar(quadro[k]);
     }
     for (const k of ['at', 'nt']) {
-      if (Array.isArray(quadro[k])) quadro[k] = quadro[k].map((x) => (typeof x === 'string' ? trocarFontes(x, ctx.rotulos).texto : x));
+      if (Array.isArray(quadro[k])) quadro[k] = quadro[k].map((x) => (typeof x === 'string' ? limpar(x) : x));
     }
   }
+
+  // AS TRÊS CONFERÊNCIAS: trava doutrinária + fonte + palavra no original + versículo
+  // conferido contra a Bíblia de verdade. Tudo vai em `avisos`, que o front já mostra.
+  const avisos = conferirTravas(resposta)
+    .concat(conferirFontes(resposta, tr.inventados))
+    .concat(conferirOriginal(resposta, pergunta, gr.trocou));
+  try { avisos.push(...await conferirVersiculos(resposta, origem, pergunta)); } catch (_) {}
 
   return new Response(JSON.stringify({
     ok: true,
@@ -509,7 +539,7 @@ export default async function handler(req) {
     fontes: ctx.fontes.map((f) => ({ fonte: f.fonte, titulo: f.titulo })),
     citadas: tr.usadas,     // as fontes que realmente foram citadas nesta resposta
     termos: ctx.termos,
-    avisos: conferirTravas(resposta).concat(conferirFontes(resposta, tr.inventados)),
+    avisos,
     provedor: r.provedor,   // quem da cascata atendeu
     modelo: r.modelo,
   }), { headers: JSONH });

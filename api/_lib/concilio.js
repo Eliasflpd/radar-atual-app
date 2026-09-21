@@ -169,23 +169,392 @@ export function conferirFontes(texto, inventados) {
   return avisos;
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// AS OUTRAS DUAS INVENÇÕES — a palavra no original e o versículo entre aspas
+// ═════════════════════════════════════════════════════════════════════════════
+// A fonte já está travada (a IA aponta um marcador, o servidor escreve a fonte).
+// Provando em produção sobraram DUAS portas, e nenhuma delas se fecha com pedido
+// solto no prompt — os modelos rápidos da cascata só obedecem quando a coisa vira
+// seção obrigatória do formato ou quando o servidor confere depois:
+//
+// 1) PALAVRA NO ORIGINAL INVENTADA. Gênesis 1:1 voltou com "o grego ποιεῖν" —
+//    Gênesis é HEBRAICO, e alfabeto grego é proibido na casa. Agora: a regra da
+//    grafia saiu do tipo "palavra" e subiu pra LEI (vale em todos os tipos); o
+//    servidor CALCULA o idioma do texto consultado e manda no prompt ("Gênesis →
+//    hebraico, é proibido dizer que é grego"); e o que escapar em alfabeto grego
+//    ou hebraico é TRANSLITERADO na saída, com aviso em cima.
+//
+// 2) VERSÍCULO ENTRE ASPAS DIZENDO O QUE NÃO ESTÁ ESCRITO. Levítico 23:10-12 saiu
+//    entre aspas "listando" uvas, trigo, cevada, romãs e figas — não lista nada
+//    disso. Aqui o servidor ABRE A BÍBLIA de verdade (public/biblia.json, a mesma
+//    que o app usa no leitor) e confere palavra por palavra.
+
+// ── Os 66 livros: sigla do biblia.json, nome pra tela e o testamento ──────────
+// ⚠️ 'jo' é João e 'jó' é Jó — é assim no biblia.json. O desempate é o acento.
+const LIVRO_NOME = {
+  gn: 'Gênesis', ex: 'Êxodo', lv: 'Levítico', nm: 'Números', dt: 'Deuteronômio', js: 'Josué',
+  jz: 'Juízes', rt: 'Rute', '1sm': '1 Samuel', '2sm': '2 Samuel', '1rs': '1 Reis', '2rs': '2 Reis',
+  '1cr': '1 Crônicas', '2cr': '2 Crônicas', ed: 'Esdras', ne: 'Neemias', et: 'Ester', 'jó': 'Jó',
+  sl: 'Salmos', pv: 'Provérbios', ec: 'Eclesiastes', ct: 'Cânticos', is: 'Isaías', jr: 'Jeremias',
+  lm: 'Lamentações', ez: 'Ezequiel', dn: 'Daniel', os: 'Oséias', jl: 'Joel', am: 'Amós',
+  ob: 'Obadias', jn: 'Jonas', mq: 'Miquéias', na: 'Naum', hc: 'Habacuque', sf: 'Sofonias',
+  ag: 'Ageu', zc: 'Zacarias', ml: 'Malaquias', mt: 'Mateus', mc: 'Marcos', lc: 'Lucas',
+  jo: 'João', atos: 'Atos', rm: 'Romanos', '1co': '1 Coríntios', '2co': '2 Coríntios',
+  gl: 'Gálatas', ef: 'Efésios', fp: 'Filipenses', cl: 'Colossenses', '1ts': '1 Tessalonicenses',
+  '2ts': '2 Tessalonicenses', '1tm': '1 Timóteo', '2tm': '2 Timóteo', tt: 'Tito', fm: 'Filemom',
+  hb: 'Hebreus', tg: 'Tiago', '1pe': '1 Pedro', '2pe': '2 Pedro', '1jo': '1 João', '2jo': '2 João',
+  '3jo': '3 João', jd: 'Judas', ap: 'Apocalipse',
+};
+// Novo Testamento = grego. Todo o resto é hebraico (com aramaico em pedaços de Daniel e Esdras).
+const NT = new Set(['mt', 'mc', 'lc', 'jo', 'atos', 'rm', '1co', '2co', 'gl', 'ef', 'fp', 'cl',
+  '1ts', '2ts', '1tm', '2tm', 'tt', 'fm', 'hb', 'tg', '1pe', '2pe', '1jo', '2jo', '3jo', 'jd', 'ap']);
+const ARAMAICO = new Set(['dn', 'ed']);
+
+const ABREV = {
+  genesis: 'gn', gn: 'gn', gen: 'gn', exodo: 'ex', ex: 'ex', levitico: 'lv', lv: 'lv', lev: 'lv',
+  numeros: 'nm', nm: 'nm', num: 'nm', deuteronomio: 'dt', dt: 'dt', deut: 'dt', josue: 'js', js: 'js',
+  juizes: 'jz', jz: 'jz', rute: 'rt', rt: 'rt', '1samuel': '1sm', '1sm': '1sm', '1sam': '1sm',
+  '2samuel': '2sm', '2sm': '2sm', '2sam': '2sm', '1reis': '1rs', '1rs': '1rs', '2reis': '2rs', '2rs': '2rs',
+  '1cronicas': '1cr', '1cr': '1cr', '2cronicas': '2cr', '2cr': '2cr', esdras: 'ed', ed: 'ed', esd: 'ed',
+  neemias: 'ne', ne: 'ne', ester: 'et', et: 'et', job: 'jó', salmos: 'sl', salmo: 'sl', sl: 'sl', sal: 'sl',
+  proverbios: 'pv', pv: 'pv', prov: 'pv', eclesiastes: 'ec', ec: 'ec', ecl: 'ec', cantares: 'ct',
+  canticos: 'ct', cantico: 'ct', ct: 'ct', isaias: 'is', is: 'is', isa: 'is', jeremias: 'jr', jr: 'jr',
+  jer: 'jr', lamentacoes: 'lm', lm: 'lm', ezequiel: 'ez', ez: 'ez', daniel: 'dn', dn: 'dn', dan: 'dn',
+  oseias: 'os', os: 'os', joel: 'jl', jl: 'jl', amos: 'am', am: 'am', obadias: 'ob', ob: 'ob',
+  jonas: 'jn', jn: 'jn', miqueias: 'mq', mq: 'mq', naum: 'na', na: 'na', habacuque: 'hc', hc: 'hc',
+  sofonias: 'sf', sf: 'sf', ageu: 'ag', ag: 'ag', zacarias: 'zc', zc: 'zc', malaquias: 'ml', ml: 'ml',
+  mateus: 'mt', mt: 'mt', mat: 'mt', marcos: 'mc', mc: 'mc', lucas: 'lc', lc: 'lc', luc: 'lc',
+  joao: 'jo', atos: 'atos', at: 'atos', romanos: 'rm', rm: 'rm', rom: 'rm',
+  '1corintios': '1co', '1co': '1co', '1cor': '1co', '2corintios': '2co', '2co': '2co', '2cor': '2co',
+  galatas: 'gl', gl: 'gl', efesios: 'ef', ef: 'ef', filipenses: 'fp', fp: 'fp', colossenses: 'cl', cl: 'cl',
+  '1tessalonicenses': '1ts', '1ts': '1ts', '2tessalonicenses': '2ts', '2ts': '2ts',
+  '1timoteo': '1tm', '1tm': '1tm', '2timoteo': '2tm', '2tm': '2tm', tito: 'tt', tt: 'tt',
+  filemom: 'fm', fm: 'fm', hebreus: 'hb', hb: 'hb', tiago: 'tg', tg: 'tg',
+  '1pedro': '1pe', '1pe': '1pe', '2pedro': '2pe', '2pe': '2pe', '1joao': '1jo', '1jo': '1jo',
+  '2joao': '2jo', '2jo': '2jo', '3joao': '3jo', '3jo': '3jo', judas: 'jd', jd: 'jd',
+  apocalipse: 'ap', ap: 'ap', apoc: 'ap',
+};
+
+const semAcentos = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+const chaveLivro = (num, palavra) => {
+  const p = semAcentos(palavra).toLowerCase().replace(/[^a-z]/g, '');
+  // "Jó" e "João" caem na mesma chave depois de tirar o acento — o acento é o desempate.
+  if (p === 'jo') return /ó/i.test(palavra) ? 'jó' : 'jo';
+  return (num ? String(num).replace(/[^123]/g, '') : '') + p;
+};
+
+// Referência COM versículo ("Levítico 23:10-12", "1Co 15:20", "Gn 1.1"). Só com
+// versículo: é o que dá pra conferir contra o texto sagrado.
+const RE_REF = /(?:^|[^\wÀ-ÿ])([123]|I{1,3})?\s*[ªº°]?\s*([A-Za-zÀ-ÿ]{2,16})\.?\s*(\d{1,3})\s*[:.]\s*(\d{1,3})(?:\s*[-–—]\s*(\d{1,3}))?/g;
+
+/** Toda referência bíblica resolvível dentro de um texto. */
+function acharReferencias(texto) {
+  const out = [];
+  const t = String(texto || '');
+  RE_REF.lastIndex = 0;
+  for (let m; (m = RE_REF.exec(t));) {
+    const romano = { i: 1, ii: 2, iii: 3 }[String(m[1] || '').toLowerCase()];
+    const ab = ABREV[chaveLivro(romano || m[1], m[2])];
+    if (!ab) continue;
+    const bruto = m[0].replace(/^[^\wÀ-ÿ]+/, '');
+    out.push({
+      abbrev: ab, cap: +m[3], v1: +m[4], v2: m[5] ? +m[5] : +m[4],
+      bruto, ini: m.index + (m[0].length - bruto.length), fim: m.index + m[0].length,
+    });
+  }
+  return out;
+}
+
+/**
+ * Os livros que o pedido do pastor menciona — inclusive sem versículo ("João 3",
+ * "Levítico", "primícias em Gênesis"). É daqui que sai o IDIOMA do original.
+ * Sigla de 2 letras só conta com número colado (senão "os", "na", "am" e "is"
+ * transformariam prosa em português em citação bíblica).
+ */
+function livrosCitados(texto) {
+  const t = String(texto || '');
+  const achados = [];
+  const por = (ab) => { if (ab && LIVRO_NOME[ab] && achados.indexOf(ab) < 0) achados.push(ab); };
+  // Duas passadas: (1) nome por extenso, que vale sozinho; (2) sigla curta, que só
+  // vale com número colado e começando em maiúscula.
+  for (const re of [/(?:^|[^\wÀ-ÿ])([123]|I{1,3})?\s*[ªº°]?\s*([A-Za-zÀ-ÿ]{5,16})/g,
+    /(?:^|[^\wÀ-ÿ])([123]|I{1,3})?\s*[ªº°]?\s*([A-ZÀ-Ý][a-zà-ÿ]?[A-Za-zÀ-ÿ]{0,2})\.?\s*\d{1,3}\b/g]) {
+    re.lastIndex = 0;
+    for (let m; (m = re.exec(t));) {
+      const romano = { i: 1, ii: 2, iii: 3 }[String(m[1] || '').toLowerCase()];
+      por(ABREV[chaveLivro(romano || m[1], m[2])]);
+      if (achados.length >= 6) break;
+    }
+  }
+  return achados;
+}
+
+/**
+ * O BLOCO DO ORIGINAL — a regra da grafia + o idioma CALCULADO pelo servidor.
+ * Não é pedido: é fato. "Gênesis é Antigo Testamento, logo o original é hebraico,
+ * logo é proibido dizer que a palavra é grega." Era exatamente por essa fresta que
+ * "o grego ποιεῖν em Gênesis 1:1" passava.
+ */
+export function blocoDoOriginal(assunto) {
+  const livros = livrosCitados(assunto);
+  let alvo = '';
+  if (livros.length) {
+    alvo = '\nO TEXTO DESTA CONSULTA (o servidor conferiu, não é chute):\n' + livros.slice(0, 4).map((ab) => {
+      const nt = NT.has(ab);
+      return `• ${LIVRO_NOME[ab]} → ${nt ? 'NOVO TESTAMENTO → o original é GREGO. É PROIBIDO dizer que uma palavra deste texto é hebraica'
+        : 'ANTIGO TESTAMENTO → o original é HEBRAICO' + (ARAMAICO.has(ab) ? ' (com trechos em aramaico)' : '') + '. É PROIBIDO dizer que uma palavra deste texto é grega'}.`;
+    }).join('\n');
+  }
+  return `\n\n════ A PALAVRA NO ORIGINAL — TRAVA ════
+⚠️ GRAFIA: escreva a palavra do original APENAS TRANSLITERADA em letras latinas (ex.: *bara*, *chesed*, *aparche*, *dorea*). É PROIBIDO escrever em alfabeto hebraico ou grego — o servidor translitera à força o que escapar, e uma letra trocada vira erro no púlpito.
+⚠️ IDIOMA: Antigo Testamento = hebraico (aramaico em partes de Daniel e Esdras). Novo Testamento = grego. NUNCA diga que uma palavra do AT é grega, nem que uma palavra do NT é hebraica.${alvo}
+⚠️ CERTEZA: só escreva palavra do original se você souber o livro, o capítulo e o versículo EXATOS onde ela está. Se não souber, NÃO escreva termo nenhum — trabalhe pelo sentido do texto em português e diga que está fazendo isso. Palavra inventada é pior do que palavra nenhuma.`;
+}
+
+// ── TRANSLITERAÇÃO FORÇADA — o que escapar em alfabeto grego/hebraico não chega
+// ao pastor naquele alfabeto. Some a grafia proibida; a palavra continua legível.
+const MAPA_GREGO = { α: 'a', β: 'b', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'e', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n', ξ: 'x', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'y', φ: 'ph', χ: 'ch', ψ: 'ps', ω: 'o', ϐ: 'b', ϑ: 'th', ϒ: 'y' };
+const MAPA_HEBRAICO = { 'א': "'", 'ב': 'b', 'ג': 'g', 'ד': 'd', 'ה': 'h', 'ו': 'v', 'ז': 'z', 'ח': 'ch', 'ט': 't', 'י': 'y', 'כ': 'k', 'ך': 'k', 'ל': 'l', 'מ': 'm', 'ם': 'm', 'נ': 'n', 'ן': 'n', 'ס': 's', 'ע': "'", 'פ': 'p', 'ף': 'f', 'צ': 'ts', 'ץ': 'ts', 'ק': 'q', 'ר': 'r', 'ש': 'sh', 'ת': 't' };
+// O hebraico é consonantal: sem os pontos vocálicos, בָּרָא viraria "br". Como o
+// modelo quase sempre escreve com niqqud, lemos os pontos e devolvemos "bara".
+const NIQQUD = { 'ָ': 'a', 'ַ': 'a', 'ֲ': 'a', 'ֶ': 'e', 'ֵ': 'e', 'ֱ': 'e', 'ְ': '', 'ִ': 'i', 'ֹ': 'o', 'ֳ': 'o', 'ֺ': 'o', 'ֻ': 'u', 'ׁ': '', 'ׂ': '', 'ּ': '' };
+const RUN_GREGO = /[Ͱ-Ͽἀ-῿][Ͱ-Ͽἀ-῿̀-ͯͅʼ'’]*/g;
+const RUN_HEBRAICO = /[֐-״יִ-ﭏ][֐-״יִ-ﭏʼ'’]*/g;
+const TEM_ALFABETO_ESTRANGEIRO = /[Ͱ-Ͽἀ-῿֐-״יִ-ﭏ]/;
+
+function romanizar(run, mapa, ehGrego) {
+  const cs = [...run.normalize('NFD')];
+  // espírito rude (ἁ, ῥ) vira o "h" que a transliteração clássica escreve
+  const rude = ehGrego && run.normalize('NFD').indexOf('̔') >= 0;
+  let out = '';
+  for (let i = 0; i < cs.length; i++) {
+    const c = cs[i], prox = cs[i + 1] || '';
+    if (!ehGrego) {
+      // ו é vav, mas com shuruq (וּ) é "u" e com holam (וֹ) é "o" — sem isto,
+      // רוּחַ sairia "rvcha" em vez de "ruach".
+      if (c === 'ו' && prox === 'ּ') { out += 'u'; i++; continue; }
+      if (c === 'ו' && prox === 'ֹ') { out += 'o'; i++; continue; }
+      // י depois de hiriq é mater lectionis: já viramos "i", não repita o "y"
+      // (senão תָּמִיד vira "tamiyd" em vez de "tamid").
+      if (c === 'י' && /i$/.test(out) && NIQQUD[prox] === undefined) continue;
+      // patah furtivo: רוּחַ é "ruach", não "rucha" — a vogal soa ANTES da gutural.
+      if (c === 'ַ' && i === cs.length - 1 && /(ch|')$/.test(out)) {
+        out = out.replace(/(ch|')$/, 'a$1'); continue;
+      }
+      if (NIQQUD[c] !== undefined) { out += NIQQUD[c]; continue; }
+      if (c >= '֑' && c <= 'ׇ') continue;    // cantilação e o que sobrou do niqqud
+    } else {
+      // ditongo: αυ/ευ/ου é "au/eu/ou"; υ sozinho é "y" (pneuma, não pneyma)
+      if ((c === 'υ' || c === 'Υ') && /[aeo]$/.test(out)) { out += 'u'; continue; }
+    }
+    if (c >= '̀' && c <= 'ͯ') continue;      // acentos e espíritos: fora
+    if (c === 'ͅ' || c === 'ʼ') continue;     // iota subscrito, apóstrofo modificador
+    const base = mapa[c.toLowerCase()];
+    if (base === undefined) { if (/[a-z0-9]/i.test(c)) out += c; continue; }
+    out += (c === c.toLowerCase() ? base : base.charAt(0).toUpperCase() + base.slice(1));
+  }
+  out = (rude ? 'h' : '') + out;
+  return out.replace(/^'+|'+$/g, '') || '';
+}
+
+/** Devolve { texto, trocou }. Roda em cima de pedaço de stream sem problema: a
+ *  troca é por caractere, então marcador partido no meio não estraga nada. */
+export function transliterarOriginal(texto) {
+  let trocou = false;
+  let t = String(texto || '');
+  if (!TEM_ALFABETO_ESTRANGEIRO.test(t)) return { texto: t, trocou: false };
+  t = t.replace(RUN_GREGO, (r) => { const v = romanizar(r, MAPA_GREGO, true); trocou = true; return v; });
+  t = t.replace(RUN_HEBRAICO, (r) => { const v = romanizar(r, MAPA_HEBRAICO, false); trocou = true; return v; });
+  return { texto: t.replace(/\*\s*\*/g, '').replace(/ {2,}/g, ' '), trocou };
+}
+
+/**
+ * Confere a PALAVRA NO ORIGINAL contra o idioma do texto consultado.
+ * `assunto` é o que o pastor pediu — é dali que sai o testamento.
+ */
+export function conferirOriginal(texto, assunto, jaTransliterou) {
+  const avisos = [];
+  const t = String(texto || '');
+  if (jaTransliterou || TEM_ALFABETO_ESTRANGEIRO.test(t)) {
+    avisos.push('grafia-original: a resposta veio com palavra em alfabeto grego/hebraico (proibido na casa). O sistema transliterou em letras latinas — mas quem escreve no alfabeto original costuma estar chutando a palavra. CONFIRA o termo antes de pregar.');
+  }
+  const livros = livrosCitados(assunto);
+  if (!livros.length) return avisos;
+  const soAT = livros.every((ab) => !NT.has(ab));
+  const soNT = livros.every((ab) => NT.has(ab));
+  const livrosNaResposta = livrosCitados(t);
+  if (soAT && /\bgreg[oa]s?\b|\bkoin[eê]\b|\bsetuaginta\b/i.test(t)) {
+    // pode ser legítimo se a resposta puxou um texto do NT pra comparar
+    if (!livrosNaResposta.some((ab) => NT.has(ab))) {
+      avisos.push(`lingua-do-original: o texto da consulta é ${livros.map((a) => LIVRO_NOME[a]).join(', ')} — Antigo Testamento, original em HEBRAICO —, mas a resposta falou em GREGO. Palavra grega em texto hebraico é invenção. NÃO leve ao púlpito.`);
+    }
+  } else if (soNT && /\bhebraic[oa]s?\b|\baramaic[oa]s?\b/i.test(t)) {
+    if (!livrosNaResposta.some((ab) => !NT.has(ab))) {
+      avisos.push(`lingua-do-original: o texto da consulta é ${livros.map((a) => LIVRO_NOME[a]).join(', ')} — Novo Testamento, original em GREGO —, mas a resposta falou em HEBRAICO sem citar nenhum texto do Antigo. Confira o termo.`);
+    }
+  }
+  return avisos;
+}
+
+// ── A BÍBLIA DE VERDADE ──────────────────────────────────────────────────────
+// public/biblia.json (Almeida) é a MESMA base que o leitor do app usa. Carregada
+// uma vez por instância e guardada em memória do módulo; se falhar, a conferência
+// simplesmente não acontece — nunca derruba a resposta do pastor.
+let BIBLIA = null, BIBLIA_P = null;
+export function carregarBiblia(origem) {
+  if (BIBLIA) return Promise.resolve(BIBLIA);
+  if (BIBLIA_P) return BIBLIA_P;
+  if (!origem) return Promise.resolve(null);
+  BIBLIA_P = (async () => {
+    try {
+      const r = await fetch(origem + '/biblia.json');
+      if (!r.ok) return null;
+      const arr = JSON.parse((await r.text()).replace(/^﻿/, ''));
+      if (!Array.isArray(arr) || arr.length < 60) return null;
+      const idx = {};
+      for (const l of arr) idx[l.abbrev] = l.chapters;
+      BIBLIA = idx;
+      return BIBLIA;
+    } catch (_) { return null; } finally { BIBLIA_P = null; }
+  })();
+  return BIBLIA_P;
+}
+
+/** O texto real de uma referência. null quando a referência NÃO EXISTE. */
+function textoDoVersiculo(biblia, r) {
+  const caps = biblia && biblia[r.abbrev];
+  if (!caps || !caps[r.cap - 1]) return null;
+  const vs = caps[r.cap - 1];
+  if (!vs[r.v1 - 1]) return null;
+  const fim = Math.min(r.v2 || r.v1, vs.length);
+  return vs.slice(r.v1 - 1, fim).join(' ');
+}
+
+const VAZIAS_PT = new Set(('a o e de da do das dos que em um uma para por com sem sobre como mais nao sim se ao aos as os na no nas nos pelo pela ser estar ter foi era sao eram esta isso isto aquele este eu voce ele ela nos eles seu sua meu minha quando onde qual quem porque pois entao mas ou nem ate desde entre depois antes ainda so apenas cada todo toda todos todas outro qualquer nada tudo vez vezes dia dias deus senhor disse diz vos vossa vosso teu tua lhe lhes ha').split(' '));
+const conteudo = (s) => semAcentos(s).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/)
+  .filter((p) => p.length >= 3 && !VAZIAS_PT.has(p));
+const radical = (p) => (p.length > 5 ? p.slice(0, p.length - 2) : p);
+
+/**
+ * TRAVA DO VERSÍCULO. Três conferências, todas contra o texto sagrado de verdade:
+ *  a) a referência EXISTE (capítulo e versículo dentro do livro)?
+ *  b) o que está ENTRE ASPAS colado nela é mesmo o que está escrito ali?
+ *  c) o assunto que a resposta diz estar naquele endereço está mesmo lá? Quando não
+ *     está, e a palavra aparece em OUTRO endereço do mesmo livro, devolvemos o
+ *     endereço certo — avisar é bom, apontar onde é melhor.
+ */
+export async function conferirVersiculos(texto, origem, assunto) {
+  const t = String(texto || '');
+  const refs = acharReferencias(t);
+  if (!refs.length) return [];
+  let biblia = null;
+  try {
+    biblia = await Promise.race([carregarBiblia(origem), new Promise((ok) => setTimeout(() => ok(null), 4000))]);
+  } catch (_) { biblia = null; }
+  if (!biblia) return [];
+  const avisos = [];
+  const visto = new Set();
+
+  // a) a referência existe?
+  for (const r of refs) {
+    const k = r.abbrev + r.cap + ':' + r.v1 + '-' + r.v2;
+    if (visto.has(k)) continue;
+    visto.add(k);
+    if (textoDoVersiculo(biblia, r) === null) {
+      avisos.push(`versiculo-inexistente: "${r.bruto}" não existe na Bíblia (${LIVRO_NOME[r.abbrev]} não tem esse capítulo/versículo). A resposta citou um endereço que a igreja não vai achar.`);
+      if (avisos.length >= 4) return avisos;
+    }
+  }
+
+  // b) aspas coladas numa referência: bate com o que está escrito?
+  const aspas = /[“"]([^”"\n]{25,400})[”"]/g;
+  for (let m; (m = aspas.exec(t));) {
+    const jan = { ini: Math.max(0, m.index - 130), fim: m.index + m[0].length + 130 };
+    const perto = acharReferencias(t.slice(jan.ini, jan.fim));
+    if (!perto.length) continue;
+    const palavras = conteudo(m[1]);
+    if (palavras.length < 4) continue;
+    let melhor = 0, alvo = perto[0];
+    for (const r of perto) {
+      const real = textoDoVersiculo(biblia, r);
+      if (real === null) continue;
+      const bruto = ' ' + semAcentos(real).toLowerCase().replace(/[^a-z0-9]/g, ' ') + ' ';
+      const bate = palavras.filter((p) => bruto.indexOf(' ' + radical(p)) >= 0).length / palavras.length;
+      if (bate > melhor) { melhor = bate; alvo = r; }
+    }
+    if (melhor < 0.55) {
+      const real = textoDoVersiculo(biblia, alvo);
+      avisos.push(`versiculo-nao-bate: a resposta pôs entre aspas, como sendo ${alvo.bruto}, um texto que NÃO está escrito lá. ${alvo.bruto} diz: "${String(real || '').slice(0, 190)}${(real || '').length > 190 ? '…' : ''}". Não pregue essa citação.`);
+      if (avisos.length >= 4) return avisos;
+    }
+  }
+
+  // c) o assunto do pedido está mesmo no endereço que a resposta apontou?
+  const ancoras = [...new Set(conteudo(assunto).filter((p) => p.length >= 5))].slice(0, 3);
+  const VERBO = /\b(diz|dizem|fala|falam|trata|menciona|mencionam|lista|listam|cita|citam|ensina|ensinam|registra|descreve|nomeia|enumera|ordena|manda|afirma|declara|apresenta|traz|trazem|e sobre|sao sobre)\b/i;
+  for (const r of refs) {
+    if (avisos.length >= 4) break;
+    const depois = semAcentos(t.slice(r.fim, r.fim + 90)).toLowerCase();
+    if (!VERBO.test(depois)) continue;
+    const real = textoDoVersiculo(biblia, r);
+    if (real === null) continue;
+    const alvoTxt = ' ' + semAcentos(real).toLowerCase().replace(/[^a-z0-9]/g, ' ') + ' ';
+    for (const a of ancoras) {
+      if (depois.indexOf(radical(a)) < 0) continue;            // não é isso que ele afirmou
+      if (alvoTxt.indexOf(' ' + radical(a)) >= 0) continue;    // está lá mesmo: tudo certo
+      // Está no livro, mas em OUTRO endereço? Então dá pra apontar o certo.
+      const caps = biblia[r.abbrev] || [];
+      const onde = [];
+      for (let c = 0; c < caps.length && onde.length < 3; c++) {
+        for (let v = 0; v < caps[c].length; v++) {
+          if ((' ' + semAcentos(caps[c][v]).toLowerCase().replace(/[^a-z0-9]/g, ' ')).indexOf(' ' + radical(a)) >= 0) { onde.push(`${c + 1}:${v + 1}`); break; }
+        }
+      }
+      avisos.push(`endereco-errado: a resposta diz que ${r.bruto} fala de "${a}" — e ${r.bruto} não traz isso. `
+        + (onde.length ? `Em ${LIVRO_NOME[r.abbrev]} isso aparece em ${onde.map((x) => LIVRO_NOME[r.abbrev] + ' ' + x).join(', ')}. Confira o endereço antes de pregar.` : 'Confira o endereço antes de pregar.'));
+      break;
+    }
+  }
+  return avisos;
+}
+
+/** O rodapé que o pastor lê na tela quando a resposta veio em streaming. */
+function rodapeAvisos(avisos) {
+  if (!avisos || !avisos.length) return '';
+  return '\n\n⚠️ CONFERIR ANTES DE PREGAR\n' + avisos.slice(0, 4).map((a) => '• ' + a).join('\n');
+}
+
 /**
  * Mesma troca, só que EM CIMA DO FLUXO (as telas do Concílio recebem streaming).
  * Segura um rabo de até 8 caracteres porque o marcador pode chegar partido entre
  * dois pedaços do stream — sem isso, "[O" e "2]" sairiam crus na tela do pastor.
  */
-export function fluxoComFontes(resp, rotulos, rodapeSeVazio) {
-  if (!resp || !resp.body || !rotulos || !rotulos.length) return resp;
+// `opts` (novo): { origem, assunto, conferir } — quando `conferir` é true, o fluxo
+// guarda uma cópia do que passou e, no fim, confere a palavra no original e os
+// versículos contra a Bíblia de verdade, pendurando os avisos no rodapé. Fica de
+// fora só o REESCREVER, porque ali a saída substitui a mensagem do pastor na tela
+// (rodapé viraria lixo dentro do texto dele) — mas a transliteração vale lá também.
+export function fluxoComFontes(resp, rotulos, rodapeSeVazio, opts) {
+  opts = opts || {};
+  const temFonte = !!(rotulos && rotulos.length);
+  if (!resp || !resp.body) return resp;
+  if (!temFonte && !opts.conferir && !opts.sempre) return resp;
   const enc = new TextEncoder(), dec = new TextDecoder();
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   (async () => {
     const reader = resp.body.getReader();
-    let buf = '', citou = false;
+    let buf = '', citou = false, inventados = 0, transliterou = false, tudo = '';
     const solta = async (pedaco) => {
-      const t = trocarFontes(pedaco, rotulos);
+      const t = temFonte ? trocarFontes(pedaco, rotulos) : { texto: pedaco, usadas: [], inventados: 0 };
       if (t.usadas.length) citou = true;
-      await writer.write(enc.encode(t.texto));
+      inventados += t.inventados;
+      // Grafia proibida NÃO chega ao pastor: alfabeto grego/hebraico vira letra
+      // latina aqui mesmo, caractere por caractere (marcador partido não atrapalha).
+      const g = transliterarOriginal(t.texto);
+      if (g.trocou) transliterou = true;
+      if (opts.conferir) tudo += g.texto;
+      await writer.write(enc.encode(g.texto));
     };
     try {
       for (;;) {
@@ -202,6 +571,13 @@ export function fluxoComFontes(resp, rotulos, rodapeSeVazio) {
       // consultado. Não dizemos "isto sustenta a afirmação X" — dizemos o que entrou
       // na mesa, que é a verdade conferível.
       if (!citou && rodapeSeVazio) await writer.write(enc.encode(rodapeSeVazio));
+      if (opts.conferir) {
+        const avisos = conferirOriginal(tudo, opts.assunto || '', transliterou)
+          .concat(await conferirVersiculos(tudo, opts.origem, opts.assunto || ''))
+          .concat(inventados ? ['fonte-inventada: ' + inventados + ' marcador(es) fora da lista foram apagados da resposta.'] : []);
+        const rod = rodapeAvisos(avisos);
+        if (rod) await writer.write(enc.encode(rod));
+      }
     } catch (_) {}
     try { await writer.close(); } catch (_) {}
   })();
@@ -266,7 +642,9 @@ const TIPOS = {
 
 const LEI = `⛔ TRAVAS INEGOCIÁVEIS (valem mais que impressionar):
 - NUNCA invente NADA: nem versículo, nem citação, nem palavra no hebraico/grego, nem data, nome, número ou "fato histórico". Se não tiver CERTEZA, não inclua — trabalhe com o que o texto realmente diz. Verdadeiro é melhor que impressionante.
+- 🔤 PALAVRA NO ORIGINAL: SÓ transliterada em letras latinas (ex.: *bara*, *chesed*, *aparche*). NUNCA em alfabeto hebraico nem grego. E o idioma tem que bater com o testamento: Antigo Testamento é HEBRAICO (aramaico em partes de Daniel e Esdras), Novo Testamento é GREGO. Dizer que uma palavra de Gênesis é grega é erro grosseiro. Se você não souber o livro, capítulo e versículo exatos onde a palavra está, NÃO escreva palavra nenhuma do original.
 - Todo versículo citado (Livro capítulo:versículo) tem que EXISTIR e realmente dizer o que você afirma.
+- 📖 VERSÍCULO ENTRE ASPAS: se você puser um versículo entre aspas, as palavras têm que ser DAQUELA referência exata — o pastor lê no púlpito e a igreja abre a Bíblia. O servidor abre a Bíblia e confere. Na menor dúvida, NÃO transcreva: só remeta à referência e explique com as suas palavras. E não diga que um versículo "fala de" um assunto que não está escrito nele.
 - NÃO copie nem reproduza trechos de livro, comentário ou sermão de ninguém. Você forja um texto NOVO e ORIGINAL, em português do Brasil, usando o MÉTODO do servo — não as palavras dele.
 - NÃO finja ser a pessoa. Você não diz "eu, Spurgeon". Você escreve NO MÉTODO dele, na terceira pessoa quando precisar citá-lo.
 - CRISTO SEMPRE NO CENTRO. Doutrina fiel, evangélica pentecostal (Assembleias de Deus): batismo no Espírito Santo, dons para hoje, santidade, autoridade da Escritura.
@@ -390,7 +768,7 @@ Sua tarefa: responder as perguntas do pastor sobre ESTA mensagem, APROFUNDANDO e
 Responda direto, em prosa pastoral, curto e denso (o pastor lê no celular). Sem cabeçalhos com emoji, sem "claro!".
 
 ${LEI}${fonteK}`;
-  const SYS = contexto ? SYS_MSG : `Você é o MAGO-MESTRE do CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil).
+  const SYS_BASE = contexto ? SYS_MSG : `Você é o MAGO-MESTRE do CONCÍLIO DOS EXPOSITORES do app RADAR, do pastor Elias (Assembleias de Deus, Brasil).
 
 O pastor faz UMA pergunta. Sua tarefa:
 1) ESCOLHA INTERNAMENTE, sem perguntar e sem pedir pra ele escolher, o(s) expositor(es) do Concílio mais aptos a responder. Roster disponível:
@@ -407,6 +785,10 @@ FORMATO da resposta (use os cabeçalhos com emoji):
 🧙 QUEM RESPONDEU — no fim, 1 linha dizendo qual(is) servo(s) do Concílio você consultou e por quê.
 
 ${LEI}`;
+  // A trava do original vale igual aqui: a lupa também já devolveu palavra grega
+  // em texto hebraico. O idioma é CALCULADO pelo servidor a partir do que ele pediu.
+  const assunto = pergunta + ' ' + String(contexto || '').slice(0, 400);
+  const SYS = SYS_BASE + blocoDoOriginal(assunto);
   // Versão do prompt para quando NÃO houver busca na web disponível (o Gemini é o
   // único provedor da cascata com busca de verdade, e ele vive estourando cota).
   // Aqui a ordem de pesquisar SAI e entra a ordem de ser honesto sobre isso —
@@ -421,7 +803,7 @@ ${LEI}`;
     : [];
 
   try {
-    return await respostaTexto({
+    return fluxoComFontes(await respostaTexto({
       sys: SYS,
       sysSemWeb: SYS_SEM_WEB,
       web: true,
@@ -429,7 +811,7 @@ ${LEI}`;
       temperature: 0.5,
       max_tokens: 2200,
       tag: 'lupa',
-    }, CORS);
+    }, CORS), [], '', { conferir: true, origem, assunto });
   } catch (e) {
     return respostaErro(e, CORS);
   }
@@ -495,9 +877,9 @@ O pastor já tem uma mensagem escrita. Ele NÃO quer uma mensagem nova do zero e
 
 Mantenha o padrão da casa: prosa densa em parágrafos de verdade (não vira lista), **negrito** nas palavras do original e nas ênfases, português do Brasil. Se a mensagem começa com as linhas TÍTULO: e REFERÊNCIA:, devolva essas linhas também.
 
-⚠️ REGRA DA GRAFIA: palavra do hebraico ou do grego SÓ transliterada em letras latinas (ex.: *tamid*, *chesed*, *dorea*). NÃO escreva no alfabeto hebraico nem no grego — um acento trocado vira erro no púlpito.${metodo}
+${metodo}
 
-${LEI}
+${LEI}${blocoDoOriginal(instrucao + ' ' + String(texto || '').slice(0, 1500))}
 
 Comece DIRETO no texto da mensagem reescrita. Sem saudação, sem "claro!", sem explicar o que você fez, sem comentário no fim.${fonteK}${fonteW}`;
 
@@ -516,7 +898,10 @@ Agora devolva a mensagem inteira, já com essa mudança feita.`;
   // Aqui NÃO pedimos citação (é a mensagem DELE sendo reescrita). Mas se um marcador
   // do material de apoio escapar no meio do texto, ele sai como fonte de verdade em
   // vez de "[F3]" cru na tela do pastor.
-  return fluxoComFontes(await streamChat(SYS, user, { temperature: 0.55, max_tokens: 4000, tag: 'reescrever' }), wg ? wg.rotulos : []);
+  // `sempre` (e não `conferir`): aqui a saída SUBSTITUI a mensagem do pastor na tela,
+  // então rodapé de aviso viraria lixo dentro do texto dele. O que vale é a
+  // transliteração — grafia proibida não entra na mensagem dele de jeito nenhum.
+  return fluxoComFontes(await streamChat(SYS, user, { temperature: 0.55, max_tokens: 4000, tag: 'reescrever' }), wg ? wg.rotulos : [], '', { sempre: true });
 }
 
 // ── CONVERSAR — bate-papo fiel com UM mestre do Concílio ─────────────────────
@@ -563,7 +948,7 @@ ${bloco}
 
 ⚖️ AUTORIDADE: a Bíblia e a sã doutrina AD (pentecostal clássica). Nada inventado — nem versículo, nem etimologia. Cristo no centro. Em ponto disputado, sinalize com humildade e mande confirmar com a Palavra.${blocoCtx}
 
-${LEI}${fonteK}${fonteW}${fontes}`;
+${LEI}${blocoDoOriginal(pergunta + ' ' + String(contexto || '').slice(0, 400))}${fonteK}${fonteW}${fontes}`;
 
   const conversa = (Array.isArray(historico) ? historico.slice(-8) : [])
     .map((m) => ({ role: m && m.role === 'assistant' ? 'assistant' : 'user', content: String((m && m.content) || '').slice(0, 2000) }))
@@ -576,7 +961,7 @@ ${LEI}${fonteK}${fonteW}${fontes}`;
   return fluxoComFontes(await streamChat(SYS, perguntaFinal, {
     messages: [...conversa, { role: 'user', content: perguntaFinal }],
     temperature: 0.5, max_tokens: 2200, tag: 'conversar',
-  }), rotulos);
+  }), rotulos, '', { conferir: true, origem, assunto: pergunta });
 }
 
 
@@ -591,14 +976,18 @@ export default async function handler(req) {
   if (acao === 'perola') {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
     if (!tema) return new Response('Diga o texto ou o tema do sermão.', { status: 400, headers: CORS });
-    const fonteP = await kittelFonte(tema, _origemDe(req));
-    return streamChat(SYS_PEROLA + fonteP, 'TEXTO / TEMA DO PASTOR: ' + tema, { temperature: 0.6, max_tokens: 3600 });
+    const origem = _origemDe(req);
+    const fonteP = await kittelFonte(tema, origem);
+    return fluxoComFontes(await streamChat(SYS_PEROLA + blocoDoOriginal(tema) + fonteP, 'TEXTO / TEMA DO PASTOR: ' + tema,
+      { temperature: 0.6, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema });
   }
   if (acao === 'mensagem') {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
     if (!tema) return new Response('Diga o texto ou o tema da mensagem.', { status: 400, headers: CORS });
-    const fonteM = await kittelFonte(tema, _origemDe(req));
-    return streamChat(SYS_MENSAGEM + fonteM, 'TEXTO / TEMA DO PASTOR: ' + tema, { temperature: 0.65, max_tokens: 3600 });
+    const origem = _origemDe(req);
+    const fonteM = await kittelFonte(tema, origem);
+    return fluxoComFontes(await streamChat(SYS_MENSAGEM + blocoDoOriginal(tema) + fonteM, 'TEXTO / TEMA DO PASTOR: ' + tema,
+      { temperature: 0.65, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema });
   }
   if (acao === 'lupa') {
     const pergunta = (b.pergunta || b.tema || b.passagem || '').toString().trim().slice(0, 500);
@@ -608,7 +997,7 @@ export default async function handler(req) {
   if (acao === 'lupa-msg') {
     const pergunta = (b.pergunta || '').toString().trim().slice(0, 500);
     if (!pergunta) return new Response('Escreva a sua pergunta.', { status: 400, headers: CORS });
-    return lupaWeb(pergunta, (b.contexto || '').toString(), b.historico);
+    return lupaWeb(pergunta, (b.contexto || '').toString(), b.historico, _origemDe(req));
   }
   // REESCREVER — devolve a mensagem INTEIRA já mudada do jeito que o pastor mandou.
   if (acao === 'reescrever') {
@@ -638,7 +1027,7 @@ export default async function handler(req) {
   if (id === 'wagner-cordeiro') {
     if (!passagem) return new Response('Diga o texto, o assunto ou a sua dúvida.', { status: 400, headers: CORS });
     const { wagnerStream } = await import('./concilio-wagner.js');
-    return wagnerStream(passagem, (TIPOS[tipo] || TIPOS.estudo).ordem);
+    return wagnerStream(passagem, (TIPOS[tipo] || TIPOS.estudo).ordem, _origemDe(req));
   }
 
   const e = ERUDITOS.find((x) => x.id === id);
@@ -667,7 +1056,7 @@ Sua tarefa nesta resposta é forjar um texto NOVO usando o MÉTODO de um servo e
 
 Escreva do jeito que ELE cavaria o texto — o olhar dele, as perguntas dele, a ênfase dele, o tipo de aplicação dele. Se o método dele for grego e estrutura, faça isso. Se for calor pastoral e frase que gruda, faça isso. Se for pano de fundo judaico, faça isso.${filtro}
 
-${LEI}
+${LEI}${blocoDoOriginal(passagem)}
 
 FORMATO: use os cabeçalhos com emoji exatamente como pedidos abaixo. Comece direto no conteúdo (sem saudação e sem "claro!").${fontes}`;
 
@@ -678,5 +1067,8 @@ FORMATO: use os cabeçalhos com emoji exatamente como pedidos abaixo. Comece dir
 
   // Mesmo streaming de antes, só que agora servido pela cascata (streamChat) e com
   // os marcadores de fonte já trocados pela obra real no caminho até a tela.
-  return fluxoComFontes(await streamChat(SYS, user, { temperature: 0.5, max_tokens: 2200, tag: 'concilio-erudito' }), rotulos);
+  // `conferir` liga a segunda trava: palavra no original e versículo conferidos
+  // contra a Bíblia de verdade, com o resultado no rodapé.
+  return fluxoComFontes(await streamChat(SYS, user, { temperature: 0.5, max_tokens: 2200, tag: 'concilio-erudito' }),
+    rotulos, '', { conferir: true, origem: _origemDe(req), assunto: passagem });
 }
