@@ -209,3 +209,92 @@ completo.
 entrou em protetor de tela e depois travou na tela de bloqueio, que pede a senha
 do Elias — não dá para destravar daqui. Assim que ele destravar o aparelho, esse
 print sai em um minuto.
+
+---
+
+# v159 — texto embolado, e o nome que voltou por baixo
+
+## 1. Texto embolado na transcrição — CONSERTADO
+
+**O defeito:** com a resposta na tela, o rótulo "RESPOSTA", a dica do viva-voz e
+o texto da resposta ficavam um por cima do outro.
+
+**A causa:** `.palco` era `flex:1 1 auto` (base **auto**) e o globo tinha altura
+fixa em `vh` com `flex:0 0 auto`. Enquanto a tela era só o globo, coube. Quando
+a transcrição apareceu, o palco encolheu — **e o canvas não**. O globo
+transbordou o palco, que não tinha `overflow`, e `#estado`/`#dica` foram
+desenhados por cima das bolhas.
+
+**O conserto:** `.palco{flex:1 1 0}` — base **zero**, então a altura dele é
+puramente a sobra da tela, sem depender do conteúdo. O JS mede essa sobra,
+desconta o que estado e dica ocupam, e dimensiona o globo para o que restar.
+Resposta longa faz a caixa crescer até o teto dela (30vh) e **o globo cede o
+espaço em vez de atropelar**. Mais `overflow:hidden` no palco como última linha
+de defesa, e a dica do viva-voz encurtada para uma linha.
+
+**Prova:** `?prova=tela` enche a tela com resposta longa, mede as caixas de
+verdade com `getBoundingClientRect` e acusa qualquer sobreposição entre globo,
+estado, dica, transcrição e barra. Tem que dar **0**.
+
+## 2. O nome no prompt — NÃO CONSERTADO (é de outro dono)
+
+O nome saiu da interface, mas continua no **prompt do servidor**. Ele mora em
+dois arquivos, e **nenhum dos dois é meu**:
+
+### `api/_lib/voz.js` — o outro mago está nele
+| linha | o que diz hoje | trocar por |
+|---|---|---|
+| 78-79 | `"pelo método do Dr. Wagner Cordeiro..."` | `"pelo método consagrado..."` |
+| 131 | `material real do Dr. Wagner (Caderno de Pérolas...)` | `material de estudo (Caderno de Pérolas...)` |
+| 133 | `afirmar que "o Dr. Wagner ensina" qualquer coisa` | `afirmar que "o material ensina" qualquer coisa` |
+| 137 | `...e não o material dele.` | `...e não o material.` |
+
+### `api/_lib/concilio-wagner.js` — ⚠️ COMPARTILHADO, **não limpe na origem**
+O `SISTEMA` do globo é `METODO + ...`, e `METODO` vem daqui (linha 188). Mas
+este arquivo também serve o **Concílio de texto**, onde o nome é legítimo e
+deve continuar. Limpar aqui quebraria o Concílio.
+
+Com nome: linha 188 (`MÉTODO do Dr. Wagner Cordeiro (Instituto Teológico GIOM)`),
+190 (`Não escreva "eu, Wagner"`), 257 (`"o Wagner ensina que…"`), e os rótulos
+do garimpo — 84 (`Caderno de Pérolas do Dr. Wagner`) e 88 (`Aula do Dr. Wagner
+Cordeiro — Instituto GIOM`). **Os rótulos são o mais importante:** eles voltam
+dentro do resultado da ferramenta, então o modelo LÊ o nome mesmo com o prompt
+limpo — foi daí que saiu o "não encontrei uma aula específica do Dr. Wagner".
+
+### A correção recomendada, toda contida em `voz.js`
+```js
+// O globo não é personagem de ninguém: FAZ o método, mas não se apresenta
+// citando professor por nome. O /api/concilio-wagner continua com o nome — lá
+// é o Concílio, e lá o nome é legítimo. Por isso a limpeza é AQUI.
+const semNome = (t) => String(t || '')
+  .replace(/o\s+MÉTODO\s+do\s+Dr\.?\s*Wagner\s+Cordeiro\s*\(Instituto\s+Teológico\s+GIOM\)/gi,
+           'o MÉTODO do garimpo de tipologias')
+  .replace(/Você NÃO finge ser ele\. Não escreva "eu, Wagner"\./gi,
+           'Você não finge ser ninguém. Não assuma a identidade de nenhum professor.')
+  .replace(/Caderno de Pérolas do Dr\.?\s*Wagner/gi, 'Caderno de Pérolas')
+  .replace(/Aula do Dr\.?\s*Wagner Cordeiro\s*—\s*Instituto GIOM/gi, 'Aula do material de estudo')
+  .replace(/material real do Dr\.?\s*Wagner/gi, 'material de estudo')
+  .replace(/"o (Dr\.?\s*)?Wagner ensina( que…)?"/gi, '"o material ensina$2"')
+  .replace(/não o material dele/gi, 'não o material')
+  .replace(/Dr\.?\s*Wagner\s+Cordeiro/gi, 'o material de estudo')
+  .replace(/Dr\.?\s*Wagner/gi, 'o material de estudo')
+  .replace(/Instituto\s+(Teológico\s+)?GIOM/gi, 'o instituto');
+
+const SISTEMA = semNome(
+  METODO + '\n\n' + MENTE + '\n\n' + FALA + '\n\n' + REGRA_DE_OURO + '\n\n' + PORTEIRO
+  + '\n\n════ SEM NOME PRÓPRIO ════\n'
+  + 'Nunca cite professor, autor vivo ou instituição por nome ao se explicar, e '
+  + 'nunca fale de si na terceira pessoa de outro. Se não achar o assunto, diga '
+  + 'apenas: "não encontrei isso no material". Nada de "a aula do fulano" nem '
+  + '"o material dele".'
+);
+```
+E no garimpo (≈ linha 439), passar o resultado pela mesma peneira antes de
+devolver ao navegador — é por ali que o nome entrava:
+```js
+const ctx = assunto ? buscarContexto(assunto, 4500) : { texto: '', fontes: [] };
+ctx.texto  = semNome(ctx.texto);
+ctx.fontes = (ctx.fontes || []).map(semNome);
+```
+O método, o rigor e o crivo continuam inteiros. Muda só que o globo deixa de
+ser personagem de alguém.
