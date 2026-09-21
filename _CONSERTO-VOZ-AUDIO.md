@@ -144,3 +144,68 @@ frente, e **zero** áudio aceito de linha aposentada.
   a conversa (fontes audíveis, pico, fila, linhas vivas, cortes, modo).
 - Depois de publicar, **abra duas vezes**: o service worker serve do cache na
   primeira.
+
+---
+
+# A tela do globo (v156–v158)
+
+**No ar:** versão **v158**
+
+## O que mudou
+
+| antes | agora |
+|---|---|
+| selo, título, subtítulo com nome de pessoa, aviso grande e seletor de voz na abertura | só o globo, a barra de escrever e "← Início" discreto |
+| "Dr. Wagner Cordeiro" e "Concílio dos Expositores" no topo, nas bolhas, no texto copiado e no título da aba | **nome nenhum** em lugar nenhum |
+| fundo branco | azul-marinho profundo + dourado, zero roxo |
+| a página rolava e o globo subia | página travada em `100dvh`, o globo fica de frente e **cresce** (48vh → 54vh) |
+| só falar | falar **ou escrever** |
+
+## Os três defeitos da tela
+
+**1. "o globo continua subindo, e o texto passando".**
+Havia um `window.scrollTo(0, document.body.scrollHeight)` rodando a cada pedaço
+de transcrição. Era ele. Foi removido: a página não rola mais (`100dvh` +
+`overflow:hidden`) e quem rola é só a caixa da transcrição, com teto de 22vh.
+
+**2. O aviso atrapalhava o globo.**
+Virou balão flutuante (`position:fixed`), 3 linhas, que entra 0,9 s depois sem
+empurrar nada. No X: `.remove()` de verdade — sai do DOM, não sobra camada
+invisível — e grava no `localStorage`. Nas próximas aberturas **nem chega a ser
+criado**. O texto completo continua no ⚙️. Atalho `?aviso=1` para reler.
+
+**3. O balão podia nascer invisível.** *(achado durante o teste)*
+Ele nasce em `opacity:0` e só aparece ao ganhar a classe `.entrou`, que era
+adicionada por `requestAnimationFrame`. **rAF não roda com a aba escondida.**
+Tela apagando no carro, notificação por cima ou protetor de tela entrando no
+meio do carregamento e o aviso ficaria invisível para sempre — presente no DOM,
+mudo. Aconteceu exatamente isso no A22 durante o teste. Agora um `setTimeout`
+de 60 ms acende junto com o rAF.
+
+## Escrever, além de falar
+
+Campo de texto com botão redondo que muda de cara: escreveu → **enviar**,
+conversa de pé → **parar**, parado → **microfone**. Escrever **não pede
+microfone**: a linha sobe surda (`clientContent`) e ele liga o mic quando
+quiser. Pergunta escrita antes do aperto de mão terminar fica guardada e vai no
+`setupComplete`.
+
+## O globo em 3D
+
+Atmosfera que respira no volume, luz fora do centro, escurecimento de borda
+(*limb darkening*), contraluz dourada no lado oposto à luz e reflexo especular.
+A malha de paralelos e meridianos gira, e a largura dos meridianos muda com o
+giro — é isso que dá esfera rodando em vez de desenho parado. A pulsação
+continua vindo do **volume real** do áudio, não de animação em laço.
+
+## O que foi provado no A22, e o que não foi
+
+Provado no aparelho, servindo o **mesmo arquivo** por `adb reverse`:
+abertura só com o globo · balão flutuando sem empurrar nada · X → tela limpa ·
+recarregar → balão não voltou · ⚙️ com modo, vozes, copiar/encerrar e o aviso
+completo.
+
+**Não provado:** o globo grande durante uma conversa de verdade no ar. O A22
+entrou em protetor de tela e depois travou na tela de bloqueio, que pede a senha
+do Elias — não dá para destravar daqui. Assim que ele destravar o aparelho, esse
+print sai em um minuto.
