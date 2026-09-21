@@ -11,8 +11,8 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/radar.css?v=151">
-<link rel="preload" as="script" href="/assets/app.js?v=151">
+<link rel="stylesheet" href="/assets/radar.css?v=152">
+<link rel="preload" as="script" href="/assets/app.js?v=152">
 <script>
 /* ── A PELE DA HOME (bege ou azul) ──────────────────────────────────────────
    Isto roda AQUI NO <head>, antes de o navegador pintar qualquer coisa.
@@ -134,6 +134,13 @@
         <div class="vit-card" onclick="abrirMod('desafiomateus')">
           <div class="vit-ico">🧠</div>
           <div class="vit-nome">Quiz Bíblico</div><div class="vit-desc">Desafie seu conhecimento</div>
+        </div>
+        <!-- A PORTA DO GLOBO DE VOZ. A pagina /biblioteca/voz/ existia desde 19/09
+     mas NENHUM lugar do app levava ate ela — so digitando o endereco na mao.
+     O Elias procurou e nao achou, com razao: nao havia por onde chegar. -->
+        <div class="vit-card" onclick="location.href='/biblioteca/voz/'">
+          <div class="vit-ico">🔮</div>
+          <div class="vit-nome">Conversar por Voz</div><div class="vit-desc">Fale e ouça a resposta</div>
         </div>
 
         <div class="vit-card" onclick="abrirEbd()">
@@ -1024,7 +1031,7 @@
   </div>
 </div>
 
-<script src="/assets/app.js?v=151"></script>
+<script src="/assets/app.js?v=152"></script>
 
 <!-- REF SHEET -->
 <div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>
@@ -2022,7 +2029,7 @@ function compartilharApp(nome){
   </div>
 </div>
 
-<script src="/assets/lupa.js?v=151"></script>
-<script src="/_uso.js?v=151" defer></script>
+<script src="/assets/lupa.js?v=152"></script>
+<script src="/_uso.js?v=152" defer></script>
 </body>
 </html>
