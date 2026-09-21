@@ -325,6 +325,8 @@ const NIQQUD = { 'ָ': 'a', 'ַ': 'a', 'ֲ': 'a', 'ֶ': 'e', 'ֵ': 'e', 'ֱ': 'e
 const RUN_GREGO = /[Ͱ-Ͽἀ-῿][Ͱ-Ͽἀ-῿̀-ͯͅʼ'’]*/g;
 const RUN_HEBRAICO = /[֐-״יִ-ﭏ][֐-״יִ-ﭏʼ'’]*/g;
 const TEM_ALFABETO_ESTRANGEIRO = /[Ͱ-Ͽἀ-῿֐-״יִ-ﭏ]/;
+// palavra em alfabeto estrangeiro encostada no FIM do pedaco (pode estar partida)
+const RABO_ESTRANGEIRO = /[Ͱ-Ͽἀ-῿֐-״יִ-ﭏ][Ͱ-Ͽἀ-῿֐-״יִ-ﭏ̀-ͯͅʼ'’]*$/;
 
 function romanizar(run, mapa, ehGrego) {
   const cs = [...run.normalize('NFD')];
@@ -364,12 +366,13 @@ function romanizar(run, mapa, ehGrego) {
 /** Devolve { texto, trocou }. Roda em cima de pedaço de stream sem problema: a
  *  troca é por caractere, então marcador partido no meio não estraga nada. */
 export function transliterarOriginal(texto) {
-  let trocou = false;
+  const palavras = [];
   let t = String(texto || '');
-  if (!TEM_ALFABETO_ESTRANGEIRO.test(t)) return { texto: t, trocou: false };
-  t = t.replace(RUN_GREGO, (r) => { const v = romanizar(r, MAPA_GREGO, true); trocou = true; return v; });
-  t = t.replace(RUN_HEBRAICO, (r) => { const v = romanizar(r, MAPA_HEBRAICO, false); trocou = true; return v; });
-  return { texto: t.replace(/\*\s*\*/g, '').replace(/ {2,}/g, ' '), trocou };
+  if (!TEM_ALFABETO_ESTRANGEIRO.test(t)) return { texto: t, trocou: false, palavras };
+  const pega = (r, mapa, grego) => { const v = romanizar(r, mapa, grego); if (v && palavras.indexOf(v) < 0) palavras.push(v); return v; };
+  t = t.replace(RUN_GREGO, (r) => pega(r, MAPA_GREGO, true));
+  t = t.replace(RUN_HEBRAICO, (r) => pega(r, MAPA_HEBRAICO, false));
+  return { texto: t.replace(/\*\s*\*/g, '').replace(/ {2,}/g, ' '), trocou: !!palavras.length, palavras };
 }
 
 /**
@@ -379,8 +382,15 @@ export function transliterarOriginal(texto) {
 export function conferirOriginal(texto, assunto, jaTransliterou) {
   const avisos = [];
   const t = String(texto || '');
-  if (jaTransliterou || TEM_ALFABETO_ESTRANGEIRO.test(t)) {
-    avisos.push('grafia-original: a resposta veio com palavra em alfabeto grego/hebraico (proibido na casa). O sistema transliterou em letras latinas — mas quem escreve no alfabeto original costuma estar chutando a palavra. CONFIRA o termo antes de pregar.');
+  // `jaTransliterou` pode vir como a lista de palavras convertidas — quando vier,
+  // dizemos ao pastor EXATAMENTE qual termo ele tem que conferir.
+  // ⚠️ array vazio é "verdadeiro" em JS — sem esta conta, o aviso saía sempre.
+  const quais = Array.isArray(jaTransliterou) ? jaTransliterou : [];
+  const houve = Array.isArray(jaTransliterou) ? quais.length > 0 : !!jaTransliterou;
+  if (houve || TEM_ALFABETO_ESTRANGEIRO.test(t)) {
+    avisos.push('grafia-original: a resposta veio com palavra em alfabeto grego/hebraico (proibido na casa). O sistema transliterou em letras latinas'
+      + (quais.length ? ' — ' + quais.slice(0, 4).map((p) => '"' + p + '"').join(', ') : '')
+      + '. Quem escreve no alfabeto original costuma estar chutando a palavra: CONFIRA esse termo antes de pregar.');
   }
   const livros = livrosCitados(assunto);
   if (!livros.length) return avisos;
@@ -560,7 +570,8 @@ export function fluxoComFontes(resp, rotulos, rodapeSeVazio, opts) {
   const writer = writable.getWriter();
   (async () => {
     const reader = resp.body.getReader();
-    let buf = '', citou = false, inventados = 0, transliterou = false, tudo = '';
+    let buf = '', citou = false, inventados = 0, tudo = '';
+    const transliterou = [];   // as palavras que vieram em alfabeto grego/hebraico
     const solta = async (pedaco) => {
       const t = temFonte ? trocarFontes(pedaco, rotulos) : { texto: pedaco, usadas: [], inventados: 0 };
       if (t.usadas.length) citou = true;
@@ -568,7 +579,7 @@ export function fluxoComFontes(resp, rotulos, rodapeSeVazio, opts) {
       // Grafia proibida NÃO chega ao pastor: alfabeto grego/hebraico vira letra
       // latina aqui mesmo, caractere por caractere (marcador partido não atrapalha).
       const g = transliterarOriginal(t.texto);
-      if (g.trocou) transliterou = true;
+      for (const p of g.palavras) if (transliterou.indexOf(p) < 0) transliterou.push(p);
       if (opts.conferir) tudo += g.texto;
       await writer.write(enc.encode(g.texto));
     };
@@ -580,6 +591,12 @@ export function fluxoComFontes(resp, rotulos, rodapeSeVazio, opts) {
         let corte = buf.length;
         const i = Math.max(buf.lastIndexOf('['), buf.lastIndexOf('【'));
         if (i >= 0 && buf.length - i <= 8 && !/[\]】]/.test(buf.slice(i))) corte = i;
+        // Mesmo cuidado do marcador, agora pra palavra do original: "πρωτογενή"
+        // chega partida em dois pedaços do stream. O texto sairia certo de qualquer
+        // jeito (a troca é por caractere), mas o AVISO diria "pro" e "togene" em vez
+        // de nomear a palavra que o pastor tem que conferir. Segura o rabo.
+        const f = RABO_ESTRANGEIRO.exec(buf.slice(0, corte));
+        if (f && f.index > 0 && corte - f.index <= 40) corte = f.index;
         if (corte > 0) { await solta(buf.slice(0, corte)); buf = buf.slice(corte); }
       }
       if (buf) await solta(buf);

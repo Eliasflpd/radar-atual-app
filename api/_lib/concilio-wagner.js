@@ -526,7 +526,7 @@ export default async function handler(req) {
   // conferido contra a Bíblia de verdade. Tudo vai em `avisos`, que o front já mostra.
   const avisos = conferirTravas(resposta)
     .concat(conferirFontes(resposta, tr.inventados))
-    .concat(conferirOriginal(resposta, pergunta, gr.trocou));
+    .concat(conferirOriginal(resposta, pergunta, gr.palavras));
   try { avisos.push(...await conferirVersiculos(resposta, origem, pergunta)); } catch (_) {}
 
   return new Response(JSON.stringify({
