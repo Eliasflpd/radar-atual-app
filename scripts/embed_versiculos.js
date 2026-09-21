@@ -2,10 +2,19 @@
 /**
  * MOTOR DE LIGAÇÕES — gerador de embeddings dos versículos da Bíblia.
  * Lê public/biblia.json, gera vetores (Gemini por padrão; Voyage via env) e
- * grava em versiculo_embeddings (pgvector). IDEMPOTENTE: pula o que já tem vetor.
+ * grava em versiculo_embeddings (pgvector).
+ *
+ * IDEMPOTENTE POR MODELO: pula o versículo que já tem vetor DAQUELE MESMO modelo. Se o
+ * modelo mudar, ele regera tudo sozinho — porque vetor de um modelo não conversa com
+ * consulta de outro (mesma dimensão NÃO quer dizer mesmo espaço vetorial).
  *
  * Uso:
  *   RADAR_DB="postgres://..." GEMINI_API_KEY="AIza..." BOOKS="jo" node scripts/embed_versiculos.js
+ *
+ * Reindexar a Bíblia inteira no Voyage (é o que a busca do RADAR usa):
+ *   RADAR_DB="postgres://..." VOYAGE_API_KEY="pa-..." EMB_PROVIDER=voyage BOOKS=ALL \
+ *     node scripts/embed_versiculos.js
+ *   (com provider=voyage os defaults já viram dim 1024 e tabela versiculo_emb_voyage)
  *
  * Env:
  *   RADAR_DB        connection string do Postgres (obrigatório)
@@ -13,10 +22,15 @@
  *   EMB_PROVIDER    "gemini" (default) | "voyage"
  *   GEMINI_API_KEY  chave Gemini (se provider=gemini)
  *   GEMINI_MODEL    default gemini-embedding-001
- *   VOYAGE_API_KEY  chave Voyage (se provider=voyage)  -> escalar Bíblia inteira (200M tokens grátis)
- *   VOYAGE_MODEL    default voyage-3.5
- *   EMB_DIM         dimensão de saída (default 768 — precisa casar com a coluna vector(768))
+ *   VOYAGE_API_KEY  chave Voyage (se provider=voyage)  -> Bíblia inteira cabe folgado nos
+ *                   200M tokens grátis (31.104 versículos ≈ 1,1M tokens)
+ *   VOYAGE_MODEL    default voyage-4-lite (1024 dims nativo, dentro da cota grátis).
+ *                   Os voyage-3.x saíram do free tier em 26/08/2026 — não usar.
+ *   EMB_DIM         dimensão de saída (precisa casar com a coluna vector(N) da tabela)
+ *                   default: 1024 no voyage, 768 no gemini
+ *   EMB_TABLE       default: versiculo_emb_voyage no voyage, versiculo_embeddings no gemini
  *   BATCH           itens por request (default 100)
+ *   REEMBUTIR       "1" regera tudo, mesmo o que já está no modelo alvo
  */
 const fs = require('fs');
 const path = require('path');
@@ -25,14 +39,20 @@ const { Client } = require('pg');
 const CS = process.env.RADAR_DB;
 if (!CS) { console.error('FALTA RADAR_DB'); process.exit(1); }
 const PROVIDER = (process.env.EMB_PROVIDER || 'gemini').toLowerCase();
-const DIM = parseInt(process.env.EMB_DIM || '768', 10);
+const VOY = PROVIDER === 'voyage';
+// defaults por provedor: o Voyage escreve na vector(1024) de versiculo_emb_voyage, o
+// Gemini na vector(768) de versiculo_embeddings. Errar isso só dá erro de SQL no final.
+const DIM = parseInt(process.env.EMB_DIM || (VOY ? '1024' : '768'), 10);
 const BATCH = parseInt(process.env.BATCH || '100', 10);
-const TABLE = (process.env.EMB_TABLE || 'versiculo_embeddings').replace(/[^a-z0-9_]/gi, '');
+const TABLE = (process.env.EMB_TABLE || (VOY ? 'versiculo_emb_voyage' : 'versiculo_embeddings')).replace(/[^a-z0-9_]/gi, '');
 const BOOKS = (process.env.BOOKS || 'jo').toLowerCase();
+const REEMBUTIR = process.env.REEMBUTIR === '1';
 const GKEY = process.env.GEMINI_API_KEY;
 const GMODEL = process.env.GEMINI_MODEL || 'gemini-embedding-001';
 const VKEY = process.env.VOYAGE_API_KEY;
-const VMODEL = process.env.VOYAGE_MODEL || 'voyage-3.5';
+// Ver nota no cabeçalho: voyage-3.x perdeu a cota grátis em 26/08/2026.
+const VMODEL = process.env.VOYAGE_MODEL || 'voyage-4-lite';
+const MODELO = VOY ? VMODEL : GMODEL;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -92,12 +112,20 @@ const embed = PROVIDER === 'voyage' ? embedVoyage : embedGemini;
   const c = new Client({ connectionString: CS, ssl: { rejectUnauthorized: false } });
   await c.connect();
 
-  console.log(`Tabela destino: ${TABLE}`);
-  // idempotência: pula refs que já têm embedding
-  const jaR = await c.query(`select ref from ${TABLE} where embedding is not null`);
+  console.log(`Tabela destino: ${TABLE} · modelo: ${MODELO} · dim: ${DIM}`);
+  // O que já está gravado, por modelo — pra a troca de modelo ficar à vista.
+  const inv = await c.query(
+    `select modelo, dim, count(*)::int n from ${TABLE} where embedding is not null
+      group by modelo, dim order by n desc`);
+  inv.rows.forEach(r => console.log(`  no banco: ${r.n} com ${r.modelo} (${r.dim} dims)`));
+
+  // Idempotência POR MODELO: só pula o que já está no modelo/dim alvo. Vetor de outro
+  // modelo não serve — a consulta é feita no espaço do modelo atual.
+  const jaR = await c.query(
+    `select ref from ${TABLE} where embedding is not null and modelo=$1 and dim=$2`, [MODELO, DIM]);
   const ja = new Set(jaR.rows.map(x => x.ref));
-  const pend = alvo.filter(a => !ja.has(a.ref));
-  console.log(`Já embutidos: ${ja.size}. Pendentes: ${pend.length}.`);
+  const pend = REEMBUTIR ? alvo : alvo.filter(a => !ja.has(a.ref));
+  console.log(`Já em ${MODELO}: ${ja.size}. Pendentes: ${pend.length}.${REEMBUTIR ? ' (REEMBUTIR=1: regerando tudo)' : ''}`);
   if (!pend.length) { console.log('Nada a fazer.'); await c.end(); return; }
 
   let feito = 0;
@@ -124,7 +152,7 @@ const embed = PROVIDER === 'voyage' ? embedVoyage : embedGemini;
          values ($1,$2,$3,$4,$5,$6,$7,$8,$9::vector)
          on conflict (ref) do update set texto=excluded.texto, modelo=excluded.modelo,
            dim=excluded.dim, embedding=excluded.embedding`,
-        [a.ref, a.abbrev, a.livro, a.cap, a.ver, a.texto, PROVIDER === 'voyage' ? VMODEL : GMODEL, DIM, vec]);
+        [a.ref, a.abbrev, a.livro, a.cap, a.ver, a.texto, MODELO, DIM, vec]);
     }
     feito += lote.length;
     console.log(`  ${feito}/${pend.length} (${((feito / pend.length) * 100).toFixed(0)}%)`);

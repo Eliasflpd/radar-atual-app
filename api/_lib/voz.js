@@ -1,4 +1,5 @@
-// CONVERSA POR VOZ COM O CONCÍLIO — Dr. Wagner Cordeiro (Gemini Live, áudio↔áudio)
+// CONVERSA POR VOZ COM O CONCÍLIO (Gemini Live, áudio↔áudio)
+// O globo FAZ o método, mas não é personagem de ninguém: ver semNome(), abaixo.
 // URL pública: POST /api/voz   (rewrite -> /api/edge?fn=voz)
 //
 // POR QUE ESTE ARQUIVO EXISTE E POR QUE ELE É TÃO PEQUENO:
@@ -37,6 +38,12 @@ import { buscarContexto } from './concilio-wagner.js';
 // honestidade. Importada, não copiada: se o Elias corrigir uma trava lá, a voz obedece
 // na mesma hora. O que muda aqui embaixo é só a ENTREGA (falar ≠ escrever).
 import { METODO } from './concilio-wagner.js';
+// O CONHECIMENTO REAL. As ferramentas que fazem o mestre BUSCAR em vez de lembrar
+// (a Bíblia do app, o acervo de pregações do Elias, o motor de ligações e a trava
+// mecânica de citação), mais a doutrina que manda ele usá-las. Tudo em
+// voz-ferramentas.js para caber aqui numa linha — e para ferramenta nova não
+// obrigar ninguém a mexer no index.html do globo.
+import { FERRAMENTAS, REGRA_DE_OURO, executarFerramenta, chavesGemini } from './voz-ferramentas.js';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
 const JSONH = { ...CORS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
@@ -120,6 +127,8 @@ pra mais — e quase sempre dá — você OFERECE, não despeja.
   você é, não anuncie método. Algo como: "Fala, pastor. Qual texto você quer abrir hoje?" — e pronto.
 
 ════ A FERRAMENTA garimpar ════
+(As outras quatro — ler_versiculo, conferir_citacao, buscar_no_acervo, versiculos_ligados — estão no bloco
+"VOCÊ NÃO SABE DE CABEÇA. VOCÊ VAI BUSCAR", mais abaixo. Aquele bloco manda em tudo.)
 Você tem acesso ao material real do Dr. Wagner (Caderno de Pérolas, tipologias catalogadas e a transcrição das
 aulas). Ele NÃO está na sua memória: você tem que ir buscar.
 • CHAME garimpar ANTES de afirmar que "o Dr. Wagner ensina" qualquer coisa. Sem consultar, você não sabe.
@@ -129,7 +138,9 @@ aulas). Ele NÃO está na sua memória: você tem que ir buscar.
   pela Escritura, pelo método, avisando que a partir dali é você trabalhando e não o material dele.
 
 ════ VOCÊ NÃO TEM BUSCA NA INTERNET NESTA CONVERSA ════
-Fora o garimpar, você não consulta nada: só o que já sabe. Então a trava é esta, e é absoluta:
+Você tem as CINCO ferramentas do RADAR (garimpar, ler_versiculo, conferir_citacao, buscar_no_acervo,
+versiculos_ligados) — e elas são o ÚNICO lugar de onde pode sair dado novo. Internet, notícia e
+pesquisa recente você NÃO tem. Então a trava é esta, e é absoluta:
 • NUNCA invente número, data, distância, medição, porcentagem, estudo, pesquisa ou nome de autor.
 • NUNCA atribua nada à NASA, a uma universidade, a um instituto ou a um pesquisador sem ter certeza.
   Se não tem certeza, não atribui. Inventar fonte destrói a autoridade de tudo o que você falou antes.
@@ -224,8 +235,9 @@ de qualquer assistente, ela está errada.
 ════ DADO REAL: NUNCA INVENTE ════
 Quando o assunto tocar em céu, criação, dilúvio, idade da terra, eclipse, astronomia, arqueologia:
 traga o que a ciência de fato mediu, e diga com todas as letras ONDE a ciência para e onde a fé
-começa. MAS a trava mais importante de todas vem antes: você NÃO tem busca nesta conversa. Se não
-tem segurança no dado, DIGA QUE NÃO SABE. Inventar número, data ou estudo é pior que não ter dado
+começa. MAS a trava mais importante de todas vem antes: as suas ferramentas trazem a BÍBLIA, o
+ACERVO DO PASTOR e o MATERIAL DAS AULAS — não trazem ciência, notícia nem estatística. Se o dado
+não veio de ferramenta e você não tem segurança nele, DIGA QUE NÃO SABE. Inventar número, data ou estudo é pior que não ter dado
 nenhum — some a autoridade de tudo. Nunca atribua à NASA, a uma universidade ou a um pesquisador
 algo que você não tem certeza. Melhor dizer "não vou chutar esse número" do que chutar.
 
@@ -274,7 +286,63 @@ E O RELÓGIO: de trinta a sessenta segundos de fala. SESSENTA É TETO, não meta
 você despejou — corte pela metade e guarde o resto. Ele está dirigindo, e o que faz ele voltar
 não é o tanto que você falou: é a fome que você deixou.`;
 
-const SISTEMA = METODO + '\n\n' + MENTE + '\n\n' + FALA + '\n\n' + PORTEIRO;
+// ─────────────────────────────────────────────────────────────────────────────
+// SEM NOME PRÓPRIO — o globo FAZ o método, mas não é personagem de ninguém.
+//
+// POR QUE ISTO EXISTE E POR QUE FICA AQUI, E SÓ AQUI:
+// o METODO vem importado de concilio-wagner.js, e os RÓTULOS DO GARIMPO também
+// ("Caderno de Pérolas do Dr. Wagner", "Aula do Dr. Wagner Cordeiro — Instituto
+// GIOM"). Aquele arquivo serve DOIS donos: este globo e o Concílio escrito. No
+// Concílio o nome é legítimo e tem que continuar; no globo, o Elias mandou tirar.
+// Limpar na origem consertaria um e quebraria o outro. Então a peneira é aqui.
+//
+// E repare onde ela precisa passar: não basta limpar o PROMPT. O rótulo voltava
+// DENTRO do resultado da ferramenta, e o modelo lia o nome ali — foi assim que
+// saiu, no celular do pastor, um "não encontrei uma aula específica do Dr.
+// Wagner sobre esse versículo". Por isso semNome() é aplicada nos dois lugares:
+// na instrução de sistema E em tudo o que volta de ferramenta.
+//
+// ⚠️ O MÉTODO NÃO ENFRAQUECE. Sai o nome próprio; o rigor, o crivo e as travas
+// continuam palavra por palavra.
+const semNome = (t) => String(t || '')
+  .replace(/pelo\s+método\s+do\s+Dr\.?\s*Wagner\s+Cordeiro/gi, 'pelo método consagrado')
+  .replace(/o\s+MÉTODO\s+do\s+Dr\.?\s*Wagner\s+Cordeiro\s*\(Instituto\s+Teológico\s+GIOM\)/gi,
+           'o MÉTODO do garimpo de tipologias')
+  .replace(/Você NÃO finge ser ele\. Não escreva "eu, Wagner"\./gi,
+           'Você não finge ser ninguém. Não assuma a identidade de nenhum professor.')
+  .replace(/Caderno de Pérolas do Dr\.?\s*Wagner/gi, 'Caderno de Pérolas')
+  .replace(/Aula do Dr\.?\s*Wagner Cordeiro\s*—\s*Instituto GIOM/gi, 'Aula do material de estudo')
+  .replace(/material real do Dr\.?\s*Wagner/gi, 'material de estudo')
+  .replace(/"o (Dr\.?\s*)?Wagner ensina( que…)?"/gi, '"o material ensina$2"')
+  .replace(/não o material dele/gi, 'não o material')
+  .replace(/material das aulas dele/gi, 'material de estudo')
+  .replace(/Dr\.?\s*Wagner\s+Cordeiro/gi, 'o material de estudo')
+  .replace(/Dr\.?\s*Wagner/gi, 'o material de estudo')
+  .replace(/Instituto\s+(Teológico\s+)?GIOM/gi, 'o instituto')
+  // O SOBRENOME SOLTO, que foi o que escapou no primeiro teste desta peneira.
+  // Dentro do corpus das aulas aparece "a lógica do Wagner", "o Wagner ensina" —
+  // sem título nenhum na frente. As três primeiras trocas cuidam da concordância
+  // ("do Wagner" → "do material", e não "do o material"); a última é a rede.
+  .replace(/\b(d[oa]s?|de)\s+Wagner\b/gi, '$1 material')
+  .replace(/\b([oa]s?)\s+Wagner\b/gi, '$1 material')
+  .replace(/\bWagner\b/gi, 'o material de estudo')
+  .replace(/\bGIOM\b/gi, 'o instituto');
+
+// A ORDEM IMPORTA, e não é arbitrária: método → mente → oratória → REGRA DE OURO →
+// porteiro. A regra de ouro (buscar, nunca lembrar; fonte sempre; na dúvida, não diz)
+// fica logo antes do porteiro de propósito — é a última DOUTRINA que ele lê antes das
+// três portas de saída, e é onde o modelo mais obedece.
+const SISTEMA = semNome(
+  METODO + '\n\n' + MENTE + '\n\n' + FALA + '\n\n' + REGRA_DE_OURO + '\n\n' + PORTEIRO
+  + '\n\n════ SEM NOME PRÓPRIO ════\n'
+  + 'Nunca cite professor, autor vivo ou instituição por NOME ao se explicar ou ao falar do\n'
+  + 'seu método, e nunca fale de si na pessoa de outro. Quando não achar um assunto, diga\n'
+  + 'apenas: "não encontrei isso no material". Nada de "a aula do fulano", nada de "o material\n'
+  + 'dele", nada de instituto.\n'
+  + 'ISTO NÃO VALE PARA FONTE CONSULTADA: quando a ferramenta pesquisar_biblioteca te trouxer\n'
+  + 'o nome de uma obra ou de um comentarista, você DIZ o nome — ali citar a fonte é a sua\n'
+  + 'honestidade, e é obrigatório. A regra é sobre de quem VOCÊ é; não sobre de onde o dado veio.'
+);
 
 // ⚠️ A BUSCA DO GOOGLE (googleSearch) FICOU DE FORA — e não foi escolha, foi teste.
 // O Elias pediu grounding pra trazer dado real. Assinar o token COM googleSearch dá
@@ -283,44 +351,23 @@ const SISTEMA = METODO + '\n\n' + MENTE + '\n\n' + FALA + '\n\n' + PORTEIRO;
 // cofre, uma por uma — todas recusam. Grounding do Live API é recurso de plano pago.
 // Ligar isso no tier gratuito não dá "sem busca": dá SESSÃO QUE NÃO ABRE, ou seja,
 // tela morta no meio da estrada. Por isso está desligado de propósito.
-// Se um dia o Elias puser cartão na conta do Gemini, basta voltar a linha:
-//   const FERRAMENTAS = [{ googleSearch: {} }, { functionDeclarations: [ ... ] }];
-// Enquanto não tem busca, a trava que segura a honestidade é a ordem lá em cima:
-// sem certeza, ele DIZ QUE NÃO SABE. Nunca inventa número, data, estudo ou fonte.
-const FERRAMENTAS = [{
-  functionDeclarations: [{
-    name: 'garimpar',
-    description: 'Busca no material real do Dr. Wagner Cordeiro (Caderno de Pérolas, tipologias catalogadas e transcrições das aulas). '
-      + 'Use ANTES de afirmar o que ele ensina, e sempre que for cavar um texto, um objeto, um número, uma raiz do original ou um costume judaico. '
-      + 'Devolve os trechos que mais casam com o assunto.',
-    parameters: {
-      type: 'OBJECT',
-      properties: {
-        assunto: {
-          type: 'STRING',
-          description: 'O que procurar, em português, com as palavras CONCRETAS do texto (ex.: "corvo pomba arca Noé", '
-            + '"pele de texugo tabernáculo", "setenta semanas Daniel"). Termos concretos acham; termos vagos não.',
-        },
-      },
-      required: ['assunto'],
-    },
-  }],
-}];
+// Se um dia o Elias puser cartão na conta do Gemini, basta pôr a busca do Google
+// na frente das nossas:
+//   tools: [{ googleSearch: {} }, ...FERRAMENTAS]
+//
+// ⚠️ MAS REPARE: a falta do googleSearch DEIXOU de ser o buraco que era. As CINCO
+// ferramentas declaradas em voz-ferramentas.js dão ao mestre a Bíblia inteira, o
+// acervo de pregações do próprio Elias, o motor de ligações e a trava mecânica de
+// citação — tudo do disco do RADAR, sem depender de plano pago e sem a lorota que
+// uma busca genérica na internet costuma trazer. A honestidade aqui não é mais só
+// "ele promete não inventar": é que o dado VEM DE FORA DA CABEÇA DELE, conferido.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2) AS CHAVES — mesmo padrão do resto do app (rodízio entre as 3)
 // ─────────────────────────────────────────────────────────────────────────────
-function chaves() {
-  const out = [];
-  for (const nome of ['GEMINI_API_KEYS', 'GEMINI_API_KEY', 'GOOGLE_API_KEY']) {
-    const bruto = (typeof process !== 'undefined' && process.env && process.env[nome]) || '';
-    for (const k of String(bruto).split(/[,\s;]+/)) {
-      const t = k.trim();
-      if (t && !out.includes(t)) out.push(t);
-    }
-  }
-  return out;
-}
+// A lista mora em voz-ferramentas.js: o redator da biblioteca usa as MESMAS chaves.
+// Duas cópias da mesma lista é como uma delas envelhece sem ninguém notar.
+const chaves = chavesGemini;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3) ASSINAR O TOKEN EFÊMERO
@@ -404,8 +451,9 @@ async function assinarToken(handle, voz) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4) O ENDPOINT
-// POST /api/voz  { acao:'token', handle? }     -> { ok, token, url, modelo, expiraEm }
-// POST /api/voz  { acao:'garimpo', assunto }   -> { ok, texto, fontes }
+// POST /api/voz  { acao:'token', handle? }            -> { ok, token, url, modelo, expiraEm }
+// POST /api/voz  { acao:'ferramenta', nome, args }     -> { ok, nome, resposta }   ← A PORTA ÚNICA
+// POST /api/voz  { acao:'garimpo', assunto }           -> { ok, texto, fontes }    ← forma antiga, viva
 // ─────────────────────────────────────────────────────────────────────────────
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
@@ -415,16 +463,47 @@ export default async function handler(req) {
   try { b = await req.json(); } catch (_) {}
   const acao = (b.acao || 'token').toString();
 
+  // A PORTA ÚNICA DAS FERRAMENTAS.
+  // O navegador não decide nada: pega o functionCall que o Gemini mandou, repassa
+  // {nome, args} pra cá, e devolve ao Gemini o objeto que voltar em `resposta`.
+  // Ferramenta nova entra em voz-ferramentas.js e o globo NÃO muda uma linha.
+  if (acao === 'ferramenta') {
+    const nome = (b.nome || b.name || '').toString().slice(0, 40);
+    const args = (b.args && typeof b.args === 'object') ? b.args : {};
+    // A origem sai da própria requisição: em produção é o domínio do RADAR, em
+    // preview é o domínio do preview. Assim os arquivos estáticos (biblia.json,
+    // busca/*) e a rota /api/estudo-busca são sempre os DESTE deploy — nunca os de
+    // outro ambiente, que é como se serve versículo velho sem ninguém perceber.
+    const origem = new URL(req.url).origin;
+    let resposta;
+    try {
+      resposta = await executarFerramenta(nome, args, origem);
+    } catch (e) {
+      resposta = { erro: 'a consulta falhou: ' + (e && e.message ? e.message : 'motivo desconhecido'),
+        ordem: 'NÃO invente para tapar o buraco. Diga ao pastor que a consulta falhou agora.' };
+    }
+    // A PENEIRA TAMBÉM AQUI — e este é o lugar que mais importa.
+    // Limpar só o prompt não resolvia: o rótulo do garimpo ("Aula do Dr. Wagner
+    // Cordeiro — Instituto GIOM") voltava DENTRO do resultado da ferramenta, e o
+    // modelo lia o nome ali, depois de já ter lido a instrução limpa. Peneiramos
+    // o JSON inteiro: as trocas são todas de texto e não encostam na estrutura.
+    // (Nome de OBRA vindo da biblioteca passa inteiro — lá citar a fonte é a regra.)
+    const limpa = JSON.parse(semNome(JSON.stringify(resposta)));
+    return new Response(JSON.stringify({ ok: true, nome, resposta: limpa }), { headers: JSONH });
+  }
+
   if (acao === 'garimpo') {
     const assunto = (b.assunto || b.q || '').toString().trim().slice(0, 300);
     // Teto curto de propósito: em voz, contexto gordo atrasa a resposta e o pastor sente
     // o silêncio. 4500 caracteres é o suficiente pra sustentar um garimpo falado.
     const ctx = assunto ? buscarContexto(assunto, 4500) : { texto: '', fontes: [] };
+    // Mesma peneira da porta nova: esta forma antiga continua viva enquanto o
+    // globo não for costurado, e o nome entrava por aqui também.
     return new Response(JSON.stringify({
       ok: true,
-      texto: ctx.texto || '',
+      texto: semNome(ctx.texto || ''),
       achou: !!ctx.texto,
-      fontes: (ctx.fontes || []).map((f) => ({ fonte: f.fonte, titulo: f.titulo })),
+      fontes: (ctx.fontes || []).map((f) => ({ fonte: semNome(f.fonte), titulo: semNome(f.titulo) })),
     }), { headers: JSONH });
   }
 

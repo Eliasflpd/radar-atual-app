@@ -495,6 +495,12 @@ const HANDLERS = {
   manual:       require('./_lib/manual.js'),
   leitura:      require('./_lib/leitura.js'),
   publicacoes:  require('./_lib/publicacoes.js'),
+  // MOTOR INVISÍVEL da biblioteca do Elias (livros comprados: Champlin, Kittel,
+  // Waltke, Kidner…). Entra AQUI porque precisa de pg — o /api/voz é Edge e não
+  // tem pg — e porque nenhuma função nova cabe no plano Hobby. Protegida por
+  // RADAR_ADMIN_TOKEN: só servidor chama, nunca o navegador. Ver o cabeçalho de
+  // api/_lib/biblioteca.js pra entender por que o texto não pode sair daqui.
+  biblioteca:   require('./_lib/biblioteca.js'),
   painel:       painel,
   uso:          uso,
   pregado:      pregado

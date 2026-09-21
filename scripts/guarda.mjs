@@ -156,8 +156,13 @@ const ASSINATURAS = [
   [/\bre_[A-Za-z0-9_]{20,}/, 'chave do Resend'],
   [/postgres(ql)?:\/\/[^\s'"]+:[^\s'"@]+@/, 'senha de banco de dados'],
 ];
+// nome que, por si só, já cheira a segredo — mesmo que a chave lá dentro esteja
+// num formato que as ASSINATURAS não conhecem.
+const NOME_DE_SEGREDO = /(^|\/)\.?(env|chaves?|segredos?|credenciais?|secrets?)[.\-_]|\.(pem|key|p12|pfx)$|token/i;
+
 function checarSegredos() {
-  // só o que o git leva. O que está no .gitignore pode ter chave à vontade.
+  // ── 5a. O QUE O GIT JÁ LEVA ────────────────────────────────────────────
+  // O que está no .gitignore pode ter chave à vontade: o git não leva.
   const versionados = execSync('git ls-files', { cwd: RAIZ }).toString().trim().split('\n');
   const olhar = versionados.filter(f =>
     /\.(js|mjs|cjs|json|html|css|md|txt|yml|yaml)$/i.test(f) &&
@@ -179,6 +184,46 @@ function checarSegredos() {
     }
   }
   if (!achou) passou(`nenhuma chave nos ${olhar.length} arquivos que vão pro git`);
+
+  // ── 5b. O QUE ESTÁ NA BEIRADA, PRESTES A ENTRAR ────────────────────────
+  // Olhar só `git ls-files` deixava um buraco do tamanho do mundo: arquivo NOVO
+  // com chave dentro, ainda não versionado e ainda não no .gitignore, passava
+  // batido — e o `git add -A` (o mesmo que já mandou 1.546 arquivos de
+  // node_modules pro repositório em 21/09/2026) engolia ele sem ninguém ver.
+  // `--others --exclude-standard` é exatamente "solto E não ignorado": a lista
+  // do que um `git add -A` levaria AGORA. Usa a resolução de .gitignore do
+  // próprio git, então quem já está protegido nem aparece aqui.
+  const soltos = execSync('git ls-files --others --exclude-standard', { cwd: RAIZ })
+    .toString().trim().split('\n').filter(Boolean)
+    .filter(f => !f.startsWith('node_modules/') && tamanho(f) < 3_000_000);
+
+  let achouSolto = 0;
+  for (const f of soltos) {
+    let src;
+    // sem filtro de extensão aqui de propósito: `.env-teste` e `.chaves-teste.json`
+    // são o caso típico, e um deles nem extensão tem. Se não for texto, ler() falha
+    // ou vem lixo — e lixo não casa com as ASSINATURAS.
+    try { src = ler(f); } catch { continue; }
+
+    let casou = false;
+    for (const [re, nome] of ASSINATURAS) {
+      const m = src.match(re);
+      if (m) {
+        falha(`${nome.toUpperCase()} EM ARQUIVO SOLTO E DESPROTEGIDO: ${f} (${m[0].slice(0, 12)}…). `
+          + `Ele NÃO está no git ainda, mas também NÃO está no .gitignore — um `
+          + `"git add -A" leva ele junto com a chave. Ponha ${f} no .gitignore agora.`);
+        achouSolto++;
+        casou = true;
+      }
+    }
+    // nome suspeito sem assinatura conhecida: avisa, não trava. Pode ser chave de
+    // formato que eu não conheço, pode ser arquivo inocente com "token" no nome.
+    if (!casou && NOME_DE_SEGREDO.test(f)) {
+      avisa(`${f} tem cara de arquivo de chave e está fora do .gitignore. `
+        + `Não achei chave conhecida dentro, mas confira — se for segredo, ignore o arquivo.`);
+    }
+  }
+  if (!achouSolto) passou(`nenhuma chave nos ${soltos.length} arquivos soltos que um "git add -A" levaria`);
 }
 
 /* ── 6. LIXO QUE NÃO PODE SUBIR ────────────────────────────────────────────

@@ -35,3 +35,10 @@ node_modules/
 # arquivos de teste com chave dentro (criados 21/09) — NUNCA pro git
 scripts/.env-teste
 scripts/.chaves-teste.json
+# .env-vercel é despejo do "vercel env pull": traz BLOB_READ_WRITE_TOKEN e
+# VERCEL_OIDC_TOKEN com valor real. Pega qualquer .env-* futuro em scripts/.
+scripts/.env-*
+
+scripts/.env-vercel
+scripts/_provabib.mjs
+scripts/.cfpares

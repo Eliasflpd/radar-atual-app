@@ -21,10 +21,17 @@ const ABBR={ rm:'rm', rom:'rm', romanos:'rm', gn:'gn', genesis:'gn', ex:'ex', ex
   ef:'ef', efesios:'ef', fp:'fp', cl:'cl', gl:'gl', galatas:'gl' };
 
 // Motor semântico agora padronizado em Voyage 1024 dims (tabela versiculo_emb_voyage).
+// MODELO: trocar pelo painel (VOYAGE_MODEL na Vercel) — o default aqui é só a rede de
+// segurança. voyage-4-lite entrega 1024 dims nativo (mesma coluna vector(1024)) e está
+// na cota grátis de 200M tokens; voyage-3.x virou "older model" e NÃO tem mais free tier.
+// ATENÇÃO: modelo diferente = ESPAÇO VETORIAL diferente. Dimensão igual só evita erro de
+// SQL, não garante busca certa. Ao trocar VOYAGE_MODEL é OBRIGATÓRIO regerar os vetores
+// (scripts/embed_versiculos.js, que reindexa sozinho quando a coluna modelo não bate).
+// Confira o que está gravado com  ?sem=1&diag=1  antes e depois da troca.
 const SEM_TABLE=(process.env.EMB_TABLE||'versiculo_emb_voyage').replace(/[^a-z0-9_]/gi,'');
 const VDIM=parseInt(process.env.EMB_DIM||'1024',10);
 const VKEY=process.env.VOYAGE_API_KEY;
-const VMODEL=process.env.VOYAGE_MODEL||'voyage-3.5';
+const VMODEL=process.env.VOYAGE_MODEL||'voyage-4-lite';
 
 function parseRef(s){
   const m=s.trim().match(/^(.*?)[\s]*?(\d{1,3})[:\s.](\d{1,3})\s*$/);
@@ -163,6 +170,20 @@ module.exports = async (req,res) => {
     const c=new Client({connectionString:cs, ssl:{rejectUnauthorized:false}});
     try{
       await c.connect();
+      // ?sem=1&diag=1 — confere se o modelo configurado é o MESMO que gerou os vetores
+      // salvos. Vetor de um modelo buscado com consulta de outro devolve lixo silencioso.
+      if(q.diag){
+        const d=await c.query(
+          `select modelo, dim, count(*)::int as n from ${SEM_TABLE}
+            where embedding is not null group by modelo, dim order by n desc`);
+        const gravados=d.rows.map(x=>x.modelo);
+        res.status(200).json({ok:true,modo:'diag',tabela:SEM_TABLE,
+          configurado:{modelo:VMODEL,dim:VDIM,chave:!!VKEY}, gravado:d.rows,
+          bate: gravados.length===1 && gravados[0]===VMODEL && d.rows[0].dim===VDIM,
+          aviso: gravados.length===1 && gravados[0]===VMODEL ? null
+            : `vetores gravados com [${gravados.join(', ')}] mas as consultas usam [${VMODEL}] — reindexe com scripts/embed_versiculos.js`});
+        return;
+      }
       if(q.ref){
         const ref=parseAbbrev(q.ref.toString());
         if(!ref){ res.status(400).json({ok:false,err:'ref'}); return; }

@@ -45,6 +45,40 @@ function cortar(v) {
   return w.map((x) => x / s);
 }
 
+// A PERGUNTA → VETOR, separado do handler DE PROPÓSITO.
+// Quem mais usa isto: api/_lib/voz-ferramentas.js (a ferramenta buscar_no_acervo do
+// globo de voz). Se o globo copiasse esta chamada, no dia em que o modelo, o prefixo
+// ou a quantidade de dimensões mudasse aqui, a busca da voz passaria a falar uma
+// língua diferente do índice — e erraria calado, que é o pior jeito de errar.
+// Devolve o vetor de 256 números, ou null se não deu (nunca lança).
+export async function embutirPergunta(pergunta) {
+  const texto = String(pergunta || '').trim().slice(0, 600);
+  if (texto.length < 2) return null;
+
+  const conta = process.env.CF_ACCOUNT_ID;
+  const token = process.env.CF_AI_TOKEN;
+  if (!conta || !token) return null;
+
+  for (let tent = 0; tent < 3; tent++) {
+    try {
+      const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${conta}/ai/run/${MODELO}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: [`task: search result | query: ${texto}`] })
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const bruto = (j.result?.data || j.result?.response || [])[0];
+        if (Array.isArray(bruto) && bruto.length >= DIMS) return cortar(bruto);
+      } else if (r.status !== 429 && r.status < 500) {
+        return null;                                    // 400/403: insistir não resolve
+      }
+    } catch (_) { /* rede tropeçou: tenta de novo */ }
+    await new Promise((s) => setTimeout(s, 400 * (tent + 1)));
+  }
+  return null;
+}
+
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
 
@@ -56,35 +90,13 @@ export default async function handler(req) {
   pergunta = String(pergunta).trim().slice(0, 600);
   if (pergunta.length < 2) return json({ ok: false, erro: 'pergunta vazia' }, 400);
 
-  const conta = process.env.CF_ACCOUNT_ID;
-  const token = process.env.CF_AI_TOKEN;
-  if (!conta || !token) return json({ ok: false, erro: 'servidor sem credencial de embedding' }, 500);
+  if (!process.env.CF_ACCOUNT_ID || !process.env.CF_AI_TOKEN)
+    return json({ ok: false, erro: 'servidor sem credencial de embedding' }, 500);
 
-  let ultimo = '';
-  for (let tent = 0; tent < 3; tent++) {
-    try {
-      const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${conta}/ai/run/${MODELO}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: [`task: search result | query: ${pergunta}`] })
-      });
-      if (r.ok) {
-        const j = await r.json();
-        const bruto = (j.result?.data || j.result?.response || [])[0];
-        if (Array.isArray(bruto) && bruto.length >= DIMS) {
-          // 10 min de cache na borda: pergunta repetida (e tem muita) nem chega no Cloudflare
-          return json({ ok: true, dims: DIMS, v: cortar(bruto) }, 200,
-            { 'Cache-Control': 'public, s-maxage=600, max-age=600' });
-        }
-        ultimo = 'resposta sem vetor';
-      } else {
-        ultimo = String(r.status);
-        if (r.status !== 429 && r.status < 500) break;   // 400/403: insistir não resolve
-      }
-    } catch (e) {
-      ultimo = String(e?.message || e);
-    }
-    await new Promise((s) => setTimeout(s, 400 * (tent + 1)));
-  }
-  return json({ ok: false, erro: 'não consegui entender a pergunta agora', detalhe: ultimo }, 503);
+  const v = await embutirPergunta(pergunta);
+  if (!v) return json({ ok: false, erro: 'não consegui entender a pergunta agora' }, 503);
+
+  // 10 min de cache na borda: pergunta repetida (e tem muita) nem chega no Cloudflare
+  return json({ ok: true, dims: DIMS, v }, 200,
+    { 'Cache-Control': 'public, s-maxage=600, max-age=600' });
 }
