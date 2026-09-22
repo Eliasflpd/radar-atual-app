@@ -43,7 +43,15 @@ import { METODO } from './concilio-wagner.js';
 // mecânica de citação), mais a doutrina que manda ele usá-las. Tudo em
 // voz-ferramentas.js para caber aqui numa linha — e para ferramenta nova não
 // obrigar ninguém a mexer no index.html do globo.
-import { FERRAMENTAS, REGRA_DE_OURO, executarFerramenta, chavesGemini } from './voz-ferramentas.js';
+import { FERRAMENTAS, REGRA_DE_OURO, executarFerramenta, chavesGemini, escrever } from './voz-ferramentas.js';
+// A MEMÓRIA. A terceira perna do que o Elias comparou com o ChatGPT: ele já
+// SABE (as ferramentas) e já não TRAVA — faltava LEMBRAR. Antes disto, fechar a
+// página apagava a conversa inteira, e cair a rede apagava de novo.
+// Este arquivo só COSTURA: lê a memória antes de assinar o token, manda gravar
+// o que passou pelas ferramentas, e recebe os turnos que o globo mandar.
+// Quem decide o que pode ser guardado é a peneira semSegredo(), lá dentro.
+import { blocoDoSistema, LEI_DA_MEMORIA, registrarTurno, gravarTemas,
+         temasDeFerramenta, esquecerTudo } from './voz-memoria.js';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
 const JSONH = { ...CORS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
@@ -332,8 +340,12 @@ const semNome = (t) => String(t || '')
 // porteiro. A regra de ouro (buscar, nunca lembrar; fonte sempre; na dúvida, não diz)
 // fica logo antes do porteiro de propósito — é a última DOUTRINA que ele lê antes das
 // três portas de saída, e é onde o modelo mais obedece.
+// LEI_DA_MEMORIA entra colada na REGRA DE OURO porque é a mesma doutrina: não
+// sabe de cabeça, não LEMBRA de cabeça. Ela vale mesmo quando não há memória
+// nenhuma guardada — é ela que faz o globo dizer "não lembro" em vez de inventar.
 const SISTEMA = semNome(
-  METODO + '\n\n' + MENTE + '\n\n' + FALA + '\n\n' + REGRA_DE_OURO + '\n\n' + PORTEIRO
+  METODO + '\n\n' + MENTE + '\n\n' + FALA + '\n\n' + REGRA_DE_OURO
+  + '\n\n' + LEI_DA_MEMORIA + '\n\n' + PORTEIRO
   + '\n\n════ SEM NOME PRÓPRIO ════\n'
   + 'Nunca cite professor, autor vivo ou instituição por NOME ao se explicar ou ao falar do\n'
   + 'seu método, e nunca fale de si na pessoa de outro. Quando não achar um assunto, diga\n'
@@ -372,7 +384,12 @@ const chaves = chavesGemini;
 // ─────────────────────────────────────────────────────────────────────────────
 // 3) ASSINAR O TOKEN EFÊMERO
 // ─────────────────────────────────────────────────────────────────────────────
-function setupDaSessao(handle, voz) {
+// `memoria` é o bloco "A SUA MEMÓRIA DESTE PASTOR", já peneirado, ou '' quando
+// não há nada guardado (primeira conversa, banco fora, pastor sem chave).
+// Vai DENTRO do token assinado, como o resto: o navegador não consegue mexer
+// nele, e nem inventar um. Memória que viesse do aparelho seria texto livre
+// entrando na instrução de sistema — ou seja, um buraco.
+function setupDaSessao(handle, voz, memoria) {
   const setup = {
     model: MODELO,
     generationConfig: {
@@ -381,7 +398,7 @@ function setupDaSessao(handle, voz) {
       speechConfig: { languageCode: 'pt-BR', voiceConfig: { prebuiltVoiceConfig: { voiceName: escolherVoz(voz) } } },
       temperature: 0.55,
     },
-    systemInstruction: { parts: [{ text: SISTEMA }] },
+    systemInstruction: { parts: [{ text: SISTEMA + (memoria ? '\n\n' + memoria : '') }] },
     tools: FERRAMENTAS,
     // O servidor manda um handle a cada tanto; guardando ele, uma queda de rede não
     // apaga a conversa — o front pede token novo com o handle e retoma do ponto.
@@ -410,7 +427,7 @@ function setupDaSessao(handle, voz) {
   return setup;
 }
 
-async function assinarToken(handle, voz) {
+async function assinarToken(handle, voz, memoria) {
   const ks = chaves();
   if (!ks.length) return { erro: 'Não há chave do Gemini configurada no servidor (GEMINI_API_KEYS).', status: 500 };
 
@@ -419,7 +436,7 @@ async function assinarToken(handle, voz) {
     uses: 1,                                                    // um token, uma conexão
     expireTime: new Date(agora + 30 * 60 * 1000).toISOString(), // a sessão morre em 30 min
     newSessionExpireTime: new Date(agora + 2 * 60 * 1000).toISOString(), // e só pode ABRIR nos próximos 2 min
-    bidiGenerateContentSetup: setupDaSessao(handle, voz),
+    bidiGenerateContentSetup: setupDaSessao(handle, voz, memoria),
     // fieldMask ausente DE PROPÓSITO: trava o setup inteiro no token (ver cabeçalho).
   });
 
@@ -454,14 +471,44 @@ async function assinarToken(handle, voz) {
 // POST /api/voz  { acao:'token', handle? }            -> { ok, token, url, modelo, expiraEm }
 // POST /api/voz  { acao:'ferramenta', nome, args }     -> { ok, nome, resposta }   ← A PORTA ÚNICA
 // POST /api/voz  { acao:'garimpo', assunto }           -> { ok, texto, fontes }    ← forma antiga, viva
+// POST /api/voz  { acao:'lembrar', user, sessao, eu, mestre, cortado, fechou, fim }
+//                                                      -> { ok }                   ← A MEMÓRIA
+// POST /api/voz  { acao:'esquecer', user }             -> { ok, apagados }         ← o direito dele
+//
+// TODAS elas aceitam `user`: é a chave do pastor (o WhatsApp só com dígitos, o
+// mesmo padrão de radar_uso e leitura_progresso; aparelho sem cadastro manda um
+// id anônimo). SEM `user` nada é guardado e o globo diz que não tem memória —
+// ele nunca finge.
 // ─────────────────────────────────────────────────────────────────────────────
-export default async function handler(req) {
+
+// A chave do pastor, limpa. Não é firula: ela vira user_key no banco, e user_key
+// sujo é linha órfã que ninguém acha depois.
+function chaveDoPastor(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return '';
+  const d = s.replace(/\D/g, '');
+  if (d.length >= 8) return d.slice(0, 60);
+  return s.toLowerCase().replace(/[^a-z0-9_.@-]/g, '').slice(0, 60);
+}
+
+// Guardar não pode atrasar a conversa. Na Vercel Edge existe waitUntil: a
+// resposta sai na hora e a gravação termina depois. Onde não existe (o banco de
+// provas roda num http comum), a gente espera — e é bom que espere, senão a
+// prova vira sorteio. O caminho da gravação é o MESMO nos dois casos.
+function depois(ctx, promessa) {
+  const p = Promise.resolve(promessa).catch(() => {});
+  if (ctx && typeof ctx.waitUntil === 'function') { ctx.waitUntil(p); return null; }
+  return p;
+}
+
+export default async function handler(req, ctx) {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
   if (req.method !== 'POST') return new Response(JSON.stringify({ ok: false, erro: 'POST apenas' }), { status: 405, headers: JSONH });
 
   let b = {};
   try { b = await req.json(); } catch (_) {}
   const acao = (b.acao || 'token').toString();
+  const user = chaveDoPastor(b.user || b.user_key);
 
   // A PORTA ÚNICA DAS FERRAMENTAS.
   // O navegador não decide nada: pega o functionCall que o Gemini mandou, repassa
@@ -477,7 +524,7 @@ export default async function handler(req) {
     const origem = new URL(req.url).origin;
     let resposta;
     try {
-      resposta = await executarFerramenta(nome, args, origem);
+      resposta = await executarFerramenta(nome, args, origem, { user });
     } catch (e) {
       resposta = { erro: 'a consulta falhou: ' + (e && e.message ? e.message : 'motivo desconhecido'),
         ordem: 'NÃO invente para tapar o buraco. Diga ao pastor que a consulta falhou agora.' };
@@ -489,7 +536,53 @@ export default async function handler(req) {
     // o JSON inteiro: as trocas são todas de texto e não encostam na estrutura.
     // (Nome de OBRA vindo da biblioteca passa inteiro — lá citar a fonte é a regra.)
     const limpa = JSON.parse(semNome(JSON.stringify(resposta)));
+
+    // ── A MEMÓRIA SE ESCREVE SOZINHA AQUI ──────────────────────────────────
+    // Esta é a parte que me deixa dormir tranquilo: pra saber DO QUE se falou,
+    // o servidor não precisa ler a conversa. A ferramenta que o globo chamou já
+    // diz o assunto em texto limpo — "Daniel 12:4", "a escada de Jacó". Tema e
+    // pergunta, que é exatamente o que o Elias mandou guardar, e nada além.
+    // A peneira do nome próprio passa por cima ANTES de gravar, pelo mesmo
+    // motivo de sempre: o que entra sujo sai sujo depois, pela memória.
+    if (user) {
+      const temas = temasDeFerramenta(nome, args);
+      if (temas.length) {
+        const esperar = depois(ctx, gravarTemas(origem, user, JSON.parse(semNome(JSON.stringify(temas)))));
+        if (esperar) await esperar;
+      }
+    }
     return new Response(JSON.stringify({ ok: true, nome, resposta: limpa }), { headers: JSONH });
+  }
+
+  // ─── A MEMÓRIA CURTA: o globo contando pra cá o que acabou de ser dito ───
+  // Fogo e esquece: o front NÃO espera a resposta. Se isto falhar, a conversa
+  // não sente nada — só a memória fica mais pobre, e aí o globo diz que não
+  // lembra, que é a verdade.
+  if (acao === 'lembrar') {
+    if (!user) return new Response(JSON.stringify({ ok: true, guardado: false, sem_dono: true }), { headers: JSONH });
+    const origem = new URL(req.url).origin;
+    const turno = {
+      sessao: (b.sessao || '').toString().slice(0, 60),
+      // semNome também aqui: o que o MESTRE falou pode ter escapado um nome, e
+      // memória é o caminho mais silencioso pra um nome voltar semana que vem.
+      eu: semNome((b.eu || b.pastor || '').toString()),
+      mestre: semNome((b.mestre || b.globo || '').toString()),
+      cortado: !!b.cortado,
+      fechou: !!b.fechou,
+      fim: !!b.fim,
+    };
+    const esperar = depois(ctx, registrarTurno(origem, user, turno, escrever));
+    let r = { ok: true };
+    if (esperar) r = (await esperar) || { ok: true };
+    return new Response(JSON.stringify({ ok: true, guardado: true, resumido: !!(r && r.resumido) }), { headers: JSONH });
+  }
+
+  // ─── ESQUECER É DIREITO DO DONO ─────────────────────────────────────────
+  // Não é enfeite de privacidade: é o que torna honesto guardar qualquer coisa.
+  if (acao === 'esquecer') {
+    if (!user) return new Response(JSON.stringify({ ok: false, erro: 'sem dono' }), { status: 400, headers: JSONH });
+    const r = await esquecerTudo(new URL(req.url).origin, user);
+    return new Response(JSON.stringify({ ok: true, apagados: (r && r.apagados) || 0 }), { headers: JSONH });
   }
 
   if (acao === 'garimpo') {
@@ -510,13 +603,31 @@ export default async function handler(req) {
   if (acao === 'token') {
     const handle = (b.handle || '').toString().slice(0, 4000) || null;
     const voz = escolherVoz(b.voz);
-    const r = await assinarToken(handle, voz);
+
+    // ── A MEMÓRIA ENTRA AQUI, ANTES DA ASSINATURA ──────────────────────────
+    // É este bloco que faz o globo abrir a boca já sabendo de onde pararam.
+    // Ele NÃO pode derrubar a conversa: se o banco estiver fora, se o token de
+    // admin não existir, se a rede tropeçar — volta vazio, e a sessão abre
+    // igual, só sem memória. Conversa sem memória é pobre; conversa que não
+    // abre é tela morta.
+    // A peneira do nome próprio passa por cima do bloco inteiro, como passa em
+    // tudo o que entra na instrução de sistema desde que ela existe.
+    let memoria = '';
+    if (user) {
+      try { memoria = semNome(await blocoDoSistema(new URL(req.url).origin, user) || ''); }
+      catch (_) { memoria = ''; }
+    }
+
+    const r = await assinarToken(handle, voz, memoria);
     if (r.erro) return new Response(JSON.stringify({ ok: false, erro: r.erro }), { status: r.status, headers: JSONH });
     return new Response(JSON.stringify({
       ok: true,
       token: r.token,   // <- é ISTO que desce pro navegador. A chave real fica aqui.
       modelo: MODELO,
       voz,
+      // O globo mostra isto na tela: "retomando de onde vocês pararam". O
+      // CONTEÚDO da memória não desce — só o aviso de que ela existe.
+      lembrando: !!memoria,
       // O endpoint "Constrained" é o que aceita token efêmero no lugar da chave.
       url: 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained',
       retomando: !!handle,

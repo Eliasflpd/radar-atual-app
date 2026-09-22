@@ -501,6 +501,12 @@ const HANDLERS = {
   // RADAR_ADMIN_TOKEN: só servidor chama, nunca o navegador. Ver o cabeçalho de
   // api/_lib/biblioteca.js pra entender por que o texto não pode sair daqui.
   biblioteca:   require('./_lib/biblioteca.js'),
+  // A MEMÓRIA DO GLOBO DE VOZ. Entra AQUI pelo mesmo motivo da biblioteca: ela
+  // precisa de pg, o /api/voz é Edge e não tem pg, e nenhuma função nova cabe
+  // no plano Hobby. Protegida por RADAR_ADMIN_TOKEN — aqui dentro está o que o
+  // pastor conversou, e sem trava qualquer um leria a memória de qualquer um.
+  // Ver o cabeçalho de api/_lib/globo-memoria.js.
+  memoria:      require('./_lib/globo-memoria.js'),
   painel:       painel,
   uso:          uso,
   pregado:      pregado

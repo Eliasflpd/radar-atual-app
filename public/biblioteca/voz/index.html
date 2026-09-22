@@ -243,6 +243,13 @@
         <button id="encerrar" disabled>⏹ Encerrar</button>
       </div>
 
+      <h3>A memória</h3>
+      <div class="linhaCfg">
+        <button id="esquecer">🧠 Apagar a memória</button>
+      </div>
+      <div class="obs" id="obsMemoria">Ele guarda os ASSUNTOS que vocês conversaram e um resumo curto,
+      para retomar de onde pararam. Um toque apaga tudo, e não fica cópia.</div>
+
       <h3>Privacidade</h3>
       <div class="aviso">
         <div class="t">⚠️ Esta conversa NÃO é privada</div>
@@ -250,7 +257,13 @@
         ouvir e processar o que for falado aqui</b>, e o conteúdo pode ser usado para treinar os modelos deles.</p>
         <p>Fale de texto bíblico e de estudo à vontade. <b>Não fale nome de membro, segredo de
         aconselhamento nem assunto sigiloso da igreja.</b> Quem estiver no carro está sendo gravado junto.</p>
-        <p>O áudio vai do seu celular direto para o Google. O RADAR não grava nada.</p>
+        <p>O áudio vai do seu celular direto para o Google. <b>O RADAR não grava áudio nenhum.</b></p>
+        <p><b>O que o RADAR guarda, desde a v161:</b> os ASSUNTOS que vocês conversaram (o versículo que
+        ele abriu, a pergunta que você fez) e um RESUMO CURTO da conversa — é isso que faz ele retomar
+        de onde vocês pararam em vez de começar do zero toda vez.
+        <b>O que ele NUNCA guarda:</b> nome de membro, matéria de aconselhamento, telefone, e-mail,
+        endereço ou valor. Uma peneira no servidor joga fora antes de gravar, e no que sobra o nome
+        próprio vira “alguém”. O botão <b>🧠 Apagar a memória</b>, aqui em cima, apaga tudo na hora.</p>
       </div>
     </div>
   </div>
@@ -282,6 +295,7 @@
   var $ = function(id){ return document.getElementById(id); };
   var cv=$('globo'), elEstado=$('estado'), elDica=$('dica'), elConversa=$('conversa'),
       btnEncerrar=$('encerrar'), btnCopiar=$('copiar'), btnModo=$('modo'),
+      btnEsquecer=$('esquecer'), elObsMemoria=$('obsMemoria'),
       elProva=$('provaVoz'), elLinha=$('linhaVozes'), elHud=$('hud'),
       btnAcao=$('acao'), elCampo=$('campo'), elBarra=$('barraConversa'),
       elConfig=$('config'), btnConfig=$('abrirConfig'), btnFecharConfig=$('fecharConfig'),
@@ -360,8 +374,82 @@
     dormidas:0, maiorSono:0, fita:[],
 
     texto:[], wake:null, voz:vozDaURL(),
-    fase:'pronto', nivel:0, escala:0.94, giro:0, relogio:0, amostra:null
+    fase:'pronto', nivel:0, escala:0.94, giro:0, relogio:0, amostra:null,
+
+    // ── A MEMÓRIA (v161) ───────────────────────────────────────────────────
+    // lembrando  = o servidor assinou este token COM a memória dentro
+    // memEu/memMestre = o que foi dito NESTE turno, ainda não mandado pro servidor
+    // memCortou  = ele falou por cima; o assunto ficou pela metade
+    lembrando:false, memEu:'', memMestre:'', memCortou:false, memEnviados:0,
+    avisouMemoria:false, rotuloFerr:'', dicaFerr:''
   };
+
+  // O QUE APARECE NO QUADRO ENQUANTO ELE BUSCA. Um rótulo por ferramenta —
+  // "⛏️ Buscando no material" enquanto ele abre um versículo confundia: parecia
+  // que tinha ido pra outro lugar.
+  var ROTULOS = {
+    ler_versiculo:        ['📖 Abrindo o texto','Foi buscar o versículo exato.'],
+    conferir_citacao:     ['🔎 Conferindo a citação','Está checando se o texto diz mesmo isso.'],
+    pesquisar_biblioteca: ['📚 Consultando o material','Foi ver o que os comentaristas dizem.'],
+    buscar_no_acervo:     ['🗂️ Procurando nas suas mensagens','Foi ver o que você já pregou.'],
+    versiculos_ligados:   ['🔗 Puxando textos ligados','Foi buscar as referências cruzadas.'],
+    o_que_ja_falamos:     ['🧠 Lembrando','Foi ver o que vocês já conversaram.'],
+    garimpar:             ['⛏️ Buscando no material','Foi conferir nas fontes.']
+  };
+  function rotuloDaFerramenta(nome){
+    var r=ROTULOS[nome]||ROTULOS.garimpar;
+    S.rotuloFerr=r[0]; S.dicaFerr=r[1];
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // QUEM É O PASTOR — a chave da memória.
+  // É a MESMA chave do resto do RADAR (public/_uso.js): o whatsapp do
+  // 'radar_user', só dígitos. ⚠️ SÓ LÊ. Jamais escreve nessa chave — ela é
+  // sagrada e é de outro dono.
+  // Sem cadastro não se perde a memória: cria-se um id do APARELHO, que não
+  // diz quem a pessoa é e serve pra ela achar a própria conversa de volta.
+  // Sem chave nenhuma, o servidor não guarda nada e o globo diz que não lembra
+  // — ele nunca finge.
+  // ════════════════════════════════════════════════════════════════════════
+  var EU_SOU = (function(){
+    try{
+      var r=JSON.parse(localStorage.getItem('radar_user')||'null');
+      var w=String((r&&r.whatsapp)||'').replace(/\D/g,'');
+      if(w.length>=8) return w.slice(0,60);
+    }catch(e){}
+    try{
+      var a=localStorage.getItem('globo_id');
+      if(!a){ a='ap'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+              localStorage.setItem('globo_id',a); }
+      return a;
+    }catch(e){ return ''; }     // navegador sem localStorage: sem memória, e tudo bem
+  })();
+  var SESSAO = 's'+Date.now().toString(36);
+
+  // Manda o turno pro servidor guardar. FOGO E ESQUECE, sempre: se isto falhar,
+  // a conversa não sente nada — só a memória fica mais pobre, e aí o mestre diz
+  // que não lembra, que é a verdade. NUNCA pode segurar a fala.
+  function guardarNaMemoria(extra){
+    if(!EU_SOU) return;
+    var c={ acao:'lembrar', sessao:SESSAO };
+    for(var k in extra) if(Object.prototype.hasOwnProperty.call(extra,k)) c[k]=extra[k];
+    S.memEnviados++;
+    try{ pedir(c)['catch'](function(){}); }catch(e){}
+  }
+
+  // FECHOU A ABA NO BRAÇO, sem tocar em encerrar. `fetch` morre junto com a
+  // página; `sendBeacon` é entregue pelo navegador DEPOIS de ela fechar — é
+  // exatamente pra isto que ele existe. Sem esta linha, o pastor que fecha a
+  // aba no semáforo perdia o último turno, justo o que ele mais quer de volta.
+  window.addEventListener('pagehide', function(){
+    if(!EU_SOU || !(S.memEu||S.memMestre||S.memEnviados)) return;
+    try{
+      var corpo=JSON.stringify({ acao:'lembrar', user:EU_SOU, sessao:SESSAO,
+                                 eu:S.memEu, mestre:S.memMestre, fim:true });
+      navigator.sendBeacon('/api/voz', new Blob([corpo],{type:'application/json'}));
+      S.memEu=''; S.memMestre='';
+    }catch(e){}
+  });
   var HUD_LIGADO = /[?&]hud=1/.test(location.search);
   function diario(){
     try{ console.log.apply(console, ['[VOZ]'].concat([].slice.call(arguments))); }catch(e){}
@@ -545,7 +633,11 @@
     // e o ouvido é que fecharam. NÃO é encerrar — um toque volta.
     if(S.pausado){ S.fase='pausado'; estado('⏸️ PAUSADO','Toque no globo, ou no play do carro, para voltar.','espera'); return; }
     if(S.reconectando){ S.fase = navigator.onLine===false ? 'semRede' : 'reconectando'; return; }
-    if(S.garimpando){ S.fase='garimpo'; estado('⛏️ Buscando no material','Foi conferir nas fontes.'); return; }
+    // O rótulo é POR FERRAMENTA: "abrindo o texto" é outra coisa de "procurando
+    // nas suas mensagens", e o pastor no volante lê o quadro de canto de olho.
+    // Sem ferramenta nomeada, cai no rótulo velho do garimpo.
+    if(S.garimpando){ S.fase='garimpo';
+      estado(S.rotuloFerr||'⛏️ Buscando no material', S.dicaFerr||'Foi conferir nas fontes.'); return; }
     if(S.eleFalando){
       S.fase='eleFala';
       // dica curta de propósito: no viva-voz ela divide a tela com a resposta
@@ -1142,6 +1234,12 @@
 
   // ── o servidor: token e garimpo ───────────────────────────────────────────
   async function pedir(corpo){
+    // A CHAVE DO PASTOR VAI EM TUDO, de um lugar só.
+    // Assinar o token, chamar ferramenta e guardar turno precisam todos saber de
+    // quem é a conversa. Pôr isso aqui dentro é o que garante que nenhuma
+    // chamada nova esqueça de mandar — esquecer seria memória virando um monte
+    // de linhas órfãs, que é pior que não ter memória.
+    if(EU_SOU && corpo && !corpo.user) corpo.user=EU_SOU;
     // cache:'no-store' é cinto e suspensório: o service worker já foi instruído a
     // nunca guardar /api/voz, mas token vencido = tela morta na estrada.
     var r=await fetch('/api/voz',{method:'POST',cache:'no-store',
@@ -1198,6 +1296,10 @@
     S.ws=null; S.pronto=false;
 
     var p = pedir({ acao:'token', voz:S.voz, handle:S.handle||undefined }).then(function(t){
+      // O servidor avisa se assinou este token COM a memória dentro. O CONTEÚDO
+      // da memória não desce pro aparelho — só o aviso de que ela existe, que é
+      // o que a tela precisa pra dizer "retomando de onde vocês pararam".
+      S.lembrando = !!t.lembrando;
       return new Promise(function(ok,falhou){
         if(g!==S.geracao){ falhou(new Error('geração vencida')); return; }
         var ws;
@@ -1218,6 +1320,13 @@
           // setup pobre de propósito: modelo, voz, persona e ferramenta já vêm
           // travados dentro do token (o Google ignora o que mandarmos aqui).
           ws.send(JSON.stringify({ setup:{ model:t.modelo } }));
+          // UMA VEZ SÓ, e só quando há memória de verdade: o pastor precisa
+          // enxergar a diferença entre "ele está começando do zero" e "ele
+          // lembra". Sem isto, memória boa parece sorte.
+          if(S.lembrando && !S.avisouMemoria){
+            S.avisouMemoria=true;
+            nota('— 🧠 retomando de onde vocês pararam —');
+          }
           ok(ws);
         };
         ws.onmessage=function(ev){
@@ -1273,14 +1382,22 @@
     }
 
     // o mestre pediu o material das aulas -> buscamos no servidor e devolvemos
+    // ⚠️ A PORTA ÚNICA. Antes daqui o navegador mandava TUDO pro garimpo, e as
+    // ferramentas novas (ler_versiculo, conferir_citacao, pesquisar_biblioteca,
+    // buscar_no_acervo, versiculos_ligados, o_que_ja_falamos) voltavam vazias —
+    // o mestre pedia o texto exato e recebia nada. Agora o navegador não decide
+    // coisa nenhuma: repassa o nome e os argumentos que o Gemini pediu e devolve
+    // o que voltar. Ferramenta nova entra no servidor e ESTE arquivo não muda.
     if(m.toolCall){
       var chamadas=m.toolCall.functionCalls||[];
       S.garimpando=true; fase();
       for(var i=0;i<chamadas.length;i++){
         (function(fc){
-          pedir({ acao:'garimpo', assunto:(fc.args&&fc.args.assunto)||'' })
-          .then(function(r){ responderFerramenta(fc,{ achou:r.achou, material:r.texto||'' }); })
-          .catch(function(){ responderFerramenta(fc,{ achou:false, material:'', erro:'a busca no material falhou agora' }); });
+          rotuloDaFerramenta(fc.name);
+          pedir({ acao:'ferramenta', nome:fc.name, args:(fc.args||{}) })
+          .then(function(r){ responderFerramenta(fc, r.resposta); })
+          .catch(function(){ responderFerramenta(fc,{ erro:'a consulta falhou agora',
+            ordem:'NÃO invente para tapar o buraco. Diga ao pastor que a consulta falhou agora.' }); });
         })(chamadas[i]);
       }
       return;
@@ -1289,7 +1406,20 @@
     var sc=m.serverContent;
     if(sc){
       // ele cortou: cala o alto-falante na hora e reabre o que tinha sido mutado
-      if(sc.interrupted){ calarMestre('o Google avisou interrupted'); S.turnoMudo=false; S.bolhaMestre=null; }
+      if(sc.interrupted){
+        // ── O CORTE ALIMENTA A MEMÓRIA ────────────────────────────────────
+        // "posso ficar falando o tempo todo mesmo cortando ele e fica perfeito".
+        // Cortar já funcionava: o alto-falante cala na hora. O que faltava é o
+        // mestre SABER que ficou devendo. O que ele tinha dito até aqui vai pro
+        // servidor marcado como assunto pela metade — e é por isso que, na
+        // conversa seguinte, ele consegue dizer "voltando no que eu dizia…".
+        if(S.memMestre){
+          guardarNaMemoria({ mestre:S.memMestre, cortado:true });
+          S.memCortou=true;
+        }
+        S.memMestre='';
+        calarMestre('o Google avisou interrupted'); S.turnoMudo=false; S.bolhaMestre=null;
+      }
       var partes=(sc.modelTurn&&sc.modelTurn.parts)||[];
       for(var k=0;k<partes.length;k++){
         var d=partes[k].inlineData;
@@ -1306,15 +1436,25 @@
       if(sc.inputTranscription&&sc.inputTranscription.text){
         if(!S.bolhaEu) S.bolhaEu=bolha('eu','Você');
         S.bolhaEu.textContent+=sc.inputTranscription.text; rolar();
+        S.memEu+=sc.inputTranscription.text;
       }
       if(sc.outputTranscription&&sc.outputTranscription.text){
         if(!S.bolhaMestre) S.bolhaMestre=bolha('mestre','Resposta');
         S.bolhaMestre.textContent+=sc.outputTranscription.text; rolar();
+        S.memMestre+=sc.outputTranscription.text;
       }
       if(sc.turnComplete){
         if(S.bolhaEu&&S.bolhaEu.textContent) S.texto.push('Você: '+S.bolhaEu.textContent);
         if(S.bolhaMestre&&S.bolhaMestre.textContent) S.texto.push('Resposta: '+S.bolhaMestre.textContent);
         S.bolhaEu=null; S.bolhaMestre=null;
+        // ── TURNO FECHADO: O SERVIDOR GUARDA ──────────────────────────────
+        // Aqui vai a TRANSCRIÇÃO, não o áudio — e o servidor não guarda a
+        // transcrição: ele resume, peneira e joga o resto fora. Quem decide o
+        // que pode ficar é a peneira do segredo, no servidor (voz-memoria.js).
+        if(S.memEu||S.memMestre){
+          guardarNaMemoria({ eu:S.memEu, mestre:S.memMestre });
+          S.memEu=''; S.memMestre='';
+        }
       }
     }
 
@@ -1558,6 +1698,16 @@
   // depois o microfone, e só no fim os contextos — nunca ANTES do fade acabar,
   // senão o último naco de fala saía estalando.
   function desligar(silencioso){
+    // ── FECHOU A CONVERSA: MANDA GUARDAR AGORA ─────────────────────────────
+    // `fim:true` faz o servidor resumir na hora, em vez de esperar o rascunho
+    // engordar. É ISTO que faz o "fechei a página e voltei depois" funcionar de
+    // primeira: se o resumo só saísse mais tarde, a conversa curta — que é a
+    // maioria — nunca viraria memória.
+    // Vai antes de qualquer desmonte porque `pedir` usa fetch e não depende de
+    // nada que morra abaixo.
+    if(S.memEu||S.memMestre||S.memEnviados) guardarNaMemoria({ eu:S.memEu, mestre:S.memMestre, fim:true });
+    S.memEu=''; S.memMestre='';
+
     S.fechandoDeProposito=true; S.ligado=false; S.reconectando=false; S.abrindo=false;
     clearTimeout(S.agendado); clearTimeout(S.agendaSom); clearTimeout(S.fimFala);
     clearInterval(S.vigia); S.vigia=null;
@@ -1746,6 +1896,29 @@
     if(!S.meioDuplex) S.corteMs=0;
     pintarModo(); fase();
     diario('modo trocado na mão -> '+(S.meioDuplex?'MEIO-DUPLEX (viva-voz)':'FULL-DUPLEX (fone)'));
+  });
+
+  // ── APAGAR A MEMÓRIA ──────────────────────────────────────────────────────
+  // Não é enfeite de privacidade: é o que torna honesto guardar qualquer coisa.
+  // Apaga no banco, de verdade, sem lixeira e sem cópia. Dois toques (o segundo
+  // confirma) pra não apagar sem querer no solavanco do carro.
+  if(btnEsquecer) btnEsquecer.addEventListener('click',function(){
+    if(!EU_SOU){ if(elObsMemoria) elObsMemoria.textContent='Não há memória ligada neste aparelho.'; return; }
+    if(btnEsquecer.dataset.certeza!=='1'){
+      btnEsquecer.dataset.certeza='1';
+      btnEsquecer.textContent='🧠 Tem certeza? Toque de novo';
+      setTimeout(function(){ btnEsquecer.dataset.certeza=''; btnEsquecer.textContent='🧠 Apagar a memória'; },5000);
+      return;
+    }
+    btnEsquecer.dataset.certeza=''; btnEsquecer.textContent='apagando…';
+    pedir({ acao:'esquecer' }).then(function(r){
+      S.lembrando=false; S.avisouMemoria=false;
+      btnEsquecer.textContent='✅ Apagada';
+      if(elObsMemoria) elObsMemoria.textContent='Apagado: '+(r.apagados||0)+' registro(s). Ele não lembra mais de nada.';
+    })['catch'](function(){
+      btnEsquecer.textContent='🧠 Apagar a memória';
+      if(elObsMemoria) elObsMemoria.textContent='Não consegui apagar agora — tente de novo daqui a pouco.';
+    });
   });
 
   btnCopiar.addEventListener('click',function(){
@@ -2125,6 +2298,130 @@
     bFechar.addEventListener('click',function(){ p.remove(); });
   }
   if(/[?&]prova=escuro/.test(location.search)) setTimeout(provaEscuro,500);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // AUTOPROVA DA MEMÓRIA (?prova=memoria)
+  //
+  // Prova a memória SEM gastar uma sessão de voz e SEM sujar a memória de
+  // verdade do pastor: o ciclo inteiro (gravar assunto → gravar conversa →
+  // resumir → ler de volta → perguntar do que nunca se falou → apagar) roda
+  // numa chave de prova descartável. No fim, mostra TAMBÉM a memória real dele,
+  // só leitura, pra ele enxergar com os próprios olhos o que está guardado.
+  //
+  // COMO USAR NO CELULAR (sem PC, sem cabo):
+  //   1. abra  /biblioteca/voz/?prova=memoria
+  //   2. espere o quadro encher (uns 10 segundos — ele resume de verdade)
+  //   3. "📋 Copiar" e manda
+  // ══════════════════════════════════════════════════════════════════════════
+  function provaMemoria(){
+    var p=document.createElement('div');
+    p.style.cssText='position:fixed;inset:0;z-index:98;overflow:auto;background:#07141d;'
+      +'color:#d9f5e6;font:700 12px/1.55 ui-monospace,Consolas,monospace;padding:12px 12px 80px';
+    var pre=document.createElement('pre');
+    pre.style.cssText='white-space:pre-wrap;margin:0';
+    pre.textContent='AUTOPROVA DA MEMÓRIA — rodando…';
+    p.appendChild(pre);
+
+    var barra=document.createElement('div');
+    barra.style.cssText='position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;'
+      +'padding:10px;background:#04101a;border-top:2px solid #C9A14A';
+    function bt(t){ var b=document.createElement('button'); b.textContent=t;
+      b.style.cssText='flex:1;padding:12px;border:0;border-radius:10px;font:800 14px system-ui;'
+        +'background:#C9A14A;color:#122029'; barra.appendChild(b); return b; }
+    var bCopiar=bt('📋 Copiar'), bFechar=bt('✕ Fechar');
+    p.appendChild(barra);
+    document.body.appendChild(p);
+
+    var L=[], PROVA='prova'+Math.random().toString(36).slice(2,9);
+    function dizer(x){ L.push(x); pre.textContent=L.join('\n'); }
+    function marca(c){ return c ? '✅' : '🛑'; }
+
+    // mandar com chave EXPLÍCITA: o `pedir` põe a do pastor, e aqui a gente
+    // quer a descartável — memória de prova não encosta na memória dele.
+    function comProva(c){ c.user=PROVA; return pedir(c); }
+
+    (async function(){
+      try{
+        dizer('AUTOPROVA DA MEMÓRIA DO GLOBO');
+        dizer('');
+        dizer('quem sou eu aqui .... '+(EU_SOU || '(sem chave — memória desligada)'));
+        dizer('chave de prova ...... '+PROVA+'  (descartável, apagada no fim)');
+        dizer('');
+        dizer('── O CICLO, numa chave de prova ──');
+
+        // 1) um assunto entra pela ferramenta, como entra de verdade
+        var f1=await comProva({ acao:'ferramenta', nome:'ler_versiculo', args:{ ref:'Daniel 12:4' } });
+        var leu=!!(f1.resposta && (f1.resposta.texto||f1.resposta.versiculos||f1.resposta.achou));
+        dizer(marca(leu)+' 1. abriu Daniel 12:4 (e isso virou assunto guardado)');
+
+        // 2) a conversa vira resumo (fim:true resume na hora, de verdade)
+        await comProva({ acao:'lembrar', sessao:'prova',
+          eu:'Me explique Daniel 12:4 e o conhecimento crescendo.',
+          mestre:'O texto fala de um livro selado até o tempo do fim; a ciência que se multiplica '
+                +'é o entendimento das profecias entre os sábios, não a tecnologia.', fim:true });
+        dizer('✅ 2. mandou a conversa pro servidor resumir');
+
+        // 3) lê de volta — é ISTO que o mestre enxerga na conversa seguinte
+        var f3=await comProva({ acao:'ferramenta', nome:'o_que_ja_falamos', args:{} });
+        var r3=f3.resposta||{};
+        dizer(marca(r3.lembro)+' 3. leu de volta: lembro='+(r3.lembro?'SIM':'não'));
+        if(r3.de_onde_pararam) dizer('     resumo ..... '+r3.de_onde_pararam.slice(0,240));
+        (r3.assuntos||[]).slice(0,5).forEach(function(a){
+          dizer('     assunto .... '+a.assunto+'  ('+a.quando+')'); });
+
+        // 4) o que NUNCA foi falado tem que voltar "não lembro"
+        var f4=await comProva({ acao:'ferramenta', nome:'o_que_ja_falamos',
+          args:{ assunto:'as cidades de refúgio e o vingador do sangue' } });
+        var r4=f4.resposta||{};
+        dizer(marca(r4.lembro===false)+' 4. assunto que NUNCA foi falado → lembro='+(r4.lembro?'SIM (ERRADO!)':'não'));
+
+        // 5) o corte, e o "ficou pela metade"
+        await comProva({ acao:'lembrar', sessao:'prova', cortado:true,
+          mestre:'Eu ia te mostrar de onde sobem os quatro animais de Daniel sete, quando' });
+        var f5=await comProva({ acao:'ferramenta', nome:'o_que_ja_falamos', args:{} });
+        var r5=f5.resposta||{};
+        dizer(marca(!!r5.ficou_pela_metade)+' 5. cortou ele no meio → ficou pela metade: '
+              +(r5.ficou_pela_metade? '"'+r5.ficou_pela_metade.slice(0,110)+'…"' : '(nada)'));
+
+        // 6) apaga a prova — nada de lixo no banco do app
+        var f6=await comProva({ acao:'esquecer' });
+        dizer(marca(f6.ok)+' 6. apagou a prova ('+(f6.apagados||0)+' registro(s))');
+
+        dizer('');
+        dizer('── A SUA MEMÓRIA DE VERDADE (só leitura, nada foi mexido) ──');
+        if(!EU_SOU){ dizer('(este aparelho está sem chave — nada é guardado)'); }
+        else{
+          var meu=await pedir({ acao:'ferramenta', nome:'o_que_ja_falamos', args:{} });
+          var r=meu.resposta||{};
+          if(!r.lembro){ dizer('(vazia — ou é a primeira vez, ou você apagou)'); }
+          else{
+            if(r.ficou_pela_metade) dizer('ficou pela metade: "'+r.ficou_pela_metade+'"');
+            if(r.de_onde_pararam)   dizer('de onde pararam ('+(r.quando_foi||'')+'): '+r.de_onde_pararam);
+            (r.assuntos||[]).forEach(function(a){
+              dizer('  · '+a.assunto+(a.texto_ligado?' — '+a.texto_ligado:'')
+                    +'  ('+a.quando+(a.vezes>1?', '+a.vezes+'x':'')+')'); });
+          }
+        }
+        dizer('');
+        dizer('Se as 6 linhas de cima estão com ✅, a memória está de pé.');
+      }catch(e){
+        dizer('');
+        dizer('🛑 A PROVA PAROU: '+(e && e.message ? e.message : e));
+        dizer('(isso costuma ser rede, ou o servidor sem banco configurado)');
+      }
+    })();
+
+    bCopiar.addEventListener('click',function(){
+      var t=pre.textContent;
+      function caiu(){ var a=document.createElement('textarea'); a.value=t; document.body.appendChild(a);
+        a.select(); try{ document.execCommand('copy'); }catch(e){} a.remove(); }
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t)['catch'](caiu);
+      else caiu();
+      bCopiar.textContent='✅ Copiado'; setTimeout(function(){ bCopiar.textContent='📋 Copiar'; },1500);
+    });
+    bFechar.addEventListener('click',function(){ p.remove(); });
+  }
+  if(/[?&]prova=memoria/.test(location.search)) setTimeout(provaMemoria,400);
 
   // A mesma fita, sem painel: serve pra ler por adb/console em qualquer momento.
   window.__VOZDIAG=function(){

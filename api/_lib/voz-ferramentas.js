@@ -35,6 +35,13 @@
 
 import { buscarContexto } from './concilio-wagner.js';
 import { embutirPergunta } from './busca-vetor.js';
+// A SÉTIMA PORTA: a memória. Ela é DECLARADA aqui, junto com as outras, porque
+// quem lê esta lista é o modelo — e pra ele memória é ferramenta igual às
+// demais: ou ele busca, ou ele não sabe. O miolo mora em voz-memoria.js.
+// ⚠️ A seta aponta só pra cá: voz-memoria.js NÃO importa este arquivo (ele
+// recebe o redator por parâmetro). Import circular em ESM deixa `const` em TDZ
+// e o módulo morre no carregamento — e um globo que não carrega é tela morta.
+import { FERRAMENTA_MEMORIA, oQueJaFalamos } from './voz-memoria.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) OS LIVROS — apelido → abreviação do biblia.json, nome por extenso, testamento.
@@ -710,6 +717,10 @@ export const FERRAMENTAS = [{
         required: ['ref'],
       },
     },
+    // A MEMÓRIA. Declarada por último de propósito: ela é a única que não busca
+    // fora — busca DENTRO do que já foi conversado. Sem ela, o globo só podia
+    // fingir que lembrava, e fingir lembrança é mentira igual a citação inventada.
+    FERRAMENTA_MEMORIA,
   ],
 }];
 
@@ -721,7 +732,7 @@ export const FERRAMENTAS = [{
 export const REGRA_DE_OURO = `════ VOCÊ NÃO SABE DE CABEÇA. VOCÊ VAI BUSCAR. ════
 Isto está acima de qualquer outra regra deste documento, inclusive das de oratória.
 
-Você tem SEIS ferramentas e elas são a sua memória de verdade:
+Você tem SETE ferramentas e elas são a sua memória de verdade:
   ler_versiculo         — o texto exato de qualquer versículo, com o idioma original junto
   conferir_citacao      — confere se o versículo diz MESMO o que você vai afirmar
   pesquisar_biblioteca  — a BIBLIOTECA DE ESTUDO dele: Champlin, Kittel, Waltke, Kidner,
@@ -729,6 +740,7 @@ Você tem SEIS ferramentas e elas são a sua memória de verdade:
   buscar_no_acervo      — as pregações e mensagens escritas pelo PRÓPRIO pastor Elias
   versiculos_ligados    — referências cruzadas de verdade, pelo motor de ligações
   garimpar              — o material de estudo do acervo (Caderno de Pérolas e aulas)
+  o_que_ja_falamos      — a SUA MEMÓRIA: o que vocês dois já conversaram, e quando
 
 LEI 1 — NENHUM VERSÍCULO SAI DA SUA BOCA SEM PASSAR POR ler_versiculo.
 Nem os que você tem certeza. Principalmente os que você tem certeza — é neles que a
@@ -798,8 +810,12 @@ eu quero ver isso direito na sua mensagem".`;
 // que o Gemini pediu, e devolve ao Gemini o objeto que sair daqui. Ferramenta nova
 // entra aqui e o index.html do globo NÃO muda mais uma linha.
 // ─────────────────────────────────────────────────────────────────────────────
-export async function executarFerramenta(nome, args, origem) {
+// `ctx` é o 4º argumento e é OPCIONAL de propósito: o banco de provas antigo
+// (scripts/_provar-voz-ferramentas.mjs) chama com três, e continua valendo.
+// Dentro dele vem { user } — a chave do pastor, que só a memória usa.
+export async function executarFerramenta(nome, args, origem, ctx) {
   const a = args || {};
+  const c = ctx || {};
   switch (String(nome || '')) {
     case 'garimpar': {
       const assunto = String(a.assunto || a.q || '').trim().slice(0, 300);
@@ -823,6 +839,10 @@ export async function executarFerramenta(nome, args, origem) {
       return pesquisarBiblioteca(a.pergunta || a.q || a.assunto, origem);
     case 'versiculos_ligados':
       return versiculosLigados(a.ref || a.referencia, origem);
+    // A MEMÓRIA. Sem `user` ela responde "não tenho memória ligada" — e o globo
+    // diz isso em voz alta. NUNCA devolve lembrança inventada para tapar buraco.
+    case 'o_que_ja_falamos':
+      return oQueJaFalamos(a, origem, c.user || '');
     default:
       return { erro: 'ferramenta desconhecida: ' + nome,
         ordem: 'Não use isso. Siga com as ferramentas que você tem.' };
@@ -832,3 +852,9 @@ export async function executarFerramenta(nome, args, origem) {
 // Exportadas para o banco de provas (scripts/_provar-voz-ferramentas.mjs) poder
 // bater em cada uma sem subir sessão de voz nenhuma.
 export { lerVersiculo, conferirCitacao, buscarNoAcervo, versiculosLigados, pesquisarBiblioteca, partirRef, medir };
+
+// O REDATOR, exportado. Quem resume a conversa (voz-memoria.js) precisa dele,
+// mas NÃO pode importar este arquivo — seria import circular. Então o voz.js
+// pega aqui e ENTREGA a função pra lá. Um redator só no app inteiro: se a
+// cascata melhorar aqui, o resumo da memória melhora junto, no mesmo instante.
+export { escrever };
