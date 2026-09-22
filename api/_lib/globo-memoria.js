@@ -87,6 +87,34 @@ async function tabela(c) {
   // disco arranhado. Com ela, o assunto pela metade vale 48 horas e depois
   // some sozinho. `if not exists` porque a tabela já pode ter nascido sem.
   try { await c.query(`alter table globo_memoria add column if not exists pendente_em timestamptz`); } catch (_) {}
+
+  // ⚠️ A CHAVE DO TEMA VIROU COLUNA — E ISSO SAIU DE UM BUG MEDIDO EM PRODUÇÃO.
+  // O "não duplica" era um SELECT e depois um INSERT. Enquanto a gravação
+  // esperava na frente da resposta, uma de cada vez, funcionava. Quando a
+  // gravação saiu do caminho (waitUntil), cinco chamadas passaram a rodar JUNTAS
+  // — as cinco leram "não existe" antes de qualquer uma escrever, e o mesmo
+  // "Salmos 23:4" virou TRÊS linhas em vez de vezes=5. Corrida clássica.
+  // Quem tem que garantir unicidade é o banco, não a ordem em que as coisas
+  // chegam: coluna própria, índice único, e um ON CONFLICT que é atômico.
+  try { await c.query(`alter table globo_memoria add column if not exists chave_tema text`); } catch (_) {}
+  try {
+    await c.query(`update globo_memoria set chave_tema = split_part(busca,' |',1)
+                    where tipo='tema' and coalesce(chave_tema,'')=''`);
+  } catch (_) {}
+  // duplicados que já nasceram torto morrem antes do índice único (senão ele
+  // nem se cria). Fica o mais antigo; o contador se recompõe sozinho na
+  // próxima vez que o assunto voltar.
+  try {
+    await c.query(`delete from globo_memoria a using globo_memoria b
+                    where a.tipo='tema' and b.tipo='tema'
+                      and a.user_key=b.user_key and a.chave_tema=b.chave_tema
+                      and a.id > b.id`);
+  } catch (_) {}
+  try {
+    await c.query(`create unique index if not exists globo_memoria_tema_unico
+                   on globo_memoria(user_key, chave_tema) where tipo='tema'`);
+  } catch (_) {}
+
   // Uma linha 'sessao' por pessoa — é o "de onde paramos". O índice único é o
   // que faz o upsert ser upsert, e não uma pilha de resumos velhos.
   try {
@@ -172,23 +200,19 @@ async function gravarTemas(c, chave, itens) {
     // _ chega no LIKE. A barra é o único caractere de fora, posto por nós.
     const chaveTema = normalizar(tema).slice(0, 110);
     const busca = (chaveTema + ' | ' + normalizar((it.pergunta || '') + ' ' + (it.ref || ''))).slice(0, 300);
-    const ja = await c.query(
-      `select id, pergunta, ref from globo_memoria
-        where user_key=$1 and tipo='tema' and busca like $2 limit 1`, [chave, chaveTema + ' |%']);
-    if (ja.rowCount) {
-      await c.query(
-        `update globo_memoria
-            set vezes=vezes+1, atualizado_em=now(),
-                pergunta=coalesce(nullif($2,''), pergunta),
-                ref=coalesce(nullif($3,''), ref)
-          where id=$1`,
-        [ja.rows[0].id, corta(it.pergunta, MAX_PERGUNTA), corta(it.ref, MAX_REF)]);
-    } else {
-      await c.query(
-        `insert into globo_memoria(user_key, tipo, tema, pergunta, ref, busca)
-         values($1,'tema',$2,$3,$4,$5)`,
-        [chave, tema, corta(it.pergunta, MAX_PERGUNTA), corta(it.ref, MAX_REF), busca]);
-    }
+    // UMA instrução só, e atômica. Perguntar antes ("já existe?") e escrever
+    // depois é exatamente o que produziu três linhas de "Salmos 23:4" quando as
+    // gravações passaram a correr juntas. Aqui quem resolve o empate é o índice
+    // único, dentro do banco, onde não há corrida.
+    await c.query(
+      `insert into globo_memoria(user_key, tipo, tema, pergunta, ref, busca, chave_tema)
+       values($1,'tema',$2,$3,$4,$5,$6)
+       on conflict (user_key, chave_tema) where tipo='tema' do update set
+         vezes = globo_memoria.vezes + 1,
+         atualizado_em = now(),
+         pergunta = coalesce(nullif(excluded.pergunta,''), globo_memoria.pergunta),
+         ref      = coalesce(nullif(excluded.ref,''),      globo_memoria.ref)`,
+      [chave, tema, corta(it.pergunta, MAX_PERGUNTA), corta(it.ref, MAX_REF), busca, chaveTema]);
     n++;
   }
   // o teto por pessoa. Memória que cresce sem freio é banco estourado — e este

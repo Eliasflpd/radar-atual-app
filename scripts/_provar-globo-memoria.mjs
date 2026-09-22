@@ -263,6 +263,27 @@ const mostrar = (titulo, r) => {
   console.log((r.texto || '(nada)').trim());
 };
 
+// ════════════════════════════════════════════════════════════════════════════
+// A CORRIDA — o bug que só apareceu quando a gravação saiu do caminho da fala.
+// Enquanto cada gravação esperava a anterior, "não duplica" funcionava. Quando
+// o waitUntil deixou elas correrem juntas, cinco leram "não existe" antes de
+// qualquer uma escrever, e o mesmo "Salmos 23:4" virou TRÊS linhas em vez de
+// vezes=5. Esta prova é o que impede isso de voltar.
+// ════════════════════════════════════════════════════════════════════════════
+console.log('\n▸ CINCO GRAVAÇÕES AO MESMO TEMPO (é o que o servidor faz de verdade)');
+{
+  const C = 'prova_corrida_' + Date.now().toString(36);
+  await pedir({ acao: 'esquecer', user: C }).catch(() => {});
+  await Promise.all([1, 2, 3, 4, 5].map(() =>
+    pedir({ acao: 'ferramenta', nome: 'ler_versiculo', args: { ref: 'Salmos 23:4' }, user: C }).catch(() => null)));
+  const r = await pedir({ acao: 'ferramenta', nome: 'o_que_ja_falamos', args: {}, user: C }).catch(() => null);
+  const a = (r && r.resposta && r.resposta.assuntos) || [];
+  ok('virou UMA linha só, e não cinco', a.length === 1, a.length + ' linha(s): ' + a.map((x) => x.assunto + ' x' + x.vezes).join(' , '));
+  ok('com o contador em 5 (é isso que deixa ele dizer "você volta nesse texto")',
+    a.length === 1 && a[0].vezes === 5, a[0] ? 'vezes=' + a[0].vezes : '—');
+  await pedir({ acao: 'esquecer', user: C }).catch(() => {});
+}
+
 if (!process.env.SEM_PENEIRA) {
   console.log('\npeneirando as chaves do Gemini…');
   if (!(await peneirarChaves())) { console.log('✖ nenhuma chave abre sessão de voz agora.'); srv.close(); process.exit(1); }
