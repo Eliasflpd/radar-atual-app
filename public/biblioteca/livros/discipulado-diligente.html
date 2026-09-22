@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Discipulado Diligente — Samuel Rodrigues · RADAR</title>
+<meta name="description" content="Discipulado Diligente: um guia prático para o aperfeiçoamento cristão, de Samuel Rodrigues (com a colaboração de Pedro Carvalho). Goiânia, 2023.">
+<meta name="theme-color" content="#0f3d5c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* ── NADA PODE EMPURRAR A PAGINA PRA FORA DA TELA ──────────────────────────
+   Achado no A22 em 22/09/2026: a pagina rolava PRA O LADO e o leitor ficava
+   arrastando o dedo de lado pra ler. O culpado era UMA linha da bibliografia:
+   um endereco de site comprido que o navegador nao sabe onde quebrar. Um
+   paragrafo de 564 px estica o documento inteiro.
+   `anywhere` so age quando nao ha onde quebrar — texto normal continua
+   quebrando por palavra. MEDIDO depois: 593 px -> 375 px, rolagem zerada.
+   ⚠️ A regra mora AQUI, no gerador. Na primeira vez eu consertei direto no
+   .html e a correcao SUMIU assim que o livro foi gerado de novo. */
+.wrap, .conteudo, .conteudo p, .conteudo li, .conteudo td, .conteudo th, .conteudo blockquote{
+  overflow-wrap:anywhere;
+}
+html,body{overflow-x:hidden}
+
+:root{
+  --navy:#0f3d5c; --navy-esc:#0a2b41; --dourado:#C8A24A; --dourado-esc:#8a6a2f;
+  --tinta:#22303c; --papel:#f8f5ee; --fundo:#eef3f7; --suave:#6d8299; --linha:#e2e7ec;
+  --fs:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:Lora,Georgia,'Times New Roman',serif;background:var(--fundo);color:var(--tinta);line-height:1.75;-webkit-font-smoothing:antialiased}
+
+/* ---------- cabecalho fixo ---------- */
+header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20;
+  padding:calc(8px + env(safe-area-inset-top)) 12px 8px;box-shadow:0 2px 10px rgba(10,43,65,.25)}
+.barra{max-width:820px;margin:0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;padding:8px 14px;font:700 .92rem/1 Lora,Georgia,serif;cursor:pointer;white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.24)}
+.btn.ouro{background:var(--dourado);border-color:var(--dourado);color:#20180a}
+.btn.ouro:hover{background:#d8b360}
+.ferramentas{margin-left:auto;display:flex;gap:6px}
+.ferramentas button{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.18);
+  border-radius:10px;width:40px;height:38px;font:700 1rem/1 Lora,serif;cursor:pointer}
+
+.wrap{max-width:820px;margin:0 auto;padding:16px 14px calc(40px + env(safe-area-inset-bottom))}
+
+/* ---------- capa e creditos ---------- */
+.capa-bloco{background:linear-gradient(160deg,var(--navy),var(--navy-esc));border-radius:18px;
+  padding:20px;display:flex;gap:18px;align-items:center;color:#fff;box-shadow:0 8px 24px rgba(15,61,92,.22)}
+.capa-bloco img{width:132px;height:auto;flex-shrink:0;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.4);display:block}
+.creditos{min-width:0}
+.creditos .selo{color:var(--dourado);font-size:.72rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:6px}
+.creditos h1{font-family:'Playfair Display',Georgia,serif;font-size:1.65rem;line-height:1.12;font-weight:800;margin-bottom:6px}
+.creditos .sub{font-size:.98rem;opacity:.9;font-style:italic;margin-bottom:12px;line-height:1.35}
+.creditos .autor{font-size:1.05rem;font-weight:700}
+.creditos .colab{font-size:.9rem;opacity:.88}
+.creditos .local{font-size:.84rem;opacity:.75;margin-top:8px;border-top:1px solid rgba(200,162,74,.35);padding-top:8px}
+
+/* ---------- indice ---------- */
+.indice{background:#fff;border:1px solid var(--linha);border-left:5px solid var(--dourado);
+  border-radius:14px;padding:16px 18px;margin-top:16px;box-shadow:0 3px 12px rgba(15,61,92,.07)}
+.indice h2{font-family:'Playfair Display',Georgia,serif;color:var(--navy);font-size:1.2rem;margin-bottom:10px}
+.indice ol{list-style:none;counter-reset:cap}
+.indice li{margin:0 0 2px}
+.indice a{display:flex;gap:10px;align-items:baseline;justify-content:space-between;
+  padding:9px 4px;color:var(--navy);text-decoration:none;font-size:1rem;
+  border-bottom:1px dotted #dfe5ea;line-height:1.3}
+.indice a:hover{background:#f4f8fb;color:var(--dourado-esc)}
+.indice .pg{color:var(--dourado-esc);font-size:.82rem;font-weight:700;white-space:nowrap;flex-shrink:0}
+.indice li:last-child a{border-bottom:none}
+
+/* ---------- corpo do livro ---------- */
+.conteudo{background:var(--papel);border-radius:16px;padding:26px 22px 34px;margin-top:16px;
+  box-shadow:0 4px 18px rgba(15,61,92,.09);font-size:var(--fs);line-height:1.82}
+.conteudo p{margin:0 0 1.05em;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.conteudo h2{font-family:'Playfair Display',Georgia,serif;color:var(--navy);font-size:1.5em;line-height:1.2;
+  text-align:center;margin:1.6em 0 .2em;scroll-margin-top:84px}
+.conteudo h2:first-child{margin-top:.2em}
+.conteudo h2::after{content:'';display:block;width:64px;height:3px;background:var(--dourado);
+  border-radius:3px;margin:14px auto 22px}
+.conteudo h3{font-family:'Playfair Display',Georgia,serif;color:var(--dourado-esc);font-size:1.16em;
+  margin:1.5em 0 .5em;line-height:1.3;scroll-margin-top:84px}
+.conteudo h4{color:var(--navy);font-size:1.02em;font-weight:700;margin:1.3em 0 .4em;scroll-margin-top:84px}
+.conteudo em{font-style:italic;color:#1b4a6b}
+.conteudo strong{font-weight:700;color:var(--navy)}
+.conteudo ul{margin:0 0 1.05em;padding:0;list-style:none}
+.conteudo li{margin:0 0 .55em;padding-left:20px;position:relative;text-align:left}
+.conteudo li::before{content:'';position:absolute;left:2px;top:.72em;width:7px;height:7px;
+  border-radius:50%;background:var(--dourado)}
+.conteudo blockquote{border-left:4px solid var(--dourado);background:#fffdf7;border-radius:0 10px 10px 0;
+  padding:14px 16px 2px;margin:0 0 1.15em;font-size:.97em;color:#3b4a57}
+.conteudo blockquote p{margin-bottom:.85em;text-align:justify}
+.conteudo blockquote p:last-child{margin-bottom:.85em}
+.conteudo .sep{height:1px;background:linear-gradient(90deg,transparent,#d8cdb2,transparent);margin:2.2em 6%}
+.conteudo .rotulo-tabela{text-align:left;font-weight:700;color:var(--navy);margin:1.4em 0 .5em;font-size:.97em}
+.conteudo .fonte-tabela{text-align:left;font-size:.85em;color:var(--suave);margin:-.5em 0 1.4em}
+.tabela-rolagem{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 .6em;
+  border:1px solid #ded5c0;border-radius:10px;background:#fff}
+.conteudo table{border-collapse:collapse;width:100%;font-size:.93em;min-width:340px}
+.conteudo th{background:var(--navy);color:#fff;font-weight:700;text-align:left;padding:9px 11px;line-height:1.35}
+.conteudo td{padding:9px 11px;border-top:1px solid #e8e1d0;vertical-align:top;line-height:1.5;text-align:left}
+.conteudo tr:nth-child(even) td{background:#faf7f0}
+.conteudo .nota{font-size:.86em;color:#4d5c69;border-top:1px solid #ded5c0;padding-top:10px;margin-top:1.4em;text-align:left}
+.conteudo .nota a{color:var(--dourado-esc);text-decoration:none;font-weight:700}
+.conteudo sup.nr a{color:var(--dourado-esc);text-decoration:none;font-weight:700}
+
+/* ---------- rodape ---------- */
+.rodape{text-align:center;margin-top:20px}
+.rodape .fim{color:var(--suave);font-size:.9rem;margin-bottom:14px;font-style:italic}
+.creditos-fim{background:#fff;border:1px solid var(--linha);border-radius:12px;padding:14px 16px;
+  font-size:.84rem;color:var(--suave);line-height:1.6;margin-top:14px;text-align:left}
+.creditos-fim b{color:var(--navy)}
+
+#topo{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));width:46px;height:46px;
+  border-radius:50%;background:var(--navy);color:#fff;border:2px solid var(--dourado);font-size:1.1rem;
+  cursor:pointer;display:none;z-index:30;box-shadow:0 4px 14px rgba(0,0,0,.28)}
+#topo.on{display:block}
+
+@media (max-width:560px){
+  .capa-bloco{flex-direction:column;text-align:center;padding:18px 16px;gap:14px}
+  .capa-bloco img{width:148px;height:auto;margin:0 auto}
+  .creditos h1{font-size:1.45rem}
+  .creditos .local{text-align:center}
+  .conteudo{padding:20px 15px 28px;border-radius:14px}
+  .conteudo h2{font-size:1.32em}
+  .barra{gap:6px}
+  .btn{padding:8px 11px;font-size:.86rem}
+}
+@media (min-width:1100px){ .wrap{max-width:860px} }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="barra">
+    <button class="btn ouro" onclick="location.href='/'">🏠 Voltar ao Início</button>
+    <button class="btn" onclick="location.href='/biblioteca/livros/'">📚 Livros</button>
+    <div class="ferramentas">
+      <button onclick="fonte(-1)" aria-label="Diminuir letra" title="Letra menor">A−</button>
+      <button onclick="fonte(1)" aria-label="Aumentar letra" title="Letra maior">A+</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="capa-bloco">
+    <img src="discipulado-diligente-capa.jpg" alt="Capa do livro Discipulado Diligente" width="620" height="911">
+    <div class="creditos">
+      <div class="selo">Biblioteca do obreiro</div>
+      <h1>Discipulado Diligente</h1>
+      <div class="sub">Um guia prático para o aperfeiçoamento cristão</div>
+      <div class="autor">Samuel Rodrigues</div>
+      <div class="colab">com a colaboração de Pedro Carvalho</div>
+      <div class="local">Goiânia - GO · 2023 · Editora Visão<br>ISBN 978-85-5545-214-7 · 96 páginas</div>
+    </div>
+  </div>
+
+  <nav class="indice">
+    <h2>Índice</h2>
+    <ol>
+      <li><a href="#dedicatoria"><span>DEDICATÓRIA</span><span class="pg">p. 3</span></a></li>
+      <li><a href="#introducao"><span>INTRODUÇÃO</span><span class="pg">p. 7</span></a></li>
+      <li><a href="#capitulo-i-conhecendo-a-biblia"><span>CAPÍTULO I — CONHECENDO A BÍBLIA</span><span class="pg">p. 11</span></a></li>
+      <li><a href="#capitulo-ii-o-obreiro-e-os-cinco-ministerios-fundamentais"><span>CAPÍTULO II — O OBREIRO E OS CINCO MINISTÉRIOS FUNDAMENTAIS</span><span class="pg">p. 29</span></a></li>
+      <li><a href="#capitulo-iii-o-obreiro-e-suas-atribuicoes-ministeriais"><span>CAPÍTULO III — O OBREIRO E SUAS ATRIBUIÇÕES MINISTERIAIS</span><span class="pg">p. 41</span></a></li>
+      <li><a href="#capitulo-iv-os-dons-do-espirito-santo"><span>CAPÍTULO IV — OS DONS DO ESPÍRITO SANTO</span><span class="pg">p. 51</span></a></li>
+      <li><a href="#capitulo-v-principios-da-honra"><span>CAPÍTULO V — PRINCÍPIOS DA HONRA</span><span class="pg">p. 67</span></a></li>
+      <li><a href="#capitulo-vi-a-assembleia-de-deus-e-o-movimento-pentecostal"><span>CAPÍTULO VI — A ASSEMBLEIA DE DEUS E O MOVIMENTO PENTECOSTAL</span><span class="pg">p. 79</span></a></li>
+      <li><a href="#capitulo-vii-a-historia-dos-primeiros-protestantes-no-brasil"><span>CAPÍTULO VII — A HISTÓRIA DOS PRIMEIROS PROTESTANTES NO BRASIL</span><span class="pg">p. 87</span></a></li>
+      <li><a href="#palavras-finais"><span>PALAVRAS FINAIS</span><span class="pg">p. 94</span></a></li>
+      <li><a href="#referencias"><span>REFERÊNCIAS</span><span class="pg">p. 95</span></a></li>
+      <li><a href="#sobre-o-autor"><span>SOBRE O AUTOR</span></a></li>
+    </ol>
+  </nav>
+
+  <article class="conteudo">
+<p><strong>Samuel Rodrigues</strong> (com a colaboração de Pedro Carvalho)</p>
+<p>Goiânia - GO 2023</p>
+<div class="sep"></div>
+<p>Copyright © Samuel Rodrigues, 2023 ISBN 978-85-5545-214-7</p>
+<p>Produção: Editora Visão Revisão: Profª. Dra. Solange Cavalcante de Matos Capa: Lucas Luiz da Silva Diagramação: Elber Fernandes Colaboração: Pedro Carvalho</p>
+<p>Dados Internacionais de Catalogação na Publicação Catalogação na publicação Elaborada por Bibliotecária Janaina Ramos - CRB-8/9166</p>
+<p>R696d</p>
+<p>Rodrigues, Samuel</p>
+<p>Discipulado diligente: um guia prático para o aperfeiçoamento cristão / Samuel Rodrigues. – Goiânia: Visão, 2023.</p>
+<p>96 p.; 14 X 21 cm ISBN 978-85-5545-214-7</p>
+<p>1. Religião - Estudo e ensino. 2. Bíblia. 3. Reflexões. 4. Teologia. I. Rodrigues, Samuel. II. Título.</p>
+<p>CDD 220.7</p>
+<p>Índice para catálogo sistemático I. Aspectos religiosos - Cristianismo</p>
+<p>Impresso no Brasil / <em>Printed in Brazil</em> Todos os direitos reservados, sendo proibida a reprodução total ou parcial desta obra sem prévia autorização</p>
+<div class="sep"></div>
+<div class="sep"></div>
+<h2 id="dedicatoria">DEDICATÓRIA</h2>
+<p>Dedico este livro ao amado casal, pastor Pedro Carvalho e sua digníssima esposa Dca. Sônia. Um casal comprometido com o reino de Deus e com um vasto conhecimento na área teológica. Vocês são referência na área do ensino bíblico. Tenho-os como professores, mentores, amigos e intercessores do meu ministério. Meu amigo pastor Pedro, obrigado pela participação neste livro e por todo cuidado demonstrado a minha família. Deixo aqui minha estima e profunda gratidão a Deus, vocês são bençãos em nossa vida e ministério.</p>
+<h3 id="segunda-dedicatoria">Segunda dedicatória</h3>
+<p>Dedico este livro ao meu amado esposo, José Roberto, que me ensinou a confiar em Deus.</p>
+<p>À minha mãe, Vera Lúcia, por seu amor incondicional.</p>
+<p>Aos meus filhos, Gabriel e Rafael, minhas maiores inspirações.</p>
+<p>Aos meus irmãos, amigos e professores, que me apoiaram e incentivaram nesta jornada.</p>
+<p>E a todos que, de alguma forma, contribuíram para a realização deste sonho.</p>
+<div class="sep"></div>
+<h2 id="introducao">INTRODUÇÃO</h2>
+<p>Ser um discípulo é ser um aluno ou aprendiz. Ser diligente é ser ativo, aplicado, zeloso e cuidadoso. O profeta Jeremias nos adverte: "<em>Maldito aquele que fizer a obra do Senhor relaxadamente</em>" (Jr 48.10). Destarte, podemos concluir que ser um discípulo é fácil, difícil é ser diligente.</p>
+<p>Nosso desejo é que você seja grandemente edificado através deste conteúdo que o Espírito Santo nos inspirou a escrever.</p>
+<p>Inicialmente, gostaríamos de fazer alguns questionamentos para levá-lo a refletir a respeito dos seus conhecimentos bíblicos:</p>
+<ul>
+<li>Você conhece sua Bíblia?</li>
+<li>Quem é o autor dela?</li>
+<li>Quantos homens foram inspirados para redigir a Bíblia toda?</li>
+<li>Quantos anos levou para ser escrita?</li>
+<li>Quais as duas traduções mais famosas da Bíblia?</li>
+<li>Quem são os que falam na Bíblia?</li>
+</ul>
+<p>Respostas para essas e para outras perguntas sobre a poderosa Palavra de Deus você encontrará estudando o primeiro capítulo deste livro.</p>
+<p>À luz da Palavra de Deus, destacamos, nos capítulos II e III, os requisitos bíblicos para ser um obreiro diligente e aprovado por Deus, enfatizado quais as atribuições do obreiro dentro de cada cargo específico e pontuando que os <em>obreiros é Deus quem chama</em>, mas é a igreja quem reconhece. Portanto, se o obreiro não honra a sua igreja, não será reconhecido. Porque todo ministério que Deus outorgou aos homens é para o aperfeiçoamento dos santos na edificação do corpo de Cristo que é a igreja (Ef 4.12).</p>
+<p>Já no Capítulo IV, abordamos os dons do Espírito Santo, em que, infelizmente, constatamos que o mau uso dos dons divinos tem causado muitos prejuízos ao reino de Deus e à fé pentecostal. Você sabia que os dons são dádivas do Espírito Santo aos salvos para os habilitarem no exercício de sua fé? Creia! Os dons e o batismo no Espírito Santo são para você também! Só que os dons não nos fazem superiores aos demais cristãos, mas sim nos tornam servos deles. Os dons não são para autopromoção, mas para serviço; não são para sermos servidos, mas para servirmos.</p>
+<p>A respeito do dom de profecia, ressaltamos que há muitos que se intitulam profetas em nossos dias, mas, ainda no Capítulo IV deste livro, destacamos que a profecia pode ter três origens distintas, a saber: <em>maligna, humana e divina</em>. Contudo, enfatizamos que o propósito da profecia à luz da Bíblia, é bem claro, ela deve servir para: <em>consolar, exortar e edificar</em> os salvos. Que fique claro: fora desse propósito, causará danos irreparáveis, tanto para quem profetiza, quanto para quem houve.</p>
+<p>Prosseguimos nosso estudo falando sobre os princípios da honra. E sobre essa temática, pretendemos responder às seguintes perguntas:</p>
+<ul>
+<li>O que é honra?</li>
+<li>O que diz a Bíblia sobre a honra?</li>
+<li>A quem devo honrar?</li>
+</ul>
+<p>Se Deus falou, vai cumprir, é fato! Deus não mente. Mas existe na Bíblia uma ação humana que cancela as promessas de Deus na vida de uma pessoa: a <em>desonra</em>. Não se assuste, pois isso é bíblico. Leia atentamente o Capítulo V deste livro, e veja como a desonra cancelou a promessa de Deus na vida de sacerdotes e reis em Israel.</p>
+<p>Sobre a igreja Assembleia de Deus e a fé pentecostal, esclarecemos, no Capítulo VI, alguns pontos para uma melhor compreensão do leitor:</p>
+<ul>
+<li>Os dons do Espírito Santo não foram restritos somente para os dias dos apóstolos.</li>
+<li>Se a igreja começou pentecostal, não poderá terminar tradicional.</li>
+<li>Por que o batismo e os dons do Espírito Santo foram quase extintos no segundo século da igreja primitiva.</li>
+<li>Quem foi Montano e quais os prejuízos que ele causou à fé pentecostal.</li>
+<li>Nós, assembleianos, somos pentecostais clássicos e não neopentecostais.</li>
+</ul>
+<p>Abordamos, ainda, no último capítulo, sobre a chegada dos primeiros protestantes ao Brasil, após a sua descoberta, em 22 de julho de 1500, trazendo algumas informações históricas sobre a fé protestante e respondendo às seguintes perguntas:</p>
+<ul>
+<li>Quem foram os primeiros protestantes que chegaram ao Brasil?</li>
+<li>Em que ano aconteceu o primeiro culto em solo brasileiro?</li>
+<li>Qual o texto bíblico que foi lido?</li>
+</ul>
+<p>Caro leitor, as palavras deste livro são fruto da inspiração do Espírito Santo em nossos corações, visando servir ao Senhor Jesus e ao seu rebanho, por meio desta honrosa posição de ser servo dele.</p>
+<p><em>Quando nossas vozes silenciarem na terra, é porque estaremos cantando no céu.</em> Esperamos que este conteúdo continue sendo benção para a presente e as futuras gerações.</p>
+<p>Boa Leitura!</p>
+<p><strong>Samuel Rodrigues</strong> <em>Pastor Presidente da Assembleia de Deus</em> <em>Nação Madureira Campo de Colméia - TO.</em></p>
+<div class="sep"></div>
+<h2 id="capitulo-i-conhecendo-a-biblia">CAPÍTULO I — CONHECENDO A BÍBLIA</h2>
+<h3 id="1-1-etimologia-da-palavra-biblia">1.1 ETIMOLOGIA DA PALAVRA BÍBLIA</h3>
+<p>A palavra Bíblia não consta no texto das sagradas escrituras, apenas em sua capa. Etimologicamente, a palavra Bíblia utilizada na língua portuguesa vem da palavra grega bíblos, que significa "um livro". O termo bíblos vem do nome dado à polpa interna da planta do papiro em que se escrevia os livros sagrados. A palavra Bíblia, então, quer dizer "coleção de livros pequenos".</p>
+<p>De acordo com informações contidas no livro Práticas Pastorais, organizado pela Editora InterSaberes, em 2015a, esse vocábulo foi atribuído a João Crisóstomo, patriarca de Constantinopla, no século IV e, logo depois, introduzida por Jerônimo, o tradutor da Vulgata (tradução da Bíblia do hebraico para o Latim). Com a junção dos 66 livros, sendo 39 no Velho Testamento e 27 no Novo, os quais compõem o Cânion Bíblico, a palavra Bíblia passou a ser conhecida universalmente pelos judeus e cristãos.</p>
+<h3 id="1-2-a-autoria-divina-humana-da-biblia">1.2 A AUTORIA DIVINA-HUMANA DA BÍBLIA</h3>
+<p>Para que a Palavra de Deus fosse redigida, Deus usou vários personagens das mais diversas classes sociais. O pastor Abrão de Almeida, membro da Academia Evangélica de Letras, diz que:</p>
+<blockquote><p>Para redigir sua palavra, Deus inspirou mais de 40 autores, dentre eles os estadistas José e Daniel, o legislador Moisés, o poeta Davi, o sábio Salomão, os profetas Isaías e Jeremias, o médico Lucas, o filósofo Paulo, o coletor de impostos Mateus, e os pescadores Pedro, Tiago e João. Estes e muitos outros gastaram, ao todo, dezesseis séculos na redação da Bíblia, começando por volta de 1500 a. C. e terminando por volta do primeiro século da nossa era. (ALMEIDA, 2018, p. 16)</p></blockquote>
+<p>A Bíblia começa com o relato da criação, em Gênesis 1, escrito por Moisés por volta de 1405 anos a.C., e termina com as revelações da eternidade futura em Apocalipse 22, escrito pelo apóstolo João, em torno de 95 d. C.</p>
+<p>Acerca dessa autoria divina-humana da Bíblia, o filósofo e teólogo Tomás de Aquino (1225 – 1274) disse, acertadamente, em uma de suas falas: "o autor principal da escritura é o Espírito Santo; o homem foi apenas um autor instrumental".</p>
+<p>Certa vez, um ateu questionou um pastor sobre a autoria da Bíblia, dizendo que seria meramente humana. Diante de tal questionamento, o pregador lhe respondeu: A Bíblia só pode ter três autorias: ou de Deus, ou do diabo ou do homem. Do homem certamente não é, pois ele não escreveria sobre a sua queda, seus pecados, sua corrupção e sua incerteza diante da morte. A autoria da Bíblia também jamais poderia ser atribuída ao diabo, pois não escreveria sobre sua queda do céu com seus anjos, sua derrota no deserto, na cruz e a sua prisão eterna no poço do abismo com todos os seus anjos caídos. Portanto, de maneira soberana, o autor da Bíblia é o próprio Deus, que narra a vitória completa sobre o diabo, os demônios, a besta, o falso profeta, o anticristo e todos os homens que se opõem ao evangelho e propõe a vitória completa da igreja, dos salvos comprados e lavados pelo sangue de Jesus Cristo.</p>
+<p>Na própria Bíblia consta que tudo o que há nela foi inspirado pelo Espírito de Deus:</p>
+<blockquote><p><em>Sabendo primeiramente isto: que nenhuma profecia da Escritura é de particular interpretação. Porque a profecia nunca foi produzida por vontade de homem algum, mas os homens santos de Deus falaram inspirados pelo Espírito Santo.</em> (2 Pd 1.20 - 21)</p></blockquote>
+<p>Um dos maiores mestres da doutrina pentecostal na atualidade, Antônio Gilberto, descreve com maestria: "O autor da Bíblia é o próprio Deus, o tema central é Jesus Cristo, e o intérprete fiel é o Espírito Santo" (GILBERTO, 2014). Jesus é o tema central da Bíblia, Ele mesmo nos declara em João 5.39: "<em>examinais as escrituras, porque vós cuidais ter nelas a vida eterna, e são elas que de mim testificam</em>".</p>
+<p>Destarte, Jesus Cristo é o centro da Bíblia, e podemos resumir os 66 livros em cinco temas referentes a Ele:</p>
+<ul>
+<li>PREPARAÇÃO – Todo Antigo Testamento, que pois trata da preparação para o advento de Cristo.</li>
+<li>MANIFESTAÇÃO – Os Evangelhos, que tratam da manifestação de Cristo.</li>
+<li>PROPAGAÇÃO – O livro de Atos, que trata da propagação de Cristo.</li>
+<li>EXPLANAÇÃO – As Epístolas que são as explicações das doutrinas de Cristo.</li>
+<li>CONSUMAÇÃO – O Livro do Apocalipse que trata da consumação de todas as coisas preditas por meio de Cristo.</li>
+</ul>
+<p>Todos os livros da Bíblia, de maneira direta ou indireta, têm como tema central a apresentação de Jesus Cristo. O pastor Abrão de Almeida (2018), destaca, com maestria, quem é Jesus em vários livros da Bíblia, por exemplo:</p>
+<ul>
+<li>Em Gênesis – Ele é nosso Deus criador e a semente da mulher;</li>
+<li>Em Êxodo – Ele é o nosso cordeiro pascal;</li>
+<li>Em Levítico – Ele é o nosso sacrifício pelo pecado;</li>
+<li>Em Números – Ele é aquele que foi levantado;</li>
+<li>Em Deuteronômio – Ele é nosso verdadeiro profeta;</li>
+<li>Em Josué – Ele é o capitão da nossa salvação;</li>
+<li>Em Juízes – Ele é o nosso juiz-libertador;</li>
+<li>Em Rute – Ele é nosso Resgatador;</li>
+<li>Em 1 e 2 Samuel, 1 e 2 Reis, 1 e 2 Crônicas – Ele é o nosso Rei;</li>
+<li>Em Esdras e Neemias – Ele é nosso restaurador;</li>
+<li>Em Ester – Ele é o nosso advogado;</li>
+<li>Em Jó – Ele é o nosso redentor vivo;</li>
+<li>Em Salmos – Ele é o nosso tudo em todos;</li>
+<li>Em Provérbios – Ele é nossa sabedoria;</li>
+<li>Em Eclesiastes – Ele é a finalidade da vida;</li>
+<li>Em Cântico dos Cânticos – Ele é o nosso amado;</li>
+<li>Em Isaías e em Mateus – Ele é o Messias-Rei;</li>
+<li>Em Jeremias, Lamentações e Romanos – Ele é a nossa Justiça;</li>
+<li>Em Ezequiel e em Lucas – Ele é o filho do Homem;</li>
+<li>Em Daniel - Ele é a pedra que esmigalha os reinos do mundo;</li>
+<li>Em Oseias - Ele é o que encaminha o desviado;</li>
+<li>Em Habacuque - Ele é Deus da minha salvação;</li>
+<li>Em Ageu - Ele é o desejado de todas as nações;</li>
+<li>Em Zacarias - Ele o renovo da justiça;</li>
+<li>Em Malaquias - Ele o Sol da justiça;</li>
+<li>Em Marcos - Ele o servo do Senhor;</li>
+<li>Em João - Ele o filho de Deus;</li>
+<li>Em Atos - Ele o Senhor redivivo;</li>
+<li>Em Gálatas - Ele a nossa liberdade;</li>
+<li>Em Efésios - Ele a cabeça da Igreja;</li>
+<li>Em Filipenses - Ele a nossa alegria;</li>
+<li>Em Colossenses - Ele a nossa glória;</li>
+<li>Em 1 e 2 Tessalonicenses - Ele a gloriosa imagem de Deus;</li>
+<li>Em Hebreus - Ele é aquele que há de vir;</li>
+<li>Em Tiago - Ele é nosso modelo;</li>
+<li>Em apocalipse - Ele é nosso Rei triunfante.</li>
+</ul>
+<p>Enfim, como está escrito em Apocalipse 1.8: "<em>Ele [Jesus] é aquele que era, que é, e que há de vir! O todo Poderoso.</em>"</p>
+<h3 id="1-3-as-duas-traducoes-mais-famosas-da-biblia">1.3 AS DUAS TRADUÇÕES MAIS FAMOSAS DA BÍBLIA</h3>
+<h4 id="1-3-1-septuaginta">1.3.1 Septuaginta</h4>
+<p>Esta foi a primeira tradução da Bíblia. Traduzida por setenta homens, do hebraico para o grego, por volta do ano 285 a.C., na cidade de Alexandria, no Egito. Evidentemente, trata-se da tradução do Velho Testamento. Provavelmente, essa era a Bíblia usada por Jesus e os apóstolos. Ela se dividia em três partes:</p>
+<ul>
+<li>Lei (torá);</li>
+<li>Profetas (nevi'im)</li>
+<li>Escritos (ketuvim).</li>
+</ul>
+<p>Em vários momentos de sua vida aqui terra, consoante ao que foi narrado nos livros da Bíblia que contam a história de Jesus (Novo Testamento), Jesus perguntou aos religiosos a respeito do que está escrito nos <em>Salmos</em>, do que está escrito nos <em>Profetas</em>, do que está escrito na <em>Lei</em>.</p>
+<h4 id="1-3-2-vulgata">1.3.2 Vulgata</h4>
+<p>É a tradução da Bíblia toda do hebraico para o latim, feita por Jerônimo, no ano 405 d.C., na cidade de Belém, Palestina. Essa versão é usada pela igreja romana desde o concílio de Trento, em 1546 d.C.</p>
+<h3 id="1-4-as-divisoes-da-biblia">1.4 AS DIVISÕES DA BÍBLIA</h3>
+<p>A Bíblia está dividida em duas grandes partes: Antigo e Novo testamento. O Antigo Testamento, originalmente, foi escrito na língua hebraica, contendo somente algumas passagens na língua aramaica, e foi concluído por volta do ano 434 a.C.</p>
+<p>O Novo Testamento, por sua vez, foi escrito na língua grega popular, o <em>Koyné</em>, contendo também algumas frases em aramaico, tendo o seu surgimento entre os anos 53 e 96 d.C.</p>
+<p>A palavra "testamento", para as duas divisões da Bíblia, remota ao termo latino <em>"testamentum"</em> e ao termo grego <em>"diathéke"</em>, o qual, na maioria de suas ocorrências na Bíblia grega, significa: <em>"conserto ou aliança"</em>, em vez de testamento.</p>
+<p>É importante que o leitor compreenda que todos os livros da Bíblia só passaram a constar capítulos e versículos séculos depois.</p>
+<p>A divisão em capítulos foi feita por Hugo de Saint Cher, em 1250 d.C., um profundo estudioso das escrituras e comentarista bíblico pertencente à Ordem Dominicana, uma denominação católica.</p>
+<p>Já a divisão em versículos ocorreu em duas etapas diferentes: o Velho Testamento no ano de 1445, pelo Rabi Nathan; e o Novo testamento no ano de 1551 por Robert Stevens. Ele também publicou a vulgata latina no ano de 1555, sendo a primeira versão da Bíblia dividida em capítulos e versículos.</p>
+<h3 id="1-5-estrutura-da-biblia">1.5 ESTRUTURA DA BÍBLIA</h3>
+<p>A estrutura da Bíblia pode ser apresentada de várias maneiras. Apresentamos, na tabela a seguir, esse modelo prático com o objetivo de uma melhor compreensão para o leitor. Seguindo a seguinte ordem: livros, capítulos, versículos, palavras, letras, livro do meio ou central, capítulo do meio ou central, livro e versículo menor.</p>
+<p class="rotulo-tabela"><strong>Tabela 1: Resumo da Estrutura Bíblica</strong></p>
+<div class="tabela-rolagem"><table>
+<tr><th>Resumo da Estrutura Bíblica</th><th>A. testamento</th><th>N. testamento</th></tr>
+<tr><td>Livros</td><td>39</td><td>27</td></tr>
+<tr><td>Capítulos</td><td>929</td><td>260</td></tr>
+<tr><td>Versículos</td><td>23.214</td><td>7.959</td></tr>
+<tr><td>Palavras</td><td>592.439</td><td>181.253</td></tr>
+<tr><td>Letras</td><td>2.728.100</td><td>838.380</td></tr>
+<tr><td>Livro do meio</td><td>Provérbios</td><td>2 Ts</td></tr>
+<tr><td>Capítulo do meio</td><td>13</td><td>Rm 13.14</td></tr>
+<tr><td>Livro menor</td><td>Obadias</td><td>3 Jo</td></tr>
+<tr><td>Verso menor</td><td>Êx 20.13; Dt 5.17</td><td>Jo 11.35</td></tr>
+</table></div>
+<p class="fonte-tabela"><em>Fonte: Elaborado pelo autor</em></p>
+<h4 id="1-5-1-o-velho-testamento">1.5.1 O Velho Testamento</h4>
+<p>Os livros do Velho Testamento são divididos em quatro grupos: pentateuco, história, poesia e profecia, conforme consta na Tabela 2, abaixo.</p>
+<p class="rotulo-tabela"><strong>Tabela 2: Divisão dos livros do Velho Testamento</strong></p>
+<div class="tabela-rolagem"><table>
+<tr><th colspan="4">Divisão em grupos dos livros do Velho Testamento</th></tr>
+<tr><td>1º Grupo</td><td>Pentateuco</td><td>Gn – Dt</td><td>05 LIVROS</td></tr>
+<tr><td>2º Grupo</td><td>História</td><td>Js – Et</td><td>12 LIVROS</td></tr>
+<tr><td>3º Grupo</td><td>Poesia</td><td>Jó – Ct</td><td>05 LIVROS</td></tr>
+<tr><td>4º Grupo</td><td>Profecia</td><td>Is – Ml</td><td>17 LIVROS</td></tr>
+</table></div>
+<p class="fonte-tabela"><em>Fonte: Elaborada pelo autor</em></p>
+<p>Vejamos, agora, de forma resumida, os assuntos tratados em cada um desses grupos de livros bíblicos:</p>
+<ul>
+<li>Pentateuco – os judeus chamam-no de "Torá" ou "Lei", sendo essa obra o código legislativo da nação judaica.</li>
+<li>História – Esses livros tratam da conquista da terra prometida, e do estabelecimento de Israel em Canaã. Eles também retratam os altos e baixos das consequências vividas pelos judeus por razão da desobediência à Lei dada por Deus. Quando Israel obedecia triunfava, quando desobedecia amargava as mais humilhantes derrotas.</li>
+<li>Poesia – Os livros poéticos representam a clássica poesia hebraica. Neste grupo de livros, os poetas narram sofrimentos, hinos para adoração, provérbios de sabedoria, conselhos e poesias de amor, apontando para Cristo e sua noiva, a igreja.</li>
+<li>Profecia – Os livros proféticos são divididos em profetas maiores e profetas menores. São assim chamados não por causa da sua importância, mas pela quantidade do material escrito. Esses livros ocupam quase um terço do Velho Testamento e contêm doutrinas, histórias pessoais dos profetas e a mensagem inspirada de Deus para o seu povo.</li>
+</ul>
+<h4 id="1-5-2-periodo-interbiblico">1.5.2 Período Interbíblico</h4>
+<p>Entre o último livro do Antigo Testamento e o primeiro do Novo Testamento existe um espaço de tempo de aproximadamente 430 anos, conhecido como Período Interbíblico, em que vários livros foram escritos, mas sem a devida inspiração do Espírito Santo (livros apócrifos). Porém, os reformadores protestantes foram os grandes responsáveis pela retirada desses livros da Bíblia, pois havia neles elementos inconsistentes com a doutrina protestante, como <em>oração aos mortos e intercessão aos santos</em>. Todavia, outros livros foram inclusos nas bíblias de traduções romanas. Veja, na tabela a seguir, quais são esses livros:</p>
+<p class="rotulo-tabela"><strong>Tabela 3: Relação de Livros Apócrifos</strong></p>
+<div class="tabela-rolagem"><table>
+<tr><th colspan="1">Relação de Livros Apócrifos</th></tr>
+<tr><td>1º Tobias</td></tr>
+<tr><td>2º Judite</td></tr>
+<tr><td>3º Sabedoria de Salomão</td></tr>
+<tr><td>4º Eclesiástico</td></tr>
+<tr><td>5º Baruc</td></tr>
+<tr><td>6º I Macabeus</td></tr>
+<tr><td>7º II Macabeus</td></tr>
+</table></div>
+<p>Além desses acima citados, as bíblias de traduções romanas incluem outros, que são:</p>
+<div class="tabela-rolagem"><table>
+<tr><th colspan="1">Outros livros das traduções romanas</th></tr>
+<tr><td>8º Ester</td></tr>
+<tr><td>9º Cântico dos Três Santos Filhos</td></tr>
+<tr><td>10º História de Suzana</td></tr>
+<tr><td>11º Bel e o Dragão</td></tr>
+</table></div>
+<h4 id="1-5-3-o-novo-testamento">1.5.3 O Novo Testamento</h4>
+<p>Como destacado no subtópico anterior, houve aproximadamente 430 anos de silêncio profético, até que o anjo Gabriel quebrou esse silêncio dentro do templo, falando a Zacarias que lhe daria um filho por nome de João, o qual, sendo o último profeta da antiga aliança, foi o precursor do Messias. A partir desse episódio, foram escritos os livros do Novo Testamento, os quais estão divididos de acordo com a tabela que se segue.</p>
+<p class="rotulo-tabela"><strong>Tabela 4: Divisão dos Livros do Novo Testamento</strong></p>
+<div class="tabela-rolagem"><table>
+<tr><th colspan="4">Divisão em Grupos dos Livros do Novo Testamento</th></tr>
+<tr><td>1º Grupo</td><td>Evangelhos</td><td>Mt – Jo</td><td>04 livros</td></tr>
+<tr><td>2º Grupo</td><td>História</td><td>At</td><td>01 livro</td></tr>
+<tr><td>3º Grupo</td><td>Epístolas</td><td>Rm – Jd</td><td>21 livros</td></tr>
+<tr><td>4º Grupo</td><td>Revelação</td><td>Ap</td><td>01 livro</td></tr>
+</table></div>
+<p class="fonte-tabela"><em>Fonte: Elaborada pelo autor</em></p>
+<p>A seguir, apresentamos, de forma resumida, o que cada um desses grupos de livros bíblicos descreve a vida terrena de Jesus, e seu glorioso ministério entre os homens. Os três primeiros são chamados sinóticos, pelo paralelismo que apresentam, e o quarto é universal. Como relatado por Lucas, é tudo o que Jesus começou a fazer e ensinar.</p>
+<ul>
+<li>História - registra a história da igreja primitiva, seu viver, exemplo e agir. Em Atos, vemos Jesus subindo, o Espírito Santo descendo e a igreja crescendo em graça, em número e sabedoria pela plenitude do Espírito na vida da igreja.</li>
+<li>Epístolas - as cartas ou epístolas contém um compêndio de doutrinas direcionadas a indivíduos e as igrejas existentes nos dias dos apóstolos e também a nós, nos dias atuais. Elas podem ser divididas em epístolas gerais e pastorais.</li>
+<li>Revelação – trata da volta pessoal de Jesus à terra, e das coisas que precederão esse glorioso evento. Alguém disse, certa vez, que o Apocalipse é o inverso do Gêneses. No Gêneses mostra como tudo começou e no Apocalipse mostra como tudo findará. Para ilustrar as oposições entre esses dois livros bíblicos, o pastor e teólogo norte-americano, Warren W. Wierisbe, traça um paralelo entre eles, conforme mostra a Tabela 5, a seguir.</li>
+</ul>
+<p class="rotulo-tabela"><strong>Tabela 5: Paralelo entre os livros de Gêneses e Apocalipse</strong></p>
+<div class="tabela-rolagem"><table>
+<tr><th>Gênesis</th><th>Apocalipse</th></tr>
+<tr><td>Criação dos céus e da terra (caps. 1 - 2)</td><td>Criação do novo céu e da nova terra (caps. 21 - 22)</td></tr>
+<tr><td>O primeiro Adão reina sobre a terra (1. 26)</td><td>O último Adão reina em glória (21. 5)</td></tr>
+<tr><td>A criação da noite e dos mares (1. 5 e 10)</td><td>Não há mais noite e nem mar (21. 1 e 25)</td></tr>
+<tr><td>Uma noiva para Adão (2.18 - 25)</td><td>A noiva preparada para Cristo (19. 7)</td></tr>
+<tr><td>A árvore da vida no Éden (2. 9 e 3. 22)</td><td>A árvore da vida da nova criação no céu (22. 2)</td></tr>
+<tr><td>A morte e a maldição (3.14, 17 - 19)</td><td>Não haverá mais maldição, morte ou lágrimas (22. 3)</td></tr>
+<tr><td>Conflito entre Cristo e satanás (3. 15)</td><td>A condenação final de satanás (20. 10)</td></tr>
+<tr><td>O homem afastado da face de Deus (3. 23 e 4.16)</td><td>Os homens veem a face de Deus em glória (22. 4)</td></tr>
+<tr><td>Os crentes procuram uma cidade (Hb 11. 13 - 16)</td><td>A cidade santa é apresentada em glória (21.10), o cordeiro reina eternamente (22. 3)</td></tr>
+</table></div>
+<p class="fonte-tabela"><em>Fonte: Wierisbe (2007, p. 846).</em></p>
+<h3 id="1-6-quem-fala-na-biblia">1.6 QUEM FALA NA BÍBLIA</h3>
+<p>Ao estudar a Bíblia, é importante observar quem está falando. Esses cuidados evitam que o leitor cometa erros gravíssimos na interpretação e aplicação do texto.</p>
+<p>Segundo o escritor Antônio Gilberto (2014), são três seres que falam na Bíblia, quais sejam:</p>
+<ul>
+<li>Deus – fala continuamente através da sua Palavra; ora diretamente, ora através dos seus servos.</li>
+<li>O homem – fala de si mesmo. Há um capítulo todo escrito por um ímpio (Dn 4). Além disso o livro de Eclesiastes é o registro do raciocínio do homem natural, insatisfeito como sempre.</li>
+<li>O diabo – a Bíblia registra palavras e mensagens dele.</li>
+</ul>
+<p>Diante disso, durante o estudo da Bíblia, procure observar quem está falando, para evitar aplicações errôneas, pois, de acordo com Gilberto (2014, p. 61), "é preciso sabedoria e prudência na aplicação da mensagem da Bíblia."</p>
+<h3 id="1-7-breve-resumo-da-biblia">1.7 BREVE RESUMO DA BÍBLIA</h3>
+<p>Para concluirmos nosso estudo sobre esse livro sagrado que acompanha e direciona o povo de Deus há milênios, trazemos um breve resumo a respeito da Bíblia, comentado por John MacArthur:</p>
+<blockquote><p><strong>A Bíblia</strong></p><p>Este livro contém: a mente de Deus, o estado do homem, o caminho para a salvação, a perdição dos pecadores e a felicidade dos cristãos. Sua doutrina é santa, seus preceitos são obrigatórios, suas <em>histórias são verdadeiras e suas decisões são imutáveis. Leia a Bíblia para ser sábio, creia nela para ser salvo e coloque-a em prática para ser santo.</em> Ela contém luz para direcioná-lo, alimento para sustentá-lo e consolo para animá-lo. É o mapa do viajante, o cajado do peregrino, a bússola do piloto, a espada do soldado e o estatuto do cristão. Aqui o céu é aberto e os portões do inferno são revelados. Cristo é o grande tema; nosso bem, seu desígnio; e a glória de Deus, seu fim. Deve encher nossa memória, governar nosso coração e guiar os nossos pés. Leia-a sem pressa, com frequência e em oração. É uma mina de riquezas, saúde para a alma e um rio de deleite. É dada a você aqui nesta vida, será aberta no julgamento e está estabelecida para sempre. Envolve o mais alto grau de responsabilidade, compensará o maior trabalho e condenará todos os que desprezam seu conteúdo. I Tss. 2.13. (MACARTHUR, 2015, p. 21).</p></blockquote>
+<p>Não está escrito na bíblia que o povo de Deus é destruído pelo o diabo, mas, está escrito "<em>o meu povo foi destruído porque lhes faltou conhecimento</em>".</p>
+<p>Finalizando este capítulo sobre a Palavra de Deus, podemos afirmar, a partir da leitura desse conjunto de livros escritos pelo próprio Criador por meio de homens inspirados pelo Espírito Santo, que quem ganha o céu ganha tudo, quem perde o céu perde tudo.</p>
+<div class="sep"></div>
+<h2 id="capitulo-ii-o-obreiro-e-os-cinco-ministerios-fundamentais">CAPÍTULO II — O OBREIRO E OS CINCO MINISTÉRIOS FUNDAMENTAIS</h2>
+<p>Se nós, obreiros, fôssemos donos de um negócio, <em>nós gostaríamos de ter um funcionário em nossa equipe trabalhando como nós temos trabalhado no reino de Deus?</em> Ainda dá tempo de melhorarmos antes que sejamos reprovados por Ele.</p>
+<h3 id="2-1-conhecendo-os-cinco-ministerios">2.1 CONHECENDO OS CINCO MINISTÉRIOS</h3>
+<p>O obreiro dentro das suas atribuições ministeriais deve seguir o padrão bíblico para obter êxito no seu chamado.</p>
+<p>Desse modo, compreender a diferença entre <em>habilidade</em> e <em>autoridade</em> é fundamental para um bom desempenho ministerial:</p>
+<ul>
+<li>Habilidade – pode ser nata ou adquirida.</li>
+<li>Autoridade – dádiva de Deus sendo manifestada no caráter cristão e em um bom testemunho.</li>
+</ul>
+<p>O que compromete a autoridade espiritual é o pecado. O pecado não tira a habilidade e sim a autoridade, por exemplo: uma pessoa que é um bom tocador e adorador na casa de Deus, quando peca ele não esquece a habilidade de tocar e cantar, mas perde a autoridade para tal serviço; do mesmo modo, um obreiro que fracassa no seu matrimônio perde a autoridade para ministrar para famílias porque seu testemunho fica comprometido e, nesta área, compromete a sua autoridade.</p>
+<p>Fica evidente, portanto, que não podemos fazer a obra do Senhor apenas com nossas habilidades. Oremos para que o Espírito Santo nos dê habilidade e, acima de tudo, autoridade para fazer a obra do Senhor.</p>
+<p>Muitas pessoas desejam receber poder, autoridade e unção em suas vidas apenas em um momento de oração e unção com óleo, e não é bem assim. A oração nos dá poder! O jejum nos traz quebrantamento! A leitura da Bíblia, de bons livros e cursos seculares e teológicos nos traz conhecimento! Um bom testemunho na família, na igreja e na sociedade de nos dá autoridade! E a sabedoria é um dom de Deus! Ela é o equilíbrio para se ter uma vida saudável e bem-sucedida nas mais diversas áreas das nossas vidas. Certa vez, alguém perguntou a um sábio: O que é sabedoria? O sábio lhe respondeu: "Sabedoria é a capacidade de julgar as coisas corretamente e agir prudentemente".</p>
+<p>Certa vez, a irmã Janaina Milhomem disse em uma de suas ministrações sobre a importância da sabedoria e o equilíbrio nas tomadas de decisões: "a diferença entre o remédio e o veneno é a dosagem certa, o mesmo remédio que cura uma enfermidade, em excesso, pode levar à óbito."</p>
+<p>Outro fator importante na vida de um obreiro é a unção. A unção é uma capacidade dada por Deus para o salvo fazer o que ele jamais faria, para chegar onde jamais chegaria e viver o que ele jamais viveria.</p>
+<p>A Bíblia nos ensina a compreender a igreja como um corpo formado por vários membros, cada um em seu devido lugar, sendo todos regidos por uma cabeça. A cabeça da igreja é Cristo, nós somos os seus membros em particular (Rm 12.5; I Co 12.27; Ef 1.23).</p>
+<p>Todos os membros são importantes e todos precisam um dos outros. O importante não é o tamanho dos membros, quem é maior ou menor, e sim a função. Conta-se que, um dia, os olhos se sentindo turvos precisou usar óculos e pediu ao amigo nariz que permitisse apoiar os óculos para ver melhor. Então, o nariz falou: "o problema é seu e eu não tenho nada a ver com isso, não posso te ajudar." Um certo dia, a visão escureceu a ponto de o pé tropeçar em um obstáculo e todo o corpo caiu. Sabe quem se quebrou primeiro? O nariz, é claro! No ministério também é assim, precisamos uns dos outros ou, caso contrário, seremos feridos, nos sentimos enfadados e, até mesmo, adoecidos, se não servirmos uns aos outros como Jesus nos ensinou.</p>
+<p>Todos os membros são diferentes, trabalham diferente, mas o sangue é que da vida e faz todos importantes. Se um obreiro perder a vida de Cristo em seu ministério, logo começará a morrer espiritualmente.</p>
+<p>O propósito dos ministérios bíblicos é servir, visando o aperfeiçoamento dos santos e da Igreja, que é o corpo de Cristo. Se o sentido do ministério não for esse, ele não é bíblico e, logo, se não for bíblico, não pode ser aceito.</p>
+<p>Destacamos, a seguir, que os dons ministeriais, são dons concedidos àqueles que são nomeados ou ordenados para o ministério do corpo de Cristo. E estes devem servir à igreja no mesmo nível de valor e propósito. Vejamos a ordem que Deus colocou os ministérios na igreja e seus significados, com base em Efésios 4:</p>
+<blockquote><p><em>E ele mesmo deu uns para apóstolos, e outros para profetas, e outros para evangelistas, e outros para pastores e doutores, querendo o aperfeiçoamento dos santos, para a obra do ministério, para edificação do corpo de Cristo</em> (Ef 4. 11- 12. Grifo nosso).</p></blockquote>
+<p>Vejamos, agora, cada um desses ministérios de forma mais detalhada:</p>
+<h4 id="1-apostolos">1) Apóstolos</h4>
+<p><em>"Ele mesmo deu uns para apóstolos [...]" (Ef 4.11)</em></p>
+<p>Esse ministério foi atribuído, inicialmente, aos doze que Jesus chamou para estar com Ele enquanto desenvolvia seu ministério terreno, conforme registrou o evangelista Marcos (Mc 3.16 -19).</p>
+<p>Os apóstolos eram representantes legais de Cristo na terra, a eles foram entregues as chaves do reino dos Céus. No grego, "apóstolo" significa mensageiro, enviado ou delegado.</p>
+<p>Após Jesus retornar ao Céu, os onze apóstolos consentiram que era necessário escolher um substituto para o lugar de Judas. Para essa escolha, levaram em consideração alguns critérios, dentre eles, o principal era ter andado com Jesus, desde o batismo até sua ascensão ao Céu (I Co 15. 4 -8). Ao lançarem sorte, Matias foi o escolhido (At 1. 25 - 26), depois, Paulo é reconhecido como apóstolo e também Barnabé, conforme Atos 14.14.</p>
+<p>Há várias linhas de entendimento sobre a atual existência ou não do ministério apostólico. A igreja católica acredita na sucessão apostólica e consideraram os papas como sucessores do apóstolo Pedro. Entendemos, à luz da Bíblia, que a importância não é a sucesso, mas a continuidade do trabalho que eles iniciaram. Ao abordar esse tema, o escritor Elienai Cabral escreveu o seguinte:</p>
+<blockquote><p>Há um conceito errado quanto a função apostólica hoje. Chamam alguns de apóstolos pelo tempo de serviço ministerial ou destaque na liderança pastoral. Se o ministério de apóstolo encontra-se na mesma lista de Efésios 4,11, pergunto, então: porque devemos ter evangelistas, pastores, mestres e profetas e não apóstolos se esse ministério foi incluído no mesmo texto? É claro que não podemos generalizar a importância; ao contrário, queremos dar o devido valor a esse necessário ministério na igreja atual (CABRAL, 1999, p. 87).</p></blockquote>
+<p>Enfatizamos que esse ministério apostólico foi selado por que todos os apóstolos com seus próprios sangue, como testemunhas ou mártires pela causa do Evangelho de Jesus. Eles estabeleceram as doutrinas, igrejas em diversas cidades, foram terrivelmente perseguidos, torturados e mortos. Quem não estiver apto a sofrer esses danos jamais ouse tomar para si esta tamanho honra.</p>
+<h4 id="2-profetas">2) Profetas</h4>
+<p><em>"[...] e outros para profetas" (Ef 4.11)</em></p>
+<p>Os profetas exerciam, na prática, o propósito dos dons ministeriais, eles trabalhavam em uma profunda sintonia com os apóstolos. A eles foram confiados, pelo Espírito Santo, a honrosa responsabilidade de edificar, consolar e exortar a igreja (I Co 14. 3).</p>
+<p>Na igreja primitiva, houve vários profetas, conforme relatado por Lucas no livro de Atos. Há registros de profetas na cidade de Antioquia (At 13. 1 - 2), em Jerusalém (At 11. 27 - 28), e as filhas de Filipe que também eram profetisas. É importante deixar claro que, nos dias desses profetas primitivos, a Bíblia não estava completa. No entanto, suas mensagens jamais contrariaram as escrituras, ao contrário, ficou como fundamento das doutrinas apostólicas deixadas pelo Espírito Santo a sua igreja.</p>
+<p>Destacamos que o ofício de profeta é também para nossos dias, ele trabalha com finalidades específicas de edificar, consolar e exortar com base nas verdades já reveladas na Bíblia. Fora desse modelo bíblico, o profeta e as profecias só geram prejuízos, tanto para quem profetiza quanto para quem as ouvem.</p>
+<h4 id="3-evangelistas">3) Evangelistas</h4>
+<p><em>"[...] e outros para evangelistas" (Ef 4.11)</em></p>
+<p>Os evangelistas são aqueles que são comissionados a levar as boas novas da salvação aos perdidos. O ministério de evangelista não é menos ou mais importante que os demais. Os evangelistas são habilitados pelo Espírito Santo para falar da salvação, na pessoa de Jesus, a todos os que ainda não são salvos.</p>
+<p>Enquanto os evangelistas ganham as almas, os pastores apascentam e, juntamente com os mestres, ensinam a Palavra de Deus, transmitindo o conhecimento sistemático da mesma. Enquanto os apóstolos e profetas lançaram os fundamentos para a igreja, os evangelistas edificaram sobre esse fundamento, ganhando as almas para Cristo.</p>
+<h4 id="4-pastores-e-mestres">4) Pastores e mestres</h4>
+<p><em>"[...] e outros para pastores e doutores" (Ef 4.11)</em></p>
+<p>O pastor é aquele que cuida, alimenta, ensina e protege o rebanho dos falsos ensinos e dos lobos traiçoeiros. O pastor chamado por Deus tem a consciência de que as ovelhas não são suas, mas do seu premio pastor que é Cristo.</p>
+<p>Quem constitui um pastor é o Espírito Santo, pois, conforme consta no livro de Atos: "<em>Olhai, pois, por vós, e por todo o rebanho sobre que o Espírito Santo vos constituiu bispos, para apascentardes a igreja de Deus, que ele resgatou com seu próprio sangue</em>" (At 20.28). Desse modo, ninguém pode tomar essa honra para si se não for chamado por Deus.</p>
+<p>No início do evangelho, conforme as igrejas iam se estabelecendo, nas mais diversas cidades do mundo antigo, pastores eram designados pelo Espírito Santo e, através da liderança dos apóstolos, eram colocados para cuidar daquelas cristãos.</p>
+<p>Há uma grande concordância teológica de que o pastor exerce um duplo ministério, atuando também como mestre. O apóstolo Paulo recomendou a Timóteo, pastor da igreja de Éfeso: "<em>Persiste em ler, exortar e ensinar, até que eu vá.</em>" (1 Tm 4.13).</p>
+<p>O ministério de mestres é o de ensinar a Palavra de Deus de forma lógica. Os mestres são meticulosos no ensino bíblico, eles ensinam os significados das palavras de Jesus, esclarecem o texto e mostram o contexto, visando uma compreensão clara das escrituras e evitando as interpretações equivocadas.</p>
+<h3 id="2-2-o-proposito-dos-ministerios">2.2 O PROPÓSITO DOS MINISTÉRIOS</h3>
+<p>Os ministérios existem para uma tríplice missão:</p>
+<ul>
+<li>O aperfeiçoamento dos santos,</li>
+<li>A obra do ministério,</li>
+<li>E a edificação do corpo de Cristo.</li>
+</ul>
+<p>Foi Deus quem colocou cada membro no corpo em seu devido lugar, para desempenhar sua função com excelência, consoante ao que consta em Efésios 4.16, que diz o seguinte: "<em>[...] do qual o corpo inteiro, bem ajustado, e ligado pelo auxílio de todas as juntas, segundo a justa operação de cada parte, efetua o seu crescimento para edificação de si mesmo em amor</em>".</p>
+<p>Nós fomos colocados no corpo de Cristo com um propósito especial, e com funções diferentes. Você sabia que a maioria dos bons pescadores não gostam de tratar os peixes que pescam? Imagine que se todos fossem pescadores e não tivessem os tratadores dos peixes, seria importante pescar? Claro que não! Logo eles se perderiam. Nesta visão, os profetas e evangelistas são como aqueles que pescam; e os pastores, mestres e doutores são como aqueles que limpam. O processo de limpar demanda cuidado e tempo e, além de tudo, uma ótima precisão no tempo por parte daqueles que cuidam. Se não atentar para esse detalhe, corre o risco de perder o peixe, mesmo depois de gastar muito tempo com ele.</p>
+<p>Deus espera que cada um de nós desempenhemos nosso trabalho com dedicação, não criticando ou se julgando melhor, mas servindo uns aos outros no temor do Senhor.</p>
+<blockquote><p><em>Se é ministério, seja em ministrar; se é ensinar, haja dedicação ao ensino; ou o que exorta, use esse dom em exortar; o que reparte, faça-o com liberalidade; o que preside, com cuidado; o que exercita misericórdia, com alegria</em> (Rm 12. 7 – 8. Grifo nosso).</p></blockquote>
+<p>Oremos para que o Senhor da seara envie trabalhadores com a visão de reino, submissos ao seu Senhor. O propósito do Espírito Santo é que cada um fique na posição em que foi chamado, para desenvolver um ministério de excelência, com humildade e amor, sempre sendo aqueles que servem a todos, pois, como está escrito no Evangelho de Mateus: "<em>Não será assim entre vós; antes, qualquer que entre vós quiser tornar-se grande, será esse o que vos sirva.</em>" (Mt 20. 26)</p>
+<div class="sep"></div>
+<h2 id="capitulo-iii-o-obreiro-e-suas-atribuicoes-ministeriais">CAPÍTULO III — O OBREIRO E SUAS ATRIBUIÇÕES MINISTERIAIS</h2>
+<p>Neste capítulo, o leitor compreenderá o perfil do obreiro bíblico, os cargos e suas atribuições ministeriais, dentro de cada área de competência.</p>
+<h3 id="3-1-requisitos-biblicos-para-ser-um-obreiro">3.1 REQUISITOS BÍBLICOS PARA SER UM OBREIRO</h3>
+<p>Em primeiro lugar, ele precisa ser chamado por Deus. Deus é quem chama obreiros para sua obra. Conforme a fala do pastor Enoque Vieira, em uma de suas pregações, Deus é quem chama, mas a igreja é quem o reconhece. E esse reconhecimento vem acompanhado de prova: "<em>E também estes sejam primeiro provados, depois sirvam, se forem irrepreensíveis</em>" (Tm 3.10. Grifo nosso).</p>
+<p>O obreiro é o padrão dos fiéis. Isso significa que os demais membros têm como modelo ou referência na vida espiritual. Certa vez, um monge que estava discipulando Thomas de Aquino disse a ele: "Thomas, as vacas estão voando." Rapidamente ele foi à janela para ver. O monge sorriu e disse: "Thomas, como você é tolo! As vacas não voam." Ao que ele respondeu: "Eu prefiro acreditar que as vacas voam do que acreditar que um homem de Deus minta."</p>
+<p>A linguagem sadia gera credibilidade e é um remédio contra o engano. O poder da morte e da vida está no poder da língua e aquele que a ama comerá do seu fruto (Pv 18.21). Nossas palavras podem gerar vida ou morte, ferir ou curar. Há quem diga que nada mata mais do que as palavras. O pastor Cash Luna, líder de uma grande igreja na Guatemala, ensina sobre a sabedoria da lagarta: A lagarta quando percebe que está cansada de rastejar, esforça-se fixando em algo e com o que sai da sua boca ela constrói um casulo. O casulo, feito com o que sai da sua boca, gera um ambiente de transformação. Em pouco tempo, a lagarta vira uma borboleta, que antes rastejava, agora voa. Esta ilustração mostra que o que sai da nossa boca pode gerar um ambiente de transformação que produz profundas mudanças ou um casulo que produz morte em vez da vida.</p>
+<p>Deus estabeleceu os requisitos dos homens que deveriam auxiliar Moisés na sua jornada:</p>
+<blockquote><p><em>Mas escolhe do meio do povo homens capazes, tementes a Deus, que sejam dignos de confiança e inimigos de ganhos desonestos. Estabelece-os como chefes de mil, chefes de cem e chefes de cinquenta e chefes de dez</em> (Êx 18. 21. Grifo nosso).</p></blockquote>
+<p>Observem que Deus foi quem deu as características dos obreiros, mas ele disse a Moisés: "Escolhe!"</p>
+<p>Na igreja primitiva, houve uma murmuração entre os irmãos sobre o serviço social da igreja e os apóstolos disseram: "<em>Portanto, irmãos, escolhei dentre vós sete homens de bom testemunho, cheios do Espírito e de sabedoria, aos quais encarregaremos deste ministério.</em>" (At 6. 3. Grifo nosso).</p>
+<p>Os apóstolos disseram: Escolhei! E nós encarregaremos deste, ou seja, dentro da necessidade existente na igreja. A partir de então, nasceu o ministério da diaconia, que significa: encargo, serviço ou ocupação.</p>
+<p>A seguir, destacamos várias qualidades bíblicas que o Espírito Santo requer de seus obreiros:</p>
+<ul>
+<li>Governar bem sua própria família e ser marido de uma só mulher. (I Tm 3.12; Rm 13. 13 - 14)</li>
+<li>Possuir boa reputação, ter boa fama, ser honestos, digno de confiança. (At 6. 3; I Tm 3.8; Jo 12. 6)</li>
+<li>Não seja de língua dobre "dupla" ou conversador. (Mr 5. 37)</li>
+<li>Não ser cobiçoso. (I Pe 2.15; At 6. 5; Ap 2.14)</li>
+<li>Ser gentil e acolhedor. (Cl 4. 5)</li>
+</ul>
+<p>Para um melhor entendimento das referências citadas acima, recomendamos o estudo do capítulo 3 de II Timóteo e do capítulo 2 de Tito.</p>
+<h3 id="3-2-conhecendo-os-ministerios-existentes">3.2 CONHECENDO OS MINISTÉRIOS EXISTENTES</h3>
+<h4 id="3-2-1-bispo">3.2.1 Bispo</h4>
+<p>O Bispo é o pastor que supervisiona ou administra uma área, um Estado ou uma Nação, é a autoridade maior dentro da hierarquia ministerial. É o presidente da convenção nacional de ministros do ministério. Ele é pastor dos pastores, especificamente, dos presidentes das convenções estaduais.</p>
+<h4 id="3-2-2-pastor-presidente">3.2.2 Pastor Presidente</h4>
+<p>O Pastor Presidente pode exercer dupla função: Presidente da Convenção Estadual e também de um dos campos do Estado.</p>
+<p>Ao Presidente da Convenção Estadual é conferida, por meio do Bispo, autoridade para implantar novas frentes de trabalhos, criando novos campos. A ele compete realizar transferências dos demais pastores presidentes dos campos ligado à convenção do Estado, exceto dos pastores que exercem cargos vitais.</p>
+<p>Ao Pastor Presidente de um campo específico ele é um representante legal do presidente da convenção Estadual, compete trabalhar para o bom desenvolvimento do ministério e a expansão do reino de Deus. A igreja pastoreada pelo Presidente é chamada de Sede e as demais ligadas a ela são chamadas de congregações. Ao Pastor Presidente é conferida, por meio do Pastor Presidente da Convenção Estadual, autoridade para realizar transferências dos pastores dirigentes de congregações ligados ao campo, e outras mais atribuições.</p>
+<h4 id="3-2-3-pastor-dirigente-de-congregacao">3.2.3 Pastor Dirigente de Congregação</h4>
+<p>O Pastor Dirigente de uma congregação é o representante legal do Pastor Presidente do Campo. A ele compete trabalhar debaixo da visão dada por Deus ao presidente do campo para obter um bom êxito na sua administração, tanto na perspectiva organizacional como espiritual. A ele, na maioria das vezes, é conferida autoridade para construir templos, dar posse a líderes de departamentos, abrir novos pontos de pregação, indicar nome de novos obreiros que serão consagrados para servir nos cargos locais etc. Além de todas essas atribuições conferidas a todos os obreiros, o papel principal de um pastor é apascentar o rebanho de Deus, servindo uma prestação de contas com o Supremo Pastor – Jesus Cristo.</p>
+<h4 id="3-2-4-evangelistas-e-missionarios">3.2.4 Evangelistas e missionários</h4>
+<p>Esses ministérios são uma benção quando exercidos dentro do seu real propósito. Os evangelistas e missionários são os responsáveis pela propagação do evangelho. Seu lugar de atuação não é, especificamente, dentro da igreja, mas evangelizando nos lares, realizando evangelismo, discipulando e promovendo ações que leve o maior número de pessoas a Cristo.</p>
+<h4 id="3-2-5-presbiteros">3.2.5 Presbíteros</h4>
+<p>O presbítero desenvolve seu ministério lado a lado com o pastor, ajudando a cuidar e apascentar o rebanho. A eles é conferida a missão de orar pelos enfermos, ungindo-os com óleo, em nome de Jesus, consoante ao que está escrito no livro de Tiago:</p>
+<blockquote><p><em>Está alguém doente? chame os presbíteros da igreja; e estes façam oração sobre ele, ungindo-o com óleo em nome do Senhor. A oração da fé salvará o doente, e o Senhor o restabelecerá; e se tiver cometido pecados, ser-lhe-ão perdoados.</em> (Tg 5. 14 - 15)</p></blockquote>
+<p>Ademais, compete, também, ao presbítero levar santa ceia aos irmãos que não podem mais ir à igreja e estar apto para ensinar e ajudar a resolver os conflitos na igreja.</p>
+<h4 id="3-2-6-diaconos-e-diaconisas">3.2.6 Diáconos e diaconisas</h4>
+<p>Esse ministério nasceu no início da igreja primitiva, pois houve uma murmuração por parte dos gregos aos hebreus sobre a falta de assistência às suas viúvas na distribuição diária dos alimentos. Diante de tal problemática, os apóstolos escolheram algumas pessoas para exercerem esse ministério, conforme consta em Atos 6. 1- 3: <em>"Escolhei, pois, irmãos, dentre vós, sete homens de boa reputação, cheios do Espírito Santo e de sabedoria, aos quais constituamos sobre este importante negócio."</em></p>
+<p>Desde então, o serviço diaconal ocupou um lugar especial na igreja. Os diáconos são responsáveis por manter a organização em todas as áreas, especificamente a servil, na igreja.</p>
+<p>Seguem algumas recomendações para o bom desempenho desta função:</p>
+<ul>
+<li>Desenvolver, uma liderança servidora ao reino de Deus em sintonia com a visão dada por Deus ao Pastor e à Diretoria da Igreja. Os obreiros são o cartão de visita da igreja (daí a importância de serem cordiais, gentis, estarem bem-vestidos, barba feita e cabelo cortado).</li>
+<li>Promover visitas e reuniões para incentivar os demais auxiliares, diáconos e diaconisas a entenderem a visão e estarem motivados a servir ao Senhor.</li>
+<li>Supervisionar a organização e limpeza interna e externa do templo, com o objetivo de proporcionar um ambiente organizado e aconchegante a todos que vêm ao templo. Exemplo: papel higiênico no banheiro, copos no bebedouro etc.</li>
+<li>Desenvolver um cronograma de escala de trabalho alternado para as devidas necessidades como, por exemplo, para a abertura e fechamento do templo; supervisão do estacionamento; suporte à recepção e organização do estacionamento no pátio. Cumpre ressaltar que a escala deve ser feita com antecedência, nunca de última hora.</li>
+<li>Orientar os demais obreiros que não estiverem escalados para não ficarem fora do templo na hora do culto. Ter sempre um diácono e uma diaconisa prestando assistência ao dirigente do culto: servir água ao pregador; ajudar um ancião a ir ao banheiro ou a subir no altar; ligar e desligar um microfone quando a pessoa estiver com dificuldade; levar um CD à mesa de som etc.</li>
+<li>Fazer um relatório das coisas danificadas, como ar, lâmpadas queimadas, tomadas, banheiros, fechaduras etc.</li>
+</ul>
+<h4 id="3-2-7-auxiliares">3.2.7 Auxiliares</h4>
+<p>O auxiliar é aquele que "auxilia ou ajuda em uma determinada função ou cargo". No sentido ministerial, o auxiliar é aquele que ajuda os diáconos no desempenho de suas tarefas. É uma espécie de estágio e também de avaliação dos seus valores, caráter, obediência à palavra de Deus, obediência a sua liderança e respeito à tradição do ministério que serve. Alguém disse certa vez que: "tradição é a fé viva dos que já morreram e tradicionalismo é a fé morta dos que estão vivos".</p>
+<h3 id="3-3-recomendacoes-para-o-bom-desempenho-ministerial-do-obreiro">3.3 RECOMENDAÇÕES PARA O BOM DESEMPENHO MINISTERIAL DO OBREIRO</h3>
+<p>O segredo para ter um bom desempenho como obreiro está na intimidade com Deus, a qual é adquirida através da leitura diária da Palavra, da oração, do jejum, da busca incessante pela presença do Espírito Santo, da frequência aos cultos e da busca por mais conhecimento.</p>
+<p>Por isso, recomendamos as seguintes atitudes a todos aqueles que desempenham uma função ministerial na igreja:</p>
+<ul>
+<li>Tenha a Bíblia como seu maior tesouro, ela é a fonte da qual o obreiro deve beber diariamente, é pão vivo que devemos comer continuamente. Leia para ser sábio, creia nela para ser salvo e aplique seus ensinamentos em sua vida para ser santo.</li>
+<li>Ore para entender a Bíblia, ore para pregar a Bíblia, ore para viver os seus ensinamentos. Alguém, certo dia, perguntou a um sábio pastor: "qual é mais importante: a leitura da Bíblia ou a oração? Ele respondeu com outra pergunta: "qual das asas é mais importante para um pássaro: a direita ou a esquerda?" Assim como o pássaro não voa com uma asa só, o obreiro não prospera sem leitura bíblica e oração.</li>
+<li>Tenha o Espírito Santo como seu melhor amigo e mestre. Leia bons livros. Nós dissemos bons! Pois um livro ruim pode desestimular sua vida devocional de leitura. Peça ajuda a um amigo, veja sua biblioteca, compre comentários bíblicos, bíblias de estudo, manual do ministro, nele o leitor encontrará maneiras práticas de como celebrar Santa Ceia, cerimonial fúnebre, cerimonial de casamentos etc.</li>
+<li>Busque intensamente, com jejum e oração, o batismo e os dons do Espírito Santo.</li>
+<li>Matricule-se em uma escola teológica, participe de seminários e escolas bíblicas de obreiros.</li>
+<li>Por último, se esforce para não faltar aos cultos de ensinos e às escolas bíblicas dominicais.</li>
+</ul>
+<p>Enfim, <em>"busque o aperfeiçoamento, pois o Reino é excelente, o aperfeiçoamento é nosso, a capacitação vem de Deus"</em>.</p>
+<div class="sep"></div>
+<h2 id="capitulo-iv-os-dons-do-espirito-santo">CAPÍTULO IV — OS DONS DO ESPÍRITO SANTO</h2>
+<p><em>"Uma igreja cheia do Espírito Santo move os céus, abala o inferno e provoca profundas mudanças na terra"</em></p>
+<p>As igrejas pentecostais, ao longo de vários séculos, têm se destacado por meio da ação poderosa do Espírito Santo na vida dos salvos. Por meio dos dons espirituais, Deus tem levantado homens que, outrora sendo desprezados pela sua simplicidade, revolucionaram cidades, estados e nações, por meio da mensagem pentecostal pregada no poder do Espírito Santo.</p>
+<p>Os dons do Espírito Santo é uma dádiva de Deus ao crente para realizar o que for útil, conforme o que está escrito em I Coríntios 12.7: "<em>mas a manifestação do Espírito é dada a cada um para o que for útil.</em>" Ou seja, os dons não são dados para uma projeção pessoal, mas para o serviço. Os dons são para servirmos uns aos outros, visando a edificação da igreja e não para exaltar nossas virtudes ou habilidades. Como já foi dito, o propósito dos dons é edificar toda a igreja, todo o Corpo de Cristo para ser abençoado, exortado e consolado. Por isso, nunca devemos usar os santos dons de Deus em benefício particular, como se fosse algo exclusivo de certas pessoas. Somos chamados a servir a Igreja do Senhor e não a utilizar os dons de Deus para nós mesmos.</p>
+<h3 id="4-1-a-variedade-dos-dons">4.1 A VARIEDADE DOS DONS</h3>
+<p>Os dons do Espírito Santo são variados e distribuídos aos crentes pelo próprio Espírito, para serem usados no serviço ministerial.</p>
+<blockquote><p><em>Porque a um pelo Espírito é dada a palavra da sabedoria; e a outro, pelo mesmo Espírito, a palavra da ciência; e a outro, pelo mesmo Espírito, a fé; e a outro, pelo mesmo Espírito, os dons de curar; e a outro a operação de maravilhas; e a outro a profecia; e a outro o dom de discernir os espíritos; e a outro a variedade de línguas; e a outro a interpretação das línguas. Mas um só e o mesmo Espírito opera todas estas coisas, repartindo particularmente a cada um como quer</em> (1 Co 12. 8 - 11).</p></blockquote>
+<p>Como podemos constatar na passagem bíblica citada, o Espírito Santo é quem reparte os dons a cada crente. Nós somos apenas o instrumento, mas o poder é do Espírito. Não recebemos esses dons por méritos próprios, mas pela graça e misericórdia de Deus.</p>
+<p>É importante pontuar que os dons não nos fazem superiores aos demais cristãos, mas servos. Quem não tem aptidão para servir, logo resistirá à atuação do Espírito Santo, argumentando que os dons não são para nossos dias. Os dons não são para autopromoção ministerial ou interesses egoístas, mas para o aperfeiçoamento do ministério, visando a unidade do corpo de Cristo.</p>
+<p>Para uma melhor compreensão, vejamos, na tabela a seguir, os dons do Espírito Santo dentro de três grupos, cada um com três dons:</p>
+<p class="rotulo-tabela"><strong>Tabela 6: Classificação dos dons do Espírito Santo em grupos</strong></p>
+<div class="tabela-rolagem"><table>
+<tr><th>Grupo</th><th>Dons</th></tr>
+<tr><td>Revelação</td><td>Palavra de sabedoria<br>Palavra de conhecimento<br>Discernimento dos espíritos</td></tr>
+<tr><td>Poder</td><td>Dom da fé<br>Dons de curar<br>Dons de operação de maravilhas</td></tr>
+<tr><td>Inspiração</td><td>Dons de profecia<br>Dons de interpretação de línguas<br>Dom de variedade de línguas</td></tr>
+</table></div>
+<p class="fonte-tabela"><em>Fonte: Elaborada pelos autores</em></p>
+<p>Agora vamos analisar cada um desses três grupos de dons de forma mais detalhada.</p>
+<h4 id="1-revelacao">1) Revelação</h4>
+<p>Esses dons têm a finalidade de capacitar os salvos, proporcionando-lhes uma sabedoria superior à sabedoria humana (Tg 3.17); um conhecimento sobrenatural e um discernimento superior do mundo espiritual (Jr 33. 3).</p>
+<p>A palavra de sabedoria se manifestou intensamente na vida do sábio Salomão (I Rs 3.28); a palavra do conhecimento e discernimento se manifestou, de forma intensa, na vida dos profetas Eliseu e Daniel (II Rs 6. 8 - 23 e Dn 1.17; 2. 19 - 20).</p>
+<p>O Deus da Bíblia é o Deus das grandes revelações, como relatado no livro de Daniel:</p>
+<blockquote><p><em>Então foi revelado o mistério a Daniel numa visão de noite; então Daniel louvou o Deus do céu. Falou Daniel, dizendo: Seja bendito o nome de Deus de eternidade a eternidade, porque dele são a sabedoria e a força; E ele muda os tempos e as estações; ele remove os reis e estabelece os reis; ele dá sabedoria aos sábios e conhecimento aos entendidos. Ele revela o profundo e o escondido; conhece o que está em trevas, e com ele mora a luz.</em> (Dn 2. 19 - 22).</p></blockquote>
+<h4 id="2-poder">2) Poder</h4>
+<p>Os dons de poder são dons sobrenaturais pelos quais o poder de Deus se manifesta, a fim de transmitir uma resposta miraculosa através de uma intervenção divina, até mesmo na natureza física. Há muitos exemplos na Bíblia de homens que foram usados de maneira extraordinária com os dons de poder: Moisés ordenando as pragas no Egito; Elias e Eliseu oraram e fogo caiu do céu; as águas do Jordão se abriram; quanto aos apóstolos de Jesus, até suas sombras curavam os enfermos e os demônios fugiam deles.</p>
+<p>Esses dons eram as credenciais do ministério apostólico para evangelizar os gentios e exortar a igreja, como diz Paulo em sua carta aos Romanos: "<em>pelo poder de sinais e maravilhas e por meio do poder do Espírito de Deus. Assim, desde Jerusalém e arredores, até o Ilírico, proclamei plenamente o evangelho de Cristo</em>" (Rm 15.19).</p>
+<h4 id="3-inspiracao">3) Inspiração</h4>
+<p>Os dons de inspiração são manifestados por meio de expressões vocais e orais. Esses dons, transmitidos através de línguas, são dons de comunicação divina visando, primeiro, à edificação pessoal e, segundo, à edificação e exortação espiritual da igreja.</p>
+<p>O apóstolo Paulo recomendou aos cristãos buscarem com zelo os dons espirituais, dando um destaque especial ao dom de profecia, dizendo: "<em>segui o amor, e procurai com zelo os dons espirituais, mas principalmente o de profetizar</em>" (1 Co 14-1).</p>
+<p>Vimos, nessa passagem, que Paulo destaca primeiro o amor, depois o zelo, e depois os dons espirituais.</p>
+<p>Vejamos o porquê:</p>
+<blockquote><p><em>E ainda que tivesse o dom de profecia, e conhecesse todos os mistérios e toda a ciência, e ainda que tivesse toda a fé, de maneira tal que transportasse os montes, e não tivesse amor, nada seria</em> (I Co 13-2).</p></blockquote>
+<p>W. Wiersbe (2007) comentando esse texto diz que:</p>
+<blockquote><p>A profecia, a ciência e as línguas não são dons permanentes. (Ciência não significa "educação acadêmica", mas sim comunicação imediata de uma verdade espiritual à mente.) Esses três dons andavam juntos. Deus comunicava determinado conhecimento ao profeta, o qual transmitia a mensagem em línguas. Então, um intérprete (por vezes o próprio profeta) explicava essa mensagem. Os coríntios valorizavam esses três dons ao extremo, especialmente o dom de línguas. Esses dons desaparecerão (serão abolidos) e cessarão, mas o amor durará para sempre; pois "Deus é amor" (1 Jo 4. 8 - 16) (WIERSBE, 2007, 800).</p></blockquote>
+<p>O evangelista Lucas escreveu a maneira como esses dons se manifestaram sobre os crentes na cidade de Éfeso: "<em>E, impondo-lhes Paulo as mãos, veio sobre eles o Espírito Santo; e falavam línguas, e profetizavam</em>" (At 19. 6).</p>
+<p>O pastor Geziel Gomes, em uma de suas aulas, fazendo uma reflexão sobre o dom de línguas, esclarece quais os tipos de línguas são dadas como dom:</p>
+<ul>
+<li>Existem as línguas dadas como sinal do batismo com o Espírito Santo (At 2. 4).</li>
+<li>Existem as línguas dadas como dom (I Co 12. 4,10).</li>
+<li>Existem as línguas que podem ser interpretadas mediante o dom de interpretação.</li>
+<li>As línguas não são utilizadas para a pregação do evangelho elas servem como instrumento de oração, adoração, louvor e proclamação das grandezas de Deus (At 2.11; 10. 46; I Co 14. 2,14).</li>
+<li>Elas são fator de edificação pessoal, quem fala em línguas edifica a si mesmo é o único dom que não edifica a igreja, mas sim quem fala (I Co 14. 4, 26).</li>
+<li>Elas são um sinal para os infiéis (I Co 14. 22).</li>
+</ul>
+<h3 id="4-2-alguns-esclarecimentos-biblicos-sobre-o-uso-dos-dons">4.2 ALGUNS ESCLARECIMENTOS BÍBLICOS SOBRE O USO DOS DONS</h3>
+<p>Os dons são para os salvos, e nós já estudamos que é o Espírito Santo quem o reparte para o que for útil na igreja. Agora, destacaremos a maneira correta do uso dos dons, segundo a Bíblia, e a necessidade de ordem no culto.</p>
+<h4 id="4-2-1-dom-de-falar-em-linguas">4.2.1 Dom de falar em línguas</h4>
+<p>Nós somos pentecostais, acreditamos nos dons para o nosso tempo e temos vivido essa poderosa ação do Espírito Santo que desceu no dia de Pentecostes e permanece em nossos dias. No entanto, não basta ter algo sem saber usar. Observe o seguinte exemplo metafórico: uma faca é um ótimo instrumento na mão de uma dona de casa, mas um perigo na mão de uma criança. Qual é a diferença? É que um sabe usá-la e outro não. Diante desta ilustração fica claro: não basta ter os dons, é preciso saber usá-los.</p>
+<p>O dom de falar em línguas, por exemplo, não é recomendado para ser usado de maneira excessiva em uma pregação, não é prudente ser usado em uma visita ao hospital, em cerimonial fúnebre etc. Por que razão? Porque quem fala em línguas não é entendido, pois fala em mistério, não é uma comunicação para falar aos homens, mas a Deus (I Co 14.2).</p>
+<p>É necessário, portanto, nos atentarmos para o que o apóstolo Paulo disse:</p>
+<blockquote><p><em>Dou graças ao meu Deus, porque falo mais línguas do que vós todos. Todavia, antes quero falar na igreja cinco palavras na minha própria inteligência, para que possa também instruir os outros, do que dez mil palavras em língua desconhecida</em> (I Co 14. 18 - 19).</p></blockquote>
+<p>Alguém disse, acertadamente, que uma pessoa cheia do Espírito Santo não pode estar fora de si de maneira descontrolada, pois o fruto do Espírito Santo é o domínio próprio (Gl 5. 22).</p>
+<h4 id="4-2-2-dom-de-profetizar">4.2.2 Dom de profetizar</h4>
+<p>O apóstolo Paulo orientou a igreja a buscar os melhores dons, principalmente o de profetizar. Esse dom foi dado para uma tríplice missão que é: edificação, exortação e consolação.</p>
+<ul>
+<li><strong>Edificação:</strong> confirma nossa expectativa de estar trabalhando para o Senhor e nos estimula a continuar fazendo a obra do Senhor, como aconteceu a Paulo que foi encorajado em meio a uma tempestade em alto mar: "<em>Não temas, Paulo, importa que compares coisas perante César, e eis que Deus te deu a tua vida e a de todos os que navegam contigo</em>" (At 27. 24).</li>
+<li><strong>Exortação:</strong> a respeito desse propósito da profecia, o pastor Antônio Gilberto (2014) esclarece que há uma diferença fundamental entre exortar e ensinar. O ensino tem por objetivo transmitir o conhecimento, lidar com o intelecto, a mente. A exortação toca no coração e atinge a consciência e a vontade de quem está sendo exortado, de modo que a sua fé é estimulada e o crente passa a ter um maior compromisso com o Reino de Deus. Na exortação, as verdades ensinadas são aplicadas imediatamente à vida cristã. Quem tem o dom de exortar não é necessário somente um mestre, embora possa sê-lo (At 11. 23). A exortação mexe com a dormência do crente, desperta-o para uma nova realidade e dá-lhe uma injeção de ânimo. A exortação nunca visa rebaixar ou diminuir o crente, mas sempre tem em vista estimulá-lo ao crescimento e fortalecimento, tornando-o apto para a obra de Deus, como nessa exortação que Paulo fez aos efésios: "<em>Pelo que diz: desperta, tu que dormes, e levanta-te dentre os mortos, e Cristo te iluminará</em>" (Ef 5. 14).</li>
+<li><strong>Consolação:</strong> conforta aquele que está abatido devido às perseguições que a pregação do evangelho traz; evita a depressão naquele que está sendo perseguido e, às vezes, até torturado pelo amor à Palavra de Deus. Como aconteceu com Jesus que foi consolado por um anjo quando estava prestes a ser entregue para ser crucificado: "<em>Então lhe apareceu um anjo do céu, que o confortava</em>" (Lc 22. 43).</li>
+</ul>
+<p>O dom de profetizar deve ser usado para cumprir, especificamente, o que o Espírito Santo determinou dentro desses três propósitos. Fora desses objetivos citados, uma profecia será perigosa, tanto para quem profetiza como para quem a ouve. Jamais deverá ser usado como ato de coação, intimidação e extorsão, até porque o Espírito Santo é muito ético e não trabalha com esses tipos de atitudes.</p>
+<p>Outro ponto que desejamos destacar é que o maior profeta constituído por Deus na vida de uma ovelha é seu pastor, ele é quem vela pela sua alma diante de Deus. É claro que isso não impede o Espírito Santo falar com essa pessoa através de um dom profético, visando cumprir a tríplice missão da profecia. Infelizmente, muitos estão em busca de profetas que, com palavras aveludadas, massageiem seu ego e corroboram para a sua perdição, e desprezam o ensino bíblico e sistemático dos cultos de ensinos e escolas bíblicas dominicais da sua igreja.</p>
+<h4 id="4-2-3-dom-de-discernimento-dos-espiritos">4.2.3 Dom de discernimento dos espíritos</h4>
+<p>Precisamos do dom de discernimento dos espíritos para compreendermos que espírito fala nas profecias, pois, desde os dias de Moisés, Deus alertou o povo sobre os falsos profetas:</p>
+<blockquote><p><em>E, se disseres no teu coração: como conhecemos qual seja a palavra que o Senhor não falou; com presunção a falou o profeta; não o temerás</em> (Dt 18.20 - 22).</p></blockquote>
+<p>À luz da Palavra de Deus, a profecia pode ter três origens: humana, maligna e divina. Vejamos alguns exemplos da origem da profecia:</p>
+<ul>
+<li><strong>Humana:</strong> o profeta Natã era conceituado em Israel, foi ele quem confrontou o pecado de Davi, o maior rei de Israel. Em uma determinada ocasião, quando Davi desejou construir o templo de Jerusalém, ele consultou o profeta e olha o que ele respondeu: "<em>Sucedeu, pois, que, morando Davi já em sua casa, disse Davi ao profeta Natã: Eis que moro em casa de cedros, mas a arca do concerto do Senhor está debaixo de cortinas. Então, Natã disse a Davi: Tudo quanto tens no teu coração faze, porque Deus é contigo.</em>" (1 Cr 17.1 - 2). O profeta falou a Davi: "Tudo que tens no coração faze porque Deus é contigo", mas essa palavra foi humana. Veja o que Deus falou a ele na mesma noite: "<em>Mas sucedeu, na mesma noite, que a palavra do Senhor veio a Natã, dizendo: Vai e dize a Davi, meu servo: Assim diz o Senhor: Tu me não edificarás uma casa para morar.</em>" (I Cr 17.3 - 4). Deus ordenou que ele voltasse e falasse a Davi que não era para ele edificar a casa para morar. Outro exemplo é o de I Rs 13, quando um profeta velho mentiu e enganou o profeta do Senhor.</li>
+<li><strong>Maligna:</strong> conforme o texto de II Crônicas 18, houve uma guerra contra Israel e os Arameus, e apareceram 400 profetas de acabe e profetizaram dizendo: "vai porque o senhor lhes dará vitória". O rei Josafá perguntou: "não há um outro profeta do Senhor para que consultemos? Note que os 400 profetas do texto eram de Acabe e não do Senhor, mas eles profetizaram em nome do Senhor, por meio de um espírito de mentira: "<em>Micaías continuou: 'Ouve o resto da palavra do Senhor. Eu vi o Senhor sentado sobre o seu trono, com os exércitos celestiais à sua volta. E o Senhor disse: 'Quem irá convencer Acabe para que vá e morra em Ramote-Gileade?' Várias sugestões foram feitas. Finalmente, apresentou-se um espírito diante do Senhor que disse: "Vou eu. Eu o persuadirei." O Senhor perguntou-lhe: "Como?" E ele respondeu: "Serei um espírito de mentira na boca dos profetas." E o Senhor disse: "Isso dará resultado; conseguirás o que pretendes; podes ir."</em> (I Rs 22.19 - 22). O que fica claro é que quem insiste viver uma vida de pecado e mentira diante de Deus, como viveu Acabe, o espírito que opera para instruir essa pessoa é o espírito do engano. "<em>E com todo o engano da injustiça para os que perecem, porque não receberam o amor da verdade para se salvarem.</em>" (II Ts 2.10). Outro episódio é aquele narrado em Atos 16, quando Paulo e Silas estavam indo orar. O texto diz que todas as vezes que eles passavam uma jovem dizia: "esses homens que anunciam a salvação são servos do Deus altíssimo". O apóstolo Paulo repreendeu aquele espírito no nome de Jesus e nunca mais ela teve adivinhação.</li>
+<li><strong>Divina:</strong> a profecia bíblica é de origem divina, mas o canal é humano e a Palavra de Deus nos alerta: "<em>Amados, não creiais a todo o espírito, mas provai se os espíritos são de Deus, porque já muitos falsos profetas se têm levantado no mundo</em>" (I Jo 4.1).</li>
+</ul>
+<p>É o Espírito Santo quem dá esse dom para que os salvos falem, inspirados pelo próprio Espírito, a vontade de Deus concernentes às coisas que breve vão acontecer, seja no aspecto espiritual ou terreno, visando o fortalecimento da fé para a salvação. A Bíblia é chamada de profecia. Nela encontramos muitos profetas verdadeiros que falavam o que Deus mandava (verdadeiro), mas, em contrapartida, outros falaram sem Deus mandar (falso). O dom de profecia bíblico cumpre, exclusivamente, a vontade de Deus para a transmissão de sua mensagem. Fora desse propósito, não podemos dar ouvidos onde Deus se cala. Não desprezeis as profecias.</p>
+<div class="sep"></div>
+<h2 id="capitulo-v-principios-da-honra">CAPÍTULO V — PRINCÍPIOS DA HONRA</h2>
+<p><em>"Deem a cada um o que lhe é devido... se honra, honra."</em> (Rm 13.7)</p>
+<h3 id="5-1-o-que-e-honra">5.1 O QUE É HONRA?</h3>
+<p>Honra pode ser definida como <em>devoção, reputação, respeito</em>. É um Princípio de conduta de quem é virtuoso, corajoso, honesto; cujas qualidades são consideradas virtuosas.</p>
+<p>Nós, cristãos, temos princípios extraordinários sobre honra, estabelecidos por Deus na Bíblia, para serem obedecidos. Destacaremos, a seguir, alguns desses princípios bíblicos sobre a honra.</p>
+<h3 id="5-2-principios-biblicos-da-honra-na-familia">5.2 PRINCÍPIOS BÍBLICOS DA HONRA NA FAMÍLIA</h3>
+<p>Deus colocou os pais como autoridade sobre os filhos e ordenou, dizendo: "<em>E vós, pais, não provoqueis à ira a vossos filhos, mas criai-os na doutrina e admoestação do Senhor.</em>" (Ef 6.4).</p>
+<p>Esse princípio dado aos pais ensina um padrão santo de não provocar o sentimento de ira nos filhos. Mas, o que é provocar a ira? O ser humano tem vários sentimentos dentro dele, amor, alegria, ira, tristeza etc. Esses sentimentos, na maioria das vezes, são ativados com palavras, por exemplo: se nós queremos ativar o amor dos nossos filhos, se abraçamos, beijamos e falamos que os amamos; se queremos ativar a tristeza deles, os castigamos. Assim é será o sentimento da ira: se formas ásperos, agressivos, maus, eles crescerão irados e serão vingativos, por esta razão Deus aconselha o equilíbrio padrão.</p>
+<p>Aos filhos, por sua vez, Deus disse: "<em>Filhos, obedecei a vossos pais no Senhor, porquanto isto é justo. Honra a teu pai e a tua mãe; este é o primeiro mandamento com promessa.</em>" (Ef 6.1-3. Grifo nosso). Como podemos notar, mesmo que os pais não sejam bons, Deus quer que os honremos, pois, fazendo assim, teremos uma vida longa e feliz na terra. A nossa nação está se envelhecendo, os jovens são terrivelmente ceifados se envelhecendo e sempre no grito de desespero de um pai ou uma mãe está a frase: "Filho, por que você não me obedeceu?!"</p>
+<p>No que concerne ao matrimônio, Deus disse, no Livro de Efésios 5. 22, 25: "<em>Vós, maridos, amai as vossas esposas e vós, mulheres, obedecei aos vossos maridos</em>". O apóstolo Pedro, ao abordar a temática, disse o seguinte:</p>
+<blockquote><p><em>Igualmente vós, maridos, coabitai com elas com entendimento, dando honra à mulher, como vaso mais fraco; como sendo vós os seus co-herdeiros da graça da vida; para que não sejam impedidas as vossas orações</em> (1 Pd 3.7).</p></blockquote>
+<p>Infelizmente, hoje muitos casamentos são destruídos não por infidelidade, mas por falta de respeito e honra. Caro leitor, atente para a ordem divina: se o homem é o cabeça da mulher, sendo um representante legal de Cristo, e esse representante peca desonrando sua esposa, a bíblia diz que as orações deste marido correm sério risco de não serem ouvidas; logo, sem a intercessão sacerdotal do lar, esse matrimônio fica vulnerável e sem proteção espiritual. Nesse viés, é importante que as mulheres sejam sábias, evitando discussões tolas, para não comprometerem a benção de Deus sobre sua família.</p>
+<h3 id="5-3-principios-biblicos-sobre-obedecer-as-autoridades">5.3 PRINCÍPIOS BÍBLICOS SOBRE OBEDECER ÀS AUTORIDADES</h3>
+<p>Sobre a obediência às autoridades, a Palavra de Deus diz o seguinte:</p>
+<blockquote><p><em>Cada qual seja submisso às autoridades constituídas, porque não há autoridade que não venha de Deus; as que existem foram instituídas por Deus. Assim, aquele que resiste à autoridade, opõe-se à ordem estabelecida por Deus; e os que a ela se opõem, atraem sobre si a condenação</em> (Rm 13.1 - 2)</p></blockquote>
+<p>Não há autoridade que não seja constituída por Deus, desde o vereador de sua cidade ao presidente da república, desde o soldado ao comandante do exército, desde o juiz ao presidente do Supremo Tribunal Federal. Eles só estão lá porque Deus permitiu, e precisam ser honrados por todos os crentes. É Deus quem levanta e é Deus quem abate.</p>
+<p>Nesse contexto, para que tenhamos bons governantes e paz precisamos orar, de acordo com as orientações bíblicas:</p>
+<blockquote><p><em>Antes de tudo, recomendo que façam súplicas, orações, intercessões e ações de graças, em favor de todas as pessoas; pelos reis e por todos os que exercem autoridade, para que tenhamos uma vida tranquila e pacífica, com toda a piedade e dignidade</em> (I Tm 2. 1 - 2).</p></blockquote>
+<p>Quando as coisas não vão bem, entremos em nosso quarto, fechemos a porta e falemos com Deus, não devemos ir às praças, fazer atos de manifestação ou rebelião contra nenhuma autoridade. Veja o que diz a Bíblia sobre isso: "<em>[...] quem resiste às autoridades resiste a Deus e atrai maldições sobre si</em>" (Rm 13. 2). Quando o apóstolo Pedro estava preso, a igreja não foi protestar contra Herodes, ela foi.</p>
+<h3 id="5-4-principios-biblicos-de-honra-aos-lideres-espirituais">5.4 PRINCÍPIOS BÍBLICOS DE HONRA AOS LÍDERES ESPIRITUAIS</h3>
+<p>A Palavra de Deus também diz que "<em>os presbíteros que lideram bem a igreja são dignos de dupla honra</em>" (1Tm 5.17). Então, seremos claros neste ponto: se Deus diz que quem resiste às autoridades espirituais que velam pela nossa alma diante de Deus e atraem maldição para suas vidas, como podemos desonrar nossa liderança espiritual? Os líderes são servos do rebanho, a diferença é que eles estão revestidos de autoridade espiritual. Se você tocar no ombro de alguém que está vestido de termo, você tocou primeiro na pessoa ou no termo? No termo, é claro! O revestimento espiritual é assim, antes de atingir a pessoa eu toco no revestimento espiritual que está sobre ele. Se as autoridades são dignas de honra, os que trabalham bem na obra de Deus são dignos de "dupla honra". Certa vez, alguém disse: "a unção que você honra é a unção que você atrai."</p>
+<p>Percebam que a única coisa que faz a promessa de Deus ser cancelada na vida de uma pessoa é a desonra:</p>
+<blockquote><p><em>Portanto, o Senhor, o Deus de Israel, declara: "Prometi a sua família e a linhagem de seu pai que ministrei diante de mim para sempre". Mas agora o Senhor declara: "Longe de mim tal coisa! Mas Honrarei aqueles que me honram, mas aqueles que me desprezam serão tratados com desprezo</em> (I Sm 2.30).</p></blockquote>
+<p>Nessa passagem, vimos que Eli desonrou a Deus desobedecendo a sua palavra e isso lhe custou o cancelamento da promessa de Deus sobre ele e sua família. No capítulo 12 de Números, temos outro exemplo de desonra, no qual percebemos que falar contra uma liderança atrai maldição e enfermidades, pois Mirian ficou lepra após questionar seu líder e irmão Moisés.</p>
+<p>Outro episódio do juízo de Deus aconteceu a vários homens que se levantaram contra a liderança de Moisés, em que a terra se abriu e eles, juntamente com tudo quanto tinham, foram sepultados vivos:</p>
+<blockquote><p><em>Assim que Moisés acabou de dizer tudo isso, o chão debaixo deles fendeu-se e a terra abriu a sua boca e os engoliu juntamente com suas famílias, com todos os seguidores de Corá e com todos os seus bens. Desceram vivos à sepultura, com tudo o que possuíam; a terra fechou-se sobre eles, e pereceram, desaparecendo do meio da assembleia. Diante dos seus gritos, todos os israelitas ao redor fugiram, gritando: "A terra vai nos engolir também!"</em> (Nm 16. 31-34).</p></blockquote>
+<p>Vejam que esses relatos deixam claro os perigos que um cristão pode correr ao se levantar para promover rebelião na igreja, levante contra pastores e líderes. Não conhecemos um em toda a história que teve um final feliz. Por isso, fazemos um apelo: Não entre por este caminho! Quem corrige as autoridades é o próprio Deus. A Bíblia ensina os cristãos a obedecerem aos seus pastores: "<em>Obedecei a vossos pastores, e sujeitai-vos a eles; porque velam por vossas almas, como aqueles que hão de dar conta delas; para que o façam com alegria e não gemendo, porque isso não vos seria útil</em>" (Hb 13.17).</p>
+<p>A Palavra de Deus trata com seriedade a questão da obediência. Uma vez, Saul desonrou a Deus e a promessa foi cancelada sobre a sua vida e família, conforme consta em 1 Samuel, 15. 23: "<em>Porque a rebelião é como o pecado de feitiçaria, e o porfiar é como iniquidade e idolatria. Porquanto tu rejeitaste a palavra do Senhor, ele também te rejeitou a ti, para que não sejas rei</em>".</p>
+<p>Em uma das citações de Jon Bevere ele disse: "se o pecado de rebelião, desonra e desobediência é como o pecado de feitiçaria, todos os que vivem desobedecendo e desonrando a Deus e à sua liderança corre o risco de se tornarem aprendizes de feiticeiro". O escritor fala que quando uma pessoa procura um líder de magia para segui-lo, a primeira pergunta que esse líder faz é: "Você conhece as leis de Deus? Se sim, você precisa quebrar todas para obter o poder de satanás." Então, fica claro que a obediência atrai o poder de Deus, enquanto a desobediência atrai o poder de satanás. E na Bíblia está escrito que os feiticeiros não entrarão no céu.</p>
+<p>Caro leitor, você tem promessas de Deus? Provavelmente sim. Lindas promessas! Então, honre a Deus e à sua liderança espiritual, ainda que seja difícil, e todas as promessas se cumprirão integralmente em sua vida, caso contrário, esqueça, pois todas serão canceladas.</p>
+<h3 id="5-5-principios-biblicos-de-honrar-ao-senhor-com-nossos-bens-financeiros">5.5 PRINCÍPIOS BÍBLICOS DE HONRAR AO SENHOR COM NOSSOS BENS FINANCEIROS</h3>
+<p>Em provérbios 3. 9-10 está escrito: "<em>Honra ao Senhor com teus bens e com as primícias de todos os teus rendimentos; e se encherão com fartura os teus celeiros, assim como transbordarão de vinho.</em>"</p>
+<p>Tudo o que temos é dádiva de Deus: saúde, família e finanças foi Deus quem nos deu. Desse modo, honrar ao Senhor com as primícias das nossas rendas é uma maneira de reconhecimento da bênção Dele em nossas vidas.</p>
+<p>Se ele ordenou honrar com as primícias, ao receber o salário, o primeiro a ser honrado é Ele através da décima parte, o dízimo. Logo, Ele faz uma promessa para quem lhe honrar com as primícias: "encherão com fartura os teus celeiros". Como já destacado em outro texto, aqueles que não o honram serão desonrados:</p>
+<blockquote><p><em>Vocês plantam muito, mas colhem pouco. Têm muito pouco para comer e beber, e não têm roupas para se esquentarem no frio. Seus salários desaparecem como se vocês pusessem o dinheiro em bolsos furados!</em> (Ag 1.6).</p></blockquote>
+<p>Vejam: aqueles que honram, os celeiros se enchem, aos que não honram, seu dinheiro desaparece como se o bolso estivesse furado. Os dízimos pertencem a Deus e ele ordena dizendo:</p>
+<blockquote><p><em>Trazei todos os dízimos à casa do tesouro, para que haja mantimento na minha casa, e depois fazei prova de mim nisto, diz o Senhor dos Exércitos, se eu não vos abrir as janelas do céu, e não derramar sobre vós uma bênção tal até que não haja lugar suficiente para a recolherdes</em> (Ml 3.10).</p></blockquote>
+<p>Em nenhum outro lugar na Bíblia Deus convida uma pessoa para fazer prova Dele. Deus chama o homem para um desafio: você quer ver as janelas do céu se abrir e uma bênção se derramar sobre você? Então trazei! E depois fazei prova de mim. Observamos que muitos cristãos cumprem a primeira parte do versículo: trazei; mas nunca a segunda parte que diz: fazei. Quem honra a Deus trazendo, Deus lhe honra fazendo as bênçãos vir sobre os seus celeiros.</p>
+<p>M. Murdok disse, em uma de suas pregações, que o dízimo é um antídoto contra a avareza e, ao analisarmos a raiz da palavra avara, constatamos que ela vem de "amante da prata". Assim, ao devolver o dízimo, o crente está se desapegando do dinheiro, tornando-se mais generoso. Sob o mesmo prisma, o Pastor Hernandes D. Lopes diz constantemente, em seus ensinos, que o crente precisa ter o coração e o bolso abertos para ajudar a obra de Deus.</p>
+<p>O dízimo é a décima parte e não uma quantidade qualquer. Olha o que diz a Bíblia a esse respeito: "<em>ao que distribui mais se lhe acrescenta, e ao que retém mais do que é justo, é para a sua perda</em>" (Pv 11.24). Além disso, a Palavra de Deus nos diz que Deus espera que cada um de nós sejamos encontrados fiéis diante Dele (1 Co 4.2).</p>
+<p>A Bíblia é a palavra de Deus, e todo salvo deve quer um dos seus ensinamentos que nós não nos curvarmos seremos disciplinados pelo Senhor (Hb 12.6). Por que cremos que somos salvos? Por que cremos que nossos pecados estão perdoados? Por que cremos que nosso nome está escrito no livro da vida? Por que cremos que Jesus vai voltar? A resposta a todas essas perguntas é simples: <strong>é porque está escrito na Bíblia.</strong> Pois se cremos na Bíblia para a salvação, devemos crer nos seus ensinamentos sobre contribuição.</p>
+<blockquote><p><em>E digo isto: Que o que semeia pouco, pouco também ceifará; e o que semeia em abundância, em abundância ceifará. Cada um contribua segundo propôs no seu coração; não com tristeza, ou por necessidade; porque Deus ama ao que dá com alegria. E Deus é poderoso para fazer abundar em vós toda a graça, a fim de que tendo sempre, em tudo, toda a suficiência, abundeis em toda a boa obra</em> (II Co 9.6-8).</p></blockquote>
+<p>Que Deus abençoe sempre a vossa sementeira, para que em todos os cultos possamos ofertar e dizimar com amor e gratidão. Que Ele seja servido também com nossos recursos financeiros, pois tudo provém de Deus. Enquanto os fariseus deram dinheiro para dizer que Jesus não ressuscitou, nós damos dinheiro para testificar que Ele está vivo.</p>
+<p>Myer Pearlman, comentando o tema em apreço:</p>
+<blockquote><p>Se o Judeu dava o dízimo sob a Lei, é uma desgraça para um cristão dar menos sob a graça. Tertuliano um grande estudioso da igreja primitiva, no século II, disse: "oferecemos as primícias àquele a quem enviamos nossas orações". Como a nossa justiça poderá exceder a dos escribas e fariseus (Mt. 5.20), que pagam dízimos e primícias, se nós não fizermos nada disso? Deve ser notado que o dizimar era praticado antes da Lei, mesmo por Abraão, pai dos fiéis (Gn 14.17-20). (PEARLMAN, 1995, p. 60).</p></blockquote>
+<p>Portanto, amados, sejamos fiéis a Deus, honrando-o com os dízimos e as ofertas, para que, assim, possamos nos alegrar com as bênçãos Dele sobre nossas vidas.</p>
+<div class="sep"></div>
+<h2 id="capitulo-vi-a-assembleia-de-deus-e-o-movimento-pentecostal">CAPÍTULO VI — A ASSEMBLEIA DE DEUS E O MOVIMENTO PENTECOSTAL</h2>
+<h3 id="6-1-conhecendo-a-historia-do-pentecostes">6.1 CONHECENDO A HISTÓRIA DO PENTECOSTES</h3>
+<p>Entendemos, à luz da Bíblia, que Deus Pai projetou a Igreja, Deus Filho fundou-a, e o Espírito Santo inaugurou no dia de Pentecostes, conforme o relato de Lucas em Atos 2.</p>
+<p>Essa promessa do derramamento do Espírito Santo foi feita, ainda no Velho Testamento, por intermédio do profeta Joel, e no Novo Testamento, João Batista disse: "<em>eu vos batizo com água, mas no meio de vós há um que batizará com o Espírito Santo e com fogo</em>" (Mt 3.11).</p>
+<p>Estudando o Novo Testamento, percebemos essa ação poderosa sendo manifestada de forma intensa em vários lugares:</p>
+<ul>
+<li>No sermão de Pedro (At 2.38);</li>
+<li>Após os apóstolos saírem da prisão (At 4.31);</li>
+<li>Sobre os cristãos na cidade de Éfeso (At 19.6);</li>
+<li>Na casa de Cornélio (At 10.44);</li>
+<li>Na igreja de Corinto (I Co 12).</li>
+</ul>
+<p>E em tantos outros lugares, a ação do Espírito Santo estava operando sinais, libertação, salvação e batismo; dando dons aos fiéis. Todavia, nos dias atuais, a grande pergunta que muitos cristãos fazem é: Por que o batismo e os dons do Espírito Santo foram, em parte, abolidos do meio cristão? O que leva a uma outra pergunta: Se a igreja nasceu pentecostal, como terminará tradicional?</p>
+<p>Isso ocorreu, especificamente, na era da Igreja Imperial, quando o Imperador Constantino elaborou um edito de tolerância em favor dos cristãos perseguidos, tornando, então, o cristianismo de perseguido à religião oficial do Império Romano. Uma das maiores razões pela qual o batismo e os dons do Espírito Santo perderam a sua ênfase no meio cristão foi por causa de um sacerdote pagão, chamado Montano, que, ao se converter ao cristianismo, depois se desviou da verdade e criou um movimento chamado de <em>montanhismo</em>. Frangiotti (2002, apud Baptista, 2017) fala sobre a vida desse sacerdote:</p>
+<blockquote><p>Como afirmamos anteriormente, Montano nasceu em Ardaba, uma vila na Frígia – atual Turquia, entre 155 e 160. Era um sacerdote pagão e seu culto era supostamente direcionado aos deuses Apolo, Átis e Cibele. O primeiro era considerado símbolo da inspiração profética; já nos cultos de Átis e Cibele as cerimônias cruéis incluíam a autocastração de seus sacerdotes e ainda requeriam de seus seguidores uma vida de extrema pobreza e austeridade. Montano converteu-se ao cristianismo e, num dado momento, intitulou-se porta-voz do Espírito Santo. Ele afirmava que sua missão era inaugurar a Era do "Paracleto" e, com uma mensagem apocalíptica, anunciava a volta iminente de Cristo. Também dizia ser a perfeita revelação divina: "Vim, não como anjo ou um mensageiro, mas como o próprio Deus Pai". "Sou o Pai, o Filho e o Espírito Santo" (FRANGIOTTI, 2002, apud BAPTISTA, 2017, p. 18).</p></blockquote>
+<p>De acordo com Baptista (2017), os ensinamentos de Montano eram heréticos e foram fortemente combatidos pelos líderes das igrejas primitivas. Vejamos, o que autor fala, com base nos estudos de Eusébio de Cesareia (1999) e de Roger Olson (1999), sobre a razão pela qual os dons foram desestimulados na igreja:</p>
+<blockquote><p>Segundo Eusébio de Cesareia (1999, p. 182), os líderes eclesiásticos "reuniram-se várias vezes em muitos lugares em toda a Ásia com esse propósito e examinaram suas novas doutrinas e julgaram-nas vãs, rejeitando-as como heresia, foram de fato expulsos e afastados da comunhão com a Igreja".</p><p>Como consequência imediata da expulsão dos montanistas, a liderança da Igreja começou a associar ao montanismo o exercício dos dons espirituais, como o falar em línguas, as profecias, os sinais e os milagres. Os excessos cometidos por Montano, criaram uma forte barreira na Igreja, e as manifestações espirituais foram desestimuladas de tal maneira que "quase se extinguiram sob a pressão de bispos temerosos" (Olson, 1999, p. 32). (BAPTISTA, 2017, p. 12. Grifo nosso).</p></blockquote>
+<p>O legado deixado por Montano acarretou sérios prejuízos ao longo dos séculos, ao ponto dos líderes quase extinguirem a ação do Espírito Santo nas comunidades cristãs. Por esta razão, a sequência espiritual tomou conta da igreja católica, pois o Espírito da Vida não teve liberdade para atuar de maneira livre, em conformidade com as escrituras.</p>
+<p>Enquanto o Espírito Santo não encontrou espaço na igreja que estava morta em seus rudimentos, ele achou espaço no coração de Lutero, que protestou e, após isso, focos de avivamentos têm acontecido em todo o mundo, inclusive no Brasil, por meio da chama pentecostal trazida pelos suecos Gunnar Vingren e Daniel Berg.</p>
+<h3 id="6-2-conhecendo-a-assembleia-de-deus">6.2 CONHECENDO A ASSEMBLEIA DE DEUS</h3>
+<p>A Assembleia de Deus foi uma igreja que nasceu da semente pentecostal da Rua Azusa, em Los Angeles, Califórnia, EUA, no ano de 1906, vindo para o Brasil em 1910 e solidificando-se como igreja em 1911, na cidade de Belém, Estado do Pará. No entanto, desde o século XV, homens como Martinho Lutero, João Calvino, Jacobus Arminius, Zuinglio, John Knox, Evan Roberts, J. Edwards, D.L. Mudy, C. Spurgeon<sup class="nr"><a href="#nota1" id="ref1">1</a></sup> e tantos outros foram usados por Deus como agentes de um poderoso avivamento, os quais retornaram às escrituras e protestaram contra os dogmas mortos da tradição católica.</p>
+<p class="nota" id="nota1"><a href="#ref1">1</a> Para compreender melhor quem foram esses homens, recomendamos a leitura do livro <em>"20 homens extraordinários que incendiaram o mundo"</em>, de Jhon Bunyan.</p>
+<p>No ano de 1901, um homem chamado Charles Fox Parham, fundou uma Escola Bíblica em Topeka, Texas, e o início dos primeiros sinais do movimento pentecostal começou ali. Já no ano de 1906, um pastor, por nome de William Seymour, iniciou um avivamento na igreja da Rua Azusa. Esse homem era de cor negra e, por uma questão racial, havia sido rejeitado na escola Parham, não sendo autorizado a receber o certificado teológico porque era de cor negra, contudo estava habilitado teologicamente pelos ensinos do professor Parham. Então, Seymour buscou o batismo com o Espírito Santo e, depois dessa experiência, a igreja da Rua Azusa, nº 312, nunca mais foi a mesma. Quando Seymour pregava sobre o batismo com o Espírito Santo, pessoas eram batizadas, falavam em outras línguas e os dons do Espírito eram concedidos à igreja. Além disso, os sinais e prodígios aconteciam como registrado na Bíblia no início da igreja primitiva.</p>
+<p>A partir do avivamento da Rua Azusa, a chama pentecostal se espalhou por diversas cidades, entre elas Chicago, EUA, com William Durham. Impactados pela chama pentecostal em Chicago, os suecos Daniel Berg e Gunnar Vingren foram movidos pelo Espírito Santo para virem ao Brasil realizar a obra missionária. Inicialmente, o nome da nova igreja era "Missão da Fé Apostólica". Anos mais tarde, com apenas 18 pessoas, em 18 de junho de 1911, passou a ser chamada de <em>Assembleia de Deus</em>.</p>
+<p>A Assembleia de Deus tem unicamente a Bíblia como a sua regra de fé e prática. Cremos na Bíblia e não desprezamos o batismo e nem os dons espirituais. A Assembleia de Deus é uma igreja pentecostal clássica e autêntica, suas doutrinas são construídas com uma teologia puramente bíblica e teologicamente correta. "Por esta razão devemos manter nossos bons costumes, o bom senso ético e costumes que não comprometam a fé, são elementos representativos daquilo que cremos", pontua o pastor Elienai Cabral (1999, p. 75).</p>
+<p>Deus fez prosperar a chama pentecostal em solo brasileiro, pois em 1910 eram apenas dois homens cheios do Espírito Santo e hoje a Assembleia de Deus conta com, aproximadamente, vinte e dois milhões de membros e trezentas e oitenta mil congregações espalhadas no Brasil e no exterior, anunciando tem, hoje e eternamente, que Ele salva, cura e batiza com o Espírito Santo.</p>
+<p>Vejamos, a seguir, algumas características que diferem a Igreja Assembleia de Deus (pentecostal clássica) das igrejas neopentecostais:</p>
+<h4 id="1-caracteristicas-marcantes-da-igreja-assembleia-de-deus">1) Características marcantes da igreja Assembleia de Deus</h4>
+<ul>
+<li>É uma igreja missionária;</li>
+<li>É uma igreja que ama a Bíblia e incentiva o crescimento espiritual e intelectual dos seus obreiros e membros;</li>
+<li>É uma igreja que preserva seus bons costumes e valores recebidos pelos nossos pais pentecostais;</li>
+<li>É uma igreja que acredita no batismo e nos dons espirituais, seguindo o padrão bíblico, sendo que a busca pelo Espírito Santo deve ser acompanhada de obediência, oração, jejum e leitura bíblica, evitando, assim, desvios doutrinário e meninice no culto cristão.</li>
+<li>É uma igreja que preserva a doutrina e combate os exageros;</li>
+<li>O batismo nas águas é por imersão (mergulhar completamente);</li>
+<li>As crianças são apresentadas ao Senhor ao nascer, e só são batizadas aos doze anos de idade.</li>
+<li>Para se tornar membro da igreja e necessário se batizar;</li>
+<li>Os casais precisam ser casados civilmente;</li>
+<li>Presta um excelente trabalho social;</li>
+<li>Para que um membro seja consagrado a obreiro é necessário ser batizado com o Espírito Santo, com evidências no falar em línguas, dar bom testemunho, ter um curso básico em teologia, e ser dizimista e ofertante.</li>
+</ul>
+<h4 id="2-caracteristicas-das-igrejas-neopentecostais">2) Características das igrejas neopentecostais</h4>
+<ul>
+<li>Exorcismo e misticismo religioso;</li>
+<li>Campanhas com sal grosso;</li>
+<li>Rosa ungida, lenço ungido, água ungida, vassoura ungida etc;</li>
+<li>Pobreza é símbolo de pecado;</li>
+<li>A teologia predominante é a da prosperidade;</li>
+<li>Quebra de maldição.</li>
+</ul>
+<p>A Assembleia de Deus, que preserva o movimento pentecostal bíblico, chamado de movimento pentecostal clássico, rejeita os ensinamentos das igrejas neopentecostais, preservando sua doutrina apostólica e cristocêntrica. Vale ressaltar que Montano seguiu um caminho perigoso de êxtases frenéticos, desconsiderando a doutrina dos apóstolos, tentando trazer um movimento novo, cheio de heresias, que causou prejuízos incalculáveis à obra de Deus. Observe isso, pois tudo que não é bíblico deve ser duramente rejeitado, ainda que faça chover milagres.</p>
+<div class="sep"></div>
+<h2 id="capitulo-vii-a-historia-dos-primeiros-protestantes-no-brasil">CAPÍTULO VII — A HISTÓRIA DOS PRIMEIROS PROTESTANTES NO BRASIL</h2>
+<p><em>"Para a salvação o evangelho de Jesus não faz distinção entre judeu e gentil, homem e mulher, doutor e analfabeto, religioso e ateu. O evangelho quebra muralhas, despedaça grilhões, rompe tabus, quebra preconceitos e torna todos que creem em Jesus um único povo chamado igreja"</em></p>
+<p>H. DIAS LOPES</p>
+<p>O Brasil foi descoberto em 22 de abril de 1500 pela frota do navegador português Pedro Alves Cabral, conforme narrado nos livros de História. A Reforma Protestante aconteceu dezessete anos mais tarde, em 31 de outubro de 1517, na cidade de Wittenberg, na Alemanha, quando o reformador protestante Martinho Lutero fixou as 95 teses na porta da igreja católica de Wittenberg, gerando um profundo desconforto entre ele e o clero católico. Logo, surgiu um movimento chamado de "Contrarreforma" com o intuito de barrar a reforma protestante liderada por Lutero. Vale a pena destacar que Portugal e Espanha foram os países que trabalharam fortemente para barrar os protestantes.</p>
+<blockquote><p>O Brasil foi colonizado por uma nação fortemente católica - Portugal. A Europa vivia o clima da Contrarreforma, período em que havia um esforço contínuo e intenso para extinguir as ideias nascidas da Reforma Protestante, cujos principais representantes foram Martinho Lutero, João Calvino e Ulrico Zuínglio. Dentre as principais forças que personificaram a Contrarreforma, estava a Companhia de Jesus, ordem religiosa fundada por Inácio de Loiola em 1534, em Paris (INTERSABERES, 2015b, p. 93).</p></blockquote>
+<p>Portugal, ao descobrir o Brasil, declarou-o como uma nação católica e com isso proibiu a entrada de missionários protestantes em terras brasileiras. Em 1549, chegaram à Bahia os primeiros jesuítas acompanhando o Governador-Geral Tomé de Souza, liderados pelo padre Manoel da Nóbrega. O objetivo principal deles era abrir escolas e catequizar os índios, dar nomes católicos às cidades, como é o caso da cidade de São Paulo e, assim, estabelecer, de uma vez por todas, a religião católica como a oficial do país.</p>
+<h3 id="7-1-os-protestantes-franceses">7.1 OS PROTESTANTES FRANCESES</h3>
+<p>Em 1555, chegaram ao Brasil, em uma embarcação francesa liderada por Nicolau Durand Villegaignon, de origem católica, e com o apoio do Almirante Gaspar Coligny, os chamados huguenotes (protestantes calvinistas franceses) que buscavam refúgio no Brasil.</p>
+<h4 id="7-1-1-primeiro-culto-em-solo-brasileiro">7.1.1 Primeiro culto em solo brasileiro</h4>
+<p>Cinquenta e sete anos depois do descobrimento do Brasil, em 1557, foi realizado o primeiro culto protestante em nossa pátria.</p>
+<blockquote><p>O primeiro culto protestante foi realizado em 10 de março de 1557 pelo pastor Peierre Richier, numa quarta-feira. O texto bíblico lido nesse culto foi Salmos 27.4: <em>"Uma coisa pedi ao Senhor, e a buscarei: que possa morar na casa do Senhor todos os dias da minha vida, para contemplar a formosura do Senhor, e inquirir no seu templo". No dia 21 de março, domingo, foi realizada a primeira Santa Ceia.</em> (CRESPIN, 2006). (INTERSABERES, 2015b, p. 95).</p></blockquote>
+<p>Em 1968, três pastores foram mortos a pedido dos líderes católicos, sendo assim reprimida a ação dos protestantes franceses no Brasil.</p>
+<h3 id="7-2-os-protestantes-holandeses">7.2 OS PROTESTANTES HOLANDESES</h3>
+<blockquote><p>A segunda experiência protestante no Brasil ocorreu em 1624, quando os holandeses conquistaram Pernambuco e ali permaneceram por 30 anos. Estima-se que, no Brasil holandês, havia cerca de 22 igrejas, 54 pastores proponentes, 120 presbíteros, 120 diáconos e mais 100 consoladores e mestres-escolas (Crespin, 2006) (INTERSABERES, 2015b, p. 97).</p></blockquote>
+<p>Após 30 anos da chegada dos protestantes holandeses ao Brasil, eles foram expulsos pelos portugueses em 1654, inclusive muitos indígenas que abraçaram a fé protestante não foram permitidos ficar e foram juntos com os holandeses.</p>
+<h3 id="7-3-deus-abriu-as-portas-para-a-evangelizacao">7.3 DEUS ABRIU AS PORTAS PARA A EVANGELIZAÇÃO</h3>
+<p>Após 314 anos de descobrimento do Brasil, a Bíblia chegou a nossa pátria, produzindo salvação e libertação das garras de satanás e da idolatria. Deus proveu um caminho através das autoridades para que a boa semente do Evangelho se espalhasse no coração dos brasileiros.</p>
+<blockquote><p>Ao chegar aqui, uma das primeiras atitudes de Dom João VI foi abrir os portos brasileiros para as nações amigas, sendo a preferência da Inglaterra. Pelo Tratado de 1810, os ingleses que aqui residiam ganharam liberdade para realizar seu culto sem serem molestados, desde que não fizessem prosélitos, os templos não parecessem igrejas e seus praticantes não perturbassem a boa ordem pública. Também por via inglesa, a Bíblia na língua portuguesa, traduzida por João Ferreira de Almeida, entrou no país. Já em 1814, a Sociedade Bíblica Britânica e Estrangeira introduziu discretamente as Escrituras no Brasil, a bordo de navios portugueses que para cá se dirigiam (GIRALDI, 2008, apud INTERSABERES, 2015b, p. 99).</p></blockquote>
+<p>Após esse tratado, exatamente 355 anos do descobrimento do Brasil, é que as ações missionárias foram implantadas e várias denominações protestantes começaram a chegar ao Brasil de maneira definitiva.</p>
+<blockquote><p>A ação missionária para o Brasil teve início em 1855, exatos 355 anos depois de seu achamento. Geralmente, os missionários eram anglo-americanos, habitantes dos Estados Unidos, mas de origem inglesa. O movimento começou com os congregacionais, depois vieram os presbiterianos, os metodistas, os batistas e, por fim, os episcopais, em 1889. (CESAR, 2000, apud INTERSABERES, 2015b, p. 100).</p></blockquote>
+<p>Resumindo, de forma cronológica, a chegada dos protestantes ao Brasil, temos a seguinte sequência:</p>
+<ul>
+<li>1º - os presbiterianos, no ano de 1859;</li>
+<li>2º - os metodistas, no ano de 1867;</li>
+<li>3º - os batistas, no ano de 1881;</li>
+<li>4º - a Congregação Cristã no Brasil, em 1910 (considerada a primeira igreja pentecostal);</li>
+<li>5º - os pentecostais, em novembro de 1910.</li>
+</ul>
+<p>Sobre a chegada dos primeiros pentecostais ao Brasil, o livro "Apontamentos sobre a história das igrejas cristãs e os livros proféticos da Bíblia", organizado pela Editora IterSaberes (2015), relata que os dois homens que fundariam a maior denominação protestante brasileira chegaram ao Brasil em um navio de nome Clement, que veio de Nova Iorque. Eram eles os suecos Daniel Berg e Gunnar Vingren, os quais, ao chegarem no Estado do Pará, filiaram-se à igreja batista. Algum tempo depois, devido a pressões, desligaram-se desse grupo e fundaram a <em>Missão da Fé Apostólica</em>, no dia 18 de junho de 1911, juntamente com simpatizantes da experiência pentecostal. Esse era o mesmo nome utilizado por Seymour, um dos líderes da Rua Azusa em Los Angeles.</p>
+<p>Ainda de acordo com IterSaberes (2015), o nome Assembleia de Deus só foi adotado em janeiro de 1918, ou seja, seis anos e meio depois da fundação da Missão da Fé Apostólica. A igreja Assembleia de Deus, ao contrário das igrejas históricas, que se estabeleceram ao sul do país e depois subiram para outras regiões, teve início no Pará e somente mais tarde chegou ao Rio de Janeiro e São Paulo. Essa igreja "logo se tornou a maior denominação do país, com cerca de 22 mil templos espalhados por todo o território nacional. O número de fiéis é estimado em torno de 22 milhões." (INTERSABERES, 2015b, p. 108).</p>
+<p>Após a Assembleia de Deus ser consolidada, muitos outros ministérios foram surgindo, tais como: Evangelho Quadrangular, Avivamento Bíblico, Exército da Salvação, Renascer e outras denominações vindas de outras nações como igrejas nativas. O importante é que nós possamos valorizar esse legado de fé, coragem e ousadia dos nossos irmãos que morreram para que a mensagem da vida eterna chegasse até nós. Se você é um cristão e é grato a Deus pela sua salvação, seja também um evangelizador.</p>
+<p><em>"O calvário pode ter sido a última palavra do homem, mas o sepulcro vazio foi a última palavra de Deus."</em> (Warren Wiersbe)</p>
+<div class="sep"></div>
+<h2 id="palavras-finais">PALAVRAS FINAIS</h2>
+<p>Esperamos ter contribuído para seu elevado espiritual e maturidade cristã, ao longo da leitura deste livro. O aperfeiçoamento cristão é necessário para o desenvolvimento ministerial de excelência.</p>
+<p>O apóstolo Paulo recomendou a Timóteo: "<em>persiste em ler, exortar e ensinar</em>" (II Tm 4.13). Destarte, finalizamos com as recomendações de John MacArthur:</p>
+<p><em>Estude a Bíblia para ser sábio, creia nela para ser salvo e pratique seus ensinamentos para ser santo.</em></p>
+<p>Glória, honra, adoração e louvor sejam dados ao nosso Senhor e Salvador Jesus Cristo, para sempre! Amém!</p>
+<div class="sep"></div>
+<h2 id="referencias">REFERÊNCIAS</h2>
+<p>ALMEIDA, Abraão de. <strong>201 Respostas Para o Seu Enriquecimento Espiritual e Cultural</strong>. Rio de Janeiro: Casa Publicadora das Assembleias de Deus, 2018.</p>
+<p>BAPTISTA, Douglas Roberto de Almeida. <strong>História das Assembleias de Deus: o grande movimento pentecostal do Brasil</strong>. Curitiba: InterSaberes, 2017.</p>
+<p>BÍBLIA. Português. <strong>Bíblia Sagrada</strong>. Tradução de João Ferreira de Almeida. 4. ed. Rio de Janeiro: Sociedade Bíblica do Brasil, 2009.</p>
+<p>CABRAL, Elienai. <strong>Comentário Bíblico: Efésios</strong>. 3. ed. Rio de Janeiro: Casa Publicadora das Assembleias de Deus, 1999.</p>
+<p>GILBERTO, Antonio. <strong>Manual da Escola Dominical: o curso de treinamento para professores iniciantes e de atualização</strong>. 18. ed. Rio de Janeiro: Casa Publicadora das Assembleias de Deus, 2014.</p>
+<p>INTERSABERES, Editora (Org.). <strong>Práticas pastorais</strong>. Curitiba: InterSaberes, 2015a.</p>
+<p>INTERSABERES, Editora (Org.). <strong>Apontamentos sobre a história das igrejas cristãs e os livros proféticos da Bíblia</strong>. Curitiba: InterSaberes, 2015b.</p>
+<p>MACARTHUR, John. <strong>Manual Bíblico MacArthur</strong>. Tradução Érica Campos. Rio de Janeiro: Thomas Nelson Brasil, 2015. Disponível em: https://aluzdasescriturasrc.files.wordpress.com/2018/03/manual-bíblico-macarthur.pdf. Acesso em 14 abril 2022.</p>
+<p>PEARLMAN, Myer. <strong>Epístolas Paulinas</strong>. Série Comentários Bíblicos. Rio de Janeiro: Casa Publicadora das Assembleias de Deus, 2013.</p>
+<p>WIERSBE, W. Warren. <strong>Comentário Bíblico Wiersbe: Novo Testamento</strong>. Santo André: Geográfica Editora, 2007.</p>
+<div class="sep"></div>
+<h2 id="sobre-o-autor">SOBRE O AUTOR</h2>
+<p>SAMUEL RODRIGUES, SERVE A DEUS E A IGREJA COMO PASTOR PRESIDENTE DA ASSEMBLEIA DE DEUS NAÇÃO MADUREIRA CAMPO DE COLMÉIA TOCANTINS, É COORDENADOR ADJUNTO DA EBADETINS TO.</p>
+<p>É ESCRITOR E AUTOR DO LIVRO <em>SEGUIR A JESUS OPORTUNISMO OU DEVOÇÃO?</em> E UM DOS AUTORES DE <em>CHAMADO E VOCAÇÃO MINISTERIAL E PREGAÇÃO BÍBLICA</em>, MATÉRIA DO CURSO DA ESCOLA DE LÍDERES DO CAMPO DE GURUPI.</p>
+<p>É TEÓLOGO, GRADUADO EM TEOLOGIA BÍBLICA INTERCONFESSIONAL E PÓS GRADUADO EM CAPELANIA E ACONSELHAMENTO BÍBLICO.</p>
+<p>É CASADO COM KEYLLA FRANCYELLY E PAI DE DOIS FILHOS, DAVI E TALITA.</p>
+<p>63 99973-8000 · @PR_SAMUEL_RODRIGUES</p>
+<p>ISBN 855545214-7 · EDITORA VISÃO</p>
+  </article>
+
+  <div class="rodape">
+    <div class="fim">— fim —</div>
+    <button class="btn ouro" style="color:#20180a" onclick="location.href='/'">🏠 Voltar ao Início</button>
+    <div class="creditos-fim">
+      <b>Discipulado Diligente — Um guia prático para o aperfeiçoamento cristão.</b><br>
+      Samuel Rodrigues, com a colaboração de Pedro Carvalho. Goiânia - GO: Editora Visão, 2023.
+      ISBN 978-85-5545-214-7. Copyright © Samuel Rodrigues, 2023.<br>
+      Todos os direitos reservados ao autor. Esta página reproduz o texto do livro para leitura,
+      sem alteração das palavras do autor.
+    </div>
+  </div>
+
+</div>
+
+<button id="topo" aria-label="Voltar ao topo">↑</button>
+<script>
+(function(){
+  var raiz=document.documentElement;
+  function aplicar(v){ raiz.style.setProperty('--fs', v+'px'); }
+  var fs=parseInt(localStorage.getItem('dd_fs')||'18',10);
+  aplicar(fs);
+  window.fonte=function(d){
+    fs=Math.max(15,Math.min(26,fs+d));
+    localStorage.setItem('dd_fs',fs); aplicar(fs);
+  };
+  var btn=document.getElementById('topo');
+  window.addEventListener('scroll',function(){
+    btn.classList.toggle('on', window.scrollY>600);
+    try{
+      var max=document.body.scrollHeight-window.innerHeight;
+      localStorage.setItem('dd_prog', max>0?(window.scrollY/max).toFixed(4):'0');
+    }catch(e){}
+  },{passive:true});
+  btn.onclick=function(){ window.scrollTo({top:0,behavior:'smooth'}); };
+  try{
+    var p=parseFloat(localStorage.getItem('dd_prog')||'0');
+    if(p>0.02 && !location.hash){
+      setTimeout(function(){
+        window.scrollTo(0,(document.body.scrollHeight-window.innerHeight)*p);
+      },120);
+    }
+  }catch(e){}
+})();
+</script>
+</body>
+</html>

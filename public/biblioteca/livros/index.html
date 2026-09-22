@@ -58,14 +58,22 @@
 
   <div class="wrap">
     <div id="lista">
-      <div class="sec">Coleção Rebecca Brown</div>
+      <div class="sec">Livros para ler</div>
       <div class="grid" id="grid"></div>
     </div>
     <div id="leitor"><div class="conteudo" id="conteudo"></div><div class="capfim" id="capfim"></div></div>
   </div>
 
 <script>
+// O `url` e a `capa` so existem no Discipulado Diligente, e por um motivo:
+// o leitor daqui converte markdown simples e NAO sabe montar TABELA. Esse livro
+// tem 6 tabelas de verdade (as divisoes da Biblia, os dons do Espirito...), que
+// viravam linha solta e sem sentido. Entao ele mora numa pagina propria, que
+// desenha tabela direito e ainda mostra a foto da capa. Livro sem `url` continua
+// abrindo no leitor de sempre — nada mudou pros outros cinco.
 var LIVROS=[
+  {slug:'discipulado-diligente', titulo:'Discipulado Diligente', autor:'Samuel Rodrigues',
+   cor:'#b0452a', ico:'📕', url:'discipulado-diligente.html', capa:'discipulado-diligente-capa.jpg'},
   {slug:'ele-veio-libertar-cativos', titulo:'Ele Veio para Libertar os Cativos', autor:'Rebecca Brown', cor:'#5b1a1a', ico:'⛓️'},
   {slug:'prepara-te-para-guerra',    titulo:'Prepara-te para a Guerra',        autor:'Rebecca Brown', cor:'#2f4a6b', ico:'⚔️'},
   {slug:'vaso-para-honra',           titulo:'Vaso para a Honra',                autor:'Rebecca Brown', cor:'#7a5a1e', ico:'🏺'},
@@ -79,12 +87,21 @@ function progresso(slug){ try{ return parseFloat(localStorage.getItem('livro_pro
 function renderLista(){
   $('grid').innerHTML=LIVROS.map(function(l){
     var pg=Math.round(progresso(l.slug)*100);
-    return '<div class="livro" onclick="abrirLivro(\''+l.slug+'\')">'
-      +'<div class="capa" style="background:linear-gradient(150deg,'+l.cor+',#1a1220)">'
-      +'<div class="ico">'+l.ico+'</div><div class="ct">'+l.titulo+'</div></div>'
+    var capa = l.capa
+      ? '<div class="capa" style="background:#1a1220"><img src="'+l.capa+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>'
+      : '<div class="capa" style="background:linear-gradient(150deg,'+l.cor+',#1a1220)">'
+        +'<div class="ico">'+l.ico+'</div><div class="ct">'+l.titulo+'</div></div>';
+    return '<div class="livro" data-slug="'+l.slug+'" data-url="'+(l.url||'')+'">'
+      +capa
       +'<div class="meta"><b>'+l.titulo+'</b><span>'+l.autor+'</span>'
       +'<div class="barra"><i style="width:'+pg+'%"></i></div></div></div>';
   }).join('');
+  $('grid').onclick=function(ev){
+    var card=ev.target.closest ? ev.target.closest('.livro') : null;
+    if(!card) return;
+    var u=card.getAttribute('data-url');
+    if(u) location.href=u; else abrirLivro(card.getAttribute('data-slug'));
+  };
 }
 
 function fonte(d){
