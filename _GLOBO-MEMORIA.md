@@ -204,6 +204,7 @@ globo passa a responder que não está guardando nada. Ele nunca finge.
 | `api/_lib/voz.js` | lê a memória antes de assinar o token; `acao:'lembrar'`, `acao:'esquecer'`; LEI 7; `semNome()` por cima de tudo |
 | `api/_lib/voz-ferramentas.js` | `o_que_ja_falamos` declarada; LEI 7 na REGRA DE OURO; `escrever` exportado |
 | `public/biblioteca/voz/index.html` | a costura + **a PORTA ÚNICA das ferramentas** + rótulo por ferramenta + botão de apagar |
+| `api/edge.js` | uma palavra: o `context` da Vercel passa adiante (ver os 1.729 ms, abaixo) |
 | `scripts/_provar-globo-memoria.mjs` | **novo** — a peneira (19) + as 3 conversas de verdade |
 | `scripts/_provar-globo-memoria-front.mjs` | **novo** — a costura do navegador, com o JS real da página (19) |
 
@@ -223,7 +224,7 @@ recebia nada. Trocado agora, junto com a memória, e provado na bancada.
 
 | prova | resultado |
 |---|---|
-| `_provar-globo-memoria.mjs` — peneira do segredo + 3 conversas reais | **27/27** |
+| `_provar-globo-memoria.mjs` — peneira + corrida + 3 conversas reais | **29/29** |
 | `_provar-globo-memoria-front.mjs` — a costura, com o JS real da página | **19/19** |
 | `_provar-voz-ferramentas.mjs` — as ferramentas (não quebrou nada) | **32/32** |
 | `_provar-sem-nome.mjs` — o nome não volta pela memória | **6/6** |
@@ -237,6 +238,41 @@ recebia nada. Trocado agora, junto com a memória, e provado na bancada.
 > voltou 32/32. **A memória de propósito NÃO depende do Cloudflare**: busca por
 > palavra, que em 80 frases curtas por pessoa basta e é instantânea. Uma perna a
 > menos pra quebrar.
+
+---
+
+## Dois defeitos que só apareceram MEDINDO no ar — e os dois estão consertados
+
+Nenhum dos dois aparece na bancada. Só depois de subir e cronometrar.
+
+### 1. O pastor esperava a memória ser gravada: **1.729 ms** por versículo
+O roteador `api/edge.js` chamava `h(req)` e **engolia o `context` da Vercel** —
+então o `waitUntil` não existia, e a gravação entrava no caminho da resposta.
+Toda vez que o globo abria um versículo, eram **um segundo e sete décimos de
+silêncio** no meio da frase.
+
+| medido em produção | antes | depois |
+|---|---|---|
+| ferramenta **sem** memória | 89 ms | 89 ms |
+| ferramenta **com** memória | **1.729 ms** | **68 ms** |
+
+Conserto: passar o `context` adiante (`h(req, ctx)`), e tirar a DDL (`create
+table` / `alter` / dois índices) do caminho quente — ela rodava a cada
+requisição, e o globo chama isto a cada versículo.
+
+### 2. O conserto de cima **acordou um bug escondido**: o assunto duplicava
+Enquanto a gravação esperava na frente da resposta, uma de cada vez, o "não
+duplica" funcionava. Quando ela saiu do caminho, cinco chamadas passaram a correr
+**juntas** — e o "não duplica" era um **SELECT e depois um INSERT**. As cinco
+leram *"não existe"* antes de qualquer uma escrever, e o mesmo "Salmos 23:4"
+virou **três linhas** em vez de `vezes=5`. Corrida clássica, e ela só nasceu
+porque o primeiro conserto funcionou.
+
+Conserto: quem garante unicidade passa a ser **o banco**, não a ordem em que as
+coisas chegam — coluna `chave_tema`, índice único parcial e um `INSERT … ON
+CONFLICT DO UPDATE`, que é atômico. A migração limpa os duplicados que já
+nasceram tortos antes de criar o índice. **Conferido no ar:** cinco chamadas ao
+mesmo tempo → uma linha, `vezes=5`. E virou prova permanente no banco de provas.
 
 ---
 
