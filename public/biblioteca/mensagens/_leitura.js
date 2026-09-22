@@ -16,7 +16,22 @@
   var FONT_MIN = 15, FONT_MAX = 24, FONT_BASE = 17, KEY = 'radar_msg_fontpx';
 
   // ---------- estilos ----------
+  // ── A BARRA NAO PODE TAPAR A PALAVRA ──────────────────────────────────────
+  // Queixa do Elias em 22/09/2026, com print: a barra "A- A+ Copiar" fica FIXA
+  // no alto e, enquanto ele rolava a mensagem, ela ficava POR CIMA das frases —
+  // dava pra ver "posta, pra Pala[vra]" com o meio da linha coberto.
+  // Barra fixa nao ocupa lugar nenhum no texto: ela flutua. Entao:
+  //   · ENQUANTO ELE ROLA PRA BAIXO (lendo), a barra SOME.
+  //   · Assim que ele para, rola pra cima, ou volta ao topo, ela VOLTA.
+  // E o mesmo vale embaixo: o "Ja preguei esta" e o "Gostei" (de _pregado.js e
+  // _uso.js) cobriam a ultima linha — por isso o respiro no rodape da pagina.
   var css = ''
+   + '.lt-bar{transition:opacity .18s ease, transform .18s ease}'
+   + '.lt-bar.lt-sumiu{opacity:0;transform:translateY(-14px);pointer-events:none}'
+   + '#rp-pino,#radar-uso-selo,#lm-fab{transition:opacity .18s ease, transform .18s ease}'
+   + '#rp-pino.lt-sumiu,#radar-uso-selo.lt-sumiu,#lm-fab.lt-sumiu'
+   + '{opacity:0;transform:translateY(16px);pointer-events:none}'
+   + 'body{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}'
    + '.lt-prog{position:fixed;top:0;left:0;height:4px;width:0;z-index:80;'
    + 'background:linear-gradient(90deg,#0f6d78,#a9791c);transition:width .08s linear}'
    + '.lt-bar{position:fixed;top:calc(8px + env(safe-area-inset-top));right:10px;z-index:81;display:flex;gap:6px;align-items:center;'
@@ -116,4 +131,31 @@
     }
     onScroll();
   }
+  // ── o vai-e-vem da barra ──────────────────────────────────────────────────
+  // Rolou pra baixo mais de 8 px: some. Subiu, parou 900 ms, ou chegou no topo:
+  // volta. Os 8 px sao pra o tremido do dedo nao ficar piscando a barra.
+  (function(){
+    // A barra e criada mais tarde, de forma assincrona — procurar UMA vez aqui
+    // devolvia null e o vai-e-vem nunca ligava (foi o que aconteceu no 1o teste).
+    // Por isso a busca acontece a CADA rolagem, com o resultado guardado.
+    // Nao e so a barra de cima: o "Ja preguei esta", o "Gostei" e a lupa tambem
+    // flutuam e tapavam a ultima linha. Vem tudo junto. Sao criados por OUTROS
+    // arquivos (_pregado.js, _uso.js, _lupa.js) e em momentos diferentes, entao
+    // a busca acontece a cada rolagem em vez de uma vez so.
+    var ALVOS = '.lt-bar,#rp-pino,#radar-uso-selo,#lm-fab';
+    function pegar(){ return document.querySelectorAll(ALVOS); }
+    var ultimo = window.scrollY, relogio = null;
+    function mostrar(){ pegar().forEach(function(b){ b.classList.remove('lt-sumiu'); }); }
+    function sumir(){ pegar().forEach(function(b){ b.classList.add('lt-sumiu'); }); }
+    window.addEventListener('scroll', function(){
+      var y = window.scrollY;
+      if (y < 60) { mostrar(); }
+      else if (y > ultimo + 8) { sumir(); }
+      else if (y < ultimo - 8) { mostrar(); }
+      ultimo = y;
+      clearTimeout(relogio);
+      relogio = setTimeout(mostrar, 900);   // parou de rolar? ela volta sozinha
+    }, {passive:true});
+  })();
+
 })();
