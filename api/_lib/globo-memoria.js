@@ -56,7 +56,15 @@ function normalizar(s) {
     .toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// A DDL roda UMA VEZ por instância quente, não a cada requisição.
+// `create table if not exists` + `alter table` + dois `create index` são quatro
+// idas ao banco que quase sempre não fazem nada — e o globo chama isto a cada
+// versículo que ele abre. Instância nova confere de novo, que é o certo: quem
+// garante o formato é o banco, não a nossa lembrança.
+let pronta = false;
+
 async function tabela(c) {
+  if (pronta) return;
   await c.query(`create table if not exists globo_memoria(
     id bigserial primary key,
     user_key text not null default '',
@@ -89,6 +97,7 @@ async function tabela(c) {
     await c.query(`create index if not exists globo_memoria_temas
                    on globo_memoria(user_key, atualizado_em desc) where tipo='tema'`);
   } catch (_) {}
+  pronta = true;
 }
 
 function linhaTema(r) {

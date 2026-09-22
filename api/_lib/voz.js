@@ -544,14 +544,19 @@ export default async function handler(req, ctx) {
     // pergunta, que é exatamente o que o Elias mandou guardar, e nada além.
     // A peneira do nome próprio passa por cima ANTES de gravar, pelo mesmo
     // motivo de sempre: o que entra sujo sai sujo depois, pela memória.
+    let fundo = null;
     if (user) {
       const temas = temasDeFerramenta(nome, args);
       if (temas.length) {
         const esperar = depois(ctx, gravarTemas(origem, user, JSON.parse(semNome(JSON.stringify(temas)))));
         if (esperar) await esperar;
+        fundo = !esperar;
       }
     }
-    return new Response(JSON.stringify({ ok: true, nome, resposta: limpa }), { headers: JSONH });
+    // `fundo` é diagnóstico, não contrato: diz se a gravação saiu do caminho da
+    // resposta (waitUntil) ou se o pastor teve que esperar por ela. Fica no topo
+    // da resposta HTTP, fora de `resposta` — o Gemini nunca vê isto.
+    return new Response(JSON.stringify({ ok: true, nome, fundo, resposta: limpa }), { headers: JSONH });
   }
 
   // ─── A MEMÓRIA CURTA: o globo contando pra cá o que acabou de ser dito ───
