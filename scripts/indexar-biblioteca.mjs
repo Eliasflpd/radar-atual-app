@@ -379,11 +379,27 @@ const TEM_HEBRAICO = /[֐-׿]/;
 
 function pedacosOwens(f) {
   const pedacos = [];
+  // UM VERSÍCULO SÓ ENTRA UMA VEZ. O Elias exporta do Logos aos poucos, e as
+  // exportações SE SOBREPÕEM — isso não é acidente, é como a ferramenta dele
+  // funciona. Medido em 21/09/2026, nos 11 arquivos da pasta:
+  //   • "Analytical Key to the Old Testamen1.docx" traz Gênesis 1:1–9:9 DUAS
+  //     vezes dentro do MESMO arquivo (430 versículos, 215 únicos) — e esses 215
+  //     são idênticos, palavra por palavra, aos de "Analytical Key to the Old
+  //     Testament.docx". Sem esta trava, Gênesis entraria TRÊS vezes no banco.
+  //   • "1&2 SAMUEL.docx" começa com Rute 4:1–4:22, que já vem inteiro no
+  //     "Ruth.docx" (esse a trava de livro já barrava, por vir sem cabeçalho).
+  // Versículo repetido no banco não é só desperdício: a busca devolve o mesmo
+  // trecho três vezes e empurra para fora as outras fontes que o globo ia citar.
+  // Quem chega primeiro fica; a ordem dos arquivos é alfabética e estável.
+  const vistos = new Set();
+  let repetidos = 0;
   for (const arq of arquivosDocx(f)) {
     let livro = '', cap = 0, ver = 0, linhas = [];
     const fechar = () => {
       if (livro && cap && linhas.length) {
         const ref = `${livro} ${cap}:${ver}`;
+        if (vistos.has(ref)) { repetidos++; linhas = []; return; }
+        vistos.add(ref);
         pedacos.push({ autor: f.autor, obra: f.obra, livro, secao: ref, tipo: 'hebraico',
           texto: `${ref} — hebraico palavra por palavra (Owens, Analytical Key):\n` + linhas.join('\n') });
       }
@@ -406,6 +422,7 @@ function pedacosOwens(f) {
     }
     fechar();
   }
+  if (repetidos) console.log(`   ℹ  owens: ${repetidos} versículos repetidos entre os .docx — entraram uma vez só`);
   return pedacos;
 }
 

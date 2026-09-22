@@ -13,6 +13,13 @@ Configurações/
 
 .env.prod
 .env.curso
+# A trava (scripts/guarda.mjs) pegou estes dois soltos na raiz, com chave de
+# verdade dentro (Groq, Google e senha do Postgres) e FORA do .gitignore: um
+# "git add -A" distraído publicaria tudo num repositório que é PÚBLICO.
+# O `.env*` no fim fecha a porta pra qualquer .env novo que apareça amanhã.
+.env.dev2
+.env.radar
+.env*
 BACKUP/
 
 # ── CHAVES E PROVAS — NUNCA VÃO PRO GIT ──────────────────────────────────────
