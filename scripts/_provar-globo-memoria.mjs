@@ -18,6 +18,17 @@
    tabela. Se a memória não funcionasse, a prova 1 voltaria muda.
 
    Precisa no ambiente: GEMINI_API_KEYS, RADAR_DB, RADAR_ADMIN_TOKEN.
+   (O RADAR_ADMIN_TOKEN aqui pode ser QUALQUER valor: ele só precisa bater entre
+   as duas pontas locais. Em produção quem manda é o da Vercel.)
+
+   ⚠️ COMO PEGAR O RADAR_DB — a pegadinha que me custou tempo e fica escrita:
+   `vercel env pull --environment=production` baixa os nomes e devolve os
+   VALORES VAZIOS (as variáveis de produção são criptografadas e não descem).
+   O que funciona é o ambiente de DESENVOLVIMENTO:
+       npx vercel env pull scripts/.env-minhas --yes
+   e depois:
+       node --env-file=scripts/.env-minhas scripts/_provar-globo-memoria.mjs
+   `scripts/.env-*` está no .gitignore — nunca vai pro repositório.
    ══════════════════════════════════════════════════════════════════════════════ */
 import fs from 'node:fs';
 import http from 'node:http';
