@@ -179,6 +179,12 @@ const embed = PROVIDER === 'voyage' ? embedVoyage : embedGemini;
     feito += lote.length;
     console.log(`  ${feito}/${pend.length} (${((feito / pend.length) * 100).toFixed(0)}%)`);
     // Gemini free tier = 100 requests/min (o batch conta cada item). Espera 1 min entre lotes de 100.
+    // ⚠️ MEDIDO em 23/09/2026, contra a API: o teto é
+    // `EmbedContentRequestsPerMinutePerUserPerProjectPerModel-FreeTier = 100`, e NÃO
+    // existe teto diário (conferido com um pedido sozinho depois da queda: HTTP 200).
+    // Este PACE_MS estava certo — a primeira indexação morreu com 925 de 31.104 porque
+    // EU estava testando a mesma chave por fora, ao mesmo tempo, e roubando a cota dele.
+    // LIÇÃO: enquanto esta fila estiver rodando, não bater na mesma chave por fora.
     const pace = parseInt(process.env.PACE_MS || (PROVIDER === 'gemini' ? '62000' : '300'), 10);
     if (i + BATCH < pend.length) { console.log(`  aguardando ${pace}ms (quota)...`); await sleep(pace); }
   }
