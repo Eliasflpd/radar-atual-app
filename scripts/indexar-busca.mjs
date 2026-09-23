@@ -39,6 +39,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -229,6 +230,88 @@ function pedacosMensagens() {
   return { pedacos, docs };
 }
 
+// ══ FASE 3 — A EBD (as revistas e o material de apoio de CADA turma) ═════════
+// POR QUE ISTO EXISTE (23/09/2026, pedido do Elias):
+// "o globo precisa ter acesso a todas as lições atuais dentro do RADAR... ter
+// esse conhecimento gravado pra quando a pessoa começar a estudar a revista ter
+// assunto fiel". Hoje o globo sabe a Bíblia e o acervo de pregações dele, mas
+// NÃO sabia nada da revista que o professor vai dar no domingo — que é
+// justamente o que o pastor tem na mão quando abre o app.
+//
+// DUAS FONTES, e as duas importam:
+//  • public/ebd/<turma>/html/apoio-NN.html — o material de apoio, já em texto
+//    limpo (~9 mil caracteres por lição).
+//  • public/ebd/<turma>/licoes/licao-N.docx — A REVISTA em si. DOCX não se lê
+//    direto: o markitdown (que o Elias já tinha instalado e ninguém sabia)
+//    converte pra markdown. O .md fica guardado ao lado — converter duas vezes
+//    é desperdício, e na segunda indexação já é instantâneo.
+//
+// O `title:` de cada pedaço leva TURMA e LIÇÃO. Não é enfeite: é o que faz a
+// pergunta "o que diz a lição 5 do adulto" cair na lição 5 do adulto, e não
+// numa lição parecida de outra turma.
+function textoDoDocx(caminho) {
+  const md = caminho.replace(/\.docx$/i, '.md');
+  if (fs.existsSync(md) && fs.statSync(md).size > 200) return fs.readFileSync(md, 'utf8');
+  try {
+    execSync(`markitdown "${caminho}" > "${md}"`, { stdio: ['ignore', 'ignore', 'pipe'], timeout: 300000 });
+    if (fs.existsSync(md) && fs.statSync(md).size > 200) return fs.readFileSync(md, 'utf8');
+  } catch (_) {}
+  return '';
+}
+
+function pedacosEBD() {
+  const base = path.join(RAIZ, 'public', 'ebd');
+  const pedacos = [], docs = [];
+  if (!fs.existsSync(base)) return { pedacos, docs };
+
+  for (const turma of fs.readdirSync(base).filter((t) => fs.statSync(path.join(base, t)).isDirectory()).sort()) {
+    const pares = [];
+
+    // a) material de apoio (HTML)
+    const dirH = path.join(base, turma, 'html');
+    if (fs.existsSync(dirH)) {
+      for (const arq of fs.readdirSync(dirH).filter((f) => /\.html?$/i.test(f)).sort()) {
+        const bruto = fs.readFileSync(path.join(dirH, arq), 'utf8')
+          .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ');
+        const n = (arq.match(/(\d+)/) || [, '?'])[1];
+        pares.push({ arq, n, tipo: 'apoio', texto: limparHTML(bruto) });
+      }
+    }
+    // b) A REVISTA (DOCX -> markdown)
+    const dirL = path.join(base, turma, 'licoes');
+    if (fs.existsSync(dirL)) {
+      for (const arq of fs.readdirSync(dirL).filter((f) => /\.docx$/i.test(f)).sort()) {
+        const n = (arq.match(/(\d+)/) || [, '?'])[1];
+        const md = textoDoDocx(path.join(dirL, arq));
+        if (md) pares.push({ arq, n, tipo: 'revista', texto: md.replace(/[#*_>`]/g, ' ').replace(/\s+/g, ' ').trim() });
+      }
+    }
+
+    for (const it of pares) {
+      if (it.texto.length < 400) continue;
+      // O título da lição é a primeira linha forte do texto — em maiúsculas ou
+      // logo depois de "Lição N". Se não achar, fica o número, que já resolve.
+      const m = it.texto.match(/Li[çc][aã]o\s*0?(\d+)[^A-ZÀ-Ú]{0,12}([A-ZÀ-Ú][^.]{6,90})/)
+             || it.texto.match(/\b([A-ZÀ-Ú][A-ZÀ-Ú\s,'ÇÃÕÁÉÍÓÚÂÊÔÀ]{10,80})\b/);
+      const titulo = (m ? (m[2] || m[1]) : ('Lição ' + it.n)).replace(/\s+/g, ' ').trim();
+      const rotulo = `EBD ${turma} · lição ${it.n} · ${it.tipo} · ${titulo}`;
+
+      const d = docs.length;
+      docs.push({ a: it.arq, t: titulo, r: `${turma} — lição ${it.n}`, e: it.tipo === 'revista' ? '📕' : '📘', turma, n: it.n, tipo: it.tipo });
+
+      // janelas de ~900 caracteres andando de 700 em 700: a emenda de 200
+      // garante que o parágrafo cortado na divisa ainda seja achável.
+      let i = 0;
+      for (let ini = 0; ini < it.texto.length; ini += 700, i++) {
+        const txt = it.texto.slice(ini, ini + 900);
+        if (txt.length < 200) break;
+        pedacos.push({ texto: `title: ${rotulo} | text: ${txt}`, d, p: i, trecho: txt.slice(0, 460) });
+      }
+    }
+  }
+  return { pedacos, docs };
+}
+
 // ══ FASE 2 — A BÍBLIA (public/biblia.json, texto que o app JÁ tem) ════════════
 // Janela de 3 versículos andando de 2 em 2, dentro do capítulo. Metade dos vetores
 // de uma indexação versículo a versículo, e responde muito melhor: pergunta de
@@ -263,6 +346,11 @@ if (alvo === 'mensagens' || alvo === 'tudo') {
   const { pedacos, docs } = pedacosMensagens();
   console.log(`📜 Acervo do Elias: ${docs.length} mensagens → ${pedacos.length} trechos`);
   await gravar('mensagens', pedacos, { docs, itens: pedacos.map((p) => [p.d, p.p, p.trecho]) });
+}
+if (alvo === 'ebd' || alvo === 'tudo') {
+  const { pedacos, docs } = pedacosEBD();
+  console.log(`🏫 EBD: ${docs.length} lições/apoios → ${pedacos.length} trechos`);
+  if (pedacos.length) await gravar('ebd', pedacos, { docs, itens: pedacos.map((p) => [p.d, p.p, p.trecho]) });
 }
 if (alvo === 'biblia' || alvo === 'tudo') {
   const { pedacos, livros } = pedacosBiblia();

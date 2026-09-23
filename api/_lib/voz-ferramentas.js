@@ -318,6 +318,83 @@ async function abrirAcervo(origem) {
   return baixandoAcervo;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// A EBD — A LIÇÃO QUE A IGREJA VAI ESTUDAR NO DOMINGO.
+// Elias (23/09/2026): "o globo precisa ter acesso a todas as lições atuais...
+// focar na lição que estudaremos no próximo domingo sempre... saber responder o
+// nome de todas as lições, qual a lição 3, qual a 12, e em que lição estamos
+// de acordo com as datas vigentes."
+// O catálogo é gerado do próprio app.js (scripts/gerar-catalogo-ebd.mjs), então
+// título errado aqui só existe se estiver errado no app — fonte única.
+// ─────────────────────────────────────────────────────────────────────────────
+let _catEBD = null;
+async function abrirCatalogoEBD(origem) {
+  if (_catEBD) return _catEBD;
+  try {
+    const r = await fetch(origem + '/ebd/catalogo.json', { cf: { cacheTtl: 900 } });
+    if (!r.ok) return null;
+    _catEBD = await r.json();
+    return _catEBD;
+  } catch (_) { return null; }
+}
+
+// A MESMA conta do app (licaoDaSemana): o domingo que vem é o alvo; se hoje já
+// é domingo, o alvo é hoje. Cópia fiel de propósito — divergir aqui faria o
+// globo falar de uma lição e o app mostrar outra, que é pior que não saber.
+function licaoDeHoje(cat) {
+  const inicio = new Date(cat.inicio_trimestre + 'T00:00:00');
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const prox = new Date(hoje);
+  if (hoje.getDay() !== 0) prox.setDate(hoje.getDate() + (7 - hoje.getDay()));
+  return { n: Math.max(1, Math.round((prox - inicio) / (7 * 86400000)) + 1),
+           domingo: prox.toISOString().slice(0, 10) };
+}
+
+async function licaoDaEBD(args, origem) {
+  const cat = await abrirCatalogoEBD(origem);
+  if (!cat) return { achou: false, ordem: 'O catálogo da EBD não respondeu agora. Diga que não conseguiu abrir as lições — NÃO invente título de lição nem número.' };
+
+  const turmaPedida = String((args && args.turma) || '').trim().toLowerCase();
+  const numero = parseInt((args && args.licao) || 0, 10);
+  const atual = licaoDeHoje(cat);
+  const turmas = Object.keys(cat.turmas);
+  const alvo = turmas.find((t) => t === turmaPedida)
+            || turmas.find((t) => turmaPedida && t.startsWith(turmaPedida.slice(0, 5)));
+
+  // 1) "quais são as lições?" -> a lista inteira daquela turma
+  if (args && args.listar) {
+    const t = alvo || 'adulto';
+    return {
+      achou: true, turma: t, licao_de_agora: atual.n, proximo_domingo: atual.domingo,
+      licoes: (cat.turmas[t] || []).map((l) => ({ numero: l.n, titulo: l.titulo, domingo: l.domingo })),
+      ordem: 'Esta é a lista REAL das lições desta turma. Diga o número e o título como estão aqui, sem reescrever o título. A lição de agora está em licao_de_agora.',
+    };
+  }
+
+  // 2) "qual é a lição 3?" -> aquela lição, em todas as turmas ou na pedida
+  const n = numero > 0 ? numero : atual.n;
+  const achados = (alvo ? [alvo] : turmas).map((t) => {
+    const l = (cat.turmas[t] || []).find((x) => x.n === n);
+    return l ? { turma: t, numero: l.n, titulo: l.titulo, domingo: l.domingo,
+                 versiculo_aureo: l.aureo || '', aplicacao: l.pratica || '' } : null;
+  }).filter(Boolean);
+
+  if (!achados.length) {
+    return { achou: false, pedido: n, ordem: 'Não existe lição com esse número no trimestre atual. Diga isso com todas as letras e ofereça a lição do domingo que vem (licao_de_agora).', licao_de_agora: atual.n };
+  }
+
+  return {
+    achou: true,
+    é_a_lição_de_agora: n === atual.n,
+    licao_de_agora: atual.n,
+    proximo_domingo: atual.domingo,
+    licoes: achados,
+    ordem: 'Estes são o número, o título e o versículo áureo REAIS da lição. Fale o título exatamente como está. '
+         + 'Se "é_a_lição_de_agora" for verdadeiro, deixe claro que é a do domingo que vem. '
+         + 'Para o CONTEÚDO da lição (o que ela ensina), chame buscar_na_licao — não invente o miolo a partir do título.',
+  };
+}
+
 async function buscarNoAcervo(pergunta, origem, quantos = 4) {
   const q = String(pergunta || '').trim().slice(0, 400);
   if (q.length < 3) return { achou: false, motivo: 'pergunta curta demais para buscar' };
@@ -671,6 +748,20 @@ export const FERRAMENTAS = [{
       },
     },
     {
+      name: 'licao_da_ebd',
+      description: 'A LIÇÃO DA ESCOLA BÍBLICA DOMINICAL: número, título, versículo áureo e a data do domingo, de todas as 7 turmas (adulto, jovem, juvenis, juniores, adolescentes). '
+        + 'USE SEMPRE que o pastor falar de lição, revista, EBD, Escola Dominical, "domingo que vem", "lição 3", "qual lição estamos". '
+        + 'Sem argumento nenhum ela já devolve a lição do PRÓXIMO DOMINGO. É PROIBIDO dizer número ou título de lição sem chamar isto antes.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          licao: { type: 'NUMBER', description: 'O número da lição (ex.: 3, 12). Deixe vazio para a lição do próximo domingo.' },
+          turma: { type: 'STRING', description: 'adulto, jovem, juvenis, juniores ou adolescentes. Vazio = todas as turmas.' },
+          listar: { type: 'BOOLEAN', description: 'true para a lista completa das lições do trimestre daquela turma.' },
+        },
+      },
+    },
+    {
       name: 'buscar_no_acervo',
       description: 'Procura POR SENTIDO nas pregações e mensagens escritas pelo próprio pastor Elias, que estão no RADAR. '
         + 'CHAME sempre que ele perguntar o que ELE já pregou, escreveu ou estudou sobre um assunto ("o que eu preguei sobre...", "eu já falei disso?"), '
@@ -732,7 +823,7 @@ export const FERRAMENTAS = [{
 export const REGRA_DE_OURO = `════ VOCÊ NÃO SABE DE CABEÇA. VOCÊ VAI BUSCAR. ════
 Isto está acima de qualquer outra regra deste documento, inclusive das de oratória.
 
-Você tem SETE ferramentas e elas são a sua memória de verdade:
+Você tem OITO ferramentas e elas são a sua memória de verdade:
   ler_versiculo         — o texto exato de qualquer versículo, com o idioma original junto
   conferir_citacao      — confere se o versículo diz MESMO o que você vai afirmar
   pesquisar_biblioteca  — a BIBLIOTECA DE ESTUDO dele: Champlin, Kittel, Waltke, Kidner,
@@ -833,6 +924,8 @@ export async function executarFerramenta(nome, args, origem, ctx) {
       return lerVersiculo(a.ref || a.referencia, origem);
     case 'conferir_citacao':
       return conferirCitacao(a.ref || a.referencia, a.o_que_eu_disse || a.afirmacao, origem);
+    case 'licao_da_ebd':
+      return licaoDaEBD(a, origem);
     case 'buscar_no_acervo':
       return buscarNoAcervo(a.pergunta || a.q || a.assunto, origem);
     case 'pesquisar_biblioteca':
