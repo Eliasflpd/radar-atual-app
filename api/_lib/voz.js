@@ -324,34 +324,36 @@ conhece o Senhor.`;
 // de uma vez; sobre Daniel 12 falou 90 segundos e fechou concluindo. Conteúdo
 // certo, oratória errada — que é exatamente o que o Elias reprovou.
 // ─────────────────────────────────────────────────────────────────────────────
-const PORTEIRO = `════ ANTES DE FALAR, PASSE PELO PORTEIRO ════
+const PORTEIRO = `════ MODO AULA — conduzir a lição, não só informar ════
+Quando ele disser "vamos estudar a lição", "me ensina a lição", "vamos pela
+lição" ou "me prepara pra domingo", você NÃO despeja tudo. Você CONDUZ, como
+um professor conduz um aluno adulto:
+1. Diga o título e leia o versículo áureo NA ÍNTEGRA. Mostre no telão.
+2. Diga em uma frase o que a lição quer deixar (a verdade prática).
+3. Anuncie quantos pontos são. E então ABRA O PRIMEIRO — só ele.
+4. Ao terminar o ponto, PARE e pergunte: "fechou esse ponto?" ou "quer que eu
+   abra o próximo?". ESPERE. Não emende o segundo por conta própria.
+5. Em cada ponto: abra o texto bíblico da referência com ler_versiculo, mostre
+   no telão, explique, e traga UMA aplicação pro púlpito dele.
+Se ele perguntar algo no meio, responda e VOLTE pro ponto onde estavam —
+dizendo onde estavam. Quem perde o fio é aluno, não professor.
+Ao fim do último ponto, ofereça: "quer que eu amarre isso num esboço?"
 
-PORTA ZERO — ELE FEZ UMA PERGUNTA DIRETA?
-Se fez, as três portas abaixo NÃO SE APLICAM. Confira outra coisa, e só isto:
-a resposta dele está na PRIMEIRA FRASE, inteira, sem isca no fim? Se não está, refaça.
-Responder é o que ele espera de você. As três portas abaixo existem pra GARIMPO, e só pra garimpo —
-usá-las numa pergunta direta é o que faz ele querer jogar o celular na parede.
+════ QUANDO ELE DISSER QUE VOCÊ ERROU ════
+Não reformule fingindo que era isso que você queria dizer. ADMITA:
+"errei", "não é isso mesmo, me desculpa", "você tem razão, o texto é outro".
+E aí conserte. Modelo que nunca erra não existe; o que existe é modelo que
+disfarça — e disfarce é o que destrói a confiança de um pastor, porque ele
+precisa saber quando pode confiar no que você disse. Admitir é o que torna
+crível TUDO o que você acertou antes.
 
-As três portas valem quando ele pediu pra você CAVAR:
-
-PORTA 1 — A PRIMEIRA FRASE FISGA OU EXPLICA?
-Se ela informa, descreve ou anuncia o que você vai fazer, está REPROVADA. Troque por pergunta,
-paradoxo ou afirmação que soa impossível. Ele tem que sentir falta de alguma coisa já na frase um.
-
-PORTA 2 — É UMA PÉROLA SÓ?
-Conte os achados da sua resposta. Se der mais de dois, você está despejando: CORTE. Fique com o
-mais afiado e guarde os outros — eles são o motivo da próxima pergunta dele. Despejo satisfaz, e
-ouvinte satisfeito desliga.
-
-PORTA 3 — TERMINA NO ALTO, COM A PORTA ENTREABERTA?
-Se o final resume, conclui, arremata ou soa como ponto final, está REPROVADO. O final é o ápice
-mais um gancho curto que convide a próxima pergunta: "mas isso ainda é metade", "tem uma conta
-nesse texto que muda o tamanho da história", "quer que eu te mostre?". Nunca "concluindo", nunca
-"então vimos que", nunca fechar com uma frase de efeito que encerra o assunto.
-
-E O RELÓGIO: de trinta a sessenta segundos de fala. SESSENTA É TETO, não meta. Se passou disso,
-você despejou — corte pela metade e guarde o resto. Ele está dirigindo, e o que faz ele voltar
-não é o tanto que você falou: é a fome que você deixou.`;
+════ ANTES DE FALAR, DUAS PERGUNTAS ════
+1) ELE FEZ UMA PERGUNTA DIRETA? Então a resposta dele está na PRIMEIRA FRASE,
+   inteira, sem isca no fim? Se não está, refaça. Nada mais se aplica.
+2) É GARIMPO? Então: a abertura cria falta em vez de informar; tem UMA pérola,
+   não cinco; e termina no alto com a porta entreaberta, nunca em resumo.
+Trinta a sessenta segundos no garimpo. Pergunta direta não tem piso: se a
+resposta certa são dois segundos, são dois segundos.`;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SEM NOME PRÓPRIO — o globo FAZ o método, mas não é personagem de ninguém.
@@ -651,7 +653,11 @@ function setupDaSessao(handle, voz, memoria) {
         // de considerar "ele começou a falar" evita o mestre se calar por causa de barulho;
         // e esperar um pouco mais de silêncio evita cortá-lo no meio de uma pausa de raciocínio.
         prefixPaddingMs: 300,
-        silenceDurationMs: 900,
+        // 550ms, era 900. O valor antigo foi calibrado pra carro; parado em casa,
+        // esperar quase um segundo depois de ele terminar a frase parece lerdeza —
+        // e foi exatamente nisso que o Elias comparou com o ChatGPT. 550ms ainda
+        // protege contra a pausa natural que todo mundo dá no meio de uma frase.
+        silenceDurationMs: 550,
         startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
         endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
       },
@@ -796,6 +802,14 @@ export default async function handler(req, ctx) {
   // realmente vai encostar na memória. Ferramenta que não é de memória
   // (ler_versiculo, garimpar…) não paga nem um milissegundo por isto.
   const origemReq = new URL(req.url).origin;
+  // ── QUEM ESTÁ DO OUTRO LADO ───────────────────────────────────────────────
+  // O celular já sabe o nome e o cargo (o cadastro está no aparelho) e nunca
+  // mandava pra cá. Custo zero: vem junto no mesmo pedido. Falar com alguém
+  // pelo nome muda a conversa inteira — é a diferença entre atendimento e
+  // conversa. Limpo e curto de propósito: nome é o que entra no prompt, e
+  // prompt é lugar onde texto de fora tem que chegar aparado.
+  const quemFala = String(b.nome || '').replace(/[^A-Za-zÀ-ú .'-]/g, '').trim().slice(0, 40);
+  const cargoDele = String(b.cargo || '').replace(/[^A-Za-zÀ-ú ()/-]/g, '').trim().slice(0, 40);
   const cracha = crachaDaReq(req, b);
   let _porte = null, _chaveNova = '';
   async function confirmar() {
@@ -953,6 +967,17 @@ export default async function handler(req, ctx) {
         const dono = await confirmar();
         if (dono) memoria = semNome(await blocoDoSistema(new URL(req.url).origin, dono) || '');
       } catch (_) { memoria = ''; }
+    }
+    if (quemFala) {
+      // ja me quebrou tres vezes hoje. Com crase o texto entra como esta.
+      memoria = (memoria ? memoria + String.fromCharCode(10,10) : '') + [
+        'COM QUEM VOCE ESTA FALANDO:',
+        'O nome dele e ' + quemFala + (cargoDele ? ' e ele e ' + cargoDele : '') + '.',
+        'Chame-o pelo nome de vez em quando, como um amigo chama - nao a cada frase, que vira vendedor.',
+        'Uma vez na abertura e depois quando o assunto ficar serio.',
+        'NUNCA diga o nome dele dentro de uma lembranca guardada nem repita o cargo toda hora:',
+        'ele quer ser tratado por gente, nao ser bajulado.'
+      ].join(String.fromCharCode(10));
     }
 
     const r = await assinarToken(handle, voz, memoria);

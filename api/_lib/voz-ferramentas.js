@@ -748,10 +748,7 @@ export const FERRAMENTAS = [{
     },
     {
       name: 'mostrar_na_tela',
-      description: 'O TELÃO. Põe um texto GRANDE na tela do pastor enquanto você fala, como um pregador que aponta pro projetor. '
-        + 'Use quando for LER um versículo (mostre o versículo), quando anunciar o título da lição, quando enumerar tópicos, '
-        + 'e use com tipo "nada" pra voltar ao rosto quando terminar aquele ponto. '
-        + 'NÃO narre que está mostrando ("veja na tela") — só mostre e continue falando. É uma apresentação, não um anúncio.',
+      description: 'O TELÃO: põe texto grande na tela enquanto você fala. Use ao LER um versículo, ao anunciar o título da lição e ao enumerar tópicos. tipo "nada" limpa a tela. NUNCA narre que está mostrando.',
       parameters: {
         type: 'OBJECT',
         properties: {
@@ -764,9 +761,7 @@ export const FERRAMENTAS = [{
     },
     {
       name: 'licao_da_ebd',
-      description: 'A LIÇÃO DA ESCOLA BÍBLICA DOMINICAL: número, título, versículo áureo e a data do domingo, de todas as 7 turmas (adulto, jovem, juvenis, juniores, adolescentes). '
-        + 'USE SEMPRE que o pastor falar de lição, revista, EBD, Escola Dominical, "domingo que vem", "lição 3", "qual lição estamos". '
-        + 'Sem argumento nenhum ela já devolve a lição do PRÓXIMO DOMINGO. É PROIBIDO dizer número ou título de lição sem chamar isto antes.',
+      description: 'A LIÇÃO DA EBD: número, título, versículo áureo, verdade prática e os pontos, das 7 turmas. Sem argumento devolve a do PRÓXIMO DOMINGO. Use sempre que ele falar lição/revista/EBD/domingo. PROIBIDO dizer número ou título de lição sem chamar isto.',
       parameters: {
         type: 'OBJECT',
         properties: {

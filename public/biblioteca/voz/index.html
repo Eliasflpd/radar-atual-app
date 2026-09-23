@@ -480,6 +480,29 @@
       S.memEu=''; S.memMestre='';
     }catch(e){}
   });
+  // ── PREPARAR ANTES DO TOQUE ────────────────────────────────────────────
+  // Assinar o token no Google e ler a memoria leva tempo. Fazer isso SO quando
+  // ele toca no globo e um segundo de silencio que ele sente como lentidao.
+  // Agora a pagina ja pede o token 1,2s depois de abrir e guarda na manga: no
+  // toque, a sessao abre com o que ja esta pronto. Se der erro, nada acontece —
+  // o caminho normal continua valendo, so sem a vantagem.
+  var TOKEN_PRONTO = null;
+  setTimeout(function(){
+    try{
+      TOKEN_PRONTO = pedir({ acao:'token', voz:S.voz })
+        .then(function(t){ TOKEN_PRONTO_EM = Date.now(); return t; })
+        ['catch'](function(){ TOKEN_PRONTO=null; return null; });
+    }catch(e){ TOKEN_PRONTO=null; }
+  }, 1200);
+  var TOKEN_PRONTO_EM = 0;
+  // Token do Google vale 30 min; uso o adiantado so nos primeiros 20 pra nunca
+  // entregar um vencido na mao do pastor.
+  function tokenAdiantado(){
+    if(!TOKEN_PRONTO || !TOKEN_PRONTO_EM) return null;
+    if(Date.now()-TOKEN_PRONTO_EM > 20*60*1000) return null;
+    var t=TOKEN_PRONTO; TOKEN_PRONTO=null; return t;
+  }
+
   var HUD_LIGADO = /[?&]hud=1/.test(location.search);
   function diario(){
     try{ console.log.apply(console, ['[VOZ]'].concat([].slice.call(arguments))); }catch(e){}
@@ -1343,6 +1366,15 @@
     // chamada nova esqueça de mandar — esquecer seria memória virando um monte
     // de linhas órfãs, que é pior que não ter memória.
     if(EU_SOU && corpo && !corpo.user) corpo.user=EU_SOU;
+    // O NOME VAI JUNTO. O aparelho ja tem o cadastro e nunca mandava — e falar
+    // com alguem pelo nome muda a conversa inteira. Custo zero: pega carona no
+    // mesmo pedido. 'radar_user' continua SO LEITURA, como sempre.
+    if(corpo && corpo.acao==='token' && !corpo.nome){
+      try{
+        var _u=JSON.parse(localStorage.getItem('radar_user')||'null');
+        if(_u&&_u.nome){ corpo.nome=String(_u.nome).slice(0,40); if(_u.cargo) corpo.cargo=String(_u.cargo).slice(0,40); }
+      }catch(e){}
+    }
     // O CRACHÁ VAI PELO MESMO FUNIL, e pelo mesmo motivo do `user` aí em cima:
     // pôr aqui é o que garante que nenhuma chamada nova esqueça de mandar.
     // No CABEÇALHO, nunca na URL — segredo em query string vira log de servidor.
@@ -1617,7 +1649,13 @@
     derrubar(S.ws,1000,'trocando de linha');     // NUNCA duas linhas vivas
     S.ws=null; S.pronto=false;
 
-    var p = pedir({ acao:'token', voz:S.voz, handle:S.handle||undefined }).then(function(t){
+    // Usa o token ja preparado SE existir e se nao for retomada (retomada
+    // precisa do handle assinado junto, e o adiantado foi assinado sem ele).
+    var adiantado = S.handle ? null : tokenAdiantado();
+    var p = (adiantado || pedir({ acao:'token', voz:S.voz, handle:S.handle||undefined })).then(function(t){
+      if(!t || !t.token) return pedir({ acao:'token', voz:S.voz, handle:S.handle||undefined }).then(function(t2){ return t2; });
+      return t;
+    }).then(function(t){
       // O servidor avisa se assinou este token COM a memória dentro. O CONTEÚDO
       // da memória não desce pro aparelho — só o aviso de que ela existe, que é
       // o que a tela precisa pra dizer "retomando de onde vocês pararam".
