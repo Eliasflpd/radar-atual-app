@@ -516,7 +516,17 @@ function setupDaSessao(handle, voz, memoria) {
     sessionResumption: handle ? { handle } : {},
     // Sessão morre em 15 min sem isto. Com a janela deslizante, ela segue além disso:
     // o servidor descarta o começo do contexto em vez de encerrar.
-    contextWindowCompression: { slidingWindow: {}, triggerTokens: '16000' },
+    // ⚠️ 16.000 ERA POUCO E ESTAVA QUEBRANDO A CONVERSA (achado em 23/09/2026).
+    // A janela desliza quando o contexto TOTAL chega neste número — e a
+    // instrução de sistema sozinha já come ~9.000 tokens (método, os 41 mestres,
+    // oratória, régua, regra de ouro, memória, porteiro, ferramentas). Sobravam
+    // ~7.000 pra conversa: passou disso, o servidor descartava O COMEÇO — e o
+    // globo perdia o que ELE MESMO tinha dito. O Elias sentiu na pele: "cita uma
+    // coisa e depois teima que não citou". Não era mentira, era esquecimento.
+    // 100.000 dá folga de sobra dentro da janela do modelo e mantém a conversa
+    // inteira viva. A sessão continua não morrendo: quando chegar lá, ela desliza
+    // em vez de encerrar, que é pra isso que a compressão existe.
+    contextWindowCompression: { slidingWindow: {}, triggerTokens: '100000' },
     // As duas transcrições existem pra TELA: é assim que o pastor enxerga o que ele
     // falou e o que o mestre respondeu enquanto dirige. Não alteram o áudio.
     inputAudioTranscription: {},
