@@ -573,6 +573,30 @@
     S.escala += (escAlvo-S.escala)*0.10;      // o globo CRESCE quando ele toca
     S.giro += 0.0042 + S.nivel*0.010;          // e gira um tico mais rápido na voz
 
+    // ── A FORMA VIVA ───────────────────────────────────────────────────────
+    // Elias: "quero a mesma animação do ChatGPT, ele parece vivo, o nosso é
+    // ultrapassado". Ele tem razão e o motivo é simples: círculo perfeito não
+    // existe na natureza, e o olho sabe disso. O que dá vida é o CONTORNO se
+    // deformar o tempo todo.
+    // Três ondas de frequências diferentes (3, 5 e 7 voltas) andando em
+    // velocidades diferentes. Como não são múltiplas, elas nunca repetem o
+    // mesmo desenho — é isso que faz parecer respiração e não animação em laço.
+    // Parado ele respira de leve; falando, a deformação cresce com a voz.
+    function forma(ctx, cx, cy, raio, extra){
+      var t=S.relogio, f=(extra||0);
+      ctx.beginPath();
+      for(var i=0;i<=72;i++){
+        var A=i*(6.2832/72);
+        var d = Math.sin(A*3 + t*0.9)*(0.018+f*0.052)
+              + Math.sin(A*5 - t*1.35)*(0.012+f*0.034)
+              + Math.sin(A*7 + t*0.55)*(0.007+f*0.022);
+        var r=raio*(1+d);
+        var x=cx+Math.cos(A)*r, y=cy+Math.sin(A)*r;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.closePath();
+    }
+
     var c=CORES[S.fase]||CORES.pronto;
     // 0,285 + halo de até 1,63x cabe justinho dentro do canvas sem cortar a auréola
     var R = (L*0.385) * S.escala * (1 + S.nivel*0.055);
@@ -587,7 +611,7 @@
     halo.addColorStop(0,'rgba('+c.aura+','+(0.52+S.nivel*0.42).toFixed(3)+')');
     halo.addColorStop(0.45,'rgba('+c.aura+','+(0.20+S.nivel*0.22).toFixed(3)+')');
     halo.addColorStop(1,'rgba('+c.aura+',0)');
-    g.beginPath(); g.arc(meio,meio,R*(1.18+S.nivel*0.10),0,6.2832);
+    forma(g,meio,meio,R*(1.18+S.nivel*0.10),S.nivel);
     g.fillStyle=halo; g.fill();
 
     // ── 2. CORPO: gradiente com a luz fora do centro = esfera, não círculo ──
@@ -596,24 +620,24 @@
     lum.addColorStop(0.42,c.a);
     lum.addColorStop(0.88,'#0a2231');
     lum.addColorStop(1,'#071a26');
-    g.beginPath(); g.arc(meio,meio,R,0,6.2832); g.fillStyle=lum; g.fill();
+    forma(g,meio,meio,R,S.nivel); g.fillStyle=lum; g.fill();
 
     // ── 3. A MALHA: paralelos e meridianos, dourados, por dentro da bola ───
     g.save();
-    g.beginPath(); g.arc(meio,meio,R*0.995,0,6.2832); g.clip();   // nada vaza
+    forma(g,meio,meio,R*0.995,S.nivel); g.clip();   // nada vaza
     g.translate(meio,meio); g.rotate(-0.22);                       // eixo inclinado
     g.lineWidth=Math.max(1,L*0.0030);
     for(var p=-4;p<=4;p++){
       var fi=p*(Math.PI/10), y=Math.sin(fi)*R, rx=Math.cos(fi)*R;
       g.beginPath(); g.ellipse(0,y,rx,rx*0.20,0,0,6.2832);
-      g.strokeStyle=c.linha; g.globalAlpha=(p===0?0.46:0.20)*(0.5+S.nivel*0.6); g.stroke();
+      g.strokeStyle=c.linha; g.globalAlpha=(p===0?0.16:0.07)*(0.5+S.nivel*0.6); g.stroke();  // sobra so um fantasma da malha
     }
     // a largura do meridiano muda com o giro: é isso que dá esfera RODANDO
     for(var m=0;m<6;m++){
       var f=S.giro+m*(Math.PI/6), larg=Math.abs(Math.sin(f))*R;
       if(larg<R*0.035) continue;
       g.beginPath(); g.ellipse(0,0,larg,R,0,0,6.2832);
-      g.strokeStyle=c.linha; g.globalAlpha=0.19*(0.5+S.nivel*0.6); g.stroke();
+      g.strokeStyle=c.linha; g.globalAlpha=0.07*(0.5+S.nivel*0.6); g.stroke();
     }
     g.globalAlpha=1; g.restore();
 
@@ -623,16 +647,16 @@
     var beira=g.createRadialGradient(meio,meio,R*0.68, meio,meio,R);
     beira.addColorStop(0,'rgba(0,0,0,0)');
     beira.addColorStop(1,'rgba(0,0,0,.34)');
-    g.beginPath(); g.arc(meio,meio,R,0,6.2832); g.fillStyle=beira; g.fill();
+    forma(g,meio,meio,R,S.nivel); g.fillStyle=beira; g.fill();
 
     // ── 5. LUZ DE CONTORNO ────────────────────────────────────────────────
     // Um fio fino em volta da bola inteira (senão a beirada some no fundo
     // escuro e o globo parece recortado), e um trecho mais forte embaixo à
     // direita — do lado oposto à luz. É esse contraluz que arredonda.
     g.save();
-    g.beginPath(); g.arc(meio,meio,R*0.99,0,6.2832);
+    forma(g,meio,meio,R*0.99,S.nivel);
     g.lineWidth=Math.max(1,L*0.0032); g.strokeStyle=c.linha;
-    g.globalAlpha=0.20+S.nivel*0.15; g.stroke();
+    g.globalAlpha=0.34+S.nivel*0.30; g.stroke();
     g.beginPath(); g.arc(meio,meio,R*0.985,Math.PI*0.13,Math.PI*0.90);
     g.lineWidth=Math.max(1.4,L*0.0062); g.strokeStyle=c.linha;
     g.globalAlpha=0.42+S.nivel*0.32; g.stroke();
