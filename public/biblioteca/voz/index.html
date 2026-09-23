@@ -1352,9 +1352,14 @@
   }
   // Medidos no recorte de cada folha. Se o Elias gerar um avatar novo, é aqui
   // que se acerta — e o jeito de acertar é olhar a tela, não adivinhar.
+  // ⚠️ ESTES NÚMEROS FORAM CALCULADOS, NÃO CHUTADOS. O chute anterior punha a
+  // boca 16% acima do lugar e o pastor via DUAS bocas: a do rosto e a minha em
+  // cima. Quem achou o ponto certo foi o casamento da peça 'boca-fechada'
+  // contra o próprio rosto (scripts/recortar-avatar.py mede isso). Avatar novo
+  // = rodar a medição de novo, nunca estimar no olho.
   var POS_AVATAR = {
-    mestra: { bx:33, by:52, bw:34, ox:30, oy:29, ow:41 },
-    mestre: { bx:36, by:53, bw:29, ox:31, oy:28, ow:38 },
+    mestra: { bx:36.6, by:68.5, bw:31.3, ox:30, oy:29, ow:41 },
+    mestre: { bx:32.0, by:61.4, bw:27.0, ox:31, oy:28, ow:38 },
   };
 
   function trocarBoca(nome, forcar){
@@ -1363,7 +1368,7 @@
     // trava de 70ms: sem ela a boca treme a 60 quadros por segundo e fica
     // parecendo defeito, não fala.
     var agora=Date.now();
-    if(!forcar && agora-AV.ultimaTroca<70) return;
+    if(!forcar && agora-AV.ultimaTroca<60) return;  // ~16 trocas/s: fala humana não passa disso
     AV.ultimaTroca=agora; AV.boca=nome;
     AV.elBoca.src='/avatar/'+AV.quem+'/'+nome+'.png';
   }
@@ -1374,13 +1379,18 @@
     var falando=(S.fase==='eleFala');
     var n=falando?S.nivel:0;
     var b;
-    if(!falando||n<0.05) b='boca-fechada';
-    else if(n<0.14) b='boca-meio';
-    else if(n<0.26) b='boca-aberta';
+    // ⚠️ A FAIXA É 0,26 a 1,0 — NÃO 0 a 1. O medir() devolve
+    // min(1, sqrt(rms*3.4)), e fala normal tem rms de 0,02 a 0,35. Na primeira
+    // versão eu cortei em 0,05/0,14/0,26 achando que a escala era 0–1: a boca
+    // ficava PRESA na mais aberta e parecia travada. Foi exatamente o que o
+    // Elias viu. Se mexer no medir(), mexa aqui junto.
+    if(!falando||n<0.24) b='boca-fechada';
+    else if(n<0.42) b='boca-meio';
+    else if(n<0.62) b='boca-aberta';
     else b='boca-sorriso';
     // o "O" entra de vez em quando no volume médio: é o que tira a cara de
     // boneco repetindo três caretas.
-    if(falando&&n>=0.14&&n<0.26&&Math.random()<0.18) b='boca-o';
+    if(falando&&n>=0.42&&n<0.62&&Math.random()<0.18) b='boca-o';
     trocarBoca(b);
   }
 
