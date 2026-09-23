@@ -243,7 +243,8 @@
 
       <div style="margin:18px 0 6px;color:#C9A14A;letter-spacing:.1em;font-size:12px;font-weight:800">QUEM APARECE</div>
       <div id="linhaAvatar" style="display:flex;gap:8px;flex-wrap:wrap">
-        <button data-av="mestra" class="av-op" style="flex:1;min-width:92px;padding:11px 8px;border-radius:14px;border:1px solid rgba(201,161,74,.45);background:rgba(255,255,255,.06);color:#eaf2f8;font-weight:700">👩‍🏫 Mestra</button>
+        <!-- A MESTRA volta quando o Elias gerar a versao DESENHADA. A fotografica
+             foi cancelada por ele, com razao, e nao pode ficar alcancavel. -->
         <button data-av="mestre" class="av-op" style="flex:1;min-width:92px;padding:11px 8px;border-radius:14px;border:1px solid rgba(201,161,74,.45);background:rgba(255,255,255,.06);color:#eaf2f8;font-weight:700">👨‍🏫 Mestre</button>
         <button data-av="globo"  class="av-op" style="flex:1;min-width:92px;padding:11px 8px;border-radius:14px;border:1px solid rgba(201,161,74,.45);background:rgba(255,255,255,.06);color:#eaf2f8;font-weight:700">🌐 Globo</button>
       </div>
@@ -1312,7 +1313,7 @@
     // ILUSTRACAO nao existe emenda pra aparecer: a pele e cor lisa. E a
     // mesma tecnica de todo desenho animado desde sempre.
     var salvo='mestre';
-    try{ salvo=localStorage.getItem('voz.avatar')||'mestre'; }catch(e){}
+    try{ salvo=localStorage.getItem('voz.avatar2')||'mestre'; }catch(e){}
     usarAvatar(salvo); marcar(salvo);
   },0);
 
@@ -1411,7 +1412,7 @@
   })();
 
   function usarAvatar(quem){
-    try{ localStorage.setItem('voz.avatar', quem||'globo'); }catch(e){}
+    try{ localStorage.setItem('voz.avatar2', quem||'globo'); }catch(e){}
     var globo=document.getElementById('globo');
     if(!quem||quem==='globo'){
       AV.on=false; if(AV.el) AV.el.style.display='none';
