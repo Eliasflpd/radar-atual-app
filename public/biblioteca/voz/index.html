@@ -1306,9 +1306,12 @@
     // truque (da pra ver a emenda) e o Elias cancelou, com razao. Em
     // ILUSTRACAO nao existe emenda pra aparecer: a pele e cor lisa. E a
     // mesma tecnica de todo desenho animado desde sempre.
-    var salvo='globo';
-    try{ salvo=localStorage.getItem('voz.avatar2')||'globo'; }catch(e){}
-    usarAvatar(salvo); marcar(salvo);
+    // ⚠️ SEM MEMORIA DE ESCOLHA. Enquanto o avatar foi o padrao, a pagina
+    // GRAVOU 'mestre' no aparelho — e depois, mesmo com a versao nova, ela
+    // obedecia a escolha guardada e o avatar continuava na tela do Elias.
+    // Nao existe mais onde escolher, entao nao ha o que lembrar: globo, sempre.
+    try{ localStorage.removeItem('voz.avatar'); localStorage.removeItem('voz.avatar2'); }catch(e){}
+    usarAvatar('globo'); marcar('globo');
   },0);
 
   // ── O AVATAR ───────────────────────────────────────────────────────────
