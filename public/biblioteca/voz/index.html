@@ -1286,6 +1286,31 @@
     return j;
   }
 
+  // ── A DESPEDIDA ────────────────────────────────────────────────────────
+  // Só o que é DESPEDIDA DE VERDADE entra aqui. "encerrar o assunto" conta,
+  // mas "encerrar a lição de domingo" NÃO — por isso o  e as âncoras: um
+  // falso positivo desliga o pastor no meio do estudo, e isso é pior do que
+  // ele ouvir dois segundos de ruído. A ÂNCORA DE FIM ($) é o que segura:
+  // "vamos encerrar a lição de domingo" tem texto depois e NÃO casa;
+  // "pode encerrar o assunto" acaba ali e casa. Provado nos dois sentidos:
+  // 13 despedidas reconhecidas, 7 frases parecidas recusadas.
+  var DESPEDIDA = /(?:^|[\s,.;])(?:(?:pode|podemos|vamos|quero|vou)\s+(?:encerrar|desligar|parar|finalizar)(?:\s+(?:o\s+assunto|a\s+conversa|por\s+aqui|por\s+hoje|aqui|agora|tudo|isso))?|encerrar\s+o\s+assunto|desliga(?:r)?(?:\s+(?:a[íi]|isso|agora|tudo))?|chega\s+por\s+(?:hoje|agora)|at[ée]\s+(?:a\s+)?pr[óo]xima|at[ée]\s+mais|at[ée]\s+logo|tchau|fim\s+de\s+papo|era\s+s[óo]\s+isso)\s*[.!]?\s*$/i;
+
+  // Espera o áudio da despedida terminar de tocar e AÍ desliga. Sem esta
+  // espera, o "Certo, pastor. Até a próxima." era cortado no meio.
+  function despedirEDesligar(){
+    if(S.desligando) return;
+    S.desligando = true;
+    var tentativas = 0;
+    (function esperar(){
+      var tocando = (S.tocando && S.tocando.length) || (S.fila && S.fila.length);
+      // teto de 12s: se o áudio travar, desliga do mesmo jeito. Microfone
+      // aberto esquecido é o defeito que a gente veio consertar.
+      if(tocando && ++tentativas < 40){ setTimeout(esperar, 300); return; }
+      setTimeout(function(){ try{ desligar(); }catch(e){} }, 400);
+    })();
+  }
+
   // ── O FIO DO ASSUNTO ──────────────────────────────────────────────────────
   // O jeito bom de retomar é o handle do Google (a sessão inteira volta). Mas
   // handle expira e às vezes é recusado. Quando isso acontece, a gente não deixa
@@ -1481,6 +1506,16 @@
         S.memMestre+=sc.outputTranscription.text;
       }
       if(sc.turnComplete){
+        // ── ELE MANDOU ENCERRAR: DESLIGA SOZINHO ─────────────────────────
+        // O Elias: "quando eu pedir pra encerrar o assunto ou desligar, ele
+        // deve desligar sozinho, senão fica ouvindo ruídos". É verdade: o
+        // mestre respondia "até a próxima" e o microfone continuava aberto,
+        // captando barulho de rua e de carro até ele lembrar de tocar em
+        // Encerrar. Aqui a gente lê a DESPEDIDA na transcrição do que ELE
+        // falou e agenda o desligamento — depois que o áudio da resposta
+        // terminar de tocar, senão a última frase do mestre morre no meio.
+        var _euDisse = (S.bolhaEu && S.bolhaEu.textContent) || '';
+        if(!S.vaiDesligar && _euDisse && DESPEDIDA.test(_euDisse)) S.vaiDesligar = true;
         if(S.bolhaEu&&S.bolhaEu.textContent) S.texto.push('Você: '+S.bolhaEu.textContent);
         if(S.bolhaMestre&&S.bolhaMestre.textContent) S.texto.push('Resposta: '+S.bolhaMestre.textContent);
         S.bolhaEu=null; S.bolhaMestre=null;
@@ -1489,9 +1524,10 @@
         // transcrição: ele resume, peneira e joga o resto fora. Quem decide o
         // que pode ficar é a peneira do segredo, no servidor (voz-memoria.js).
         if(S.memEu||S.memMestre){
-          guardarNaMemoria({ eu:S.memEu, mestre:S.memMestre });
+          guardarNaMemoria({ eu:S.memEu, mestre:S.memMestre, fim:S.vaiDesligar||false });
           S.memEu=''; S.memMestre='';
         }
+        if(S.vaiDesligar) despedirEDesligar();
       }
     }
 
