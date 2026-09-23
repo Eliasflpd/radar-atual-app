@@ -1328,7 +1328,7 @@
       AV.el=document.createElement('div');
       AV.el.id='avatar';
       AV.el.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);'
-        +'width:min(78vw,340px);pointer-events:none;z-index:5;display:none;'
+        +'width:min(62vw,268px);pointer-events:none;z-index:5;display:none;'
         +'filter:drop-shadow(0 18px 40px rgba(0,0,0,.55))';
       AV.el.innerHTML=''
         +'<img id="av-rosto" style="width:100%;display:block">'
@@ -1341,8 +1341,8 @@
     }
     AV.quem=quem;
     var d='/avatar/'+quem+'/';
-    AV.el.querySelector('#av-rosto').src=d+'rosto.png';
-    AV.elOlhos.src=d+'olhos-fechados.png';
+    AV.el.querySelector('#av-rosto').src=d+'rosto.webp';
+    AV.elOlhos.src=d+'olhos-fechados.webp';
     // onde a boca e os olhos se encaixam no rosto. São percentuais do rosto,
     // não pixels: assim o avatar acompanha qualquer tamanho de tela.
     var pos = POS_AVATAR[quem] || POS_AVATAR.mestra;
@@ -1370,7 +1370,7 @@
     var agora=Date.now();
     if(!forcar && agora-AV.ultimaTroca<60) return;  // ~16 trocas/s: fala humana não passa disso
     AV.ultimaTroca=agora; AV.boca=nome;
-    AV.elBoca.src='/avatar/'+AV.quem+'/'+nome+'.png';
+    AV.elBoca.src='/avatar/'+AV.quem+'/'+nome+'.webp';
   }
 
   // Chamado a cada quadro pelo mesmo laço que pinta o globo.
