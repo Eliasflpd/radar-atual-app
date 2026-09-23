@@ -1286,6 +1286,60 @@
     return j;
   }
 
+  // ── O TELÃO ────────────────────────────────────────────────────────────
+  // Uma tela grande por cima do rosto, comandada pelo próprio mestre enquanto
+  // ele fala. Fecha sozinha depois de um tempo proporcional ao tamanho do
+  // texto — se o modelo esquecer de mandar 'nada', a tela não fica presa.
+  var elTelao=null, relogioTelao=null;
+  function telao(args){
+    var tipo=String(args.tipo||'nada').toLowerCase();
+    if(!elTelao){
+      elTelao=document.createElement('div');
+      elTelao.id='telao';
+      elTelao.setAttribute('aria-live','polite');
+      elTelao.style.cssText='position:fixed;left:0;right:0;top:0;bottom:0;z-index:60;'
+        +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
+        +'padding:26px 22px;text-align:center;opacity:0;pointer-events:none;'
+        +'transition:opacity .35s ease;'
+        +'background:radial-gradient(ellipse at center,#0f3d5c 0%,#071d2c 78%)';
+      document.body.appendChild(elTelao);
+    }
+    clearTimeout(relogioTelao);
+    if(tipo==='nada'||!args.texto){ elTelao.style.opacity='0'; return; }
+
+    var txt=String(args.texto||'').slice(0,700);
+    var ref=String(args.referencia||'').slice(0,120);
+    function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    var corpo;
+    if(tipo==='topicos'){
+      corpo='<div style="text-align:left;max-width:min(94vw,640px)">'
+        + txt.split('|').filter(function(x){return x.trim();}).map(function(x,i){
+            return '<div style="display:flex;gap:12px;margin:0 0 18px;align-items:flex-start">'
+              +'<span style="color:#C9A14A;font-weight:800;font-size:clamp(20px,5vw,30px);line-height:1.15">'+(i+1)+'.</span>'
+              +'<span style="color:#eaf2f8;font-size:clamp(19px,4.6vw,29px);line-height:1.3">'+esc(x.trim())+'</span></div>';
+          }).join('')
+        + '</div>';
+    } else if(tipo==='titulo'){
+      corpo='<div style="color:#C9A14A;letter-spacing:.14em;font-size:clamp(12px,3vw,15px);font-weight:800;margin-bottom:14px">LIÇÃO</div>'
+        +'<div style="color:#fff;font-weight:800;font-size:clamp(26px,7.4vw,46px);line-height:1.16;max-width:min(94vw,760px)">'+esc(txt)+'</div>';
+    } else {
+      // versículo: aspas douradas grandes, o texto respirando
+      corpo='<div style="color:#C9A14A;font-size:clamp(40px,10vw,64px);line-height:.4;margin-bottom:22px">“</div>'
+        +'<div style="color:#f2f7fb;font-size:clamp(20px,5.2vw,34px);line-height:1.38;max-width:min(94vw,720px);font-style:italic">'+esc(txt)+'</div>';
+    }
+    elTelao.innerHTML=corpo
+      + (ref?'<div style="margin-top:22px;color:#C9A14A;font-weight:700;font-size:clamp(14px,3.6vw,19px);letter-spacing:.04em">'+esc(ref)+'</div>':'');
+    elTelao.style.opacity='1';
+
+    // ⚠️ REDE DE SEGURANÇA: ~85ms por caractere (a velocidade de quem lê em voz
+    // alta), com piso de 7s e teto de 45s. Sem isto, um 'nada' esquecido pelo
+    // modelo deixaria o pastor olhando um versículo pro resto da conversa.
+    var vida=Math.min(45000, Math.max(7000, txt.length*85));
+    relogioTelao=setTimeout(function(){ if(elTelao) elTelao.style.opacity='0'; }, vida);
+  }
+  // Desligou a conversa? A tela volta pro rosto.
+  window.addEventListener('pagehide',function(){ try{ telao({tipo:'nada'}); }catch(e){} });
+
   // ── A DESPEDIDA ────────────────────────────────────────────────────────
   // Só o que é DESPEDIDA DE VERDADE entra aqui. "encerrar o assunto" conta,
   // mas "encerrar a lição de domingo" NÃO — por isso o  e as âncoras: um
@@ -1455,6 +1509,18 @@
       S.garimpando=true; fase();
       for(var i=0;i<chamadas.length;i++){
         (function(fc){
+          // ── O TELÃO SE RESOLVE AQUI, SEM SAIR DO APARELHO ────────────────
+          // Elias: "se vai ler o texto áureo ele mostra o texto depois volta
+          // pra ele, tipo uma apresentação profissional". Mandar isto pro
+          // servidor custaria uma ida e volta na internet — e a tela chegaria
+          // DEPOIS da voz, que é justamente o que estraga a apresentação.
+          // O navegador já recebe o pedido do modelo: troca a tela na hora e
+          // responde na mesma batida.
+          if(fc.name==='mostrar_na_tela'){
+            try{ telao(fc.args||{}); }catch(e){}
+            responderFerramenta(fc,{ ok:true, ordem:'A tela já mudou. NÃO comente que mostrou nada — continue falando.' });
+            return;
+          }
           rotuloDaFerramenta(fc.name);
           pedir({ acao:'ferramenta', nome:fc.name, args:(fc.args||{}) })
           .then(function(r){ responderFerramenta(fc, r.resposta); })

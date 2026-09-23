@@ -748,6 +748,22 @@ export const FERRAMENTAS = [{
       },
     },
     {
+      name: 'mostrar_na_tela',
+      description: 'O TELÃO. Põe um texto GRANDE na tela do pastor enquanto você fala, como um pregador que aponta pro projetor. '
+        + 'Use quando for LER um versículo (mostre o versículo), quando anunciar o título da lição, quando enumerar tópicos, '
+        + 'e use com tipo "nada" pra voltar ao rosto quando terminar aquele ponto. '
+        + 'NÃO narre que está mostrando ("veja na tela") — só mostre e continue falando. É uma apresentação, não um anúncio.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          tipo: { type: 'STRING', description: 'versiculo, titulo, topicos ou nada (nada = volta pro rosto).' },
+          texto: { type: 'STRING', description: 'O que aparece grande. Em topicos, separe as linhas com | (barra).' },
+          referencia: { type: 'STRING', description: 'A referência por extenso, ex.: Atos 13, versículo 2. Aparece embaixo, menor.' },
+        },
+        required: ['tipo'],
+      },
+    },
+    {
       name: 'licao_da_ebd',
       description: 'A LIÇÃO DA ESCOLA BÍBLICA DOMINICAL: número, título, versículo áureo e a data do domingo, de todas as 7 turmas (adulto, jovem, juvenis, juniores, adolescentes). '
         + 'USE SEMPRE que o pastor falar de lição, revista, EBD, Escola Dominical, "domingo que vem", "lição 3", "qual lição estamos". '
@@ -823,7 +839,7 @@ export const FERRAMENTAS = [{
 export const REGRA_DE_OURO = `════ VOCÊ NÃO SABE DE CABEÇA. VOCÊ VAI BUSCAR. ════
 Isto está acima de qualquer outra regra deste documento, inclusive das de oratória.
 
-Você tem OITO ferramentas e elas são a sua memória de verdade:
+Você tem NOVE ferramentas e elas são a sua memória de verdade:
   ler_versiculo         — o texto exato de qualquer versículo, com o idioma original junto
   conferir_citacao      — confere se o versículo diz MESMO o que você vai afirmar
   pesquisar_biblioteca  — a BIBLIOTECA DE ESTUDO dele: Champlin, Kittel, Waltke, Kidner,
@@ -924,6 +940,12 @@ export async function executarFerramenta(nome, args, origem, ctx) {
       return lerVersiculo(a.ref || a.referencia, origem);
     case 'conferir_citacao':
       return conferirCitacao(a.ref || a.referencia, a.o_que_eu_disse || a.afirmacao, origem);
+    // O TELÃO é resolvido NO NAVEGADOR, antes de chegar aqui — a tela troca na
+    // hora, sem ida e volta na internet. Este caso só existe pra bancada de
+    // provas e pra um navegador antigo que não saiba interceptar.
+    case 'mostrar_na_tela':
+      return { ok: true, mostrado: String((a && a.tipo) || 'nada'),
+               ordem: 'A tela já mudou. NÃO comente que mostrou nada — continue falando naturalmente.' };
     case 'licao_da_ebd':
       return licaoDaEBD(a, origem);
     case 'buscar_no_acervo':
