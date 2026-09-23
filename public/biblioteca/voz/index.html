@@ -32,7 +32,7 @@
     margin:0 auto;max-width:720px;height:100dvh;overflow:hidden;
     display:flex;flex-direction:column;
     background:
-      radial-gradient(115% 80% at 50% 8%, #16405a 0%, #0c2234 42%, #061019 100%);
+      radial-gradient(115% 80% at 50% 8%, #0e2c40 0%, #071723 45%, #02070c 100%);
     color:var(--texto);
     font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.5;
     -webkit-font-smoothing:antialiased;
@@ -495,14 +495,14 @@
   // adesivo. Por isso cada fase tem um miolo claro (b), uma casca funda (a),
   // a linha dourada da malha e a cor da atmosfera em volta.
   var CORES = {
-    pronto:       { a:'#0e3b57', b:'#1d6f86', linha:'#C9A14A', aura:'20,90,120'   },
-    ouvindo:      { a:'#0e4257', b:'#2287a0', linha:'#C9A14A', aura:'25,120,150'  },
+    pronto:       { a:'#12506f', b:'#3aa8c4', linha:'#E8C36A', aura:'58,168,196'  },
+    ouvindo:      { a:'#12586f', b:'#3fc0d8', linha:'#E8C36A', aura:'63,192,216'  },
     euFalo:       { a:'#0f6d78', b:'#35b6c4', linha:'#f0d9a6', aura:'50,180,195'  },
     eleFala:      { a:'#8a6113', b:'#d9ab4a', linha:'#ffeec4', aura:'201,161,74'  },
     garimpo:      { a:'#7a5510', b:'#c09235', linha:'#ffeec4', aura:'201,161,74'  },
     reconectando: { a:'#2b3a46', b:'#5d7484', linha:'#C9A14A', aura:'93,116,132'  },
     semRede:      { a:'#26323c', b:'#4a5b68', linha:'#8b98a3', aura:'74,91,104'   },
-    pausado:      { a:'#233240', b:'#4c6274', linha:'#C9A14A', aura:'76,98,116'   },
+    pausado:      { a:'#2b4356', b:'#6b8aa0', linha:'#E8C36A', aura:'107,138,160' },
     erro:         { a:'#4e1414', b:'#a33a33', linha:'#f0b9b5', aura:'163,58,51'   }
   };
 
@@ -581,8 +581,11 @@
 
     // ── 1. ATMOSFERA: halo macio que respira no volume ─────────────────────
     var halo=g.createRadialGradient(meio,meio,R*0.88, meio,meio,R*(1.18+S.nivel*0.10));
-    halo.addColorStop(0,'rgba('+c.aura+','+(0.34+S.nivel*0.34).toFixed(3)+')');
-    halo.addColorStop(0.45,'rgba('+c.aura+','+(0.11+S.nivel*0.16).toFixed(3)+')');
+    // AURA MAIS FORTE (23/09/2026). Era 0.34 e sumia contra o fundo. O halo e
+    // o que separa o globo do ceu atras dele — sem ele, dois azuis parecidos
+    // viram uma mancha so. Subiu pra 0.52 parado e quase 1 quando ele fala.
+    halo.addColorStop(0,'rgba('+c.aura+','+(0.52+S.nivel*0.42).toFixed(3)+')');
+    halo.addColorStop(0.45,'rgba('+c.aura+','+(0.20+S.nivel*0.22).toFixed(3)+')');
     halo.addColorStop(1,'rgba('+c.aura+',0)');
     g.beginPath(); g.arc(meio,meio,R*(1.18+S.nivel*0.10),0,6.2832);
     g.fillStyle=halo; g.fill();

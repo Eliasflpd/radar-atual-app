@@ -1,4 +1,4 @@
-const V='radar-v177';               // cache do SHELL — troca a cada versão do app
+const V='radar-v178';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
 
 // ═══ O SHELL: sem isto o app não pinta nada. Vai pro cache JÁ na instalação. ═══
