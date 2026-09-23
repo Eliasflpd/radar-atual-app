@@ -80,6 +80,7 @@ const PASTOR_B  = '5588' + sufixo;        // telefone — o "ladrão" da prova
 const PASTOR_D  = '5577' + sufixo;        // telefone, do tempo em que não havia trava
 const PASTOR_E  = '5566' + sufixo;        // telefone, pra provar a parede da tolerância
 const PASTOR_G  = '5555' + sufixo;        // telefone novo, pro teste de re-envio do cadastro
+const PASTOR_H  = '5544' + sufixo;        // telefone que um golpista tenta reservar de véspera
 // Aparelho sem cadastro, EXATAMENTE no formato que o app sorteia
 // (public/_pregado.js: 'aparelho-' + base36).
 const APARELHO_C = 'aparelho-' + Math.random().toString(36).slice(2, 10);
@@ -89,7 +90,7 @@ const APARELHO_C = 'aparelho-' + Math.random().toString(36).slice(2, 10);
 // cara de telefone sem ser. Está aqui porque a primeira versão da trava
 // quebrava justamente neste caso, e prova que não volta a quebrar.
 const APARELHO_F = 'aparelho-' + String(Date.now()).slice(-8);
-const TODOS = [PASTOR_A, PASTOR_B, PASTOR_D, PASTOR_E, PASTOR_G, APARELHO_C,
+const TODOS = [PASTOR_A, PASTOR_B, PASTOR_D, PASTOR_E, PASTOR_G, PASTOR_H, APARELHO_C,
                APARELHO_F, APARELHO_F.replace(/\D/g, '')];
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -347,6 +348,30 @@ try {
     const p3 = await cadastrar('');              // outro aparelho, sem crachá
     ok('mas um aparelho NOVO de verdade ainda ganha o dele', /^rk_/.test(p3.chave || ''));
     ok('e aí sim a conta passa a ter dois', (await contar()) === 2);
+  }
+
+  // ── 8c. a reserva de terreno ───────────────────────────────────────────────
+  titulo('8c) ⚔️  RESERVAR O NÚMERO DE VÉSPERA NÃO DÁ ACESSO DEPOIS');
+  {
+    // O golpe: antes do pastor existir no cadastro, o sujeito pede o caderno
+    // dele e fica com o crachá que a adoção devolve. Depois é só esperar.
+    const reserva = await lerCaderno(PASTOR_H, '');
+    const kLadrao = reserva.chave_nova;
+    ok('o golpista consegue reservar o número de quem não se cadastrou', /^rk_/.test(kLadrao || ''));
+
+    // ...só que aí o pastor de verdade se cadastra.
+    const dele = await fetch(EU + '/api/cadastros', { method: 'POST', headers: cab(),
+      body: JSON.stringify({ nome: 'Pastor Verdadeiro H', cargo: 'Pastor', whatsapp: PASTOR_H }) }).then((r) => r.json());
+    ok('o pastor de verdade se cadastra e recebe o crachá DELE', /^rk_/.test(dele.chave || ''));
+
+    await gravarPrega(PASTOR_H, dele.chave, 'Sermão particular do pastor H');
+    const golpe = await lerCaderno(PASTOR_H, kLadrao);
+    ok('o crachá reservado de véspera MORREU no cadastro',
+       (golpe.itens || []).length === 0 && golpe.precisa_chave === true, 'motivo: ' + golpe.motivo);
+    ok('e nada do que o pastor guardou vazou',
+       !JSON.stringify(golpe).includes('particular'));
+    const certo = await lerCaderno(PASTOR_H, dele.chave);
+    ok('o dono continua entrando normalmente', (certo.itens || []).some((x) => /particular/.test(x.titulo)));
   }
 
   // ── 9. a chave não pode vazar por onde o telefone já vaza ──────────────────

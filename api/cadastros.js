@@ -61,6 +61,20 @@ module.exports = async (req, res) => {
             const conf = await CHAVE.conferir(c, dono, trazido);
             mesmoAparelho = !!(conf && conf.ok && conf.dono);
           }
+          // ⚠️ A RESERVA DE TERRENO — brecha vista na produção em 23/09/2026.
+          // Número que ainda NÃO está no cadastro é adotado por quem chegar
+          // primeiro (é o que mantém vivo o caderno de quem nunca se cadastrou).
+          // Só que dava pra abusar disso: bastava alguém pedir de véspera o
+          // caderno de um monte de números e ficar com o crachá de cada um.
+          // Quando o pastor de verdade se cadastrasse depois, o crachá reservado
+          // continuava valendo — e o sujeito lia tudo o que ele fosse guardar.
+          // Por isso: cadastro NASCENDO agora zera todo crachá que existia antes
+          // dele. Nenhum aparelho honesto perde nada — antes do cadastro o app
+          // guarda o caderno debaixo de um id de aparelho, não do telefone — e
+          // este mesmo POST já devolve o crachá novo, na linha de baixo.
+          if (!jaExistia) {
+            try { await c.query('delete from radar_chaves where user_key=$1', [dono]); } catch (_) {}
+          }
           if (!mesmoAparelho) {
             const e = await CHAVE.emitir(c, whatsapp, cargo || 'aparelho');
             if (e && e.ok) chaveNova = e.chave;
