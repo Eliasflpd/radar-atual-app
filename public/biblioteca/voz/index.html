@@ -1307,8 +1307,16 @@
     for(var i=0;i<ops.length;i++) (function(b){
       b.addEventListener('click',function(){ var q=b.getAttribute('data-av'); usarAvatar(q); marcar(q); });
     })(ops[i]);
-    var salvo='mestra';
-    try{ salvo=localStorage.getItem('voz.avatar')||'mestra'; }catch(e){}
+    // ⚠️ O GLOBO VOLTOU A SER O PADRAO (23/09/2026). O avatar em camadas e uma
+    // FOTO com a boca trocada — a tecnica e de desenho animado e em rosto real
+    // ela entrega o truque: da pra ver a emenda em volta da boca. O Elias foi
+    // direto: 'nao podemos fazer nada amador'. Ele esta certo. O globo e
+    // honesto: nao promete uma pessoa, pulsa com a voz de verdade e nunca
+    // parece falso. O avatar continua aqui, escolhivel na engrenagem, porque a
+    // fabrica de recortar (scripts/recortar-avatar.py) serve pro dia em que a
+    // gente fizer o avatar DE VERDADE, com servico de streaming.
+    var salvo='globo';
+    try{ salvo=localStorage.getItem('voz.avatar')||'globo'; }catch(e){}
     usarAvatar(salvo); marcar(salvo);
   },0);
 
