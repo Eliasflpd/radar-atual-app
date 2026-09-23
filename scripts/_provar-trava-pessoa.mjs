@@ -34,6 +34,7 @@
    linhas que esta prova criar são apagadas no fim. O banco está em 1.074 MB de
    1.100 MB de freio — prova que deixa lixo aqui é prova que custa caro.
    ══════════════════════════════════════════════════════════════════════════════ */
+import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -41,6 +42,18 @@ import { createRequire } from 'node:module';
 import pg from 'pg';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// `--servir` sobe o RADAR local e FICA DE PÉ, em vez de rodar as conferências e
+// sair. Serve pra abrir o app no CELULAR e conferir o outro lado da trava: se o
+// aparelho está mesmo mandando o crachá. Provar o servidor não prova o app — dá
+// pra ter o servidor perfeito e o front esquecendo de mandar, e aí o buraco
+// continua aberto, só que com cara de consertado.
+//   node --env-file=scripts/.env-trava scripts/_provar-trava-pessoa.mjs --servir
+const SERVIR = process.argv.includes('--servir');
+const MIME = { '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8',
+  '.css':'text/css; charset=utf-8', '.json':'application/json; charset=utf-8', '.png':'image/png',
+  '.jpg':'image/jpeg', '.svg':'image/svg+xml', '.ico':'image/x-icon', '.webp':'image/webp',
+  '.woff2':'font/woff2', '.bin':'application/octet-stream' };
 
 // ─── o placar ────────────────────────────────────────────────────────────────
 let passou = 0, falhou = 0;
@@ -66,6 +79,7 @@ const PASTOR_A  = '5599' + sufixo;        // telefone
 const PASTOR_B  = '5588' + sufixo;        // telefone — o "ladrão" da prova
 const PASTOR_D  = '5577' + sufixo;        // telefone, do tempo em que não havia trava
 const PASTOR_E  = '5566' + sufixo;        // telefone, pra provar a parede da tolerância
+const PASTOR_G  = '5555' + sufixo;        // telefone novo, pro teste de re-envio do cadastro
 // Aparelho sem cadastro, EXATAMENTE no formato que o app sorteia
 // (public/_pregado.js: 'aparelho-' + base36).
 const APARELHO_C = 'aparelho-' + Math.random().toString(36).slice(2, 10);
@@ -75,7 +89,7 @@ const APARELHO_C = 'aparelho-' + Math.random().toString(36).slice(2, 10);
 // cara de telefone sem ser. Está aqui porque a primeira versão da trava
 // quebrava justamente neste caso, e prova que não volta a quebrar.
 const APARELHO_F = 'aparelho-' + String(Date.now()).slice(-8);
-const TODOS = [PASTOR_A, PASTOR_B, PASTOR_D, PASTOR_E, APARELHO_C,
+const TODOS = [PASTOR_A, PASTOR_B, PASTOR_D, PASTOR_E, PASTOR_G, APARELHO_C,
                APARELHO_F, APARELHO_F.replace(/\D/g, '')];
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -103,6 +117,14 @@ function comoExpress(res) {
 
 const srv = http.createServer(async (rq, res) => {
   const u = new URL(rq.url, 'http://127.0.0.1');
+  // No modo --servir, TODA chamada de API aparece no terminal dizendo se veio
+  // com crachá ou não. É esta linha que prova o lado do celular: não adianta o
+  // servidor conferir direito se o aparelho nunca manda o crachá.
+  if (SERVIR && u.pathname.startsWith('/api/')) {
+    const k = rq.headers['x-radar-chave'];
+    console.log('  ' + rq.method.padEnd(4) + ' ' + (u.pathname + u.search).slice(0, 62).padEnd(63) +
+                (k ? '🔑 crachá ' + String(k).slice(0, 10) + '…' : '— sem crachá'));
+  }
   const corpo = await new Promise((k) => { let s = ''; rq.on('data', (d) => s += d); rq.on('end', () => k(s)); });
 
   if (u.pathname === '/api/voz') {
@@ -116,6 +138,23 @@ const srv = http.createServer(async (rq, res) => {
   }
   const h = (u.pathname === '/api/dados') ? dados
           : (u.pathname === '/api/cadastros') ? cadastros : null;
+
+  // ── MODO --servir: o RADAR de verdade, aberto no navegador ────────────────
+  // Serve public/ pra eu poder ABRIR o app e ver o crachá nascer no celular de
+  // mentira. Provar o servidor não prova o app: dá pra ter o servidor perfeito
+  // e o front esquecendo de mandar o crachá — e aí o buraco continua aberto,
+  // só que com cara de consertado. As rotas de API que esta prova não sobe
+  // (acesso, hit…) devolvem 404 de propósito, e o app tem que aguentar: ele já
+  // foi escrito pra não travar quando o servidor some.
+  if (!h && SERVIR && !u.pathname.startsWith('/api/')) {
+    const alvo = path.join(RAIZ, 'public', decodeURIComponent(u.pathname));
+    const arq = u.pathname.endsWith('/') ? path.join(alvo, 'index.html') : alvo;
+    if (arq.startsWith(path.join(RAIZ, 'public')) && fs.existsSync(arq) && !fs.statSync(arq).isDirectory()) {
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(arq).toLowerCase()] || 'text/plain' });
+      res.end(fs.readFileSync(arq));
+      return;
+    }
+  }
   if (!h) { res.writeHead(404); res.end('{}'); return; }
   let b = {}; try { b = JSON.parse(corpo || '{}'); } catch (_) {}
   try {
@@ -125,8 +164,20 @@ const srv = http.createServer(async (rq, res) => {
     res.writeHead(200); res.end(JSON.stringify({ ok: false, err: String(e.message) }));
   }
 });
-await new Promise((k) => srv.listen(0, '127.0.0.1', k));
+// Porta fixa no --servir (o `adb reverse` precisa saber o número de antemão);
+// porta sorteada na prova, pra duas rodadas nunca brigarem pela mesma.
+await new Promise((k) => srv.listen(SERVIR ? 8790 : 0, '127.0.0.1', k));
 const EU = 'http://127.0.0.1:' + srv.address().port;
+
+if (SERVIR) {
+  console.log('\n🌐 RADAR local de pé (handlers REAIS, banco REAL): ' + EU);
+  console.log('   No celular, com o cabo: adb reverse tcp:' + srv.address().port +
+              ' tcp:' + srv.address().port + '  e abra http://localhost:' + srv.address().port);
+  console.log('   Ctrl+C encerra.\n');
+  // Fica parado aqui pra sempre: o servidor segue de pé e as conferências
+  // abaixo NÃO rodam — elas sujariam o banco e derrubariam o servidor no fim.
+  await new Promise(() => {});
+}
 
 // ─── os jeitos de bater na porta, do jeito que o app bate ───────────────────
 const cab = (chave) => {
@@ -272,6 +323,31 @@ try {
   ok('e mesmo assim a resposta NÃO é erro — o app não trava',
      depoisDaParede.ok === true && Array.isArray(depoisDaParede.itens));
   if (antes === undefined) delete process.env.RADAR_CHAVE_ATE; else process.env.RADAR_CHAVE_ATE = antes;
+
+  // ── 8b. o app re-manda o cadastro o tempo todo; isso não pode virar alarme ─
+  titulo('8b) RE-ENVIAR O CADASTRO COM O CRACHÁ NO BOLSO NÃO EMITE OUTRO');
+  {
+    const cadastrar = (chave) => fetch(EU + '/api/cadastros', { method: 'POST', headers: cab(chave),
+      body: JSON.stringify({ nome: 'Pastor Novo G', cargo: 'Pastor', whatsapp: PASTOR_G }) }).then((r) => r.json());
+    const contar = async () => {
+      const c = new pg.Client({ connectionString: process.env.RADAR_DB, ssl: { rejectUnauthorized: false } });
+      await c.connect();
+      try { return (await c.query('select count(*)::int n from radar_chaves where user_key=$1', [PASTOR_G])).rows[0].n; }
+      finally { await c.end(); }
+    };
+    const p1 = await cadastrar('');
+    ok('o cadastro novo recebe o crachá dele', /^rk_/.test(p1.chave || ''), (p1.chave || '').slice(0, 12) + '…');
+    ok('e nasceu UM só', (await contar()) === 1);
+
+    const p2 = await cadastrar(p1.chave);        // o MESMO celular, re-mandando
+    ok('re-enviar com o crachá não emite outro', !p2.chave);
+    ok('continua UM só crachá na conta', (await contar()) === 1,
+       'sem isto, cada re-envio gastava uma vaga e acendia alarme de invasão');
+
+    const p3 = await cadastrar('');              // outro aparelho, sem crachá
+    ok('mas um aparelho NOVO de verdade ainda ganha o dele', /^rk_/.test(p3.chave || ''));
+    ok('e aí sim a conta passa a ter dois', (await contar()) === 2);
+  }
 
   // ── 9. a chave não pode vazar por onde o telefone já vaza ──────────────────
   titulo('9) O CRACHÁ NÃO DESCE POR NENHUM GET');

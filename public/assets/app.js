@@ -99,13 +99,28 @@ window.radarGuardarChave = setChave;
 
 // salva o cadastro na nuvem (não trava o app se falhar)
 // É TAMBÉM POR AQUI QUE O CRACHÁ NASCE: a resposta traz `chave` uma única vez.
+//
+// ⚠️ UMA DE CADA VEZ. Na hora do cadastro esta função é chamada duas vezes em
+// menos de um segundo (o cadastro em si, e o `renovarChave` logo atrás). Se as
+// duas saírem juntas, o servidor emite DOIS crachás pra mesma pessoa, gasta uma
+// vaga à toa e — pior — dispara o aviso de "um novo aparelho entrou na sua
+// conta" pra alguém que acabou de se cadastrar. `_emVoo` faz a segunda chamada
+// pegar carona na primeira em vez de abrir outra.
+var _emVoo = null;
 function salvarNuvem(nome,cargo,fone){
+  if(_emVoo) return _emVoo;
   try{
-    fetch('/api/cadastros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:nome,cargo:cargo,whatsapp:fone})})
+    // Manda o crachá que este aparelho JÁ TEM, se tiver: é assim que o servidor
+    // sabe que é o mesmo celular de sempre e não emite outro nem avisa nada.
+    var h={'Content-Type':'application/json'}, k=getChave();
+    if(k) h['x-radar-chave']=k;
+    _emVoo = fetch('/api/cadastros',{method:'POST',headers:h,body:JSON.stringify({nome:nome,cargo:cargo,whatsapp:fone})})
       .then(function(r){ return r.json(); })
-      .then(function(d){ if(d&&d.chave) setChave(d.chave); })
-      ['catch'](function(){});
-  }catch(e){}
+      .then(function(d){ if(d&&d.chave) setChave(d.chave); return d; })
+      ['catch'](function(){ return null; })
+      .then(function(d){ _emVoo=null; return d; });
+    return _emVoo;
+  }catch(e){ _emVoo=null; }
 }
 // QUEM JÁ USAVA O APP ANTES DA TRAVA não tem crachá nenhum. Em vez de mandar
 // essa gente refazer login — que é quebrar o app de quem já usa, e isso é pior

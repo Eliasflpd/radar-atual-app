@@ -42,15 +42,29 @@ module.exports = async (req, res) => {
       // Se isto falhar, o cadastro segue em frente sem crachá: a pessoa cai no
       // período de tolerância e o app continua inteiro. Cadastro que não
       // termina é pior que conta destrancada.
-      let chaveNova = '', eraNovo = true;
+      // O aparelho manda o crachá que ele JÁ TEM, quando tem. Se for válido e
+      // for desta mesma pessoa, NÃO se emite outro e NÃO se avisa nada: é o
+      // mesmo celular de sempre re-mandando o cadastro (o app faz isso sozinho
+      // em várias situações). Sem esta conferência, cada re-envio gastava uma
+      // vaga de aparelho e acendia o alarme de invasão sem ninguém ter invadido.
+      let chaveNova = '', eraNovo = true, mesmoAparelho = false;
       if (whatsapp) {
         try {
           await CHAVE.tabela(c);
+          const dono = CHAVE.chaveDe(whatsapp);
           const jaTinha = await c.query(
-            'select count(*)::int as n from radar_chaves where user_key=$1', [CHAVE.chaveDe(whatsapp)]);
+            'select count(*)::int as n from radar_chaves where user_key=$1', [dono]);
           eraNovo = !((jaTinha.rows[0] && jaTinha.rows[0].n) > 0);
-          const e = await CHAVE.emitir(c, whatsapp, cargo || 'aparelho');
-          if (e && e.ok) chaveNova = e.chave;
+
+          const trazido = CHAVE.daRequisicao(req, b);
+          if (trazido) {
+            const conf = await CHAVE.conferir(c, dono, trazido);
+            mesmoAparelho = !!(conf && conf.ok && conf.dono);
+          }
+          if (!mesmoAparelho) {
+            const e = await CHAVE.emitir(c, whatsapp, cargo || 'aparelho');
+            if (e && e.ok) chaveNova = e.chave;
+          }
         } catch (_) { chaveNova = ''; }
       }
 
@@ -65,7 +79,9 @@ module.exports = async (req, res) => {
       // passando, e ela passa CALADA. A mensagem sai só quando é gente nova
       // (boas-vindas) ou quando um aparelho NOVO entra numa conta que já tinha
       // dono (o aviso que protege o pastor).
-      const calado = jaExistia && eraNovo;
+      // ...e o mesmo silêncio vale pro celular que só re-mandou o cadastro com o
+      // crachá dele no bolso: nada nasceu, nada mudou, ninguém precisa saber.
+      const calado = (jaExistia && eraNovo) || mesmoAparelho;
       let avisado = false;
       const FT = process.env.FONNTE_TOKEN;
       if (FT && whatsapp && !calado) {
