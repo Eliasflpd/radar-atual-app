@@ -240,6 +240,13 @@
 
       <h3>A conversa</h3>
       <div class="linhaCfg">
+
+      <div style="margin:18px 0 6px;color:#C9A14A;letter-spacing:.1em;font-size:12px;font-weight:800">QUEM APARECE</div>
+      <div id="linhaAvatar" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button data-av="mestra" class="av-op" style="flex:1;min-width:92px;padding:11px 8px;border-radius:14px;border:1px solid rgba(201,161,74,.45);background:rgba(255,255,255,.06);color:#eaf2f8;font-weight:700">👩‍🏫 Mestra</button>
+        <button data-av="mestre" class="av-op" style="flex:1;min-width:92px;padding:11px 8px;border-radius:14px;border:1px solid rgba(201,161,74,.45);background:rgba(255,255,255,.06);color:#eaf2f8;font-weight:700">👨‍🏫 Mestre</button>
+        <button data-av="globo"  class="av-op" style="flex:1;min-width:92px;padding:11px 8px;border-radius:14px;border:1px solid rgba(201,161,74,.45);background:rgba(255,255,255,.06);color:#eaf2f8;font-weight:700">🌐 Globo</button>
+      </div>
         <button id="copiar">📋 Copiar</button>
         <button id="encerrar" disabled>⏹ Encerrar</button>
       </div>
@@ -557,6 +564,7 @@
 
     // ── de onde vem o pulso agora ──────────────────────────────────────────
     var alvo=0;
+    pintarAvatar();
     if(S.fase==='eleFala'||S.fase==='garimpo') alvo=medir(S.analiseSom,S.bufSom);
     else if(S.ligado) alvo=medir(S.analiseMic,S.bufMic);
     if(S.fase==='reconectando'||S.fase==='semRede'||S.fase==='erro'){
@@ -1284,6 +1292,120 @@
     if(j && j.chave_nova) guardarCracha(j.chave_nova);
     if(!j.ok) throw new Error(j.erro||('HTTP '+r.status));
     return j;
+  }
+
+  // liga os três botões e lembra a escolha (o pastor escolhe uma vez, fica)
+  setTimeout(function(){
+    var ops=document.querySelectorAll('.av-op');
+    function marcar(q){
+      for(var i=0;i<ops.length;i++){
+        var on=ops[i].getAttribute('data-av')===q;
+        ops[i].style.background=on?'rgba(201,161,74,.22)':'rgba(255,255,255,.06)';
+        ops[i].style.borderColor=on?'#C9A14A':'rgba(201,161,74,.45)';
+      }
+    }
+    for(var i=0;i<ops.length;i++) (function(b){
+      b.addEventListener('click',function(){ var q=b.getAttribute('data-av'); usarAvatar(q); marcar(q); });
+    })(ops[i]);
+    var salvo='mestra';
+    try{ salvo=localStorage.getItem('voz.avatar')||'mestra'; }catch(e){}
+    usarAvatar(salvo); marcar(salvo);
+  },0);
+
+  // ── O AVATAR ───────────────────────────────────────────────────────────
+  // Elias: "quero add um avatar no lugar do globo que sincroniza a fala em
+  // tempo real". A sincronia NÃO vem do avatar — vem do ÁUDIO, que a página já
+  // mede pra fazer o globo pulsar (S.nivel, 0 a 1). O mesmo número que inflava
+  // o globo agora troca a boca. É a técnica do desenho animado: 5 bocas e um
+  // par de olhos fechados, trocados na hora certa. Roda no A22, sem internet
+  // extra, sem custo e sem atraso — que é o que reprova vídeo gerado por IA
+  // numa conversa ao vivo.
+  var AV = { on:false, quem:'mestra', boca:null, ultimaTroca:0, piscando:false, el:null, elBoca:null, elOlhos:null };
+  var BOCAS = ['boca-fechada','boca-meio','boca-aberta','boca-o','boca-sorriso'];
+
+  function montarAvatar(quem){
+    if(!AV.el){
+      AV.el=document.createElement('div');
+      AV.el.id='avatar';
+      AV.el.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);'
+        +'width:min(78vw,340px);pointer-events:none;z-index:5;display:none;'
+        +'filter:drop-shadow(0 18px 40px rgba(0,0,0,.55))';
+      AV.el.innerHTML=''
+        +'<img id="av-rosto" style="width:100%;display:block">'
+        +'<img id="av-boca"  style="position:absolute;display:block">'
+        +'<img id="av-olhos" style="position:absolute;display:none">';
+      var alvo=document.getElementById('globo');
+      (alvo&&alvo.parentNode?alvo.parentNode:document.body).appendChild(AV.el);
+      AV.elBoca=AV.el.querySelector('#av-boca');
+      AV.elOlhos=AV.el.querySelector('#av-olhos');
+    }
+    AV.quem=quem;
+    var d='/avatar/'+quem+'/';
+    AV.el.querySelector('#av-rosto').src=d+'rosto.png';
+    AV.elOlhos.src=d+'olhos-fechados.png';
+    // onde a boca e os olhos se encaixam no rosto. São percentuais do rosto,
+    // não pixels: assim o avatar acompanha qualquer tamanho de tela.
+    var pos = POS_AVATAR[quem] || POS_AVATAR.mestra;
+    AV.elBoca.style.cssText='position:absolute;display:block;left:'+pos.bx+'%;top:'+pos.by+'%;width:'+pos.bw+'%';
+    AV.elOlhos.style.cssText='position:absolute;display:none;left:'+pos.ox+'%;top:'+pos.oy+'%;width:'+pos.ow+'%';
+    trocarBoca('boca-fechada', true);
+  }
+  // Medidos no recorte de cada folha. Se o Elias gerar um avatar novo, é aqui
+  // que se acerta — e o jeito de acertar é olhar a tela, não adivinhar.
+  var POS_AVATAR = {
+    mestra: { bx:33, by:52, bw:34, ox:30, oy:29, ow:41 },
+    mestre: { bx:36, by:53, bw:29, ox:31, oy:28, ow:38 },
+  };
+
+  function trocarBoca(nome, forcar){
+    if(!AV.elBoca) return;
+    if(!forcar && AV.boca===nome) return;
+    // trava de 70ms: sem ela a boca treme a 60 quadros por segundo e fica
+    // parecendo defeito, não fala.
+    var agora=Date.now();
+    if(!forcar && agora-AV.ultimaTroca<70) return;
+    AV.ultimaTroca=agora; AV.boca=nome;
+    AV.elBoca.src='/avatar/'+AV.quem+'/'+nome+'.png';
+  }
+
+  // Chamado a cada quadro pelo mesmo laço que pinta o globo.
+  function pintarAvatar(){
+    if(!AV.on||!AV.el) return;
+    var falando=(S.fase==='eleFala');
+    var n=falando?S.nivel:0;
+    var b;
+    if(!falando||n<0.05) b='boca-fechada';
+    else if(n<0.14) b='boca-meio';
+    else if(n<0.26) b='boca-aberta';
+    else b='boca-sorriso';
+    // o "O" entra de vez em quando no volume médio: é o que tira a cara de
+    // boneco repetindo três caretas.
+    if(falando&&n>=0.14&&n<0.26&&Math.random()<0.18) b='boca-o';
+    trocarBoca(b);
+  }
+
+  // A PISCADA. Rosto que não pisca parece morto — é o detalhe que mais vende a
+  // ideia de que tem alguém ali. De 3 a 7 segundos, 130ms de olho fechado.
+  (function piscar(){
+    setTimeout(function(){
+      if(AV.on&&AV.elOlhos){
+        AV.elOlhos.style.display='block';
+        setTimeout(function(){ if(AV.elOlhos) AV.elOlhos.style.display='none'; },130);
+      }
+      piscar();
+    }, 3000+Math.random()*4000);
+  })();
+
+  function usarAvatar(quem){
+    try{ localStorage.setItem('voz.avatar', quem||'globo'); }catch(e){}
+    var globo=document.getElementById('globo');
+    if(!quem||quem==='globo'){
+      AV.on=false; if(AV.el) AV.el.style.display='none';
+      if(globo) globo.style.visibility='';
+      return;
+    }
+    montarAvatar(quem); AV.on=true; AV.el.style.display='block';
+    if(globo) globo.style.visibility='hidden';
   }
 
   // ── O TELÃO ────────────────────────────────────────────────────────────
