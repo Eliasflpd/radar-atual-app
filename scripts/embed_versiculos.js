@@ -47,7 +47,18 @@ const BATCH = parseInt(process.env.BATCH || '100', 10);
 const TABLE = (process.env.EMB_TABLE || (VOY ? 'versiculo_emb_voyage' : 'versiculo_embeddings')).replace(/[^a-z0-9_]/gi, '');
 const BOOKS = (process.env.BOOKS || 'jo').toLowerCase();
 const REEMBUTIR = process.env.REEMBUTIR === '1';
-const GKEY = process.env.GEMINI_API_KEY;
+// REVEZAMENTO DE CHAVES (23/09/2026) — medido na mão contra a API do Google:
+// o teto do free tier é `EmbedContentRequestsPerMinutePerUserPerProjectPerModel = 100`,
+// e um lote de 100 textos conta como 100 pedidos, NÃO como um. Ou seja: 100
+// versículos por minuto por chave. A Bíblia inteira com uma chave só leva umas
+// 5 horas; com as 3 chaves revezando, cai pra menos de 2. O limite é POR PROJETO,
+// então revezar só ajuda se as chaves forem de projetos diferentes — que é o caso.
+// Aceita GEMINI_API_KEYS com vírgula, ou a GEMINI_API_KEY de sempre.
+const GKEYS = (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '')
+  .split(/[,\s]+/).filter(Boolean);
+let gAtual = 0;
+const GKEY = GKEYS[0];
+const proximaChave = () => { gAtual = (gAtual + 1) % GKEYS.length; return GKEYS[gAtual]; };
 const GMODEL = process.env.GEMINI_MODEL || 'gemini-embedding-001';
 const VKEY = process.env.VOYAGE_API_KEY;
 // Ver nota no cabeçalho: voyage-3.x perdeu a cota grátis em 26/08/2026.
@@ -72,7 +83,7 @@ const NOME = { gn:'gênesis', ex:'êxodo', lv:'levítico', nm:'números', dt:'de
 
 // ---- provedores de embedding ----
 async function embedGemini(texts) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GMODEL}:batchEmbedContents?key=${GKEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GMODEL}:batchEmbedContents?key=${GKEYS[gAtual]}`;
   const body = { requests: texts.map(t => ({ model: `models/${GMODEL}`, content: { parts: [{ text: t }] }, outputDimensionality: DIM })) };
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!r.ok) throw new Error('gemini ' + r.status + ' ' + (await r.text()).slice(0, 200));
@@ -137,7 +148,18 @@ const embed = PROVIDER === 'voyage' ? embedVoyage : embedGemini;
       catch (e) {
         const msg = String(e);
         const is429 = /\b429\b|rate limit/i.test(msg);
-        if (tent >= (is429 ? 15 : 5)) throw e;
+        if (tent >= (is429 ? 40 : 5)) throw e;
+        // Bateu no teto: antes de DORMIR, tenta a próxima chave. O limite é por
+        // projeto, então a chave seguinte costuma estar com o minuto zerado — e a
+        // fila anda em vez de parar. Só quando todas já passaram é que espera o
+        // minuto virar (o Google manda retryDelay de ~36s; 40s cobre com folga).
+        if (is429 && !VOY && GKEYS.length > 1) {
+          const antes = gAtual; proximaChave();
+          if (gAtual !== antes && tent % GKEYS.length !== 0) {
+            console.warn(`  teto da chave ${antes + 1} — passando pra chave ${gAtual + 1}`);
+            continue;
+          }
+        }
         // 429 (trial Voyage = ~3 RPM/10K TPM): espera longa e crescente
         const wait = is429 ? Math.min(25000 + 5000 * tent, 60000) : 2000 * tent;
         console.warn(`  retry ${tent} (${msg.slice(0, 80)}) — esperando ${wait}ms`);

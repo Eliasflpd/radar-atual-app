@@ -33,6 +33,23 @@ const VDIM=parseInt(process.env.EMB_DIM||'1024',10);
 const VKEY=process.env.VOYAGE_API_KEY;
 const VMODEL=process.env.VOYAGE_MODEL||'voyage-4-lite';
 
+// ── A RESERVA (23/09/2026) ───────────────────────────────────────────────────
+// POR QUE: a cota grátis da Voyage é de ~3 buscas POR MINUTO. Testando a busca
+// ao vivo, três perguntas seguidas já devolveram `voyage 429` — ou seja, numa
+// classe de EBD com vários pastores procurando ao mesmo tempo no domingo, a
+// busca por sentido simplesmente PARA, e o irmão não vê motivo nenhum na tela.
+// O Gemini Embedding é grátis no free tier (conferido na mão: HTTP 200) e a
+// chave já é nossa — não precisou cadastrar nada.
+//
+// ⚠️ A PEGADINHA QUE QUASE ME PEGOU: ter o MESMO TAMANHO de vetor (1024) NÃO
+// deixa os dois motores comparáveis. Cada modelo tem o seu próprio "espaço": um
+// vetor do Gemini procurado na tabela da Voyage devolve LIXO, e lixo silencioso,
+// que é pior que erro. Por isso a reserva tem TABELA PRÓPRIA, indexada com o
+// mesmo motor — e quem escolhe o motor escolhe a tabela junto, sempre no par.
+const GKEY=(process.env.GEMINI_API_KEYS||process.env.GEMINI_API_KEY||'').split(/[,\s]+/).filter(Boolean)[0]||'';
+const GMODEL=process.env.GEMINI_EMB_MODEL||'gemini-embedding-2';
+const GTABLE=(process.env.EMB_TABLE_RESERVA||'versiculo_emb_gemini').replace(/[^a-z0-9_]/gi,'');
+
 function parseRef(s){
   const m=s.trim().match(/^(.*?)[\s]*?(\d{1,3})[:\s.](\d{1,3})\s*$/);
   if(!m) return null;
@@ -47,13 +64,51 @@ function parseAbbrev(s){
   let a=m[1].trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[.\s]/g,'');
   return { abbrev:ABBR[a]||a, cap:+m[2], ver:+m[3] };
 }
-async function embedQuery(text){
+async function embedVoyage(text){
   // Voyage — mesma família/dimensão dos vetores salvos (input_type:query melhora a busca)
   const r=await fetch('https://api.voyageai.com/v1/embeddings',{method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+VKEY},
     body:JSON.stringify({model:VMODEL,input:[text],output_dimension:VDIM,input_type:'query'})});
   if(!r.ok) throw new Error('voyage '+r.status);
   return (await r.json()).data[0].embedding;
+}
+async function embedGemini(text){
+  // outputDimensionality:1024 pra casar com a coluna vector(1024). O gemini-embedding-2
+  // já devolve o vetor normalizado nesse tamanho (medido: comprimento 1.0000), então
+  // não precisa normalizar na mão antes de gravar nem de comparar.
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GMODEL+':embedContent?key='+GKEY,
+    {method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({model:'models/'+GMODEL,outputDimensionality:VDIM,content:{parts:[{text}]}})});
+  if(!r.ok) throw new Error('gemini '+r.status);
+  const j=await r.json();
+  const v=j&&j.embedding&&j.embedding.values;
+  if(!Array.isArray(v)) throw new Error('gemini sem vetor');
+  return v;
+}
+// Devolve SEMPRE o par { vetor, tabela } — nunca um sem o outro, porque procurar
+// na tabela errada não dá erro: dá resposta bonita e errada.
+//
+// E só cai pra reserva se ela estiver INTEIRA. Enquanto a Bíblia está sendo
+// indexada, a tabela existe mas tem um punhado de versículos — e uma reserva pela
+// metade é pior que reserva nenhuma: ela responde sempre, sempre com o pedaço
+// errado, e ninguém desconfia. Meia-boca não entra no lugar do bom.
+const MINIMO_RESERVA = 31000;   // a Bíblia tem 31.102; 31.000 dá folga
+let reservaPronta = null;       // lembrada entre chamadas na mesma função quente
+async function embedQuery(text, c){
+  try{
+    return { vec: await embedVoyage(text), tabela: SEM_TABLE, motor: VMODEL };
+  }catch(e){
+    if(!GKEY) throw e;
+    if(reservaPronta === null){
+      try{
+        const n = await c.query(`select count(*)::int n from ${GTABLE} where embedding is not null`);
+        reservaPronta = n.rows[0].n >= MINIMO_RESERVA;
+      }catch(_){ reservaPronta = false; }
+    }
+    if(!reservaPronta) throw e;   // devolve o erro DE VERDADE, não uma resposta falsa
+    return { vec: await embedGemini(text), tabela: GTABLE, motor: GMODEL,
+             reserva: 'principal falhou ('+String(e.message||e).slice(0,40)+')' };
+  }
 }
 
 module.exports = async (req,res) => {
@@ -177,8 +232,21 @@ module.exports = async (req,res) => {
           `select modelo, dim, count(*)::int as n from ${SEM_TABLE}
             where embedding is not null group by modelo, dim order by n desc`);
         const gravados=d.rows.map(x=>x.modelo);
+        // A RESERVA também tem que aparecer aqui. Reserva que ninguém confere é
+        // reserva que só se descobre quebrada no domingo, com a classe esperando.
+        let res_ok=null;
+        try{
+          const g=await c.query(
+            `select modelo, dim, count(*)::int as n from ${GTABLE}
+              where embedding is not null group by modelo, dim order by n desc`);
+          res_ok={ tabela:GTABLE, chave:!!GKEY, modelo:GMODEL, gravado:g.rows,
+                   pronta: g.rows.length===1 && g.rows[0].modelo===GMODEL
+                           && g.rows[0].dim===VDIM && g.rows[0].n>=31000 };
+        }catch(e){ res_ok={ tabela:GTABLE, chave:!!GKEY, erro:String(e.message||e).slice(0,80), pronta:false }; }
+
         res.status(200).json({ok:true,modo:'diag',tabela:SEM_TABLE,
           configurado:{modelo:VMODEL,dim:VDIM,chave:!!VKEY}, gravado:d.rows,
+          reserva:res_ok,
           bate: gravados.length===1 && gravados[0]===VMODEL && d.rows[0].dim===VDIM,
           aviso: gravados.length===1 && gravados[0]===VMODEL ? null
             : `vetores gravados com [${gravados.join(', ')}] mas as consultas usam [${VMODEL}] — reindexe com scripts/embed_versiculos.js`});
@@ -206,12 +274,14 @@ module.exports = async (req,res) => {
       const termo=(q.q||'').toString().trim().slice(0,300);
       if(termo.length<2){ res.status(400).json({ok:false,err:'curto'}); return; }
       if(!VKEY){ res.status(200).json({ok:false,err:'sem chave IA'}); return; }
-      const vec='['+(await embedQuery(termo)).join(',')+']';
+      const emb=await embedQuery(termo,c);
+      const vec='['+emb.vec.join(',')+']';
       const r=await c.query(
         `select ref,livro,cap,ver,texto, 1-(embedding <=> $1::vector) as score
-           from ${SEM_TABLE} where embedding is not null
+           from ${emb.tabela} where embedding is not null
           order by embedding <=> $1::vector limit $2`, [vec,limit]);
-      res.status(200).json({ok:true,modo:'texto',q:termo,total:r.rowCount,itens:r.rows});
+      res.status(200).json({ok:true,modo:'texto',q:termo,total:r.rowCount,itens:r.rows,
+        motor:emb.motor, reserva:emb.reserva||null});
     }catch(e){ res.status(200).json({ok:false,err:String(e).slice(0,160)}); }
     finally{ try{ await c.end(); }catch(_){}}
     return;
