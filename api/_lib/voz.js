@@ -491,6 +491,50 @@ function chaveDoPastor(v) {
   return s.toLowerCase().replace(/[^a-z0-9_.@-]/g, '').slice(0, 60);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// O CRACHÁ DO APARELHO — a trava por pessoa, do lado do Edge.
+//
+// Até 22/09/2026 bastava mandar o WhatsApp de alguém em `user` pra ler os
+// assuntos que a pessoa conversou aqui (`o_que_ja_falamos`) ou pra APAGAR a
+// memória dela. Agora o aparelho manda junto um crachá, e o servidor confere.
+//
+// Aqui é Edge: não tem `pg`, então não dá pra olhar o banco daqui. O caminho é
+// o MESMO que a memória já usa há tempos (voz-memoria.js -> armazem()):
+// servidor-pra-servidor, batendo em /api/dados?fn=chave, que roda em Node e
+// tem banco, com o RADAR_ADMIN_TOKEN do env. Um desenho só no app inteiro.
+//
+// ⚠️ QUANDO A CONFERÊNCIA DIZ NÃO, A CONVERSA ABRE IGUAL. O globo fala, lê
+// versículo, garimpa o acervo — só fica SEM MEMÓRIA, e ele diz isso em voz
+// alta, que é a verdade. Conversa sem memória é pobre; conversa que não abre é
+// tela morta, e tela morta é o que o Elias nunca aceita.
+// ─────────────────────────────────────────────────────────────────────────────
+function crachaDaReq(req, b) {
+  let doCabecalho = '';
+  try { doCabecalho = (req.headers && req.headers.get && req.headers.get('x-radar-chave')) || ''; } catch (_) {}
+  // O corpo também vale AQUI (e só aqui) por um motivo concreto: o
+  // `navigator.sendBeacon` que salva o último turno quando o pastor fecha a aba
+  // manda um Blob e não consegue pôr cabeçalho nenhum.
+  const s = String(doCabecalho || (b && b.chave) || '').trim();
+  return /^rk_[A-Za-z0-9_-]{20,120}$/.test(s) ? s : '';
+}
+
+async function conferirCracha(origem, user, cracha) {
+  const token = (typeof process !== 'undefined' && process.env && process.env.RADAR_ADMIN_TOKEN) || '';
+  if (!user) return { ok: false, motivo: 'sem_dono' };
+  // Sem token de admin a gente NÃO consegue conferir — e o que não se confere
+  // não se abre. Fail-closed de propósito: abrir por precaução seria devolver o
+  // buraco inteiro pra quem soubesse derrubar esta chamada.
+  if (!token) return { ok: false, motivo: 'sem_token' };
+  try {
+    const r = await fetch(origem + '/api/dados?fn=chave', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao: 'conferir', user, chave: cracha, token }),
+    });
+    return await r.json();
+  } catch (_) { return { ok: false, motivo: 'rede' }; }
+}
+
 // Guardar não pode atrasar a conversa. Na Vercel Edge existe waitUntil: a
 // resposta sai na hora e a gravação termina depois. Onde não existe (o banco de
 // provas roda num http comum), a gente espera — e é bom que espere, senão a
@@ -510,6 +554,27 @@ export default async function handler(req, ctx) {
   const acao = (b.acao || 'token').toString();
   const user = chaveDoPastor(b.user || b.user_key);
 
+  // ── A CONFERÊNCIA, UMA VEZ SÓ POR REQUISIÇÃO ─────────────────────────────
+  // `confirmar()` devolve a chave do pastor se ele PROVOU ser o dono, e string
+  // vazia se não provou. Quem recebe string vazia trata igualzinho a "aparelho
+  // sem dono", que é um caminho que este arquivo já sabia andar desde o
+  // primeiro dia — por isso nada aqui precisou aprender a dar erro na cara do
+  // pastor. É preguiçosa de propósito: só bate no servidor quando a chamada
+  // realmente vai encostar na memória. Ferramenta que não é de memória
+  // (ler_versiculo, garimpar…) não paga nem um milissegundo por isto.
+  const origemReq = new URL(req.url).origin;
+  const cracha = crachaDaReq(req, b);
+  let _porte = null, _chaveNova = '';
+  async function confirmar() {
+    if (!user) return '';
+    if (!_porte) _porte = conferirCracha(origemReq, user, cracha);
+    const p = await _porte;
+    // Aparelho sem cadastro que apareceu pela primeira vez ganha crachá agora.
+    // Ele desce UMA vez, aqui, e o globo guarda. Ver api/_lib/chave.js.
+    if (p && p.chave_nova) _chaveNova = p.chave_nova;
+    return (p && p.ok) ? user : '';
+  }
+
   // A PORTA ÚNICA DAS FERRAMENTAS.
   // O navegador não decide nada: pega o functionCall que o Gemini mandou, repassa
   // {nome, args} pra cá, e devolve ao Gemini o objeto que voltar em `resposta`.
@@ -523,8 +588,14 @@ export default async function handler(req, ctx) {
     // outro ambiente, que é como se serve versículo velho sem ninguém perceber.
     const origem = new URL(req.url).origin;
     let resposta;
+    // A ÚNICA ferramenta que devolve dado de pessoa é a da memória — e é ela
+    // que paga a conferência. Sem crachá bom, ela recebe `user` vazio e
+    // responde "não tenho memória ligada nesta conversa", que é o caminho
+    // honesto que já existia pra quem nunca se cadastrou. Nada de erro, nada
+    // de dado de ninguém.
+    const donoFerr = (user && nome === 'o_que_ja_falamos') ? await confirmar() : user;
     try {
-      resposta = await executarFerramenta(nome, args, origem, { user });
+      resposta = await executarFerramenta(nome, args, origem, { user: donoFerr });
     } catch (e) {
       resposta = { erro: 'a consulta falhou: ' + (e && e.message ? e.message : 'motivo desconhecido'),
         ordem: 'NÃO invente para tapar o buraco. Diga ao pastor que a consulta falhou agora.' };
@@ -548,7 +619,15 @@ export default async function handler(req, ctx) {
     if (user) {
       const temas = temasDeFerramenta(nome, args);
       if (temas.length) {
-        const esperar = depois(ctx, gravarTemas(origem, user, JSON.parse(semNome(JSON.stringify(temas)))));
+        // A conferência entrou DENTRO do `depois`: gravar já acontecia fora do
+        // caminho da resposta (waitUntil), então conferir aqui não custa um
+        // milissegundo ao pastor. Sem dono provado não se grava — senão daria
+        // pra sujar o caderno de assuntos de qualquer um só sabendo o telefone.
+        const esperar = depois(ctx, (async () => {
+          const dono = await confirmar();
+          if (!dono) return null;
+          return gravarTemas(origem, dono, JSON.parse(semNome(JSON.stringify(temas))));
+        })());
         if (esperar) await esperar;
         fundo = !esperar;
       }
@@ -556,7 +635,7 @@ export default async function handler(req, ctx) {
     // `fundo` é diagnóstico, não contrato: diz se a gravação saiu do caminho da
     // resposta (waitUntil) ou se o pastor teve que esperar por ela. Fica no topo
     // da resposta HTTP, fora de `resposta` — o Gemini nunca vê isto.
-    return new Response(JSON.stringify({ ok: true, nome, fundo, resposta: limpa }), { headers: JSONH });
+    return new Response(JSON.stringify({ ok: true, nome, fundo, chave_nova: _chaveNova || undefined, resposta: limpa }), { headers: JSONH });
   }
 
   // ─── A MEMÓRIA CURTA: o globo contando pra cá o que acabou de ser dito ───
@@ -576,17 +655,32 @@ export default async function handler(req, ctx) {
       fechou: !!b.fechou,
       fim: !!b.fim,
     };
-    const esperar = depois(ctx, registrarTurno(origem, user, turno, escrever));
+    // Conferir DENTRO do `depois`, pelo mesmo motivo dos temas: guardar o turno
+    // já saía do caminho da resposta, então a trava aqui é de graça. Crachá
+    // ruim = não guarda, e o front nem sente (ele não espera resposta nenhuma).
+    const esperar = depois(ctx, (async () => {
+      const dono = await confirmar();
+      if (!dono) return { ok: true, recusado: true };
+      return registrarTurno(origem, dono, turno, escrever);
+    })());
     let r = { ok: true };
     if (esperar) r = (await esperar) || { ok: true };
-    return new Response(JSON.stringify({ ok: true, guardado: true, resumido: !!(r && r.resumido) }), { headers: JSONH });
+    return new Response(JSON.stringify({ ok: true, guardado: !(r && r.recusado),
+      resumido: !!(r && r.resumido) }), { headers: JSONH });
   }
 
   // ─── ESQUECER É DIREITO DO DONO ─────────────────────────────────────────
   // Não é enfeite de privacidade: é o que torna honesto guardar qualquer coisa.
   if (acao === 'esquecer') {
     if (!user) return new Response(JSON.stringify({ ok: false, erro: 'sem dono' }), { status: 400, headers: JSONH });
-    const r = await esquecerTudo(new URL(req.url).origin, user);
+    // Apagar é o direito do DONO — e só dele. Sem crachá bom a gente não apaga
+    // e DIZ que não apagou (`recusado`): o globo mostra isso na tela em vez de
+    // fingir que limpou. Mentir aqui seria pior que o buraco.
+    const donoApagar = await confirmar();
+    if (!donoApagar) {
+      return new Response(JSON.stringify({ ok: true, apagados: 0, recusado: true }), { headers: JSONH });
+    }
+    const r = await esquecerTudo(new URL(req.url).origin, donoApagar);
     return new Response(JSON.stringify({ ok: true, apagados: (r && r.apagados) || 0 }), { headers: JSONH });
   }
 
@@ -619,8 +713,13 @@ export default async function handler(req, ctx) {
     // tudo o que entra na instrução de sistema desde que ela existe.
     let memoria = '';
     if (user) {
-      try { memoria = semNome(await blocoDoSistema(new URL(req.url).origin, user) || ''); }
-      catch (_) { memoria = ''; }
+      // Aqui a conferência custa uma ida ao servidor na ABERTURA da sessão —
+      // e só na abertura. Se ela disser não, `memoria` fica vazia e a sessão
+      // abre exatamente como abre pra quem nunca conversou antes.
+      try {
+        const dono = await confirmar();
+        if (dono) memoria = semNome(await blocoDoSistema(new URL(req.url).origin, dono) || '');
+      } catch (_) { memoria = ''; }
     }
 
     const r = await assinarToken(handle, voz, memoria);
@@ -630,6 +729,8 @@ export default async function handler(req, ctx) {
       token: r.token,   // <- é ISTO que desce pro navegador. A chave real fica aqui.
       modelo: MODELO,
       voz,
+      // O crachá do aparelho, quando ele acabou de nascer. Desce UMA vez.
+      chave_nova: _chaveNova || undefined,
       // O globo mostra isto na tela: "retomando de onde vocês pararam". O
       // CONTEÚDO da memória não desce — só o aviso de que ela existe.
       lembrando: !!memoria,

@@ -86,10 +86,37 @@ async function submitCadastro(){
   salvarNuvem(nome,cargo,fone);   // guarda na nuvem pro Elias ver todos
   irHome();
 }
+// ══ O CRACHÁ DO APARELHO ══════════════════════════════════════════════════
+// Segredo sorteado pelo servidor no cadastro, guardado SÓ neste aparelho. É ele
+// que prova "o caderno de pregações e a memória do globo são MEUS". Sem isso,
+// até 22/09/2026 bastava saber o WhatsApp de alguém pra ler os dados dela.
+// Mora em chave PRÓPRIA do localStorage, nunca dentro do 'radar_user' — aquela
+// é sagrada e tem dono. Ver api/_lib/chave.js.
+function getChave(){ try{ return localStorage.getItem('radar_chave')||''; }catch(e){ return ''; } }
+function setChave(k){ try{ if(k) localStorage.setItem('radar_chave',String(k)); }catch(e){} }
+window.radarChave = getChave;   // _pregado.js e o globo de voz leem por aqui
+window.radarGuardarChave = setChave;
+
 // salva o cadastro na nuvem (não trava o app se falhar)
+// É TAMBÉM POR AQUI QUE O CRACHÁ NASCE: a resposta traz `chave` uma única vez.
 function salvarNuvem(nome,cargo,fone){
-  try{ fetch('/api/cadastros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:nome,cargo:cargo,whatsapp:fone})}).catch(function(){}); }catch(e){}
+  try{
+    fetch('/api/cadastros',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:nome,cargo:cargo,whatsapp:fone})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if(d&&d.chave) setChave(d.chave); })
+      ['catch'](function(){});
+  }catch(e){}
 }
+// QUEM JÁ USAVA O APP ANTES DA TRAVA não tem crachá nenhum. Em vez de mandar
+// essa gente refazer login — que é quebrar o app de quem já usa, e isso é pior
+// que o buraco —, o próprio app refaz o cadastro sozinho, em silêncio, e ganha
+// o crachá. Na prática: ele abre o RADAR uma vez e a conta dele se tranca.
+function renovarChave(){
+  var u=getUser(); if(!u||!u.whatsapp) return;
+  if(getChave()) return;
+  salvarNuvem(u.nome,u.cargo,u.whatsapp);
+}
+window.radarRenovarChave = renovarChave;
 // "Já cadastrado?" — restaura pelo WhatsApp
 async function jaCadastrado(){
   var fone=prompt('Digite seu WhatsApp (com DDD):'); if(!fone) return;
@@ -276,7 +303,7 @@ function irHome(){
   ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
-  if(!_acessoVerificado){ _acessoVerificado=true; verificarAcesso(); }
+  if(!_acessoVerificado){ _acessoVerificado=true; verificarAcesso(); renovarChave(); }
   if(!_deepLinkFeito){                 // ?mod=... / ?ir=... abre direto SÓ na 1ª carga; voltar nunca reabre
     _deepLinkFeito=true;
     const _qs = new URLSearchParams(location.search);

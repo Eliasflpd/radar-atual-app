@@ -427,6 +427,30 @@
   })();
   var SESSAO = 's'+Date.now().toString(36);
 
+  // ════════════════════════════════════════════════════════════════════════
+  // O CRACHÁ DO APARELHO — saber quem eu sou não basta mais, agora eu PROVO.
+  // Até 22/09/2026 bastava mandar o WhatsApp de alguém em `user` pra ler os
+  // assuntos que a pessoa conversou aqui — ou pra APAGAR a memória dela.
+  // O crachá é um segredo sorteado pelo servidor, guardado só neste aparelho.
+  // Aparelho sem cadastro ganha o dele na primeira conversa, sozinho, sem o
+  // pastor ver nada. ⚠️ 'radar_user' continua sendo SÓ LEITURA aqui.
+  // Ver api/_lib/chave.js.
+  // ════════════════════════════════════════════════════════════════════════
+  var CHAVE_K='radar_chave';
+  function cracha(){
+    try{
+      if(typeof window.radarChave==='function') return window.radarChave()||'';
+      return localStorage.getItem(CHAVE_K)||'';
+    }catch(e){ return ''; }
+  }
+  function guardarCracha(k){
+    if(!k) return;
+    try{
+      if(typeof window.radarGuardarChave==='function') window.radarGuardarChave(k);
+      else localStorage.setItem(CHAVE_K,String(k));
+    }catch(e){}
+  }
+
   // Manda o turno pro servidor guardar. FOGO E ESQUECE, sempre: se isto falhar,
   // a conversa não sente nada — só a memória fica mais pobre, e aí o mestre diz
   // que não lembra, que é a verdade. NUNCA pode segurar a fala.
@@ -445,7 +469,10 @@
   window.addEventListener('pagehide', function(){
     if(!EU_SOU || !(S.memEu||S.memMestre||S.memEnviados)) return;
     try{
-      var corpo=JSON.stringify({ acao:'lembrar', user:EU_SOU, sessao:SESSAO,
+      // `sendBeacon` manda um Blob e NÃO consegue pôr cabeçalho nenhum — por
+      // isso, e só aqui, o crachá viaja dentro do corpo. O servidor aceita os
+      // dois (ver crachaDaReq em api/_lib/voz.js).
+      var corpo=JSON.stringify({ acao:'lembrar', user:EU_SOU, chave:cracha(), sessao:SESSAO,
                                  eu:S.memEu, mestre:S.memMestre, fim:true });
       navigator.sendBeacon('/api/voz', new Blob([corpo],{type:'application/json'}));
       S.memEu=''; S.memMestre='';
@@ -1241,11 +1268,20 @@
     // chamada nova esqueça de mandar — esquecer seria memória virando um monte
     // de linhas órfãs, que é pior que não ter memória.
     if(EU_SOU && corpo && !corpo.user) corpo.user=EU_SOU;
+    // O CRACHÁ VAI PELO MESMO FUNIL, e pelo mesmo motivo do `user` aí em cima:
+    // pôr aqui é o que garante que nenhuma chamada nova esqueça de mandar.
+    // No CABEÇALHO, nunca na URL — segredo em query string vira log de servidor.
+    var _h={'Content-Type':'application/json'}, _k=cracha();
+    if(_k) _h['x-radar-chave']=_k;
     // cache:'no-store' é cinto e suspensório: o service worker já foi instruído a
     // nunca guardar /api/voz, mas token vencido = tela morta na estrada.
     var r=await fetch('/api/voz',{method:'POST',cache:'no-store',
-      headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo)});
+      headers:_h,body:JSON.stringify(corpo)});
     var j=await r.json().catch(function(){ return {ok:false,erro:'resposta inválida do servidor'}; });
+    // Crachá recém-sorteado desce UMA vez. Guardar tem que vir ANTES do throw:
+    // resposta de erro também pode trazer o crachá, e perdê-lo aqui seria
+    // sortear outro na chamada seguinte — molho de chaves à toa na conta.
+    if(j && j.chave_nova) guardarCracha(j.chave_nova);
     if(!j.ok) throw new Error(j.erro||('HTTP '+r.status));
     return j;
   }
@@ -1913,6 +1949,14 @@
     }
     btnEsquecer.dataset.certeza=''; btnEsquecer.textContent='apagando…';
     pedir({ acao:'esquecer' }).then(function(r){
+      // O servidor recusou porque não deu pra confirmar que esta conversa é
+      // dele. NÃO mentir aqui: dizer "apagada" sem ter apagado é pior que o
+      // buraco que a trava veio fechar.
+      if(r && r.recusado){
+        btnEsquecer.textContent='🧠 Apagar a memória';
+        if(elObsMemoria) elObsMemoria.textContent='Não consegui confirmar que esta memória é deste aparelho, então não apaguei nada. Abra o RADAR uma vez e volte aqui.';
+        return;
+      }
       S.lembrando=false; S.avisouMemoria=false;
       btnEsquecer.textContent='✅ Apagada';
       if(elObsMemoria) elObsMemoria.textContent='Apagado: '+(r.apagados||0)+' registro(s). Ele não lembra mais de nada.';

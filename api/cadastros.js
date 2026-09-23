@@ -1,5 +1,10 @@
 // Cadastros do RADAR — salva na nuvem (Supabase pessoal) e lista pro admin (Elias).
 const { Client } = require('pg');
+// A CHAVE DO APARELHO. É AQUI que ela nasce pra quem tem WhatsApp — e é de
+// propósito: este POST já manda uma mensagem no WhatsApp DA PRÓPRIA PESSOA.
+// Então quem tentar pegar um crachá com o número dos outros acende uma luz no
+// celular do dono na mesma hora. Ver o cabeçalho de api/_lib/chave.js.
+const CHAVE = require('./_lib/chave.js');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,18 +23,52 @@ module.exports = async (req, res) => {
       const cargo = (b && b.cargo || '').trim();
       const whatsapp = (b && b.whatsapp || '').replace(/\D/g, '');
       if (!nome) { res.status(400).json({ error: 'sem nome' }); return; }
+      let jaExistia = false;
       if (whatsapp) {
         // 1 cadastro por WhatsApp — se já existe, ATUALIZA nome/cargo mas PRESERVA trial_inicio/liberado_ate
         const ex = await c.query('select id from radar_cadastros where regexp_replace(coalesce(whatsapp,\'\'),\'\\D\',\'\',\'g\') = $1 limit 1', [whatsapp]);
+        jaExistia = !!ex.rows[0];
         if (ex.rows[0]) await c.query('update radar_cadastros set nome=$1, cargo=$2 where id=$3', [nome, cargo, ex.rows[0].id]);
         else await c.query('insert into radar_cadastros(nome,cargo,whatsapp) values($1,$2,$3)', [nome, cargo, whatsapp]);
       } else {
         await c.query('insert into radar_cadastros(nome,cargo,whatsapp) values($1,$2,$3)', [nome, cargo, whatsapp]);
       }
+
+      // ── O CRACHÁ DO APARELHO ────────────────────────────────────────────
+      // Nasce aqui e desce UMA vez, nesta resposta. Nunca mais sai do banco em
+      // texto — lá só fica o SHA-256. Por isso o "Já cadastrado?" (o GET com
+      // ?phone=) não devolve crachá nenhum: se devolvesse, quem rouba a conta
+      // pelo telefone roubaria a chave junto e a trava não valeria nada.
+      // Se isto falhar, o cadastro segue em frente sem crachá: a pessoa cai no
+      // período de tolerância e o app continua inteiro. Cadastro que não
+      // termina é pior que conta destrancada.
+      let chaveNova = '', eraNovo = true;
+      if (whatsapp) {
+        try {
+          await CHAVE.tabela(c);
+          const jaTinha = await c.query(
+            'select count(*)::int as n from radar_chaves where user_key=$1', [CHAVE.chaveDe(whatsapp)]);
+          eraNovo = !((jaTinha.rows[0] && jaTinha.rows[0].n) > 0);
+          const e = await CHAVE.emitir(c, whatsapp, cargo || 'aparelho');
+          if (e && e.ok) chaveNova = e.chave;
+        } catch (_) { chaveNova = ''; }
+      }
+
       // Confirmação no WhatsApp da própria pessoa (evita gente mentirosa) — via Fonnte, sem bloquear o cadastro se falhar
+      //
+      // ⚠️ O SILÊNCIO DA AUTO-CURA — a linha que evita um desastre:
+      // quando a trava entrar no ar, TODO mundo que já usa o app vai refazer o
+      // cadastro sozinho pra ganhar crachá. Sem este `calado`, isso dispararia
+      // a mensagem de boas-vindas pra BASE INTEIRA de uma vez — centenas de
+      // WhatsApp iguais, no mesmo minuto, pra gente que não pediu nada.
+      // Cadastro que JÁ EXISTIA e ainda não tinha crachá nenhum = é a auto-cura
+      // passando, e ela passa CALADA. A mensagem sai só quando é gente nova
+      // (boas-vindas) ou quando um aparelho NOVO entra numa conta que já tinha
+      // dono (o aviso que protege o pastor).
+      const calado = jaExistia && eraNovo;
       let avisado = false;
       const FT = process.env.FONNTE_TOKEN;
-      if (FT && whatsapp) {
+      if (FT && whatsapp && !calado) {
         let alvo = String(whatsapp || '').replace(/\D/g, '');
         // 10 ou 11 digitos = Brasil sem o codigo do pais -> completa com 55.
         // 12 ou mais = ja veio com codigo de pais (55 ou de fora) -> NAO mexe,
@@ -37,9 +76,16 @@ module.exports = async (req, res) => {
         const ehBrasilCurto = (alvo.length === 10 || alvo.length === 11);
         if (ehBrasilCurto) alvo = '55' + alvo;
         const primeiroNome = nome.split(/\s+/)[0];
-        const msg = 'Ola ' + primeiroNome + '! ✅ Seu cadastro no *RADAR* foi feito com sucesso.'
-          + (cargo ? ('\nCargo: ' + cargo) : '')
-          + '\n\nAcesse o app aqui:\nhttps://radar-atual.vercel.app\n\n_Avisos e agenda da igreja na palma da mao._ 🙏';
+        // QUANDO JÁ HAVIA APARELHO NA CONTA, a mensagem muda: não é "bem-vindo",
+        // é AVISO. Esta linha é a rede de segurança da trava — se alguém tentar
+        // entrar na conta do pastor com o número dele, o celular DELE apita.
+        const msg = (!eraNovo && chaveNova)
+          ? ('Ola ' + primeiroNome + '! 🔔 Um *novo aparelho* acabou de entrar na sua conta do *RADAR*.'
+             + '\n\nSe foi voce, esta tudo certo — pode ignorar.'
+             + '\nSe NAO foi voce, responda esta mensagem que a gente tira o acesso dele.')
+          : ('Ola ' + primeiroNome + '! ✅ Seu cadastro no *RADAR* foi feito com sucesso.'
+             + (cargo ? ('\nCargo: ' + cargo) : '')
+             + '\n\nAcesse o app aqui:\nhttps://radar-atual.vercel.app\n\n_Avisos e agenda da igreja na palma da mao._ 🙏');
         try {
           const fr = await fetch('https://api.fonnte.com/send', {
             method: 'POST',
@@ -51,7 +97,9 @@ module.exports = async (req, res) => {
           avisado = !!(fj && (fj.status === true || fj.status === 'true'));
         } catch (e) { avisado = false; }
       }
-      res.json({ ok: true, avisado });
+      // `chave` sai daqui UMA vez na vida deste aparelho. O app guarda em
+      // localStorage 'radar_chave' e manda no cabeçalho x-radar-chave depois.
+      res.json({ ok: true, avisado, chave: chaveNova || undefined });
     } else {
       const phone = ((req.query && req.query.phone) || '').replace(/\D/g, '');
       if (phone) { // "Já cadastrado?" — restaura pelo WhatsApp

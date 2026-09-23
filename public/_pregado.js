@@ -68,6 +68,45 @@
     }) || '';
   }
 
+  /* ═══════════ O CRACHÁ ══════════════════════════════════════════════════════
+     Saber QUEM eu sou não basta mais: agora eu também PROVO. Até 22/09/2026
+     bastava mandar o WhatsApp de alguém nesta rota pra ler o caderno inteiro
+     de pregações da pessoa. O crachá é um segredo sorteado pelo servidor e
+     guardado só neste aparelho (localStorage 'radar_chave'). Ver api/_lib/chave.js.
+
+     Vai no CABEÇALHO, nunca na URL: query string entra em log de servidor, em
+     histórico de navegador e no Referer — segredo em URL é segredo publicado
+     devagar.  ⚠️ Segue valendo: 'radar_user' aqui é SÓ getItem, jamais setItem. */
+  var CHAVE_K = 'radar_chave';
+  function cracha(){
+    return seguro(function(){
+      if(typeof window.radarChave === 'function') return window.radarChave() || '';
+      return localStorage.getItem(CHAVE_K) || '';
+    }) || '';
+  }
+  function cabecalhos(extra){
+    var h = extra || {};
+    var k = cracha();
+    if(k) h['x-radar-chave'] = k;
+    return h;
+  }
+  /* O servidor responde com `chave_nova` quando acabou de sortear um crachá pra
+     este aparelho (acontece uma vez, com quem nunca se cadastrou), e com
+     `renove` quando a pessoa é do tempo em que a trava não existia — aí o app
+     refaz o cadastro sozinho e a conta dela se tranca. Falha em silêncio como
+     todo o resto deste arquivo. */
+  function guardarSelo(d){
+    if(!d) return d;
+    if(d.chave_nova) seguro(function(){
+      if(typeof window.radarGuardarChave === 'function') window.radarGuardarChave(d.chave_nova);
+      else localStorage.setItem(CHAVE_K, String(d.chave_nova));
+    });
+    if(d.renove) seguro(function(){
+      if(typeof window.radarRenovarChave === 'function') window.radarRenovarChave();
+    });
+    return d;
+  }
+
   /* ═══════════ OS 66 LIVROS ══════════════════════════════════════════════════
      nome normalizado -> código curto. Os numerados ganham variantes sozinhos
      (1/I/primeira/1a) pra "1 Coríntios", "I Coríntios" e "1a Coríntios" caírem
@@ -215,9 +254,10 @@
     if(REGISTROS && !forcar) return Promise.resolve(REGISTROS);
     if(pedido && !forcar) return pedido;
     var k = quemSou();
-    pedido = fetch(API+'&user='+encodeURIComponent(k), { cache:'no-store' })
+    pedido = fetch(API+'&user='+encodeURIComponent(k), { cache:'no-store', headers: cabecalhos() })
       .then(function(r){ return r.json(); })
       .then(function(d){
+        guardarSelo(d);
         REGISTROS = (d && Array.isArray(d.itens)) ? d.itens : [];
         REGISTROS.forEach(preparar);
         cacheGravar(REGISTROS);
@@ -254,9 +294,10 @@
       tema: lim(dados.tema, 400), angulo: lim(dados.angulo, 400),
       publico: lim(dados.publico, 120), data: dados.data || hoje()
     };
-    return fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(corpo) })
+    return fetch(API, { method:'POST', headers: cabecalhos({'Content-Type':'application/json'}), body:JSON.stringify(corpo) })
       .then(function(r){ return r.json(); })
       .then(function(d){
+        guardarSelo(d);
         if(d && d.item){
           REGISTROS = REGISTROS || [];
           if(!REGISTROS.some(function(x){ return x.id === d.item.id; })){ REGISTROS.unshift(preparar(d.item)); }
@@ -266,10 +307,11 @@
       });
   }
   function apagar(id){
-    return fetch(API, { method:'POST', headers:{'Content-Type':'application/json'},
+    return fetch(API, { method:'POST', headers: cabecalhos({'Content-Type':'application/json'}),
         body:JSON.stringify({ acao:'apagar', user:quemSou(), id:id }) })
       .then(function(r){ return r.json(); })
       .then(function(d){
+        guardarSelo(d);
         REGISTROS = (REGISTROS||[]).filter(function(x){ return x.id !== id; });
         cacheGravar(REGISTROS); avisarOuvintes();
         return d;

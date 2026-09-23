@@ -3,6 +3,10 @@
 // Os handlers moram em api/_lib/ (prefixo _ = não vira função). As URLs públicas
 // continuam iguais (ex.: /api/hit, /api/leitura) via "rewrites" no vercel.json.
 const { Client } = require('pg');
+// A trava por pessoa. Mora em api/_lib/ e é usada DIRETO (mesmo processo, mesmo
+// `pg`) pelas rotas daqui — a porta HTTP dela existe só pro /api/voz, que roda
+// no Edge. Ver o cabeçalho de api/_lib/chave.js.
+const CHAVE = require('./_lib/chave.js');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PAINEL DE USO — só o pastor, protegido por RADAR_ADMIN_TOKEN.
@@ -408,7 +412,9 @@ async function pregTabela(c){
 async function pregado(req, res){
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type');
+  // x-radar-chave é o crachá do aparelho. Vai no CABEÇALHO e nunca na URL:
+  // query string entra no log da Vercel, no histórico e no Referer.
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, x-radar-chave');
   res.setHeader('Cache-Control','no-store');
   if(req.method === 'OPTIONS'){ res.status(200).end(); return; }
 
@@ -433,13 +439,38 @@ async function pregado(req, res){
     await c.connect();
     await pregTabela(c);
 
+    // ── A TRAVA POR PESSOA ───────────────────────────────────────────────────
+    // Até 22/09/2026 bastava saber o WhatsApp de alguém pra ler o caderno de
+    // pregações dela por aqui. Agora o aparelho mostra o crachá e o servidor
+    // confere contra radar_chaves. Ver api/_lib/chave.js pra entender a ordem
+    // das decisões — principalmente por que crachá de OUTRO dono é NÃO sempre.
+    //
+    // ⚠️ RECUSA NÃO TRAVA A TELA: o caderno volta VAZIO, com o motivo junto.
+    // public/_pregado.js só desenha a faixa de aviso quando há registro, então
+    // lista vazia = app inteiro, sem aviso nenhum — nunca erro na cara do
+    // pastor. É a mesma escolha do `catch` lá embaixo.
+    const porte = await CHAVE.conferir(c, chave, CHAVE.daRequisicao(req, b));
+    if(!porte.ok){
+      res.status(200).json({ ok:true, itens:[], salvo:false,
+                             precisa_chave:true, motivo: porte.motivo });
+      return;
+    }
+    // O que volta junto de TODA resposta daqui pra frente:
+    //   chave_nova -> nasceu um crachá agora (aparelho sem cadastro); o app
+    //                 guarda e passa a mandar. Sai UMA vez só, nunca mais.
+    //   renove     -> ainda é gente do período de tolerância; o app refaz o
+    //                 cadastro sozinho pra ganhar crachá e se trancar.
+    const selo = {};
+    if(porte.chave_nova) selo.chave_nova = porte.chave_nova;
+    if(porte.renove)     selo.renove = true;
+
     // ── apagar (desmarcar "já preguei") ──────────────────────────────────────
     if(req.method === 'POST' && b.acao === 'apagar'){
       const id = parseInt(b.id, 10);
       if(!(id > 0)){ res.status(400).json({ ok:false, err:'id' }); return; }
       const d = await c.query(
         `delete from radar_pregacoes where id=$1 and user_key=$2`, [id, chave]);
-      res.status(200).json({ ok:true, apagado:d.rowCount });
+      res.status(200).json({ ok:true, apagado:d.rowCount, ...selo });
       return;
     }
 
@@ -459,7 +490,7 @@ async function pregado(req, res){
             and pregado_em = coalesce($3::date, current_date)
           limit 1`, [chave, slug || titulo, data]);
       if(ja.rowCount){
-        res.status(200).json({ ok:true, salvo:true, ja:true, item: pregLinha(ja.rows[0]) });
+        res.status(200).json({ ok:true, salvo:true, ja:true, item: pregLinha(ja.rows[0]), ...selo });
         return;
       }
 
@@ -469,7 +500,7 @@ async function pregado(req, res){
          returning *`,
         [chave, slug, titulo, pregTexto(b.ref), livros, pregTexto(b.tema, 400),
          pregTexto(b.angulo, 400), pregTexto(b.publico, 120), data]);
-      res.status(200).json({ ok:true, salvo:true, item: pregLinha(r.rows[0]) });
+      res.status(200).json({ ok:true, salvo:true, item: pregLinha(r.rows[0]), ...selo });
       return;
     }
 
@@ -479,7 +510,7 @@ async function pregado(req, res){
         where user_key=$1
         order by pregado_em desc, id desc
         limit 500`, [chave]);
-    res.status(200).json({ ok:true, total:l.rowCount, itens: l.rows.map(pregLinha) });
+    res.status(200).json({ ok:true, total:l.rowCount, itens: l.rows.map(pregLinha), ...selo });
   }catch(e){
     // igual ao fn=uso: erro de banco NUNCA pode travar a tela do pastor
     res.status(200).json({ ok:true, itens:[], salvo:false, err:String(e && e.message || e).slice(0,160) });
@@ -507,6 +538,12 @@ const HANDLERS = {
   // pastor conversou, e sem trava qualquer um leria a memória de qualquer um.
   // Ver o cabeçalho de api/_lib/globo-memoria.js.
   memoria:      require('./_lib/globo-memoria.js'),
+  // A CHAVE DO APARELHO — o crachá que prova "estes dados são MEUS". Entra AQUI
+  // pelos mesmos dois motivos de sempre: precisa de pg (o /api/voz é Edge e não
+  // tem) e nenhuma função nova cabe no plano Hobby. Protegida por
+  // RADAR_ADMIN_TOKEN, sem CORS: só servidor chama. As rotas daqui de dentro
+  // usam as funções dele DIRETO, sem rede. Ver api/_lib/chave.js.
+  chave:        require('./_lib/chave.js'),
   painel:       painel,
   uso:          uso,
   pregado:      pregado
