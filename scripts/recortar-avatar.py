@@ -29,9 +29,13 @@ import sys, os
 from collections import deque
 from PIL import Image
 
-# Tolerância do que conta como xadrez. As duas cores do quadriculado ficam por
-# volta de 254 e 238; 210 dá folga pra compressão sem alcançar pele nem camisa.
-CLARO_MIN = 210
+# Tolerância do que conta como xadrez.
+# ⚠️ MEDIDO, depois de o avatar sair com o quadriculado na tela do pastor: os
+# quadrados ESCUROS do xadrez ficam em 200-208, não em 238 como eu supus. Com
+# o corte em 210 eles viravam MURO e a inundação parava neles. 178 passa por
+# todos os dois tons. Pele e camisa não correm risco: quem protege é o teste
+# de neutralidade abaixo (pele tem R muito maior que B).
+CLARO_MIN = 178
 # Quanto os três canais podem diferir entre si. Cinza tem R≈G≈B; pele e camisa
 # azul não têm. É este teste que impede o corte de comer o rosto.
 NEUTRO_MAX = 14
@@ -67,7 +71,10 @@ def tirar_fundo(im):
         x, y = fila.popleft()
         px[x, y] = (0, 0, 0, 0)
         apagados += 1
-        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        # 8 direções, não 4: o xadrez é um tabuleiro, e quadrado só toca o
+        # vizinho de mesma cor na DIAGONAL. Com 4 direções a inundação ficava
+        # presa dentro de uma cor só.
+        for dx, dy in ((1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)):
             semear(x + dx, y + dy)
     return im, apagados
 
