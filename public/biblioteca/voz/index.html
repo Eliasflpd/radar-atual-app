@@ -241,16 +241,10 @@
       <h3>A conversa</h3>
       <div class="linhaCfg">
 
-      <div style="margin:18px 0 6px;color:#C9A14A;letter-spacing:.1em;font-size:12px;font-weight:800">QUEM APARECE</div>
-      <div id="linhaAvatar" style="display:flex;gap:8px;flex-wrap:wrap">
-        <!-- A MESTRA volta quando o Elias gerar a versao DESENHADA. A fotografica
-             foi cancelada por ele, com razao, e nao pode ficar alcancavel. -->
-        <button data-av="mestre" class="av-op" style="flex:1;min-width:92px;padding:11px 8px;border-radius:14px;border:1px solid rgba(201,161,74,.45);background:rgba(255,255,255,.06);color:#eaf2f8;font-weight:700">👨‍🏫 Mestre</button>
-        <button data-av="globo"  class="av-op" style="flex:1;min-width:92px;padding:11px 8px;border-radius:14px;border:1px solid rgba(201,161,74,.45);background:rgba(255,255,255,.06);color:#eaf2f8;font-weight:700">🌐 Globo</button>
-      </div>
-        <button id="copiar">📋 Copiar</button>
-        <button id="encerrar" disabled>⏹ Encerrar</button>
-      </div>
+      <!-- QUEM APARECE: os botoes sairam em 23/09/2026. O avatar em camadas ficou
+           amador nas duas tentativas (foto e desenho) e o Elias mandou ficar so o
+           globo. O codigo e a fabrica de recorte continuam no repositorio pro dia
+           em que a gente fizer com servico de avatar de verdade. -->
 
       <h3>A memória</h3>
       <div class="linhaCfg">
@@ -1312,8 +1306,8 @@
     // truque (da pra ver a emenda) e o Elias cancelou, com razao. Em
     // ILUSTRACAO nao existe emenda pra aparecer: a pele e cor lisa. E a
     // mesma tecnica de todo desenho animado desde sempre.
-    var salvo='mestre';
-    try{ salvo=localStorage.getItem('voz.avatar2')||'mestre'; }catch(e){}
+    var salvo='globo';
+    try{ salvo=localStorage.getItem('voz.avatar2')||'globo'; }catch(e){}
     usarAvatar(salvo); marcar(salvo);
   },0);
 
