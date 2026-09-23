@@ -85,6 +85,44 @@ async function embedGemini(text){
   if(!Array.isArray(v)) throw new Error('gemini sem vetor');
   return v;
 }
+// ── O REFINADOR (Cohere rerank) ──────────────────────────────────────────────
+// POR QUE (23/09/2026, liberado pelo Elias: "o RADAR tá longe de funil e venda"):
+// a busca por vetor acha o ASSUNTO, mas erra a ORDEM. Medido: perguntando
+// "quando o filho volta arrependido e o pai o recebe com festa", o vetor sozinho
+// devolvia 2Rs 4:18, Lv 25:41 e Gn 27:31 — texto de pai e filho, nenhum deles o
+// que foi perguntado. Com o rerank, **Lucas 15:25 sobe pra primeiro**.
+// Por isso a busca agora pega TRÊS VEZES mais versículos do banco (é de graça,
+// o vetor já está lá) e deixa o Cohere escolher quais merecem aparecer.
+//
+// ⚠️ O rerank NUNCA pode derrubar a busca. Se a Cohere falhar, atrasar ou bater
+// no teto, fica a ordem do vetor — que já era o que existia antes. Refinamento
+// que quebra o principal não é refinamento, é risco.
+// Limite: chave de teste = 20 chamadas/min. Temos SEIS (todas testadas vivas em
+// 23/09), revezando dá 120/min. O sorteio do ponto de partida espalha a carga
+// entre as funções da Vercel, que não conversam entre si.
+const CKEYS=(process.env.COHERE_API_KEYS||process.env.COHERE_API_KEY||'').split(/[,\s]+/).filter(Boolean);
+let cAtual=CKEYS.length?Math.floor(Math.random()*CKEYS.length):0;
+async function refinar(pergunta, itens, quantos){
+  if(!CKEYS.length || itens.length<=quantos) return { itens: itens.slice(0,quantos), reordenado:false };
+  const chave=CKEYS[cAtual]; cAtual=(cAtual+1)%CKEYS.length;
+  try{
+    const ctrl=new AbortController();
+    const corta=setTimeout(()=>ctrl.abort(), 4000);   // busca lenta é busca quebrada
+    const r=await fetch('https://api.cohere.com/v2/rerank',{method:'POST',signal:ctrl.signal,
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+chave},
+      body:JSON.stringify({model:'rerank-v3.5',query:pergunta,
+        documents:itens.map(i=>i.texto||''),top_n:quantos})});
+    clearTimeout(corta);
+    if(!r.ok) throw new Error('cohere '+r.status);
+    const j=await r.json();
+    if(!Array.isArray(j.results)||!j.results.length) throw new Error('cohere sem resultado');
+    return { itens: j.results.map(x=>Object.assign({}, itens[x.index], {score_refinado:x.relevance_score}))
+                              .filter(Boolean), reordenado:true };
+  }catch(_){
+    return { itens: itens.slice(0,quantos), reordenado:false };
+  }
+}
+
 // Devolve SEMPRE o par { vetor, tabela } — nunca um sem o outro, porque procurar
 // na tabela errada não dá erro: dá resposta bonita e errada.
 //
@@ -247,6 +285,8 @@ module.exports = async (req,res) => {
         res.status(200).json({ok:true,modo:'diag',tabela:SEM_TABLE,
           configurado:{modelo:VMODEL,dim:VDIM,chave:!!VKEY}, gravado:d.rows,
           reserva:res_ok,
+          refinador:{ motor:'cohere rerank-v3.5', chaves:CKEYS.length,
+                      ligado:CKEYS.length>0, teto:'20 chamadas/min por chave' },
           bate: gravados.length===1 && gravados[0]===VMODEL && d.rows[0].dim===VDIM,
           aviso: gravados.length===1 && gravados[0]===VMODEL ? null
             : `vetores gravados com [${gravados.join(', ')}] mas as consultas usam [${VMODEL}] — reindexe com scripts/embed_versiculos.js`});
@@ -260,15 +300,18 @@ module.exports = async (req,res) => {
             where abbrev=$1 and cap=$2 and ver=$3 and embedding is not null limit 1`,
           [ref.abbrev,ref.cap,ref.ver]);
         if(!base.rowCount){ res.status(200).json({ok:true,modo:'ref',achou:false,total:0,itens:[],msg:'versículo ainda não indexado'}); return; }
+        const bruto=CKEYS.length ? Math.min(limit*3,40) : limit;
         const r=await c.query(
           `select ref,livro,cap,ver,texto, 1-(embedding <=> $1::vector) as score
              from ${SEM_TABLE}
             where embedding is not null and ref <> $2
             order by embedding <=> $1::vector limit $3`,
-          [base.rows[0].embedding, base.rows[0].ref, limit]);
+          [base.rows[0].embedding, base.rows[0].ref, bruto]);
+        // aqui a "pergunta" é o próprio versículo que o irmão abriu
+        const fino=await refinar(base.rows[0].texto, r.rows, limit);
         res.status(200).json({ok:true,modo:'ref',achou:true,
           base:{ref:base.rows[0].ref,livro:base.rows[0].livro,cap:base.rows[0].cap,ver:base.rows[0].ver,texto:base.rows[0].texto},
-          total:r.rowCount,itens:r.rows});
+          total:fino.itens.length,itens:fino.itens,refinado:fino.reordenado});
         return;
       }
       const termo=(q.q||'').toString().trim().slice(0,300);
@@ -276,12 +319,16 @@ module.exports = async (req,res) => {
       if(!VKEY){ res.status(200).json({ok:false,err:'sem chave IA'}); return; }
       const emb=await embedQuery(termo,c);
       const vec='['+emb.vec.join(',')+']';
+      // pega 3x pro refinador ter de onde escolher (teto 40: mais que isso só
+      // engorda o pedido pro Cohere sem melhorar o que vai aparecer na tela)
+      const bruto=CKEYS.length ? Math.min(limit*3,40) : limit;
       const r=await c.query(
         `select ref,livro,cap,ver,texto, 1-(embedding <=> $1::vector) as score
            from ${emb.tabela} where embedding is not null
-          order by embedding <=> $1::vector limit $2`, [vec,limit]);
-      res.status(200).json({ok:true,modo:'texto',q:termo,total:r.rowCount,itens:r.rows,
-        motor:emb.motor, reserva:emb.reserva||null});
+          order by embedding <=> $1::vector limit $2`, [vec,bruto]);
+      const fino=await refinar(termo, r.rows, limit);
+      res.status(200).json({ok:true,modo:'texto',q:termo,total:fino.itens.length,itens:fino.itens,
+        motor:emb.motor, reserva:emb.reserva||null, refinado:fino.reordenado});
     }catch(e){ res.status(200).json({ok:false,err:String(e).slice(0,160)}); }
     finally{ try{ await c.end(); }catch(_){}}
     return;
