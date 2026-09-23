@@ -32,7 +32,7 @@ module.exports = async (req,res) => {
 
   let b=req.body; if(typeof b==='string'){ try{b=JSON.parse(b);}catch(_){b={};} } b=b||{};
   const ADM=process.env.RADAR_ADMIN_TOKEN;
-  if(ADM && b.token!==ADM){ res.status(403).json({error:'token'}); return; }
+  if(!ADM || b.token!==ADM){ res.status(403).json({error:'token'}); return; }
   const pergunta=(b.pergunta||'').toString().trim().slice(0,500);
   const licao=parseInt(b.licao||'1',10)||1;
   const revista=(b.revista==='juvenil'||b.revista==='jovem')?b.revista:'adulto';

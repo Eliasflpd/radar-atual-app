@@ -255,8 +255,13 @@ module.exports = async (req, res) => {
   b = b || {};
   const q = req.query || {};
 
+  // SÓ POST, SÓ NO CORPO. Aceitar `token` e `acao` pela URL (como era até
+  // 23/09/2026) transformava esta rota numa porta que se abre colando um
+  // endereço no navegador — e a URL ainda ficava no log da Vercel, no
+  // histórico e no Referer. O próprio cabeçalho deste arquivo proíbe isso.
+  if (req.method !== 'POST') { res.status(405).json({ ok: false, motivo: 'so_post' }); return; }
   const ADM = process.env.RADAR_ADMIN_TOKEN;
-  const veio = b.token || q.token;
+  const veio = b.token;
   if (!ADM || veio !== ADM) { res.status(403).json({ ok: false, motivo: 'token' }); return; }
 
   const cs = process.env.RADAR_DB;
@@ -265,15 +270,20 @@ module.exports = async (req, res) => {
   const c = new Client({ connectionString: cs, ssl: { rejectUnauthorized: false } });
   try {
     await c.connect();
-    const acao = String(b.acao || q.acao || 'conferir');
-    const user = b.user || b.user_key || q.user || '';
+    const acao = String(b.acao || 'conferir');
+    const user = b.user || b.user_key || '';
 
     if (acao === 'conferir') {
-      res.status(200).json(await conferir(c, user, b.chave || q.chave || ''));
+      res.status(200).json(await conferir(c, user, b.chave || ''));
       return;
     }
+    // EMITIR SAIU DAQUI. Quem emite crachá é o cadastro (api/cadastros.js),
+    // que manda um WhatsApp pro dono do número na mesma hora. Exposta como
+    // ação HTTP, esta chamada entregava o crachá de QUALQUER pastor — em
+    // silêncio, sem avisar ninguém — pra quem tivesse o token de admin.
+    // As rotas Node que precisam emitir usam `emitir()` direto, em processo.
     if (acao === 'emitir') {
-      res.status(200).json(await emitir(c, user, b.apelido));
+      res.status(403).json({ ok: false, motivo: 'emitir_nao_e_rota' });
       return;
     }
     res.status(400).json({ ok: false, motivo: 'ação desconhecida: ' + acao });

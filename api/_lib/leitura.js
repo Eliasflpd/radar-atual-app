@@ -7,6 +7,11 @@
 //   POST /api/leitura  { user, acao:'marcar_lote', itens:[{livro,capitulo}] }   (migra progresso local)
 //   POST /api/leitura  { user, acao:'plano', plano:'livre'|'ano'|'cronologico', meta_dia? }
 const { Client } = require('pg');
+// A TRAVA POR PESSOA. Até 23/09/2026 esta rota era a única por pessoa SEM
+// trava nenhuma: com o WhatsApp de alguém dava pra ler o plano de leitura dela
+// e, pior, APAGAR capítulo por capítulo o ano inteiro de leitura bíblica —
+// sem backup e sem confirmação. Ver api/_lib/chave.js.
+const CHAVE = require('./chave.js');
 
 async function ensure(c){
   await c.query(`create table if not exists leitura_progresso(
@@ -27,7 +32,11 @@ async function ensure(c){
   )`);
 }
 
-function normKey(v){ return (v||'').toString().replace(/\s+/g,'').slice(0,60); }
+// MESMA regra de api/dados.js, chave.js, globo-memoria.js e voz.js.
+// Antes esta cópia só tirava espaco: o mesmo pastor virava DUAS identidades
+// (11999999999 aqui, (11)99999-9999 ali) e o painel mostrava 0 capitulos
+// lidos pra quem le todo dia. Agora e a regra unica: CHAVE.chaveDe.
+function normKey(v){ return CHAVE.chaveDe(v); }
 function normLivro(v){ return (v||'').toString().toLowerCase().trim().slice(0,12); }
 function planoValido(p){ return ['livre','ano','cronologico'].includes(p) ? p : 'livre'; }
 
@@ -44,7 +53,7 @@ async function pegarConfig(c, user){
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, x-radar-chave');
   if(req.method==='OPTIONS'){ res.status(200).end(); return; }
 
   const cs=process.env.RADAR_DB;
@@ -52,6 +61,21 @@ module.exports = async (req, res) => {
   const c=new Client({connectionString:cs, ssl:{rejectUnauthorized:false}});
   try{
     await c.connect(); await ensure(c);
+
+    // ── A TRAVA POR PESSOA ────────────────────────────────────────────────
+    // Recusa NAO trava a tela: devolve o plano vazio, igual a quem nunca leu.
+    // Quem desenha a tela so mostra o que vier; nada de erro na cara do pastor.
+    let _b = req.body;
+    if(typeof _b === 'string'){ try{ _b = JSON.parse(_b); }catch(e){ _b = {}; } }
+    _b = _b || {};
+    const _dono = normKey(req.method==='POST' ? _b.user : (req.query||{}).user);
+    if(_dono){
+      const porte = await CHAVE.conferir(c, _dono, CHAVE.daRequisicao(req, _b));
+      if(!porte.ok){
+        res.status(200).json({ ok:true, lidos:[], total:0, precisa_chave:true, motivo:porte.motivo });
+        return;
+      }
+    }
 
     if(req.method==='POST'){
       let b=req.body; if(typeof b==='string'){ try{ b=JSON.parse(b); }catch(e){ b={}; } }

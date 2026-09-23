@@ -67,7 +67,9 @@ module.exports = async (req, res) => {
   try {
     await c.connect();
     await ensure(c);
-    const ADM = process.env.RADAR_ADMIN_TOKEN || 'radar-elias-2026';
+    // SEM COPIA FIXA. Com o fallback literal, trocar a variavel na Vercel nao
+// adiantava nada: esta rota continuaria aceitando o token velho pra sempre.
+const ADM = process.env.RADAR_ADMIN_TOKEN || '';
     const q = req.query || {};
 
     // ───────── GRAVAR ─────────

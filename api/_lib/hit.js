@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
     // === painel: ranking completo (protegido por token) ===
     if(q.all){
       const ADM=process.env.RADAR_ADMIN_TOKEN;
-      if(ADM && q.token!==ADM){ res.status(403).json({error:'token'}); return; }
+      if(!ADM || q.token!==ADM){ res.status(403).json({error:'token'}); return; }
       const r=await c.query('select chave,grupo,rotulo,views,ultimo from radar_acessos order by views desc limit 500');
       res.json({ok:true, itens:r.rows});
       return;

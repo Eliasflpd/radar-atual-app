@@ -277,7 +277,7 @@ function mostrarLista(){
   renderLista('');
 }
 function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
-const ETOKEN='radar-elias-2026';
+const ETOKEN=(function(){try{return localStorage.getItem('radar_adm')||''}catch(e){return ''}})();
 function renderLista(qraw){
   const R=$('resultados'); if(!R) return;
   const M=$('motor'); if(M) M.innerHTML='';   // limpa resultados do motor ao digitar

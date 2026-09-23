@@ -26,10 +26,13 @@ let _cadPendente = {nome:'',cargo:'',fone:'',token:''};
 function getUser(){ return JSON.parse(localStorage.getItem('radar_user')||'null'); }
 function saveUser(u){ localStorage.setItem('radar_user',JSON.stringify(u)); }
 
-// Ativa conta admin via ?_a=radar2026admin
+// DESLIGADO em 23/09/2026 — a URL ligava modo admin sem pedir senha.
 (function(){
   const p=new URLSearchParams(location.search).get('_a');
-  if(p==='radar2026admin'){const u=getUser();if(u){u.admin=true;saveUser(u);}
+  // A URL ?_a=... ligava modo admin sem pedir nada. Desligada em 23/09/2026:
+// link é coisa que se compartilha sem pensar, e quem abrisse virava admin.
+// Quem manda agora é só a senha digitada em tela-admin.
+if(false){
   history.replaceState({},'',location.pathname);}
 })();
 
@@ -676,6 +679,10 @@ const PLANOS_INFO = {
 };
 const LEIT = { key:null, plano:'livre', meta:1, iniciado:null, set:new Set(), datas:new Set(), carregado:false, migrado:false };
 
+// O CRACHA vai junto em toda chamada de /api/leitura — sem ele o servidor
+// recusa (a rota ficou sem trava ate 23/09/2026 e dava pra apagar o ano de
+// leitura de qualquer pastor). Cabecalho, nunca na URL.
+function _cab(extra){ var h=extra||{}; var k=getChave(); if(k) h['x-radar-chave']=k; return h; }
 function leitKey(){ var u=getUser()||{}; if(u.whatsapp) return u.whatsapp.replace(/\D/g,''); return (u.id||'anon'); }
 function _ck(abbrev,cap){ return abbrev.toLowerCase()+'|'+cap; }
 function leitLido(abbrev,cap){ return LEIT.set.has(_ck(abbrev,cap)); }
@@ -694,7 +701,7 @@ function _leitLerCache(){
 function leitCarregar(cb){
   LEIT.key = leitKey();
   _leitLerCache(); // instantâneo (offline-friendly)
-  fetch('/api/leitura?user='+encodeURIComponent(LEIT.key)).then(function(r){return r.json();}).then(function(d){
+  fetch('/api/leitura?user='+encodeURIComponent(LEIT.key),{headers:_cab()}).then(function(r){return r.json();}).then(function(d){
     if(d && d.ok){
       LEIT.plano = (d.config && d.config.plano) || 'livre';
       LEIT.meta  = (d.config && d.config.meta_dia) || PLANOS_META[LEIT.plano] || 1;
@@ -732,7 +739,7 @@ function leitMigrarLocal(){
   if(!itens.length) return;
   itens.forEach(function(it){ LEIT.set.add(_ck(it.livro,it.capitulo)); });
   LEIT.datas.add(_hojeStr()); _leitSalvarCache();
-  fetch('/api/leitura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:LEIT.key,acao:'marcar_lote',itens:itens})}).catch(function(){});
+  fetch('/api/leitura',{method:'POST',headers:_cab({'Content-Type':'application/json'}),body:JSON.stringify({user:LEIT.key,acao:'marcar_lote',itens:itens})}).catch(function(){});
 }
 
 function leitMarcar(abbrev,cap,estado){
@@ -741,7 +748,7 @@ function leitMarcar(abbrev,cap,estado){
   if(estado){ LEIT.set.add(k); LEIT.datas.add(_hojeStr()); }
   else{ LEIT.set.delete(k); }
   _leitSalvarCache();
-  fetch('/api/leitura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:LEIT.key,acao:(estado?'marcar':'desmarcar'),livro:abbrev,capitulo:cap})}).catch(function(){});
+  fetch('/api/leitura',{method:'POST',headers:_cab({'Content-Type':'application/json'}),body:JSON.stringify({user:LEIT.key,acao:(estado?'marcar':'desmarcar'),livro:abbrev,capitulo:cap})}).catch(function(){});
 }
 
 function leitStreak(){
@@ -784,7 +791,7 @@ function abrirPlano(){ mostrarTela('tela-plano'); var sc=document.getElementById
 function escolherPlano(id){
   if(!PLANOS_INFO[id]) return;
   LEIT.plano=id; LEIT.meta=PLANOS_META[id]||1; _leitSalvarCache();
-  fetch('/api/leitura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:LEIT.key,acao:'plano',plano:id,meta_dia:LEIT.meta})}).catch(function(){});
+  fetch('/api/leitura',{method:'POST',headers:_cab({'Content-Type':'application/json'}),body:JSON.stringify({user:LEIT.key,acao:'plano',plano:id,meta_dia:LEIT.meta})}).catch(function(){});
   renderPlano();
 }
 
@@ -1175,7 +1182,15 @@ function delMidiaAdmin(id){
   var tk=localStorage.getItem('radar_adm')||'';
   fetch('/api/videos?acao=midia-del&id='+id+'&token='+encodeURIComponent(tk)).then(function(r){return r.json();}).then(function(){ renderAdmin(tk); }).catch(function(){});
 }
-function _admToken(){ var tk=localStorage.getItem('radar_adm'); if(tk) return tk; try{ var u=getUser(); if(u&&u.admin){ return 'radar-elias-2026'; } }catch(e){} return ''; }
+// A SENHA DO ADMIN NUNCA MORA AQUI. Até 23/09/2026 esta função devolvia o
+// token fixo pra quem tivesse `admin:true` no aparelho — e o token estava
+// escrito 37 vezes dentro do JavaScript que TODO celular baixa. Qualquer um
+// abria o código-fonte, lia a senha e virava dono do RADAR: emitia o crachá
+// de qualquer pastor, baixava a base inteira, apagava cadastro.
+// Agora só existe um caminho: o Elias digita a senha uma vez em
+// `tela-admin`, ela fica em localStorage['radar_adm'] NESTE aparelho, e some
+// se ele limpar o navegador. Não tem atalho, não tem padrão, não tem cópia.
+function _admToken(){ try{ return localStorage.getItem('radar_adm')||''; }catch(e){ return ''; } }
 function _ehAdmin(){ return !!_admToken(); }
 function deletePost(id){
   if(!confirm('Apagar esta publicação?')) return;
@@ -2877,7 +2892,10 @@ function fecharYT(){
 let tapCount=0,tapTimer=null;
 function tapLogo(){
   tapCount++;clearTimeout(tapTimer);
-  if(tapCount>=5){tapCount=0;abrirPainelAdm();return;}
+  // 5 toques abriam 15 telas de CRM, dashboard e relatórios SEM SENHA.
+  // Agora o atalho continua (é como o Elias chega lá), mas só abre pra quem
+  // já digitou a senha: sem `radar_adm` no aparelho, manda pra porta certa.
+  if(tapCount>=5){tapCount=0; if(_admToken()){ abrirPainelAdm(); } else { irAdmin(); } return;}
   tapTimer=setTimeout(()=>tapCount=0,1500);
 }
 function irBusca(){alert('Busca global — em breve');}
@@ -2959,7 +2977,7 @@ async function renderCadastros(){
   var box=document.getElementById('cad-adm-lista'); if(!box) return;
   box.innerHTML='<div style="text-align:center;color:var(--sub);padding:30px">Carregando cadastros…</div>';
   try{
-    var r=await fetch('/api/cadastros?token=radar-elias-2026');
+    var r=await fetch('/api/cadastros?token='+encodeURIComponent(_admToken()));
     var d=await r.json();
     var lista=(d&&d.cadastros)||[];
     document.getElementById('cad-adm-sub').textContent=lista.length+' cadastrado'+(lista.length!==1?'s':'');
@@ -2982,7 +3000,7 @@ async function renderCadastros(){
 async function apagarCadastro(fone,nome){
   if(!confirm('Apagar o cadastro de '+(nome||'esta pessoa')+'?\n\nEla não perde acesso agora, mas some da sua lista.')) return;
   try{
-    var r=await fetch('/api/cadastros?token=radar-elias-2026&del='+encodeURIComponent(fone));
+    var r=await fetch('/api/cadastros?token='+encodeURIComponent(_admToken())+'&del='+encodeURIComponent(fone));
     var d=await r.json();
     if(d&&d.ok){ renderCadastros(); }
     else alert('Não deu pra apagar. Tente de novo.');
@@ -3156,7 +3174,7 @@ async function renderIgrejasAdm(){
   var box=document.getElementById('igr-adm-lista'); if(!box) return;
   box.innerHTML='<div style="text-align:center;color:var(--sub);padding:30px">Carregando…</div>';
   try{
-    var r=await fetch('/api/igrejas?token=radar-elias-2026'); var d=await r.json();
+    var r=await fetch('/api/igrejas?token='+encodeURIComponent(_admToken())); var d=await r.json();
     var lista=(d&&d.igrejas)||[];
     document.getElementById('igr-adm-sub').textContent=lista.length+' igreja'+(lista.length!==1?'s':'');
     box.innerHTML='<button onclick="abrirCadastroIgreja()" style="width:100%;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border:none;border-radius:14px;padding:13px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:14px">➕ Nova igreja</button>';
@@ -3186,7 +3204,7 @@ function editarIgreja(id){
 async function apagarIgreja(id,nome){
   if(!confirm('Apagar a igreja '+(nome||'')+'?')) return;
   try{
-    var r=await fetch('/api/igrejas?token=radar-elias-2026&del='+id); var d=await r.json();
+    var r=await fetch('/api/igrejas?token='+encodeURIComponent(_admToken())+'&del='+id); var d=await r.json();
     if(d&&d.ok) renderIgrejasAdm(); else alert('Não deu pra apagar.');
   }catch(e){ alert('Erro ao apagar.'); }
 }
@@ -4048,7 +4066,7 @@ async function renderVideosAdm(){
   var box=document.getElementById('vid-adm-lista'); if(!box) return;
   box.innerHTML='<div style="text-align:center;color:var(--sub);padding:24px">Carregando…</div>';
   try{
-    var r=await fetch('/api/videos?token=radar-elias-2026'); var d=await r.json();
+    var r=await fetch('/api/videos?token='+encodeURIComponent(_admToken())); var d=await r.json();
     var lista=(d&&d.videos)||[];
     var sub=document.getElementById('vid-adm-sub'); if(sub) sub.textContent=lista.length+' vídeo'+(lista.length!==1?'s':'')+' no slide';
     var cnt=document.getElementById('adm-cnt-videos'); if(cnt) cnt.textContent=lista.length+' no slide';
@@ -4072,7 +4090,7 @@ async function addVideoAdm(){
   if(!url){ msg.style.color='#ff6b6b'; msg.textContent='Cole um link primeiro.'; return; }
   var btn=document.getElementById('vid-btn-add'); btn.disabled=true; var t=btn.textContent; btn.textContent='Adicionando…';
   try{
-    var r=await fetch('/api/videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:'radar-elias-2026',url:url,titulo:titulo})});
+    var r=await fetch('/api/videos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:_admToken(),url:url,titulo:titulo})});
     var d=await r.json();
     if(d&&d.ok){ document.getElementById('vid-url').value=''; document.getElementById('vid-titulo').value=''; msg.style.color='var(--gold)'; msg.textContent='✅ Adicionado ao slide!'; renderVideosAdm(); fetchCloudVideos(); }
     else { msg.style.color='#ff6b6b'; msg.textContent='Não deu. Confira o link e tente de novo.'; }
@@ -4081,7 +4099,7 @@ async function addVideoAdm(){
 }
 async function delVideoAdm(id){
   if(!confirm('Remover este vídeo do slide?')) return;
-  try{ var r=await fetch('/api/videos?token=radar-elias-2026&del='+id); var d=await r.json();
+  try{ var r=await fetch('/api/videos?token='+encodeURIComponent(_admToken())+'&del='+id); var d=await r.json();
     if(d&&d.ok){ renderVideosAdm(); fetchCloudVideos(); } else alert('Não deu pra remover.'); }
   catch(e){ alert('Erro ao remover.'); }
 }

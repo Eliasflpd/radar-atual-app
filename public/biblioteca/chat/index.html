@@ -98,7 +98,7 @@
   </div>
 
 <script>
-const TOKEN='radar-elias-2026';
+const TOKEN=(function(){try{return localStorage.getItem('radar_adm')||''}catch(e){return ''}})();
 const $=id=>document.getElementById(id);
 let ultimo=0;
 

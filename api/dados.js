@@ -37,7 +37,7 @@ async function painel(req, res){
   const q = req.query || {};
   // Mesma trava de fn=kittel / fn=avaliacao (api/estudo-busca.js)
   const ADM = process.env.RADAR_ADMIN_TOKEN;
-  if(ADM && q.token !== ADM){ res.status(403).json({ ok:false, err:'token' }); return; }
+  if(!ADM || q.token !== ADM){ res.status(403).json({ ok:false, err:'token' }); return; }
 
   const cs = process.env.RADAR_DB;
   if(!cs){ res.status(200).json({ ok:false, off:true, err:'db não configurado' }); return; }

@@ -45,7 +45,7 @@ async function perguntarLupa(){
   document.getElementById('lupa-resp').innerHTML='<div style="color:#0f6d78;text-align:center;padding:16px;font-weight:700">🔎 Buscando na lição…</div>';
   try{
     var r=await fetch('/api/ebd-lupa',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({token:'radar-elias-2026',licao:_lupaLicao,revista:_lupaTurma,pergunta:q})});
+      body:JSON.stringify({token:(function(){try{return localStorage.getItem('radar_adm')||''}catch(e){return ''}})(),licao:_lupaLicao,revista:_lupaTurma,pergunta:q})});
     var d=await r.json();
     if(d.ok){
       document.getElementById('lupa-resp').innerHTML=

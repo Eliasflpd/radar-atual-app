@@ -15,7 +15,7 @@
 (function (janela) {
   'use strict';
 
-  var TOKEN = 'radar-elias-2026';           // mesmo token já usado no /api/estudo-busca
+  var TOKEN = (function(){ try{ return localStorage.getItem('radar_adm')||''; }catch(e){ return ''; } })();           // mesmo token já usado no /api/estudo-busca
   var LISTA = { mensagem: '/biblioteca/mensagens/', estudo: '/biblioteca/estudo/' };
   var ROTULO = { mensagem: 'Mensagem', estudo: 'Estudo' };
 

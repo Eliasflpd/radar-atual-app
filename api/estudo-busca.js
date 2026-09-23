@@ -219,7 +219,7 @@ module.exports = async (req,res) => {
 
   // ===== BUSCA no ESTUDO (full-text) — protegida por token =====
   const ADM=process.env.RADAR_ADMIN_TOKEN;
-  if(ADM && q.token!==ADM){ res.status(403).json({error:'token'}); return; }
+  if(!ADM || q.token!==ADM){ res.status(403).json({error:'token'}); return; }
   const termo=(q.q||'').toString().trim().slice(0,120);
   if(termo.length<2){ res.status(400).json({error:'curto'}); return; }
 
