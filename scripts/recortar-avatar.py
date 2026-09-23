@@ -36,9 +36,13 @@ from PIL import Image
 # todos os dois tons. Pele e camisa não correm risco: quem protege é o teste
 # de neutralidade abaixo (pele tem R muito maior que B).
 CLARO_MIN = 178
-# Quanto os três canais podem diferir entre si. Cinza tem R≈G≈B; pele e camisa
-# azul não têm. É este teste que impede o corte de comer o rosto.
-NEUTRO_MAX = 14
+# Quanto os três canais podem diferir entre si.
+# ⚠️ MEDIDO, depois de a inundação COMER A PELE em volta dos lábios e sobrar só
+# uma tira de 13 pixels: o xadrez é PERFEITAMENTE neutro (200,200,200 — zero de
+# diferença), enquanto a pele clara fica por volta de (205,198,192), que dá 13.
+# Com a folga em 14 a pele passava por xadrez. Em 6 os dois se separam limpo.
+# Esta é a trava que impede o corte de comer o rosto — mexer aqui é perigoso.
+NEUTRO_MAX = 6
 
 
 def eh_xadrez(p):
