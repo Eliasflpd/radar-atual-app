@@ -624,9 +624,15 @@
       ctx.beginPath();
       for(var i=0;i<=72;i++){
         var A=i*(6.2832/72);
-        var d = Math.sin(A*3 + t*0.9)*(0.018+f*0.052)
-              + Math.sin(A*5 - t*1.35)*(0.012+f*0.034)
-              + Math.sin(A*7 + t*0.55)*(0.007+f*0.022);
+        // ⚠️ DEFORMAÇÃO QUASE ZERO, DE PROPÓSITO. A primeira versão ondulava
+        // o contorno com força e o Elias reprovou na hora: "não gostei desse
+        // globo gelatinoso". Ele está certo — o orbe do ChatGPT NÃO deforma.
+        // Ele é um círculo LIMPO que respira (cresce e encolhe) e se mexe por
+        // DENTRO. A vida vem da respiração e do brilho interno, não de amassar
+        // a silhueta. Mantenho um sopro mínimo só pra a borda não ficar dura
+        // de compasso — abaixo do que o olho percebe como deformação.
+        var d = Math.sin(A*3 + t*0.55)*(0.004+f*0.010)
+              + Math.sin(A*5 - t*0.80)*(0.003+f*0.007);
         var r=raio*(1+d);
         var x=cx+Math.cos(A)*r, y=cy+Math.sin(A)*r;
         if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
@@ -636,7 +642,12 @@
 
     var c=CORES[S.fase]||CORES.pronto;
     // 0,285 + halo de até 1,63x cabe justinho dentro do canvas sem cortar a auréola
-    var R = (L*0.385) * S.escala * (1 + S.nivel*0.055);
+    // A RESPIRAÇÃO. É ela que faz o orbe parecer vivo sem deformar nada: ele
+    // cresce e encolhe devagar, sempre, e cresce mais quando a voz sobe. Dois
+    // ciclos de períodos diferentes (5,2s e 8,6s) pra a respiração não marcar
+    // compasso — respiração humana também não marca.
+    var respiro = Math.sin(S.relogio*1.20)*0.016 + Math.sin(S.relogio*0.73)*0.010;
+    var R = (L*0.385) * S.escala * (1 + respiro + S.nivel*0.085);
     // a luz vem de cima à esquerda; é ela que dá volume à bola
     var lx=meio-R*0.40, ly=meio-R*0.44;
 
