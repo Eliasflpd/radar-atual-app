@@ -62,6 +62,74 @@ const domingoDa = (n) => {
   return d.toISOString().slice(0, 10);
 };
 
+// ─── 4b) OS PONTOS E SUBPONTOS DE CADA LIÇÃO ────────────────────────────────
+// Elias: "ele parece que não tá dentro da lição... precisa ler o texto áureo na
+// íntegra, a verdade prática, e cada ponto da lição e subpontos, destacando e
+// explicando". O título e o áureo já chegavam; o MIOLO não. Ele está no
+// subsídio de cada turma (public/ebd/<turma>/html/subsidio-NN.html), marcado
+// por romano (I —, II —) nos pontos e por número (2., 3)) nos subpontos.
+function limpar(t) {
+  return String(t || '').replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'").replace(/&hellip;/g, '...').replace(/&mdash;/g, '—')
+    .replace(/\s+/g, ' ').trim();
+}
+function pontosDaLicao(turma, n) {
+  const dir = path.join(RAIZ, 'public', 'ebd', turma, 'html');
+  if (!fs.existsSync(dir)) return [];
+  const dois = String(n).padStart(2, '0');
+  const alvo = ['subsidio-' + dois, 'subsidio-' + n, 'apoio-' + dois, 'apoio-' + n,
+                'licao-' + dois, 'licao-' + n]
+    .map((b) => path.join(dir, b + '.html')).find((f) => fs.existsSync(f));
+  if (!alvo) return [];
+
+  // ⚠️ COMO A LIÇÃO É GUARDADA DE VERDADE (visto no arquivo, não suposto):
+  //   <p class="sec-head">I — O MANDATO UNIVERSAL DE</p>
+  //   <p>JESUS
+  //   1. A Autoridade de Cristo sobre Todas as
+  //   Nações (Mt 28:18)
+  //   Antes de ordenar a missão...
+  // Ou seja: (a) o título do PONTO nasce partido em DOIS parágrafos — o resto
+  // dele ("JESUS") abre o parágrafo seguinte; (b) dentro do parágrafo, as
+  // quebras de linha são só do editor e cortam o subponto no meio.
+  // Por isso: junto as linhas de dentro do parágrafo, e depois costuro o
+  // pedaço perdido do título com o começo do parágrafo seguinte.
+  const paras = fs.readFileSync(alvo, 'utf8')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .split(/<\/p>/i)
+    .map((b) => b.replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'").replace(/&hellip;/g, '...').replace(/&mdash;/g, '—')
+      .replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+
+  const achados = [];
+  for (let i = 0; i < paras.length; i++) {
+    const t = paras[i];
+
+    // PONTO: romano + travessão. O resto do título vem no parágrafo seguinte,
+    // ANTES do primeiro subponto numerado.
+    const mp = /^([IVX]{1,4})\s*[—.\-–)]\s*(.{3,120})$/.exec(t);
+    if (mp) {
+      let titulo = (mp[1] + ' — ' + mp[2]).trim();
+      const prox = paras[i + 1] || '';
+      const resto = prox.split(/\s\d{1,2}\.\s/)[0].trim();
+      // só costura se for curto e em MAIÚSCULAS — senão é o corpo do texto
+      if (resto && resto.length <= 40 && resto === resto.toUpperCase()) titulo += ' ' + resto;
+      achados.push({ nivel: 'ponto', texto: titulo.replace(/\s+/g, ' ') });
+    }
+
+    // SUBPONTO: "N. Título (Referência)". A referência entre parênteses é o que
+    // marca o fim — sem ela o texto do comentário entraria junto.
+    const re = /(?:^|\s)(\d{1,2})\.\s+([A-ZÀ-Ú][^()]{4,110}\([^)]{2,30}\))/g;
+    let m;
+    while ((m = re.exec(t))) {
+      achados.push({ nivel: 'subponto', texto: (m[1] + '. ' + m[2]).replace(/\s+/g, ' ').trim() });
+    }
+  }
+  return achados;
+}
+
 const catalogo = {
   gerado_em: new Date().toISOString().slice(0, 10),
   inicio_trimestre: INICIO.toISOString().slice(0, 10),
@@ -80,6 +148,7 @@ for (const [turma, lista] of Object.entries(LICOES)) {
     aureo: (previa[turma] && previa[turma][String(l.n)] && previa[turma][String(l.n)].aureo) || '',
     pratica: (previa[turma] && previa[turma][String(l.n)] && previa[turma][String(l.n)].pratica) || '',
     tem_video: !!l.video, tem_slides: !!l.ppt,
+    pontos: pontosDaLicao(turma, l.n),
   }));
 }
 

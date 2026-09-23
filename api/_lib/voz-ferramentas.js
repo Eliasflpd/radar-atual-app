@@ -376,7 +376,8 @@ async function licaoDaEBD(args, origem) {
   const achados = (alvo ? [alvo] : turmas).map((t) => {
     const l = (cat.turmas[t] || []).find((x) => x.n === n);
     return l ? { turma: t, numero: l.n, titulo: l.titulo, domingo: l.domingo,
-                 versiculo_aureo: l.aureo || '', aplicacao: l.pratica || '' } : null;
+                 versiculo_aureo: l.aureo || '', verdade_pratica: l.pratica || '',
+                 pontos_da_licao: l.pontos || [] } : null;
   }).filter(Boolean);
 
   if (!achados.length) {
@@ -389,9 +390,7 @@ async function licaoDaEBD(args, origem) {
     licao_de_agora: atual.n,
     proximo_domingo: atual.domingo,
     licoes: achados,
-    ordem: 'Estes são o número, o título e o versículo áureo REAIS da lição. Fale o título exatamente como está. '
-         + 'Se "é_a_lição_de_agora" for verdadeiro, deixe claro que é a do domingo que vem. '
-         + 'Para o CONTEÚDO da lição (o que ela ensina), chame buscar_na_licao — não invente o miolo a partir do título.',
+    ordem: 'Isto é a lição REAL. Use assim, e NESTA ORDEM, quando ele pedir a lição: (1) o TÍTULO exatamente como está escrito; (2) o VERSÍCULO ÁUREO — LEIA NA ÍNTEGRA, palavra por palavra, com a referência. É PROIBIDO resumir o áureo; (3) a VERDADE PRÁTICA, inteira; (4) os PONTOS (I, II, III) e, debaixo de cada um, os SUBPONTOS com a referência bíblica deles. Se "é_a_lição_de_agora" for verdadeiro, diga que é a do domingo que vem. Quando ele pedir pra EXPLICAR um ponto, explique AQUELE ponto pelo texto bíblico da referência dele — abra o versículo com ler_versiculo ANTES. NUNCA invente o que a lição ensina a partir do título.',
   };
 }
 
