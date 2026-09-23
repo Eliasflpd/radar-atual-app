@@ -45,8 +45,23 @@ CLARO_MIN = 178
 NEUTRO_MAX = 6
 
 
-def eh_xadrez(p):
+def eh_magenta(p):
+    """Fundo MAGENTA chapado — o jeito certo de pedir ao gerador de imagem.
+    Depois de perder três tentativas com o xadrez pintado, a lição ficou: peça
+    #FF00FF liso. Magenta é vermelho alto, verde BAIXO e azul alto — nenhuma
+    pele, cabelo, camisa ou dente do mundo cai nessa combinação. O corte fica
+    perfeito de primeira, sem risco de comer o rosto.
+    A folga existe porque JPEG/WEBP amassam a cor: o canto veio (248,3,248)."""
     r, g, b = p[0], p[1], p[2]
+    return r > 170 and b > 170 and g < 110 and abs(r - b) < 70
+
+
+def eh_xadrez(p):
+    """O fundo xadrez pintado, do jeito antigo. Fica aqui porque as duas
+    primeiras folhas do Elias vieram assim e podem precisar ser refeitas."""
+    r, g, b = p[0], p[1], p[2]
+    if eh_magenta(p):
+        return True
     if r < CLARO_MIN or g < CLARO_MIN or b < CLARO_MIN:
         return False
     return (max(r, g, b) - min(r, g, b)) <= NEUTRO_MAX

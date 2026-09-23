@@ -1307,16 +1307,12 @@
     for(var i=0;i<ops.length;i++) (function(b){
       b.addEventListener('click',function(){ var q=b.getAttribute('data-av'); usarAvatar(q); marcar(q); });
     })(ops[i]);
-    // ⚠️ O GLOBO VOLTOU A SER O PADRAO (23/09/2026). O avatar em camadas e uma
-    // FOTO com a boca trocada — a tecnica e de desenho animado e em rosto real
-    // ela entrega o truque: da pra ver a emenda em volta da boca. O Elias foi
-    // direto: 'nao podemos fazer nada amador'. Ele esta certo. O globo e
-    // honesto: nao promete uma pessoa, pulsa com a voz de verdade e nunca
-    // parece falso. O avatar continua aqui, escolhivel na engrenagem, porque a
-    // fabrica de recortar (scripts/recortar-avatar.py) serve pro dia em que a
-    // gente fizer o avatar DE VERDADE, com servico de streaming.
-    var salvo='globo';
-    try{ salvo=localStorage.getItem('voz.avatar')||'globo'; }catch(e){}
+    // O AVATAR DESENHADO e o padrao. Com FOTO a troca de boca entregava o
+    // truque (da pra ver a emenda) e o Elias cancelou, com razao. Em
+    // ILUSTRACAO nao existe emenda pra aparecer: a pele e cor lisa. E a
+    // mesma tecnica de todo desenho animado desde sempre.
+    var salvo='mestre';
+    try{ salvo=localStorage.getItem('voz.avatar')||'mestre'; }catch(e){}
     usarAvatar(salvo); marcar(salvo);
   },0);
 
@@ -1367,7 +1363,7 @@
   // = rodar a medição de novo, nunca estimar no olho.
   var POS_AVATAR = {
     mestra: { bx:36.3, by:46.0, bw:29.0, ox:26, oy:22, ow:46 },
-    mestre: { bx:36.8, by:47.1, bw:25.5, ox:26, oy:22, ow:46 },
+    mestre: { bx:40.2, by:43.1, bw:30.2, ox:26, oy:20, ow:46 },
   };
 
   function trocarBoca(nome, forcar){
