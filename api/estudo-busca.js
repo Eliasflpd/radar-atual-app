@@ -38,17 +38,22 @@ const VMODEL=process.env.VOYAGE_MODEL||'voyage-4-lite';
 // ao vivo, três perguntas seguidas já devolveram `voyage 429` — ou seja, numa
 // classe de EBD com vários pastores procurando ao mesmo tempo no domingo, a
 // busca por sentido simplesmente PARA, e o irmão não vê motivo nenhum na tela.
-// O Gemini Embedding é grátis no free tier (conferido na mão: HTTP 200) e a
-// chave já é nossa — não precisou cadastrar nada.
-//
 // ⚠️ A PEGADINHA QUE QUASE ME PEGOU: ter o MESMO TAMANHO de vetor (1024) NÃO
 // deixa os dois motores comparáveis. Cada modelo tem o seu próprio "espaço": um
-// vetor do Gemini procurado na tabela da Voyage devolve LIXO, e lixo silencioso,
+// vetor de um motor procurado na tabela do outro devolve LIXO, e lixo silencioso,
 // que é pior que erro. Por isso a reserva tem TABELA PRÓPRIA, indexada com o
 // mesmo motor — e quem escolhe o motor escolhe a tabela junto, sempre no par.
-const GKEY=(process.env.GEMINI_API_KEYS||process.env.GEMINI_API_KEY||'').split(/[,\s]+/).filter(Boolean)[0]||'';
-const GMODEL=process.env.GEMINI_EMB_MODEL||'gemini-embedding-2';
-const GTABLE=(process.env.EMB_TABLE_RESERVA||'versiculo_emb_gemini').replace(/[^a-z0-9_]/gi,'');
+//
+// POR QUE CLOUDFLARE, e não o Gemini (que era o plano de manhã): RESERVA NO
+// MESMO DONO NÃO É RESERVA. O globo de voz já depende inteiro do Google. Se o
+// Google tiver um dia ruim, a voz e a busca cairiam JUNTAS, e o pastor ficaria
+// sem nada. A Cloudflare é casa diferente, o bge-m3 entrega 1024 dims nativo, a
+// conta (CF_ACCOUNT_ID/CF_AI_TOKEN) já está na Vercel, e a cota é de outra
+// ordem: 10.000 neurônios/dia, e a Bíblia inteira custa cerca de 10% disso.
+const RKEY=process.env.CF_AI_TOKEN||'';
+const RCONTA=process.env.CF_ACCOUNT_ID||'';
+const RMODEL=process.env.CF_EMB_MODEL||'@cf/baai/bge-m3';
+const RTABLE=(process.env.EMB_TABLE_RESERVA||'versiculo_emb_cf').replace(/[^a-z0-9_]/gi,'');
 
 function parseRef(s){
   const m=s.trim().match(/^(.*?)[\s]*?(\d{1,3})[:\s.](\d{1,3})\s*$/);
@@ -72,17 +77,15 @@ async function embedVoyage(text){
   if(!r.ok) throw new Error('voyage '+r.status);
   return (await r.json()).data[0].embedding;
 }
-async function embedGemini(text){
-  // outputDimensionality:1024 pra casar com a coluna vector(1024). O gemini-embedding-2
-  // já devolve o vetor normalizado nesse tamanho (medido: comprimento 1.0000), então
-  // não precisa normalizar na mão antes de gravar nem de comparar.
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GMODEL+':embedContent?key='+GKEY,
-    {method:'POST',headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({model:'models/'+GMODEL,outputDimensionality:VDIM,content:{parts:[{text}]}})});
-  if(!r.ok) throw new Error('gemini '+r.status);
+async function embedReserva(text){
+  // bge-m3 entrega 1024 dims nativo — não precisa pedir tamanho nem cortar.
+  const r=await fetch('https://api.cloudflare.com/client/v4/accounts/'+RCONTA+'/ai/run/'+RMODEL,
+    {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+RKEY},
+     body:JSON.stringify({text:[text]})});
+  if(!r.ok) throw new Error('cloudflare '+r.status);
   const j=await r.json();
-  const v=j&&j.embedding&&j.embedding.values;
-  if(!Array.isArray(v)) throw new Error('gemini sem vetor');
+  const v=j&&j.result&&((j.result.data&&j.result.data[0])||(j.result.response&&j.result.response.data&&j.result.response.data[0]));
+  if(!Array.isArray(v)) throw new Error('cloudflare sem vetor');
   return v;
 }
 // ── O REFINADOR (Cohere rerank) ──────────────────────────────────────────────
@@ -136,15 +139,15 @@ async function embedQuery(text, c){
   try{
     return { vec: await embedVoyage(text), tabela: SEM_TABLE, motor: VMODEL };
   }catch(e){
-    if(!GKEY) throw e;
+    if(!RKEY||!RCONTA) throw e;
     if(reservaPronta === null){
       try{
-        const n = await c.query(`select count(*)::int n from ${GTABLE} where embedding is not null`);
+        const n = await c.query(`select count(*)::int n from ${RTABLE} where embedding is not null`);
         reservaPronta = n.rows[0].n >= MINIMO_RESERVA;
       }catch(_){ reservaPronta = false; }
     }
     if(!reservaPronta) throw e;   // devolve o erro DE VERDADE, não uma resposta falsa
-    return { vec: await embedGemini(text), tabela: GTABLE, motor: GMODEL,
+    return { vec: await embedReserva(text), tabela: RTABLE, motor: RMODEL,
              reserva: 'principal falhou ('+String(e.message||e).slice(0,40)+')' };
   }
 }
@@ -275,12 +278,12 @@ module.exports = async (req,res) => {
         let res_ok=null;
         try{
           const g=await c.query(
-            `select modelo, dim, count(*)::int as n from ${GTABLE}
+            `select modelo, dim, count(*)::int as n from ${RTABLE}
               where embedding is not null group by modelo, dim order by n desc`);
-          res_ok={ tabela:GTABLE, chave:!!GKEY, modelo:GMODEL, gravado:g.rows,
-                   pronta: g.rows.length===1 && g.rows[0].modelo===GMODEL
+          res_ok={ tabela:RTABLE, chave:!!(RKEY&&RCONTA), modelo:RMODEL, gravado:g.rows,
+                   pronta: g.rows.length===1 && g.rows[0].modelo===RMODEL
                            && g.rows[0].dim===VDIM && g.rows[0].n>=31000 };
-        }catch(e){ res_ok={ tabela:GTABLE, chave:!!GKEY, erro:String(e.message||e).slice(0,80), pronta:false }; }
+        }catch(e){ res_ok={ tabela:RTABLE, chave:!!(RKEY&&RCONTA), erro:String(e.message||e).slice(0,80), pronta:false }; }
 
         res.status(200).json({ok:true,modo:'diag',tabela:SEM_TABLE,
           configurado:{modelo:VMODEL,dim:VDIM,chave:!!VKEY}, gravado:d.rows,

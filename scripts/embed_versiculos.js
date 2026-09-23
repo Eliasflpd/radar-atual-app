@@ -60,10 +60,11 @@ let gAtual = 0;
 const GKEY = GKEYS[0];
 const proximaChave = () => { gAtual = (gAtual + 1) % GKEYS.length; return GKEYS[gAtual]; };
 const GMODEL = process.env.GEMINI_MODEL || 'gemini-embedding-001';
+const CFMODEL = process.env.CF_EMB_MODEL || '@cf/baai/bge-m3';   // 1024 dims nativo
 const VKEY = process.env.VOYAGE_API_KEY;
 // Ver nota no cabeçalho: voyage-3.x perdeu a cota grátis em 26/08/2026.
 const VMODEL = process.env.VOYAGE_MODEL || 'voyage-4-lite';
-const MODELO = VOY ? VMODEL : GMODEL;
+const MODELO = VOY ? VMODEL : (PROVIDER === 'cloudflare' ? CFMODEL : GMODEL);
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -99,7 +100,30 @@ async function embedVoyage(texts) {
   const j = await r.json();
   return j.data.sort((a, b) => a.index - b.index).map(d => d.embedding);
 }
-const embed = PROVIDER === 'voyage' ? embedVoyage : embedGemini;
+// CLOUDFLARE (23/09/2026) — o motor da RESERVA da busca por sentido.
+// POR QUE ELE E NÃO O GEMINI, que era o plano de manhã: reserva no MESMO dono
+// não é reserva. O globo de voz já depende do Google; se o Google cair, a voz e
+// a busca cairiam JUNTAS. A Cloudflare é casa diferente — e o bge-m3 entrega
+// 1024 dims nativo, que é exatamente a coluna que já existe.
+// De quebra, é muito mais rápido de indexar: o free tier do Gemini são 100
+// pedidos/minuto (a Bíblia inteira levaria ~5h e MORREU duas vezes no meio),
+// enquanto aqui a conta é de 10.000 neurônios/dia e o bge-m3 custa 1.075 por
+// MILHÃO de tokens — a Bíblia inteira cabe em cerca de 10% de um dia.
+async function embedCloudflare(texts) {
+  const conta = process.env.CF_ACCOUNT_ID, token = process.env.CF_AI_TOKEN;
+  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${conta}/ai/run/${CFMODEL}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ text: texts })
+  });
+  if (!r.ok) throw new Error('cloudflare ' + r.status + ' ' + (await r.text()).slice(0, 200));
+  const j = await r.json();
+  const dados = (j.result && (j.result.data || (j.result.response && j.result.response.data))) || [];
+  if (dados.length !== texts.length) throw new Error('cloudflare devolveu ' + dados.length + ' de ' + texts.length);
+  return dados;
+}
+const embed = PROVIDER === 'voyage' ? embedVoyage
+            : PROVIDER === 'cloudflare' ? embedCloudflare
+            : embedGemini;
 
 (async () => {
   if (PROVIDER === 'gemini' && !GKEY) { console.error('FALTA GEMINI_API_KEY'); process.exit(1); }
