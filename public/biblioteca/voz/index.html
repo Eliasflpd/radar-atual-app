@@ -244,7 +244,15 @@
       <!-- QUEM APARECE: os botoes sairam em 23/09/2026. O avatar em camadas ficou
            amador nas duas tentativas (foto e desenho) e o Elias mandou ficar so o
            globo. O codigo e a fabrica de recorte continuam no repositorio pro dia
-           em que a gente fizer com servico de avatar de verdade. -->
+           em que a gente fizer com servico de avatar de verdade.
+           ⚠️ QUANDO TIREI AQUELE BLOCO, LEVEI JUNTO ESTES DOIS BOTOES e o
+           </div> que fechava a linha — e o globo passou HORAS morto no celular
+           do Elias, porque o arranque procura por eles e batia em null. Eles
+           voltaram no mesmo lugar. Nao apagar: o Copiar e regra dele em todo
+           app, e o Encerrar e a unica saida sem fechar a aba. -->
+        <button id="copiar">📋 Copiar</button>
+        <button id="encerrar" disabled>⏹ Encerrar</button>
+      </div>
 
       <h3>A memória</h3>
       <div class="linhaCfg">
@@ -296,13 +304,35 @@
   // ══════════════════════════════════════════════════════════════════════════
 
   var $ = function(id){ return document.getElementById(id); };
-  var cv=$('globo'), elEstado=$('estado'), elDica=$('dica'), elConversa=$('conversa'),
-      btnEncerrar=$('encerrar'), btnCopiar=$('copiar'), btnModo=$('modo'),
-      btnEsquecer=$('esquecer'), elObsMemoria=$('obsMemoria'),
-      elProva=$('provaVoz'), elLinha=$('linhaVozes'), elHud=$('hud'),
-      btnAcao=$('acao'), elCampo=$('campo'), elBarra=$('barraConversa'),
-      elConfig=$('config'), btnConfig=$('abrirConfig'), btnFecharConfig=$('fecharConfig'),
-      btnInicio=$('inicio');
+
+  // ⚠️ O FUSÍVEL — aprendido em 23/09/2026, no pior jeito.
+  // Eu tirei o bloco do avatar da tela e levei junto, sem ver, os botões
+  // "Copiar" e "Encerrar". O arranque faz `btnEncerrar.disabled = true`, bateu
+  // em null, e a página INTEIRA morreu antes de ligar o microfone: o globo
+  // ficou mudo com "Não consegui começar" no celular do Elias por horas, longe
+  // do PC, sem poder fazer nada. Um botão a menos não pode derrubar a conversa.
+  // Por isso: quem não estiver na tela vira um elemento de verdade, criado na
+  // memória e nunca plantado no documento. Ele aceita `.disabled`, `.textContent`,
+  // `.addEventListener` — tudo — e simplesmente não aparece. O resto do código
+  // segue falando com ele sem saber da diferença, e o globo continua de pé.
+  // Não é pra esconder erro: some no console quem faltou, pra eu ir consertar.
+  var faltaram = [];
+  var $ou = function(id, tag){
+    var el = document.getElementById(id);
+    if (el) return el;
+    faltaram.push(id);
+    return document.createElement(tag || 'button');
+  };
+
+  var cv=$('globo'), elEstado=$ou('estado','div'), elDica=$ou('dica','div'),
+      elConversa=$ou('conversa','div'),
+      btnEncerrar=$ou('encerrar'), btnCopiar=$ou('copiar'), btnModo=$ou('modo'),
+      btnEsquecer=$ou('esquecer'), elObsMemoria=$ou('obsMemoria','div'),
+      elProva=$ou('provaVoz','div'), elLinha=$ou('linhaVozes','div'), elHud=$ou('hud','div'),
+      btnAcao=$ou('acao'), elCampo=$ou('campo','input'), elBarra=$ou('barraConversa','form'),
+      elConfig=$ou('config','div'), btnConfig=$ou('abrirConfig'), btnFecharConfig=$ou('fecharConfig'),
+      btnInicio=$ou('inicio');
+  if (faltaram.length) console.warn('[voz] sumiram da tela: ' + faltaram.join(', '));
 
   var TAXA_ENVIO = 16000;   // o que o Gemini Live aceita de entrada
   var TAXA_VOLTA = 24000;   // o que ele devolve

@@ -255,10 +255,64 @@ function checarLimiteVercel() {
   else passou(`${fns.length} de 12 funções da Vercel`);
 }
 
+/* ── 8. O CÓDIGO PROCURA BOTÃO QUE NÃO EXISTE MAIS? ───────────────────────
+   POR QUE EXISTE (23/09/2026, custou caro):
+   tirei da tela o bloco do avatar e levei junto, sem enxergar, os botões
+   "Copiar" e "Encerrar". O arranque da página faz `btnEncerrar.disabled=true`.
+   Bateu em null, a página MORREU inteira antes de ligar o microfone, e o Elias
+   ficou horas longe do PC com o globo mudo dizendo "Não consegui começar".
+   A sintaxe estava perfeita — `node --check` passou feliz. Faltava justamente
+   isto: conferir se o que o JavaScript PROCURA ainda está no HTML.
+
+   Como funciona: em cada página, junta todo id que o código busca
+   (`$('x')`, `$ou('x')`, `getElementById('x')`, `querySelector('#x')`) e
+   confere se existe um `id="x"` no mesmo arquivo. É burro de propósito — só
+   olha o arquivo, sem montar página nenhuma — e pega exatamente o erro que
+   me pegou: alguém apaga um pedaço do HTML e esquece o código que fala com ele.   */
+function checarBotoesSumidos() {
+  const paginas = execSync('git ls-files public', { cwd: RAIZ }).toString().trim().split('\n')
+    .filter(f => f.endsWith('.html'));
+
+  for (const f of paginas) {
+    const src = ler(f);
+    // só vale pra página que tem script dentro; HTML puro não procura nada
+    if (!/<script[\s>]/i.test(src)) continue;
+
+    const temNoHtml = new Set();
+    for (const m of src.matchAll(/\bid\s*=\s*["']([^"']+)["']/g)) temNoHtml.add(m[1]);
+    // id posto por código também conta: `el.id='x'` / `setAttribute('id','x')`
+    for (const m of src.matchAll(/\.id\s*=\s*["']([^"']+)["']/g)) temNoHtml.add(m[1]);
+    for (const m of src.matchAll(/setAttribute\(\s*["']id["']\s*,\s*["']([^"']+)["']/g)) temNoHtml.add(m[1]);
+    // id montado em pedaços ('linha-'+n) eu não tenho como adivinhar: ignoro abaixo.
+
+    const procurados = new Map();   // id -> como foi procurado
+    const guardar = (id, como) => { if (!procurados.has(id)) procurados.set(id, como); };
+    for (const m of src.matchAll(/getElementById\(\s*["']([^"']+)["']\s*\)/g)) guardar(m[1], 'getElementById');
+    // ⚠️ `\$ou?\(` estaria ERRADO: exigiria a letra "o", e deixaria passar o
+    // `$('encerrar')` — justamente o que derrubou o globo. Tem que ser grupo.
+    // O `[,)]` no fim não é enfeite: sem ele, o `$('v-'+n)` das páginas de
+    // versículo entrava como se procurasse um id chamado "v-" — 4 alarmes
+    // falsos. Exigindo vírgula ou fecha-parêntese logo depois das aspas, o id
+    // montado em pedaços fica de fora, que é onde eu não tenho como adivinhar.
+    for (const m of src.matchAll(/\$(?:ou)?\(\s*["']([^"']+)["']\s*[,)]/g)) guardar(m[1], '$()');
+    for (const m of src.matchAll(/querySelector\(\s*["']#([A-Za-z][\w-]*)["']\s*\)/g)) guardar(m[1], 'querySelector');
+
+    const sumidos = [...procurados.keys()].filter(id => !temNoHtml.has(id));
+    if (sumidos.length) {
+      falha(`${f}: o código procura ${sumidos.map(i => `"${i}"`).join(', ')}, `
+        + `mas não existe id="${sumidos[0]}" nessa página. `
+        + `Ou o HTML foi apagado por engano, ou o código ficou pra trás.`);
+    } else if (procurados.size) {
+      passou(`${f}: os ${procurados.size} elementos procurados pelo código estão na tela`);
+    }
+  }
+}
+
 /* ── relatório ─────────────────────────────────────────────────────────── */
 function main() {
   console.log('\n🚦 TRAVA DO RADAR — conferindo antes de publicar\n');
   checarSintaxe();
+  checarBotoesSumidos();
   checarEssenciais();
   const marcosAgora = checarCrescimento();
   checarVersao();
