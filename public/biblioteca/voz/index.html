@@ -223,6 +223,18 @@
         <button id="fecharConfig" aria-label="Fechar">✕</button>
       </div>
 
+      <h3>Volume da voz</h3>
+      <div class="linhaCfg" style="align-items:center;gap:10px">
+        <span style="font-size:18px">🔉</span>
+        <input id="volVoz" type="range" min="0.4" max="5" step="0.2" value="2.6"
+               style="flex:1;accent-color:var(--gold)" aria-label="Volume da voz">
+        <span style="font-size:20px">🔊</span>
+      </div>
+      <div class="obs" style="font-size:.8rem;color:var(--suave);margin-top:4px">
+        Arraste para o mestre falar mais alto ou mais baixo. Vale mesmo com o
+        volume do celular no máximo.
+      </div>
+
       <h3>Onde o som está saindo</h3>
       <div class="linhaCfg">
         <button id="modo" title="Onde o som está saindo"><b>🔈</b>Viva-voz</button>
@@ -2071,7 +2083,26 @@
       S.analiseSom=S.ctxSom.createAnalyser();
       S.analiseSom.fftSize=512; S.analiseSom.smoothingTimeConstant=0.35;
       S.bufSom=new Uint8Array(S.analiseSom.fftSize);
-      S.analiseSom.connect(S.ctxSom.destination);
+      // ── VOLUME (24/09/2026) — o Elias: "a voz tá baixa, quase inaudível, e não
+      // consigo controlar pelo volume do celular". O áudio de Web Audio saía num
+      // ganho fixo 1.0 direto pro alto-falante: no A22 isso é fraco, e o botão de
+      // volume do Android nem sempre pega em AudioContext. Conserto:
+      //   analiseSom → mestreVol (reforço) → limitador (anti-estouro) → alto-falante
+      // O reforço padrão é 2.6× (audível no A22 sem distorcer, porque o limitador
+      // segura os picos). E vira controle NA TELA (barra no ⚙️), que não depende
+      // do botão do celular. O nível fica guardado no aparelho.
+      S.mestreVol=S.ctxSom.createGain();
+      var volSalvo=parseFloat(localStorage.getItem('voz.vol'));
+      S.mestreVol.gain.value=(volSalvo>=0.2&&volSalvo<=6)?volSalvo:2.6;
+      var limite=S.ctxSom.createDynamicsCompressor();
+      // limitador: segura o que passar de ~-3 dB pra o reforço não estourar
+      try{
+        limite.threshold.value=-3; limite.knee.value=3; limite.ratio.value=12;
+        limite.attack.value=0.003; limite.release.value=0.25;
+      }catch(_){}
+      S.analiseSom.connect(S.mestreVol);
+      S.mestreVol.connect(limite);
+      limite.connect(S.ctxSom.destination);
       S.fila=[]; S.sobra=new Float32Array(BUF_SAIDA); S.sobraN=0;
       S.proximoSom=0; S.tocando=[]; S.tocandoAgora=false; S.turnoMudo=false;
       novoGanho();
@@ -2157,7 +2188,7 @@
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
     S.pausado=false; S.falandoLocal=false; S.caiuNoEscuro=false; S.escondidoEm=0;
     S.worklet=S.script=S.noMic=S.stream=S.ctxMic=S.ctxSom=S.ganho=null;
-    S.analiseMic=S.analiseSom=S.bufMic=S.bufSom=null;
+    S.analiseMic=S.analiseSom=S.bufMic=S.bufSom=S.mestreVol=null;
     S.fila=[]; S.sobra=null; S.sobraN=0; S.tocando=[]; S.tocandoAgora=false;
     S.proximoSom=0; S.turnoMudo=false; S.corteMs=0;
     S.euFalando=S.eleFalando=S.garimpando=false;
@@ -2312,6 +2343,24 @@
   if(S.manualDuplex) S.meioDuplex=(S.manualDuplex==='viva');
   pintarModo();
   atualizarAcao();
+  // ── VOLUME NA TELA ────────────────────────────────────────────────────────
+  // O reforço mora no S.mestreVol (montado quando a conversa liga). A barra
+  // mexe nele ao vivo e guarda o nível no aparelho, pra valer na próxima vez.
+  // Funciona antes mesmo de o mestre falar: se ainda não há nó, só guarda o
+  // valor, e o áudio nasce já no volume certo quando a sessão abre.
+  (function(){
+    var bar=document.getElementById('volVoz'); if(!bar) return;
+    var v=parseFloat(localStorage.getItem('voz.vol'));
+    if(v>=0.4&&v<=5) bar.value=v;
+    bar.addEventListener('input',function(){
+      var g=parseFloat(bar.value)||2.6;
+      try{ localStorage.setItem('voz.vol',String(g)); }catch(e){}
+      if(S.mestreVol&&S.ctxSom){
+        try{ S.mestreVol.gain.setTargetAtTime(g,S.ctxSom.currentTime,0.02); }catch(_){ S.mestreVol.gain.value=g; }
+      }
+    });
+  })();
+
   btnModo.addEventListener('click',function(){
     S.manualDuplex = S.meioDuplex ? 'fone' : 'viva';
     S.meioDuplex = !S.meioDuplex;
