@@ -35,7 +35,7 @@ export default async function handler(req) {
 Prosa contínua, densa de revelação (línguas originais reais, pérolas ocultas, tipologia), um fio condutor que cresce e desemboca em Cristo, e um fechamento curto que arrebata. Sem tópicos, sem cabeçalhos, sem marcações de palco. Se o assunto não for uma passagem, ancore a mensagem em textos bíblicos reais.`;
 
   try {
-    return await respostaStream({ sys: SYS, user, temperature: 0.9, max_tokens: 3200, tag: 'mensagem' }, CORS);
+    return await respostaStream({ sys: SYS, user, temperature: 0.9, max_tokens: 3200, tag: 'mensagem', premium: true }, CORS);
   } catch (e) {
     return respostaErro(e, CORS);
   }

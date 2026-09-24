@@ -111,6 +111,16 @@ const FONTES = [
   { id: 'sadrak',   autor: 'Pr. Sadrak Lufuankenda', peso: 3, aprovado: true,
     obra: 'pregações transcritas do Pr. Sadrak', dir: 'D:\\PREGACOES\\transcricoes', tipo: 'pregacao' },
 
+  // Augusto Cury — VOZ COMPLEMENTAR, não autoridade doutrinária (pedido do
+  // Elias, 24/09/2026). É escritor e psiquiatra, não exegeta da linha da AD. A
+  // "Análise da Inteligência de Cristo" é leitura inspiradora sobre a mente e o
+  // caráter de Jesus — entra com filtro (aprovado:false), citada pelo NOME, e o
+  // globo marca como o olhar DELE, nunca como doutrina fechada. Livros comprados
+  // pelo Elias: motor invisível, texto só no Postgres, nunca no repo nem na tela.
+  { id: 'cury', autor: 'Augusto Cury', peso: 4, aprovado: false,
+    obra: 'Augusto Cury — Análise da Inteligência de Cristo (coleção)',
+    dir: AUT('Augusto-Cury'), tipo: 'comentario' },
+
   // ── 4º escalão: REPROVADO no Concílio, entra com filtro ────────────────────
   { id: 'champlin', autor: 'Champlin', peso: 4, aprovado: false,
     obra: 'Champlin — O Antigo/Novo Testamento Interpretado, versículo por versículo',

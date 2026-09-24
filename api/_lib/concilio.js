@@ -745,6 +745,7 @@ async function streamChat(SYS, user, opts) {
       temperature: opts.temperature != null ? opts.temperature : 0.5,
       max_tokens: opts.max_tokens || 2200,
       tag: opts.tag || 'concilio',
+      premium: true,   // o Concílio é a parte funda — usa o cérebro Claude primeiro
     }, CORS);
   } catch (e) {
     return respostaErro(e, CORS);
@@ -861,6 +862,7 @@ ${LEI}`;
       temperature: 0.5,
       max_tokens: 2200,
       tag: 'lupa',
+      premium: true,   // Lupa é estudo fundo — cérebro Claude, com a web já injetada no prompt
     }, CORS), [], '', { conferir: true, origem, assunto });
   } catch (e) {
     return respostaErro(e, CORS);

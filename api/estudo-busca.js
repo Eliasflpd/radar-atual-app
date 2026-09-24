@@ -28,7 +28,11 @@ const ABBR={ rm:'rm', rom:'rm', romanos:'rm', gn:'gn', genesis:'gn', ex:'ex', ex
 // SQL, não garante busca certa. Ao trocar VOYAGE_MODEL é OBRIGATÓRIO regerar os vetores
 // (scripts/embed_versiculos.js, que reindexa sozinho quando a coluna modelo não bate).
 // Confira o que está gravado com  ?sem=1&diag=1  antes e depois da troca.
-const SEM_TABLE=(process.env.EMB_TABLE||'versiculo_emb_voyage').replace(/[^a-z0-9_]/gi,'');
+// default = versiculo_emb_v4 (a tabela VIVA). Era 'versiculo_emb_voyage' (motor
+// morto): se a env EMB_TABLE sumisse, a busca respondia LIXO em silencio. E a
+// tabela voyage foi apagada em 24/09 pra liberar 415 MB — apontar o default pra
+// ela seria apontar pro vazio.
+const SEM_TABLE=(process.env.EMB_TABLE||'versiculo_emb_v4').replace(/[^a-z0-9_]/gi,'');
 const VDIM=parseInt(process.env.EMB_DIM||'1024',10);
 const VKEY=process.env.VOYAGE_API_KEY;
 const VMODEL=process.env.VOYAGE_MODEL||'voyage-4-lite';

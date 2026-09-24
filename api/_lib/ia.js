@@ -96,6 +96,23 @@ const M = (id, extra) => ({ id, extra: extra || null });
 // ─────────────────────────────────────────────────────────────────────────────
 export const DEGRAUS = [
   {
+    // 0º — CLAUDE (Anthropic), o CÉREBRO PREMIUM (24/09/2026, chave do Elias no cofre).
+    // ⚠️ `premium: true` — NÃO entra na cascata comum. Só é chamado quando o pedido
+    // traz `premium:true` (as partes fundas: Concílio, Mensagem, a nota de pesquisa
+    // do globo). Assim o resto do app segue de graça e a chave paga só é gasta onde
+    // a profundidade vale. Modelo: Sonnet 5 (ótimo e mais barato que o Opus); trocar
+    // por ANTHROPIC_MODEL se um dia quiser o Opus. Sem `temperature` — o Sonnet 5 recusa.
+    id: 'claude',
+    nome: 'Claude',
+    pago: true,
+    premium: true,
+    dialeto: 'anthropic',
+    url: 'https://api.anthropic.com/v1/messages',
+    env: ['ANTHROPIC_API_KEYS', 'ANTHROPIC_API_KEY'],
+    timeout: 22000,   // Claude pensa fundo; dá mais prazo que os rápidos
+    modelos: [M(process.env.ANTHROPIC_MODEL || 'claude-sonnet-5')],
+  },
+  {
     // 1º — Groq. Mediu 2,02s com o prompt inteiro do Wagner e atende praticamente
     // sempre (7 chaves em rodízio). O `reasoning_effort: 'low'` é o que tirou 1,8s:
     // sem ele o gpt-oss gasta metade do orçamento pensando antes de escrever.
@@ -377,15 +394,45 @@ function corpoGemini(degrau, modelo, p, stream) {
   return { url: `${degrau.url}/${modelo.id}:${metodo}${encodeURIComponent(p.__chave)}`, body: b, headers: { 'Content-Type': 'application/json', 'User-Agent': UA, Accept: stream ? 'text/event-stream' : 'application/json' } };
 }
 
-const montar = (degrau, modelo, p, stream) => (degrau.dialeto === 'gemini' ? corpoGemini : corpoOpenAI)(degrau, modelo, p, stream);
+// CLAUDE (Anthropic) — dialeto próprio (24/09/2026). Nem OpenAI nem Gemini:
+//   • autentica em `x-api-key` (não Bearer), com o cabeçalho `anthropic-version`;
+//   • o sistema vai no campo `system` (string), fora das mensagens;
+//   • ⚠️ NÃO manda `temperature`: o Sonnet 5 RECUSA esse campo com HTTP 400
+//     (dito no guia oficial da API). Mandar temperatura mataria o degrau inteiro.
+function corpoAnthropic(degrau, modelo, p, stream) {
+  const { sys, conversa } = normalizarMensagens(p);
+  const b = {
+    model: modelo.id,
+    max_tokens: p.max_tokens || 2200,
+    messages: conversa.map((m) => ({
+      role: (m.role === 'assistant' || m.role === 'model') ? 'assistant' : 'user',
+      content: String(m.content || ''),
+    })),
+    ...(modelo.extra || {}),
+  };
+  if (sys) b.system = sys;
+  if (stream) b.stream = true;
+  return { url: degrau.url, body: b, headers: {
+    'Content-Type': 'application/json', 'x-api-key': p.__chave,
+    'anthropic-version': '2023-06-01', 'User-Agent': UA,
+    Accept: stream ? 'text/event-stream' : 'application/json' } };
+}
 
-// Texto de uma resposta NÃO-streaming, nos dois dialetos.
+const montar = (degrau, modelo, p, stream) =>
+  (degrau.dialeto === 'gemini' ? corpoGemini
+    : degrau.dialeto === 'anthropic' ? corpoAnthropic
+    : corpoOpenAI)(degrau, modelo, p, stream);
+
+// Texto de uma resposta NÃO-streaming, nos três dialetos.
 function extrairTexto(degrau, j) {
   if (degrau.dialeto === 'gemini') {
     const c = (j.candidates || [])[0];
     if (!c) return '';
     // `thought: true` = raciocínio interno do modelo; não é resposta pro pastor.
     return (c.content && c.content.parts || []).filter((x) => !x.thought).map((x) => x.text || '').join('');
+  }
+  if (degrau.dialeto === 'anthropic') {
+    return (j.content || []).filter((x) => x.type === 'text').map((x) => x.text || '').join('');
   }
   const m = j.choices && j.choices[0] && j.choices[0].message;
   return (m && m.content) || '';
@@ -400,6 +447,11 @@ function extrairPedaco(degrau, dado) {
       const c = (j.candidates || [])[0];
       if (!c) return '';
       return (c.content && c.content.parts || []).filter((x) => !x.thought).map((x) => x.text || '').join('');
+    }
+    if (degrau.dialeto === 'anthropic') {
+      // Claude manda eventos SSE: o texto vem em content_block_delta/text_delta.
+      if (j.type === 'content_block_delta' && j.delta && j.delta.type === 'text_delta') return j.delta.text || '';
+      return '';
     }
     const d = j.choices && j.choices[0] && j.choices[0].delta;
     if (!d) return '';
@@ -615,6 +667,9 @@ async function cascata(p, stream) {
       break;
     }
     if (pular.includes(degrau.id)) { tentativas.push(`${degrau.id}: pulado (já devolveu vazio)`); continue; }
+    // DEGRAU PREMIUM (Claude): só entra quando o chamador pede `premium:true`. Nas
+    // chamadas comuns ele é pulado, pra a chave paga não ser gasta em tudo.
+    if (degrau.premium && !p.premium) { continue; }
     const chaves = lerChaves(degrau);
     if (!chaves.length) { tentativas.push(`${degrau.id}: sem chave configurada`); continue; }
     if (castigado(degrau.id)) { tentativas.push(`${degrau.id}: em castigo (falhou há pouco)`); continue; }
