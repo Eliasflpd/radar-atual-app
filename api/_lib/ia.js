@@ -320,6 +320,13 @@ export function classificar(status, corpo) {
     //   3) prompt malformado                               → PARA, é bug nosso e
     //      tem que aparecer em vez de sumir atrás do fallback.
     if (PROBLEMA_DE_CHAVE.test(txt)) return { acao: 'pular', motivo: 'chave inválida (400)', alvo: 'chave', castigo: 600000 };
+    // SEM CRÉDITO / faturamento — a Anthropic devolve 400 "Your credit balance is
+    // too low", não 402. Isto NÃO é bug nosso: é a chave paga sem saldo, e o
+    // próximo motor (grátis) resolve. Sem esta linha, o Claude sem crédito
+    // PARAVA a cascata inteira e quebrava o Concílio/Mensagem em vez de cair pro
+    // grátis. Castigo longo pra não bater na mesma chave a cada frase.
+    if (/cr[ée]dit|billing|balance\s+is\s+too\s+low|insufficient|saldo|payment\s+required/i.test(txt))
+      return { acao: 'pular', motivo: 'sem crédito (400)', alvo: 'chave', castigo: 900000 };
     if (PROBLEMA_DE_MODELO.test(txt)) return { acao: 'pular', motivo: 'modelo recusou os parâmetros', alvo: 'modelo', castigo: 1800000 };
     return { acao: 'parar', motivo: 'pedido inválido (bug nosso): ' + txt.slice(0, 200) };
   }
