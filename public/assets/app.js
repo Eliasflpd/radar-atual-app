@@ -81,13 +81,31 @@ async function submitCadastro(){
   if(!cargo){err.textContent='Selecione seu cargo na igreja.';err.style.display='block';return;}
   if(precisaCodigoPais(document.getElementById('cad-fone').value)){err.textContent='Esse número não parece do Brasil. Se você é de fora, comece com + e o código do país — ex.: +244 923 000 000 (Angola), +1 305 867 5309 (EUA). Sem isso o WhatsApp não chega até você.';err.style.display='block';document.getElementById('cad-fone').focus();return;}
   if(fone.length<8||fone.length>15){err.textContent='WhatsApp inválido. No Brasil: (99) 99999-9999. Fora do Brasil, use o código do país: +244 923 000 000';err.style.display='block';document.getElementById('cad-fone').focus();return;}
+  // ── A CONFIRMAÇÃO POR WHATSAPP (24/09/2026) ───────────────────────────────
+  // Antes daqui saía direto pra dentro do app. Agora não: o cadastro manda um
+  // código de 6 dígitos pro WhatsApp e só entra quem digita o código de volta.
+  // É a tampa do buraco nº 1 da auditoria — sem isso, qualquer um pegava a conta
+  // de qualquer pastor com o número dele. A tela e as funções de código já
+  // existiam prontas no app, só estavam desligadas.
   const btn=document.getElementById('btn-cad-enviar');
-  btn.textContent='Entrando...';btn.disabled=true;
-  const uid='u_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  const isAdmin=ADMIN_PHONES.includes(fone);
-  saveUser({nome,cargo,whatsapp:fone,id:uid,...(isAdmin&&{admin:true})});
-  salvarNuvem(nome,cargo,fone);   // guarda na nuvem pro Elias ver todos
-  irHome();
+  btn.textContent='Enviando código...';btn.disabled=true;
+  _cadPendente={nome:nome,cargo:cargo,fone:fone,token:''};
+  try{
+    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:nome,phone:fone})});
+    const data=await res.json();
+    if(!res.ok||!data.token)throw new Error((data&&data.error)||'Não consegui enviar o código agora. Tente de novo.');
+    _cadPendente.token=data.token;
+    document.getElementById('otp-fone-display').textContent=document.getElementById('cad-fone').value;
+    Array.from(document.getElementById('otp-digits').children).forEach(d=>d.value='');
+    document.getElementById('otp-erro').style.display='none';
+    ocultarTodas();
+    document.getElementById('tela-otp').classList.add('ativa');
+    setTimeout(()=>document.getElementById('otp-digits').children[0].focus(),350);
+  }catch(e){
+    err.textContent=e.message;err.style.display='block';
+  }finally{
+    btn.textContent='ACESSAR O APP';btn.disabled=false;
+  }
 }
 // ══ O CRACHÁ DO APARELHO ══════════════════════════════════════════════════
 // Segredo sorteado pelo servidor no cadastro, guardado SÓ neste aparelho. É ele
@@ -110,14 +128,18 @@ window.radarGuardarChave = setChave;
 // conta" pra alguém que acabou de se cadastrar. `_emVoo` faz a segunda chamada
 // pegar carona na primeira em vez de abrir outra.
 var _emVoo = null;
-function salvarNuvem(nome,cargo,fone){
+function salvarNuvem(nome,cargo,fone,otpToken,otpCode){
   if(_emVoo) return _emVoo;
   try{
     // Manda o crachá que este aparelho JÁ TEM, se tiver: é assim que o servidor
     // sabe que é o mesmo celular de sempre e não emite outro nem avisa nada.
     var h={'Content-Type':'application/json'}, k=getChave();
     if(k) h['x-radar-chave']=k;
-    _emVoo = fetch('/api/cadastros',{method:'POST',headers:h,body:JSON.stringify({nome:nome,cargo:cargo,whatsapp:fone})})
+    // ...e o código de confirmação, quando o cadastro está nascendo agora. Sem
+    // um dos dois (crachá conhecido OU código válido) o servidor não emite crachá.
+    var corpo={nome:nome,cargo:cargo,whatsapp:fone};
+    if(otpToken&&otpCode){ corpo.otp_token=otpToken; corpo.otp_code=otpCode; }
+    _emVoo = fetch('/api/cadastros',{method:'POST',headers:h,body:JSON.stringify(corpo)})
       .then(function(r){ return r.json(); })
       .then(function(d){ if(d&&d.chave) setChave(d.chave); return d; })
       ['catch'](function(){ return null; })
@@ -279,7 +301,12 @@ async function submitOtp(){
     const res=await fetch('/api/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:_cadPendente.token,code})});
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'Código inválido');
-    saveUser({nome:_cadPendente.nome,cargo:_cadPendente.cargo,whatsapp:_cadPendente.fone,id:data.uid});
+    var isAdmin=ADMIN_PHONES.includes(_cadPendente.fone);
+    saveUser({nome:_cadPendente.nome,cargo:_cadPendente.cargo,whatsapp:_cadPendente.fone,id:data.uid,...(isAdmin&&{admin:true})});
+    // AGORA o crachá nasce: manda o cadastro com o código no bolso. É este código
+    // que prova pro servidor que o WhatsApp é desta pessoa — sem ele, nenhum
+    // crachá sai. Guarda na nuvem pro Elias ver todos, no mesmo passo.
+    await salvarNuvem(_cadPendente.nome,_cadPendente.cargo,_cadPendente.fone,_cadPendente.token,code);
     irHome();
   }catch(e){
     err.textContent=e.message;err.style.display='block';

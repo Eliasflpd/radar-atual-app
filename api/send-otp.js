@@ -26,9 +26,17 @@ export default async function handler(req) {
   const { phone, nome } = body;
   const cleanPhone = String(phone || '').replace(/\D/g, '');
 
-  if (!cleanPhone || cleanPhone.length < 10 || cleanPhone.length > 11) {
+  // 8 a 15 dígitos — o mesmo que o app aceita, pra não barrar quem é de fora do
+  // Brasil (Angola +244, Portugal +351...). Antes exigia 10-11 e prendia o
+  // código só no Brasil.
+  if (!cleanPhone || cleanPhone.length < 8 || cleanPhone.length > 15) {
     return Response.json({ error: 'Número de WhatsApp inválido' }, { status: 400, headers: CORS });
   }
+  // Pra ENTREGAR pelo Fonnte precisa do código do país. Brasil curto (10/11) leva
+  // 55; número que já veio com código de país (12+) vai como está — senão um
+  // +244 de Angola viraria 55244... e a mensagem nunca chegaria.
+  const alvoFonnte = (cleanPhone.length === 10 || cleanPhone.length === 11)
+    ? '55' + cleanPhone : cleanPhone;
 
   // Generate 6-digit OTP
   const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -36,7 +44,11 @@ export default async function handler(req) {
 
   // Create signed token: base64(payload) + '.' + hmac(base64)
   const payloadB64 = btoa(JSON.stringify({ phone: cleanPhone, code, exp }));
-  const secret = process.env.OTP_SECRET || 'radar-ebd-2026';
+  // ⚠️ SEM segredo fraco de reserva. O fallback 'radar-ebd-2026' estava no
+  // código-fonte: qualquer um que visse o repositório forjava um token e
+  // "confirmava" sem receber código nenhum. Sem OTP_SECRET forte, recusa.
+  const secret = process.env.OTP_SECRET;
+  if (!secret) return Response.json({ error: 'verificação indisponível' }, { status: 503, headers: CORS });
   const sig = await hmacSign(payloadB64, secret);
   const token = payloadB64 + '.' + sig;
 
@@ -49,7 +61,7 @@ export default async function handler(req) {
       await fetch('https://api.fonnte.com/send', {
         method: 'POST',
         headers: { 'Authorization': FONNTE_TOKEN, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target: '55' + cleanPhone, message: msg, typing: false, delay: 1 })
+        body: JSON.stringify({ target: alvoFonnte, message: msg, typing: false, delay: 1 })
       });
     } catch (e) {
       console.error('Fonnte error:', e.message);

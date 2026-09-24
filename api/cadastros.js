@@ -5,6 +5,43 @@ const { Client } = require('pg');
 // Então quem tentar pegar um crachá com o número dos outros acende uma luz no
 // celular do dono na mesma hora. Ver o cabeçalho de api/_lib/chave.js.
 const CHAVE = require('./_lib/chave.js');
+const crypto = require('crypto');
+
+// ── A CONFIRMAÇÃO POR WHATSAPP (24/09/2026, pedido do Elias) ─────────────────
+// "QUEM CADASTRAR PRECISA RECEBER UM CÓDIGO CONFIRMANDO."
+// É a tampa do pior buraco da auditoria (AUDITORIA-2026-09-23.md, nº 1): até
+// ontem este POST entregava um crachá válido pra QUALQUER número — provei ao
+// vivo. Com um número roubado, o sujeito lia o caderno de pregações, o plano de
+// leitura e a memória do globo do pastor.
+// Agora o crachá só nasce com PROVA de que quem cadastra controla aquele
+// WhatsApp: o código de 6 dígitos que o /api/send-otp mandou pra ele. Quem
+// digita o número de outro nunca recebe o código — ele foi pro celular do dono.
+//
+// O token vem do send-otp assim:  base64(payload) + '.' + hmac(payload, OTP_SECRET)
+// e payload = { phone, code, exp }. Conferimos aqui a MESMA assinatura, e que o
+// código é DESTE número, não de outro. Sem OTP_SECRET forte na Vercel isto NÃO
+// passa — nada de cair num segredo escrito no código.
+function confereCodigo(token, code, whatsapp) {
+  try {
+    const secret = process.env.OTP_SECRET;
+    if (!secret || !token || !code) return false;
+    const i = String(token).indexOf('.');
+    if (i < 0) return false;
+    const payloadB64 = String(token).slice(0, i);
+    const assinaturaVinda = String(token).slice(i + 1);
+    const esperada = crypto.createHmac('sha256', secret).update(payloadB64).digest('hex');
+    // comparação de tempo constante — não entrega o segredo pela demora
+    const a = Buffer.from(assinaturaVinda), b = Buffer.from(esperada);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString('utf8'));
+    if (Date.now() > payload.exp) return false;
+    if (String(code).trim() !== String(payload.code)) return false;
+    // ⚠️ o código foi emitido PRA ESTE número — sem esta linha, um código
+    // legítimo do próprio atacante liberaria o crachá do número da vítima.
+    if (String(payload.phone).replace(/\D/g, '') !== String(whatsapp).replace(/\D/g, '')) return false;
+    return true;
+  } catch (_) { return false; }
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -47,7 +84,7 @@ module.exports = async (req, res) => {
       // mesmo celular de sempre re-mandando o cadastro (o app faz isso sozinho
       // em várias situações). Sem esta conferência, cada re-envio gastava uma
       // vaga de aparelho e acendia o alarme de invasão sem ninguém ter invadido.
-      let chaveNova = '', eraNovo = true, mesmoAparelho = false;
+      let chaveNova = '', eraNovo = true, mesmoAparelho = false, precisaCodigo = false;
       if (whatsapp) {
         try {
           await CHAVE.tabela(c);
@@ -75,9 +112,16 @@ module.exports = async (req, res) => {
           if (!jaExistia) {
             try { await c.query('delete from radar_chaves where user_key=$1', [dono]); } catch (_) {}
           }
-          if (!mesmoAparelho) {
+          // ⚠️ A TRAVA: crachá só nasce pra APARELHO CONHECIDO (que já provou ser
+          // desta conta) OU pra quem trouxe o código de confirmação DESTE número.
+          // Sem uma das duas coisas, nenhum crachá sai — e o app avisa que
+          // precisa do código (precisa_codigo abaixo). É isto que fecha o buraco.
+          const codigoOk = confereCodigo(b && b.otp_token, b && b.otp_code, whatsapp);
+          if (!mesmoAparelho && codigoOk) {
             const e = await CHAVE.emitir(c, whatsapp, cargo || 'aparelho');
             if (e && e.ok) chaveNova = e.chave;
+          } else if (!mesmoAparelho) {
+            precisaCodigo = true;
           }
         } catch (_) { chaveNova = ''; }
       }
@@ -129,7 +173,8 @@ module.exports = async (req, res) => {
       }
       // `chave` sai daqui UMA vez na vida deste aparelho. O app guarda em
       // localStorage 'radar_chave' e manda no cabeçalho x-radar-chave depois.
-      res.json({ ok: true, avisado, chave: chaveNova || undefined });
+      res.json({ ok: true, avisado, chave: chaveNova || undefined,
+                 precisa_codigo: precisaCodigo || undefined });
     } else {
       const phone = ((req.query && req.query.phone) || '').replace(/\D/g, '');
       if (phone) { // "Já cadastrado?" — restaura pelo WhatsApp

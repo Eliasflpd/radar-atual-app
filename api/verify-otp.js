@@ -47,8 +47,9 @@ export default async function handler(req) {
     return Response.json({ error: 'Código expirado. Solicite um novo.' }, { status: 400, headers: CORS });
   }
 
-  // Verify signature
-  const secret = process.env.OTP_SECRET || 'radar-ebd-2026';
+  // Verify signature — sem segredo fraco de reserva (ver send-otp.js)
+  const secret = process.env.OTP_SECRET;
+  if (!secret) return Response.json({ error: 'verificação indisponível' }, { status: 503, headers: CORS });
   const expectedSig = await hmacSign(payloadB64, secret);
   if (givenSig !== expectedSig) {
     return Response.json({ error: 'Token inválido' }, { status: 400, headers: CORS });
