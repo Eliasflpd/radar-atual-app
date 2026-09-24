@@ -772,7 +772,12 @@ export async function iaStreamTexto(p) {
           if (!linha.startsWith('data:')) continue;
           const dado = linha.slice(5).trim();
           if (dado === '[DONE]') { buf = ''; break; }
-          let pedaco = extrairPedaco(res.provedor === 'gemini' ? { dialeto: 'gemini' } : { dialeto: 'openai' }, dado);
+          // ⚠️ o dialeto do STREAM tem que casar com o provedor, senão o texto sai
+          // vazio: o Claude (anthropic) lido como openai não acha nenhuma letra.
+          let pedaco = extrairPedaco(
+            { dialeto: res.provedor === 'gemini' ? 'gemini'
+              : res.provedor === 'claude' ? 'anthropic'
+              : 'openai' }, dado);
           if (!pedaco) continue;
           if (filtro) { pedaco = filtro(pedaco); if (!pedaco) continue; }
           saiuAlgo = true;
