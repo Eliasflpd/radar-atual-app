@@ -818,6 +818,22 @@ export const FERRAMENTAS = [{
         required: ['ref'],
       },
     },
+    {
+      name: 'saber_agora',
+      description: 'A INTERNET, AO VIVO. Busca fato ATUAL na internet de verdade: notícia, quem ganhou o jogo, cotação, preço, previsão do tempo, o que aconteceu hoje, data de um evento, quem é uma pessoa. '
+        + 'CHAME sempre que o pastor perguntar algo que depende do que está acontecendo AGORA no mundo, ou algo que você não teria como saber por ser recente. '
+        + 'NÃO use para conversa geral nem para conhecimento que você já tem de cabeça (história, ciência, conselho) — isso você responde direto. E NÃO use para Bíblia (essa é ler_versiculo e a biblioteca).',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          pergunta: {
+            type: 'STRING',
+            description: 'O que buscar na internet, em português, claro e específico (ex.: "resultado do jogo do Brasil ontem", "cotação do dólar hoje", "quem é o governador de São Paulo agora").',
+          },
+        },
+        required: ['pergunta'],
+      },
+    },
     // A MEMÓRIA. Declarada por último de propósito: ela é a única que não busca
     // fora — busca DENTRO do que já foi conversado. Sem ela, o globo só podia
     // fingir que lembrava, e fingir lembrança é mentira igual a citação inventada.
@@ -830,10 +846,14 @@ export const FERRAMENTAS = [{
 // Vai DEPOIS do método e da oratória, e ANTES do porteiro: é a última doutrina
 // que ele lê antes das três portas de saída.
 // ─────────────────────────────────────────────────────────────────────────────
-export const REGRA_DE_OURO = `════ VOCÊ NÃO SABE DE CABEÇA. VOCÊ VAI BUSCAR. ════
-Isto está acima de qualquer outra regra deste documento, inclusive das de oratória.
+export const REGRA_DE_OURO = `════ NO SAGRADO, VOCÊ NÃO SABE DE CABEÇA — VOCÊ VAI BUSCAR ════
+⚠️ ISTO VALE PARA BÍBLIA, VERSÍCULO, ERUDIÇÃO, PALAVRA NO ORIGINAL E ESTUDO —
+o coração da casa. NÃO vale para conversa geral, notícia ou assunto do mundo:
+aquilo você responde do que já sabe (ALMA, lá em cima). Aqui é o terreno santo,
+e aqui é proibido chutar. Neste terreno, isto está acima de qualquer regra de
+oratória.
 
-Você tem NOVE ferramentas e elas são a sua memória de verdade:
+Você tem estas ferramentas e elas são a sua memória de verdade NO SAGRADO:
   ler_versiculo         — o texto exato de qualquer versículo, com o idioma original junto
   conferir_citacao      — confere se o versículo diz MESMO o que você vai afirmar
   pesquisar_biblioteca  — a BIBLIOTECA DE ESTUDO dele: Champlin, Kittel, Waltke, Kidner,
@@ -914,6 +934,71 @@ eu quero ver isso direito na sua mensagem".`;
 // `ctx` é o 4º argumento e é OPCIONAL de propósito: o banco de provas antigo
 // (scripts/_provar-voz-ferramentas.mjs) chama com três, e continua valendo.
 // Dentro dele vem { user } — a chave do pastor, que só a memória usa.
+// ─────────────────────────────────────────────────────────────────────────────
+// SABER AGORA — a janela do globo pro mundo de HOJE (24/09/2026, pedido do Elias:
+// "tira a mordaça e liga a internet"). O grounding do Google fica de fora no tier
+// grátis (derruba a sessão, code 1011 — ver voz.js). Então a internet entra pela
+// NOSSA busca: Tavily por palavra, Exa por sentido de reserva, com as chaves que
+// já estão na Vercel (TAVILY_API_KEYS / EXA_API_KEYS). Conversa de graça, busca
+// de graça. Só pra FATO ATUAL — notícia, cotação, quem ganhou, que dia cai algo.
+// Conhecimento geral o próprio motor já sabe e responde sem gastar isto.
+async function saberAgora(pergunta, origem) {
+  const q = String(pergunta || '').trim().slice(0, 300);
+  if (!q) return { achou: false, ordem: 'Pergunta vazia. Peça pro pastor repetir o que ele quer saber.' };
+  const umaChave = (lista) => {
+    const ks = String(lista || '').split(/[,\s]+/).filter(Boolean);
+    return ks.length ? ks[Math.floor(Math.random() * ks.length)] : '';
+  };
+  // 1) Tavily — resposta pronta + fontes
+  const tv = umaChave(process.env.TAVILY_API_KEYS || process.env.TAVILY_API_KEY);
+  if (tv) {
+    try {
+      const r = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tv },
+        body: JSON.stringify({ query: q, max_results: 4, search_depth: 'basic', include_answer: true }),
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const fontes = (j.results || []).slice(0, 4).map((x) => ({ titulo: x.title, url: x.url }));
+        const texto = (j.answer || '') + (fontes.length
+          ? '\n\nDo que a busca trouxe:\n' + (j.results || []).slice(0, 3)
+              .map((x) => '• ' + (x.title || '') + ': ' + String(x.content || '').slice(0, 220)).join('\n')
+          : '');
+        if (texto.trim()) return {
+          achou: true, material: texto, fontes,
+          ordem: 'Isto veio da internet AGORA. Responda em cima disto, com as suas palavras, e diga que é o que a internet mostra. Se for opinião ou incerto, diga que é.',
+        };
+      }
+    } catch (_) {}
+  }
+  // 2) Exa — reserva, busca por sentido
+  const ex = umaChave(process.env.EXA_API_KEYS || process.env.EXA_API_KEY);
+  if (ex) {
+    try {
+      const r = await fetch('https://api.exa.ai/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ex },
+        body: JSON.stringify({ query: q, numResults: 4, contents: { text: { maxCharacters: 500 } } }),
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const rs = j.results || [];
+        const texto = rs.slice(0, 3).map((x) => '• ' + (x.title || '') + ': ' + String((x.text || '')).slice(0, 220)).join('\n');
+        if (texto.trim()) return {
+          achou: true, material: texto,
+          fontes: rs.slice(0, 4).map((x) => ({ titulo: x.title, url: x.url })),
+          ordem: 'Isto veio da internet AGORA (busca por sentido). Responda em cima disto, com as suas palavras, e diga que é o que a internet mostra.',
+        };
+      }
+    } catch (_) {}
+  }
+  return {
+    achou: false,
+    ordem: 'A busca na internet não respondeu agora. Diga ao pastor, com naturalidade, que não conseguiu checar isso neste momento — NÃO invente o dado.',
+  };
+}
+
 export async function executarFerramenta(nome, args, origem, ctx) {
   const a = args || {};
   const c = ctx || {};
@@ -952,6 +1037,8 @@ export async function executarFerramenta(nome, args, origem, ctx) {
     // diz isso em voz alta. NUNCA devolve lembrança inventada para tapar buraco.
     case 'o_que_ja_falamos':
       return oQueJaFalamos(a, origem, c.user || '');
+    case 'saber_agora':
+      return saberAgora(a.pergunta || a.q || a.assunto, origem);
     default:
       return { erro: 'ferramenta desconhecida: ' + nome,
         ordem: 'Não use isso. Siga com as ferramentas que você tem.' };
