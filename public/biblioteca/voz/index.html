@@ -226,7 +226,7 @@
       <h3>Volume da voz</h3>
       <div class="linhaCfg" style="align-items:center;gap:10px">
         <span style="font-size:18px">🔉</span>
-        <input id="volVoz" type="range" min="0.4" max="5" step="0.2" value="2.6"
+        <input id="volVoz" type="range" min="0.6" max="8" step="0.2" value="3.6"
                style="flex:1;accent-color:var(--gold)" aria-label="Volume da voz">
         <span style="font-size:20px">🔊</span>
       </div>
@@ -2093,7 +2093,9 @@
       // do botão do celular. O nível fica guardado no aparelho.
       S.mestreVol=S.ctxSom.createGain();
       var volSalvo=parseFloat(localStorage.getItem('voz.vol'));
-      S.mestreVol.gain.value=(volSalvo>=0.2&&volSalvo<=6)?volSalvo:2.6;
+      // padrao 3.6x (o Elias pediu mais alto); teto 8x. O limitador abaixo
+      // segura o estouro mesmo no teto.
+      S.mestreVol.gain.value=(volSalvo>=0.4&&volSalvo<=8)?volSalvo:3.6;
       var limite=S.ctxSom.createDynamicsCompressor();
       // limitador: segura o que passar de ~-3 dB pra o reforço não estourar
       try{
@@ -2351,9 +2353,9 @@
   (function(){
     var bar=document.getElementById('volVoz'); if(!bar) return;
     var v=parseFloat(localStorage.getItem('voz.vol'));
-    if(v>=0.4&&v<=5) bar.value=v;
+    if(v>=0.6&&v<=8) bar.value=v;
     bar.addEventListener('input',function(){
-      var g=parseFloat(bar.value)||2.6;
+      var g=parseFloat(bar.value)||3.6;
       try{ localStorage.setItem('voz.vol',String(g)); }catch(e){}
       if(S.mestreVol&&S.ctxSom){
         try{ S.mestreVol.gain.setTargetAtTime(g,S.ctxSom.currentTime,0.02); }catch(_){ S.mestreVol.gain.value=g; }

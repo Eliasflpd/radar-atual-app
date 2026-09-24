@@ -1014,14 +1014,27 @@ export default async function handler(req, ctx) {
     }
     if (quemFala) {
       // ja me quebrou tres vezes hoje. Com crase o texto entra como esta.
+      // ⚠️ 24/09/2026, pedido do Elias: "nao e pra me chamar de Pastor Elias,
+      // mas pode pedir meu nome pra saber." Entao: SO O PRIMEIRO NOME, leve,
+      // NUNCA o cargo grudado como titulo ("Pastor Fulano"). O cargo serve so
+      // pra medir a profundidade da conversa, nao pra tratar a pessoa.
+      var primeiroNome = quemFala.split(/\s+/)[0] || quemFala;
       memoria = (memoria ? memoria + String.fromCharCode(10,10) : '') + [
         'COM QUEM VOCE ESTA FALANDO:',
-        'O nome dele e ' + quemFala + (cargoDele ? ' e ele e ' + cargoDele : '') + '.',
-        'Chame-o pelo nome de vez em quando, como um amigo chama - nao a cada frase, que vira vendedor.',
-        'Uma vez na abertura e depois quando o assunto ficar serio.',
-        'NUNCA diga o nome dele dentro de uma lembranca guardada nem repita o cargo toda hora:',
-        'ele quer ser tratado por gente, nao ser bajulado.'
+        'O primeiro nome dele e ' + primeiroNome + '.'
+          + (cargoDele ? ' (Na igreja ele e ' + cargoDele + ' - isto so te diz o NIVEL da conversa, NAO e como voce o chama.)' : ''),
+        'Chame-o so pelo primeiro nome, e de vez em quando, como um amigo chama - nao a cada frase.',
+        'NUNCA grude o cargo no nome: nada de "Pastor ' + primeiroNome + '". So "' + primeiroNome + '".',
+        'Se em algum momento parecer que o nome esta errado, ou ele pedir, pergunte com',
+        'naturalidade como ele prefere ser chamado - e passe a chamar assim.',
+        'NUNCA repita o nome dentro de uma lembranca guardada. Tratar por gente, nao bajular.'
       ].join(String.fromCharCode(10));
+    } else {
+      // Sem nome no cadastro: em vez de inventar um tratamento, o globo PERGUNTA.
+      memoria = (memoria ? memoria + String.fromCharCode(10,10) : '')
+        + 'VOCE AINDA NAO SABE O NOME DELE. Numa boa hora da conversa, pergunte '
+        + 'com naturalidade como ele gosta de ser chamado, e passe a usar so isso. '
+        + 'Nao invente nome nem titulo.';
     }
 
     const r = await assinarToken(handle, voz, memoria);
