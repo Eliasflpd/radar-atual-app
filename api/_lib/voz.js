@@ -704,16 +704,13 @@ const chaves = chavesGemini;
 function setupDaSessao(handle, voz, memoria) {
   const setup = {
     model: MODELO,
-    // ── NATURALIDADE (25/09/2026, pesquisa que o Elias mandou fazer) ──────────
-    // Dois recursos do Gemini 3.8 Live que eu NUNCA tinha ligado — e é isto que
-    // fazia falta pra ele soar vivo como o ChatGPT, não monótono:
-    //  • affective dialog: o modelo adapta o TOM e a EMOÇÃO da resposta ao jeito
-    //    como o pastor fala. É o que tira o "robô lendo" e põe gente conversando.
-    //  • proatividade: o modelo decide sozinho quando NÃO responder (ruído, fala
-    //    que não é pra ele) — menos interrupção à toa.
-    // Os dois só existem no 3.8 Live (não no 3.1 Flash Live); é o modelo que usamos.
-    enableAffectiveDialog: true,
-    proactivity: { proactiveAudio: true },
+    // ⚠️ AFFECTIVE DIALOG e PROACTIVITY foram TENTADOS aqui (25/09/2026) e QUEBRAM
+    // a conexão: o endpoint BidiGenerateContent v1beta recusa com code 1007
+    // "Unknown name 'enableAffectiveDialog' at 'setup': Cannot find field".
+    // A doc os cita, mas NÃO neste modelo/endpoint (models/gemini-3.8-live via WS
+    // constrained). Testado ao vivo abrindo o WebSocket com a setup — não reabrir
+    // sem confirmar num modelo/endpoint que aceite (ex.: um -native-audio, se
+    // existir). O que faz o tom soar vivo aqui fica sendo o prompt enxuto + temperatura.
     generationConfig: {
       responseModalities: ['AUDIO'],
       // pt-BR nativo, confirmado na lista de idiomas aceitos pelo campo languageCode.
