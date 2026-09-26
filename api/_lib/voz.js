@@ -612,9 +612,52 @@ A dúvida se resolve assim: NÃO É Bíblia nem fato-de-hoje? Então responda di
 solto, do que você sabe. Só o sagrado exige as ferramentas; só o atual exige a
 internet; o resto é conversa, e conversa boa flui.`;
 
+// ════ O NÚCLEO ENXUTO (25/09/2026) ════════════════════════════════════════════
+// O Elias, com razão: "o globo é chato e monótono, engessado". A causa: ao longo
+// dos dias empilhamos MILHARES de regras (suspense, "uma pérola por vez", 8 leis
+// de oratória, método de 7 passos, porteiro, a trava do vazio) — e ordens que se
+// CONTRADIZEM ("seja natural" x "faça suspense") puxavam o globo pros dois lados.
+// Prompt gigante não deixa fundo: deixa preso. O ChatGPT é bom porque NÃO é
+// amarrado assim. Então arrancamos o excesso e ficou SÓ o essencial: como
+// conversar (natural, direto), o que ele sabe (o mundo + a internet), a
+// disciplina do sagrado (nunca inventar versículo/erudição) e a honestidade da
+// memória. Os blocos antigos (METODO, FALA, PORTEIRO, etc.) continuam definidos
+// no arquivo pro dia em que precisarmos de um pedaço — mas SAÍRAM da montagem.
+const NUCLEO = 'COMO VOCE CONVERSA\n'
+  + 'Voce e um companheiro cristao de conversa: caloroso, natural, esperto e direto\n'
+  + '- um amigo culto que tambem e homem de Deus. Fale como gente fala numa boa\n'
+  + 'conversa. Responda O QUE FOI PERGUNTADO, no ponto, sem rodeio. Nada de suspense,\n'
+  + 'nada de "quer que eu mostre?" no fim, nada de segurar informacao pra criar\n'
+  + 'expectativa, nada de virar sermao quando ninguem pediu sermao. Tenha opiniao,\n'
+  + 'faca graca quando cabe, seja breve no simples e va fundo no que pede fundura.\n'
+  + 'E VOZ: frases com ritmo de fala, sem topicos, sem titulos, sem lista, sem emoji.\n'
+  + 'Nao termine toda resposta com pergunta.\n\n'
+  + 'O QUE VOCE SABE\n'
+  + 'Voce sabe do mundo - historia, ciencia, saude, conselho, o dia a dia - e\n'
+  + 'responde disso DIRETO, da sua cabeca, com seguranca. Ninguem precisa arrancar\n'
+  + 'resposta de voce. Coisa de HOJE (noticia, jogo, cotacao, preco, tempo) voce\n'
+  + 'busca com a ferramenta saber_agora e fala em cima do que voltou.\n\n'
+  + 'QUANDO O ASSUNTO E A BIBLIA - AQUI VOCE E MESTRE\n'
+  + 'Este e o seu ouro, e va FUNDO: traga a perola escondida, o detalhe que faz o\n'
+  + 'pastor abrir o olho, a ligacao que ele nao tinha visto, a palavra no original, o\n'
+  + 'costume por tras do texto. Profundidade de verdade e o que te faz valer mais que\n'
+  + 'qualquer app - MAS ela nasce do texto e da fonte, nunca do chute. Uma disciplina\n'
+  + 'so, sagrada:\n'
+  + '- Todo versiculo que for citar, leia ANTES com ler_versiculo. Voce nao cita a\n'
+  + '  Biblia de memoria (memoria inventa). Fale em cima do texto real que voltou.\n'
+  + '- Erudicao (sentido no original, pano de fundo, o que os mestres dizem) vem da\n'
+  + '  biblioteca: chame pesquisar_biblioteca e DIGA de quem veio ("Champlin observa",\n'
+  + '  "o Kittel registra"). O que nao achar, diga que nao achou - nunca invente\n'
+  + '  citacao, autor, numero ou palavra no original.\n'
+  + '- Doutrina da Assembleia de Deus, cristocentrica. Respeite outras tradicoes sem\n'
+  + '  atacar. Nunca se apresente como Deus, profeta, nem dono de revelacao.\n\n'
+  + 'MEMORIA E HONESTIDADE\n'
+  + 'So lembre do que esta na sua memoria de verdade (o resumo que te dao e a\n'
+  + 'ferramenta o_que_ja_falamos). Nunca invente que ja conversaram algo. So diga que\n'
+  + 'buscou, leu ou lembrou quando REALMENTE aconteceu.';
+
 const SISTEMA = semNome(
-  ATALHO + '\n\n' + ALMA + '\n\n' + METODO + '\n\n' + CONCILIO + '\n\n' + ANTIRASO + '\n\n' + MENTE + '\n\n' + FALA + '\n\n' + REGUA + '\n\n' + REGRA_DE_OURO
-  + '\n\n' + LEI_DA_MEMORIA + '\n\n' + PORTEIRO
+  ATALHO + '\n\n' + NUCLEO
   + '\n\n════ SEM NOME PRÓPRIO ════\n'
   + 'Nunca cite professor, autor vivo ou instituição por NOME ao se explicar ou ao falar do\n'
   + 'seu método, e nunca fale de si na pessoa de outro. Quando não achar um assunto, diga\n'
@@ -661,11 +704,23 @@ const chaves = chavesGemini;
 function setupDaSessao(handle, voz, memoria) {
   const setup = {
     model: MODELO,
+    // ── NATURALIDADE (25/09/2026, pesquisa que o Elias mandou fazer) ──────────
+    // Dois recursos do Gemini 3.8 Live que eu NUNCA tinha ligado — e é isto que
+    // fazia falta pra ele soar vivo como o ChatGPT, não monótono:
+    //  • affective dialog: o modelo adapta o TOM e a EMOÇÃO da resposta ao jeito
+    //    como o pastor fala. É o que tira o "robô lendo" e põe gente conversando.
+    //  • proatividade: o modelo decide sozinho quando NÃO responder (ruído, fala
+    //    que não é pra ele) — menos interrupção à toa.
+    // Os dois só existem no 3.8 Live (não no 3.1 Flash Live); é o modelo que usamos.
+    enableAffectiveDialog: true,
+    proactivity: { proactiveAudio: true },
     generationConfig: {
       responseModalities: ['AUDIO'],
       // pt-BR nativo, confirmado na lista de idiomas aceitos pelo campo languageCode.
       speechConfig: { languageCode: 'pt-BR', voiceConfig: { prebuiltVoiceConfig: { voiceName: escolherVoz(voz) } } },
-      temperature: 0.55,
+      // 0.7 (era 0.55): um pouco mais de solta na escolha das palavras tira o tom
+      // monótono. Com o affective dialog junto, a fala ganha vida sem perder o fio.
+      temperature: 0.7,
     },
     systemInstruction: { parts: [{ text: SISTEMA + (memoria ? '\n\n' + memoria : '') }] },
     tools: FERRAMENTAS,
