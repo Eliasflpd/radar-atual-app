@@ -49,10 +49,11 @@
   <div class="divisor"></div>
 
   <div class="mtabs">
-    <button class="mtab on" data-p="lista" onclick="stab('lista')">📖 Sermões</button>
+    <button class="mtab" data-p="lista" onclick="stab('lista')">📖 Sermões</button>
     <button class="mtab" data-p="forjar" onclick="stab('forjar')">✍️ Forjar Sermão</button>
   </div>
 
+  <div id="stab-dica" style="text-align:center;color:#9aa1ad;font-size:.86rem;margin:14px 0 6px;line-height:1.5">👆 Toque em <b style="color:#0f6d78">📖 Sermões</b> para ler,<br>ou <b style="color:#0f6d78">✍️ Forjar Sermão</b> para criar um novo.</div>
   <input id="busca" type="search" placeholder="🔎 Buscar por título, texto ou referência…" autocomplete="off">
   <div id="lista"></div>
   <div id="vazio-busca" class="vazio" style="display:none">Nenhum sermão encontrado pra essa busca.</div>
@@ -299,7 +300,11 @@
   var busca=document.getElementById('busca');
   var vazioB=document.getElementById('vazio-busca');
   var cri=document.querySelector('.criador');
-  if(cri) cri.style.display='none';           // começa na aba de lista
+  var dica=document.getElementById('stab-dica');
+  // COMEÇA FECHADO: nada de lista até tocar em "📖 Sermões". A página abre limpa.
+  if(cri)   cri.style.display='none';
+  if(list)  list.style.display='none';
+  if(busca) busca.style.display='none';
   function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
   function filtrar(){
     if(!busca||!list) return;
@@ -313,6 +318,7 @@
   if(busca) busca.addEventListener('input', filtrar);
   window.stab=function(p){
     var naLista = p==='lista';
+    if(dica)  dica.style.display  = 'none';     // escolheu uma aba: a dica sai
     if(list)  list.style.display  = naLista?'block':'none';
     if(busca) busca.style.display = naLista?'block':'none';
     if(cri)   cri.style.display   = naLista?'none':'block';
