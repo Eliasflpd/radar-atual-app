@@ -1128,11 +1128,11 @@ html[data-fs="3"] .prl-out{font-size:20px}
   transition:transform .12s,border-color .12s,box-shadow .12s;
 }
 #home .vit-card:active{transform:scale(.96);border-color:var(--dourado);box-shadow:0 3px 12px rgba(185,139,46,.22)}
-#home .vit-ico{height:auto;display:grid;place-items:center;font-size:clamp(17px,5.4vw,24px);line-height:1;margin-bottom:2px;filter:saturate(.92)}
-#home .vit-ico img{max-height:clamp(20px,6vw,30px);max-width:80%;width:auto;object-fit:contain}
+#home .vit-ico{height:auto;display:grid;place-items:center;font-size:clamp(20px,6.8vw,29px);line-height:1;margin-bottom:4px;filter:saturate(.92)}
+#home .vit-ico img{max-height:clamp(24px,7.6vw,38px);max-width:80%;width:auto;object-fit:contain}
 #home .vit-nome{
   font-size:clamp(9.5px,2.9vw,12px);font-weight:800;color:var(--marrom);
-  letter-spacing:.2px;line-height:1.06;text-transform:uppercase;
+  letter-spacing:.3px;line-height:1.14;text-transform:uppercase;
 }
 #home .vit-desc{
   font-size:clamp(8px,2.5vw,10.5px);color:var(--cinza);line-height:1.22;margin-top:3px;
