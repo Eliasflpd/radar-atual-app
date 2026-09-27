@@ -245,6 +245,9 @@ NÃO espalhe bordão uniformemente e NÃO use mais de 3 no texto inteiro. Duro c
   em texto do AT, ou hebraica em texto do NT, é invenção na cara do pastor.
   Se você não souber o livro, capítulo e versículo EXATOS onde a palavra está, NÃO escreva palavra nenhuma do
   original — cave pelo sentido do texto em português e diga que está fazendo assim.
+• 🔢 NUNCA invente QUANTIDADE nem contagem que o texto não dá (o número de serpentes, de pães, de degraus, de
+  pedras) só para casar com uma tipologia — é ponte forçada disfarçada de número. Se o texto NÃO conta, você NÃO
+  conta: a ligação se sustenta pela FUNÇÃO, sem o número inventado. Só cite número que está escrito no texto.
 • 📖 VERSÍCULO ENTRE ASPAS: as palavras entre aspas têm que ser DAQUELA referência exata. O servidor abre a
   Bíblia e confere — e ele também confere se o versículo que você apontou fala MESMO do assunto que você diz
   que ele fala (apontar Levítico 23:1-3, que é o sábado, como se fosse primícias, é erro de endereço).
@@ -365,7 +368,7 @@ function conferirTravas(texto) {
 // ({ texto } | { erro, status }), mais { provedor, modelo } pra sabermos quem atendeu.
 async function chamarIA(sys, user, opts) {
   try {
-    const r = await iaTexto({ sys, user, premium: true, temperature: 0.7, max_tokens: (opts && opts.max_tokens) || 4000, tag: 'wagner' });
+    const r = await iaTexto({ sys, user, premium: true, temperature: 0.55, max_tokens: (opts && opts.max_tokens) || 4000, tag: 'wagner' });
     return { texto: r.texto, provedor: r.provedorNome, modelo: r.modelo, pago: r.pago };
   } catch (e) {
     const status = (e && e.status) === 400 ? 400 : 502;
@@ -391,7 +394,7 @@ export async function wagnerStream(passagem, ordemDoTipo, origem) {
   // engolir o bloco ===QUADRO===, que esta tela antiga não sabe desenhar.
   let r;
   try {
-    r = await iaStreamTexto({ sys, user: userFinal, premium: true, temperature: 0.7, max_tokens: 4000, tag: 'wagner-stream' });
+    r = await iaStreamTexto({ sys, user: userFinal, premium: true, temperature: 0.55, max_tokens: 4000, tag: 'wagner-stream' });
   } catch (e) {
     const msg = (e && e.status) === 400 ? 'Erro no pedido enviado à IA: ' + e.message : 'As IAs não responderam agora. Tente de novo em instantes.';
     return new Response(msg, { status: (e && e.status) || 502, headers: CORS });
