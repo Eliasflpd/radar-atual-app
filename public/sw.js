@@ -1,5 +1,14 @@
-const V='radar-v188';               // cache do SHELL — troca a cada versão do app
+const V='radar-v189';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
+// ⚠️ 27/09/2026 — POR QUE ESTE CACHE EXISTE (bug real: "clico na mensagem e não abre"):
+// o `activate` apagava o cache da versão anterior a CADA subida de versão. Como as
+// páginas de mensagem/sermão eram guardadas só no cache do SHELL (que troca de nome),
+// toda vez que eu subia a versão o irmão ficava com o conteúdo ZERADO — e a mensagem
+// só abria se a internet respondesse na hora do clique. Pastor com sinal ruim: não abria.
+// Este cache é PERSISTENTE (nunca apagado ao subir versão, como o PACOTE): toda página
+// que o irmão abriu UMA vez continua abrindo pra sempre, mesmo offline, mesmo depois de
+// eu publicar uma versão nova.
+const CONTEUDO='radar-conteudo-v1';
 
 // ═══ O SHELL: sem isto o app não pinta nada. Vai pro cache JÁ na instalação. ═══
 // Por que pré-carregar: o service worker NÃO controla a página durante a visita
@@ -32,8 +41,8 @@ self.addEventListener('install',e=>{
 
 self.addEventListener('activate',e=>
   e.waitUntil(caches.keys()
-    // apaga só as versões velhas do shell. O PACOTE do irmão fica de pé.
-    .then(ks=>Promise.all(ks.filter(k=>k!==V && k!==PACOTE).map(k=>caches.delete(k))))
+    // apaga só as versões velhas do shell. O PACOTE e o CONTEUDO do irmão ficam de pé.
+    .then(ks=>Promise.all(ks.filter(k=>k!==V && k!==PACOTE && k!==CONTEUDO).map(k=>caches.delete(k))))
     .then(()=>self.clients.claim())));
 
 self.addEventListener('message',e=>{
@@ -118,14 +127,21 @@ function documento(req){
   return caches.open(V).then(c=>c.match(req,{ignoreSearch:true})).then(guardado=>{
     const rede=fetch(req).then(r=>{
       if(r&&r.ok){
-        const clone=r.clone();
-        caches.open(V).then(c=>c.put(req,clone)).catch(()=>{});
+        // grava nos DOIS: no shell da versão (rápido) E no CONTEUDO persistente,
+        // que sobrevive à próxima subida de versão. É isto que faz a mensagem que
+        // o irmão abriu uma vez continuar abrindo pra sempre.
+        const c1=r.clone(), c2=r.clone();
+        caches.open(V).then(c=>c.put(req,c1)).catch(()=>{});
+        caches.open(CONTEUDO).then(c=>c.put(req,c2)).catch(()=>{});
         if(guardado) avisaVersaoNova(req.url);
       }
       return r;
     }).catch(()=>
-      // sem rede: agora sim vale tudo que houver guardado, inclusive o pacote
-      guardado||daDespensa(req).then(p=>p||paginaOffline()).catch(()=>paginaOffline())
+      // sem rede: vale o do shell, senão o CONTEUDO persistente, senão o pacote,
+      // e só então a página de "ainda não guardada".
+      guardado
+      || caches.open(CONTEUDO).then(c=>c.match(req,{ignoreSearch:true}))
+           .then(p=>p||daDespensa(req)).then(p=>p||paginaOffline()).catch(()=>paginaOffline())
     );
     return guardado||rede;   // tem guardado do shell? desenha JÁ. Não tem? espera a rede.
   });
