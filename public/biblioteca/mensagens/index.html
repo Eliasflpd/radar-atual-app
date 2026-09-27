@@ -14,10 +14,10 @@
     font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
     padding:16px 13px calc(46px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased;
   }
-  .voltar{display:inline-block;margin:0 0 16px;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .voltar{display:inline-block;margin:0;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:8px 13px;font-size:.82rem;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
   .selo{text-align:center;color:var(--teal);font-size:.82rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
-  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.5rem;font-weight:800;margin:2px 0 4px;white-space:nowrap}
-  .sub{text-align:center;color:#6b7280;font-size:1rem;margin-bottom:8px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.32rem;font-weight:800;margin:4px 0 1px;white-space:nowrap}
+  .sub{text-align:center;color:#6b7280;font-size:.84rem;margin-bottom:6px}
   .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 22px}
   .card{
     display:block;text-decoration:none;color:inherit;background:#fff;
@@ -35,19 +35,20 @@
 </head>
 <body>
 
-  <div style="display:flex;gap:8px;margin-bottom:16px">
-    <button class="voltar" style="margin:0" onclick="location.href='/?mod=manuais'">← Biblioteca</button>
-    <button class="voltar" style="margin:0;background:#0f3d5c" onclick="location.href='/'">🏠 Início</button>
+  <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:nowrap">
+    <button class="voltar" onclick="location.href='/?mod=manuais'">← Biblioteca</button>
+    <button class="voltar" style="background:#0f3d5c" onclick="location.href='/'">🏠 Início</button>
   </div>
 
   <h1>Mensagens para Pregar</h1>
   <div class="sub">Sermões densos em prosa</div>
 
-  <div class="mtabs" style="margin-top:12px">
-    <button class="mtab on" data-p="lista" onclick="mtab('lista')">📖 Mensagens</button>
+  <div class="mtabs" style="margin-top:6px">
+    <button class="mtab" data-p="lista" onclick="mtab('lista')">📖 Mensagens</button>
     <button class="mtab" data-p="forjar" onclick="mtab('forjar')">🔥 Forjar Mensagem</button>
   </div>
 
+  <div id="mtab-dica" style="text-align:center;color:#9aa1ad;font-size:.86rem;margin:14px 0 6px;line-height:1.5">👆 Toque em <b style="color:#0f6d78">📖 Mensagens</b> para ler,<br>ou <b style="color:#8a1c1c">🔥 Forjar Mensagem</b> para criar uma nova.</div>
   <div id="lista"></div>
 
 <script>
@@ -195,8 +196,8 @@
 <!-- ══════════ CRIADOR DE MENSAGENS (skill Mensagens para Pregar) ══════════ -->
 <style>
   .criador{margin:0}
-  .mtabs{display:flex;gap:8px;margin:0 0 18px}
-  .mtab{flex:1;padding:12px 8px;border-radius:13px;background:#eef2f4;border:1px solid #e4e7ec;color:#0f3d5c;font-weight:800;font-family:inherit;font-size:.98rem;cursor:pointer}
+  .mtabs{display:flex;gap:8px;margin:0 0 8px}
+  .mtab{flex:1;padding:9px 8px;border-radius:11px;background:#eef2f4;border:1px solid #e4e7ec;color:#0f3d5c;font-weight:800;font-family:inherit;font-size:.9rem;cursor:pointer}
   .mtab.on{background:linear-gradient(135deg,#8a1c1c,#a9791c);color:#fff;border-color:transparent}
   .cr-selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase}
   .cr-tit{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.42rem;margin:4px 0 6px}
@@ -236,8 +237,12 @@
   var raw='', ocupado=false;
   // duas abas: 📖 Mensagens (padrão) e 🔥 Forjar — nada fica escondido pra baixo
   var _cri=document.querySelector('.criador'), _list=document.getElementById('lista');
+  var _dica=document.getElementById('mtab-dica');
+  // COMEÇA FECHADO: nada de lista até tocar em "📖 Mensagens". A página abre limpa.
   if(_cri&&_list&&_list.parentNode){ _list.parentNode.insertBefore(_cri, _list.nextSibling); _cri.style.display='none'; }
+  if(_list) _list.style.display='none';
   window.mtab=function(p){
+    if(_dica) _dica.style.display='none';      // escolheu uma aba: a dica sai
     if(_list) _list.style.display = p==='lista'?'block':'none';
     if(_cri) _cri.style.display = p==='forjar'?'block':'none';
     document.querySelectorAll('.mtab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-p')===p); });
