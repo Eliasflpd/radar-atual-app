@@ -1034,7 +1034,10 @@ export default async function handler(req) {
       { temperature: 0.6, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema });
   }
   if (acao === 'mensagem') {
-    const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
+    // 4000 (era 400) — pra caber uma TRANSCRIÇÃO inteira colada (ex.: o texto de
+    // um vídeo/áudio). O SYS_MENSAGEM forja uma mensagem ORIGINAL a partir do
+    // texto (método Escavador de Pérolas) — não copia a fala de ninguém.
+    const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 4000);
     if (!tema) return new Response('Diga o texto ou o tema da mensagem.', { status: 400, headers: CORS });
     const origem = _origemDe(req);
     const fonteM = await kittelFonte(tema, origem);
