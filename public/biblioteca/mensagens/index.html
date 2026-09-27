@@ -238,9 +238,7 @@
   // duas abas: 📖 Mensagens (padrão) e 🔥 Forjar — nada fica escondido pra baixo
   var _cri=document.querySelector('.criador'), _list=document.getElementById('lista');
   var _dica=document.getElementById('mtab-dica');
-  // COMEÇA FECHADO: nada de lista até tocar em "📖 Mensagens". A página abre limpa.
   if(_cri&&_list&&_list.parentNode){ _list.parentNode.insertBefore(_cri, _list.nextSibling); _cri.style.display='none'; }
-  if(_list) _list.style.display='none';
   window.mtab=function(p){
     if(_dica) _dica.style.display='none';      // escolheu uma aba: a dica sai
     if(_list) _list.style.display = p==='lista'?'block':'none';
@@ -248,6 +246,7 @@
     document.querySelectorAll('.mtab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-p')===p); });
     window.scrollTo(0,0);
   };
+  mtab('lista');   // abre a lista de cara — nada de tela vazia
   function escH(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function inl(s){return escH(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');}
   function render(txt){
