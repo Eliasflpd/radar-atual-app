@@ -12,8 +12,8 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/radar.css?v=192">
-<link rel="preload" as="script" href="/assets/app.js?v=192">
+<link rel="stylesheet" href="/assets/radar.css?v=193">
+<link rel="preload" as="script" href="/assets/app.js?v=193">
 <script>
 /* ── A PELE DA HOME (bege ou azul) ──────────────────────────────────────────
    Isto roda AQUI NO <head>, antes de o navegador pintar qualquer coisa.
@@ -88,6 +88,10 @@
           <div class="vit-vref">SALMOS 119:105</div>
         </div>
         <button class="vit-vseta" title="Abrir Bíblia e Harpa" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)">&rarr;</button>
+      </div>
+
+      <div class="vit-hero-img" style="text-align:center;margin:2px 0 14px">
+        <img src="/biblioteca/img/pastor-palavra.jpg" alt="Pastor com a Bíblia aberta e a pomba do Espírito Santo" style="width:100%;max-width:230px;border-radius:16px;box-shadow:0 10px 26px rgba(0,0,0,.30);display:block;margin:0 auto" loading="lazy">
       </div>
 
       <div class="vit-grade">
@@ -1032,7 +1036,7 @@
   </div>
 </div>
 
-<script src="/assets/app.js?v=192"></script>
+<script src="/assets/app.js?v=193"></script>
 
 <!-- REF SHEET -->
 <div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>
@@ -1260,6 +1264,9 @@
     <button class="std-back" onclick="irHome()">←</button>
     <div class="std-hinfo"><div class="std-titulo">📚 Biblioteca</div><div class="std-sub">Livros e manuais do obreiro</div></div>
     <div style="width:36px"></div>
+  </div>
+  <div style="text-align:center;padding:12px 14px 0">
+    <img src="/biblioteca/img/pastor-palavra.jpg" alt="Pastor com a Bíblia aberta e a pomba do Espírito Santo" style="width:100%;max-width:230px;border-radius:16px;box-shadow:0 10px 26px rgba(0,0,0,.25);display:block;margin:0 auto" loading="lazy">
   </div>
   <div class="dash-scroll" style="padding:14px" id="manuais-lista"></div>
 </div>
@@ -2030,7 +2037,7 @@ function compartilharApp(nome){
   </div>
 </div>
 
-<script src="/assets/lupa.js?v=192"></script>
-<script src="/_uso.js?v=192" defer></script>
+<script src="/assets/lupa.js?v=193"></script>
+<script src="/_uso.js?v=193" defer></script>
 </body>
 </html>
