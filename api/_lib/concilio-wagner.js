@@ -365,7 +365,7 @@ function conferirTravas(texto) {
 // ({ texto } | { erro, status }), mais { provedor, modelo } pra sabermos quem atendeu.
 async function chamarIA(sys, user, opts) {
   try {
-    const r = await iaTexto({ sys, user, temperature: 0.45, max_tokens: (opts && opts.max_tokens) || 4000, tag: 'wagner' });
+    const r = await iaTexto({ sys, user, premium: true, temperature: 0.7, max_tokens: (opts && opts.max_tokens) || 4000, tag: 'wagner' });
     return { texto: r.texto, provedor: r.provedorNome, modelo: r.modelo, pago: r.pago };
   } catch (e) {
     const status = (e && e.status) === 400 ? 400 : 502;
@@ -382,7 +382,7 @@ export async function wagnerStream(passagem, ordemDoTipo, origem) {
   // A Bíblia é grande; começamos a carregar AGORA, em paralelo com a IA, pra ela já
   // estar em memória quando o stream acabar e a conferência rodar.
   if (origem) carregarBiblia(origem);
-  const ctx = buscarContexto(passagem, 8000, { marcar: true });
+  const ctx = buscarContexto(passagem, 14000, { marcar: true });
   const { sys, user } = montarPrompt(passagem, ctx);
   const userFinal = ordemDoTipo ? user + '\n\nFORMATO PEDIDO PELO PASTOR:\n' + ordemDoTipo : user;
 
@@ -391,7 +391,7 @@ export async function wagnerStream(passagem, ordemDoTipo, origem) {
   // engolir o bloco ===QUADRO===, que esta tela antiga não sabe desenhar.
   let r;
   try {
-    r = await iaStreamTexto({ sys, user: userFinal, temperature: 0.45, max_tokens: 4000, tag: 'wagner-stream' });
+    r = await iaStreamTexto({ sys, user: userFinal, premium: true, temperature: 0.7, max_tokens: 4000, tag: 'wagner-stream' });
   } catch (e) {
     const msg = (e && e.status) === 400 ? 'Erro no pedido enviado à IA: ' + e.message : 'As IAs não responderam agora. Tente de novo em instantes.';
     return new Response(msg, { status: (e && e.status) || 502, headers: CORS });
@@ -460,7 +460,7 @@ export default async function handler(req) {
   try { origem = new URL(req.url).origin; } catch (_) {}
   if (origem) carregarBiblia(origem);
 
-  const ctx = buscarContexto(pergunta, 9000, { marcar: true });
+  const ctx = buscarContexto(pergunta, 14000, { marcar: true });
   let { sys, user } = montarPrompt(pergunta, ctx);
 
   // Conversa continuada: só as últimas trocas, resumidas, pra não estourar o prompt
