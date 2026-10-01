@@ -2,54 +2,150 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="color-scheme" content="only light">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0a1522">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mensagens para Pregar — Escavador de Pérolas Bíblicas</title>
 <style>
-  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c}
+  :root{
+    --navy:#0a1522; --navy2:#0e1f33; --navy3:#12263f;
+    --creme:#f3ead6; --creme-dim:#cdc3ad;
+    --ouro:#c9a44c; --ouro-claro:#e6c879; --teal:#5fb8c4;
+    --vinho:#8a1c1c;
+  }
   *{box-sizing:border-box;-webkit-text-size-adjust:100%}
-  html{font-size:17px}
+  html{font-size:17px;background:#06101d}
   body{
-    margin:0 auto;max-width:820px;background:var(--branco);color:var(--texto);
+    margin:0 auto;max-width:760px;min-height:100vh;color:var(--creme);
+    background:
+      radial-gradient(1100px 620px at 50% -140px, #16304e 0%, rgba(22,48,78,0) 60%),
+      linear-gradient(180deg,#0b1a2c 0%, var(--navy) 46%, #081222 100%);
     font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
-    padding:16px 13px calc(46px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased;
+    padding:0 15px calc(40px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased;
   }
-  .voltar{display:inline-block;margin:0;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:8px 13px;font-size:.82rem;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
-  .selo{text-align:center;color:var(--teal);font-size:.82rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
-  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.32rem;font-weight:800;margin:4px 0 1px;white-space:nowrap}
-  .sub{text-align:center;color:#6b7280;font-size:.84rem;margin-bottom:6px}
-  .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 22px}
+
+  /* ───── Topo: RADAR + casa ───── */
+  .topo{display:flex;align-items:center;justify-content:space-between;
+    padding:18px 2px 10px;position:sticky;top:0;z-index:40;
+    background:linear-gradient(180deg,#0b1a2c 72%, rgba(11,26,44,0));}
+  .marca{display:flex;align-items:center;gap:11px}
+  .marca .logo{flex-shrink:0;display:block;filter:drop-shadow(0 0 6px rgba(201,164,76,.35))}
+  .marca .nome{font-size:.98rem;font-weight:700;letter-spacing:.42em;color:var(--creme);
+    text-transform:uppercase;padding-left:.1em}
+  .casa{display:flex;align-items:center;justify-content:center;width:42px;height:42px;
+    border-radius:50%;background:rgba(243,234,214,.06);border:1px solid rgba(243,234,214,.14);
+    cursor:pointer;color:var(--creme);transition:background .15s}
+  .casa:active{background:rgba(243,234,214,.16)}
+
+  .migalha{display:inline-flex;align-items:center;gap:5px;margin:2px 0 14px;
+    background:none;border:none;color:var(--creme-dim);font-family:inherit;
+    font-size:.9rem;font-weight:600;cursor:pointer;padding:4px 2px;letter-spacing:.01em}
+  .migalha:active{color:var(--creme)}
+
+  h1{font-family:Georgia,'Times New Roman',serif;color:var(--creme);
+    font-size:2.15rem;font-weight:700;line-height:1.1;margin:2px 0 2px;letter-spacing:.005em;
+    text-shadow:0 2px 18px rgba(0,0,0,.45)}
+  .sub{color:var(--creme-dim);font-size:.92rem;margin:0 0 18px;font-style:italic;
+    font-family:Georgia,serif;letter-spacing:.02em}
+
+  /* ───── Abas / pílulas ───── */
+  .mtabs{display:flex;align-items:center;gap:9px;margin:0 0 20px;flex-wrap:wrap}
+  .mtab{padding:10px 20px;border-radius:999px;font-family:inherit;font-size:.92rem;
+    font-weight:700;cursor:pointer;border:1px solid transparent;transition:all .15s;letter-spacing:.01em}
+  .mtab[data-p="lista"]{background:rgba(243,234,214,.07);color:var(--creme-dim);
+    border-color:rgba(243,234,214,.12)}
+  .mtab.on{background:linear-gradient(135deg,var(--ouro-claro),var(--ouro));
+    color:#201603;border-color:transparent;box-shadow:0 6px 18px rgba(201,164,76,.28);
+    text-shadow:none}
+  #rp-atalho{padding:10px 18px;border-radius:999px;font-family:inherit;font-size:.9rem;
+    font-weight:700;cursor:pointer;background:rgba(243,234,214,.07);color:var(--creme-dim);
+    border:1px solid rgba(243,234,214,.12);transition:all .15s;letter-spacing:.01em}
+  #rp-atalho:active{background:rgba(243,234,214,.16);color:var(--creme)}
+  .mais{width:44px;height:44px;border-radius:50%;flex-shrink:0;
+    background:rgba(201,164,76,.08);border:1.5px solid var(--ouro);color:var(--ouro-claro);
+    font-size:1.5rem;line-height:1;font-weight:400;cursor:pointer;display:flex;
+    align-items:center;justify-content:center;padding-bottom:3px;margin-left:auto;transition:all .15s}
+  .mais:active{background:rgba(201,164,76,.22)}
+
+  #mtab-dica{color:var(--creme-dim)}
+
+  /* ───── CARDS cinematográficos ───── */
   .card{
-    display:block;text-decoration:none;color:inherit;background:#fff;
-    border:1px solid #e4e7ec;border-radius:16px;padding:16px 16px;margin-bottom:14px;
-    box-shadow:0 2px 10px rgba(15,61,92,.06);cursor:pointer;
-  }
-  .card .top{display:flex;gap:13px;align-items:center}
-  .card .ic{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#8a1c1c,var(--dourado));display:flex;align-items:center;justify-content:center;font-size:27px;flex-shrink:0}
-  .card .tit{font-family:Georgia,serif;font-weight:800;font-size:1.18rem;color:var(--navy);line-height:1.25}
-  .card .ref{color:var(--dourado);font-weight:800;font-size:.9rem;margin-top:2px}
-  .card .fonte{color:var(--teal);font-weight:700;font-size:.79rem;margin-top:2px}
-  .card .desc{font-size:.98rem;color:#4b5563;margin-top:9px;text-align:justify;line-height:1.55}
-  .vazio{text-align:center;color:#9aa1ad;padding:30px 0;font-size:.95rem}
+    position:relative;display:block;overflow:hidden;text-decoration:none;color:inherit;
+    min-height:184px;border-radius:22px;margin-bottom:17px;
+    background:linear-gradient(135deg,#17304c 0%, var(--navy2) 55%, #0a1727 100%);
+    border:1px solid rgba(201,164,76,.22);
+    box-shadow:0 14px 34px rgba(0,0,0,.5), inset 0 0 0 1px rgba(243,234,214,.03);
+    -webkit-tap-highlight-color:transparent;cursor:pointer;isolation:isolate}
+  .card .c-emoji{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+    font-size:5.4rem;opacity:.26;z-index:0;filter:saturate(1.1)}
+  .card .c-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    object-position:right center;z-index:1;display:block}
+  .card .c-grad{position:absolute;inset:0;z-index:2;background:linear-gradient(90deg,
+    rgba(8,18,31,.97) 0%, rgba(8,18,31,.86) 30%, rgba(8,18,31,.42) 64%, rgba(8,18,31,0) 100%)}
+  .card .c-body{position:absolute;left:0;right:0;bottom:0;z-index:3;
+    padding:18px 54px 17px 20px}
+  .card .c-tit{font-family:Georgia,'Times New Roman',serif;color:var(--creme);
+    font-size:1.42rem;font-weight:700;line-height:1.16;text-shadow:0 2px 14px rgba(0,0,0,.6)}
+  .card .c-ref{color:var(--ouro-claro);font-weight:700;font-size:.82rem;margin-top:6px;
+    letter-spacing:.015em;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .card .c-fonte{color:var(--teal);font-weight:700;font-size:.76rem;margin-top:3px;
+    text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .card .c-chev{position:absolute;right:16px;bottom:14px;z-index:3;color:var(--ouro-claro);
+    font-size:1.9rem;line-height:1;font-family:Georgia,serif;opacity:.92;
+    text-shadow:0 2px 10px rgba(0,0,0,.7)}
+  /* selo do _pregado.js — vence o estilo injetado por ter mais especificidade */
+  .card .rp-selo{position:absolute;top:13px;left:13px;z-index:6;margin:0;
+    display:inline-block;background:linear-gradient(135deg,#0f8f9e,#0f6d78);color:#fff;
+    border:1px solid rgba(230,200,121,.55);border-radius:999px;padding:4px 12px;
+    font-size:.72rem;font-weight:800;letter-spacing:.01em;
+    box-shadow:0 5px 14px rgba(0,0,0,.45)}
+
+  .vazio{text-align:center;color:var(--creme-dim);padding:34px 0;font-size:.95rem}
+
+  /* ───── rodapé: Forjar ───── */
+  #forjar-foot{display:block;width:100%;margin:6px 0 4px;padding:15px;border-radius:16px;
+    background:rgba(201,164,76,.08);border:1.5px solid var(--ouro);color:var(--ouro-claro);
+    font-family:inherit;font-size:1.04rem;font-weight:800;cursor:pointer;letter-spacing:.015em;
+    transition:all .15s}
+  #forjar-foot:active{background:rgba(201,164,76,.2)}
 </style>
 </head>
 <body>
 
-  <div style="position:sticky;top:0;z-index:50;display:flex;gap:6px;flex-wrap:nowrap;margin:-16px -13px 12px;padding:14px 13px 10px;background:var(--branco);box-shadow:0 4px 12px rgba(15,61,92,.07)">
-    <button class="voltar" onclick="location.href='/?mod=manuais'">← Biblioteca</button>
-    <button class="voltar" style="background:#0f3d5c" onclick="location.href='/'">🏠 Início</button>
+  <header class="topo">
+    <div class="marca">
+      <svg class="logo" width="30" height="30" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="24" cy="24" r="21" fill="none" stroke="#c9a44c" stroke-width="1.6" opacity=".45"/>
+        <circle cx="24" cy="24" r="13.5" fill="none" stroke="#e6c879" stroke-width="1.8" opacity=".8"/>
+        <circle cx="24" cy="24" r="6" fill="none" stroke="#e6c879" stroke-width="1.8"/>
+        <circle cx="24" cy="24" r="2.2" fill="#e6c879"/>
+        <path d="M24 2.5V9 M24 39v6.5 M2.5 24H9 M39 24h6.5" stroke="#c9a44c" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>
+      </svg>
+      <span class="nome">RADAR</span>
+    </div>
+    <button class="casa" onclick="location.href='/'" aria-label="Início" title="Início">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/>
+      </svg>
+    </button>
+  </header>
+
+  <button class="migalha" onclick="location.href='/?mod=manuais'">‹ Biblioteca</button>
+
+  <h1>Mensagens<br>para Pregar</h1>
+  <div class="sub">Sermões densos em prosa, garimpados do original</div>
+
+  <div class="mtabs">
+    <button class="mtab on" data-p="lista" onclick="mtab('lista')">Mensagens</button>
+    <button id="rp-atalho" type="button" onclick="(window.RadarPregado&&RadarPregado.painel())">📜 Já preguei</button>
+    <button class="mais" type="button" onclick="mtab('forjar')" aria-label="Forjar mensagem" title="Forjar mensagem">+</button>
   </div>
 
-  <h1>Mensagens para Pregar</h1>
-  <div class="sub">Sermões densos em prosa</div>
-
-  <div class="mtabs" style="margin-top:6px">
-    <button class="mtab" data-p="lista" onclick="mtab('lista')">📖 Mensagens</button>
-    <button class="mtab" data-p="forjar" onclick="mtab('forjar')">🔥 Forjar Mensagem</button>
-  </div>
-
-  <div id="mtab-dica" style="text-align:center;color:#9aa1ad;font-size:.86rem;margin:16px 0 8px;line-height:1.5">👆 Toque em <b style="color:#0f6d78">📖 Mensagens</b> para ler,<br>ou <b style="color:#8a1c1c">🔥 Forjar Mensagem</b> para criar uma nova.</div>
+  <div id="mtab-dica" style="display:none;text-align:center;font-size:.86rem;margin:16px 0 8px;line-height:1.5">👆 Toque em <b style="color:var(--ouro-claro)">Mensagens</b> para ler,<br>ou no <b style="color:var(--ouro-claro)">+</b> para forjar uma nova.</div>
   <div id="lista"></div>
+
+  <button id="forjar-foot" type="button" onclick="mtab('forjar')">✦ Forjar mensagem</button>
 
 <script>
   // ── CRM de Mensagens — pra postar uma nova, é só adicionar aqui em cima ──
@@ -162,15 +258,28 @@
 
   function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function dia(v){ var d=new Date(v); return isNaN(d)?'':d.toISOString().slice(0,10); }
+  // slug da capa: só para arquivos .html locais (…/mensagens/<slug>.html → capas/<slug>.jpg).
+  // Mensagens da nuvem (arquivo começa com '/') não têm imagem pronta → fallback dourado-navy.
+  function slugCapa(arquivo){
+    var a=String(arquivo||'');
+    if(!a || a.charAt(0)==='/') return '';
+    if(!/\.html$/i.test(a)) return '';
+    return a.replace(/\.html$/i,'');
+  }
   function cartao(s){
     var alvo=(String(s.arquivo||'').charAt(0)==='/')?s.arquivo:'/biblioteca/mensagens/'+s.arquivo;
+    var slug=slugCapa(s.arquivo);
+    var img = slug ? '<img class="c-img" src="capas/'+esc(slug)+'.jpg" alt="" loading="lazy" onerror="this.remove()">' : '';
     return '<a class="card" href="'+esc(alvo)+'">'
-      +'<div class="top">'
-      +'<div class="ic">'+esc(s.emoji||'🔥')+'</div>'
-      +'<div><div class="tit">'+esc(s.titulo)+'</div><div class="ref">'+esc(s.ref||'')+'</div>'
-      +(s.fonte?'<div class="fonte">✍️ '+esc(s.fonte)+'</div>':'')+'</div>'
+      +'<div class="c-emoji">'+esc(s.emoji||'🔥')+'</div>'
+      +img
+      +'<div class="c-grad"></div>'
+      +'<div class="c-body">'
+      +'<div class="c-tit">'+esc(s.titulo)+'</div>'
+      +(s.ref?'<div class="c-ref">'+esc(s.ref)+'</div>':'')
+      +(s.fonte?'<div class="c-fonte">✍️ '+esc(s.fonte)+'</div>':'')
       +'</div>'
-      +(s.desc?'<div class="desc">'+esc(s.desc)+'</div>':'')
+      +'<div class="c-chev">›</div>'
       +'</a>';
   }
   function pintar(daNuvem){
@@ -205,31 +314,37 @@
 
 <!-- ══════════ CRIADOR DE MENSAGENS (skill Mensagens para Pregar) ══════════ -->
 <style>
-  .criador{margin:0}
-  .mtabs{display:flex;gap:8px;margin:0 0 8px}
-  .mtab{flex:1;padding:9px 8px;border-radius:11px;background:#eef2f4;border:1px solid #e4e7ec;color:#0f3d5c;font-weight:800;font-family:inherit;font-size:.9rem;cursor:pointer}
-  .mtab.on{background:linear-gradient(135deg,#8a1c1c,#a9791c);color:#fff;border-color:transparent}
+  .criador{margin:6px 0 0}
   .cr-selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase}
-  .cr-tit{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.42rem;margin:4px 0 6px}
-  .cr-dica{text-align:center;color:#6b7280;font-size:.95rem;margin:0 auto 14px;max-width:560px;line-height:1.5}
-  #cr-tema{width:100%;border:2px solid #e4e7ec;border-radius:13px;padding:12px 13px;font-size:1.02rem;font-family:inherit;color:var(--texto);resize:vertical}
-  #cr-tema:focus{outline:none;border-color:var(--teal)}
-  #cr-btn{display:block;width:100%;margin-top:11px;background:linear-gradient(135deg,#8a1c1c,var(--dourado));color:#fff;border:none;border-radius:13px;padding:14px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
-  #cr-btn:disabled{opacity:.55;cursor:default}
-  #cr-quem{text-align:center;color:var(--dourado);font-weight:700;margin:14px 0 0;font-size:.95rem}
-  #cr-saida{margin-top:14px}
-  #cr-saida h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.5rem;line-height:1.25;margin:6px 0 4px}
-  #cr-saida .cr-ref{text-align:center;color:var(--dourado);font-weight:800;margin-bottom:12px}
-  #cr-saida h2{font-family:Georgia,serif;color:var(--navy);font-size:1.16rem;margin:20px 0 8px;padding-top:12px;border-top:1px solid #eee}
-  #cr-saida p{font-size:1.07rem;margin:0 0 13px;text-align:justify;line-height:1.65}
-  #cr-saida .cr-li{padding-left:6px;margin:0 0 9px;font-size:1.05rem}
-  #cr-saida strong{color:#8a1c1c;font-weight:800}
-  #cr-saida em{color:var(--navy);font-style:italic}
+  .cr-tit{font-family:Georgia,serif;text-align:left;color:var(--creme);font-size:1.6rem;margin:4px 0 6px}
+  .cr-dica{color:var(--creme-dim);font-size:.95rem;margin:0 0 14px;line-height:1.55}
+  .cr-dica b{color:var(--creme)}
+  #cr-tema{width:100%;border:1.5px solid rgba(243,234,214,.16);border-radius:14px;padding:13px 14px;
+    font-size:1.02rem;font-family:inherit;color:var(--creme);resize:vertical;
+    background:rgba(8,18,31,.6)}
+  #cr-tema::placeholder{color:rgba(205,195,173,.55)}
+  #cr-tema:focus{outline:none;border-color:var(--ouro)}
+  #cr-btn{display:block;width:100%;margin-top:11px;background:linear-gradient(135deg,var(--ouro-claro),var(--ouro));
+    color:#201603;border:none;border-radius:14px;padding:15px;font-size:1.05rem;font-weight:800;
+    font-family:inherit;cursor:pointer;box-shadow:0 8px 22px rgba(201,164,76,.28)}
+  #cr-btn:disabled{opacity:.55;cursor:default;box-shadow:none}
+  #cr-quem{text-align:center;color:var(--ouro-claro);font-weight:700;margin:14px 0 0;font-size:.95rem}
+  #cr-saida{margin-top:14px;color:var(--creme)}
+  #cr-saida h1{font-family:Georgia,serif;text-align:left;color:var(--creme);font-size:1.7rem;line-height:1.2;margin:6px 0 4px}
+  #cr-saida .cr-ref{text-align:left;color:var(--ouro-claro);font-weight:800;margin-bottom:12px}
+  #cr-saida h2{font-family:Georgia,serif;color:var(--ouro-claro);font-size:1.2rem;margin:22px 0 8px;padding-top:12px;border-top:1px solid rgba(243,234,214,.12)}
+  #cr-saida p{font-size:1.07rem;margin:0 0 13px;text-align:justify;line-height:1.7;color:var(--creme)}
+  #cr-saida .cr-li{padding-left:6px;margin:0 0 9px;font-size:1.05rem;color:var(--creme)}
+  #cr-saida strong{color:var(--ouro-claro);font-weight:800}
+  #cr-saida em{color:var(--teal);font-style:italic}
   #cr-acoes{display:flex;gap:9px;margin-top:16px}
-  .cr-sec{flex:1;background:rgba(15,61,92,.07);border:1px solid #e4e7ec;color:var(--navy);border-radius:12px;padding:11px;font-size:.98rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .cr-sec{flex:1;background:rgba(243,234,214,.07);border:1px solid rgba(243,234,214,.16);color:var(--creme);
+    border-radius:13px;padding:12px;font-size:.98rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .cr-sec:active{background:rgba(243,234,214,.16)}
 </style>
 <div class="criador">
-  <p class="cr-dica" style="margin-top:2px">Digite o tema, <b>cole um texto inteiro</b> ou a <b>transcrição de um vídeo/áudio</b> — a mensagem vem em <b>prosa densa</b>, ORIGINAL, com garimpo do original e final que queima.</p>
+  <div class="cr-tit">🔥 Forjar mensagem</div>
+  <p class="cr-dica">Digite o tema, <b>cole um texto inteiro</b> ou a <b>transcrição de um vídeo/áudio</b> — a mensagem vem em <b>prosa densa</b>, ORIGINAL, com garimpo do original e final que queima.</p>
   <textarea id="cr-tema" rows="4" placeholder="Ex.: A mulher com o fluxo de sangue • Mateus 1 • o filho pródigo&#10;— ou cole aqui o texto/transcrição de um vídeo que te tocou —"></textarea>
   <button id="cr-btn">🔥 Forjar mensagem</button>
   <div id="cr-quem"></div>
@@ -247,11 +362,12 @@
   var raw='', ocupado=false;
   // duas abas: 📖 Mensagens (padrão) e 🔥 Forjar — nada fica escondido pra baixo
   var _cri=document.querySelector('.criador'), _list=document.getElementById('lista');
-  var _dica=document.getElementById('mtab-dica');
+  var _dica=document.getElementById('mtab-dica'), _foot=document.getElementById('forjar-foot');
   if(_cri&&_list&&_list.parentNode){ _list.parentNode.insertBefore(_cri, _list.nextSibling); _cri.style.display='none'; }
   window.mtab=function(p){
     if(_dica) _dica.style.display='none';      // escolheu uma aba: a dica sai
     if(_list) _list.style.display = p==='lista'?'block':'none';
+    if(_foot) _foot.style.display = p==='lista'?'block':'none';   // rodapé Forjar só na lista
     if(_cri) _cri.style.display = p==='forjar'?'block':'none';
     document.querySelectorAll('.mtab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-p')===p); });
     window.scrollTo(0,0);
@@ -286,7 +402,7 @@
       return (function pump(){ return reader.read().then(function(x){ if(x.done) return; raw+=dec.decode(x.value,{stream:true}); render(raw); return pump(); }); })();
     })
     .then(function(){ quem.textContent=''; if(raw.trim()) acoes.style.display='flex'; })
-    .catch(function(e){ quem.textContent=''; saida.innerHTML='<p style="color:#b91c1c">Não deu certo agora: '+escH(e.message||'falha')+'. Tente de novo.</p>'; })
+    .catch(function(e){ quem.textContent=''; saida.innerHTML='<p style="color:#f0a0a0">Não deu certo agora: '+escH(e.message||'falha')+'. Tente de novo.</p>'; })
     .then(function(){ ocupado=false; btn.disabled=false; btn.textContent=LABEL; });
   }
   btn.addEventListener('click',forjar);
