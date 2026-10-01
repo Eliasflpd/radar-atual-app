@@ -2542,7 +2542,7 @@ function abrirEbdTurma(turma){
     const main=lics.filter(l=>l.n>0);
     const extra=lics.filter(l=>l.n===0);
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
-    const _capaHero=`<div style="margin:0 0 16px;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.32)"><img src="/ebd/${turma}/img/capa.jpg" style="width:100%;display:block" onerror="this.parentNode.style.display='none'"></div>`;
+    const _capaHero=`<div style="margin:2px 0 10px;overflow:hidden"><img src="/ebd/${turma}/img/capa.jpg?v=206" style="width:100%;display:block;border-radius:14px;-webkit-mask-image:linear-gradient(to bottom,#000 72%,transparent 100%);mask-image:linear-gradient(to bottom,#000 72%,transparent 100%)" onerror="this.parentNode.style.display='none'"></div>`;
     const _pg=ebdProgTurma(turma); const _pct=_pg.total?Math.round(_pg.feitas/_pg.total*100):0;
     const _progBar=_pg.total?`<div style="margin:0 0 16px;background:rgba(15,24,38,.6);border:1px solid rgba(240,226,184,.18);border-radius:14px;padding:12px 14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -2630,7 +2630,7 @@ function abrirLicaoDetalhe(idx){
   document.getElementById('ebd-det-titulo').textContent=nLabel;
   document.getElementById('ebd-det-sub').textContent=lic.titulo;
   const n=String(lic.n>0?lic.n:0).padStart(2,'0');
-  const _licBanner=(lic.n>=1&&lic.n<=13)?`<img src="/ebd/${ebdTurmaAtual}/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`:'';
+  const _licBanner=(!ebdTurmaAtual.endsWith('4') && lic.n>=1&&lic.n<=13)?`<img src="/ebd/${ebdTurmaAtual}/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`:'';
   const itens=[
     {num:'1',icon:'📝',nome:'LIÇÃO',
      ativo:!!lic.licao,
