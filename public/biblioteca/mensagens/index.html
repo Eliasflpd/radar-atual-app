@@ -35,7 +35,7 @@
 </head>
 <body>
 
-  <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:nowrap">
+  <div style="position:sticky;top:0;z-index:50;display:flex;gap:6px;flex-wrap:nowrap;margin:-16px -13px 12px;padding:14px 13px 10px;background:var(--branco);box-shadow:0 4px 12px rgba(15,61,92,.07)">
     <button class="voltar" onclick="location.href='/?mod=manuais'">← Biblioteca</button>
     <button class="voltar" style="background:#0f3d5c" onclick="location.href='/'">🏠 Início</button>
   </div>
@@ -155,7 +155,8 @@
   function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function dia(v){ var d=new Date(v); return isNaN(d)?'':d.toISOString().slice(0,10); }
   function cartao(s){
-    return '<a class="card" href="'+esc(s.arquivo)+'">'
+    var alvo=(String(s.arquivo||'').charAt(0)==='/')?s.arquivo:'/biblioteca/mensagens/'+s.arquivo;
+    return '<a class="card" href="'+esc(alvo)+'">'
       +'<div class="top">'
       +'<div class="ic">'+esc(s.emoji||'🔥')+'</div>'
       +'<div><div class="tit">'+esc(s.titulo)+'</div><div class="ref">'+esc(s.ref||'')+'</div>'
