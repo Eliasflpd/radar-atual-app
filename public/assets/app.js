@@ -1270,8 +1270,8 @@ function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 
 // ══ AUTO-EXPIRAÇÃO DE DATAS (remove avisos vencidos, deixa só de hoje em diante) ══
 function _hoje0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
-/* PRÓXIMO TRIMESTRE (turmas *4): tudo travado até o 4º Trim começar (04/10/2026). */
-function ebd4TriTravado(){ return _hoje0() < new Date(2026,9,4); }
+/* 4º Trimestre LIBERADO (trabalho na revista). Reverter p/ `return _hoje0() < new Date(2026,9,4);` se quiser re-travar. */
+function ebd4TriTravado(){ return false; }
 function _mesNum(s){
   var m={jan:0,fev:1,mar:2,abr:3,mai:4,jun:5,jul:6,ago:7,set:8,out:9,nov:10,dez:11};
   s=(''+s).toLowerCase().slice(0,3);
