@@ -152,6 +152,14 @@
   // banco estiver fora do ar, a página mostra exatamente o que sempre mostrou.
   var box=document.getElementById('lista');
 
+  // GARANTIA de abertura no TOQUE (celular): às vezes o tap no <a class="card">
+  // não disparava a navegação (re-render da lista / interferência). A delegação
+  // no container ESTÁVEL força a abertura em qualquer caso — toque ou clique.
+  box.addEventListener('click', function(e){
+    var a = e.target && e.target.closest ? e.target.closest('a.card[href]') : null;
+    if(a){ var h=a.getAttribute('href'); if(h){ location.href = h; } }
+  });
+
   function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function dia(v){ var d=new Date(v); return isNaN(d)?'':d.toISOString().slice(0,10); }
   function cartao(s){
