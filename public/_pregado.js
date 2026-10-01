@@ -664,7 +664,12 @@
   /* ═══════════ MODO 2 — LISTA DE CARTÕES ═══════════════════════════════════ */
   function modoLista(){
     estilo();
+    var moLista=null, alvoLista=null;
     function decorar(){
+      // DESLIGA o observador enquanto EU mesmo mexo nos cards. Sem isto, as minhas
+      // próprias mudanças (selo) re-disparavam o observador pra sempre = laço
+      // infinito que TRAVAVA a tela no celular (nada abria, nem rolava direito).
+      if(moLista) moLista.disconnect();
       var lista = REGISTROS || [];
       document.querySelectorAll('a.card[href]').forEach(function(a){
         var href = a.getAttribute('href')||'';
@@ -679,19 +684,21 @@
                      .sort(function(x,y){ return (y.data||'') < (x.data||'') ? -1 : 1; })[0];
         if(!j){ if(velho) velho.parentNode.removeChild(velho); return; }
         var txt = '✅ preguei em '+brData(j.data);
-        if(velho){ velho.textContent = txt; return; }
+        if(velho){ if(velho.textContent!==txt) velho.textContent = txt; return; }
         var s = document.createElement('div'); s.className='rp-selo'; s.textContent = txt;
         a.appendChild(s);
       });
+      // RELIGA o observador só depois de terminar de desenhar
+      if(moLista && alvoLista) moLista.observe(alvoLista, { childList:true, subtree:true });
     }
     ouvintes.push(decorar);
     carregar().then(decorar);
     // a lista é pintada por JS da própria página; redecora quando ela mudar
     seguro(function(){
-      var alvo = document.getElementById('lista') || document.body;
+      alvoLista = document.getElementById('lista') || document.body;
       if(!window.MutationObserver) return;
-      var mo = new MutationObserver(function(){ decorar(); });
-      mo.observe(alvo, { childList:true, subtree:true });
+      moLista = new MutationObserver(function(){ decorar(); });
+      moLista.observe(alvoLista, { childList:true, subtree:true });
     });
     // atalho pro caderno, no cabeçalho
     seguro(function(){
