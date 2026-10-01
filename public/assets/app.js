@@ -2111,19 +2111,19 @@ const EBD_LICOES = {
     {n:13, titulo:'MICA E O LEVITA EM SUA CASA',               licao:'/ebd/juniores/html/licao-13.html', ppt:null, apoio:'/ebd/juniores/html/apoio-13.html', mapa:null},
   ],
   adulto4:[
-    {n:1,  titulo:'Deuteronômio: O Livro da Aliança',              licao:'/ebd/adulto4/html/licao-01.html', ppt:null, apoio:null, mapa:null},
-    {n:2,  titulo:'Recapitulando a Jornada no Deserto',            licao:'/ebd/adulto4/html/licao-02.html', ppt:null, apoio:null, mapa:null},
-    {n:3,  titulo:'A Fidelidade de Deus diante da Infidelidade de Israel', licao:'/ebd/adulto4/html/licao-03.html', ppt:null, apoio:null, mapa:null},
-    {n:4,  titulo:'O Chamado à Obediência',                        licao:'/ebd/adulto4/html/licao-04.html', ppt:null, apoio:null, mapa:null},
-    {n:5,  titulo:'O Grande Mandamento',                           licao:'/ebd/adulto4/html/licao-05.html', ppt:null, apoio:null, mapa:null},
-    {n:6,  titulo:'A Aliança e as Bênçãos da Obediência',          licao:'/ebd/adulto4/html/licao-06.html', ppt:null, apoio:null, mapa:null},
-    {n:7,  titulo:'Maldições e Bênçãos da Aliança',                licao:'/ebd/adulto4/html/licao-07.html', ppt:null, apoio:null, mapa:null},
-    {n:8,  titulo:'Escolhendo a Vida ou a Morte',                  licao:'/ebd/adulto4/html/licao-08.html', ppt:null, apoio:null, mapa:null},
-    {n:9,  titulo:'A Sucessão de Moisés',                          licao:'/ebd/adulto4/html/licao-09.html', ppt:null, apoio:null, mapa:null},
-    {n:10, titulo:'O Cântico de Moisés: Advertência e Esperança',  licao:'/ebd/adulto4/html/licao-10.html', ppt:null, apoio:null, mapa:null},
-    {n:11, titulo:'A Bênção Final de Moisés',                      licao:'/ebd/adulto4/html/licao-11.html', ppt:null, apoio:null, mapa:null},
-    {n:12, titulo:'A Morte de Moisés e a Continuidade da Promessa',licao:'/ebd/adulto4/html/licao-12.html', ppt:null, apoio:null, mapa:null},
-    {n:13, titulo:'O Cumprimento de Deuteronômio em Cristo',       licao:'/ebd/adulto4/html/licao-13.html', ppt:null, apoio:null, mapa:null},
+    {n:1,  titulo:'Deuteronômio: O Livro da Aliança',              licao:'/ebd/adulto4/html/licao-01.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-01.html', mapa:null},
+    {n:2,  titulo:'Recapitulando a Jornada no Deserto',            licao:'/ebd/adulto4/html/licao-02.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-02.html', mapa:null},
+    {n:3,  titulo:'A Fidelidade de Deus diante da Infidelidade de Israel', licao:'/ebd/adulto4/html/licao-03.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-03.html', mapa:null},
+    {n:4,  titulo:'O Chamado à Obediência',                        licao:'/ebd/adulto4/html/licao-04.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-04.html', mapa:null},
+    {n:5,  titulo:'O Grande Mandamento',                           licao:'/ebd/adulto4/html/licao-05.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-05.html', mapa:null},
+    {n:6,  titulo:'A Aliança e as Bênçãos da Obediência',          licao:'/ebd/adulto4/html/licao-06.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-06.html', mapa:null},
+    {n:7,  titulo:'Maldições e Bênçãos da Aliança',                licao:'/ebd/adulto4/html/licao-07.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-07.html', mapa:null},
+    {n:8,  titulo:'Escolhendo a Vida ou a Morte',                  licao:'/ebd/adulto4/html/licao-08.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-08.html', mapa:null},
+    {n:9,  titulo:'A Sucessão de Moisés',                          licao:'/ebd/adulto4/html/licao-09.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-09.html', mapa:null},
+    {n:10, titulo:'O Cântico de Moisés: Advertência e Esperança',  licao:'/ebd/adulto4/html/licao-10.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-10.html', mapa:null},
+    {n:11, titulo:'A Bênção Final de Moisés',                      licao:'/ebd/adulto4/html/licao-11.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-11.html', mapa:null},
+    {n:12, titulo:'A Morte de Moisés e a Continuidade da Promessa',licao:'/ebd/adulto4/html/licao-12.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-12.html', mapa:null},
+    {n:13, titulo:'O Cumprimento de Deuteronômio em Cristo',       licao:'/ebd/adulto4/html/licao-13.html', ppt:null, apoio:'/ebd/adulto4/html/apoio-13.html', mapa:null},
   ],
   jovem4:[
     {n:1,  titulo:'Carta aos Filipenses: Um Chamado à Alegria',    licao:'/ebd/jovem4/html/licao-01.html', ppt:null, apoio:null, mapa:null},
@@ -4181,11 +4181,26 @@ function flyersExtrasCards(){
     return d>=hoje;
   }).map(function(f,i){ return {id:'fx'+i, tipo:'flyer', imagem:f.img}; });
 }
+function licaoDaSemana4(){
+  var start=new Date(2026,9,4); start.setHours(0,0,0,0); // 1o domingo do 4o tri 2026
+  var d=_hoje0();
+  if(d<start) return 1;
+  var n=Math.floor((d-start)/(7*86400000))+1;
+  return Math.max(1,Math.min(13,n));
+}
+function abrirEbd4Licao(n){
+  try{
+    abrirEbdTurma('adulto4');
+    var lics=(typeof EBD_LICOES!=='undefined')?EBD_LICOES['adulto4']:[];
+    var idx=-1; for(var i=0;i<lics.length;i++){ if(lics[i].n===n){ idx=i; break; } }
+    if(idx>=0) abrirLicaoDetalhe(idx);
+  }catch(e){}
+}
 function licaoSemanaCard(){
-  var n=(typeof licaoDaSemana==='function')?licaoDaSemana():0;
+  var n=licaoDaSemana4();
   if(n<1||n>13) return null;
   var nn=('0'+n).slice(-2);
-  return {id:'_licsem', tipo:'licaobanner', img:'/ebd/adulto/img/licao-'+nn+'.jpg', n:n};
+  return {id:'_licsem', tipo:'licaobanner', img:'/ebd/adulto4/img/licao-'+nn+'.jpg', n:n};
 }
 function abrirEbdAdultoLicao(n){
   try{
@@ -4292,7 +4307,7 @@ function renderCarousel(){
         <div style="color:#fff;font-size:13.5px;font-weight:800;margin-top:6px;border:1px solid rgba(255,255,255,.5);padding:8px 18px;border-radius:999px">🕊️ Toque para ler ›</div>
       </div>`;
     } else if(c.tipo==='licaobanner'){
-      inner=`<div onclick="abrirEbdAdultoLicao(${c.n})" style="height:460px;background:linear-gradient(160deg,#0a3a33,#0e5347);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;overflow:hidden">
+      inner=`<div onclick="abrirEbd4Licao(${c.n})" style="height:460px;background:linear-gradient(160deg,#0a3a33,#0e5347);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;overflow:hidden">
         <div style="background:linear-gradient(150deg,#f0d488,#c99a3a);color:#0a3a33;font-weight:900;font-size:12.5px;padding:7px 15px;border-radius:999px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(0,0,0,.35)">📖 LIÇÃO DA SEMANA</div>
         <img src="${c.img}" style="width:100%;display:block;box-shadow:0 10px 26px rgba(0,0,0,.45)" onerror="this.style.display='none'">
         <div style="color:#fff;font-size:13.5px;font-weight:800;opacity:.95">Toque para abrir a lição ›</div>

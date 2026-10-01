@@ -1,0 +1,352 @@
+I – O AMOR QUE SUSTENTA OS MANDAMENTOS O
+1.
+PROPÓSITO DOS MANDAMENTOS
+Quando falamos sobre os alvos dos mandamentos, estamos salientando que
+o propósito deles era formar um povo que pudesse, de fato, viver e render-se
+ao senhorio do único e soberano Deus, atentando ao seu caráter, que é
+santo e justo. Logo nos três termos iniciais do versículo 1, nota-se a
+seriedade do assunto: mandamentos falam da ordem expressa de Deus.
+Estatutos são os decretos que expressam a vontade soberana do Senhor, às
+vezes não buscando explicação lógica. Juízos são as leis que regulam a justiça
+social e os relacionamentos. Esses três conceitos em conjunto abrangem a
+lei.
+Essa tríade, como acima exposta, é algo peculiar em Deuteronômio.
+Obviamente, há distinções singulares em cada um deles, só que a ênfase
+maior era a de demonstrar ao povo escolhido de Deus que a vida de cada
+um deveria ser conduzida debaixo da autoridade da Palavra; a vida cúltica,
+os estatutos; a vida moral, os mandamentos; a vida social e justa, os juízos.
+Deus revelou-os ao seu povo para que respondesse com obediência e amor,
+num relacionamento sincero e verdadeiro para com Ele, pois todos estavam
+vivendo, até então, conforme as suas regras.
+A partir da citação de Deuteronômio 6.1, tem-se uma nova seção
+teológica e pedagógica, por meio da qual o grande legislador procura
+lembrar à nova geração que a Lei do Senhor atinge todo o modo de vida de
+Israel na área religiosa, moral e social. Esse ensino que emanava de Deus
+por meio de Moisés, quando aceito e praticado, evidenciava uma vida de
+obediência e fé. Hoje, cada cristão que vive a nova vida em Cristo é
+chamado a obedecer toda a Palavra de Deus revelada. Somente assim ele
+terá a verdadeira vida, e o cumprimento disso é uma prova real de que ele
+ama a Deus (Jo 14.15).
+2. O chamado ao amor exclusivo a Deus
+
+Logo que lemos Deuteronômio 6.2-3, compreendemos o propósito da Lei e
+o que ela exigia do povo. O destaque está no versículo 2, que diz que os
+israelitas precisavam, frente à revelação divina, temer e guardar para terem
+longos dias. O propósito é óbvio: a instrução foi dada para que produzisse
+neles temor reverente. Não seria um temor de medo, mas, sim, um ato de
+servir com reverência e obediência ao único e absoluto Deus.
+Somente por meio da obediência é que se tem temor reverente. Salomão
+disse que o temor a Deus é o princípio da sabedoria (Pv 1.7). Quem
+obedece ao Senhor terá resultados maravilhosos tanto em quantidade
+quanto em qualidade de vida.
+A ênfase no verbo guardar é vigiar, observar cuidadosamente, e requeria de cada
+um obediência aos mandamentos de modo diligente, constante e diário,
+sendo, portanto, uma responsabilidade vitalícia. Procedendo assim, eles
+receberiam a longevidade, que fala de bênção divina, atrelada aos termos
+da aliança (Dt 4.40; Ef 6.1-3). A outra resposta obediente de cada israelita
+para com a Lei é notada pela presença do verbo imperativo ouvir com a
+intenção de obedecer. Essa escuta seria obediente por saber-se que Deus
+tinha falado pela sua Palavra (Dt 6.4). Essa obediência iria trazer
+crescimento, florescimento, prosperidade espiritual, bem-estar e sucesso (Dt
+5.16; 6.3,18; 12.25,28).
+Acresce-se a isso mais bênçãos, a da multiplicação, que envolvia fertilidade
+e crescimento numérico, pois foi essa promessa que o Senhor fez ao
+patriarca Abraão (Gn 15.5; 22.17). Por fim, segue a promessa da
+abundância da Terra Prometida, caso Israel respondesse com obediência
+aos mandamentos divinos: “Terra que mana leite e mel”. Essa expressão
+descreve de modo simbólico a fidelidade de Deus na sua provisão, bem
+como destaca a abundância da terra.
+Quando se ouve para obedecer, prosperidade e multiplicação não são
+apenas um fim em si mesmo, mas, sim, uma recompensa por causa da
+fidelidade. Respondendo dessa maneira, os israelitas iriam desfrutar da terra
+que manava leite e mel por conta da sua fidelidade à aliança (Êx 3.8).
+Prosperidade aqui não seria algo automático, mas condicionado à
+obediência (Dt 28.1-4).
+3. O significado de “Ouve, ó Israel”
+
+O versículo conhecido como Shemá é o credo fundamental da fé israelita.
+Shemá quer dizer ouve, como já dito, e trata-se do credo monoteísta judaico
+que afirma a unicidade e exclusividade de Deus. Os judeus diariamente o
+citam, tanto de manhã quanto de noite. O texto completo do Shemá
+tradicionalmente envolve três trechos da Torá: amar a Deus de todo o
+coração (Dt 6.4-9), a recompensa da obediência (Dt 11.13-31) e lembrar-se
+dos mandamentos (Nm 15.37-41). É, no entanto, a partir de Deuteronômio
+6.4 que está a base, o núcleo, pois prontamente é declarado quem é o
+Senhor, de fato.
+Sob o enfoque teológico, o Shemá expressa verdades fundamentais sobre
+Deus. A primeira é que Ele é único — ênfase ao monoteísmo absoluto: só
+existe um Deus. Em segundo lugar, ênfase ao relacionamento exclusivo —
+Ele é nosso Deus, ou seja, o Deus da aliança. Em terceiro, faz-se alusão à
+lealdade integral, cujo propósito é chamar todo Israel para amar e obedecer
+ao Senhor de todo o coração (Dt 6.5).
+Assim, no termo ouve, o Senhor está chamando todos para uma
+obediência ativa, não meramente passiva. Esse ouvir teria que se responder
+com fé e fidelidade. Na frase “O SENHOR nosso Deus é o único SENHOR”,
+encontra-se o nome pessoal de Deus YHWH, repetido por duas vezes,
+salientando a sua exclusividade, soberania e comunhão com Israel. Ele não
+é apenas Deus; é “o nosso Deus”, o Deus da aliança.
+É importante dizer que o termo único não exclui a pluralidade dentro da
+unidade, o que é consistente com a revelação progressiva de Deus com a
+Trindade, que vai ser mais detalhadamente abordada no Novo Testamento.
+Aqui, porém, a ênfase maior é sobre a exclusividade de Deus como único,
+absoluto e digno de toda adoração, o que, por si só, faz cair por terra todos
+os deuses das nações pagãs.
+Nosso Senhor Jesus Cristo faz questão de confirmar o Shemá como o
+primeiro e maior de todos os mandamentos (Mc 12.29) e, logo em seguida,
+complementa com o segundo, o denominado amor absoluto (Mc 12.30). Esse
+Shemá tem valor grandioso para o cristão porque o convida constantemente
+a adorar e servir exclusivamente ao Deus único e verdadeiro, o qual, no
+tempo da graça, foi revelado de modo pleno por meio de Cristo Jesus e
+pode estar vivo no crente pela ação poderosa do Espírito Santo (Jo 14.6; 1
+Co 8.6; Ef 4.6).
+
+II – O AMOR DESPERTADO PELA PALAVRA AVIVADOS
+1.
+PELA PALAVRA NO CORAÇÃO
+Está claro em Deuteronômio 6.6 que o que haveria de levar cada israelita a
+estar sempre avivado era a Palavra continuamente no coração de cada um.
+A expressão “estarão” fala de presença contínua e, para expressar um
+aspecto de profunda reflexão interior, é dito: “no teu coração” ou “sobre o
+teu coração”. O que estaria no coração deles seriam as misericórdias divinas
+passadas, como faladas no prólogo histórico. Elas despertariam neles o
+amor, que se evidenciara obedientemente a todos os mandamentos do
+Senhor (Dt 11.1,22; 19.9; 30.16; Jo 14.15).
+Tudo isso quer dizer que a Palavra não pode apenas ser ouvida
+externamente, mas também penetrar na sede das emoções e da vontade.
+Para que isso aconteça, é preciso uma meditação meticulosa, constante e
+reflexiva, render-se por meio de um ato de obediência, deixar que ela
+transforme o interior e guardá-la no coração (Sl 1.2; 119.11).
+O avivamento é definido pelo prisma cristão como um despertar
+espiritual, um período de renovação e fortalecimento da fé. Trata-se de um
+processo de transformação individual e coletiva em que as pessoas são
+tocadas pelo Espírito Santo e experienciam um novo despertar para a vida
+cristã. Assim, se o crente tiver constantemente a Palavra de Deus na sua
+vida, então estará avivado, pois esse movimento acontece quando as
+Escrituras ardem no seu coração. É preciso, entretanto, entender que não
+podemos ter a Bíblia apenas em caráter informativo, mas ela precisa ser
+formativa em nós, pois é viva e eficaz (Hb 4.12).
+2. Ensinando a Palavra aos filhos
+O que se tem no versículo 7 é um caráter familiar da administração
+convencional. A exigência é que os filhos sejam orientados e educados pelos
+mandamentos do Senhor (Dt 6.20). Essa meditação deveria ser algo
+constante (Dt 4.9; 11.19; Sl 78.4). Tal ensino deveria ser algo diligente,
+contínuo e intencional. Os pais têm a responsabilidade pela educação ou
+discipulado espiritual dos filhos no contexto familiar — daí a expressão
+“teus filhos”.
+Essa educação teria que ser desenvolvida durante o dia nas ações diárias:
+assentado em casa, andando pelo caminho, ao deitar-se, ao levantar-se. Não
+
+seria algo praticado vez por outra, nem isoladamente, mas, sim, um
+trabalho que permearia as atividades da vida no cotidiano. Os pais
+deveriam inculcar os ensinamentos de Deus nos filhos ativa e
+intencionalmente, e isso era necessário para que os princípios divinos
+figurassem como algo normal ou rotineiro da família.
+A fé será desenvolvida no contexto familiar judaico de modo forte, durável
+e cultural porque uma pedagogia divina consistente e prescrita será
+desenvolvida — trabalho que seria feito pelos pais na transmissão dos
+ensinos e valores espirituais. O propósito desse ensino no lar era para
+trabalhar a geração vindoura a viver na fé e na obediência à Palavra de
+Deus.
+Cada pai deve estar plenamente consciente de que a transmissão da fé não
+é reponsabilidade apenas da igreja, a ser desenvolvida no templo por meio
+da liderança cristã, mas deve começar no lar, sob a responsabilidade dos
+pais, com base numa prática pedagógica e metodológica constante, com
+repetições, para que se possa gerar convicções estáveis e profundas. No
+Novo Testamento, Paulo fala sobre a missão dos pais de criar os filhos na
+doutrina e admoestação do Senhor (Ef 6.4). O sucesso de Timóteo deveu-se
+à educação promovida pela sua avó e mãe desde a infância (2 Tm 1.5; 3.15).
+Queridos pais e pastores, hoje estamos vendo países em que as igrejas não
+possuem mais juventude. Não se tem mais uma nova geração para levar à
+frente o legado de fé. Isso nos toca profundamente, bem como nos desafia a
+manter em nosso lar os cultos domésticos e o ensino da Palavra para nossos
+filhos, pois é esse trabalho que preparará para outros os tempos que virão.
+Os pastores, mestres, pregadores e professores de hoje e do amanhã estão
+dentro de nosso lar. Comecemos esse discipulado em casa, como fez Josué
+(Js 24.15).
+Além dessa questão, não nos esqueçamos de que existe uma disputa por
+parte do poder estatal de querer doutrinar nossas crianças com as suas
+ideologias. Os pais jamais devem deixar isso acontecer, mas é preciso que
+cada um seja o professor e mestre dos seus filhos no lar e afiar a fé de cada
+um com exemplo, oração e constante repetição.
+3. A importância do ensino no lar
+
+Na parte b do versículo 7, tem-se a ênfase de que o ensino deve começar em
+casa: “e as intimarás a teus filhos e delas falarás […]” (Dt 6.7). O verbo falar
+indica diálogo constante, natural, cotidiano. É preciso falar diariamente a
+Palavra do Senhor para que a fé torne-se sustentável, estável. Por outro
+lado, é nesse ambiente familiar ou doméstico que a casa torna-se o centro, a
+faculdade, a escola da formação espiritual. Por isso, disse Moisés: “[…]
+assentado em tua casa”.
+Os pais não podem nem devem querer ensinar os filhos em um dia ou um
+momento solene. A sua missão deve ser constante, diária e envolver cada
+instante no sentar, andar, deitar, levantar; logo, seguindo essa quádrupla
+pedagógica, entende-se que a transmissão dos mandamentos divinos aos
+filhos acontece por meio do convívio, exemplo e instrução formal (Pv 22.6),
+e isso é reforçado em muitas outras passagens bíblicas (Dt 11.19; Sl 78.5-7).
+III – COMO VIVER O AMOR DE DEUS NA PRÁTICA JÁ
+FALAMOS QUE DEUTERONÔMIO É O LIVRO DA
+RENOVAÇÃO DA ALIANÇA NA SUA NATUREZA, EXIBE
+.
+COM MAESTRIA O CORAÇÃO DE DEUS POR MEIO DE UMA
+PALAVRA APENAS: AMOR JOÃO AFIRMA QUE DEUS É
+.
+AMOR JO AINDA QUE O CONTEÚDO DE
+(1 4.8).
+DEUTERONÔMIO ENVOLVA NO SEU TODO TEMAS
+RELACIONADOS AOS MANDAMENTOS, ESTATUTOS E
+JUÍZOS, A SUA OBJETIVIDADE NÃO É APENAS NO CAMPO
+JURÍDICO, MAS RELACIONAL ESTÁ CLARO QUE, NA
+.
+ALIANÇA QUE O SENHOR FIRMOU COM ISRAEL, TUDO SE
+RELACIONA POR MEIO DO AMOR, QUE GERA OBEDIÊNCIA,
+TEMOR E REVERÊNCIA POR PARTE DE CADA UM DELES
+.
+1. A palavra “amor” em Deuteronômio
+O verbo amar está presente em Deuteronômio 6.5 e expressa um sentimento
+profundo e lealdade. O mesmo é ativo e denota um comprometimento com
+o Senhor, que se manifestou em ações, e não somente em sentimentos. Esse
+versículo é o princípio fundamental da fé israelita e também o será do
+cristianismo. Por meio desse versículo, temos a base relacional para a ordem
+
+de amar a Deus ser cumprida. A expressão para amar a Deus de toda a
+alma e força expressa a totalidade do ser humano na devoção piedosa para
+com o Senhor.
+Moisés esclarece nesse versículo 5 que o amor a Deus permeia toda vida
+humana: Coração, alma e força indicam totalidade interior e exterior do ser
+humano — o coração: emoções; a essência vital: a alma; e o lado físico e
+mental: a força. Os que amam a Deus verdadeiramente precisam evidenciar
+isso por meio de ações, não só sentimentos. Isso tudo mostra que nosso
+amor para com o Senhor precisa ser relacional, ativo, intencional e abarcar
+todas as áreas da vida.
+Jamais se deve pensar no amor para com Deus apenas de forma
+emocional, mas, sim, em ações voluntárias e obedientes que se concretize
+em um devocional verdadeiro. Esse amor ao Senhor faz com que todas as
+ações direcionadas para com Ele no nível de relacionamento não seja jamais
+mecânico, mas que se mostre em respostas cheias de amor, fé e vida, por
+saber quem Ele é o que faz. Deus revelou-se a Israel tanto pelo que Ele é
+quanto pelo que faz. Assim, cada israelita iria amar a Deus por saber que
+Ele é o único e verdadeiro e que os amou primeiro (Dt 10.15).
+O salvo em Cristo também é chamado para amar a esse Deus único e
+verdadeiro revelado por meio de Jesus. Ele mesmo reafirmou esse
+mandamento de Deuteronômio como o maior de todos (Mc 12.29-30).
+Portanto, amados irmãos, nosso relacionamento com o Senhor Deus
+começa com amor, é desenvolvido no amor e, no futuro, continuará no
+amor (1 Co 13.13).
+2. A teologia do amor em Deuteronômio
+Bíblica e teologicamente, o coração é o lugar onde se tomam as decisões e
+são firmados os compromissos. Nele também se pode desenvolver uma vida
+de amor, temor e reverência para com Deus. Em Deuteronômio 6.6, o
+termo palavras fala das instruções divinas. É importante atentar para esses
+detalhes para que se entenda que elas não estão falando de meras sugestões,
+mas, sim, de prescrições vitais. A presença do advérbio hoje ressalta a
+importância que a prática desses mandamentos teria que ser algo contínuo e
+imediato. Isso mostra que cada israelita deveria ver essa prática não como
+algo qualquer, mas, sim, prioridade para a vida de cada um.
+
+Considera-se também que o verbo ordenar tratava-se da Palavra de Deus, e
+isso envolvia a sua autoridade. Tais instruções não seriam algo para alguém
+pensar se iria ou não obedecer. Não se tratava de algo facultativo, mas, sim,
+de mandamentos divinos, que teriam que ser postos em prática e
+obedecidos. Essas palavras deveriam estar no coração de cada um. Deus
+não quer apenas formalidade e religiosidade de aparência, pois, estando a
+Palavra no coração, a transformação aconteceria, e o relacionamento para
+com Ele seria verdadeiro, vivo e fiel. Moisés estava ensinando a Israel que os
+mandamentos de Deus devem estar enraizados no coração e na consciência
+de cada um, o que, por si só, transforma o caráter, a ação e a decisão de
+cada israelita no seu viver diário e expressa um viver que reflete a vontade
+do Senhor.
+A Palavra de Deus não é uma obra qualquer ou um código secreto, mas é
+a verdade que dá vida e, por isso, deve ser interiorizada no coração, visto
+que é o mapa que revela o caminho para realmente se chegar a Deus e viver
+em aliança com Ele. Logo que essa Palavra é plantada no coração, a
+transformação da vida é algo real, de modo que se pode viver com Cristo a
+nova vida. O que era uma promessa nas páginas do livro de Deuteronômio,
+no Antigo Testamento, agora se concretizou na pessoa de Cristo Jesus, no
+Novo Testamento (Ez 36.26-27; Hb 8.10). O cristão que deseja permanecer
+no amor de Deus precisa guardar os seus mandamentos (Jo 15.9-10).
+Todo verdadeiro crente que manifesta amor no seu viver diário, prático,
+há de exibir ações grandiosas pelo fato de o seu coração ter absorvido a
+Palavra, que o leva a conhecer a Deus de verdade, de maneira que o seu
+coração será um campo em que esse amor crescerá cada vez mais.
+3. Vivendo o amor na prática
+O versículo 7 de Deuteronômio 6, por meio da expressão “E as intimarás a
+teus filhos” (Dt 6.7), sugere instrução e mostra que o amor para com a
+Palavra na prática seria visto e vivido no cotidiano por meio de uma ação
+contínua e penetrante: assentado, andando, deitando e levantando.
+Hermeneuticamente, esse versículo mostra que o amor a Deus não pode
+ser algo abstrato, mas tem que ser marcado por ações, ensino e repetição
+constante, por testemunho de vida eficaz e amor a Deus que se visibilize em
+
+cada gesto da vida e em todos os momentos. Quem ama a Deus de verdade
+cumpre a sua Palavra (Jo 13.35; Tg 1.22).
+Amados, que expressemos em nosso viver diário ações práticas que
+evidenciem o amor que temos para com Deus e que, por meio da Palavra,
+eduquemos nossos filhos a viver obediente e fielmente ao Senhor.
+CONCLUSÃO HÁ PALAVRAS SINGULARES QUE
+DESCREVEM O AMOR A DEUS EM DEUTERONÔMIO:
+ALIANÇA, OBEDIÊNCIA E COMPAIXÃO O SENHOR AMOU
+.
+PRIMEIRAMENTE ISRAEL, E ISSO FAZ COM QUE
+ENTENDAMOS QUE O AMOR A ELE NÃO É FIRMADO
+APENAS EM EXIGÊNCIAS E OPRESSÃO, MAS QUE ESSA
+ALIANÇA DEU-SE POR CAUSA DE UMA AÇÃO
+LIBERTADORA ADEMAIS, DEUS QUER O CORAÇÃO DO SEU
+.
+POVO TRANSFORMADO PELA SUA PALAVRA E QUE ISSO
+RESULTE EM AÇÕES QUE ENVOLVAM ENSINO, EXEMPLO
+DE VIDA E PRÁTICA TODO O CUMPRIMENTO DESSE AMOR
+.
+ESTÁ EM JESUS CRISTO, QUE NOS REVELOU O PAI JO
+(
+, CONCEDEU-NOS O ESPÍRITO PARA ESCREVER A
+17.26)
+LEI EM NOSSO CORAÇÃO RM E QUE NOS DESAFIA A
+( 5.5)
+AMAR AO SENHOR COM TODO O NOSSO SER
+.
+
+Capítulo 6
+A Aliança e as Bênçãos da Obediência
+N
+INTRODUÇÃO O CORPO CENTRAL DO SEGUNDO
+| DISCURSO  |  CAPÍTULOS  | –     | , HÁ DESTAQUE QUANTO |
+| --------- | ----------- | ----- | -------------------- |
+|           | —           | 5 26— |                      |
+AOS ESTATUTOS E ORDENANÇAS DA ALIANÇA QUE OS
+ISRAELITAS DEVERIAM OBSERVAR QUANDO ENTRASSE
+| NA TERRA PROMETIDA | .   |  É BOM QUE SE ENTENDA QUE |     |
+| ------------------ | --- | ------------------------- | --- |
+NÃO PARTE DA BOCA DE MOISÉS UM DISCURSO COM
+REGRAS MORAIS OU SOCIAIS, MAS ELE REAFIRMA OS
+TERMOS DA ALIANÇA E RESSALTA A ELEIÇÃO SOBERANA
+DE ISRAEL PARA ESTE SER O POVO EXCLUSIVO DE DEUS
+| ( DT  7.6) , TENDO A ALIANÇA COMO BASE DA BÊNÇÃO |     |     |                  |
+| ------------------------------------------------ | --- | --- | ---------------- |
+| MEDIANTE A OBEDIÊNCIA                            |     | DT  | -  E A SANTIDADE |
+|                                                  |     | (   | 7.9 15)          |
+PRÁTICA COMO CONDIÇÃO PARA PERMANECEREM NA
+| TERRA  PARA ISSO, NÃO PODERIAM COADUNAR-SE COM |     |     |     |
+| ---------------------------------------------- | --- | --- | --- |
+.
+OS COSTUMES PECAMINOSOS, AS CORRUPÇÕES E OS
+| ÍDOLOS ALI EXISTENTES  |     | DT    | - , -     |
+| ---------------------- | --- | ----- | --------- |
+|                        |     | ( 7.1 | 5 16 26). |
+É importante ressaltar que a separação de Israel dessas nações cananeias
+não  era  apenas  uma  questão  de  fanatismo,  nem  se  tratava  de
+argumentações políticas e étnicas. Tal radicalidade deve ser compreendida
+pelo aspecto espiritual e bíblico, pois Israel é eleito para viver o chamado de
+Deus  num  mundo  idólatra  e  pecaminoso  como  verdadeiros  santos,
+consagrados ao Senhor.
+Somos cônscios de que vivemos hoje na Nova Aliança em Jesus Cristo, só
+que  os  princípios  espirituais  expostos  em  Deuteronômio  7.6-26  vigoram
+para  todos  nós.  Isso  se  dá  pelo  fato  de  a  Igreja  ser  eleita  em  Cristo  e
+separada para Deus (Ef 1.4; 1 Pe 2.9). Dessa forma, sendo a escolhida por
+Deus, a Igreja precisa viver em santidade frente a um mundo pecaminoso e
+
+rejeitar qualquer tipo de aliança com o pecado. Essa separação jamais deve
+ser étnica, e sim espiritual (2 Co 6.14-18). No demais, cada crente deve
+procurar viver em obediência, pois esse é o caminho certo para a bênção e,
+claro, não se pode mensurar a prosperidade atual de qualquer cristão por
+critérios de posses ou bens materiais, mas, sim, pela sua comunhão com
+Deus (Jo 14.21; Gl 5.22).
