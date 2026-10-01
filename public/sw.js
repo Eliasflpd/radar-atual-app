@@ -1,4 +1,4 @@
-const V='radar-v202';               // cache do SHELL — troca a cada versão do app
+const V='radar-v203';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
 // ⚠️ 27/09/2026 — POR QUE ESTE CACHE EXISTE (bug real: "clico na mensagem e não abre"):
 // o `activate` apagava o cache da versão anterior a CADA subida de versão. Como as
