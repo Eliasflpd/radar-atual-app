@@ -5,14 +5,14 @@
   {
    "tipo": "senha",
    "iter": 200000,
-   "salt": "yDKJXP65pXLacFUTLWZyDQ==",
-   "chave": "HzD4Bo9SeaKvoOuC5Bs2pJxqftAOBS8CQ0CdFVmN3eI+Oyq0MSbbighuv/aG+GavI2U6/gB1azbCrf3L"
+   "salt": "hI2rhsqpUTztdNOv4SWfOA==",
+   "chave": "cC6p7EZeSjUHqGIfANHP/8X1sCgHKVeZuKmE+sj+cF4jJPRhcha4DkH3QjMNuELwSvYzq6ya/CHnlli+"
   },
   {
    "tipo": "pin",
    "iter": 1000000,
-   "salt": "E/6TKHgTNqGqlhiPFniHLQ==",
-   "chave": "aGpQVYy3rlgqLsGmFi2AB+iMcM0Ac5LVD6gY/2fXQqm1Cq4OMKs0swC62FjEXew7qHOsVYRJrAn5slPN"
+   "salt": "/ieXo7uyqsTrPx865WKMlw==",
+   "chave": "jIpcsozi0G62zDULkBxfPLfPy8SA+NecTDGlsaLoE7EcIThKNZVphUuL212PbO5XxL1zRD89Gmqs0k8q"
   }
  ],
  "prova": "dados/prova.enc",
