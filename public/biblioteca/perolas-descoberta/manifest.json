@@ -1,0 +1,112 @@
+{
+ "versao": "2026-10-09",
+ "formato": 2,
+ "embrulhos": [
+  {
+   "tipo": "senha",
+   "iter": 200000,
+   "salt": "yDKJXP65pXLacFUTLWZyDQ==",
+   "chave": "HzD4Bo9SeaKvoOuC5Bs2pJxqftAOBS8CQ0CdFVmN3eI+Oyq0MSbbighuv/aG+GavI2U6/gB1azbCrf3L"
+  },
+  {
+   "tipo": "pin",
+   "iter": 1000000,
+   "salt": "E/6TKHgTNqGqlhiPFniHLQ==",
+   "chave": "aGpQVYy3rlgqLsGmFi2AB+iMcM0Ac5LVD6gY/2fXQqm1Cq4OMKs0swC62FjEXew7qHOsVYRJrAn5slPN"
+  }
+ ],
+ "prova": "dados/prova.enc",
+ "series": [],
+ "estudos": [
+  {
+   "slug": "parabolas-texto",
+   "titulo": "As Parábolas de Jesus",
+   "sub": "As 40 parábolas explicadas, em 4 módulos",
+   "serie": "",
+   "ordem": 1,
+   "texto": true,
+   "capitulos": 40
+  },
+  {
+   "slug": "jesus-at-1",
+   "titulo": "Jesus Cristo no Antigo Testamento — 01",
+   "sub": "Pentateuco: Cristo nas Origens e na Aliança",
+   "serie": "",
+   "ordem": 2,
+   "texto": true,
+   "capitulos": 19
+  },
+  {
+   "slug": "jesus-at-2",
+   "titulo": "Jesus Cristo no Antigo Testamento — 02",
+   "sub": "Josué a Ester: Cristo no Governo e na Terra",
+   "serie": "",
+   "ordem": 3,
+   "texto": true,
+   "capitulos": 36
+  },
+  {
+   "slug": "jesus-at-3",
+   "titulo": "Jesus Cristo no Antigo Testamento — 03",
+   "sub": "Livros Poéticos: Cristo na Dor, na Sabedoria e na Adoração",
+   "serie": "",
+   "ordem": 4,
+   "texto": true,
+   "capitulos": 16
+  },
+  {
+   "slug": "jesus-at-4",
+   "titulo": "Jesus Cristo no Antigo Testamento — 04",
+   "sub": "Profetas Maiores: Cristo no Juízo, na Esperança e na Nova Aliança",
+   "serie": "",
+   "ordem": 5,
+   "texto": true,
+   "capitulos": 16
+  },
+  {
+   "slug": "jesus-at-5",
+   "titulo": "Jesus Cristo no Antigo Testamento — 05",
+   "sub": "Profetas Menores: Cristo no Chamado ao Arrependimento e na Restauração Final",
+   "serie": "",
+   "ordem": 6,
+   "texto": true,
+   "capitulos": 37
+  },
+  {
+   "slug": "escatologia-70-semanas",
+   "titulo": "Escatologia: As 70 Semanas de Daniel",
+   "sub": "O cronômetro profético de Deus",
+   "serie": "",
+   "ordem": 7,
+   "texto": true,
+   "capitulos": 96
+  },
+  {
+   "slug": "salmos-explicados",
+   "titulo": "Salmos Explicados",
+   "sub": "150 salmos explicados versículo por versículo",
+   "serie": "",
+   "ordem": 8,
+   "texto": true,
+   "capitulos": 165
+  },
+  {
+   "slug": "curiosidades-biblia",
+   "titulo": "Curiosidades da Bíblia",
+   "sub": "Das palavras originais: hebraico, grego e aramaico",
+   "serie": "",
+   "ordem": 9,
+   "texto": true,
+   "capitulos": 17
+  },
+  {
+   "slug": "doze-apostolos",
+   "titulo": "Os 12 Apóstolos",
+   "sub": "Para onde foram os doze apóstolos?",
+   "serie": "",
+   "ordem": 10,
+   "texto": true,
+   "capitulos": 1
+  }
+ ]
+}

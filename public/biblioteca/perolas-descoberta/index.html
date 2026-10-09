@@ -93,8 +93,8 @@
 
   <div class="cad" id="cad">
     <div class="lock">🔒</div>
-    <p>Estes estudos ficam <b>criptografados</b> — sem a sua senha, ninguém lê. É a mesma senha do Meu Estudo:</p>
-    <input id="senha" type="password" placeholder="sua senha" autocomplete="off" enterkeyhint="go">
+    <p>Estes estudos ficam <b>criptografados</b> — sem a sua senha ou o seu PIN, ninguém lê:</p>
+    <input id="senha" type="password" placeholder="senha ou PIN" autocomplete="off" enterkeyhint="go">
     <button id="btn" onclick="abrir()">Abrir meus estudos</button>
     <label class="rem"><input type="checkbox" id="lembrar" checked> Lembrar neste celular</label>
     <div class="erro" id="erro"></div>
@@ -132,9 +132,21 @@ let MANIFEST=null, CHAVE=null, FS=parseInt(localStorage.getItem('maria_fs')||'21
 document.documentElement.style.setProperty('--fs',FS+'px');
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 class FalhaDeRede extends Error{ constructor(m){ super(m); this.name='FalhaDeRede'; } }
-async function derivar(pass){
-  const km=await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2', salt:b64(MANIFEST.salt), iterations:MANIFEST.iter, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['decrypt']);
+// Abre com SENHA ou PIN: o manifest traz a chave de conteúdo "embrulhada" uma vez para cada
+// segredo (PBKDF2 + AES-GCM). Tenta cada embrulho com o que foi digitado; o que abrir, abriu.
+async function derivar(segredo){
+  const km=await crypto.subtle.importKey('raw', new TextEncoder().encode(segredo), 'PBKDF2', false, ['deriveKey']);
+  const todos=MANIFEST.embrulhos||[];
+  const primeiro=todos.filter(e=>/^\d+$/.test(segredo) ? e.tipo==='pin' : e.tipo!=='pin');
+  for(const em of primeiro.concat(todos.filter(e=>!primeiro.includes(e)))){
+    try{
+      const kw=await crypto.subtle.deriveKey({name:'PBKDF2', salt:b64(em.salt), iterations:em.iter, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['decrypt']);
+      const buf=b64(em.chave);
+      const raw=await crypto.subtle.decrypt({name:'AES-GCM', iv:buf.slice(0,12)}, kw, buf.slice(12));
+      return crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, false, ['decrypt']);
+    }catch(e){ /* não era este embrulho */ }
+  }
+  throw new Error('senha');
 }
 async function decifrarTexto(url){
   let r; try{ r=await fetch(url,{cache:'force-cache'}); }catch(e){ throw new FalhaDeRede('sem conexão'); }
