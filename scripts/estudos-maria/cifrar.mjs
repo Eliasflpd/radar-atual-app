@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const TRABALHO = process.env.MARIA_TRABALHO || path.join(RAIZ, '_estudos-maria-trabalho');
-const SAIDA = path.join(RAIZ, 'public', 'biblioteca', 'estudos-maria');
+const SAIDA = path.join(RAIZ, 'public', 'biblioteca', 'perolas-descoberta');
 const DADOS = path.join(SAIDA, 'dados');
 const ITER = 200000;
 const PROVA = 'RADAR-ESTUDOS-MARIA-OK';

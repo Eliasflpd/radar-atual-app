@@ -3260,10 +3260,10 @@ function renderManuais(){
   itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', emoji:'🎓', cor:'#a9791c'});
   itens.push({onclick:"location.href='/biblioteca/livros/'", titulo:'Livros', autor:'Biblioteca do obreiro', emoji:'📚', cor:'#2f6b4f'});
   itens.push({onclick:"location.href='/biblioteca/estudo/'", titulo:'Meu Estudo', autor:'Privado · senha', emoji:'🔒', cor:'#5b3a1a'});
-  // Estudos MARIA (09/10/2026): os 15 PDFs da pasta MARIA do Elias (Parábolas, Jesus no AT,
+  // Pérolas Descoberta (09/10/2026): os 15 PDFs da pasta MARIA do Elias (Parábolas, Jesus no AT,
   // 70 Semanas, Salmos Explicados, Curiosidades, 12 Apóstolos) — cifrados com a mesma senha
   // do Meu Estudo, porque é material comprado e o repositório é público.
-  itens.push({onclick:"location.href='/biblioteca/estudos-maria/'", titulo:'Estudos MARIA', autor:'Privado · senha', emoji:'🗂️', cor:'#2f4a6b'});
+  itens.push({onclick:"location.href='/biblioteca/perolas-descoberta/'", titulo:'Pérolas Descoberta', autor:'Privado · senha', emoji:'🗂️', cor:'#2f4a6b'});
   var box=document.getElementById('manuais-lista');
   box.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">'+itens.map(function(m){
     var capa = m.capa

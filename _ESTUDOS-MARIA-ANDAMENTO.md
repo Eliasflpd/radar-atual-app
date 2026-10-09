@@ -1,4 +1,8 @@
-# Estudos MARIA no RADAR — andamento (2026-10-09)
+# "Pérolas Descoberta" (ex-Estudos MARIA) no RADAR — andamento (2026-10-09)
+
+> Nome final do módulo, escolhido pelo Elias: **Pérolas Descoberta**. Pasta:
+> `public/biblioteca/perolas-descoberta/`. Os slugs internos (estudos-maria, _estudos-maria-trabalho)
+> continuam, só o nome visível e a URL mudaram.
 
 Pedido do Elias: colocar os 15 PDFs de `D:\MEUS ESTUDOS\MARIA` na Biblioteca do app,
 num módulo só pra eles, com leitura otimizada, "como todos os meus estudos" (= trancado
