@@ -49,3 +49,8 @@ scripts/.env-*
 scripts/.env-vercel
 scripts/_provabib.mjs
 scripts/.cfpares
+
+# Estudos MARIA: conteúdo ABERTO (texto e páginas dos PDFs comprados) — só o .enc vai pro git
+_estudos-maria-trabalho/
+scripts/estudos-maria/ferramentas/node_modules/
+scripts/estudos-maria/ferramentas/tessdata/

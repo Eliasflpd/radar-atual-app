@@ -1,0 +1,1 @@
+{"name":"estudos-maria-ferramentas","private":true,"type":"module","dependencies":{"pdfjs-dist":"4.10.38","@napi-rs/canvas":"0.1.65","tesseract.js":"5.1.1"}}

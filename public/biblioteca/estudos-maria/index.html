@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estudos MARIA — RADAR</title>
+<!--
+  ESTUDOS MARIA — a coleção de estudos comprados do Elias (pasta D:\MEUS ESTUDOS\MARIA).
+  Por que tem cadeado: é material com direitos autorais e o repositório do RADAR é
+  público. Então o texto e as páginas ficam CIFRADOS em dados/*.enc (AES-256-GCM) e só
+  abrem com a senha do Elias — a mesma do Meu Estudo (reaproveitamos localStorage.estudo_pass,
+  então quem já abriu o Meu Estudo entra aqui sem digitar nada).
+  Diferença pro Meu Estudo: UM salt pro módulo inteiro (manifest.json) → a chave é derivada
+  uma vez só e cada página (são 300+) abre em milissegundos. Formato: [iv 12][ct+tag].
+  Dois modos de leitura: PÁGINAS (a página original ilustrada, decifrada sob demanda) e
+  TEXTO (capítulos, índice, busca, letra maior, retoma onde parou).
+  Gerado por scripts/estudos-maria/cifrar.mjs a partir de _estudos-maria-trabalho/ (gitignored).
+-->
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;padding:16px 13px calc(48px + env(safe-area-inset-bottom))}
+  .voltar{display:inline-block;margin:0 0 14px;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.9rem;font-weight:800;margin:2px 0 6px}
+  .sub{text-align:center;color:#6b7280;font-size:.98rem;margin-bottom:18px}
+  .cad{max-width:420px;margin:26px auto;background:#f2f7f8;border:1px solid #d5e6e8;border-radius:16px;padding:22px 18px;text-align:center}
+  .cad .lock{font-size:44px;margin-bottom:6px}
+  .cad p{color:#4b5563;font-size:.95rem;margin:6px 0 14px}
+  .cad input{width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:12px;font-size:1.05rem;font-family:inherit;text-align:center}
+  .cad button{width:100%;margin-top:12px;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .cad .rem{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:.9rem;color:#4b5563}
+  .erro{color:var(--vinho);font-weight:700;margin-top:12px;min-height:1.2em}
+  .carregando{text-align:center;color:var(--teal);font-weight:700;padding:18px}
+  /* ESTANTE */
+  .lista{display:none}
+  .serie{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.15rem;margin:18px 2px 9px;padding-bottom:6px;border-bottom:2px solid #ecd9ad}
+  .grade{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .est{background:#fff;border:1px solid var(--linha);border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06)}
+  .est:active{transform:scale(.985)}
+  .est .capa{height:150px;background:linear-gradient(135deg,var(--navy),var(--dourado));display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;overflow:hidden}
+  .est .capa img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+  .est .tt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:.92rem;line-height:1.2;padding:8px 10px 0}
+  .est .au{color:var(--dourado);font-weight:700;font-size:.74rem;padding:2px 10px 0;line-height:1.25}
+  .est .qt{color:#9aa1ad;font-size:.72rem;padding:3px 10px 0}
+  .est .barra{height:4px;background:#eef1f4;margin:8px 10px 10px;border-radius:3px;overflow:hidden}
+  .est .barra i{display:block;height:100%;background:var(--dourado);width:0}
+  .aviso{text-align:center;color:#9aa1ad;font-size:.8rem;margin:22px 0 0}
+  /* LEITOR */
+  #leitor{display:none}
+  .barra-top{position:sticky;top:0;z-index:5;background:var(--branco);display:flex;align-items:center;gap:6px;padding:6px 0 8px;border-bottom:1px solid var(--linha);margin-bottom:8px;flex-wrap:wrap}
+  .barra-top button{background:#eef2f4;border:1px solid var(--linha);border-radius:9px;padding:7px 10px;font-weight:800;font-family:inherit;cursor:pointer;font-size:.88rem;white-space:nowrap}
+  .barra-top button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .barra-top .tit{flex:1;min-width:0;font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:.95rem;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ferr{display:flex;gap:6px;width:100%}
+  .ferr button{flex:1}
+  .prog{height:4px;background:#eef1f4;border-radius:3px;overflow:hidden;margin:0 0 10px}
+  .prog i{display:block;height:100%;background:var(--dourado);width:0;transition:width .2s}
+  /* modo páginas */
+  #paginas{display:none}
+  .pg{margin:0 auto 10px;background:#f3f0e9;border-radius:10px;min-height:60vw;position:relative;box-shadow:0 2px 10px rgba(15,61,92,.1)}
+  .pg img{width:100%;display:block;border-radius:10px}
+  .pg .n{position:absolute;right:8px;bottom:6px;background:rgba(15,61,92,.75);color:#fff;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px}
+  .pg .esp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--teal);font-weight:700;font-size:.9rem}
+  /* modo texto */
+  #texto{display:none;word-wrap:break-word;font-family:Georgia,'Times New Roman',serif;font-size:1.05rem;line-height:1.82;color:#2a2620;-webkit-font-smoothing:antialiased}
+  #texto .rosto{text-align:center;padding:22px 10px 18px;border-top:2px solid var(--dourado);border-bottom:2px solid var(--dourado);margin-bottom:18px}
+  #texto .rosto .orn{color:var(--dourado);font-size:1.3rem;letter-spacing:8px;margin-bottom:10px}
+  #texto .rosto .gr{color:var(--teal);font-weight:800;font-size:.78rem;letter-spacing:2px;text-transform:uppercase;font-family:'Segoe UI',system-ui,sans-serif}
+  #texto .rosto .rt{font-weight:800;color:var(--navy);font-size:1.6rem;line-height:1.25;margin-top:4px}
+  #texto .rosto .ra{color:var(--dourado);font-weight:700;font-size:.92rem;margin-top:8px;font-style:italic}
+  #texto .par{margin:0 0 12px;text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto}
+  #texto .par.drop::first-letter{float:left;font-family:Georgia,serif;font-weight:800;color:var(--dourado);font-size:3.2rem;line-height:.8;padding:7px 9px 0 0}
+  #texto .h{font-family:'Segoe UI',system-ui,sans-serif;font-weight:800;color:var(--navy);font-size:1rem;margin:22px 0 8px;padding-left:10px;border-left:4px solid var(--dourado);line-height:1.3}
+  #texto .q{margin:0 0 14px;padding:10px 14px;background:#f7f3ea;border-left:3px solid var(--dourado);border-radius:0 10px 10px 0;font-style:italic;color:#4a3e1e;line-height:1.7}
+  #texto .s{font-family:'Segoe UI',system-ui,sans-serif;font-size:.84rem;color:#6b7280;margin:0 0 12px;text-align:center}
+  #texto mark{background:#fdeec2;color:#000;font-weight:700;border-radius:3px;padding:0 1px}
+  .pagbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 0}
+  .pagbar button{background:var(--navy);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-weight:800;font-family:inherit;font-size:1rem;cursor:pointer;min-width:84px}
+  .pagbar button:disabled{opacity:.35}
+  .pagbar span{color:#6b7280;font-size:.85rem;text-align:center;font-weight:700}
+  .findbar{display:none;gap:7px;align-items:center;margin:0 0 10px}
+  .findbar.on{display:flex}
+  .findbar input{flex:1;min-width:0;padding:9px 12px;border:1.5px solid var(--linha);border-radius:10px;font-size:1rem;font-family:inherit}
+  .findbar button{background:#eef2f4;border:1px solid var(--linha);border-radius:9px;padding:8px 11px;font-weight:800;font-family:inherit;cursor:pointer}
+  .findbar .cnt{color:#6b7280;font-size:.82rem;font-weight:700;min-width:52px;text-align:center;flex-shrink:0}
+  .idx-ov{position:fixed;inset:0;z-index:50;background:rgba(15,61,92,.5)}
+  .idx-cx{position:absolute;left:0;right:0;bottom:0;max-width:860px;margin:0 auto;background:#fff;border-radius:16px 16px 0 0;max-height:82vh;display:flex;flex-direction:column}
+  .idx-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--linha);font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.15rem}
+  .idx-top button{background:#eef2f4;border:none;border-radius:9px;width:32px;height:32px;font-size:16px;cursor:pointer}
+  .idx-lista{overflow-y:auto;padding:6px 0}
+  .idx-g{padding:10px 18px 4px;color:var(--teal);font-weight:800;font-size:.76rem;letter-spacing:2px;text-transform:uppercase}
+  .idx-it{display:flex;justify-content:space-between;gap:10px;padding:11px 18px;border-bottom:1px solid #f0f2f4;cursor:pointer;color:#1c2230;font-size:.98rem}
+  .idx-it.atual{background:#f7f3ea;font-weight:800}
+  .idx-it span{color:#9aa1ad;font-size:.8rem;flex-shrink:0}
+  .toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f3d5c;color:#fff;padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:60;opacity:0;transition:opacity .3s;pointer-events:none;max-width:92%;text-align:center}
+  .toast.on{opacity:1}
+  /* lendo: some o cabeçalho da página pra sobrar tela no celular */
+  body.lendo .voltar, body.lendo .selo, body.lendo h1, body.lendo .sub{display:none}
+</style>
+</head>
+<body>
+  <button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
+  <div class="selo">✦ Privado · só você ✦</div>
+  <h1>Estudos MARIA</h1>
+  <div class="sub">Sua coleção de estudos, trancada com a sua senha</div>
+
+  <!-- CADEADO -->
+  <div class="cad" id="cad">
+    <div class="lock">🔒</div>
+    <p>Estes estudos ficam <b>criptografados</b> — sem a sua senha, ninguém lê. É a mesma senha do Meu Estudo:</p>
+    <input id="senha" type="password" placeholder="sua senha" autocomplete="off" enterkeyhint="go">
+    <button id="btn" onclick="abrir()">Abrir meus estudos</button>
+    <label class="rem"><input type="checkbox" id="lembrar" checked> Lembrar neste celular</label>
+    <div class="erro" id="erro"></div>
+  </div>
+
+  <!-- ESTANTE -->
+  <div class="lista" id="lista"></div>
+
+  <!-- LEITOR -->
+  <div id="leitor">
+    <div class="barra-top">
+      <button onclick="fecharEstudo()">← Estante</button>
+      <div class="tit" id="ltit"></div>
+      <button id="b-pag" onclick="modo('paginas')" title="Página original">📄</button>
+      <button id="b-txt" onclick="modo('texto')" title="Texto">Aa</button>
+      <div class="ferr" id="ferr-txt" style="display:none">
+        <button onclick="abrirIndice()">📑 Índice</button>
+        <button onclick="toggleFind()">🔍 Buscar</button>
+        <button onclick="copiarCapitulo(this)">📋 Copiar</button>
+        <button onclick="fonte(-1)">A−</button>
+        <button onclick="fonte(1)">A+</button>
+      </div>
+      <div class="ferr" id="ferr-pag" style="display:none">
+        <button onclick="abrirIndice()">📑 Ir para página</button>
+      </div>
+    </div>
+    <div class="findbar" id="findbar">
+      <input id="findq" placeholder="Buscar neste estudo…" autocomplete="off" enterkeyhint="search">
+      <span class="cnt" id="findcnt">—</span>
+      <button onclick="findGo(-1)">◀</button>
+      <button onclick="findGo(1)">▶</button>
+      <button onclick="toggleFind()">✕</button>
+    </div>
+    <div class="prog"><i id="progf"></i></div>
+    <div id="paginas"></div>
+    <div id="texto"></div>
+    <div class="pagbar" id="pagbar" style="display:none"><button id="pg-ant" onclick="irCap(-1)">◀</button><span id="pag-ind">—</span><button id="pg-prox" onclick="irCap(1)">▶</button></div>
+  </div>
+
+<script>
+/* ═══ CHAVE E CIFRA ════════════════════════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+let MANIFEST=null, CHAVE=null, FS=parseInt(localStorage.getItem('maria_fs')||localStorage.getItem('estudo_fs')||'17',10);
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+class FalhaDeRede extends Error{ constructor(m){ super(m); this.name='FalhaDeRede'; } }
+
+async function derivar(pass){
+  const km=await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:b64(MANIFEST.salt), iterations:MANIFEST.iter, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['decrypt']);
+}
+async function baixar(url){
+  let r; try{ r=await fetch(url,{cache:'force-cache'}); }catch(e){ throw new FalhaDeRede('sem conexão'); }
+  if(!r.ok) throw new FalhaDeRede('servidor devolveu '+r.status);
+  return new Uint8Array(await r.arrayBuffer());
+}
+async function decifrarBytes(url){
+  const buf=await baixar(url);
+  const iv=buf.slice(0,12), ct=buf.slice(12);
+  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM', iv}, CHAVE, ct));
+}
+async function decifrarTexto(url){ return new TextDecoder('utf-8').decode(await decifrarBytes(url)); }
+const _blobs={};
+async function decifrarImagem(url){
+  if(_blobs[url]) return _blobs[url];
+  const bytes=await decifrarBytes(url);
+  return _blobs[url]=URL.createObjectURL(new Blob([bytes],{type:'image/jpeg'}));
+}
+
+/* ═══ CADEADO ══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',async()=>{
+  $('senha').addEventListener('keydown',e=>{ if(e.key==='Enter') abrir(); });
+  const salva=localStorage.getItem('maria_pass')||localStorage.getItem('estudo_pass');
+  if(salva){ $('senha').value=salva; abrir(true); }
+});
+async function abrir(silencioso){
+  const s=$('senha').value.trim();
+  if(!s){ $('erro').textContent='Digite a senha.'; return; }
+  $('btn').textContent='Abrindo…'; $('erro').textContent='';
+  try{
+    if(!MANIFEST) MANIFEST=await (await fetch('manifest.json',{cache:'no-cache'})).json();
+    CHAVE=await derivar(s);
+    const prova=await decifrarTexto(MANIFEST.prova);          // senha errada → lança erro
+    if(prova!=='RADAR-ESTUDOS-MARIA-OK') throw new Error('prova');
+    if($('lembrar').checked){ localStorage.setItem('maria_pass', s); } else localStorage.removeItem('maria_pass');
+    mostrarEstante();
+    const alvo=new URLSearchParams(location.search).get('e'); if(alvo) abrirEstudo(alvo);
+  }catch(e){
+    CHAVE=null;
+    if(e instanceof FalhaDeRede){
+      $('erro').textContent='Não foi o seu erro — os estudos não estão respondendo ('+e.message+'). Tente de novo mais tarde.';
+    }else{
+      localStorage.removeItem('maria_pass');
+      $('erro').textContent=silencioso?'':'Senha errada. Tente de novo.';
+    }
+  }
+  $('btn').textContent='Abrir meus estudos';
+}
+function sair(){ CHAVE=null; localStorage.removeItem('maria_pass'); location.reload(); }
+
+/* ═══ ESTANTE ══════════════════════════════════════════════════════════════ */
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function pos(slug){ try{ return JSON.parse(localStorage.getItem('maria_pos_'+slug)||'{}'); }catch(e){ return {}; } }
+function guardarPos(slug,o){ try{ localStorage.setItem('maria_pos_'+slug, JSON.stringify(Object.assign(pos(slug),o))); }catch(e){} }
+function progresso(e){ const p=pos(e.slug); if(p.modo==='paginas'&&e.paginas) return (p.pag||0)/e.paginas; if(p.modo==='texto'&&e.capitulos) return (p.cap||0)/e.capitulos; return 0; }
+function mostrarEstante(){
+  $('cad').style.display='none'; $('leitor').style.display='none';
+  const L=$('lista'); L.style.display='block';
+  const series=(MANIFEST.series||[]).slice(); series.push({id:'',nome:'Outros estudos'});
+  let html='';
+  for(const s of series){
+    const itens=MANIFEST.estudos.filter(e=>(e.serie||'')===s.id).sort((a,b)=>a.ordem-b.ordem);
+    if(!itens.length) continue;
+    html+='<div class="serie">'+esc(s.nome)+'</div><div class="grade">'+itens.map(cardEstudo).join('')+'</div>';
+  }
+  html+='<div class="aviso">'+MANIFEST.estudos.length+' estudos · trancados com a sua senha · <a href="#" onclick="sair();return false" style="color:#8a1c1c">sair/bloquear</a></div>';
+  L.innerHTML=html;
+  // capas: decifra uma a uma, sem travar a tela
+  (async()=>{ for(const e of MANIFEST.estudos){ if(!e.capa) continue; const img=document.querySelector('.est[data-slug="'+e.slug+'"] .capa img'); if(!img) continue;
+    try{ img.src=await decifrarImagem('dados/'+e.slug+'/capa.enc'); img.style.visibility='visible'; }catch(err){} } })();
+  window.scrollTo(0,0);
+}
+function cardEstudo(e){
+  const pg=Math.round(progresso(e)*100);
+  const qt=(e.paginas?e.paginas+' páginas':'')+(e.paginas&&e.texto?' · ':'')+(e.texto?e.capitulos+' capítulos':'');
+  const capa=e.capa?'<img alt="" style="visibility:hidden">':'<span>📖</span>';
+  return '<div class="est" data-slug="'+esc(e.slug)+'" onclick="abrirEstudo(\''+esc(e.slug)+'\')"><div class="capa">'+capa+'</div>'
+    +'<div class="tt">'+esc(e.titulo)+'</div><div class="au">'+esc(e.sub)+'</div><div class="qt">'+qt+'</div>'
+    +'<div class="barra"><i style="width:'+pg+'%"></i></div></div>';
+}
+
+/* ═══ LEITOR ═══════════════════════════════════════════════════════════════ */
+let EST=null, TEXTO=null, MODO='paginas', CAP=0, _obs=null;
+let _findTerm='', _findHits=[], _findAt=-1;
+async function abrirEstudo(slug){
+  const e=MANIFEST.estudos.find(x=>x.slug===slug); if(!e) return;
+  EST=e; TEXTO=null; CAP=0; _findTerm=''; _findHits=[]; _findAt=-1;
+  $('lista').style.display='none'; $('leitor').style.display='block'; document.body.classList.add('lendo');
+  $('ltit').textContent=e.titulo;
+  $('b-pag').style.display=e.paginas?'':'none'; $('b-txt').style.display=e.texto?'':'none';
+  $('findbar').classList.remove('on'); $('findq').value='';
+  history.replaceState({},'',location.pathname+'?e='+encodeURIComponent(slug));
+  const p=pos(slug);
+  const m = p.modo && ((p.modo==='paginas'&&e.paginas)||(p.modo==='texto'&&e.texto)) ? p.modo : (e.paginas?'paginas':'texto');
+  await modo(m, true);
+  window.scrollTo(0,0);
+}
+function fecharEstudo(){
+  if(_obs){ _obs.disconnect(); _obs=null; }
+  window.onscroll=null;
+  $('leitor').style.display='none'; $('paginas').innerHTML=''; $('texto').innerHTML=''; document.body.classList.remove('lendo');
+  history.replaceState({},'',location.pathname);
+  EST=null; mostrarEstante();
+}
+async function modo(m, retomar){
+  MODO=m; guardarPos(EST.slug,{modo:m});
+  $('b-pag').classList.toggle('on',m==='paginas'); $('b-txt').classList.toggle('on',m==='texto');
+  $('ferr-txt').style.display=m==='texto'?'flex':'none'; $('ferr-pag').style.display=m==='paginas'?'flex':'none';
+  $('paginas').style.display=m==='paginas'?'block':'none'; $('texto').style.display=m==='texto'?'block':'none';
+  $('pagbar').style.display=m==='texto'?'flex':'none';
+  $('findbar').classList.remove('on');
+  if(m==='paginas') await montarPaginas(retomar); else await montarTexto(retomar);
+}
+/* ── modo PÁGINAS: as imagens originais, decifradas quando entram na tela ── */
+async function montarPaginas(retomar){
+  window.onscroll=null;
+  const box=$('paginas'); box.innerHTML='';
+  for(let i=1;i<=EST.paginas;i++){
+    const d=document.createElement('div'); d.className='pg'; d.dataset.n=i;
+    d.innerHTML='<div class="esp">📖 página '+i+'</div><span class="n">'+i+' / '+EST.paginas+'</span>';
+    box.appendChild(d);
+  }
+  if(_obs) _obs.disconnect();
+  _obs=new IntersectionObserver(async ents=>{
+    for(const en of ents){ if(!en.isIntersecting) continue; const d=en.target; if(d.dataset.ok) continue; d.dataset.ok='1';
+      const n=+d.dataset.n;
+      try{ const src=await decifrarImagem('dados/'+EST.slug+'/p'+String(n).padStart(3,'0')+'.enc');
+        const img=new Image(); img.alt='página '+n; img.onload=()=>{ const e=d.querySelector('.esp'); if(e) e.remove(); d.style.minHeight='0'; };
+        img.src=src; d.insertBefore(img, d.firstChild);
+      }catch(err){ d.dataset.ok=''; const e=d.querySelector('.esp'); if(e) e.textContent='Sem conexão — volte a rolar pra tentar de novo'; }
+    }
+  },{rootMargin:'900px 0px'});
+  box.querySelectorAll('.pg').forEach(d=>_obs.observe(d));
+  // retomar na página onde parou + guardar a página visível
+  const p=pos(EST.slug); const alvo=retomar&&p.pag>1?p.pag:1;
+  if(alvo>1){ setTimeout(()=>{ const d=box.querySelector('.pg[data-n="'+alvo+'"]'); if(d) d.scrollIntoView(); toast('Voltando à página '+alvo); },80); }
+  let _t=null;
+  window.onscroll=()=>{ if(_t) return; _t=setTimeout(()=>{ _t=null; const meio=window.scrollY+window.innerHeight*0.4; let atual=1;
+    box.querySelectorAll('.pg').forEach(d=>{ if(d.offsetTop<=meio) atual=+d.dataset.n; });
+    guardarPos(EST.slug,{pag:atual}); $('progf').style.width=Math.round(atual/EST.paginas*100)+'%'; },300); };
+  $('progf').style.width=Math.round(alvo/EST.paginas*100)+'%';
+}
+/* ── modo TEXTO: um capítulo por vez ── */
+async function montarTexto(retomar){
+  window.onscroll=null;
+  if(!TEXTO){ $('texto').innerHTML='<div class="carregando">Descriptografando o texto…</div>';
+    try{ TEXTO=JSON.parse(await decifrarTexto('dados/'+EST.slug+'/texto.enc')); }
+    catch(e){ $('texto').innerHTML='<div class="carregando">Não consegui abrir o texto agora. Tente de novo.</div>'; return; } }
+  const p=pos(EST.slug); CAP = retomar&&p.cap>0&&p.cap<TEXTO.capitulos.length ? p.cap : 0;
+  renderCap(); if(retomar&&CAP>0) toast('Voltando de onde você parou');
+}
+function _hl(txt){ if(!_findTerm) return txt; try{ const re=new RegExp('('+_findTerm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); return txt.replace(re,'<mark>$1</mark>'); }catch(e){ return txt; } }
+function renderCap(){
+  const c=TEXTO.capitulos[CAP]; if(!c) return;
+  $('texto').style.fontSize=FS+'px';
+  let html='<div class="rosto"><div class="orn">❦</div>'+(c.grupo?'<div class="gr">'+esc(c.grupo)+'</div>':'')
+    +'<div class="rt">'+_hl(esc(c.t))+'</div>'+(c.sub||c.ref?'<div class="ra">'+esc(c.sub||c.ref)+'</div>':'')+'</div>';
+  let primeiro=true;
+  for(const b of c.blocos){
+    const x=_hl(esc(b.x));
+    if(b.t==='h') html+='<div class="h">'+x+'</div>';
+    else if(b.t==='q') html+='<div class="q">'+x+'</div>';
+    else if(b.t==='s') html+='<div class="s">'+x+'</div>';
+    else { html+='<p class="par'+(primeiro&&!TEXTO.ocr&&/^[A-Za-zÀ-ÿ]/.test(b.x)?' drop':'')+'">'+x+'</p>'; primeiro=false; }
+  }
+  $('texto').innerHTML=html;
+  $('pag-ind').textContent=(CAP+1)+' de '+TEXTO.capitulos.length+(c.pag?' · pág. '+c.pag:'');
+  $('pg-ant').disabled=CAP<=0; $('pg-prox').disabled=CAP>=TEXTO.capitulos.length-1;
+  $('progf').style.width=Math.round((CAP+1)/TEXTO.capitulos.length*100)+'%';
+  guardarPos(EST.slug,{cap:CAP});
+  window.scrollTo(0,0);
+}
+function irCap(d){ if(!TEXTO) return; CAP=Math.max(0,Math.min(TEXTO.capitulos.length-1,CAP+d)); renderCap(); }
+function fonte(d){ FS=Math.max(13,Math.min(26,FS+d)); localStorage.setItem('maria_fs',FS); $('texto').style.fontSize=FS+'px'; }
+/* ── índice (capítulos no modo texto · páginas no modo páginas) ── */
+function abrirIndice(){
+  let ov=$('idx-ov'); if(!ov){ ov=document.createElement('div'); ov.id='idx-ov'; document.body.appendChild(ov); }
+  ov.className='idx-ov'; ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
+  let corpo='';
+  if(MODO==='texto' && TEXTO){
+    let g=null;
+    TEXTO.capitulos.forEach((c,i)=>{ if((c.grupo||'')!==g){ g=c.grupo||''; if(g) corpo+='<div class="idx-g">'+esc(g)+'</div>'; }
+      corpo+='<div class="idx-it'+(i===CAP?' atual':'')+'" onclick="CAP='+i+';renderCap();document.getElementById(\'idx-ov\').remove()">'+esc(c.t)+'<span>'+(c.pag?'pág. '+c.pag:(i+1))+'</span></div>'; });
+  }else{
+    const atual=pos(EST.slug).pag||1;
+    for(let i=1;i<=EST.paginas;i++) corpo+='<div class="idx-it'+(i===atual?' atual':'')+'" onclick="irPagina('+i+')">Página '+i+'</div>';
+  }
+  ov.innerHTML='<div class="idx-cx"><div class="idx-top">📑 '+(MODO==='texto'?'Índice':'Páginas')+'<button onclick="document.getElementById(\'idx-ov\').remove()">✕</button></div><div class="idx-lista">'+corpo+'</div></div>';
+  const at=ov.querySelector('.idx-it.atual'); if(at) at.scrollIntoView({block:'center'});
+}
+function irPagina(n){ const o=$('idx-ov'); if(o) o.remove(); const d=document.querySelector('#paginas .pg[data-n="'+n+'"]'); if(d) d.scrollIntoView(); }
+/* ── buscar dentro do estudo (modo texto, offline) ── */
+function toggleFind(){
+  if(MODO!=='texto'){ modo('texto').then(toggleFind); return; }
+  const fb=$('findbar'); const on=fb.classList.toggle('on');
+  if(on){ setTimeout(()=>$('findq').focus(),50); } else { _findTerm=''; _findHits=[]; _findAt=-1; $('findq').value=''; $('findcnt').textContent='—'; renderCap(); }
+}
+function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function findRun(){
+  const termo=$('findq').value.trim();
+  if(termo.length<2){ _findTerm=''; _findHits=[]; _findAt=-1; $('findcnt').textContent='—'; renderCap(); return; }
+  _findTerm=termo; const nt=norm(termo); _findHits=[];
+  TEXTO.capitulos.forEach((c,i)=>{ if(norm(c.t+' '+c.blocos.map(b=>b.x).join(' ')).includes(nt)) _findHits.push(i); });
+  if(!_findHits.length){ _findAt=-1; $('findcnt').textContent='0'; renderCap(); return; }
+  let p=_findHits.findIndex(i=>i>=CAP); _findAt=p<0?0:p; CAP=_findHits[_findAt];
+  $('findcnt').textContent=(_findAt+1)+'/'+_findHits.length; renderCap();
+}
+function findGo(d){ if(!_findHits.length) return; _findAt=(_findAt+d+_findHits.length)%_findHits.length; CAP=_findHits[_findAt]; $('findcnt').textContent=(_findAt+1)+'/'+_findHits.length; renderCap(); }
+document.addEventListener('DOMContentLoaded',()=>{ const fq=$('findq'); fq.addEventListener('input',findRun); fq.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); findGo(1); } }); });
+/* ── copiar o capítulo atual (texto limpo) ── */
+function copiarCapitulo(btn){
+  const c=TEXTO&&TEXTO.capitulos[CAP]; if(!c){ toast('Nada para copiar.'); return; }
+  const txt=[c.t+(c.sub||c.ref?' — '+(c.sub||c.ref):'')].concat(c.blocos.map(b=>b.x)).join('\n\n');
+  const ok=()=>{ const o=btn.innerHTML; btn.innerHTML='✓ Copiado'; setTimeout(()=>{btn.innerHTML=o;},1300); toast('Capítulo copiado'); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(ok).catch(()=>_copyFallback(txt,ok)); } else _copyFallback(txt,ok);
+}
+function _copyFallback(txt,cb){ try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb&&cb(); }catch(e){ toast('Não consegui copiar neste navegador.'); } }
+let _toastT=null;
+function toast(msg){ let t=$('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.className='toast'; document.body.appendChild(t); } t.textContent=msg; t.classList.add('on'); clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('on'),2200); }
+document.addEventListener('keydown',e=>{
+  if($('leitor').style.display!=='block'||MODO!=='texto') return;
+  const tg=e.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA') return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){ irCap(1); e.preventDefault(); } else if(e.key==='ArrowLeft'||e.key==='PageUp'){ irCap(-1); e.preventDefault(); }
+});
+</script>
+<script src="/_uso.js?v=1" defer></script>
+</body>
+</html>
