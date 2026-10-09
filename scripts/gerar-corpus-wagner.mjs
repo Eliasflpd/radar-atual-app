@@ -7,9 +7,13 @@
 // EMBUTIDO no bundle como módulo JavaScript. É o que este script faz.
 //
 // COMO REGERAR (depois de mexer no caderno / nas transcrições / nas tipologias):
-//   cd D:\RADAR-APP
+//   cd <raiz do clone>        (D:\RADAR-APP ou D:\radar-atual-app — o script acha sozinho)
 //   node scripts/gerar-corpus-wagner.mjs
 // Ele reescreve api/_lib/wagner-corpus.js e imprime o tamanho no fim.
+//
+// ⚠️ A VOZ do Wagner NÃO mora aqui. O corpus é só o que ele ENSINOU (matéria-prima,
+// buscada por assunto a cada pergunta); o jeito de falar, os bordões e as travas
+// moram no prompt, em api/_lib/concilio-wagner.js (METODO / EXEMPLOS / FORMATO).
 //
 // TETO: ~1,5 MB de arquivo gerado (limite combinado). O script AVISA e CORTA
 // as transcrições (a fonte mais gorda e menos destilada) se passar disso.
@@ -37,15 +41,36 @@ const add = (f, s, t) => { t = limpar(t); if (t.length > 120) chunks.push({ f, s
 // ── 1) TIPOLOGIAS CATALOGADAS (o mais destilado de todos: a ponte já vem montada)
 {
   const txt = ler(path.join(SKILL, 'referencias/tipologias.md'));
-  // O arquivo tem DOIS formatos de entrada (o Bloco A é uma linha só;
-  // os Blocos B e C são "**N.**" seguido de bullets). Cobrimos os dois.
-  let bloco = 'tipologias';
-  const partes = txt.split(/\n(?=\d+\.\s+\*\*Texto|\*\*\d+\.\*\*\s*$)/m);
-  for (const p of partes) {
-    const hs = [...p.matchAll(/^##\s+(.+)$/gm)];
-    if (hs.length) bloco = hs[hs.length - 1][1];
-    if (!/\*\*Texto:\*\*/.test(p)) continue;
-    add('T', 'Tipologias catalogadas — ' + bloco, p.replace(/^##\s+.+$/gm, '').replace(/^>.*$/gm, ''));
+  if (txt) {
+    // O arquivo tem DOIS formatos de entrada (o Bloco A é uma linha só;
+    // os Blocos B e C são "**N.**" seguido de bullets). Cobrimos os dois.
+    let bloco = 'tipologias';
+    const partes = txt.split(/\n(?=\d+\.\s+\*\*Texto|\*\*\d+\.\*\*\s*$)/m);
+    for (const p of partes) {
+      const hs = [...p.matchAll(/^##\s+(.+)$/gm)];
+      if (hs.length) bloco = hs[hs.length - 1][1];
+      if (!/\*\*Texto:\*\*/.test(p)) continue;
+      add('T', 'Tipologias catalogadas — ' + bloco, p.replace(/^##\s+.+$/gm, '').replace(/^>.*$/gm, ''));
+    }
+  } else {
+    // A PASTA D:\SKILL SÓ EXISTE NA MÁQUINA ONDE O CADERNO FOI FEITO. Em outro clone
+    // (ou em outra máquina) ela não está lá — e rodar o gerador sem este desvio
+    // APAGAVA calado as 69 tipologias catalogadas do corpus, porque o arquivo de saída
+    // é reescrito inteiro. Então, se o .md não existe, a gente recupera as tipologias
+    // do próprio wagner-corpus.js anterior: elas não mudam com caderno nem transcrição.
+    const antigo = ler(SAIDA);
+    const i = antigo.indexOf('export default ');
+    if (i >= 0) {
+      try {
+        const lista = JSON.parse(antigo.slice(i + 15).replace(/;\s*$/, ''));
+        for (const c of lista) if (c && c.f === 'T') chunks.push({ f: 'T', s: c.s, t: c.t });
+        console.warn(`⚠ ${SKILL}/referencias/tipologias.md não existe aqui — ${chunks.length} tipologias recuperadas do corpus anterior`);
+      } catch (_) {
+        console.warn('⚠ tipologias.md não existe e o corpus anterior não pôde ser lido: o corpus sai SEM tipologias catalogadas');
+      }
+    } else {
+      console.warn('⚠ tipologias.md não existe e não há corpus anterior: o corpus sai SEM tipologias catalogadas');
+    }
   }
 }
 
