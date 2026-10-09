@@ -6,108 +6,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Estudos MARIA — RADAR</title>
 <!--
-  ESTUDOS MARIA — a coleção de estudos comprados do Elias (pasta D:\MEUS ESTUDOS\MARIA).
-  Por que tem cadeado: é material com direitos autorais e o repositório do RADAR é
-  público. Então o texto e as páginas ficam CIFRADOS em dados/*.enc (AES-256-GCM) e só
-  abrem com a senha do Elias — a mesma do Meu Estudo (reaproveitamos localStorage.estudo_pass,
-  então quem já abriu o Meu Estudo entra aqui sem digitar nada).
-  Diferença pro Meu Estudo: UM salt pro módulo inteiro (manifest.json) → a chave é derivada
-  uma vez só e cada página (são 300+) abre em milissegundos. Formato: [iv 12][ct+tag].
-  Dois modos de leitura: PÁGINAS (a página original ilustrada, decifrada sob demanda) e
-  TEXTO (capítulos, índice, busca, letra maior, retoma onde parou).
+  ESTUDOS MARIA — a coleção de estudos do Elias (pasta D:\MEUS ESTUDOS\MARIA), SÓ TEXTO,
+  no mesmo padrão visual das lições da EBD (Georgia 21px, título vinho, cabeçalhos azuis,
+  caixas de texto bíblico, referências clicáveis que abrem o versículo).
+  Por que tem cadeado: é material com direitos autorais e o repositório do RADAR é público.
+  O texto fica CIFRADO em dados/<estudo>/texto.enc (AES-256-GCM) e só abre com a senha do
+  Elias — a mesma do Meu Estudo (reaproveitamos localStorage.estudo_pass: quem já abriu o
+  Meu Estudo entra aqui sem digitar nada). Um salt pro módulo inteiro (manifest.json): a
+  chave é derivada uma vez. Formato de cada .enc: [iv 12][ciphertext+tag].
   Gerado por scripts/estudos-maria/cifrar.mjs a partir de _estudos-maria-trabalho/ (gitignored).
 -->
 <style>
-  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec}
   *{box-sizing:border-box;-webkit-text-size-adjust:100%}
-  html{font-size:17px}
-  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;padding:16px 13px calc(48px + env(safe-area-inset-bottom))}
-  .voltar{display:inline-block;margin:0 0 14px;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer}
-  .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
-  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.9rem;font-weight:800;margin:2px 0 6px}
-  .sub{text-align:center;color:#6b7280;font-size:.98rem;margin-bottom:18px}
-  .cad{max-width:420px;margin:26px auto;background:#f2f7f8;border:1px solid #d5e6e8;border-radius:16px;padding:22px 18px;text-align:center}
+  body{margin:0;padding:12px 11px 56px;background:#fff;font-family:Georgia,serif;font-size:var(--fs,21px);line-height:1.6;color:#1a1a1a;max-width:860px;margin:0 auto}
+  p{margin:0 0 12px}
+  strong{font-weight:900}
+  /* ── cabeçalho da página / navegação (mesma cara do Meu Estudo) ── */
+  .voltar{display:inline-block;margin:0 0 14px;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:16px;font-weight:700;font-family:'Segoe UI',system-ui,sans-serif;cursor:pointer}
+  .selo{text-align:center;color:#0f6d78;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;font-family:'Segoe UI',system-ui,sans-serif}
+  h1{text-align:center;color:#7b0000;font-size:25px;font-weight:900;margin:2px 0 6px;line-height:1.3}
+  .sub{text-align:center;color:#888;font-size:16px;font-weight:600;margin-bottom:18px;font-family:'Segoe UI',system-ui,sans-serif}
+  .cad{max-width:420px;margin:26px auto;background:#f2f7f8;border:1px solid #d5e6e8;border-radius:16px;padding:22px 18px;text-align:center;font-family:'Segoe UI',system-ui,sans-serif;font-size:16px}
   .cad .lock{font-size:44px;margin-bottom:6px}
-  .cad p{color:#4b5563;font-size:.95rem;margin:6px 0 14px}
-  .cad input{width:100%;padding:13px 14px;border:1.5px solid var(--linha);border-radius:12px;font-size:1.05rem;font-family:inherit;text-align:center}
-  .cad button{width:100%;margin-top:12px;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:1.05rem;font-weight:800;font-family:inherit;cursor:pointer}
-  .cad .rem{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:.9rem;color:#4b5563}
-  .erro{color:var(--vinho);font-weight:700;margin-top:12px;min-height:1.2em}
-  .carregando{text-align:center;color:var(--teal);font-weight:700;padding:18px}
-  /* ESTANTE */
-  .lista{display:none}
-  .serie{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.15rem;margin:18px 2px 9px;padding-bottom:6px;border-bottom:2px solid #ecd9ad}
-  .grade{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .est{background:#fff;border:1px solid var(--linha);border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06)}
-  .est:active{transform:scale(.985)}
-  .est .capa{height:150px;background:linear-gradient(135deg,var(--navy),var(--dourado));display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;overflow:hidden}
-  .est .capa img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
-  .est .tt{font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:.92rem;line-height:1.2;padding:8px 10px 0}
-  .est .au{color:var(--dourado);font-weight:700;font-size:.74rem;padding:2px 10px 0;line-height:1.25}
-  .est .qt{color:#9aa1ad;font-size:.72rem;padding:3px 10px 0}
-  .est .barra{height:4px;background:#eef1f4;margin:8px 10px 10px;border-radius:3px;overflow:hidden}
-  .est .barra i{display:block;height:100%;background:var(--dourado);width:0}
-  .aviso{text-align:center;color:#9aa1ad;font-size:.8rem;margin:22px 0 0}
-  /* LEITOR */
+  .cad p{color:#4b5563;margin:6px 0 14px}
+  .cad input{width:100%;padding:13px 14px;border:1.5px solid #e4e7ec;border-radius:12px;font-size:18px;font-family:inherit;text-align:center}
+  .cad button{width:100%;margin-top:12px;background:#0f3d5c;color:#fff;border:none;border-radius:12px;padding:13px;font-size:18px;font-weight:800;font-family:inherit;cursor:pointer}
+  .cad .rem{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;font-size:15px;color:#4b5563}
+  .erro{color:#8a1c1c;font-weight:700;margin-top:12px;min-height:1.2em}
+  .carregando{text-align:center;color:#0f6d78;font-weight:700;padding:18px;font-family:'Segoe UI',system-ui,sans-serif;font-size:16px}
+  /* ── lista de estudos e de capítulos (como a lista de lições da EBD) ── */
+  .lista,.caps{display:none}
+  .item{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:12px 14px;margin-bottom:9px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06);font-family:'Segoe UI',system-ui,sans-serif}
+  .item:active{background:#f7fafb}
+  .item .num{width:40px;height:40px;border-radius:10px;background:#f0f4ff;color:#1d3a8a;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+  .item .tt{font-family:Georgia,serif;font-weight:800;color:#1d3a8a;font-size:17px;line-height:1.25}
+  .item .au{color:#7a4e00;font-weight:700;font-size:13px;margin-top:2px}
+  .item .qt{color:#9aa1ad;font-size:12px;margin-top:2px}
+  .item .chev{margin-left:auto;color:#c9a14a;font-size:22px;font-weight:700;flex-shrink:0}
+  .grupo-h{color:#1d3a8a;font-size:14px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;margin:20px 0 8px;padding:8px 0 0;border-top:1px solid #eaeaea;font-family:'Segoe UI',system-ui,sans-serif}
+  .busca{position:sticky;top:0;z-index:5;background:#fff;padding:4px 0 10px}
+  .busca input{width:100%;padding:11px 14px;border:1.5px solid #e4e7ec;border-radius:12px;font-size:16px;font-family:'Segoe UI',system-ui,sans-serif}
+  .aviso{text-align:center;color:#9aa1ad;font-size:13px;margin:22px 0 0;font-family:'Segoe UI',system-ui,sans-serif}
+  /* ── barra do leitor ── */
   #leitor{display:none}
-  .barra-top{position:sticky;top:0;z-index:5;background:var(--branco);display:flex;align-items:center;gap:6px;padding:6px 0 8px;border-bottom:1px solid var(--linha);margin-bottom:8px;flex-wrap:wrap}
-  .barra-top button{background:#eef2f4;border:1px solid var(--linha);border-radius:9px;padding:7px 10px;font-weight:800;font-family:inherit;cursor:pointer;font-size:.88rem;white-space:nowrap}
-  .barra-top button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
-  .barra-top .tit{flex:1;min-width:0;font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:.95rem;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ferr{display:flex;gap:6px;width:100%}
-  .ferr button{flex:1}
-  .prog{height:4px;background:#eef1f4;border-radius:3px;overflow:hidden;margin:0 0 10px}
-  .prog i{display:block;height:100%;background:var(--dourado);width:0;transition:width .2s}
-  /* modo páginas */
-  #paginas{display:none}
-  .pg{margin:0 auto 10px;background:#f3f0e9;border-radius:10px;min-height:60vw;position:relative;box-shadow:0 2px 10px rgba(15,61,92,.1)}
-  .pg img{width:100%;display:block;border-radius:10px}
-  .pg .n{position:absolute;right:8px;bottom:6px;background:rgba(15,61,92,.75);color:#fff;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px}
-  .pg .esp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--teal);font-weight:700;font-size:.9rem}
-  /* modo texto */
-  #texto{display:none;word-wrap:break-word;font-family:Georgia,'Times New Roman',serif;font-size:1.05rem;line-height:1.82;color:#2a2620;-webkit-font-smoothing:antialiased}
-  #texto .rosto{text-align:center;padding:22px 10px 18px;border-top:2px solid var(--dourado);border-bottom:2px solid var(--dourado);margin-bottom:18px}
-  #texto .rosto .orn{color:var(--dourado);font-size:1.3rem;letter-spacing:8px;margin-bottom:10px}
-  #texto .rosto .gr{color:var(--teal);font-weight:800;font-size:.78rem;letter-spacing:2px;text-transform:uppercase;font-family:'Segoe UI',system-ui,sans-serif}
-  #texto .rosto .rt{font-weight:800;color:var(--navy);font-size:1.6rem;line-height:1.25;margin-top:4px}
-  #texto .rosto .ra{color:var(--dourado);font-weight:700;font-size:.92rem;margin-top:8px;font-style:italic}
-  #texto .par{margin:0 0 12px;text-align:justify;text-justify:inter-word;-webkit-hyphens:auto;hyphens:auto}
-  #texto .par.drop::first-letter{float:left;font-family:Georgia,serif;font-weight:800;color:var(--dourado);font-size:3.2rem;line-height:.8;padding:7px 9px 0 0}
-  #texto .h{font-family:'Segoe UI',system-ui,sans-serif;font-weight:800;color:var(--navy);font-size:1rem;margin:22px 0 8px;padding-left:10px;border-left:4px solid var(--dourado);line-height:1.3}
-  #texto .q{margin:0 0 14px;padding:10px 14px;background:#f7f3ea;border-left:3px solid var(--dourado);border-radius:0 10px 10px 0;font-style:italic;color:#4a3e1e;line-height:1.7}
-  #texto .s{font-family:'Segoe UI',system-ui,sans-serif;font-size:.84rem;color:#6b7280;margin:0 0 12px;text-align:center}
-  #texto mark{background:#fdeec2;color:#000;font-weight:700;border-radius:3px;padding:0 1px}
-  .pagbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 0}
-  .pagbar button{background:var(--navy);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-weight:800;font-family:inherit;font-size:1rem;cursor:pointer;min-width:84px}
+  .barra{position:sticky;top:0;z-index:5;background:#fff;display:flex;gap:6px;align-items:center;padding:6px 0 8px;border-bottom:1px solid #eaeaea;margin-bottom:6px;font-family:'Segoe UI',system-ui,sans-serif}
+  .barra button{background:#eef2f4;border:1px solid #e4e7ec;border-radius:9px;padding:7px 10px;font-weight:800;font-family:inherit;cursor:pointer;font-size:14px;white-space:nowrap}
+  .barra .esp{flex:1}
+  .prog{height:4px;background:#eef1f4;border-radius:3px;overflow:hidden;margin:0 0 14px}
+  .prog i{display:block;height:100%;background:#c9a14a;width:0;transition:width .2s}
+  /* ── O TEXTO: exatamente a paleta das lições da EBD ── */
+  .titulo{text-align:center;color:#7b0000;font-size:25px;font-weight:900;line-height:1.3;margin:10px 0 2px;padding:0 4px}
+  .data{text-align:center;font-size:16px;color:#888;font-weight:600;letter-spacing:.5px;margin-bottom:18px}
+  .sec-head{text-align:center;font-size:17px;font-weight:900;color:#1d3a8a;letter-spacing:1.5px;margin:24px 0 10px;padding:10px 0 0;border-top:1px solid #eaeaea;text-transform:uppercase}
+  .roman-head{font-weight:900;color:#1d3a8a;font-size:20px;margin:26px 0 6px;padding:10px 12px;background:#f0f4ff;border-left:4px solid #1d3a8a;border-radius:0 6px 6px 0;text-align:left}
+  .subpoint{text-align:justify;margin-bottom:12px}
+  .box-aureo{background:#fffaf0;border-radius:8px;padding:0 16px 14px;margin:14px 0;font-style:italic;color:#5a3a00;text-align:justify;overflow:hidden}
+  .box-aureo .lbl{display:block;font-style:normal;font-size:13px;font-weight:900;color:#7a4e00;letter-spacing:2.5px;text-transform:uppercase;margin:0 -16px 12px;padding:6px 16px;text-align:center;background:rgba(201,161,74,.18);border-bottom:1px solid rgba(201,161,74,.35)}
+  .nota{font-size:15px;color:#888;text-align:center;margin:0 0 12px;font-style:italic}
+  .bref{color:#1d4ed8;font-weight:700;text-decoration:underline dotted;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  mark{background:#fdeec2;color:#000;font-weight:700;border-radius:3px;padding:0 1px}
+  .pagbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:22px 0 0;font-family:'Segoe UI',system-ui,sans-serif}
+  .pagbar button{background:#1d3a8a;color:#fff;border:none;border-radius:12px;padding:12px 18px;font-weight:800;font-family:inherit;font-size:16px;cursor:pointer;min-width:84px}
   .pagbar button:disabled{opacity:.35}
-  .pagbar span{color:#6b7280;font-size:.85rem;text-align:center;font-weight:700}
-  .findbar{display:none;gap:7px;align-items:center;margin:0 0 10px}
+  .pagbar span{color:#6b7280;font-size:14px;text-align:center;font-weight:700}
+  .findbar{display:none;gap:7px;align-items:center;margin:0 0 10px;font-family:'Segoe UI',system-ui,sans-serif}
   .findbar.on{display:flex}
-  .findbar input{flex:1;min-width:0;padding:9px 12px;border:1.5px solid var(--linha);border-radius:10px;font-size:1rem;font-family:inherit}
-  .findbar button{background:#eef2f4;border:1px solid var(--linha);border-radius:9px;padding:8px 11px;font-weight:800;font-family:inherit;cursor:pointer}
-  .findbar .cnt{color:#6b7280;font-size:.82rem;font-weight:700;min-width:52px;text-align:center;flex-shrink:0}
-  .idx-ov{position:fixed;inset:0;z-index:50;background:rgba(15,61,92,.5)}
-  .idx-cx{position:absolute;left:0;right:0;bottom:0;max-width:860px;margin:0 auto;background:#fff;border-radius:16px 16px 0 0;max-height:82vh;display:flex;flex-direction:column}
-  .idx-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--linha);font-family:Georgia,serif;font-weight:800;color:var(--navy);font-size:1.15rem}
-  .idx-top button{background:#eef2f4;border:none;border-radius:9px;width:32px;height:32px;font-size:16px;cursor:pointer}
-  .idx-lista{overflow-y:auto;padding:6px 0}
-  .idx-g{padding:10px 18px 4px;color:var(--teal);font-weight:800;font-size:.76rem;letter-spacing:2px;text-transform:uppercase}
-  .idx-it{display:flex;justify-content:space-between;gap:10px;padding:11px 18px;border-bottom:1px solid #f0f2f4;cursor:pointer;color:#1c2230;font-size:.98rem}
-  .idx-it.atual{background:#f7f3ea;font-weight:800}
-  .idx-it span{color:#9aa1ad;font-size:.8rem;flex-shrink:0}
-  .toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f3d5c;color:#fff;padding:10px 16px;border-radius:999px;font-size:.9rem;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:60;opacity:0;transition:opacity .3s;pointer-events:none;max-width:92%;text-align:center}
+  .findbar input{flex:1;min-width:0;padding:9px 12px;border:1.5px solid #e4e7ec;border-radius:10px;font-size:16px;font-family:inherit}
+  .findbar button{background:#eef2f4;border:1px solid #e4e7ec;border-radius:9px;padding:8px 11px;font-weight:800;font-family:inherit;cursor:pointer}
+  .findbar .cnt{color:#6b7280;font-size:13px;font-weight:700;min-width:52px;text-align:center;flex-shrink:0}
+  /* ── ficha do versículo (igual à da EBD) ── */
+  #ref-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50}
+  #ref-sheet{display:none;position:fixed;left:0;right:0;bottom:0;max-width:860px;margin:0 auto;background:#fff;border-radius:16px 16px 0 0;max-height:78vh;overflow-y:auto;z-index:51;padding:14px 16px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px rgba(0,0,0,.25)}
+  #ref-sheet .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-family:'Segoe UI',system-ui,sans-serif}
+  #ref-sheet .top b{color:#1d3a8a;font-size:16px}
+  #ref-sheet .top button{background:#eef2f4;border:none;border-radius:9px;width:32px;height:32px;font-size:16px;cursor:pointer}
+  .toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f3d5c;color:#fff;padding:10px 16px;border-radius:999px;font-size:15px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25);z-index:60;opacity:0;transition:opacity .3s;pointer-events:none;max-width:92%;text-align:center;font-family:'Segoe UI',system-ui,sans-serif}
   .toast.on{opacity:1}
-  /* lendo: some o cabeçalho da página pra sobrar tela no celular */
-  body.lendo .voltar, body.lendo .selo, body.lendo h1, body.lendo .sub{display:none}
+  body.lendo .voltar,body.lendo .selo,body.lendo h1,body.lendo .sub{display:none}
 </style>
 </head>
 <body>
   <button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
   <div class="selo">✦ Privado · só você ✦</div>
-  <h1>Estudos MARIA</h1>
+  <h1>ESTUDOS MARIA</h1>
   <div class="sub">Sua coleção de estudos, trancada com a sua senha</div>
 
-  <!-- CADEADO -->
   <div class="cad" id="cad">
     <div class="lock">🔒</div>
     <p>Estes estudos ficam <b>criptografados</b> — sem a sua senha, ninguém lê. É a mesma senha do Meu Estudo:</p>
@@ -117,74 +100,55 @@
     <div class="erro" id="erro"></div>
   </div>
 
-  <!-- ESTANTE -->
   <div class="lista" id="lista"></div>
+  <div class="caps" id="caps"></div>
 
-  <!-- LEITOR -->
   <div id="leitor">
-    <div class="barra-top">
-      <button onclick="fecharEstudo()">← Estante</button>
-      <div class="tit" id="ltit"></div>
-      <button id="b-pag" onclick="modo('paginas')" title="Página original">📄</button>
-      <button id="b-txt" onclick="modo('texto')" title="Texto">Aa</button>
-      <div class="ferr" id="ferr-txt" style="display:none">
-        <button onclick="abrirIndice()">📑 Índice</button>
-        <button onclick="toggleFind()">🔍 Buscar</button>
-        <button onclick="copiarCapitulo(this)">📋 Copiar</button>
-        <button onclick="fonte(-1)">A−</button>
-        <button onclick="fonte(1)">A+</button>
-      </div>
-      <div class="ferr" id="ferr-pag" style="display:none">
-        <button onclick="abrirIndice()">📑 Ir para página</button>
-      </div>
+    <div class="barra">
+      <button onclick="voltarCaps()">← Capítulos</button>
+      <span class="esp"></span>
+      <button onclick="toggleFind()" title="Buscar neste estudo">🔍</button>
+      <button onclick="copiarCapitulo(this)" title="Copiar">📋</button>
+      <button onclick="fonte(-1)">A−</button>
+      <button onclick="fonte(1)">A+</button>
     </div>
     <div class="findbar" id="findbar">
       <input id="findq" placeholder="Buscar neste estudo…" autocomplete="off" enterkeyhint="search">
       <span class="cnt" id="findcnt">—</span>
-      <button onclick="findGo(-1)">◀</button>
-      <button onclick="findGo(1)">▶</button>
-      <button onclick="toggleFind()">✕</button>
+      <button onclick="findGo(-1)">◀</button><button onclick="findGo(1)">▶</button><button onclick="toggleFind()">✕</button>
     </div>
     <div class="prog"><i id="progf"></i></div>
-    <div id="paginas"></div>
     <div id="texto"></div>
-    <div class="pagbar" id="pagbar" style="display:none"><button id="pg-ant" onclick="irCap(-1)">◀</button><span id="pag-ind">—</span><button id="pg-prox" onclick="irCap(1)">▶</button></div>
+    <div class="pagbar"><button id="pg-ant" onclick="irCap(-1)">◀ Anterior</button><span id="pag-ind">—</span><button id="pg-prox" onclick="irCap(1)">Próximo ▶</button></div>
   </div>
 
+  <div id="ref-overlay" onclick="fecharRef()"></div>
+  <div id="ref-sheet"><div class="top"><b id="ref-titulo">Referência</b><button onclick="fecharRef()">✕</button></div><div id="ref-body"></div></div>
+
 <script>
-/* ═══ CHAVE E CIFRA ════════════════════════════════════════════════════════ */
+/* ═══ CHAVE E CIFRA ═══ */
 const $=id=>document.getElementById(id);
-let MANIFEST=null, CHAVE=null, FS=parseInt(localStorage.getItem('maria_fs')||localStorage.getItem('estudo_fs')||'17',10);
+let MANIFEST=null, CHAVE=null, FS=parseInt(localStorage.getItem('maria_fs')||'21',10);
+document.documentElement.style.setProperty('--fs',FS+'px');
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 class FalhaDeRede extends Error{ constructor(m){ super(m); this.name='FalhaDeRede'; } }
-
 async function derivar(pass){
   const km=await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2', salt:b64(MANIFEST.salt), iterations:MANIFEST.iter, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['decrypt']);
 }
-async function baixar(url){
+async function decifrarTexto(url){
   let r; try{ r=await fetch(url,{cache:'force-cache'}); }catch(e){ throw new FalhaDeRede('sem conexão'); }
   if(!r.ok) throw new FalhaDeRede('servidor devolveu '+r.status);
-  return new Uint8Array(await r.arrayBuffer());
+  const buf=new Uint8Array(await r.arrayBuffer());
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:buf.slice(0,12)}, CHAVE, buf.slice(12));
+  return new TextDecoder('utf-8').decode(pt);
 }
-async function decifrarBytes(url){
-  const buf=await baixar(url);
-  const iv=buf.slice(0,12), ct=buf.slice(12);
-  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM', iv}, CHAVE, ct));
-}
-async function decifrarTexto(url){ return new TextDecoder('utf-8').decode(await decifrarBytes(url)); }
-const _blobs={};
-async function decifrarImagem(url){
-  if(_blobs[url]) return _blobs[url];
-  const bytes=await decifrarBytes(url);
-  return _blobs[url]=URL.createObjectURL(new Blob([bytes],{type:'image/jpeg'}));
-}
-
-/* ═══ CADEADO ══════════════════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded',async()=>{
+/* ═══ CADEADO ═══ */
+document.addEventListener('DOMContentLoaded',()=>{
   $('senha').addEventListener('keydown',e=>{ if(e.key==='Enter') abrir(); });
   const salva=localStorage.getItem('maria_pass')||localStorage.getItem('estudo_pass');
   if(salva){ $('senha').value=salva; abrir(true); }
+  const fq=$('findq'); fq.addEventListener('input',findRun); fq.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); findGo(1); } });
 });
 async function abrir(silencioso){
   const s=$('senha').value.trim();
@@ -193,198 +157,126 @@ async function abrir(silencioso){
   try{
     if(!MANIFEST) MANIFEST=await (await fetch('manifest.json',{cache:'no-cache'})).json();
     CHAVE=await derivar(s);
-    const prova=await decifrarTexto(MANIFEST.prova);          // senha errada → lança erro
-    if(prova!=='RADAR-ESTUDOS-MARIA-OK') throw new Error('prova');
-    if($('lembrar').checked){ localStorage.setItem('maria_pass', s); } else localStorage.removeItem('maria_pass');
-    mostrarEstante();
-    const alvo=new URLSearchParams(location.search).get('e'); if(alvo) abrirEstudo(alvo);
+    if((await decifrarTexto(MANIFEST.prova))!=='RADAR-ESTUDOS-MARIA-OK') throw new Error('prova');
+    if($('lembrar').checked) localStorage.setItem('maria_pass', s); else localStorage.removeItem('maria_pass');
+    mostrarLista();
+    const q=new URLSearchParams(location.search); if(q.get('e')) abrirEstudo(q.get('e'), q.get('c'));
   }catch(e){
     CHAVE=null;
-    if(e instanceof FalhaDeRede){
-      $('erro').textContent='Não foi o seu erro — os estudos não estão respondendo ('+e.message+'). Tente de novo mais tarde.';
-    }else{
-      localStorage.removeItem('maria_pass');
-      $('erro').textContent=silencioso?'':'Senha errada. Tente de novo.';
-    }
+    if(e instanceof FalhaDeRede) $('erro').textContent='Não foi o seu erro — os estudos não estão respondendo ('+e.message+'). Tente de novo mais tarde.';
+    else { localStorage.removeItem('maria_pass'); $('erro').textContent=silencioso?'':'Senha errada. Tente de novo.'; }
   }
   $('btn').textContent='Abrir meus estudos';
 }
 function sair(){ CHAVE=null; localStorage.removeItem('maria_pass'); location.reload(); }
-
-/* ═══ ESTANTE ══════════════════════════════════════════════════════════════ */
+/* ═══ LISTA DE ESTUDOS ═══ */
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function pos(slug){ try{ return JSON.parse(localStorage.getItem('maria_pos_'+slug)||'{}'); }catch(e){ return {}; } }
 function guardarPos(slug,o){ try{ localStorage.setItem('maria_pos_'+slug, JSON.stringify(Object.assign(pos(slug),o))); }catch(e){} }
-function progresso(e){ const p=pos(e.slug); if(p.modo==='paginas'&&e.paginas) return (p.pag||0)/e.paginas; if(p.modo==='texto'&&e.capitulos) return (p.cap||0)/e.capitulos; return 0; }
-function mostrarEstante(){
-  $('cad').style.display='none'; $('leitor').style.display='none';
+function mostrarLista(){
+  $('cad').style.display='none'; $('leitor').style.display='none'; $('caps').style.display='none'; document.body.classList.remove('lendo');
   const L=$('lista'); L.style.display='block';
-  const series=(MANIFEST.series||[]).slice(); series.push({id:'',nome:'Outros estudos'});
-  let html='';
-  for(const s of series){
-    const itens=MANIFEST.estudos.filter(e=>(e.serie||'')===s.id).sort((a,b)=>a.ordem-b.ordem);
-    if(!itens.length) continue;
-    html+='<div class="serie">'+esc(s.nome)+'</div><div class="grade">'+itens.map(cardEstudo).join('')+'</div>';
-  }
-  html+='<div class="aviso">'+MANIFEST.estudos.length+' estudos · trancados com a sua senha · <a href="#" onclick="sair();return false" style="color:#8a1c1c">sair/bloquear</a></div>';
-  L.innerHTML=html;
-  // capas: decifra uma a uma, sem travar a tela
-  (async()=>{ for(const e of MANIFEST.estudos){ if(!e.capa) continue; const img=document.querySelector('.est[data-slug="'+e.slug+'"] .capa img'); if(!img) continue;
-    try{ img.src=await decifrarImagem('dados/'+e.slug+'/capa.enc'); img.style.visibility='visible'; }catch(err){} } })();
-  window.scrollTo(0,0);
+  const itens=MANIFEST.estudos.slice().sort((a,b)=>a.ordem-b.ordem);
+  L.innerHTML=itens.map((e,i)=>{ const p=pos(e.slug); const lido=p.cap>0?' · parou no cap. '+(p.cap+1):'';
+    return '<div class="item" onclick="abrirEstudo(\''+esc(e.slug)+'\')"><div class="num">'+(i+1)+'</div><div><div class="tt">'+esc(e.titulo)+'</div><div class="au">'+esc(e.sub)+'</div><div class="qt">'+e.capitulos+' capítulos'+lido+'</div></div><span class="chev">›</span></div>'; }).join('')
+    +'<div class="aviso">'+itens.length+' estudos · trancados com a sua senha · <a href="#" onclick="sair();return false" style="color:#8a1c1c">sair/bloquear</a></div>';
+  history.replaceState({},'',location.pathname); window.scrollTo(0,0);
 }
-function cardEstudo(e){
-  const pg=Math.round(progresso(e)*100);
-  const qt=(e.paginas?e.paginas+' páginas':'')+(e.paginas&&e.texto?' · ':'')+(e.texto?e.capitulos+' capítulos':'');
-  const capa=e.capa?'<img alt="" style="visibility:hidden">':'<span>📖</span>';
-  return '<div class="est" data-slug="'+esc(e.slug)+'" onclick="abrirEstudo(\''+esc(e.slug)+'\')"><div class="capa">'+capa+'</div>'
-    +'<div class="tt">'+esc(e.titulo)+'</div><div class="au">'+esc(e.sub)+'</div><div class="qt">'+qt+'</div>'
-    +'<div class="barra"><i style="width:'+pg+'%"></i></div></div>';
-}
-
-/* ═══ LEITOR ═══════════════════════════════════════════════════════════════ */
-let EST=null, TEXTO=null, MODO='paginas', CAP=0, _obs=null;
-let _findTerm='', _findHits=[], _findAt=-1;
-async function abrirEstudo(slug){
+/* ═══ CAPÍTULOS ═══ */
+let EST=null, TEXTO=null, CAP=0, _findTerm='', _findHits=[], _findAt=-1;
+async function abrirEstudo(slug, capInicial){
   const e=MANIFEST.estudos.find(x=>x.slug===slug); if(!e) return;
-  EST=e; TEXTO=null; CAP=0; _findTerm=''; _findHits=[]; _findAt=-1;
-  $('lista').style.display='none'; $('leitor').style.display='block'; document.body.classList.add('lendo');
-  $('ltit').textContent=e.titulo;
-  $('b-pag').style.display=e.paginas?'':'none'; $('b-txt').style.display=e.texto?'':'none';
-  $('findbar').classList.remove('on'); $('findq').value='';
-  history.replaceState({},'',location.pathname+'?e='+encodeURIComponent(slug));
-  const p=pos(slug);
-  const m = p.modo && ((p.modo==='paginas'&&e.paginas)||(p.modo==='texto'&&e.texto)) ? p.modo : (e.paginas?'paginas':'texto');
-  await modo(m, true);
-  window.scrollTo(0,0);
+  EST=e; TEXTO=null; _findTerm=''; _findHits=[]; _findAt=-1;
+  $('lista').style.display='none'; $('caps').style.display='block'; $('caps').innerHTML='<div class="carregando">Descriptografando…</div>';
+  try{ TEXTO=JSON.parse(await decifrarTexto('dados/'+slug+'/texto.enc')); }
+  catch(err){ $('caps').innerHTML='<div class="carregando">Não consegui abrir agora. Volte e tente de novo.</div>'; return; }
+  if(capInicial!=null && TEXTO.capitulos[+capInicial]){ CAP=+capInicial; mostrarCap(); return; }
+  mostrarCaps();
 }
-function fecharEstudo(){
-  if(_obs){ _obs.disconnect(); _obs=null; }
-  window.onscroll=null;
-  $('leitor').style.display='none'; $('paginas').innerHTML=''; $('texto').innerHTML=''; document.body.classList.remove('lendo');
-  history.replaceState({},'',location.pathname);
-  EST=null; mostrarEstante();
+function mostrarCaps(){
+  document.body.classList.remove('lendo'); $('leitor').style.display='none'; $('lista').style.display='none';
+  const C=$('caps'); C.style.display='block';
+  const p=pos(EST.slug);
+  let html='<button class="voltar" onclick="mostrarLista()">← Estudos</button><p class="titulo">'+esc(EST.titulo).toUpperCase()+'</p><p class="data">'+esc(EST.sub)+'</p>'
+    +'<div class="busca"><input id="q" placeholder="🔎 Filtrar capítulos…" autocomplete="off" oninput="filtrarCaps(this.value)"></div>'
+    +(p.cap>0?'<div class="item" onclick="CAP='+p.cap+';mostrarCap()"><div class="num">▶</div><div><div class="tt">Continuar de onde parei</div><div class="au">'+esc(TEXTO.capitulos[p.cap].t)+'</div></div><span class="chev">›</span></div>':'')
+    +'<div id="caps-lista"></div>';
+  C.innerHTML=html; filtrarCaps(''); history.replaceState({},'',location.pathname+'?e='+encodeURIComponent(EST.slug)); window.scrollTo(0,0);
 }
-async function modo(m, retomar){
-  MODO=m; guardarPos(EST.slug,{modo:m});
-  $('b-pag').classList.toggle('on',m==='paginas'); $('b-txt').classList.toggle('on',m==='texto');
-  $('ferr-txt').style.display=m==='texto'?'flex':'none'; $('ferr-pag').style.display=m==='paginas'?'flex':'none';
-  $('paginas').style.display=m==='paginas'?'block':'none'; $('texto').style.display=m==='texto'?'block':'none';
-  $('pagbar').style.display=m==='texto'?'flex':'none';
-  $('findbar').classList.remove('on');
-  if(m==='paginas') await montarPaginas(retomar); else await montarTexto(retomar);
+function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function filtrarCaps(q){
+  const nq=norm(q); let g=null, html='';
+  TEXTO.capitulos.forEach((c,i)=>{ if(nq && !norm(c.t+' '+(c.sub||'')+' '+(c.ref||'')).includes(nq)) return;
+    if((c.grupo||'')!==g){ g=c.grupo||''; if(g) html+='<div class="grupo-h">'+esc(g)+'</div>'; }
+    html+='<div class="item" onclick="CAP='+i+';mostrarCap()"><div class="num">'+(i+1)+'</div><div><div class="tt">'+esc(c.t)+'</div>'+(c.sub||c.ref?'<div class="au">'+esc(c.sub||c.ref)+'</div>':'')+'</div><span class="chev">›</span></div>'; });
+  $('caps-lista').innerHTML=html||'<div class="aviso">Nenhum capítulo com esse nome.</div>';
 }
-/* ── modo PÁGINAS: as imagens originais, decifradas quando entram na tela ── */
-async function montarPaginas(retomar){
-  window.onscroll=null;
-  const box=$('paginas'); box.innerHTML='';
-  for(let i=1;i<=EST.paginas;i++){
-    const d=document.createElement('div'); d.className='pg'; d.dataset.n=i;
-    d.innerHTML='<div class="esp">📖 página '+i+'</div><span class="n">'+i+' / '+EST.paginas+'</span>';
-    box.appendChild(d);
-  }
-  if(_obs) _obs.disconnect();
-  _obs=new IntersectionObserver(async ents=>{
-    for(const en of ents){ if(!en.isIntersecting) continue; const d=en.target; if(d.dataset.ok) continue; d.dataset.ok='1';
-      const n=+d.dataset.n;
-      try{ const src=await decifrarImagem('dados/'+EST.slug+'/p'+String(n).padStart(3,'0')+'.enc');
-        const img=new Image(); img.alt='página '+n; img.onload=()=>{ const e=d.querySelector('.esp'); if(e) e.remove(); d.style.minHeight='0'; };
-        img.src=src; d.insertBefore(img, d.firstChild);
-      }catch(err){ d.dataset.ok=''; const e=d.querySelector('.esp'); if(e) e.textContent='Sem conexão — volte a rolar pra tentar de novo'; }
-    }
-  },{rootMargin:'900px 0px'});
-  box.querySelectorAll('.pg').forEach(d=>_obs.observe(d));
-  // retomar na página onde parou + guardar a página visível
-  const p=pos(EST.slug); const alvo=retomar&&p.pag>1?p.pag:1;
-  if(alvo>1){ setTimeout(()=>{ const d=box.querySelector('.pg[data-n="'+alvo+'"]'); if(d) d.scrollIntoView(); toast('Voltando à página '+alvo); },80); }
-  let _t=null;
-  window.onscroll=()=>{ if(_t) return; _t=setTimeout(()=>{ _t=null; const meio=window.scrollY+window.innerHeight*0.4; let atual=1;
-    box.querySelectorAll('.pg').forEach(d=>{ if(d.offsetTop<=meio) atual=+d.dataset.n; });
-    guardarPos(EST.slug,{pag:atual}); $('progf').style.width=Math.round(atual/EST.paginas*100)+'%'; },300); };
-  $('progf').style.width=Math.round(alvo/EST.paginas*100)+'%';
-}
-/* ── modo TEXTO: um capítulo por vez ── */
-async function montarTexto(retomar){
-  window.onscroll=null;
-  if(!TEXTO){ $('texto').innerHTML='<div class="carregando">Descriptografando o texto…</div>';
-    try{ TEXTO=JSON.parse(await decifrarTexto('dados/'+EST.slug+'/texto.enc')); }
-    catch(e){ $('texto').innerHTML='<div class="carregando">Não consegui abrir o texto agora. Tente de novo.</div>'; return; } }
-  const p=pos(EST.slug); CAP = retomar&&p.cap>0&&p.cap<TEXTO.capitulos.length ? p.cap : 0;
-  renderCap(); if(retomar&&CAP>0) toast('Voltando de onde você parou');
-}
+function voltarCaps(){ mostrarCaps(); }
+/* ═══ LEITURA (paleta da EBD) ═══ */
 function _hl(txt){ if(!_findTerm) return txt; try{ const re=new RegExp('('+_findTerm.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); return txt.replace(re,'<mark>$1</mark>'); }catch(e){ return txt; } }
-function renderCap(){
+function mostrarCap(){
   const c=TEXTO.capitulos[CAP]; if(!c) return;
-  $('texto').style.fontSize=FS+'px';
-  let html='<div class="rosto"><div class="orn">❦</div>'+(c.grupo?'<div class="gr">'+esc(c.grupo)+'</div>':'')
-    +'<div class="rt">'+_hl(esc(c.t))+'</div>'+(c.sub||c.ref?'<div class="ra">'+esc(c.sub||c.ref)+'</div>':'')+'</div>';
-  let primeiro=true;
-  for(const b of c.blocos){
-    const x=_hl(esc(b.x));
-    if(b.t==='h') html+='<div class="h">'+x+'</div>';
-    else if(b.t==='q') html+='<div class="q">'+x+'</div>';
-    else if(b.t==='s') html+='<div class="s">'+x+'</div>';
-    else { html+='<p class="par'+(primeiro&&!TEXTO.ocr&&/^[A-Za-zÀ-ÿ]/.test(b.x)?' drop':'')+'">'+x+'</p>'; primeiro=false; }
+  document.body.classList.add('lendo'); $('caps').style.display='none'; $('lista').style.display='none'; $('leitor').style.display='block';
+  let html=(c.grupo?'<p class="sec-head">'+esc(c.grupo)+'</p>':'')+'<p class="titulo">'+_hl(esc(c.t)).toUpperCase()+'</p>'+(c.sub||c.ref?'<p class="data">'+refs(esc(c.sub||c.ref))+'</p>':'');
+  for(let i=0;i<c.blocos.length;i++){ const b=c.blocos[i];
+    const x=refs(_hl(esc(b.x)));
+    // "Texto bíblico" seguido da citação: a caixa já traz esse rótulo, não repete o cabeçalho
+    if(b.t==='h' && /^texto b[ií]blico$/i.test(b.x) && c.blocos[i+1] && c.blocos[i+1].t==='q') continue;
+    if(b.t==='h') html+='<p class="roman-head">'+x+'</p>';
+    else if(b.t==='q') html+='<div class="box-aureo"><span class="lbl">Texto bíblico</span>'+x+'</div>';
+    else if(b.t==='s') html+='<p class="nota">'+x+'</p>';
+    else html+='<p class="subpoint">'+x+'</p>';
   }
   $('texto').innerHTML=html;
-  $('pag-ind').textContent=(CAP+1)+' de '+TEXTO.capitulos.length+(c.pag?' · pág. '+c.pag:'');
+  $('pag-ind').textContent=(CAP+1)+' de '+TEXTO.capitulos.length;
   $('pg-ant').disabled=CAP<=0; $('pg-prox').disabled=CAP>=TEXTO.capitulos.length-1;
   $('progf').style.width=Math.round((CAP+1)/TEXTO.capitulos.length*100)+'%';
   guardarPos(EST.slug,{cap:CAP});
+  history.replaceState({},'',location.pathname+'?e='+encodeURIComponent(EST.slug)+'&c='+CAP);
   window.scrollTo(0,0);
 }
-function irCap(d){ if(!TEXTO) return; CAP=Math.max(0,Math.min(TEXTO.capitulos.length-1,CAP+d)); renderCap(); }
-function fonte(d){ FS=Math.max(13,Math.min(26,FS+d)); localStorage.setItem('maria_fs',FS); $('texto').style.fontSize=FS+'px'; }
-/* ── índice (capítulos no modo texto · páginas no modo páginas) ── */
-function abrirIndice(){
-  let ov=$('idx-ov'); if(!ov){ ov=document.createElement('div'); ov.id='idx-ov'; document.body.appendChild(ov); }
-  ov.className='idx-ov'; ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
-  let corpo='';
-  if(MODO==='texto' && TEXTO){
-    let g=null;
-    TEXTO.capitulos.forEach((c,i)=>{ if((c.grupo||'')!==g){ g=c.grupo||''; if(g) corpo+='<div class="idx-g">'+esc(g)+'</div>'; }
-      corpo+='<div class="idx-it'+(i===CAP?' atual':'')+'" onclick="CAP='+i+';renderCap();document.getElementById(\'idx-ov\').remove()">'+esc(c.t)+'<span>'+(c.pag?'pág. '+c.pag:(i+1))+'</span></div>'; });
-  }else{
-    const atual=pos(EST.slug).pag||1;
-    for(let i=1;i<=EST.paginas;i++) corpo+='<div class="idx-it'+(i===atual?' atual':'')+'" onclick="irPagina('+i+')">Página '+i+'</div>';
-  }
-  ov.innerHTML='<div class="idx-cx"><div class="idx-top">📑 '+(MODO==='texto'?'Índice':'Páginas')+'<button onclick="document.getElementById(\'idx-ov\').remove()">✕</button></div><div class="idx-lista">'+corpo+'</div></div>';
-  const at=ov.querySelector('.idx-it.atual'); if(at) at.scrollIntoView({block:'center'});
+function irCap(d){ CAP=Math.max(0,Math.min(TEXTO.capitulos.length-1,CAP+d)); mostrarCap(); }
+function fonte(d){ FS=Math.max(15,Math.min(30,FS+d)); localStorage.setItem('maria_fs',FS); document.documentElement.style.setProperty('--fs',FS+'px'); }
+/* ═══ REFERÊNCIAS BÍBLICAS CLICÁVEIS (abre o versículo, como na EBD) ═══ */
+const ABREV={'at':'atos','mt':'mt','mc':'mc','lc':'lc','jo':'jo','rm':'rm','1co':'1co','2co':'2co','gl':'gl','ef':'ef','fp':'fp','cl':'cl','1ts':'1ts','2ts':'2ts','1tm':'1tm','2tm':'2tm','tt':'tt','fm':'fm','hb':'hb','tg':'tg','1pe':'1pe','2pe':'2pe','1jo':'1jo','2jo':'2jo','3jo':'3jo','jd':'jd','ap':'ap','gn':'gn','ex':'ex','lv':'lv','nm':'nm','dt':'dt','js':'js','jz':'jz','rt':'rt','1sm':'1sm','2sm':'2sm','1rs':'1rs','2rs':'2rs','1cr':'1cr','2cr':'2cr','ed':'ed','ne':'ne','et':'et','jo.':'jó','sl':'sl','pv':'pv','ec':'ec','ct':'ct','is':'is','jr':'jr','lm':'lm','ez':'ez','dn':'dn','os':'os','jl':'jl','am':'am','ob':'ob','jn':'jn','mq':'mq','na':'na','hc':'hc','sf':'sf','ag':'ag','zc':'zc','ml':'ml',
+  'genesis':'gn','exodo':'ex','levitico':'lv','numeros':'nm','deuteronomio':'dt','josue':'js','juizes':'jz','rute':'rt','1 samuel':'1sm','2 samuel':'2sm','1 reis':'1rs','2 reis':'2rs','1 cronicas':'1cr','2 cronicas':'2cr','esdras':'ed','neemias':'ne','ester':'et','jo':'jo','salmos':'sl','salmo':'sl','proverbios':'pv','eclesiastes':'ec','cantares':'ct','isaias':'is','jeremias':'jr','lamentacoes':'lm','ezequiel':'ez','daniel':'dn','oseias':'os','joel':'jl','amos':'am','obadias':'ob','jonas':'jn','miqueias':'mq','naum':'na','habacuque':'hc','sofonias':'sf','ageu':'ag','zacarias':'zc','malaquias':'ml','mateus':'mt','marcos':'mc','lucas':'lc','joao':'jo','atos':'atos','romanos':'rm','1 corintios':'1co','2 corintios':'2co','galatas':'gl','efesios':'ef','filipenses':'fp','colossenses':'cl','1 tessalonicenses':'1ts','2 tessalonicenses':'2ts','1 timoteo':'1tm','2 timoteo':'2tm','tito':'tt','filemom':'fm','hebreus':'hb','tiago':'tg','1 pedro':'1pe','2 pedro':'2pe','1 joao':'1jo','2 joao':'2jo','3 joao':'3jo','judas':'jd','apocalipse':'ap'};
+const RE_REF=/((?:[123]\s?)?[A-ZÁÉÍÓÚÂÊÔÃÕÇ][a-záéíóúâêôãõç]{1,14})\s(\d{1,3})[:.](\d{1,3})(?:\s?[-–]\s?(\d{1,3}))?/g;
+function refs(html){
+  return html.replace(RE_REF,(m,livro,cap,v1,v2)=>{ const k=norm(livro).replace(/\s+/g,' '); const ab=ABREV[k]; if(!ab) return m;
+    return '<span class="bref" data-ref="'+ab+'|'+cap+'|'+v1+'|'+(v2||'')+'">'+m+'</span>'; });
 }
-function irPagina(n){ const o=$('idx-ov'); if(o) o.remove(); const d=document.querySelector('#paginas .pg[data-n="'+n+'"]'); if(d) d.scrollIntoView(); }
-/* ── buscar dentro do estudo (modo texto, offline) ── */
-function toggleFind(){
-  if(MODO!=='texto'){ modo('texto').then(toggleFind); return; }
-  const fb=$('findbar'); const on=fb.classList.toggle('on');
-  if(on){ setTimeout(()=>$('findq').focus(),50); } else { _findTerm=''; _findHits=[]; _findAt=-1; $('findq').value=''; $('findcnt').textContent='—'; renderCap(); }
-}
-function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+let _biblia=null;
+document.addEventListener('click',async e=>{ const el=e.target.closest('.bref'); if(!el) return; e.preventDefault();
+  if(!_biblia){ try{ _biblia=await (await fetch('/biblia.json')).json(); }catch(err){ toast('Bíblia não disponível agora.'); return; } }
+  const [ab,cap,v1,v2]=el.dataset.ref.split('|'); const livro=_biblia.find(x=>x.abbrev===ab); const ch=livro&&livro.chapters[+cap-1];
+  if(!ch){ toast('Não achei essa passagem.'); return; }
+  const a=+v1-1, b=v2?+v2-1:a; let h='';
+  for(let i=a;i<=Math.min(b,ch.length-1);i++) if(ch[i]) h+='<p style="margin:0 0 8px;text-align:justify;font-size:17px;line-height:1.75"><sup style="color:#c9a14a;font-weight:900;font-size:11px">'+(i+1)+'</sup> '+esc(ch[i])+'</p>';
+  $('ref-titulo').textContent=(livro.name||ab)+' '+cap+(v2?':'+v1+'-'+v2:':'+v1); $('ref-body').innerHTML=h||'<p>Versículo não encontrado.</p>';
+  $('ref-sheet').style.display='block'; $('ref-overlay').style.display='block';
+});
+function fecharRef(){ $('ref-sheet').style.display='none'; $('ref-overlay').style.display='none'; }
+/* ═══ BUSCAR, COPIAR, TOAST ═══ */
+function toggleFind(){ const fb=$('findbar'); const on=fb.classList.toggle('on'); if(on){ setTimeout(()=>$('findq').focus(),50); } else { _findTerm=''; _findHits=[]; _findAt=-1; $('findq').value=''; $('findcnt').textContent='—'; mostrarCap(); } }
 function findRun(){
   const termo=$('findq').value.trim();
-  if(termo.length<2){ _findTerm=''; _findHits=[]; _findAt=-1; $('findcnt').textContent='—'; renderCap(); return; }
+  if(termo.length<2){ _findTerm=''; _findHits=[]; _findAt=-1; $('findcnt').textContent='—'; mostrarCap(); return; }
   _findTerm=termo; const nt=norm(termo); _findHits=[];
   TEXTO.capitulos.forEach((c,i)=>{ if(norm(c.t+' '+c.blocos.map(b=>b.x).join(' ')).includes(nt)) _findHits.push(i); });
-  if(!_findHits.length){ _findAt=-1; $('findcnt').textContent='0'; renderCap(); return; }
-  let p=_findHits.findIndex(i=>i>=CAP); _findAt=p<0?0:p; CAP=_findHits[_findAt];
-  $('findcnt').textContent=(_findAt+1)+'/'+_findHits.length; renderCap();
+  if(!_findHits.length){ _findAt=-1; $('findcnt').textContent='0'; mostrarCap(); return; }
+  let p=_findHits.findIndex(i=>i>=CAP); _findAt=p<0?0:p; CAP=_findHits[_findAt]; $('findcnt').textContent=(_findAt+1)+'/'+_findHits.length; mostrarCap();
 }
-function findGo(d){ if(!_findHits.length) return; _findAt=(_findAt+d+_findHits.length)%_findHits.length; CAP=_findHits[_findAt]; $('findcnt').textContent=(_findAt+1)+'/'+_findHits.length; renderCap(); }
-document.addEventListener('DOMContentLoaded',()=>{ const fq=$('findq'); fq.addEventListener('input',findRun); fq.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); findGo(1); } }); });
-/* ── copiar o capítulo atual (texto limpo) ── */
+function findGo(d){ if(!_findHits.length) return; _findAt=(_findAt+d+_findHits.length)%_findHits.length; CAP=_findHits[_findAt]; $('findcnt').textContent=(_findAt+1)+'/'+_findHits.length; mostrarCap(); }
 function copiarCapitulo(btn){
-  const c=TEXTO&&TEXTO.capitulos[CAP]; if(!c){ toast('Nada para copiar.'); return; }
+  const c=TEXTO&&TEXTO.capitulos[CAP]; if(!c) return;
   const txt=[c.t+(c.sub||c.ref?' — '+(c.sub||c.ref):'')].concat(c.blocos.map(b=>b.x)).join('\n\n');
-  const ok=()=>{ const o=btn.innerHTML; btn.innerHTML='✓ Copiado'; setTimeout(()=>{btn.innerHTML=o;},1300); toast('Capítulo copiado'); };
-  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(ok).catch(()=>_copyFallback(txt,ok)); } else _copyFallback(txt,ok);
+  const ok=()=>{ const o=btn.innerHTML; btn.innerHTML='✓'; setTimeout(()=>{btn.innerHTML=o;},1300); toast('Capítulo copiado'); };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok).catch(()=>_copyFallback(txt,ok)); else _copyFallback(txt,ok);
 }
-function _copyFallback(txt,cb){ try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb&&cb(); }catch(e){ toast('Não consegui copiar neste navegador.'); } }
+function _copyFallback(txt,cb){ try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb&&cb(); }catch(e){ toast('Não consegui copiar.'); } }
 let _toastT=null;
 function toast(msg){ let t=$('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.className='toast'; document.body.appendChild(t); } t.textContent=msg; t.classList.add('on'); clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('on'),2200); }
-document.addEventListener('keydown',e=>{
-  if($('leitor').style.display!=='block'||MODO!=='texto') return;
-  const tg=e.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA') return;
-  if(e.key==='ArrowRight'||e.key==='PageDown'){ irCap(1); e.preventDefault(); } else if(e.key==='ArrowLeft'||e.key==='PageUp'){ irCap(-1); e.preventDefault(); }
-});
+document.addEventListener('keydown',e=>{ if($('leitor').style.display!=='block') return; const tg=e.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA') return; if(e.key==='ArrowRight'||e.key==='PageDown'){ irCap(1); e.preventDefault(); } else if(e.key==='ArrowLeft'||e.key==='PageUp'){ irCap(-1); e.preventDefault(); } });
 </script>
 <script src="/_uso.js?v=1" defer></script>
 </body>
