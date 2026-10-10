@@ -17,7 +17,8 @@
     { "source": "/api/estudo-doutrina", "destination": "/api/edge?fn=estudo-doutrina" },
     { "source": "/api/concilio", "destination": "/api/edge?fn=concilio" },
     { "source": "/api/busca-vetor", "destination": "/api/edge?fn=busca-vetor" },
-    { "source": "/api/voz",      "destination": "/api/edge?fn=voz" }
+    { "source": "/api/voz",      "destination": "/api/edge?fn=voz" },
+    { "source": "/api/ebd-plano", "destination": "/api/edge?fn=ebd-plano" }
   ],
   "headers": [
     {

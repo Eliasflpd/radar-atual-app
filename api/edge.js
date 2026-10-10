@@ -11,8 +11,9 @@ import peca from './_lib/peca.js';
 import estudoDoutrina from './_lib/estudo-doutrina.js';
 import buscaVetor from './_lib/busca-vetor.js';
 import voz from './_lib/voz.js';
+import ebdPlano from './_lib/ebd-plano.js';
 
-const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor, voz };
+const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor, voz, 'ebd-plano': ebdPlano };
 
 // ⚠️ O SEGUNDO ARGUMENTO NÃO É ENFEITE — MEDIDO EM PRODUÇÃO (22/09/2026).
 // A Vercel entrega um `context` com `waitUntil`: é ele que deixa a resposta sair

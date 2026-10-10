@@ -2649,7 +2649,11 @@ function abrirLicaoDetalhe(idx){
      tap:lic.n>0 && ebdTurmaAtual==='adulto'?`abrirReader(${idx},'subsidio')`:null},
     {num:'6',icon:'🎬',nome:'RESUMO EM VÍDEO',
      ativo:!!lic.video,
-     tap:lic.video?`abrirVideo('${lic.video||''}')`:null}
+     tap:lic.video?`abrirVideo('${lic.video||''}')`:null},
+    // Igreja Squad: a Priscila monta a aula a partir desta lição (api/_lib/ebd-plano.js)
+    {num:'7',icon:'👩‍🏫',nome:'PLANO DE AULA',
+     ativo:lic.n>0,
+     tap:lic.n>0?`abrirPlanoAula(${idx})`:null}
   ];
   const _fnd=lic.n>0&&ebdConcluida(ebdTurmaAtual,lic.n);
   const _btnConcluir=(lic.n>0&&!_detLocked)?`<button id="ebd-btn-concluir" onclick="ebdMarcarConcluida(${idx})" style="width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${_fnd?'background:#25D366;color:#fff':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)'}">${_fnd?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA'}</button>`:'';
@@ -2708,6 +2712,12 @@ function abrirReader(idx,tipo){
   // Lupa da Lição: guarda a lição aberta e mostra o botão (só em lição/apoio de nº válido)
   _lupaLicao=lic.n; _lupaTurma=ebdTurmaAtual;
   if(lic.n>=1 && (tipo==='licao'||tipo==='apoio')) mostrarLupa(); else esconderLupa();
+}
+
+// PLANO DE AULA (Priscila, Igreja Squad): abre a página já com a revista e a lição escolhidas
+function abrirPlanoAula(idx){
+  const lic=EBD_LICOES[ebdTurmaAtual][idx]; if(!lic||lic.n<=0) return;
+  location.href='/biblioteca/plano-aula/?turma='+encodeURIComponent(ebdTurmaAtual)+'&n='+lic.n+'&titulo='+encodeURIComponent(lic.titulo||'');
 }
 
 function fecharReader(){
