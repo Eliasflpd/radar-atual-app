@@ -12,7 +12,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 
 /* ══ SPLASH ══ */
 #splash{background:var(--bg);align-items:center;justify-content:center;cursor:pointer}
-#splash img{width:100%;height:100%;object-fit:cover;object-position:top}
+#splash img{width:100%;height:100%;object-fit:contain;object-position:center} /* 10/10/2026: contain — a capa inteira, sem cortar nada (antes era cover e cortava os cantos no A22) */
 
 /* ══ HOME ══ */
 #home{background:var(--bg)}
