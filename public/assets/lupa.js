@@ -68,12 +68,19 @@ document.addEventListener('keydown',function(e){ if(e.key==='Enter'&&document.ac
   function hoje0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
   // nº e título da lição do próximo domingo (usa a função que o app já tem)
   function ebdProxima(){
-    var n=0;
-    try{ n=(typeof licaoDaSemana==='function')?licaoDaSemana():0; }catch(_){ n=0; }
+    // 10/10/2026 — BUG: o aviso dizia "Lição 15" porque contava desde 05/07 (3º tri) e a revista
+    // tem 13 lições. A partir de 04/10 vale o 4º trimestre: licaoDaSemana4() + EBD_LICOES.adulto4.
+    var n=0, turma='adulto';
+    try{
+      var q4=new Date(2026,9,4); q4.setHours(0,0,0,0);
+      if(typeof licaoDaSemana4==='function' && hoje0()>=q4){ n=licaoDaSemana4(); turma='adulto4'; }
+      else if(typeof licaoDaSemana==='function'){ n=licaoDaSemana(); }
+    }catch(_){ n=0; }
+    if(n>13) n=0;   // nunca anuncia lição que a revista não tem
     var tit='';
     try{
-      if(typeof EBD_LICOES!=='undefined' && EBD_LICOES.adulto){
-        var it=EBD_LICOES.adulto.find(function(x){ return x.n===n; });
+      if(typeof EBD_LICOES!=='undefined' && EBD_LICOES[turma]){
+        var it=EBD_LICOES[turma].find(function(x){ return x.n===n; });
         if(it) tit=it.titulo||'';
       }
     }catch(_){}
