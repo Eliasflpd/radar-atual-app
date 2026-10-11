@@ -3273,17 +3273,31 @@ function renderManuais(){
   // Pérolas Descoberta (09/10/2026): os 15 PDFs da pasta MARIA do Elias (Parábolas, Jesus no AT,
   // 70 Semanas, Salmos Explicados, Curiosidades, 12 Apóstolos) — cifrados com a mesma senha
   // do Meu Estudo, porque é material comprado e o repositório é público.
-  itens.push({onclick:"location.href='/biblioteca/perolas-descoberta/'", titulo:'Pérolas Descoberta', autor:'Privado · senha', emoji:'🗂️', cor:'#2f4a6b'});
+  itens.push({onclick:"location.href='/biblioteca/perolas-descoberta/'", titulo:'Pérolas Descoberta', autor:'Privado · senha', emoji:'🗂️', cor:'#2f4a6b', comp:'compartilharPerolas()'});
   var box=document.getElementById('manuais-lista');
   box.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">'+itens.map(function(m){
     var capa = m.capa
       ? '<img src="'+m.capa+'" style="width:100%;height:70px;object-fit:cover;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.22)" onerror="this.outerHTML=\'<div style=&quot;width:100%;height:70px;border-radius:10px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:30px&quot;>'+m.emoji+'</div>\'">'
       : '<div style="width:100%;height:70px;border-radius:10px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:30px">'+m.emoji+'</div>';
-    return '<div onclick="'+m.onclick+'" style="background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:7px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06)">'
-      +capa
+    // botão COMPARTILHAR no canto da capa (12/10/2026, pedido do Elias para o card Pérolas Descoberta).
+    // stopPropagation: tocar no botão NÃO abre o módulo; tocar no resto do card abre como sempre.
+    var btnComp = m.comp
+      ? '<button type="button" id="btn-comp-perolas" title="Compartilhar" aria-label="Compartilhar '+m.titulo+'" onclick="event.stopPropagation();'+m.comp+'" style="position:absolute;top:13px;right:13px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.35);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">📤</button>'
+      : '';
+    return '<div onclick="'+m.onclick+'" style="position:relative;background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:7px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06)">'
+      +capa+btnComp
       +'<div style="font-weight:800;font-size:12.5px;color:#0f3d5c;font-family:\'Playfair Display\',serif;margin-top:6px;line-height:1.15">'+m.titulo+'</div>'
       +'<div style="font-size:10.5px;color:#8a6a2f;margin-top:1px;line-height:1.15">'+m.autor+'</div></div>';
   }).join('')+'</div>';
+}
+// Compartilha o módulo Pérolas Descoberta (nome, o que tem dentro e o link). Mesmo padrão dos outros
+// blocos: compartilhar nativo do celular e, onde não existe, WhatsApp. Não leva senha nem PIN:
+// o módulo é privado e quem recebe pede o acesso a você.
+function compartilharPerolas(){
+  var url=location.origin+'/biblioteca/perolas-descoberta/';
+  var texto='📖 *Pérolas Descoberta* — RADAR ATUAL\nEstudos bíblicos para ler e compartilhar: As Parábolas de Jesus, Jesus Cristo no Antigo Testamento, As 70 Semanas de Daniel, Salmos Explicados, Curiosidades da Bíblia e os 12 Apóstolos.\n\n🔒 Acesso com senha ou PIN.';
+  if(navigator.share){ navigator.share({title:'Pérolas Descoberta — RADAR ATUAL',text:texto,url:url}).catch(function(){}); }
+  else{ window.open('https://wa.me/?text='+encodeURIComponent(texto+'\n'+url),'_blank'); }
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function _pHtml(t){ return '<p style="margin:0 0 15px;text-align:justify;-webkit-hyphens:auto;hyphens:auto">'+esc(t)+'</p>'; }
