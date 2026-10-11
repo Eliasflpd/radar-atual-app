@@ -49,9 +49,10 @@
   .aviso{text-align:center;color:#9aa1ad;font-size:13px;margin:22px 0 0;font-family:'Segoe UI',system-ui,sans-serif}
   /* ── barra do leitor ── */
   #leitor{display:none}
-  .barra{position:sticky;top:0;z-index:5;background:#fff;display:flex;gap:6px;align-items:center;padding:6px 0 8px;border-bottom:1px solid #eaeaea;margin-bottom:6px;font-family:'Segoe UI',system-ui,sans-serif}
+  .barra{position:sticky;top:0;z-index:5;background:#fff;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 0 8px;border-bottom:1px solid #eaeaea;margin-bottom:6px;font-family:'Segoe UI',system-ui,sans-serif}
   .barra button{background:#eef2f4;border:1px solid #e4e7ec;border-radius:9px;padding:7px 10px;font-weight:800;font-family:inherit;cursor:pointer;font-size:14px;white-space:nowrap}
-  .barra .esp{flex:1}
+  .barra .esp{flex:1;min-width:0}
+  @media (max-width:520px){ .barra .esp{display:none} .barra #b-comp{margin-left:auto} }
   .prog{height:4px;background:#eef1f4;border-radius:3px;overflow:hidden;margin:0 0 14px}
   .prog i{display:block;height:100%;background:#c9a14a;width:0;transition:width .2s}
   /* ── O TEXTO: exatamente a paleta das lições da EBD ── */
@@ -109,6 +110,7 @@
       <span class="esp"></span>
       <button onclick="toggleFind()" title="Buscar neste estudo">🔍</button>
       <button onclick="copiarCapitulo(this)" title="Copiar">📋</button>
+      <button id="b-comp" onclick="compartilhar()" title="Compartilhar" style="background:#1d3a8a;color:#fff;border-color:#1d3a8a">📤 Compartilhar</button>
       <button onclick="fonte(-1)">A−</button>
       <button onclick="fonte(1)">A+</button>
     </div>
@@ -284,6 +286,35 @@ function copiarCapitulo(btn){
   const txt=[c.t+(c.sub||c.ref?' — '+(c.sub||c.ref):'')].concat(c.blocos.map(b=>b.x)).join('\n\n');
   const ok=()=>{ const o=btn.innerHTML; btn.innerHTML='✓'; setTimeout(()=>{btn.innerHTML=o;},1300); toast('Capítulo copiado'); };
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok).catch(()=>_copyFallback(txt,ok)); else _copyFallback(txt,ok);
+}
+/* ── COMPARTILHAR o capítulo aberto (12/10/2026, pedido do Elias) ──
+   Mesmo padrão dos outros blocos do RADAR: compartilhar nativo do celular (navigator.share) e,
+   onde não existe, WhatsApp (wa.me, que aceita pouco texto → corta em 6000 e avisa).
+   Formatação do WhatsApp: subtítulo em *negrito*, citação em _itálico_. O texto sai do JSON
+   decifrado (sem os hífens suaves da tela). Não leva link da página: ela é privada (senha/PIN),
+   quem recebe não conseguiria abrir; vai só a assinatura do app. */
+function textoParaCompartilhar(c){
+  const partes=['📖 *'+c.t+'*'+(c.sub||c.ref?'\n_'+(c.sub||c.ref)+'_':'')+(c.grupo?'\n'+c.grupo:'')];
+  for(const b of c.blocos){
+    const x=(b.x||'').replace(/­/g,'').trim(); if(!x) continue;
+    if(b.t==='h') partes.push('*'+x+'*');
+    else if(b.t==='q') partes.push('_'+x+'_');
+    else partes.push(x);
+  }
+  partes.push('— '+(EST?EST.titulo:'Pérolas Descoberta')+' · Pérolas Descoberta, RADAR ATUAL');
+  return partes.join('\n\n');
+}
+function compartilhar(){
+  const c=TEXTO&&TEXTO.capitulos[CAP]; if(!c){ toast('Abra um capítulo para compartilhar.'); return; }
+  const titulo=c.t+' — Pérolas Descoberta';
+  let t=textoParaCompartilhar(c);
+  if(navigator.share){
+    if(t.length>30000) t=t.slice(0,30000)+'…\n\n(texto completo no RADAR ATUAL)';
+    navigator.share({title:titulo,text:t}).catch(function(){});
+  }else{
+    let curto=t; if(t.length>6000){ curto=t.slice(0,6000)+'…\n\n(texto completo no RADAR ATUAL)'; toast('Capítulo longo: mandei o começo.'); }
+    window.open('https://wa.me/?text='+encodeURIComponent(curto),'_blank');
+  }
 }
 function _copyFallback(txt,cb){ try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); cb&&cb(); }catch(e){ toast('Não consegui copiar.'); } }
 let _toastT=null;
