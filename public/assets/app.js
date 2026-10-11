@@ -2731,16 +2731,21 @@ function abrirLicaoDetalhe(idx){
     {num:'4',icon:'🧠',nome:'MAPA MENTAL',
      ativo:false,tap:null},
     {num:'5',icon:'📰',nome:'REVISTA CRISTÃO ALERTA',
-     ativo:lic.n>0 && ebdTurmaAtual==='adulto',
-     tap:lic.n>0 && ebdTurmaAtual==='adulto'?`abrirReader(${idx},'subsidio')`:null},
+     ativo:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4'),
+     tap:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4')?`abrirReader(${idx},'subsidio')`:null},
     {num:'6',icon:'🎬',nome:'RESUMO EM VÍDEO',
      ativo:!!lic.video,
      tap:lic.video?`abrirVideo('${lic.video||''}')`:null},
+    // 4º tri 2026 (Adultos): material exclusivo do professor e o devocional "Leitura Diária" de cada lição
+    ...(ebdTurmaAtual==='adulto4'&&lic.n>0?[
+      {num:'',icon:'🎓',nome:'MATERIAL DO PROFESSOR',ativo:true,tap:`abrirReader(${idx},'professor')`},
+      {num:'',icon:'🌅',nome:'DEVOCIONAL LEITURA DIÁRIA',ativo:true,tap:`abrirReader(${idx},'devocional')`}
+    ]:[]),
     // Igreja Squad: a Priscila monta a aula a partir desta lição (api/_lib/ebd-plano.js)
     {num:'7',icon:'👩‍🏫',nome:'PLANO DE AULA',
      ativo:lic.n>0,
      tap:lic.n>0?`abrirPlanoAula(${idx})`:null}
-  ];
+  ].map((it,i)=>({...it,num:String(i+1)}));
   const _fnd=lic.n>0&&ebdConcluida(ebdTurmaAtual,lic.n);
   const _btnConcluir=(lic.n>0&&!_detLocked)?`<button id="ebd-btn-concluir" onclick="ebdMarcarConcluida(${idx})" style="width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${_fnd?'background:#25D366;color:#fff':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)'}">${_fnd?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA'}</button>`:'';
   // PRÉVIA da lição bloqueada: capa (acima) + Texto Áureo + Verdade Prática + botão de PIN
@@ -2788,7 +2793,7 @@ function ebdMarcarConcluida(idx){
 function abrirReader(idx,tipo){
   const lic=EBD_LICOES[ebdTurmaAtual][idx];
   const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
-  const tipoLabel=tipo==='licao'?'LIÇÃO':tipo==='apoio'?'APOIO':'CRISTÃO ALERTA';
+  const tipoLabel=tipo==='licao'?'LIÇÃO':tipo==='apoio'?'APOIO':tipo==='professor'?'MATERIAL DO PROFESSOR':tipo==='devocional'?'DEVOCIONAL':'CRISTÃO ALERTA';
   document.getElementById('reader-titulo').textContent=tipoLabel+' — '+nLabel;
   document.getElementById('reader-sub').textContent=lic.titulo;
   const n=String(lic.n).padStart(2,'0');
@@ -5643,6 +5648,11 @@ const _crmInitMap = {
         var nn=(k<10?'0':'')+k;
         out.push('/ebd/'+t+'/html/licao-'+nn+'.html');
         out.push('/ebd/'+t+'/html/apoio-'+nn+'.html');
+        if(t==='adulto4'){   // 4º tri: material do professor, devocional e Cristão Alerta da lição
+          out.push('/ebd/'+t+'/html/professor-'+nn+'.html');
+          out.push('/ebd/'+t+'/html/devocional-'+nn+'.html');
+          out.push('/ebd/'+t+'/html/subsidio-'+nn+'.html');
+        }
       });
     });
     return out;   // o que não existir dá 404 e é pulado — não quebra o pacote

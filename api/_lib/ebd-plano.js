@@ -1,10 +1,10 @@
 // PLANO DE AULA DA EBD — a "Priscila" do Igreja Squad dentro do RADAR
 // URL pública: POST /api/ebd-plano   (rewrite -> /api/edge?fn=ebd-plano)
-// Corpo: { turma: 'adulto4', licao: 2, classe: 'Adultos', minutos: 45 }
+// Corpo: { turma: 'adulto4', licao: 2, classe: 'Adultos' }  (a aula da EBD é sempre de 60 minutos)
 //
 // POR QUE ISTO EXISTE:
 // o professor abre a lição do domingo e precisa transformar 8 páginas de revista numa
-// aula de 45 minutos: objetivo, tempos, perguntas, dinâmica, desafio. A Priscila
+// aula de 1 hora: objetivo, tempos, perguntas, dinâmica, desafio. A Priscila
 // (persona do Igreja Squad, At 18.26) faz esse roteiro EM CIMA DA LIÇÃO DO RADAR —
 // não inventa outra aula, organiza a da revista para a classe e o tempo que ele tem.
 //
@@ -65,7 +65,7 @@ async function buscar(origem, caminho, limite) {
 function sistema(classe, minutos) {
   return `Você é PRISCILA, mestre da Escola Bíblica Dominical do Igreja Squad, servindo no app RADAR de uma igreja Assembleia de Deus (pentecostal clássica). Como Priscila e Áquila "lhe declararam mais pontualmente o caminho de Deus" (At 18.26), você ensina com paciência, ordem e clareza.
 
-SUA TAREFA: transformar a LIÇÃO fornecida num PLANO DE AULA pronto para o professor usar no domingo, para a classe de ${classe}, em ${minutos} minutos.
+SUA TAREFA: transformar a LIÇÃO fornecida num PLANO DE AULA pronto para o professor usar no domingo, para a classe de ${classe}, em ${minutos} minutos — a aula da Escola Bíblica Dominical tem UMA HORA para a lição COMPLETA, do primeiro tópico à oração final. Não existe tempo extra: tudo o que você propuser (acolhida, perguntas, dinâmica, aplicação) precisa caber dentro dessa hora.
 
 REGRAS INVIOLÁVEIS:
 1. Siga a lição: mesmos tópicos, mesma doutrina, mesma verdade prática. Você organiza e aplica — não cria outra aula.
@@ -74,7 +74,8 @@ REGRAS INVIOLÁVEIS:
 4. NÃO escreva palavras em hebraico ou grego, transliterações, números de Strong nem "no original significa". Isso fica para o professor pesquisar.
 5. Nada de teologia da prosperidade, promessa que a Bíblia não faz, ou história inventada apresentada como real. Ilustração inventada: escreva "(ilustração)".
 6. Linguagem simples e calorosa, adequada a ${classe}. Português do Brasil.
-7. O roteiro tem de SOMAR exatamente ${minutos} minutos.
+7. O roteiro tem de SOMAR exatamente ${minutos} minutos, sem passar nem sobrar um minuto, e os tempos têm de ser realistas para uma classe de EBD: acolhida e oração 5 min; revisão da lição anterior até 3 min; introdução até 3 min; aplicação e desafio 5 a 7 min; oração final 2 min. O restante (cerca de 40 min) é dividido entre os tópicos da lição, em proporção ao tamanho de cada um. A dinâmica e as perguntas NÃO são tempo à parte: use-as dentro do momento de um tópico ou da aplicação, e escreva ali o tempo que levam.
+8. Se não couber, corte: é melhor menos atividades e a lição inteira ensinada do que um roteiro bonito que estoura a hora.
 
 FORMATO (markdown, nesta ordem, copiando os cabeçalhos letra por letra):
 TITULO: Plano de Aula — Lição <número>: <título da lição>
@@ -85,7 +86,7 @@ ${SECOES[1]}
 O texto áureo transcrito da lição, com referência; a referência da leitura bíblica em classe.
 ${SECOES[2]}
 Uma linha por momento, no formato: - **0–5 min · Acolhida** — o que o professor faz e fala.
-Momentos: acolhida e oração; revisão da lição anterior; introdução com um gancho; um momento para CADA tópico da lição; aplicação; oração final.
+Momentos: acolhida e oração; revisão rápida da lição anterior; introdução com um gancho; um momento para CADA tópico da lição (com o tempo proporcional ao tamanho dele); aplicação; oração final. Confira a soma antes de responder: o último momento termina em ${minutos} min.
 ${SECOES[3]}
 5 perguntas abertas, uma por linha começando com "- ".
 ${SECOES[4]}
@@ -107,14 +108,17 @@ export default async function handler(req) {
   if (!/^[a-z0-9]{2,20}$/.test(turma)) return new Response('turma inválida', { status: 400, headers: CORS });
   const licao = Math.max(1, Math.min(14, parseInt(b.licao, 10) || 1));
   const classe = CLASSES.includes(b.classe) ? b.classe : 'Adultos';
-  const minutos = [30, 40, 45, 50, 60].includes(+b.minutos) ? +b.minutos : 45;
+  // A EBD tem 1 hora para a lição completa: o tempo não é escolhido (nem pela IA, nem pelo professor).
+  const minutos = 60;
 
   // A lição e o apoio vêm do PRÓPRIO site (mesma origem do deploy: produção, preview ou local).
   const origem = new URL(req.url).origin;
   const nn = String(licao).padStart(2, '0');
-  const [txtLicao, txtApoio] = await Promise.all([
+  const [txtLicao, txtApoio, txtProf] = await Promise.all([
     buscar(origem, `/ebd/${turma}/html/licao-${nn}.html`, 9000),
     buscar(origem, `/ebd/${turma}/html/apoio-${nn}.md`, 4000),
+    // Plano de Aula da própria Revista do Professor (objetivos e método sugeridos), quando a turma tem
+    buscar(origem, `/ebd/${turma}/html/professor-${nn}.html`, 3800),
   ]);
   if (!txtLicao) {
     return new Response('Não encontrei o texto desta lição no RADAR (' + turma + ', lição ' + licao + ').', { status: 404, headers: CORS });
@@ -124,7 +128,11 @@ export default async function handler(req) {
 ══════ TEXTO DA LIÇÃO ══════
 ${txtLicao}
 ══════ FIM DA LIÇÃO ══════
-${txtApoio ? `
+${txtProf ? `
+══════ SUGESTÃO DA REVISTA DO PROFESSOR (objetivos e método sugeridos: aproveite a ideia, com palavras suas, sem copiar; o roteiro continua tendo de caber em ${minutos} minutos) ══════
+${txtProf}
+══════ FIM DA SUGESTÃO ══════
+` : ''}${txtApoio ? `
 ══════ MATERIAL DE APOIO AO PROFESSOR (use só como ideia; não copie) ══════
 ${txtApoio}
 ══════ FIM DO APOIO ══════

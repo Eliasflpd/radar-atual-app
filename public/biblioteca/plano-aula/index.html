@@ -88,7 +88,7 @@
   <div class="sub" id="pa-sub">A aula do domingo pronta, a partir da lição do RADAR</div>
   <div class="divisor"></div>
 
-  <p class="dica">A <b>Priscila</b> lê a lição e o material de apoio e monta a aula para a sua classe e o seu tempo: <b>objetivo, roteiro cronometrado, perguntas, dinâmica e desafio da semana</b>. Os versículos são conferidos com a Bíblia no final.</p>
+  <p class="dica">A <b>Priscila</b> lê a lição e o material de apoio e monta a aula de <b>1 hora</b> (o tempo da EBD) para a sua classe: <b>objetivo, roteiro cronometrado, perguntas, dinâmica e desafio da semana</b>. Os versículos são conferidos com a Bíblia no final.</p>
 
   <div class="linha">
     <div>
@@ -118,10 +118,7 @@
     </div>
     <div>
       <div class="rot" style="margin-top:14px">Tempo de aula</div>
-      <select id="pa-min">
-        <option value="30">30 minutos</option><option value="40">40 minutos</option>
-        <option value="45" selected>45 minutos</option><option value="50">50 minutos</option><option value="60">60 minutos</option>
-      </select>
+      <div id="pa-min" style="padding:12px 14px;border:1px solid #d9c9a8;border-radius:10px;background:#fffaf0;font-weight:700">1 hora · lição completa</div>
     </div>
   </div>
 
@@ -356,7 +353,7 @@
     var t0=Date.now();
     fetch('/api/ebd-plano',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({turma:selT.value,licao:+selL.value,classe:selC.value,minutos:+$('pa-min').value})
+      body:JSON.stringify({turma:selT.value,licao:+selL.value,classe:selC.value,minutos:60})
     })
     .then(function(r){
       if(!r.ok) return r.text().then(function(x){ throw new Error(x||('erro '+r.status)); });
