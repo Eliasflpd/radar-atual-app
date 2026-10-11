@@ -7,6 +7,17 @@ const { Client } = require('pg');
 const CHAVE = require('./_lib/chave.js');
 const crypto = require('crypto');
 
+// 12/10/2026 — "é Brasil?" pelo FORMATO do número, não pelo tamanho. Antes: 10 ou 11 dígitos = Brasil
+// e punha 55; só que o número suíço (+41 79…) e o americano (+1 305…) também têm 11 dígitos, e a
+// mensagem ia parar num número do Paraná. Brasil = DDD válido + 8 dígitos (fixo) ou + 9 + 8 (celular).
+// (Mesma regra de api/send-otp.js.)
+const DDD_BR = new Set('11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99'.split(' '));
+function pareceBrasil(d) {
+  if (!/^\d+$/.test(d) || (d.length !== 10 && d.length !== 11)) return false;
+  if (!DDD_BR.has(d.slice(0, 2))) return false;
+  return d.length === 11 ? d[2] === '9' : true;
+}
+
 // ── A CONFIRMAÇÃO POR WHATSAPP (24/09/2026, pedido do Elias) ─────────────────
 // "QUEM CADASTRAR PRECISA RECEBER UM CÓDIGO CONFIRMANDO."
 // É a tampa do pior buraco da auditoria (AUDITORIA-2026-09-23.md, nº 1): até
@@ -144,11 +155,10 @@ module.exports = async (req, res) => {
       const FT = process.env.FONNTE_TOKEN;
       if (FT && whatsapp && !calado) {
         let alvo = String(whatsapp || '').replace(/\D/g, '');
-        // 10 ou 11 digitos = Brasil sem o codigo do pais -> completa com 55.
-        // 12 ou mais = ja veio com codigo de pais (55 ou de fora) -> NAO mexe,
-        // senao numero de Angola (244...) virava 55244... e a mensagem nunca chega.
-        const ehBrasilCurto = (alvo.length === 10 || alvo.length === 11);
-        if (ehBrasilCurto) alvo = '55' + alvo;
+        // Brasil sem o codigo do pais (formato de numero brasileiro) -> completa com 55.
+        // Qualquer outra coisa ja veio com codigo de pais (55 ou de fora) -> NAO mexe,
+        // senao numero de Angola (244...) ou da Suica (41 79...) virava 55... e a mensagem nunca chega.
+        if (pareceBrasil(alvo)) alvo = '55' + alvo;
         const primeiroNome = nome.split(/\s+/)[0];
         // QUANDO JÁ HAVIA APARELHO NA CONTA, a mensagem muda: não é "bem-vindo",
         // é AVISO. Esta linha é a rede de segurança da trava — se alguém tentar

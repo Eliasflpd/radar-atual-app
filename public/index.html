@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/radar.css?v=208">
-<link rel="preload" as="script" href="/assets/app.js?v=211">
+<link rel="preload" as="script" href="/assets/app.js?v=212">
 <script>
 /* ── A PELE DA HOME (bege ou azul) ──────────────────────────────────────────
    Isto roda AQUI NO <head>, antes de o navegador pintar qualquer coisa.
@@ -947,8 +947,37 @@
       </select>
     </div>
     <div class="cad-field">
-      <label>WhatsApp (com DDD)</label>
-      <input id="cad-fone" type="tel" placeholder="(99) 99999-9999" autocomplete="tel" oninput="mascaraFone(this)" inputmode="tel"><div style="font-size:.78rem;color:#6b7a89;margin-top:3px;line-height:1.35">Fora do Brasil? Comece com <b>+</b> e o código do país — ex.: <b>+244</b> (Angola), <b>+1</b> (EUA), <b>+351</b> (Portugal).</div>
+      <label>WhatsApp</label>
+      <!-- 12/10/2026: lista de países (cliente da Suíça não conseguia colocar o número: o celular
+           não mostra a tecla "+" no teclado numérico). Escolhendo o país, a pessoa digita só o
+           número local e o app põe o código do país. Brasil continua como sempre. O valor de cada
+           opção é o código do país (DDI); "outro" = digitar com + (qualquer país). -->
+      <select id="cad-pais" onchange="trocarPais()" style="margin-bottom:8px" aria-label="País do WhatsApp">
+        <option value="55" selected>🇧🇷 Brasil (+55)</option>
+        <option value="351">🇵🇹 Portugal (+351)</option>
+        <option value="244">🇦🇴 Angola (+244)</option>
+        <option value="258">🇲🇿 Moçambique (+258)</option>
+        <option value="238">🇨🇻 Cabo Verde (+238)</option>
+        <option value="245">🇬🇼 Guiné-Bissau (+245)</option>
+        <option value="41">🇨🇭 Suíça (+41)</option>
+        <option value="1">🇺🇸 Estados Unidos / Canadá (+1)</option>
+        <option value="44">🇬🇧 Reino Unido (+44)</option>
+        <option value="353">🇮🇪 Irlanda (+353)</option>
+        <option value="34">🇪🇸 Espanha (+34)</option>
+        <option value="33">🇫🇷 França (+33)</option>
+        <option value="49">🇩🇪 Alemanha (+49)</option>
+        <option value="39">🇮🇹 Itália (+39)</option>
+        <option value="32">🇧🇪 Bélgica (+32)</option>
+        <option value="352">🇱🇺 Luxemburgo (+352)</option>
+        <option value="31">🇳🇱 Países Baixos (+31)</option>
+        <option value="81">🇯🇵 Japão (+81)</option>
+        <option value="61">🇦🇺 Austrália (+61)</option>
+        <option value="54">🇦🇷 Argentina (+54)</option>
+        <option value="595">🇵🇾 Paraguai (+595)</option>
+        <option value="598">🇺🇾 Uruguai (+598)</option>
+        <option value="outro">🌍 Outro país (digitar com +)</option>
+      </select>
+      <input id="cad-fone" type="tel" placeholder="(99) 99999-9999" autocomplete="tel" oninput="mascaraFone(this)" inputmode="tel"><div id="cad-fone-dica" style="font-size:.78rem;color:#6b7a89;margin-top:3px;line-height:1.35">Brasil: DDD + número. De fora do Brasil? Escolha seu país na lista acima e digite só o número, sem o código do país.</div>
     </div>
     <button class="btn-cad" id="btn-cad-enviar" onclick="submitCadastro()">ACESSAR O APP</button>
     <div id="cad-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
@@ -984,7 +1013,7 @@
   </div>
 </div>
 
-<script src="/assets/app.js?v=211"></script>
+<script src="/assets/app.js?v=212"></script>
 
 <!-- REF SHEET -->
 <div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>

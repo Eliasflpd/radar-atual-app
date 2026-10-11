@@ -60,6 +60,15 @@ function precisaCodigoPais(bruto){
 function mascaraFone(el){
   var bruto=el.value||'';
   var v=foneSoDigitos(bruto);
+  // 12/10/2026: com OUTRO país escolhido na lista, não aplica a máscara brasileira — a pessoa
+  // digita o número local solto (ou com +, no "Outro país").
+  var paisSel=(document.getElementById('cad-pais')||{}).value||'55';
+  if(paisSel!=='55'){
+    if(v.length>15) v=v.slice(0,15);
+    var comMais=bruto.trim().charAt(0)==='+' || paisSel==='outro';
+    el.value = v.length ? (comMais?'+':'')+v : (bruto.trim()==='+'?'+':'');
+    return;
+  }
   var internacional = bruto.trim().charAt(0)==='+' || v.length>11;
   if(internacional){
     if(v.length>15) v=v.slice(0,15);          // 15 e o maximo que existe no mundo
@@ -71,16 +80,51 @@ function mascaraFone(el){
   else el.value='('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
 }
 
+// ── PAÍS DO WHATSAPP (12/10/2026) ───────────────────────────────────────────
+// Cliente da Suíça: "tentei cadastrar, o código não chegou, e nem deixa eu colocar o telefone da
+// Suíça". O número só entrava com "+" na frente (tecla que o teclado numérico do celular esconde)
+// e, pior, o servidor tratava número de 11 dígitos de fora como brasileiro e mandava o código para
+// o número errado. Agora a pessoa escolhe o país na lista e digita só o número local.
+// Devolve {digitos, intl} ou {erro}. `digitos` = código do país + número (é a identidade da conta,
+// igual a quem sempre digitou +41...). `intl` = o app sabe que é de fora (o servidor não mexe).
+function foneParaEnviar(pais, bruto){
+  var b=(bruto||'').trim(), v=foneSoDigitos(b);
+  if(b.charAt(0)==='+') return {digitos:v, intl:true};                       // digitou +: vale como está
+  if(pais==='55'){                                                          // Brasil, como sempre foi
+    if(precisaCodigoPais(b)) return {erro:'brasil'};
+    return {digitos:v, intl:false};
+  }
+  if(pais==='outro') return {erro:'outro'};                                 // precisa do +
+  if(v.indexOf('00')===0) return {digitos:v.replace(/^0+/,''), intl:true};  // 0041... = já com o país
+  return {digitos:pais+v.replace(/^0/,''), intl:true};                      // país da lista + número sem o 0 de tronco
+}
+var _EXEMPLO_FONE={'41':'79 123 45 67','351':'912 345 678','244':'923 000 000','258':'84 123 4567','238':'991 23 45','245':'955 123 456','1':'305 867 5309','44':'7700 900123','353':'85 123 4567','34':'612 345 678','33':'6 12 34 56 78','49':'151 23456789','39':'312 345 6789','32':'470 12 34 56','352':'621 123 456','31':'6 12345678','81':'90 1234 5678','61':'412 345 678','54':'11 2345 6789','595':'981 123456','598':'94 123 456'};
+function trocarPais(){
+  var pais=document.getElementById('cad-pais').value, el=document.getElementById('cad-fone'), dica=document.getElementById('cad-fone-dica');
+  el.value='';
+  if(pais==='55'){ el.placeholder='(99) 99999-9999'; if(dica) dica.textContent='Brasil: DDD + número. De fora do Brasil? Escolha seu país na lista acima e digite só o número, sem o código do país.'; }
+  else if(pais==='outro'){ el.placeholder='+00 000 000 000'; if(dica) dica.textContent='Digite o número com o + e o código do seu país. Ex.: +41 79 123 45 67 (Suíça).'; }
+  else{
+    var ex=_EXEMPLO_FONE[pais]||'';
+    el.placeholder=ex?('ex.: '+ex):'só o número, sem o código do país';
+    if(dica) dica.textContent='Digite só o número, sem o +'+pais+' e sem o 0 do começo'+(ex?'. Ex.: '+ex:'')+'.';
+  }
+  el.focus();
+}
+
 async function submitCadastro(){
   const nome=document.getElementById('cad-nome').value.trim();
   const cargo=document.getElementById('cad-cargo').value;
-  const fone=document.getElementById('cad-fone').value.replace(/\D/g,'');
+  const pais=(document.getElementById('cad-pais')||{value:'55'}).value;
+  const alvoFone=foneParaEnviar(pais, document.getElementById('cad-fone').value);
+  const fone=alvoFone.digitos||'';
   const err=document.getElementById('cad-erro');
   err.style.display='none';
   if(!nome){err.textContent='Digite seu nome.';err.style.display='block';document.getElementById('cad-nome').focus();return;}
   if(!cargo){err.textContent='Selecione seu cargo na igreja.';err.style.display='block';return;}
-  if(precisaCodigoPais(document.getElementById('cad-fone').value)){err.textContent='Esse número não parece do Brasil. Se você é de fora, comece com + e o código do país — ex.: +244 923 000 000 (Angola), +1 305 867 5309 (EUA). Sem isso o WhatsApp não chega até você.';err.style.display='block';document.getElementById('cad-fone').focus();return;}
-  if(fone.length<8||fone.length>15){err.textContent='WhatsApp inválido. No Brasil: (99) 99999-9999. Fora do Brasil, use o código do país: +244 923 000 000';err.style.display='block';document.getElementById('cad-fone').focus();return;}
+  if(alvoFone.erro==='brasil'){err.textContent='Esse número não parece do Brasil. Se você é de fora, escolha seu país na lista acima do campo do WhatsApp. Sem isso o código não chega até você.';err.style.display='block';document.getElementById('cad-fone').focus();return;}
+  if(alvoFone.erro==='outro'){err.textContent='Digite o número com o + e o código do seu país. Ex.: +41 79 123 45 67 (Suíça).';err.style.display='block';document.getElementById('cad-fone').focus();return;}
+  if(fone.length<8||fone.length>15){err.textContent='WhatsApp inválido. Confira o país escolhido e o número. No Brasil: (99) 99999-9999.';err.style.display='block';document.getElementById('cad-fone').focus();return;}
   // ── A CONFIRMAÇÃO POR WHATSAPP (24/09/2026) ───────────────────────────────
   // Antes daqui saía direto pra dentro do app. Agora não: o cadastro manda um
   // código de 6 dígitos pro WhatsApp e só entra quem digita o código de volta.
@@ -89,13 +133,14 @@ async function submitCadastro(){
   // existiam prontas no app, só estavam desligadas.
   const btn=document.getElementById('btn-cad-enviar');
   btn.textContent='Enviando código...';btn.disabled=true;
-  _cadPendente={nome:nome,cargo:cargo,fone:fone,token:''};
+  _cadPendente={nome:nome,cargo:cargo,fone:fone,intl:alvoFone.intl,token:''};
   try{
-    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:nome,phone:fone})});
+    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:nome,phone:fone,intl:alvoFone.intl})});
     const data=await res.json();
     if(!res.ok||!data.token)throw new Error((data&&data.error)||'Não consegui enviar o código agora. Tente de novo.');
     _cadPendente.token=data.token;
-    document.getElementById('otp-fone-display').textContent=document.getElementById('cad-fone').value;
+    // mostra pra onde foi: de fora do Brasil, o número completo com + (a pessoa confere o país)
+    document.getElementById('otp-fone-display').textContent=alvoFone.intl?('+'+fone):document.getElementById('cad-fone').value;
     Array.from(document.getElementById('otp-digits').children).forEach(d=>d.value='');
     document.getElementById('otp-erro').style.display='none';
     ocultarTodas();
@@ -261,7 +306,7 @@ async function reenviarOtp(){
   const btn=document.querySelector('#tela-otp .btn-reenviar');
   btn.textContent='Reenviando...';btn.disabled=true;
   try{
-    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:_cadPendente.nome,cargo:_cadPendente.cargo,phone:_cadPendente.fone})});
+    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:_cadPendente.nome,cargo:_cadPendente.cargo,phone:_cadPendente.fone,intl:!!_cadPendente.intl})});
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'Erro');
     _cadPendente.token=data.token;

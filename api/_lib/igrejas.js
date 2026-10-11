@@ -2,6 +2,16 @@
 // Fotos vão como dataURL comprimida direto no Postgres (sem storage externo). Vídeo = link YouTube.
 const { Client } = require('pg');
 
+// 12/10/2026 — antes TODO número sem 55 na frente ganhava 55 (número de fora virava 55 + número e
+// a mensagem nunca chegava). Agora só ganha 55 quem tem formato de número brasileiro: DDD válido +
+// 8 dígitos (fixo) ou + 9 + 8 (celular). Mesma regra de api/send-otp.js.
+const DDD_BR = new Set('11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99'.split(' '));
+function pareceBrasil(d) {
+  if (!/^\d+$/.test(d) || (d.length !== 10 && d.length !== 11)) return false;
+  if (!DDD_BR.has(d.slice(0, 2))) return false;
+  return d.length === 11 ? d[2] === '9' : true;
+}
+
 async function ensure(c) {
   await c.query(`create table if not exists radar_igrejas(
     id serial primary key,
@@ -65,7 +75,7 @@ module.exports = async (req, res) => {
       let avisado = false;
       const FT = process.env.FONNTE_TOKEN;
       if (FT && whatsapp) {
-        let alvo = whatsapp; if (!alvo.startsWith('55')) alvo = '55' + alvo;
+        let alvo = String(whatsapp).replace(/\D/g, ''); if (!alvo.startsWith('55') && pareceBrasil(alvo)) alvo = '55' + alvo;
         const primeiro = (responsavel || '').split(/\s+/)[0] || 'Pastor';
         const msg = 'Ola ' + primeiro + '! ⛪ A igreja *' + nome + '* foi cadastrada no *RADAR* e ja aparece pra galera divulgar.'
           + '\n\nVeja no app:\nhttps://radar-atual.vercel.app\n\n_Que Deus abencoe seu ministerio._ 🙏';
@@ -73,7 +83,7 @@ module.exports = async (req, res) => {
           const fr = await fetch('https://api.fonnte.com/send', {
             method: 'POST',
             headers: { 'Authorization': FT, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ target: alvo, message: msg, countryCode: '55' })
+            body: JSON.stringify(Object.assign({ target: alvo, message: msg }, alvo.startsWith('55') ? { countryCode: '55' } : {}))
           });
           const fj = await fr.json().catch(() => ({}));
           avisado = !!(fj && (fj.status === true || fj.status === 'true'));
