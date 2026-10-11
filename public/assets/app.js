@@ -2729,8 +2729,8 @@ function abrirLicaoDetalhe(idx){
      ativo:!!lic.apoio,
      tap:lic.apoio?`abrirReader(${idx},'apoio',this)`:null},
     {num:'4',icon:'🧠',nome:'MAPA MENTAL',
-     ativo:lic.n>0 && ebdTurmaAtual==='adulto4',
-     tap:lic.n>0 && ebdTurmaAtual==='adulto4'?`abrirReader(${idx},'mapa')`:null},
+     ativo:lic.n>0 && (ebdTurmaAtual==='adulto4'||(ebdTurmaAtual==='jovem4'&&lic.n>=3)),
+     tap:lic.n>0 && (ebdTurmaAtual==='adulto4'||(ebdTurmaAtual==='jovem4'&&lic.n>=3))?`abrirReader(${idx},'mapa')`:null},
     {num:'5',icon:'📰',nome:'REVISTA CRISTÃO ALERTA',
      ativo:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4'),
      tap:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4')?`abrirReader(${idx},'subsidio')`:null},
@@ -5650,6 +5650,7 @@ const _crmInitMap = {
         var nn=(k<10?'0':'')+k;
         out.push('/ebd/'+t+'/html/licao-'+nn+'.html');
         out.push('/ebd/'+t+'/html/apoio-'+nn+'.html');
+        if(t==='jovem4'&&k>=3) out.push('/ebd/'+t+'/html/mapa-'+nn+'.html');   // Jovens 4º tri: mapa mental (a partir da lição 3)
         if(t==='adulto4'){   // 4º tri: material do professor, devocional e Cristão Alerta da lição
           out.push('/ebd/'+t+'/html/professor-'+nn+'.html');
           out.push('/ebd/'+t+'/html/devocional-'+nn+'.html');

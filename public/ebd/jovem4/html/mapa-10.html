@@ -1,0 +1,177 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Cérebro da lição — Lição 10</title>
+<style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:Georgia,serif;color:#e6e9f2;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.topo{position:absolute;left:0;right:0;top:0;padding:52px 12px 9px;pointer-events:none;background:linear-gradient(#0f1117ee,#0f111700)}
+.topo b{display:none;font-size:12px;letter-spacing:2px;color:#aab4d4}
+.solo .topo b{display:block}
+.topo span{line-height:1.35}
+.topo span{display:block;font-size:12.5px;color:#7e88a8;margin-top:2px;transition:opacity 1.2s}
+.bts{position:absolute;left:10px;right:10px;top:10px;display:flex;gap:6px;pointer-events:auto;align-items:center}
+.bts .esq{margin-right:auto}
+.bts #b-voltar{background:#242b45;border-color:#46507a;color:#e6ebff}
+.bts button{background:#1b1f2e;border:1px solid #333a52;color:#c6cde6;border-radius:999px;font:700 12px Georgia,serif;padding:6px 11px;transition:background .2s,transform .15s}
+.bts button:active{background:#2a3150;transform:scale(.94)}
+#leg{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px 12px;max-width:72%;font-size:11px;color:#8b95b5;pointer-events:none;transition:opacity .6s}
+#leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+#leg i.o{background:none;border:2px solid #c9d1e3;width:6px;height:6px}
+#card{position:absolute;left:10px;right:10px;bottom:10px;max-height:46%;overflow:auto;background:#1b1f2ef2;border:1px solid #333a52;border-left:5px solid var(--c,#4c8dff);border-radius:14px;padding:10px 13px 11px;box-shadow:0 6px 24px #000a;font-size:16px;line-height:1.5;transform:translateY(130%);opacity:0;transition:transform .38s cubic-bezier(.2,.9,.25,1.05),opacity .3s;pointer-events:none}
+#card.on{transform:none;opacity:1;pointer-events:auto}
+#card .k{display:block;font-size:11px;letter-spacing:2px;font-weight:900;color:var(--c,#4c8dff);margin-bottom:3px}
+#card .t{display:block;color:#f1f3fa}
+#card .s{display:block;margin-top:6px;font-style:italic;color:#aeb7d6;font-size:14.5px}
+#card .x{position:absolute;right:9px;top:6px;color:#7e88a8;font:700 20px Georgia,serif;padding:2px 8px}
+#card .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#card .chip{background:#242a40;border:1px solid #3a4262;color:#9cc0ff;border-radius:999px;font:700 13px Georgia,serif;padding:4px 11px;text-decoration:underline dotted;animation:pop .35s both}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+#card .v{display:block;margin-top:8px;color:#d9ddee;font-size:15px;animation:pop .4s both}
+#card .v i{color:#e0b23c;font-style:normal;font-weight:900;font-size:11px;margin-right:3px}
+</style></head><body>
+<canvas id="c"></canvas>
+<div class="topo"><b>CÉREBRO DA LIÇÃO 10</b><span id="dica">Arraste os pontos. Toque num ponto para ver as ligações. Pinça para dar zoom.</span></div>
+<div class="bts"><button id="b-voltar" class="esq">‹ Voltar</button><button id="b-ver">Ver tudo</button><button id="b-org">Reorganizar</button></div>
+<div id="leg"><span><i style="background:#f4f6ff"></i>Lição</span><span><i style="background:#4c8dff"></i>Tópico</span><span><i style="background:#8fb4ff;width:7px;height:7px"></i>Subtópico</span><span><i style="background:#6b7391;width:5px;height:5px"></i>Ideia</span><span><i class="o"></i>Versículo</span></div>
+<div id="card"><span class="x" id="fecha">×</span><span class="k" id="ck"></span><span class="t" id="ct"></span><span class="s" id="cs"></span><div class="chips" id="cc"></div><div id="cv"></div></div>
+<script>
+var DADOS={"n":10,"centro":"O pensar cristão: o que ocupa a sua mente?","aureo":{"texto":"Quanto ao mais, irmãos, tudo o que é verdadeiro, tudo o que é honesto, tudo o que é justo, tudo o que é puro, tudo o que é amável, tudo o que é de boa fama, se há alguma virtude, e se há algum louvor, nisso pensai.","ref":"Fp 4.8"},"pratica":"O cristão deve ocupar sua mente sempre com as coisas mais nobres da existência, mencionadas na Escritura, as quais delineiam o Fruto do Espírito.","ramos":[{"num":"I","titulo":"Entre dois mundos","sinopse":"","filhos":[{"titulo":"Paulo, o privilegiado homem culto","ref":"","folhas":["Judeu fariseu, cidadão romano, culto e mestre da retórica.","Nada transforma mais a vida que um encontro verdadeiro com Cristo."]},{"titulo":"Paulo: do ouro ao esterco","ref":"Fp 3.8","folhas":["Ao conhecer Cristo, reputou como esterco suas conquistas passadas (Fp 3.8).","Não desprezava cultura e teologia; elas adubavam o caminho da fé."]},{"titulo":"Paulo, o apologista","ref":"Rm 1.14-16","folhas":["Defendeu a fé de Damasco ao palácio de César, com ousadia.","Confrontou ideias filosóficas e culturais com a centralidade de Cristo."]}]},{"num":"II","titulo":"Um chamado à sabedoria","sinopse":"","filhos":[{"titulo":"Verdadeiro e honesto","ref":"Fp 4.8","folhas":["Verdadeiro é o que tem respaldo nas Escrituras, contra o erro e a mentira.","Honesto é o que é honroso, nobre e digno de respeito."]},{"titulo":"Justo e puro","ref":"Mt 5.20","folhas":["Justo é o que Deus vê como correto, não o entendimento humano (Mt 5.20).","Puro liga-se a santo: o que não é manchado pelo pecado."]},{"titulo":"Amável e de boa fama","ref":"Mt 5.16","folhas":["Amável é o agradável a Deus; só o Espírito Santo esclarece caso a caso.","Boa fama é pressuposto do Reino: boas obras, sem buscar aplauso (Mt 5.16)."]},{"titulo":"“Nisso pensai”","ref":"Fp 3.20","folhas":["Ocupar a mente com o que edifica, fortalece e glorifica a Deus.","Vivemos como cidadãos do céu (Fp 3.20); o discernimento espiritual é essencial."]}]},{"num":"III","titulo":"Um chamado à piedade","sinopse":"","filhos":[{"titulo":"Aprendestes, recebestes e o Deus de paz","ref":"Fp 4.9","folhas":["Paulo aconselhava o que ele mesmo vivia (Fp 4.9).","Ortodoxia e ortopraxia andam juntas: a conduta deve combinar com a doutrina.","O resultado é a presença ativa do Deus de paz, não só uma sensação."]}]}],"rotAureo":"Texto principal","rotPratica":"Resumo da lição"};
+(function(){
+var COR=['#4c8dff','#ff6b81','#2fc4a3','#e0b23c','#a78bfa','#ff9a52'];
+var cv=document.getElementById('c'), cx=cv.getContext('2d');
+var W=0,H=0,DPR=Math.max(1,window.devicePixelRatio||1);
+var T={k:1,x:0,y:0}, alvoT=null, autoAjuste=true;     // câmera e câmera-alvo (desliza)
+var nos=[], lig=[], porId={}, vizinhos={}, tempo=0;
+function add(id,tipo,label,full,cor,r,extra){ var n={id:id,tipo:tipo,label:label,full:full||label,cor:cor,r:r,x:0,y:0,vx:0,vy:0,fix:false,vis:1,esc:0,fase:Math.random()*6.28,nasc:0}; if(extra) for(var k in extra) n[k]=extra[k]; nos.push(n); porId[id]=n; vizinhos[id]=[]; return n; }
+function liga(a,b,tipo){ if(a===b||vizinhos[a].indexOf(b)>=0) return; var l={a:porId[a],b:porId[b],tipo:tipo,vis:1,part:[]}; var np=tipo==='tree'?1:1; for(var i=0;i<np;i++) l.part.push(Math.random()); lig.push(l); vizinhos[a].push(b); vizinhos[b].push(a); }
+function norm(r){ return r.replace(/\s+/g,' ').replace(/:/g,'.').replace(/[,;.\s]+$/,'').trim(); }
+function verso(ref,deQuem){ var k='v:'+norm(ref); if(!porId[k]) add(k,'verso',norm(ref),norm(ref),'#c9d1e3',5.5,{ref:norm(ref)}); liga(deQuem,k,'ref'); }
+function refsEm(t){ var o=[],m; var re=/\(([^()]*\d[^()]*)\)/g; while((m=re.exec(t))){ var inner=m[1]; var m2; var r2=/([1-3]?\s?[A-ZÊ][a-zê]{1,2}\s\d{1,3}[.:]\d[\d,\-–]*)/g; while((m2=r2.exec(inner))) o.push(m2[1]); } return o; }
+var D=DADOS, topo=[];
+add('raiz','raiz','Lição '+D.n,D.centro,'#f4f6ff',17,{sub:'LIÇÃO '+D.n});
+if(D.aureo){ add('aureo','esp',(D.rotAureo||'Texto áureo'),'“'+D.aureo.texto+'”','#e8c35a',11,{sub:(D.rotAureo||'Texto áureo').toUpperCase()}); liga('raiz','aureo','tree'); if(D.aureo.ref) verso(D.aureo.ref,'aureo'); topo.push('aureo'); }
+if(D.pratica){ add('pratica','esp',(D.rotPratica||'Verdade prática'),D.pratica,'#5fd38a',11,{sub:(D.rotPratica||'Verdade prática').toUpperCase()}); liga('raiz','pratica','tree'); topo.push('pratica'); }
+(D.ramos||[]).forEach(function(r,i){
+  var c=COR[i%COR.length], rid='r'+i;
+  add(rid,'ramo',(r.num?r.num+' · ':'')+r.titulo,r.titulo,c,13,{sub:'TÓPICO '+(r.num||''),sin:r.sinopse||''}); liga('raiz',rid,'tree'); topo.push(rid);
+  (r.filhos||[]).forEach(function(f,j){
+    var fid=rid+'f'+j; add(fid,'filho',f.titulo,f.titulo,c,8.5,{sub:'SUBTÓPICO',pai:rid,ref:f.ref||''}); liga(rid,fid,'tree');
+    if(f.ref) verso(f.ref,fid);
+    (f.folhas||[]).forEach(function(t,k){ var lid=fid+'l'+k; add(lid,'folha',t,t,c,5,{sub:'IDEIA',pai:fid}); liga(fid,lid,'tree'); refsEm(t).forEach(function(rr){ verso(rr,lid); }); });
+  });
+});
+// ── posições iniciais: tudo nasce no centro e se abre (animação de entrada) ──
+function posInicial(entrada){
+  var raiz=porId.raiz; raiz.x=0;raiz.y=0; var m=topo.length;
+  topo.forEach(function(id,i){ var a=-Math.PI/2+2*Math.PI*i/m, n=porId[id]; n.ang=a; n.x=Math.cos(a)*140; n.y=Math.sin(a)*140; });
+  topo.forEach(function(id){ var n=porId[id]; var fs=vizinhos[id].filter(function(z){return porId[z].pai===id;}); fs.forEach(function(z,j){ var a=n.ang+(j-(fs.length-1)/2)*0.55, f=porId[z]; f.ang=a; f.x=Math.cos(a)*250; f.y=Math.sin(a)*250;
+    var ls=vizinhos[z].filter(function(q){return porId[q].pai===z;}); ls.forEach(function(q,k){ var b=a+(k-(ls.length-1)/2)*0.28, l=porId[q]; l.x=Math.cos(b)*330; l.y=Math.sin(b)*330; }); }); });
+  nos.forEach(function(n){ if(n.tipo==='verso'){ var cs=vizinhos[n.id], sx=0,sy=0; cs.forEach(function(z){sx+=porId[z].x;sy+=porId[z].y;}); n.x=sx/cs.length*1.12+(Math.random()-.5)*20; n.y=sy/cs.length*1.12+(Math.random()-.5)*20; } });
+  nos.forEach(function(n){ n.x+=(Math.random()-.5)*6; n.y+=(Math.random()-.5)*6; });
+  if(entrada){ nos.forEach(function(n){ if(n.id==='raiz') return; n.x*=0.4; n.y*=0.4; n.nasc=0; n.vis=0; }); }
+}
+// ── física + flutuação contínua ──
+var alpha=1, arrastando=null;
+function compr(l){ if(l.tipo==='ref') return 70; if(l.a.tipo==='raiz') return 165; if(l.b.tipo==='filho') return 95; return 58; }
+function passo(){
+  var i,j,n,m,dx,dy,d2,d,f;
+  for(i=0;i<nos.length;i++){ n=nos[i];
+    for(j=i+1;j<nos.length;j++){ m=nos[j]; dx=n.x-m.x; dy=n.y-m.y; d2=Math.max(dx*dx+dy*dy,700); if(d2>90000) continue; d=Math.sqrt(d2); f=(n.r+m.r>20?2600:1500)/d2*alpha; dx/=d;dy/=d; n.vx+=dx*f;n.vy+=dy*f;m.vx-=dx*f;m.vy-=dy*f; }
+    n.vx-=n.x*0.0028*alpha; n.vy-=n.y*0.0028*alpha; }
+  lig.forEach(function(l){ dx=l.b.x-l.a.x; dy=l.b.y-l.a.y; d=Math.sqrt(dx*dx+dy*dy)+0.01; f=(d-compr(l))*(l.tipo==='ref'?0.018:0.035)*alpha; dx/=d;dy/=d; l.a.vx+=dx*f;l.a.vy+=dy*f;l.b.vx-=dx*f;l.b.vy-=dy*f; });
+  nos.forEach(function(n){ if(n.fix||n===arrastando){n.vx=0;n.vy=0;return;} n.vx*=0.82;n.vy*=0.82; var sp=Math.hypot(n.vx,n.vy); if(sp>14){n.vx*=14/sp;n.vy*=14/sp;} n.x+=n.vx+Math.sin(tempo*0.9+n.fase)*0.07; n.y+=n.vy+Math.cos(tempo*0.8+n.fase*1.3)*0.07; });
+  alpha=Math.max(arrastando?0.35:0.03,alpha*0.988);
+}
+// ── desenho ──
+var sel=null, selF=0;     // selF: 0..1 (suaviza o "escurecer o resto")
+function mundo(px,py){ return {x:(px-T.x)/T.k,y:(py-T.y)/T.k}; }
+function ajusta(){ W=cv.clientWidth;H=cv.clientHeight; cv.width=W*DPR;cv.height=H*DPR; }
+function alvoAjuste(){ var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; nos.forEach(function(n){x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x);y1=Math.max(y1,n.y);}); var pw=x1-x0+120, ph=y1-y0+170; var k=Math.min(W/pw,(H-90)/ph,1.25); return {k:k,x:W/2-((x0+x1)/2)*k,y:(H+10)/2-((y0+y1)/2)*k}; }
+function rotulo(n){ var s=n.label; var lim=n.tipo==='ramo'?30:n.tipo==='filho'?26:n.tipo==='folha'?22:40; if(s.length>lim) s=s.slice(0,lim-1)+'…'; return s; }
+function mostraRot(n,ativo){ if(n.tipo==='raiz'||n.tipo==='esp'||n.tipo==='ramo') return true; if(ativo) return true; if(n.tipo==='filho') return T.k>=1.25; if(n.tipo==='verso') return T.k>=1.5; return T.k>=2.1; }
+function rgb(h){ var v=parseInt(h.slice(1),16); return ((v>>16)&255)+','+((v>>8)&255)+','+(v&255); }
+function quad(){
+  cx.setTransform(DPR,0,0,DPR,0,0); cx.clearRect(0,0,W,H);
+  var vis=null; if(sel){ vis={}; vis[sel.id]=1; vizinhos[sel.id].forEach(function(z){vis[z]=1;}); }
+  // fundo vivo: ondas suaves saindo do centro
+  var cxp=porId.raiz.x*T.k+T.x, cyp=porId.raiz.y*T.k+T.y;
+  for(var o=0;o<3;o++){ var ph=((tempo*0.18+o/3)%1); cx.beginPath(); cx.arc(cxp,cyp,40+Math.abs(ph)*Math.max(W,H)*0.9,0,6.2832); cx.strokeStyle='rgba(120,140,220,'+(0.07*(1-ph))+')'; cx.lineWidth=1.5; cx.stroke(); }
+  cx.lineCap='round';
+  lig.forEach(function(l){ var vv=Math.min(l.a.vis,l.b.vis); if(vv<=0.01) return; var on=vis&&(l.a===sel||l.b===sel); var emVis=vis&&vis[l.a.id]&&vis[l.b.id]; var dimF=vis&&!on?selF:0;
+    var ax=l.a.x*T.k+T.x, ay=l.a.y*T.k+T.y, bx=l.b.x*T.k+T.x, by=l.b.y*T.k+T.y;
+    var cor=l.tipo==='ref'?'201,209,227':rgb(l.b.tipo==='verso'?l.a.cor:l.b.cor); var base=l.tipo==='ref'?0.3:0.6;
+    cx.beginPath(); cx.moveTo(ax,ay); cx.lineTo(bx,by);
+    cx.strokeStyle='rgba('+cor+','+(vv*(on?1:base)*(1-0.82*dimF))+')'; cx.lineWidth=on?2.6:(l.tipo==='ref'?1:1.5); if(on){ cx.setLineDash([7,6]); cx.lineDashOffset=-tempo*40; } cx.stroke(); cx.setLineDash([]);
+    // partículas correndo pela ligação (pulso de vida)
+    l.part.forEach(function(u,i){ l.part[i]=(u+0.0035+(on?0.006:0))%1; var px=ax+(bx-ax)*l.part[i], py=ay+(by-ay)*l.part[i]; cx.beginPath(); cx.arc(px,py,on?2.6:1.7,0,6.2832); cx.fillStyle='rgba('+cor+','+(vv*(on?0.95:0.55)*(1-0.9*dimF))+')'; cx.fill(); }); });
+  nos.forEach(function(n){ if(n.vis<=0.01) return; var ativo=vis&&vis[n.id]; var dimF=vis&&!ativo?selF:0; var pulso=n.tipo==='raiz'?1+0.06*Math.sin(tempo*2.2):1+0.03*Math.sin(tempo*1.6+n.fase);
+    var X=n.x*T.k+T.x, Y=n.y*T.k+T.y, R=Math.max(2.5,n.r*Math.min(T.k,1.6)*pulso*(0.35+0.65*n.vis)+(n===sel?1.5:0));
+    cx.globalAlpha=n.vis*(1-0.78*dimF);
+    var h=(n===sel?10:(n.tipo==='raiz'?9+3*Math.sin(tempo*2.2):0)); if(h>0||ativo){ cx.beginPath(); cx.arc(X,Y,R+(h||6),0,6.2832); cx.fillStyle='rgba('+rgb(n.cor)+','+(n===sel?0.28:0.16)+')'; cx.fill(); }
+    cx.beginPath(); cx.arc(X,Y,R,0,6.2832);
+    if(n.tipo==='verso'){ cx.fillStyle='#0f1117'; cx.fill(); cx.lineWidth=1.8; cx.strokeStyle=n.cor; cx.globalAlpha*=0.75+0.25*Math.sin(tempo*2+n.fase); cx.stroke(); }
+    else { cx.fillStyle=n.cor; cx.fill(); }
+    cx.globalAlpha=1; });
+  cx.textAlign='center'; cx.textBaseline='top';
+  nos.forEach(function(n){ if(n.vis<=0.3) return; var ativo=vis&&vis[n.id]; var dimF=vis&&!ativo?selF:0; if(dimF>0.9&&n.tipo!=='raiz') return; if(!mostraRot(n,ativo)) return;
+    var X=n.x*T.k+T.x, Y=n.y*T.k+T.y, R=Math.max(2.5,n.r*Math.min(T.k,1.6));
+    var fs=n.tipo==='raiz'?15:n.tipo==='ramo'?13:n.tipo==='esp'?12:n.tipo==='verso'?11.5:n.tipo==='filho'?12:11; cx.font=(n.tipo==='raiz'||n.tipo==='ramo'?'700 ':'')+fs+'px Georgia,serif';
+    var s=rotulo(n); cx.globalAlpha=(n.vis-0.3)/0.7*(1-0.9*dimF); cx.lineWidth=4; cx.strokeStyle='#0f1117'; cx.strokeText(s,X,Y+R+3); cx.fillStyle=n.tipo==='verso'?'#aebbe0':(n.tipo==='folha'?'#c7cde0':'#eef1fb'); cx.fillText(s,X,Y+R+3); cx.globalAlpha=1; });
+}
+// ── laço de animação ──
+var inicio=performance.now();
+function laco(ts){
+  window.__quadros=(window.__quadros||0)+1;
+  tempo=Math.max(0,(ts-inicio)/1000);
+  passo();
+  // nascimento escalonado: os pontos aparecem do centro para as pontas
+  nos.forEach(function(n){ var d=n.tipo==='raiz'?0:(n.tipo==='esp'||n.tipo==='ramo')?0.25:n.tipo==='filho'?0.7:1.1; var alvo=tempo>=d?1:0; n.vis+= (alvo-n.vis)*0.07; });
+  selF+=((sel?1:0)-selF)*0.14;
+  if(autoAjuste&&Math.floor(tempo*10)%3===0) alvoT=alvoAjuste();
+  if(alvoT){ T.k+=(alvoT.k-T.k)*0.08; T.x+=(alvoT.x-T.x)*0.08; T.y+=(alvoT.y-T.y)*0.08; if(!autoAjuste&&Math.abs(alvoT.k-T.k)<0.002&&Math.abs(alvoT.x-T.x)<0.5&&Math.abs(alvoT.y-T.y)<0.5) alvoT=null; }
+  quad(); requestAnimationFrame(laco);
+}
+// ── toque / mouse ──
+var ptrs={}, nptr=0, mov=0, t0=0, alvo=null, pinca=null;
+function noEm(px,py){ var p=mundo(px,py), best=null, bd=1e9; nos.forEach(function(n){ if(n.vis<0.5) return; var d=Math.hypot(n.x-p.x,n.y-p.y)*T.k, tol=Math.max(n.r*Math.min(T.k,1.6)+11,18); if(d<tol&&d<bd){bd=d;best=n;} }); return best; }
+function livre(){ autoAjuste=false; }
+cv.addEventListener('pointerdown',function(e){ cv.setPointerCapture(e.pointerId); ptrs[e.pointerId]={x:e.clientX,y:e.clientY}; nptr=Object.keys(ptrs).length; mov=0; t0=Date.now();
+  if(nptr===1){ alvo=noEm(e.clientX,e.clientY); if(alvo){ arrastando=alvo; alvo.fix=true; } }
+  if(nptr===2){ if(alvo){alvo.fix=false;arrastando=null;alvo=null;} var k=Object.keys(ptrs), a=ptrs[k[0]], b=ptrs[k[1]]; pinca={d:Math.hypot(a.x-b.x,a.y-b.y),k:T.k}; livre(); alvoT=null; } e.preventDefault(); });
+cv.addEventListener('pointermove',function(e){ var p=ptrs[e.pointerId]; if(!p) return; var dx=e.clientX-p.x, dy=e.clientY-p.y; mov+=Math.abs(dx)+Math.abs(dy); p.x=e.clientX;p.y=e.clientY;
+  if(nptr===2&&pinca){ var k=Object.keys(ptrs), a=ptrs[k[0]], b=ptrs[k[1]]; var d=Math.hypot(a.x-b.x,a.y-b.y), mx=(a.x+b.x)/2, my=(a.y+b.y)/2; var nk=Math.max(0.25,Math.min(3.5,pinca.k*d/pinca.d)); var w=mundo(mx,my); T.k=nk; T.x=mx-w.x*nk; T.y=my-w.y*nk; return; }
+  if(nptr===1){ if(alvo){ var w2=mundo(e.clientX,e.clientY); alvo.x=w2.x; alvo.y=w2.y; alpha=Math.max(alpha,0.5); } else if(mov>6){ livre(); alvoT=null; T.x+=dx; T.y+=dy; } } });
+function fim(e){ var teve=ptrs[e.pointerId]; delete ptrs[e.pointerId]; var antes=nptr; nptr=Object.keys(ptrs).length; if(antes===1&&teve){ if(mov<10&&Date.now()-t0<450){ escolhe(noEm(e.clientX,e.clientY)); } if(alvo){ alvo.fix=false; arrastando=null; alvo=null; } } if(nptr<2) pinca=null; }
+cv.addEventListener('pointerup',fim); cv.addEventListener('pointercancel',fim);
+cv.addEventListener('wheel',function(e){ e.preventDefault(); livre(); alvoT=null; var w=mundo(e.clientX,e.clientY); var nk=Math.max(0.25,Math.min(3.5,T.k*(e.deltaY<0?1.12:0.89))); T.k=nk; T.x=e.clientX-w.x*nk; T.y=e.clientY-w.y*nk; },{passive:false});
+// ── cartão ──
+var card=document.getElementById('card');
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function manda(ref){ if(window.parent&&window.parent!==window){ try{ window.parent.postMessage({type:'ebd-ref',ref:ref},'*'); }catch(e){} } else leInline(ref); }
+var BIB=null, MAPA={Gn:'gn',Êx:'ex',Lv:'lv',Nm:'nm',Dt:'dt',Js:'js',Jz:'jz',Rt:'rt','1Sm':'1sm','2Sm':'2sm','1Rs':'1rs','2Rs':'2rs','1Cr':'1cr','2Cr':'2cr',Ed:'ed',Ne:'ne',Et:'et',Jó:'jó',Sl:'sl',Pv:'pv',Ec:'ec',Ct:'ct',Is:'is',Jr:'jr',Lm:'lm',Ez:'ez',Dn:'dn',Os:'os',Jl:'jl',Am:'am',Ob:'ob',Jn:'jn',Mq:'mq',Na:'na',Hc:'hc',Sf:'sf',Ag:'ag',Zc:'zc',Ml:'ml',Mt:'mt',Mc:'mc',Lc:'lc',Jo:'jo',At:'atos',Rm:'rm','1Co':'1co','2Co':'2co',Gl:'gl',Ef:'ef',Fp:'fp',Cl:'cl','1Ts':'1ts','2Ts':'2ts','1Tm':'1tm','2Tm':'2tm',Tt:'tt',Fm:'fm',Hb:'hb',Tg:'tg','1Pe':'1pe','2Pe':'2pe','1Jo':'1jo','2Jo':'2jo','3Jo':'3jo',Jd:'jd',Ap:'ap'};
+function leInline(ref){ var el=document.getElementById('cv'); el.innerHTML='';
+  (BIB?Promise.resolve(BIB):fetch('/biblia.json').then(function(r){return r.text();}).then(function(t){BIB=JSON.parse(t.replace(/^\uFEFF/,''));return BIB;})).then(function(B){
+    var html='',livro=null; ref.split(/;\s*/).forEach(function(tok){ var m=tok.trim().match(/^(?:((?:[123]\s*)?[A-ZÀ-ÚÊ][a-záàâãéêíóôõúü]{0,5})\s+)?(\d+)[.:](.+)$/); if(!m) return; if(m[1]) livro=m[1].replace(/\s/g,''); var L=B.find(function(x){return x.abbrev===MAPA[livro];}); if(!L) return; var ch=L.chapters[+m[2]-1]; if(!ch) return;
+      m[3].split(',').forEach(function(p){ var r=p.trim().match(/^(\d+)(?:\s*[-–]\s*(\d+))?$/); if(!r) return; for(var v=+r[1];v<=(r[2]?+r[2]:+r[1]);v++) if(ch[v-1]) html+='<span class="v"><i>'+esc(L.name+' '+m[2]+'.'+v)+'</i> '+esc(ch[v-1])+'</span>'; }); });
+    el.innerHTML=html; }).catch(function(){ el.innerHTML=''; }); }
+function escolhe(n){ sel=n; document.getElementById('leg').style.opacity=n?0:1; if(!n){ card.classList.remove('on'); return; }
+  card.style.setProperty('--c',n.cor==='#f4f6ff'?'#aab4d4':n.cor);
+  document.getElementById('ck').textContent=n.tipo==='verso'?'VERSÍCULO':n.sub;
+  document.getElementById('ct').textContent=n.tipo==='verso'?n.ref:n.full;
+  document.getElementById('cs').textContent=(n.tipo==='ramo'&&n.sin)?n.sin:(n.tipo==='raiz'?'Toque num ponto para ver o que está ligado a ele. Os círculos vazados são versículos: ligam as ideias que citam o mesmo texto.':'');
+  var refs=[]; if(n.tipo==='verso') refs=[n.ref]; else { if(n.ref) refs.push(n.ref); if(n.tipo==='folha') refsEm(n.full).forEach(function(r){ refs.push(norm(r)); }); }
+  var chips=document.getElementById('cc'); chips.innerHTML=''; refs.filter(function(r,i){return refs.indexOf(r)===i;}).forEach(function(r){ var b=document.createElement('span'); b.className='chip'; b.textContent=(n.tipo==='verso'?'Ler ':'')+r; b.onclick=function(){ manda(r); }; chips.appendChild(b); });
+  document.getElementById('cv').innerHTML=''; if(n.tipo==='verso'&&(window.parent===window)) leInline(n.ref);
+  if(n.tipo==='verso'){ var q=vizinhos[n.id].length; document.getElementById('cs').textContent=q>1?('Este versículo liga '+q+' ideias desta lição.'):'Citado em 1 ideia desta lição.'; }
+  card.classList.add('on');
+  // a câmera desliza até o ponto escolhido
+  autoAjuste=false; alvoT={k:Math.max(T.k,0.9),x:W/2-n.x*Math.max(T.k,0.9),y:(H*0.38)-n.y*Math.max(T.k,0.9)}; }
+document.getElementById('b-voltar').onclick=function(){ if(window.parent&&window.parent!==window){ try{ window.parent.postMessage({type:'ebd-voltar'},'*'); }catch(e){} } else if(history.length>1){ history.back(); } else { location.href='/'; } };
+document.getElementById('fecha').onclick=function(){ escolhe(null); };
+document.getElementById('b-ver').onclick=function(){ autoAjuste=false; alvoT=alvoAjuste(); };
+document.getElementById('b-org').onclick=function(){ posInicial(true); alpha=1; inicio=performance.now(); selF=0; sel=null; card.classList.remove('on'); autoAjuste=true; };
+window.addEventListener('resize',function(){ ajusta(); if(autoAjuste) T=alvoAjuste(); else if(alvoT) alvoT=alvoAjuste(); });
+setTimeout(function(){ document.getElementById('dica').style.opacity=0; },8000);
+if(window.parent===window) document.body.className='solo';
+ajusta(); posInicial(true); T=alvoAjuste(); requestAnimationFrame(laco);
+window.__teste=function(){ for(var i=0;i<30;i++) passo(); nos.forEach(function(n){n.vis=1;}); quad(); return {nos:nos.length,lig:lig.length,verbos:nos.filter(function(n){return n.tipo==='verso';}).length}; };
+})();
+</script></body></html>

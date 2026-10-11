@@ -8,9 +8,9 @@
 import fs from 'fs';
 import path from 'path';
 
-const [,, pastaJson] = process.argv;
-if (!pastaJson) { console.error('uso: node scripts/ebd4-mapa.mjs <pasta-json>'); process.exit(1); }
-const DEST = path.resolve(import.meta.dirname, '../public/ebd/adulto4/html');
+const [,, pastaJson, TURMA = 'adulto4', MIN = '1'] = process.argv;
+if (!pastaJson) { console.error('uso: node scripts/ebd4-mapa.mjs <pasta-json> [turma=adulto4] [licao-inicial=1]'); process.exit(1); }
+const DEST = path.resolve(import.meta.dirname, `../public/ebd/${TURMA}/html`);
 const nn = n => String(n).padStart(2, '0');
 
 const PAGINA = (n, dados) => `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Cérebro da lição — Lição ${n}</title>
@@ -62,8 +62,8 @@ function verso(ref,deQuem){ var k='v:'+norm(ref); if(!porId[k]) add(k,'verso',no
 function refsEm(t){ var o=[],m; var re=/\\(([^()]*\\d[^()]*)\\)/g; while((m=re.exec(t))){ var inner=m[1]; var m2; var r2=/([1-3]?\\s?[A-ZÊ][a-zê]{1,2}\\s\\d{1,3}[.:]\\d[\\d,\\-–]*)/g; while((m2=r2.exec(inner))) o.push(m2[1]); } return o; }
 var D=DADOS, topo=[];
 add('raiz','raiz','Lição '+D.n,D.centro,'#f4f6ff',17,{sub:'LIÇÃO '+D.n});
-if(D.aureo){ add('aureo','esp','Texto áureo','“'+D.aureo.texto+'”','#e8c35a',11,{sub:'TEXTO ÁUREO'}); liga('raiz','aureo','tree'); if(D.aureo.ref) verso(D.aureo.ref,'aureo'); topo.push('aureo'); }
-if(D.pratica){ add('pratica','esp','Verdade prática',D.pratica,'#5fd38a',11,{sub:'VERDADE PRÁTICA'}); liga('raiz','pratica','tree'); topo.push('pratica'); }
+if(D.aureo){ add('aureo','esp',(D.rotAureo||'Texto áureo'),'“'+D.aureo.texto+'”','#e8c35a',11,{sub:(D.rotAureo||'Texto áureo').toUpperCase()}); liga('raiz','aureo','tree'); if(D.aureo.ref) verso(D.aureo.ref,'aureo'); topo.push('aureo'); }
+if(D.pratica){ add('pratica','esp',(D.rotPratica||'Verdade prática'),D.pratica,'#5fd38a',11,{sub:(D.rotPratica||'Verdade prática').toUpperCase()}); liga('raiz','pratica','tree'); topo.push('pratica'); }
 (D.ramos||[]).forEach(function(r,i){
   var c=COR[i%COR.length], rid='r'+i;
   add(rid,'ramo',(r.num?r.num+' · ':'')+r.titulo,r.titulo,c,13,{sub:'TÓPICO '+(r.num||''),sin:r.sinopse||''}); liga('raiz',rid,'tree'); topo.push(rid);
@@ -192,9 +192,10 @@ window.__teste=function(){ for(var i=0;i<30;i++) passo(); nos.forEach(function(n
 </script></body></html>`;
 
 let n0 = 0;
-for (let n = 1; n <= 13; n++) {
+for (let n = +MIN; n <= 13; n++) {
   const f = path.join(pastaJson, `${nn(n)}.json`); if (!fs.existsSync(f)) { console.log(`(sem ${nn(n)}.json — pulado)`); continue; }
   const dados = JSON.parse(fs.readFileSync(f, 'utf8'));
+  if (TURMA === 'jovem4') { dados.rotAureo = 'Texto principal'; dados.rotPratica = 'Resumo da lição'; }
   fs.writeFileSync(`${DEST}/mapa-${nn(n)}.html`, PAGINA(nn(n), dados), 'utf8'); n0++;
   console.log(`mapa-${nn(n)}.html  ramos=${dados.ramos.length}`);
 }
