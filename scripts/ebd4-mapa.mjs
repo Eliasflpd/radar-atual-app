@@ -196,6 +196,7 @@ for (let n = +MIN; n <= 13; n++) {
   const f = path.join(pastaJson, `${nn(n)}.json`); if (!fs.existsSync(f)) { console.log(`(sem ${nn(n)}.json — pulado)`); continue; }
   const dados = JSON.parse(fs.readFileSync(f, 'utf8'));
   if (TURMA === 'jovem4') { dados.rotAureo = 'Texto principal'; dados.rotPratica = 'Resumo da lição'; }
+  if (TURMA === 'adolescentes') { dados.rotAureo = 'A mensagem'; }
   fs.writeFileSync(`${DEST}/mapa-${nn(n)}.html`, PAGINA(nn(n), dados), 'utf8'); n0++;
   console.log(`mapa-${nn(n)}.html  ramos=${dados.ramos.length}`);
 }

@@ -2729,8 +2729,8 @@ function abrirLicaoDetalhe(idx){
      ativo:!!lic.apoio,
      tap:lic.apoio?`abrirReader(${idx},'apoio',this)`:null},
     {num:'4',icon:'🧠',nome:'MAPA MENTAL',
-     ativo:lic.n>0 && (ebdTurmaAtual==='adulto4'||(ebdTurmaAtual==='jovem4'&&lic.n>=3)),
-     tap:lic.n>0 && (ebdTurmaAtual==='adulto4'||(ebdTurmaAtual==='jovem4'&&lic.n>=3))?`abrirReader(${idx},'mapa')`:null},
+     ativo:lic.n>0 && (ebdTurmaAtual==='adulto4'||(ebdTurmaAtual==='jovem4'&&lic.n>=3)||(ebdTurmaAtual==='adolescentes'&&lic.n>=10&&!!lic.licao)),
+     tap:lic.n>0 && (ebdTurmaAtual==='adulto4'||(ebdTurmaAtual==='jovem4'&&lic.n>=3)||(ebdTurmaAtual==='adolescentes'&&lic.n>=10&&!!lic.licao))?`abrirReader(${idx},'mapa')`:null},
     {num:'5',icon:'📰',nome:'REVISTA CRISTÃO ALERTA',
      ativo:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4'),
      tap:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4')?`abrirReader(${idx},'subsidio')`:null},
@@ -2820,6 +2820,9 @@ function fecharReader(){
 }
 
 function fecharLicaoDetalhe(){
+  /* se a lista da turma ainda não foi montada (ex.: a lição foi aberta por atalho/recarga), monta antes de mostrar — nunca tela vazia */
+  const _b=document.getElementById('ebd-turma-body');
+  if(_b&&!_b.children.length&&typeof ebdTurmaAtual==='string'&&ebdTurmaAtual&&EBD_LICOES[ebdTurmaAtual]){ abrirEbdTurma(ebdTurmaAtual); return; }
   ocultarTodas();
   document.getElementById('tela-ebd-turma').classList.add('ativa');
 }
