@@ -80,6 +80,7 @@ export default async function handler(req) {
     // responde erro de verdade (HTTP ruim ou status:false); resposta de formato desconhecido
     // continua valendo como enviada, pra não barrar quem está recebendo normal.
     let entregue = true;
+    let motivo = '';   // razão devolvida pelo Fonnte (só aparece na resposta quando o pedido traz diag:true)
     try {
       const fr = await fetch('https://api.fonnte.com/send', {
         method: 'POST',
@@ -89,15 +90,18 @@ export default async function handler(req) {
       const fj = await fr.json().catch(() => ({}));
       if (!fr.ok || (fj && (fj.status === false || fj.status === 'false'))) {
         entregue = false;
+        motivo = String((fj && (fj.reason || fj.detail || fj.message)) || ('HTTP ' + fr.status)).slice(0, 160);
         console.error('Fonnte recusou o envio:', JSON.stringify(fj || {}).slice(0, 200));
       }
     } catch (e) {
       entregue = false;
+      motivo = 'erro de rede: ' + String(e.message).slice(0, 100);
       console.error('Fonnte error:', e.message);
     }
     if (!entregue) {
       return Response.json(
-        { error: 'Não consegui entregar o código nesse WhatsApp. Confira o número — se for de fora do Brasil, escolha o país na lista — e tente de novo.' },
+        { error: 'Não consegui entregar o código nesse WhatsApp. Confira o número — se for de fora do Brasil, escolha o país na lista — e tente de novo.',
+          ...(body.diag === true ? { motivo } : {}) },
         { status: 502, headers: CORS });
     }
   } else {
