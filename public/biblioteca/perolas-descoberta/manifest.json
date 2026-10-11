@@ -1,18 +1,18 @@
 {
- "versao": "2026-10-09",
+ "versao": "2026-10-11",
  "formato": 2,
  "embrulhos": [
   {
    "tipo": "senha",
    "iter": 200000,
-   "salt": "hI2rhsqpUTztdNOv4SWfOA==",
-   "chave": "cC6p7EZeSjUHqGIfANHP/8X1sCgHKVeZuKmE+sj+cF4jJPRhcha4DkH3QjMNuELwSvYzq6ya/CHnlli+"
+   "salt": "b0JfVLHNbczdeRktiVi5wg==",
+   "chave": "io17EP+ty0I3IfTAFblHWVhXR5seLPZVTYygT5S5fE/mK4JG1TSpQAT1EpOpSX2VPNGo3K77mvSWoLhb"
   },
   {
    "tipo": "pin",
    "iter": 1000000,
-   "salt": "/ieXo7uyqsTrPx865WKMlw==",
-   "chave": "jIpcsozi0G62zDULkBxfPLfPy8SA+NecTDGlsaLoE7EcIThKNZVphUuL212PbO5XxL1zRD89Gmqs0k8q"
+   "salt": "asUxziBujqiiNSZumGtRWg==",
+   "chave": "55E+au0IPOFpIBi9SJpsqwWzDxk22CaW8m5tJANkaKJ6WnNgIWZoxXcK5Uni3vFsjr3xZidobr5r2LpR"
   }
  ],
  "prova": "dados/prova.enc",

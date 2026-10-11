@@ -18,7 +18,7 @@
 -->
 <style>
   *{box-sizing:border-box;-webkit-text-size-adjust:100%}
-  body{margin:0;padding:12px 11px 56px;background:#fff;font-family:Georgia,serif;font-size:var(--fs,21px);line-height:1.6;color:#1a1a1a;max-width:860px;margin:0 auto}
+  body{box-sizing:border-box;margin:0;padding:12px 7px 56px;background:#fff;font-family:Georgia,serif;font-size:var(--fs,21px);line-height:1.6;color:#1a1a1a;max-width:860px;margin:0 auto}
   p{margin:0 0 12px}
   strong{font-weight:900}
   /* ── cabeçalho da página / navegação (mesma cara do Meu Estudo) ── */
@@ -239,7 +239,7 @@ function mostrarCap(){
     else if(b.t==='s') html+='<p class="nota">'+x+'</p>';
     else html+='<p class="subpoint">'+x+'</p>';
   }
-  $('texto').innerHTML=html;
+  $('texto').innerHTML=html; if(window.hifenizar) hifenizar($('texto'));   // hifeniza o capítulo (texto montado na hora)
   $('pag-ind').textContent=(CAP+1)+' de '+TEXTO.capitulos.length;
   $('pg-ant').disabled=CAP<=0; $('pg-prox').disabled=CAP>=TEXTO.capitulos.length-1;
   $('progf').style.width=Math.round((CAP+1)/TEXTO.capitulos.length*100)+'%';
@@ -290,6 +290,7 @@ let _toastT=null;
 function toast(msg){ let t=$('toast'); if(!t){ t=document.createElement('div'); t.id='toast'; t.className='toast'; document.body.appendChild(t); } t.textContent=msg; t.classList.add('on'); clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('on'),2200); }
 document.addEventListener('keydown',e=>{ if($('leitor').style.display!=='block') return; const tg=e.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA') return; if(e.key==='ArrowRight'||e.key==='PageDown'){ irCap(1); e.preventDefault(); } else if(e.key==='ArrowLeft'||e.key==='PageUp'){ irCap(-1); e.preventDefault(); } });
 </script>
+<script src="/ebd/hifen.js"></script>
 <script src="/_uso.js?v=1" defer></script>
 </body>
 </html>

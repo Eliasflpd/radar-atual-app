@@ -9,7 +9,7 @@ p{margin:0 0 12px}strong{font-weight:900}em{font-style:italic}
 .subpoint{text-align:justify;margin-bottom:12px}.subpoint strong:first-child{color:#1d3a8a}
 .lbl-inline{font-weight:900;color:#7b0000;text-transform:uppercase;letter-spacing:.5px}
 .bref{color:#1d4ed8;font-weight:700;text-decoration:underline dotted;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-</style></head><body>
+/*tela-cheia-2026-10-11b*/html,body{max-width:100%;overflow-x:hidden}body{box-sizing:border-box;padding-left:7px;padding-right:7px;overflow-wrap:anywhere}p,li,.subpoint,.verso,.box-aureo,.box-pratica,.bible-passage{text-align:justify;hyphens:auto;-webkit-hyphens:auto;overflow-wrap:anywhere;word-break:break-word;min-width:0}ul,ol{padding-left:18px}img,table,iframe{max-width:100%}</style></head><body>
 
 <div class="cap">Capítulo 5</div>
 <div class="titulo">O Grande Mandamento</div>
@@ -71,4 +71,4 @@ p{margin:0 0 12px}strong{font-weight:900}em{font-style:italic}
 document.addEventListener('touchstart',function(e){if(e.target.closest('.bref'))e.preventDefault();},{passive:false});
 document.addEventListener('touchend',function(e){var el=e.target.closest('.bref');if(el){e.preventDefault();window.parent.postMessage({type:'ebd-ref',ref:el.dataset.ref},'*');}},{passive:false});
 document.addEventListener('click',function(e){var el=e.target.closest('.bref');if(el)window.parent.postMessage({type:'ebd-ref',ref:el.dataset.ref},'*');});
-</script></body></html>
+</script><script src="/ebd/hifen.js"></script></body></html>
