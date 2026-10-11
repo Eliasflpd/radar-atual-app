@@ -4870,6 +4870,7 @@ function mostrarRefSheet(refStr){
 }
 
 window.addEventListener('message',function(e){
+  if(e.data&&e.data.type==='ebd-voltar'){ fecharReader(); return; }   /* botão "Voltar" de dentro do Mapa Mental */
   if(!e.data||e.data.type!=='ebd-ref')return;
   const ref=e.data.ref;
   if(_brefData){mostrarRefSheet(ref);return;}
