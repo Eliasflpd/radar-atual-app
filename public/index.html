@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/radar.css?v=208">
-<link rel="preload" as="script" href="/assets/app.js?v=212">
+<link rel="preload" as="script" href="/assets/app.js?v=213">
 <script>
 /* ── A PELE DA HOME (bege ou azul) ──────────────────────────────────────────
    Isto roda AQUI NO <head>, antes de o navegador pintar qualquer coisa.
@@ -1009,11 +1009,15 @@
       &nbsp;·&nbsp;
       <button class="btn-reenviar" onclick="voltarCadastro()" style="color:var(--sub)">Corrigir número</button>
     </div>
+    <!-- 12/10/2026 "entra agora, confirma depois": quem já está dentro do app pode deixar pra depois -->
+    <div style="text-align:center;margin-top:14px">
+      <button class="btn-reenviar" id="btn-otp-depois" onclick="irHome()" style="color:var(--gold);font-weight:800">Confirmar depois — voltar ao app</button>
+    </div>
     <div id="otp-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
   </div>
 </div>
 
-<script src="/assets/app.js?v=212"></script>
+<script src="/assets/app.js?v=213"></script>
 
 <!-- REF SHEET -->
 <div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>
@@ -2012,6 +2016,6 @@ function compartilharApp(nome){
 </div>
 
 <script src="/assets/lupa.js?v=208"></script>
-<script src="/_uso.js?v=206" defer></script>
+<script src="/_uso.js?v=213" defer></script>
 </body>
 </html>

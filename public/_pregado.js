@@ -58,6 +58,7 @@
       var raw = localStorage.getItem('radar_user');     // <- SÓ getItem. Jamais setItem.
       if(!raw) return '';
       var u = JSON.parse(raw);
+      if(u && u.confirmado === false) return '';   // 12/10/2026: entrou sem confirmar o WhatsApp → identidade do aparelho
       return (u && typeof u==='object') ? String(u.whatsapp||'').replace(/\D/g,'').slice(0,60) : '';
     }) || '';
     if(w.length >= 8) return w;

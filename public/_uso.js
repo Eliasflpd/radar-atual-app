@@ -40,6 +40,7 @@
       if (!raw) return '';
       var u = JSON.parse(raw);
       if (!u || typeof u !== 'object') return '';
+      if (u.confirmado === false) return '';   // 12/10/2026: WhatsApp ainda não confirmado → não registra uso em nome do telefone
       return String(u.whatsapp || '').replace(/\D/g, '').slice(0, 60);  // mesmo padrão do leitura_progresso
     }) || '';
   }

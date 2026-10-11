@@ -71,12 +71,15 @@ module.exports = async (req, res) => {
       const cargo = (b && b.cargo || '').trim();
       const whatsapp = (b && b.whatsapp || '').replace(/\D/g, '');
       if (!nome) { res.status(400).json({ error: 'sem nome' }); return; }
-      let jaExistia = false;
+      let jaExistia = false, exId = null;
       if (whatsapp) {
         // 1 cadastro por WhatsApp — se já existe, ATUALIZA nome/cargo mas PRESERVA trial_inicio/liberado_ate
+        // ⚠️ 12/10/2026 — "ENTRA AGORA, CONFIRMA DEPOIS": o cadastro NOVO é salvo na hora, mesmo sem
+        // código (assim ninguém que não recebeu o código se perde). Já a ATUALIZAÇÃO de nome/cargo de
+        // quem já está no cadastro só acontece mais abaixo, e só com prova (ver `podeAtualizar`).
         const ex = await c.query('select id from radar_cadastros where regexp_replace(coalesce(whatsapp,\'\'),\'\\D\',\'\',\'g\') = $1 limit 1', [whatsapp]);
         jaExistia = !!ex.rows[0];
-        if (ex.rows[0]) await c.query('update radar_cadastros set nome=$1, cargo=$2 where id=$3', [nome, cargo, ex.rows[0].id]);
+        if (ex.rows[0]) exId = ex.rows[0].id;
         else await c.query('insert into radar_cadastros(nome,cargo,whatsapp) values($1,$2,$3)', [nome, cargo, whatsapp]);
       } else {
         await c.query('insert into radar_cadastros(nome,cargo,whatsapp) values($1,$2,$3)', [nome, cargo, whatsapp]);
@@ -95,7 +98,7 @@ module.exports = async (req, res) => {
       // mesmo celular de sempre re-mandando o cadastro (o app faz isso sozinho
       // em várias situações). Sem esta conferência, cada re-envio gastava uma
       // vaga de aparelho e acendia o alarme de invasão sem ninguém ter invadido.
-      let chaveNova = '', eraNovo = true, mesmoAparelho = false, precisaCodigo = false;
+      let chaveNova = '', eraNovo = true, mesmoAparelho = false, precisaCodigo = false, codigoOk = false;
       if (whatsapp) {
         try {
           await CHAVE.tabela(c);
@@ -127,7 +130,7 @@ module.exports = async (req, res) => {
           // desta conta) OU pra quem trouxe o código de confirmação DESTE número.
           // Sem uma das duas coisas, nenhum crachá sai — e o app avisa que
           // precisa do código (precisa_codigo abaixo). É isto que fecha o buraco.
-          const codigoOk = confereCodigo(b && b.otp_token, b && b.otp_code, whatsapp);
+          codigoOk = confereCodigo(b && b.otp_token, b && b.otp_code, whatsapp);
           if (!mesmoAparelho && codigoOk) {
             const e = await CHAVE.emitir(c, whatsapp, cargo || 'aparelho');
             if (e && e.ok) chaveNova = e.chave;
@@ -136,6 +139,16 @@ module.exports = async (req, res) => {
           }
         } catch (_) { chaveNova = ''; }
       }
+
+      // ── "ENTRA AGORA, CONFIRMA DEPOIS" (12/10/2026) ─────────────────────────
+      // Quem se cadastra entra no app na hora e é SALVO na hora, mesmo sem ter digitado o código
+      // (o código do WhatsApp nem sempre chega). O que NÃO muda: a chave do aparelho, que protege o
+      // caderno de pregações, a memória do globo e o plano de leitura, só nasce com o código.
+      // Atualizar nome/cargo de um cadastro que JÁ EXISTE: só se vier de aparelho conhecido, com o
+      // código deste número, ou se ninguém ainda trancou aquela conta (nenhuma chave emitida).
+      // Sem isso, qualquer um mudaria o nome de um pastor já confirmado só digitando o número dele.
+      const podeAtualizar = !!exId && (mesmoAparelho || codigoOk || eraNovo);
+      if (podeAtualizar) await c.query('update radar_cadastros set nome=$1, cargo=$2 where id=$3', [nome, cargo, exId]);
 
       // Confirmação no WhatsApp da própria pessoa (evita gente mentirosa) — via Fonnte, sem bloquear o cadastro se falhar
       //
@@ -150,7 +163,12 @@ module.exports = async (req, res) => {
       // dono (o aviso que protege o pastor).
       // ...e o mesmo silêncio vale pro celular que só re-mandou o cadastro com o
       // crachá dele no bolso: nada nasceu, nada mudou, ninguém precisa saber.
-      const calado = (jaExistia && eraNovo) || mesmoAparelho;
+      // 12/10/2026: com o "entra agora, confirma depois", o cadastro nasce SEM código e não pode
+      // disparar WhatsApp nenhum (senão qualquer um mandaria mensagem, pelo número do Elias, pra
+      // qualquer telefone digitado). A mensagem só sai quando uma chave de aparelho acabou de nascer,
+      // ou seja, quando a pessoa PROVOU o número com o código. Sem chave nova = silêncio total, o que
+      // também cobre a auto-cura dos antigos e o aparelho que só re-manda o cadastro.
+      const calado = !chaveNova;
       let avisado = false;
       const FT = process.env.FONNTE_TOKEN;
       if (FT && whatsapp && !calado) {

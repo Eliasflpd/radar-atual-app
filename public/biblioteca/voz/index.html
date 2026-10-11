@@ -460,6 +460,7 @@
     try{
       var r=JSON.parse(localStorage.getItem('radar_user')||'null');
       var w=String((r&&r.whatsapp)||'').replace(/\D/g,'');
+      if(r&&r.confirmado===false) w='';   // 12/10/2026: entrou sem confirmar o WhatsApp → memória do globo pelo id do aparelho
       if(w.length>=8) return w.slice(0,60);
     }catch(e){}
     try{

@@ -125,32 +125,65 @@ async function submitCadastro(){
   if(alvoFone.erro==='brasil'){err.textContent='Esse número não parece do Brasil. Se você é de fora, escolha seu país na lista acima do campo do WhatsApp. Sem isso o código não chega até você.';err.style.display='block';document.getElementById('cad-fone').focus();return;}
   if(alvoFone.erro==='outro'){err.textContent='Digite o número com o + e o código do seu país. Ex.: +41 79 123 45 67 (Suíça).';err.style.display='block';document.getElementById('cad-fone').focus();return;}
   if(fone.length<8||fone.length>15){err.textContent='WhatsApp inválido. Confira o país escolhido e o número. No Brasil: (99) 99999-9999.';err.style.display='block';document.getElementById('cad-fone').focus();return;}
-  // ── A CONFIRMAÇÃO POR WHATSAPP (24/09/2026) ───────────────────────────────
-  // Antes daqui saía direto pra dentro do app. Agora não: o cadastro manda um
-  // código de 6 dígitos pro WhatsApp e só entra quem digita o código de volta.
-  // É a tampa do buraco nº 1 da auditoria — sem isso, qualquer um pegava a conta
-  // de qualquer pastor com o número dele. A tela e as funções de código já
-  // existiam prontas no app, só estavam desligadas.
+  // ── "ENTRA AGORA, CONFIRMA DEPOIS" (12/10/2026, decisão do Elias) ─────────────
+  // HISTÓRIA: em 24/09/2026 o cadastro passou a EXIGIR o código de 6 dígitos do WhatsApp antes de
+  // deixar a pessoa entrar — é a tampa do buraco nº 1 da auditoria (sem isso, qualquer um pegava a
+  // conta de qualquer pastor só digitando o número dele). Só que o código nem sempre chega
+  // (Fonnte desconectado, WhatsApp segurando mensagem, número de fora...) e quem não recebia o
+  // código NUNCA era salvo: o servidor só via o cadastro depois do código. Gente se perdendo.
+  // AGORA: a pessoa entra NA HORA e é SALVA na hora (lista do Elias, "não confirmado"). O código
+  // vira uma confirmação posterior (faixa na tela inicial). O que NÃO muda: a chave do aparelho
+  // (caderno de pregações, memória do globo, plano de leitura), o status de admin e a mensagem
+  // automática de boas-vindas só valem DEPOIS de confirmar. Enquanto não confirma, esses recursos
+  // usam a identidade do aparelho (como quem nunca se cadastrou) e nada fica em nome do telefone.
   const btn=document.getElementById('btn-cad-enviar');
-  btn.textContent='Enviando código...';btn.disabled=true;
+  btn.textContent='Entrando...';btn.disabled=true;
   _cadPendente={nome:nome,cargo:cargo,fone:fone,intl:alvoFone.intl,token:''};
+  saveUser({nome:nome,cargo:cargo,whatsapp:fone,id:'u_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),confirmado:false,intl:!!alvoFone.intl});  // sem admin
+  salvarNuvem(nome,cargo,fone);                    // salva já, sem código: o servidor guarda o cadastro e NÃO emite chave
+  btn.textContent='ACESSAR O APP';btn.disabled=false;
+  irHome();
+  setTimeout(pedirCodigoSilencioso,1500);          // o código vai pro WhatsApp em segundo plano
+}
+
+// Manda o código em segundo plano, sem travar nada. Se falhar, a faixa "Confirme seu WhatsApp"
+// continua na tela inicial e o botão dela tenta de novo.
+async function pedirCodigoSilencioso(){
+  const u=getUser(); if(!u||u.confirmado!==false) return;
   try{
-    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:nome,phone:fone,intl:alvoFone.intl})});
+    const res=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:u.nome,phone:u.whatsapp,intl:!!u.intl})});
     const data=await res.json();
-    if(!res.ok||!data.token)throw new Error((data&&data.error)||'Não consegui enviar o código agora. Tente de novo.');
-    _cadPendente.token=data.token;
-    // mostra pra onde foi: de fora do Brasil, o número completo com + (a pessoa confere o país)
-    document.getElementById('otp-fone-display').textContent=alvoFone.intl?('+'+fone):document.getElementById('cad-fone').value;
-    Array.from(document.getElementById('otp-digits').children).forEach(d=>d.value='');
-    document.getElementById('otp-erro').style.display='none';
-    ocultarTodas();
-    document.getElementById('tela-otp').classList.add('ativa');
-    setTimeout(()=>document.getElementById('otp-digits').children[0].focus(),350);
-  }catch(e){
-    err.textContent=e.message;err.style.display='block';
-  }finally{
-    btn.textContent='ACESSAR O APP';btn.disabled=false;
-  }
+    if(res.ok&&data.token){
+      _cadPendente={nome:u.nome,cargo:u.cargo,fone:u.whatsapp,intl:!!u.intl,token:data.token};
+      showToast('📲 Enviamos um código para o seu WhatsApp');
+    }
+  }catch(e){ /* sem internet agora: a faixa de confirmação continua lá */ }
+}
+
+// Abre a tela do código para quem já entrou sem confirmar (faixa da tela inicial e Perfil).
+async function confirmarWhatsApp(){
+  const u=getUser(); if(!u||u.confirmado!==false) return;
+  const mesmo=_cadPendente&&_cadPendente.fone===u.whatsapp;
+  _cadPendente={nome:u.nome,cargo:u.cargo,fone:u.whatsapp,intl:!!u.intl,token:mesmo?(_cadPendente.token||''):''};
+  document.getElementById('otp-fone-display').textContent=u.intl?('+'+u.whatsapp):u.whatsapp;
+  Array.from(document.getElementById('otp-digits').children).forEach(d=>d.value='');
+  document.getElementById('otp-erro').style.display='none';
+  ocultarTodas();
+  document.getElementById('tela-otp').classList.add('ativa');
+  setTimeout(()=>document.getElementById('otp-digits').children[0].focus(),350);
+  if(!_cadPendente.token) await reenviarOtp();     // ainda não saiu código: pede agora (e mostra o erro, se der)
+}
+
+// Faixa fixa no topo da tela inicial enquanto o WhatsApp não foi confirmado.
+function mostrarAvisoConfirmacao(){
+  const velho=document.getElementById('banner-confirmar'); if(velho) velho.remove();
+  const u=getUser(); if(!u||u.confirmado!==false) return;
+  const sc=document.querySelector('#home .home-scroll'); if(!sc) return;
+  const b=document.createElement('div'); b.id='banner-confirmar';
+  b.style.cssText='margin:10px 12px 0;padding:12px 14px;border-radius:14px;background:#fff7e0;border:1px solid #e5c767;color:#5a3a00;font-size:13.5px;line-height:1.45;display:flex;align-items:center;gap:10px;font-family:inherit';
+  b.innerHTML='<div style="flex:1"><b>Confirme seu WhatsApp</b><br>Digite o código que enviamos para liberar seu caderno de pregações, a memória do globo e o plano de leitura.</div>'
+    +'<button type="button" onclick="confirmarWhatsApp()" style="background:#a9791c;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-size:13.5px;font-family:inherit;cursor:pointer;white-space:nowrap">Confirmar</button>';
+  sc.insertBefore(b,sc.firstChild);
 }
 // ══ O CRACHÁ DO APARELHO ══════════════════════════════════════════════════
 // Segredo sorteado pelo servidor no cadastro, guardado SÓ neste aparelho. É ele
@@ -343,16 +376,20 @@ async function submitOtp(){
   const btn=document.getElementById('btn-otp-verificar');
   btn.textContent='Verificando...';btn.disabled=true;
   try{
+    if(!_cadPendente.token) throw new Error('Ainda não saiu um código. Toque em "Reenviar código".');
     const res=await fetch('/api/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:_cadPendente.token,code})});
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'Código inválido');
     var isAdmin=ADMIN_PHONES.includes(_cadPendente.fone);
-    saveUser({nome:_cadPendente.nome,cargo:_cadPendente.cargo,whatsapp:_cadPendente.fone,id:data.uid,...(isAdmin&&{admin:true})});
+    // confirmado:true = a pessoa PROVOU o número. Só a partir daqui valem admin, chave do aparelho e
+    // a identidade por telefone (caderno, globo, plano de leitura).
+    saveUser({nome:_cadPendente.nome,cargo:_cadPendente.cargo,whatsapp:_cadPendente.fone,id:data.uid,confirmado:true,...(isAdmin&&{admin:true})});
     // AGORA o crachá nasce: manda o cadastro com o código no bolso. É este código
     // que prova pro servidor que o WhatsApp é desta pessoa — sem ele, nenhum
     // crachá sai. Guarda na nuvem pro Elias ver todos, no mesmo passo.
     await salvarNuvem(_cadPendente.nome,_cadPendente.cargo,_cadPendente.fone,_cadPendente.token,code);
     irHome();
+    showToast('✅ WhatsApp confirmado!');
   }catch(e){
     err.textContent=e.message;err.style.display='block';
     Array.from(d).forEach(x=>x.value='');
@@ -393,6 +430,7 @@ function irHome(){
   ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
+  mostrarAvisoConfirmacao();    // faixa "Confirme seu WhatsApp" (só para quem entrou sem confirmar)
   if(!_acessoVerificado){ _acessoVerificado=true; verificarAcesso(); renovarChave(); }
   if(!_deepLinkFeito){                 // ?mod=... / ?ir=... abre direto SÓ na 1ª carga; voltar nunca reabre
     _deepLinkFeito=true;
@@ -755,7 +793,7 @@ const LEIT = { key:null, plano:'livre', meta:1, iniciado:null, set:new Set(), da
 // recusa (a rota ficou sem trava ate 23/09/2026 e dava pra apagar o ano de
 // leitura de qualquer pastor). Cabecalho, nunca na URL.
 function _cab(extra){ var h=extra||{}; var k=getChave(); if(k) h['x-radar-chave']=k; return h; }
-function leitKey(){ var u=getUser()||{}; if(u.whatsapp) return u.whatsapp.replace(/\D/g,''); return (u.id||'anon'); }
+function leitKey(){ var u=getUser()||{}; if(u.whatsapp && u.confirmado!==false) return u.whatsapp.replace(/\D/g,''); return (u.id||'anon'); }   // não confirmado = identidade do aparelho (12/10/2026)
 function _ck(abbrev,cap){ return abbrev.toLowerCase()+'|'+cap; }
 function leitLido(abbrev,cap){ return LEIT.set.has(_ck(abbrev,cap)); }
 function _fmtDia(dt){ var m=dt.getMonth()+1, d=dt.getDate(); return dt.getFullYear()+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d); }
@@ -959,6 +997,9 @@ function renderPerfil(){
   document.getElementById('pf-cargo').textContent=u.cargo||'—';
   const fone=u.whatsapp||'';
   document.getElementById('pf-fone').textContent = fone ? ('📱 '+fone) : '';
+  if(fone && u.confirmado===false){   // entrou sem confirmar: mostra o aviso e o atalho para confirmar
+    document.getElementById('pf-fone').innerHTML='📱 '+String(fone).replace(/\D/g,'')+' · <a onclick="confirmarWhatsApp()" style="color:#a9791c;font-weight:800;text-decoration:underline;cursor:pointer">confirmar WhatsApp</a>';
+  }
   const ini=(nome.trim()[0]||'?').toUpperCase();
   document.getElementById('pf-avatar').textContent=ini;
   atualizarFsUI();
