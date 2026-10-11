@@ -2729,7 +2729,8 @@ function abrirLicaoDetalhe(idx){
      ativo:!!lic.apoio,
      tap:lic.apoio?`abrirReader(${idx},'apoio',this)`:null},
     {num:'4',icon:'🧠',nome:'MAPA MENTAL',
-     ativo:false,tap:null},
+     ativo:lic.n>0 && ebdTurmaAtual==='adulto4',
+     tap:lic.n>0 && ebdTurmaAtual==='adulto4'?`abrirReader(${idx},'mapa')`:null},
     {num:'5',icon:'📰',nome:'REVISTA CRISTÃO ALERTA',
      ativo:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4'),
      tap:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4')?`abrirReader(${idx},'subsidio')`:null},
@@ -2793,7 +2794,7 @@ function ebdMarcarConcluida(idx){
 function abrirReader(idx,tipo){
   const lic=EBD_LICOES[ebdTurmaAtual][idx];
   const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
-  const tipoLabel=tipo==='licao'?'LIÇÃO':tipo==='apoio'?'APOIO':tipo==='professor'?'MATERIAL DO PROFESSOR':tipo==='devocional'?'DEVOCIONAL':'CRISTÃO ALERTA';
+  const tipoLabel=tipo==='licao'?'LIÇÃO':tipo==='apoio'?'APOIO':tipo==='professor'?'MATERIAL DO PROFESSOR':tipo==='devocional'?'DEVOCIONAL':tipo==='mapa'?'MAPA MENTAL':'CRISTÃO ALERTA';
   document.getElementById('reader-titulo').textContent=tipoLabel+' — '+nLabel;
   document.getElementById('reader-sub').textContent=lic.titulo;
   const n=String(lic.n).padStart(2,'0');
@@ -5652,6 +5653,7 @@ const _crmInitMap = {
           out.push('/ebd/'+t+'/html/professor-'+nn+'.html');
           out.push('/ebd/'+t+'/html/devocional-'+nn+'.html');
           out.push('/ebd/'+t+'/html/subsidio-'+nn+'.html');
+          out.push('/ebd/'+t+'/html/mapa-'+nn+'.html');
         }
       });
     });
