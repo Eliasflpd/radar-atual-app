@@ -84,8 +84,12 @@ export default async function handler(req) {
     try {
       const fr = await fetch('https://api.fonnte.com/send', {
         method: 'POST',
-        headers: { 'Authorization': FONNTE_TOKEN, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target: alvoFonnte, message: msg, typing: false, delay: 1 })
+        // ⚠️ 12/10/2026 — O FONNTE NÃO LÊ CORPO EM JSON: devolvia "invalid/empty body value" e o código
+        // NUNCA saía (era isso que as pessoas relatavam). Ele espera formulário (form-urlencoded).
+        // countryCode=0: o número já vai completo, com o código do país; sem isso o Fonnte pode
+        // tentar "corrigir" o prefixo pelo país padrão dele.
+        headers: { 'Authorization': FONNTE_TOKEN },
+        body: new URLSearchParams({ target: alvoFonnte, message: msg, typing: 'false', delay: '1', countryCode: '0' })
       });
       const fj = await fr.json().catch(() => ({}));
       if (!fr.ok || (fj && (fj.status === false || fj.status === 'false'))) {
