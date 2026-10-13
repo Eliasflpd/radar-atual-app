@@ -39,7 +39,7 @@ async function painel(req, res){
   const ADM = process.env.RADAR_ADMIN_TOKEN;
   if(!ADM || q.token !== ADM){ res.status(403).json({ ok:false, err:'token' }); return; }
 
-  const cs = process.env.RADAR_DB;
+  const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   if(!cs){ res.status(200).json({ ok:false, off:true, err:'db não configurado' }); return; }
 
   const c = new Client({ connectionString: cs, ssl:{ rejectUnauthorized:false } });
@@ -312,7 +312,7 @@ async function uso(req, res){
   const itens = cru.slice(0, USO_MAX_LOTE).map(usoLimpaRegistro).filter(Boolean);
   if(!itens.length){ res.status(400).json({ ok:false, err:'tela obrigatória' }); return; }
 
-  const cs = process.env.RADAR_DB;
+  const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   if(!cs){ res.status(200).json({ ok:true, salvo:false, off:true }); return; }
 
   const c = new Client({ connectionString: cs, ssl:{ rejectUnauthorized:false } });
@@ -431,7 +431,7 @@ async function pregado(req, res){
     return;
   }
 
-  const cs = process.env.RADAR_DB;
+  const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   if(!cs){ res.status(200).json({ ok:true, itens:[], off:true, salvo:false }); return; }
 
   const c = new Client({ connectionString: cs, ssl:{ rejectUnauthorized:false } });

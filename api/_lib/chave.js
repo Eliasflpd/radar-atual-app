@@ -264,7 +264,7 @@ module.exports = async (req, res) => {
   const veio = b.token;
   if (!ADM || veio !== ADM) { res.status(403).json({ ok: false, motivo: 'token' }); return; }
 
-  const cs = process.env.RADAR_DB;
+  const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   if (!cs) { res.status(200).json({ ok: false, motivo: 'db_fora' }); return; }
 
   const c = new Client({ connectionString: cs, ssl: { rejectUnauthorized: false } });

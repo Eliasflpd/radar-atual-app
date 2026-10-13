@@ -273,7 +273,7 @@ module.exports = async (req, res) => {
   const chave = chaveDe(b.user != null ? b.user : q.user);
   if (!chave) { res.status(200).json({ ok: true, lembro: false, sem_dono: true, temas: [] }); return; }
 
-  const cs = process.env.RADAR_DB;
+  const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   // SEM BANCO A MEMÓRIA SIMPLESMENTE NÃO EXISTE — e isso é dito, não escondido.
   // O globo prefere dizer "não lembro" a fingir que lembra.
   if (!cs) { res.status(200).json({ ok: true, lembro: false, off: true, temas: [] }); return; }

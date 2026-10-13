@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers','Content-Type');
   if(req.method==='OPTIONS'){ res.status(200).end(); return; }
 
-  const cs=process.env.RADAR_DB;
+  const cs=(process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   if(!cs){ res.status(200).json({ok:false, off:true}); return; }  // sem DB = não quebra o app
   const c=new Client({connectionString:cs, ssl:{rejectUnauthorized:false}});
   try{

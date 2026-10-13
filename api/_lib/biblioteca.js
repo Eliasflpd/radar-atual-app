@@ -122,7 +122,7 @@ module.exports = async (req, res) => {
   if (pergunta.length < 3) { res.status(400).json({ ok: false, err: 'pergunta curta' }); return; }
   const quantos = Math.min(parseInt(b.n || q.n || '6', 10) || 6, 12);
 
-  const cs = process.env.RADAR_DB;
+  const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   if (!cs) { res.status(200).json({ ok: false, off: true, err: 'db não configurado' }); return; }
 
   const v = await embutirPergunta(pergunta);

@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
-  const cs = process.env.RADAR_DB;
+  const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   // Sem banco a lista simplesmente vem vazia: as páginas continuam mostrando
   // as publicações estáticas antigas em vez de quebrar na cara do pastor.
   if (!cs) {
