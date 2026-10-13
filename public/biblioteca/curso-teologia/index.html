@@ -326,7 +326,8 @@ async function entrar(){
       try{ localStorage.setItem('curso_senha', s); }catch(_){}
       DADOS=d; render();
     }else{
-      $('erro').textContent='Senha incorreta.';
+      /* só diz "senha incorreta" quando o servidor realmente recusou a senha (403); se o servidor/banco falhou, avisa a verdade */
+      $('erro').textContent=(r.status===403)?'Senha incorreta.':'O curso está fora do ar agora (o servidor não conseguiu abrir o banco de dados). Não é a sua senha — tente mais tarde.';
       $('btnEntrar').disabled=false;
     }
   }catch(e){ $('erro').textContent='Sem conexão. Tente de novo.'; $('btnEntrar').disabled=false; }
