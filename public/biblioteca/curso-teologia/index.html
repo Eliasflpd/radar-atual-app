@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="color-scheme" content="only light">
+<!-- sem Referer: o Drive só entrega o MP4 ao player nativo se o pedido NÃO diz de qual site veio (com Referer devolve uma página HTML e o vídeo dá "formato inválido") -->
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cursos de Teologia — RADAR</title>
 <style>
@@ -185,6 +187,55 @@
   #player .vbox iframe,#player .vbox video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;object-fit:contain}
   #player .prox{padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:#0f1d2e;color:#cfe0ee;font-size:.85rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
   #player .prox button{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-family:inherit;cursor:pointer}
+  /* ===== PLAYER NATIVO (controles grandes pro celular) ===== */
+  body.pl-on #radar-uso-selo{display:none!important}
+  #player:not(.compacto) .vwrap{flex:0 0 auto;padding:0 8px}
+  #player .vbox{touch-action:manipulation;user-select:none;-webkit-user-select:none}
+  #player .vbox video{background:#000}
+  #player .vflash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-size:1.6rem;font-weight:900;color:#fff;opacity:0;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+  #player .vflash.on{animation:vfl .65s ease-out}
+  @keyframes vfl{0%{opacity:0;transform:scale(.8)}15%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
+  #player .vspin{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,.35);color:#fff;font-weight:700;font-size:.9rem;pointer-events:none}
+  #player .vspin.on{display:flex}
+  #player .vspin i{width:38px;height:38px;border-radius:50%;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;animation:vgira .8s linear infinite}
+  @keyframes vgira{to{transform:rotate(360deg)}}
+  #player .vfalha{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;background:rgba(10,20,32,.94);color:#fff;text-align:center;font-size:.92rem;line-height:1.4}
+  #player .vfalha button{background:var(--teal);color:#fff;border:none;border-radius:11px;padding:12px 16px;font-weight:800;font-family:inherit;font-size:.95rem;cursor:pointer;min-height:48px}
+  #player .vfalha button.sec{background:rgba(255,255,255,.16)}
+  #player .ctl{background:#0f1d2e;padding:6px 14px 4px;color:#fff;transition:opacity .25s}
+  #player:not(.compacto) .ctl{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0}
+  #player .seekrow{display:flex;align-items:center;gap:10px;font-size:.82rem;font-variant-numeric:tabular-nums;color:#cfe0ee}
+  #player .seekrow span{min-width:44px}
+  #player .seekrow span:last-child{text-align:right}
+  #player #seek{flex:1;-webkit-appearance:none;appearance:none;height:44px;background:transparent;margin:0;cursor:pointer;touch-action:none}
+  #player #seek::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,#3fb7c4 var(--p,0%),rgba(255,255,255,.38) var(--p,0%))}
+  #player #seek::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.22)}
+  #player #seek::-moz-range-progress{height:6px;border-radius:3px;background:#3fb7c4}
+  #player #seek::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid #3fb7c4;margin-top:-10px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  #player #seek::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid #3fb7c4}
+  #player .btnrow{display:flex;align-items:center;justify-content:center;gap:26px;padding:2px 0 8px}
+  #player .btnrow button{background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:50%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+  #player .btnrow button:active{transform:scale(.93);background:rgba(255,255,255,.22)}
+  #player .btnrow button.pp{width:78px;height:78px;background:var(--teal);box-shadow:0 6px 18px rgba(15,109,120,.45)}
+  #player .btnrow svg{width:34px;height:34px;fill:#fff;display:block}
+  #player .btnrow .pp svg{width:42px;height:42px}
+  #player .chiprow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 0 6px}
+  #player .chip{background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:999px;padding:0 15px;min-height:44px;font-weight:800;font-family:inherit;font-size:.88rem;cursor:pointer}
+  #player .chip:active{background:rgba(255,255,255,.24)}
+  #player .ptoast{position:absolute;left:12px;right:12px;top:calc(58px + env(safe-area-inset-top));display:none;align-items:center;justify-content:space-between;gap:10px;background:rgba(15,29,46,.96);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px 12px;font-size:.88rem;font-weight:700;z-index:3}
+  #player .ptoast.on{display:flex}
+  #player .ptoast button{background:var(--teal);color:#fff;border:none;border-radius:9px;padding:9px 12px;font-weight:800;font-family:inherit;cursor:pointer;min-height:40px}
+  /* celular deitado / tela cheia: vídeo ocupa tudo, barras viram sobreposição que some sozinha */
+  #player.compacto .pbar{position:absolute;left:0;right:0;top:0;z-index:2;background:linear-gradient(rgba(0,0,0,.8),transparent);padding-bottom:18px}
+  #player.compacto .ctl{position:absolute;left:0;right:0;bottom:0;z-index:2;background:linear-gradient(transparent,rgba(0,0,0,.88) 40%);padding-top:26px}
+  #player.compacto .prox{display:none}
+  #player.compacto .vwrap{padding:0}
+  #player.compacto .vbox{max-width:none;aspect-ratio:auto;width:100%;height:100%;border-radius:0}
+  #player.compacto .btnrow{padding:0 0 2px;gap:34px}
+  #player.compacto .btnrow button{width:54px;height:54px}
+  #player.compacto .btnrow button.pp{width:62px;height:62px}
+  #player.compacto .chiprow{padding-bottom:2px}
+  #player.compacto.escondido .pbar,#player.compacto.escondido .ctl{opacity:0;pointer-events:none}
   .carregando{text-align:center;color:var(--suave);padding:40px 20px}
   .quem-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 12px}
   .quem-pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--linha);border-radius:999px;padding:7px 14px 7px 10px;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(15,61,92,.08)}
@@ -237,6 +288,21 @@
       <button class="pchk" id="p-chk" onclick="toggleVistaPlayer()">✓ Concluída</button>
     </div>
     <div class="vwrap"></div>
+    <div class="ctl" id="ctl" style="display:none">
+      <div class="seekrow"><span id="t-cur">0:00</span><input type="range" id="seek" min="0" max="1000" value="0" aria-label="Posição do vídeo"><span id="t-dur">0:00</span></div>
+      <div class="btnrow">
+        <button onclick="plPular(-15)" aria-label="Voltar 15 segundos"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/><text x="12" y="16.6" text-anchor="middle" font-size="7.2" font-weight="800" font-family="Arial,sans-serif" fill="#fff">15</text></svg></button>
+        <button class="pp" id="pp" onclick="plToggle()" aria-label="Tocar ou pausar"></button>
+        <button onclick="plPular(15)" aria-label="Avançar 15 segundos"><svg viewBox="0 0 24 24"><g transform="translate(24,0) scale(-1,1)"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></g><text x="12" y="16.6" text-anchor="middle" font-size="7.2" font-weight="800" font-family="Arial,sans-serif" fill="#fff">15</text></svg></button>
+      </div>
+      <div class="chiprow">
+        <button class="chip" onclick="plPular(-60)" aria-label="Voltar 1 minuto">−1 min</button>
+        <button class="chip" id="vel" onclick="plVel()" aria-label="Velocidade">1×</button>
+        <button class="chip" onclick="plPular(60)" aria-label="Avançar 1 minuto">+1 min</button>
+        <button class="chip" id="fs" onclick="plTela()" aria-label="Tela cheia">⛶ Tela cheia</button>
+      </div>
+    </div>
+    <div class="ptoast" id="ptoast"><span id="ptoast-t"></span><button id="ptoast-b" onclick="plToastAcao()"></button></div>
     <div class="prox">
       <span id="p-mod"></span>
       <button id="p-prox" style="display:none" onclick="proximaAula()">Próxima aula ›</button>
@@ -301,7 +367,10 @@ function estaVista(u){ try{ return localStorage.getItem('curso_vista_'+PERFIL+'_
 function salvarPos(u,t){ try{ localStorage.setItem('curso_pos_'+PERFIL+'_'+keyU(u), String(Math.floor(t))); }catch(_){} syncProg(u,{pos:Math.floor(t)}); }
 function lerPos(u){ try{ return parseInt(localStorage.getItem('curso_pos_'+PERFIL+'_'+keyU(u))||'0',10)||0; }catch(_){ return 0; } }
 // última aula aberta por curso (pra "continuar de onde parou") — por perfil
-function salvarUltima(slug,gi){ try{ localStorage.setItem('curso_ultima_'+PERFIL+'_'+slug, String(gi)); }catch(_){} }
+function salvarUltima(slug,gi){ try{ localStorage.setItem('curso_ultima_'+PERFIL+'_'+slug, String(gi)); localStorage.setItem('curso_ult_curso_'+PERFIL, slug); }catch(_){} }
+function lerUltimoCurso(){ try{ return localStorage.getItem('curso_ult_curso_'+PERFIL)||''; }catch(_){ return ''; } }
+// "parou em 23:41" (só se começou e ainda não concluiu)
+function parouEm(a){ const p=lerPos(a.url); return (p>10 && !estaVista(a.url)) ? ' · parou em '+fmtT(p) : ''; }
 function lerUltima(slug){ try{ const v=localStorage.getItem('curso_ultima_'+PERFIL+'_'+slug); return v===null?-1:(parseInt(v,10)); }catch(_){ return -1; } }
 
 // ===== NUVEM: grava onde cada pessoa parou + serve pra contar quem está estudando =====
@@ -334,6 +403,20 @@ async function entrar(){
 }
 $('senha').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); entrar(); } });
 
+// cartão "Continuar de onde parou" na tela inicial: 1 toque e já está no vídeo, no minuto certo
+function continuarHome(cursos){
+  // acha, em qualquer curso, a última aula que a pessoa deixou no meio (ou aberta e ainda não concluída)
+  const pref=lerUltimoCurso(); let ach=null;
+  cursos.forEach(cs=>{
+    const ult=lerUltima(cs.curso); if(ult<0) return;
+    const flat=[]; cs.modulos.forEach(m=>m.aulas.forEach(a=>flat.push({m:m.nome,a})));
+    const it=flat[ult]; if(!it) return;
+    const pos=lerPos(it.a.url); if(estaVista(it.a.url) && pos<=10) return;
+    if(!ach || cs.curso===pref) ach={cs,it,ult,pos};
+  });
+  if(!ach) return '';
+  return `<div class="resume" onclick="abrirCurso('${ach.cs.curso}');abrir(${ach.ult})"><div class="ic">▶</div><div class="rt"><small>Continuar de onde parou${ach.pos>10?' · '+fmtT(ach.pos):''}</small><b>${limpaModulo(ach.it.m)} · Aula ${ach.it.a.ordem}</b></div><div class="go">›</div></div>`;
+}
 // NÍVEL 1 — lista de cursos (cada curso é um card; clica pra entrar)
 function render(){
   $('gate').style.display='none';
@@ -344,6 +427,7 @@ function render(){
     <button class="quem-pill" onclick="abrirQuem()"><span class="qe">${pa.emoji||'👤'}</span><b class="qn">${pa.nome}</b><span class="qc">⌄</span></button>
     <span class="quem-hint">toque no nome pra trocar quem está estudando</span>
   </div>
+  ${continuarHome(cursos)}
   <div class="lista-tit">Meus cursos</div>`;
   cursos.forEach(cs=>{
     const m=meta(cs.curso);
@@ -480,12 +564,12 @@ function proximaAlvo(cs){
 function bannerResume(cs){
   if(!PLANO.length) return '';
   const gi=proximaAlvo(cs); const p=PLANO[gi]; if(!p) return '';
-  const algum = cs.modulos.some(mo=>mo.aulas.some(a=>estaVista(a.url)));
+  const algum = lerPos(p.a.url)>10 || cs.modulos.some(mo=>mo.aulas.some(a=>estaVista(a.url)));
   const rot = algum? 'Continuar de onde parou' : 'Começar o curso';
   const ic = algum? '▶' : '🎬';
   return `<div class="resume" onclick="abrir(${gi})">
     <div class="ic">${ic}</div>
-    <div class="rt"><small>${rot}</small><b>${limpaAula(p.a.titulo)}</b></div>
+    <div class="rt"><small>${rot}${(lerPos(p.a.url)>10&&!estaVista(p.a.url))?' · '+fmtT(lerPos(p.a.url)):''}</small><b>${limpaAula(p.a.titulo)}</b></div>
     <div class="go">›</div></div>`;
 }
 // marcar/desmarcar aula concluída direto na lista (não abre o player)
@@ -653,7 +737,7 @@ function toggleMod(mi){
       cont.innerHTML=m.aulas.map(a=>`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${a._gi}" data-t="${(limpaAula(a.titulo)||'').toLowerCase().replace(/"/g,'')}" onclick="abrir(${a._gi})">
         <div class="chk" title="Marcar como concluída" onclick="toggleVistaAula(event,${a._gi})">✓</div>
         <div class="pl">▶</div>
-        <div class="txt">${limpaAula(a.titulo)}<small>Aula ${a.ordem}</small></div></div>`).join('');
+        <div class="txt">${limpaAula(a.titulo)}<small>Aula ${a.ordem}${parouEm(a)}</small></div></div>`).join('');
     }
     cont.dataset.pronto='1';
   }
@@ -717,45 +801,257 @@ function abrirModuloSolo(mi){
     body+=m.aulas.map(a=>'<div class="aula '+(estaVista(a.url)?'vista':'')+'" data-gi="'+a._gi+'" onclick="abrir('+a._gi+')" style="background:#fff;margin-bottom:8px;border-radius:12px">'
       +'<div class="chk" title="Marcar como concluída" onclick="toggleVistaAula(event,'+a._gi+')">✓</div>'
       +'<div class="pl">▶</div>'
-      +'<div class="txt">'+limpaAula(a.titulo)+'<small>Aula '+a.ordem+'</small></div></div>').join('');
+      +'<div class="txt">'+limpaAula(a.titulo)+'<small>Aula '+a.ordem+parouEm(a)+'</small></div></div>').join('');
   }
   document.getElementById('mod-solo-body').innerHTML=body;
   ov.style.display='block'; ov.scrollTop=0;
 }
 
 function idDrive(url){ const m=(url||'').match(/\/d\/([^/]+)/)||(url||'').match(/[?&]id=([^&]+)/); return m?m[1]:''; }
+// ===================== PLAYER NATIVO DO CURSO (v2, 14/10/2026) =====================
+// POR QUE EXISTE: o vídeo rodava dentro do iframe do Drive. O iframe não deixa o app saber em que
+// minuto a pessoa está (não dava para retomar), não tem controles pensados pro celular e, no A22,
+// depois de ~30 min ele travava e só reiniciando o app. Agora o vídeo toca num <video> nativo,
+// direto do arquivo do Drive (drive.usercontent.google.com aceita Range = dá pra adiantar/voltar),
+// com controles grandes, posição salva a cada 5 s, e um "guarda" que religa o vídeo sozinho,
+// no minuto exato, se ele parar de andar. Se o Drive recusar o arquivo (cota), abre o player antigo.
+const PL={falhou:false,v:null,url:'',gi:-1,alvo:0,avisar:false,quer:false,tries:0,lastT:-1,lastMove:0,okDesde:0,wd:null,
+  drag:false,ultSalva:0,hideT:null,wl:null,fb:false,tapT:0,tapW:0,rec:false,concl:false,errCod:0};
+const SALTO=15, VELS=[1,1.25,1.5,1.75,2,0.75];
+const IC_PLAY='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+const IC_PAUSE='<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+
+function fmtT(s){ s=Math.max(0,Math.floor(s||0)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
+  return (h? h+':'+String(m).padStart(2,'0') : m)+':'+String(x).padStart(2,'0'); }
+function srcDe(url){ const g=idDrive(url); return g ? ('/api/curso-video?id='+encodeURIComponent(g)) : url; }   // o repasse do RADAR busca no Drive (o Google recusa o navegador direto)
+function modoCompacto(){ try{ return !!document.fullscreenElement || window.matchMedia('(orientation:landscape) and (max-height:520px)').matches; }catch(_){ return false; } }
+function plCompacto(){ const p=$('player'); const c=modoCompacto(); p.classList.toggle('compacto',c); if(!c) p.classList.remove('escondido'); plAltura(); }
+function plAltura(){ const c=$('ctl'); if(c) $('player').style.setProperty('--ctlh',(c.offsetHeight||300)+'px'); }
+
 function abrir(gi){
-  atual=gi; const p=PLANO[gi]; if(!p) return;
-  salvarUltima(CURSO_ATUAL, gi);
-  $('player').classList.add('on');
+  const p=PLANO[gi]; if(!p) return;
+  if(PL.v) plParar(true);                       // guarda o ponto da aula que estava tocando
+  atual=gi; salvarUltima(CURSO_ATUAL, gi);
+  $('player').classList.add('on'); document.body.classList.add('pl-on');
   $('p-titulo').textContent=limpaAula(p.a.titulo);
   $('p-mod').textContent=limpaModulo(p.m);
-  const vw=document.querySelector('#player .vwrap');
-  const url=p.a.url||'';
-  const gid=idDrive(url);
-  if(gid || /drive\.google\.com/.test(url)){
-    // vídeo do Drive embutido DENTRO do app (a pessoa não sai do app)
-    const emb = gid ? ('https://drive.google.com/file/d/'+gid+'/preview') : url;
-    vw.innerHTML='<div class="vbox"><iframe src="'+emb+'" allow="autoplay; fullscreen" allowfullscreen playsinline></iframe></div>';
-    marcarVista(url,true);
-    const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista');
-    atualizarProgresso();
-  } else {
-    vw.innerHTML='<div class="vbox"><video id="vid" controls playsinline preload="metadata"></video></div>';
-    const v=$('vid'); v.src=url;
-    const pos=lerPos(url);
-    v.onloadedmetadata=()=>{ if(pos>5 && pos<v.duration-10){ v.currentTime=pos; } };
-    v.ontimeupdate=()=>{ if(v.currentTime>0) salvarPos(url,v.currentTime); };
-    v.onended=()=>{ marcarVista(url,true); const el=document.querySelector('.aula[data-gi="'+gi+'"]'); if(el) el.classList.add('vista'); syncPlayerChk(); atualizarProgresso(); };
-    v.play().catch(()=>{});
-  }
-  $('p-prox').style.display = (gi+1<PLANO.length)?'inline-block':'none';
+  PL.url=p.a.url||''; PL.gi=gi; PL.tries=0; PL.fb=false; PL.falhou=false; PL.concl=estaVista(PL.url);
+  try{ if(!history.state || !history.state.pl) history.pushState({pl:1},''); }catch(_){}   // botão "voltar" do celular fecha o player
+  plMontar();
+  $('p-prox').style.display=(gi+1<PLANO.length)?'inline-block':'none';
   syncPlayerChk();
 }
+
+function plMontar(){
+  const vw=document.querySelector('#player .vwrap');
+  vw.innerHTML='<div class="vbox" id="vbox"><video id="vid" playsinline webkit-playsinline preload="metadata"></video>'
+    +'<div class="vflash" id="vflash"></div><div class="vspin on" id="vspin"><i></i><span id="vspin-t">Carregando…</span></div></div>';
+  const v=$('vid'); PL.v=v; $('ctl').style.display='';
+  const on=(ev,fn)=>v.addEventListener(ev,e=>{ if(PL.v===v) fn(e); });
+  PL.alvo=lerPos(PL.url); PL.avisar=true; PL.quer=true; PL.rec=false; PL.lastT=-1; PL.lastMove=Date.now(); PL.okDesde=Date.now(); PL.ultSalva=0; PL.errCod=0;
+  let vel=1; try{ vel=parseFloat(localStorage.getItem('curso_vel'))||1; }catch(_){}
+  v.defaultPlaybackRate=vel; v.playbackRate=vel; $('vel').textContent=(vel+'').replace('.',',')+'×';
+  on('loadedmetadata',plMeta);
+  on('timeupdate',plTick);
+  on('play',()=>{ PL.quer=true; plBotoes(); plWake(true); plAgendarEsconder(); });
+  on('playing',()=>{ plSpin(false); plBotoes(); });
+  on('pause',()=>{ if(!PL.rec && !v.ended){ PL.quer=false; } plBotoes(); plSalvar(true); plWake(false); plMostrar(); });
+  on('waiting',()=>plSpin(true,'Carregando…'));
+  on('stalled',()=>{ if(!v.paused) plSpin(true,'Carregando…'); });
+  on('canplay',()=>plSpin(false));
+  on('seeked',()=>{ plSpin(false); plSalvar(true); });
+  on('seeking',()=>{ plSalvar(true); if(v.readyState<3) plSpin(true,'Carregando…'); });
+  on('ended',plFim);
+  on('error',plErro);
+  on('ratechange',()=>{ $('vel').textContent=(v.playbackRate+'').replace('.',',')+'×'; });
+  const vb=$('vbox'); vb.addEventListener('click',plToque);
+  const sk=$('seek');
+  sk.oninput=()=>{ PL.drag=true; const d=v.duration||0; $('t-cur').textContent=fmtT(sk.value/1000*d); sk.style.setProperty('--p',(sk.value/10)+'%'); };
+  sk.onchange=()=>{ const d=v.duration||0; if(d){ v.currentTime=sk.value/1000*d; } PL.drag=false; plMostrar(); };
+  plBotoes(); plMedia(); plCompacto();
+  clearInterval(PL.wd); PL.wd=setInterval(plGuarda,3000);
+  v.src=srcDe(PL.url);
+  const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{ plSpin(false); plBotoes(); });
+}
+
+function plMeta(){
+  const v=PL.v; if(!v) return;
+  $('t-dur').textContent=fmtT(v.duration);
+  const t=PL.alvo; PL.alvo=0;
+  if(t>10 && v.duration && t<v.duration-20){
+    try{ v.currentTime=t; }catch(_){}
+    if(PL.avisar){ plToast('Retomando de '+fmtT(t),'Do início',()=>{ try{ v.currentTime=0; }catch(_){} }); }
+  }
+  PL.avisar=false;
+  if(PL.rec){ PL.rec=false; }
+  if(PL.quer){ const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{ plBotoes(); }); }
+  plMedia(); plPos();
+}
+
+function plTick(){
+  const v=PL.v; if(!v) return;
+  const t=v.currentTime, d=v.duration||0;
+  if(t!==PL.lastT){ PL.lastT=t; PL.lastMove=Date.now(); if(Date.now()-PL.okDesde>20000) PL.tries=0; }
+  if(!PL.drag && d){ const sk=$('seek'); sk.value=Math.round(t/d*1000); sk.style.setProperty('--p',(t/d*100)+'%'); $('t-cur').textContent=fmtT(t); }
+  if(d && $('t-dur').textContent==='0:00') $('t-dur').textContent=fmtT(d);
+  plSalvar(false);
+  if(!PL.concl && d>60 && t/d>=0.92){ PL.concl=true; marcarVista(PL.url,true); const el=document.querySelector('.aula[data-gi="'+PL.gi+'"]'); if(el) el.classList.add('vista'); syncPlayerChk(); atualizarProgresso(); }
+}
+
+// grava o ponto onde parou (a cada 5 s ao tocar; na hora ao pausar/pular/sair)
+function plSalvar(agora){
+  const v=PL.v; if(!v||!PL.url) return;
+  const t=v.currentTime||0; if(t<3) return;
+  const n=Date.now(); if(!agora && n-PL.ultSalva<5000) return;
+  PL.ultSalva=n;
+  const d=v.duration||0;
+  salvarPos(PL.url, (d && t>d-15) ? 0 : t);      // terminou = próxima vez começa do início
+  if(!agora) plPos();
+}
+function plPos(){ try{ const v=PL.v; if(v && 'mediaSession' in navigator && navigator.mediaSession.setPositionState && v.duration && isFinite(v.duration)){
+  navigator.mediaSession.setPositionState({duration:v.duration,playbackRate:v.playbackRate||1,position:Math.min(v.currentTime,v.duration)}); } }catch(_){} }
+
+function plFim(){
+  const v=PL.v; if(!v) return;
+  PL.quer=false; salvarPos(PL.url,0);
+  if(!PL.concl){ PL.concl=true; marcarVista(PL.url,true); const el=document.querySelector('.aula[data-gi="'+PL.gi+'"]'); if(el) el.classList.add('vista'); syncPlayerChk(); atualizarProgresso(); }
+  plBotoes(); plWake(false); plMostrar();
+  if(PL.gi+1<PLANO.length) plToast('Aula concluída ✓','Próxima ›',()=>proximaAula(),12000); else plToast('Aula concluída ✓','',null,6000);
+}
+
+// ---- o "guarda": vídeo parado há 12 s (ou internet caiu e voltou) = religa no mesmo minuto ----
+function plGuarda(){
+  const v=PL.v; if(!v || PL.fb || PL.falhou || !$('player').classList.contains('on') || document.hidden) return;
+  const n=Date.now();
+  if(!v.paused && !v.ended){
+    if(v.currentTime!==PL.lastT){ PL.lastT=v.currentTime; PL.lastMove=n; }
+    else if(n-PL.lastMove>12000){ plRecuperar('parado'); }
+  } else if(PL.quer && !v.ended && v.readyState<2 && n-PL.lastMove>15000){ plRecuperar('carregando'); }
+}
+function plErro(){
+  const v=PL.v; if(!v || PL.fb || !v.getAttribute('src')) return;
+  PL.errCod=(v.error&&v.error.code)||0;
+  if(PL.errCod===4 && PL.tries>=1){ plFalha(); return; }   // o Drive recusou o arquivo (cota): não adianta insistir
+  plRecuperar('erro');
+}
+function plRecuperar(motivo){
+  const v=PL.v; if(!v || PL.fb) return;
+  if(!navigator.onLine){ plSpin(true,'Sem internet — volta sozinho quando a rede voltar'); return; }
+  if(PL.tries>=4){ plFalha(); return; }
+  PL.tries++;
+  // minuto certo: o do vídeo agora; se ele já foi zerado por uma tentativa anterior, o que a pessoa estava tentando alcançar; por último, o ponto salvo
+  const t=(v.currentTime>1)?v.currentTime:(PL.alvo>1?PL.alvo:(lerPos(PL.url)||0));
+  PL.rec=true; PL.alvo=t; PL.avisar=false; PL.lastMove=Date.now(); PL.lastT=-1; PL.okDesde=Date.now();
+  plSpin(true,'Reconectando…');
+  try{ v.removeAttribute('src'); v.load(); }catch(_){}
+  v.src=srcDe(PL.url);
+  try{ v.load(); }catch(_){}
+}
+window.addEventListener('online',()=>{ if(PL.v && $('player').classList.contains('on') && PL.quer) plRecuperar('rede'); });
+
+function plFalha(){
+  const vb=$('vbox'); if(!vb || PL.falhou || document.getElementById('vfalha')) return;
+  PL.falhou=true; plSpin(false); PL.rec=false; PL.quer=false; plBotoes();
+  const t=(PL.v&&PL.v.currentTime>1)?PL.v.currentTime:lerPos(PL.url);
+  const d=document.createElement('div'); d.className='vfalha'; d.id='vfalha';
+  d.innerHTML='<div>O vídeo não está respondendo.<br><small style="opacity:.8">'+(t>10?('Você parou em '+fmtT(t)+'. '):'')+'Seu ponto está salvo.</small></div>'
+    +'<button onclick="plTentar()">↻ Tentar de novo</button><button class="sec" onclick="plIframe()">Abrir no player do Drive</button>';
+  vb.appendChild(d);
+}
+function plTentar(){ document.querySelectorAll('.vfalha').forEach(f=>f.remove()); PL.falhou=false; PL.tries=0; PL.quer=true; plRecuperar('manual'); }
+function plIframe(){ // plano B: o player embutido do Drive (sem controles meus)
+  const g=idDrive(PL.url), vb=$('vbox'); if(!vb) return;
+  PL.fb=true; clearInterval(PL.wd); plSalvar(true);
+  try{ PL.v.pause(); PL.v.removeAttribute('src'); PL.v.load(); }catch(_){}
+  PL.v=null; $('ctl').style.display='none'; plWake(false);
+  vb.innerHTML='<iframe src="https://drive.google.com/file/d/'+g+'/preview" allow="autoplay; fullscreen" allowfullscreen playsinline></iframe>';
+}
+
+// ---- controles ----
+function plBotoes(){ const v=PL.v; const pp=$('pp'); if(!pp) return; const toca=!!v && !v.paused && !v.ended; pp.innerHTML=toca?IC_PAUSE:IC_PLAY; pp.setAttribute('aria-label',toca?'Pausar':'Tocar'); }
+function plToggle(){ const v=PL.v; if(!v) return; if(v.paused||v.ended){ plPlay(); } else { plPausa(); } plMostrar(); }
+function plPlay(){ const v=PL.v; if(!v) return; PL.quer=true; if(v.ended){ try{ v.currentTime=0; }catch(_){} } const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{}); }
+function plPausa(){ const v=PL.v; if(!v) return; PL.quer=false; v.pause(); }
+function plPular(d){
+  const v=PL.v; if(!v) return; const dur=v.duration||0;
+  let t=(v.currentTime||0)+d; t=Math.max(0,dur?Math.min(t,dur-1):t);
+  try{ v.currentTime=t; }catch(_){}
+  plFlash((d>0?'+':'−')+(Math.abs(d)>=60?(Math.abs(d)/60)+' min':Math.abs(d)+' s')); plMostrar();
+}
+function plFlash(txt){ const f=$('vflash'); if(!f) return; f.textContent=txt; f.classList.remove('on'); void f.offsetWidth; f.classList.add('on'); }
+function plVel(){ const v=PL.v; if(!v) return; const i=VELS.indexOf(v.playbackRate); const n=VELS[(i+1)%VELS.length];
+  v.playbackRate=n; v.defaultPlaybackRate=n; try{ localStorage.setItem('curso_vel',String(n)); }catch(_){} plFlash((n+'').replace('.',',')+'×'); }
+function plTela(){
+  const el=$('player');
+  try{
+    if(document.fullscreenElement || document.webkitFullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); try{ screen.orientation.unlock(); }catch(_){} }
+    else{ const r=(el.requestFullscreen||el.webkitRequestFullscreen); if(r){ const p=r.call(el); const lock=()=>{ try{ screen.orientation.lock('landscape').catch(()=>{}); }catch(_){} }; if(p&&p.then) p.then(lock).catch(()=>{}); else lock(); } }
+  }catch(_){}
+}
+document.addEventListener('fullscreenchange',()=>{ plCompacto(); const b=$('fs'); if(b) b.textContent=document.fullscreenElement?'⮌ Sair da tela cheia':'⛶ Tela cheia'; });
+window.addEventListener('resize',()=>{ if($('player').classList.contains('on')) plCompacto(); });
+window.addEventListener('orientationchange',()=>setTimeout(()=>{ if($('player').classList.contains('on')) plCompacto(); },250));
+
+// toque no vídeo: 1 toque = tocar/pausar; 2 toques na esquerda/direita = −15/+15 s
+function plToque(e){
+  if(PL.fb) return;
+  const vb=$('vbox'), r=vb.getBoundingClientRect(), x=(e.clientX-r.left)/r.width, n=Date.now();
+  if(PL.tapT && n-PL.tapT<320 && (x<.38||x>.62)){ clearTimeout(PL.tapW); PL.tapT=0; plPular(x<.5?-SALTO:SALTO); return; }
+  PL.tapT=n; clearTimeout(PL.tapW);
+  PL.tapW=setTimeout(()=>{ PL.tapT=0; if(modoCompacto() && $('player').classList.contains('escondido')){ plMostrar(); } else { plToggle(); } },270);
+}
+function plMostrar(){ const p=$('player'); p.classList.remove('escondido'); plAgendarEsconder(); }
+function plAgendarEsconder(){ clearTimeout(PL.hideT); PL.hideT=setTimeout(()=>{ const v=PL.v; if(modoCompacto() && v && !v.paused) $('player').classList.add('escondido'); },3500); }
+
+// aviso curto ("Retomando de 23:41 [Do início]" / "Aula concluída [Próxima]")
+let _toastFn=null, _toastT=0;
+function plToast(txt,btn,fn,ms){ const t=$('ptoast'); if(!t) return; $('ptoast-t').textContent=txt; const b=$('ptoast-b'); b.textContent=btn||''; b.style.display=btn?'':'none'; _toastFn=fn||null; plAltura(); t.classList.add('on'); clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('on'),ms||7000); }
+function plToastAcao(){ const f=_toastFn; $('ptoast').classList.remove('on'); if(f) f(); }
+function plSpin(on,txt){ const s=$('vspin'); if(!s) return; if(txt) $('vspin-t').textContent=txt; s.classList.toggle('on',!!on); }
+
+// tela do celular não apaga enquanto toca
+async function plWake(on){ try{ if(on){ if(!PL.wl && navigator.wakeLock){ PL.wl=await navigator.wakeLock.request('screen'); PL.wl.addEventListener('release',()=>{ PL.wl=null; }); } } else if(PL.wl){ await PL.wl.release(); PL.wl=null; } }catch(_){} }
+// controles na tela de bloqueio / fone de ouvido
+function plMedia(){
+  if(!('mediaSession' in navigator)) return; const p=PLANO[PL.gi]; if(!p) return;
+  try{
+    navigator.mediaSession.metadata=new MediaMetadata({title:limpaAula(p.a.titulo), artist:(meta(CURSO_ATUAL).prof||'').replace(/^com\s+/i,''), album:limpaModulo(p.m), artwork:[{src:'/img/curso/wagner-cordeiro.jpg',sizes:'512x512',type:'image/jpeg'}]});
+    const h=(a,f)=>{ try{ navigator.mediaSession.setActionHandler(a,f); }catch(_){} };
+    h('play',()=>plPlay()); h('pause',()=>plPausa());
+    h('seekbackward',()=>plPular(-SALTO)); h('seekforward',()=>plPular(SALTO));
+    h('seekto',d=>{ if(PL.v && d && d.seekTime!=null){ PL.v.currentTime=d.seekTime; } });
+    h('previoustrack',PL.gi>0?()=>abrir(PL.gi-1):null); h('nexttrack',PL.gi+1<PLANO.length?()=>abrir(PL.gi+1):null);
+  }catch(_){}
+}
+// sair do app / trocar de aba: grava o ponto; ao voltar, se estava tocando e ficou preso, religa
+document.addEventListener('visibilitychange',()=>{
+  if(!PL.v) return;
+  if(document.hidden){ plSalvar(true); }
+  else { if(PL.quer && !PL.v.paused) plWake(true); PL.lastMove=Date.now(); plCompacto(); }
+});
+window.addEventListener('pagehide',()=>{ plSalvar(true); flushSync(); });
+document.addEventListener('keydown',e=>{ if(!PL.v || !$('player').classList.contains('on')) return;
+  if(e.key===' '||e.key==='k'){ e.preventDefault(); plToggle(); } else if(e.key==='ArrowLeft'){ plPular(-SALTO); } else if(e.key==='ArrowRight'){ plPular(SALTO); } else if(e.key==='f'){ plTela(); } });
+
+function plParar(manterAberto){
+  clearInterval(PL.wd); clearTimeout(PL.hideT); clearTimeout(PL.tapW);
+  if(PL.v){ plSalvar(true); try{ PL.v.pause(); PL.v.removeAttribute('src'); PL.v.load(); }catch(_){} }
+  PL.v=null; plWake(false);
+  try{ if(document.fullscreenElement){ document.exitFullscreen(); } }catch(_){}
+  const t=$('ptoast'); if(t) t.classList.remove('on');
+  flushSync();
+}
+
 function syncPlayerChk(){ const p=PLANO[atual]; if(!p)return; const on=estaVista(p.a.url); const b=$('p-chk'); if(b){ b.classList.toggle('on',on); b.textContent=on?'✓ Concluída':'Marcar concluída'; } }
 function toggleVistaPlayer(){ const p=PLANO[atual]; if(!p)return; const nv=!estaVista(p.a.url); marcarVista(p.a.url,nv); const el=document.querySelector('.aula[data-gi="'+atual+'"]'); if(el) el.classList.toggle('vista',nv); syncPlayerChk(); atualizarProgresso(); }
 function proximaAula(){ if(atual+1<PLANO.length) abrir(atual+1); }
-function fecharPlayer(){ try{ const v=$('vid'); if(v){ v.pause(); v.src=''; } }catch(_){} const vw=document.querySelector('#player .vwrap'); if(vw) vw.innerHTML=''; $('player').classList.remove('on'); abrirCurso(CURSO_ATUAL); }
+function fecharPlayer(vindoDoVoltar){
+  plParar(); const vw=document.querySelector('#player .vwrap'); if(vw) vw.innerHTML=''; const c=$('ctl'); if(c) c.style.display='none';
+  $('player').classList.remove('on','compacto','escondido'); document.body.classList.remove('pl-on');
+  try{ if(vindoDoVoltar!==true && history.state && history.state.pl) history.back(); }catch(_){}
+  abrirCurso(CURSO_ATUAL);
+}
+window.addEventListener('popstate',()=>{ if($('player').classList.contains('on')) fecharPlayer(true); });
 
 // auto-desbloqueio (aparelho do Elias): se já entrou antes, não pede senha de novo
 (async function(){

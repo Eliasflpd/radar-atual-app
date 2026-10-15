@@ -1,4 +1,4 @@
-const V='radar-v220';               // cache do SHELL — troca a cada versão do app
+const V='radar-v221';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
 // ⚠️ 27/09/2026 — POR QUE ESTE CACHE EXISTE (bug real: "clico na mensagem e não abre"):
 // o `activate` apagava o cache da versão anterior a CADA subida de versão. Como as
@@ -190,6 +190,12 @@ self.addEventListener('fetch',e=>{
 
   const url=new URL(req.url);
   const mesmaOrigem=(url.origin===self.location.origin);
+
+  // VÍDEO/ÁUDIO e pedidos de trecho (Range) passam DIRETO pela rede (14/10/2026). O service worker não
+  // sabe servir Range (e arquivo de outra origem chega "opaco"): o player do curso (que toca o MP4 do Drive
+  // direto) recebia "offline"/erro, e guardar 100–300 MB de vídeo na memória do SW era uma das causas do
+  // celular travar depois de um tempo assistindo. Sem isto o vídeo vai para o navegador, que faz o resto.
+  if(req.destination==='video' || req.destination==='audio' || req.headers.has('range') || /(^|\.)drive\.usercontent\.google\.com$/.test(url.hostname)) return;
 
   // /api/ = servidor. REDE PRIMEIRO (nunca serve resposta de ontem quando há
   // sinal) e, se a rede cair, a última resposta boa que estiver guardada.
