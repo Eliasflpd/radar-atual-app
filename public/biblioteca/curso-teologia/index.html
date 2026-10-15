@@ -270,6 +270,7 @@
   #player.compacto .btnrow button.pp{width:62px;height:62px}
   #player.compacto .chiprow{padding-bottom:2px}
   #player.compacto.escondido .pbar,#player.compacto.escondido .ctl{opacity:0;pointer-events:none}
+  .novo-tag{display:inline-block;background:#1fa463;color:#fff;font-style:normal;font-size:.56rem;font-weight:800;letter-spacing:.7px;padding:2px 7px;border-radius:20px;margin-left:7px;vertical-align:middle;text-transform:uppercase;box-shadow:0 1px 4px rgba(31,164,99,.4)}
   .carregando{text-align:center;color:var(--suave);padding:40px 20px}
   .quem-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 12px}
   .quem-pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--linha);border-radius:999px;padding:7px 14px 7px 10px;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(15,61,92,.08)}
@@ -444,6 +445,18 @@ function lerPos(u){ try{ return parseInt(localStorage.getItem('curso_pos_'+PERFI
 function salvarUltima(slug,gi){ try{ localStorage.setItem('curso_ultima_'+PERFIL+'_'+slug, String(gi)); localStorage.setItem('curso_ult_curso_'+PERFIL, slug); }catch(_){} }
 function lerUltimoCurso(){ try{ return localStorage.getItem('curso_ult_curso_'+PERFIL)||''; }catch(_){ return ''; } }
 // "parou em 23:41" (só se começou e ainda não concluiu)
+// ===== SELO "NOVA": aula que entrou no app nos últimos 14 dias e que a pessoa ainda não viu =====
+const DIAS_NOVA=14;
+function ehNova(a){ if(!a||!a.criado) return false; const t=Date.parse(a.criado); if(!t) return false; return (Date.now()-t)<DIAS_NOVA*86400000 && !estaVista(a.url); }
+function qtdNovas(cs){ let n=0; cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ if(ehNova(a)) n++; })); return n; }
+function haDias(a){ const d=Math.floor((Date.now()-Date.parse(a.criado))/86400000); return d<=0?'hoje':(d===1?'ontem':'há '+d+' dias'); }
+function blocoNovas(cs){
+  const it=[]; cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ if(ehNova(a)) it.push({a,mo}); }));
+  if(!it.length) return '';
+  it.sort((x,y)=>Date.parse(y.a.criado)-Date.parse(x.a.criado));
+  const lista=it.slice(0,6);
+  return `<div class="sec-mod" style="margin-top:4px;color:#1a8a4a">🆕 Aulas novas (${it.length})</div>`+lista.map(({a,mo})=>`<div class="pdf-link" style="cursor:pointer;background:#effaf3;border-color:#bfe6cf;color:#1d5a3a" onclick="abrir(${a._gi})"><span style="font-size:22px">${a.tipo==='texto'?'📖':'🎬'}</span><span style="flex:1;min-width:0"><b style="display:block;font-size:.95rem;color:#14502f;line-height:1.2">${limpaAula(a.titulo).replace(/s*|s*Dr.?s*Wagner Cordeiros*$/i,'')}</b><span style="font-size:.78rem;color:#2f7a52">${limpaModulo(mo.nome)} · ${haDias(a)}</span></span><span style="color:#1fa463;font-size:1.2rem">›</span></div>`).join('')+(it.length>6?`<div style="font-size:.78rem;color:#2f7a52;margin:-4px 2px 10px">e mais ${it.length-6} nos módulos abaixo</div>`:'')+`<div style="height:6px"></div>`;
+}
 function parouEm(a){ const p=lerPos(a.url); return (p>10 && !estaVista(a.url)) ? ' · parou em '+fmtPos(a,p) : ''; }
 function lerUltima(slug){ try{ const v=localStorage.getItem('curso_ultima_'+PERFIL+'_'+slug); return v===null?-1:(parseInt(v,10)); }catch(_){ return -1; } }
 
@@ -516,7 +529,7 @@ function render(){
       <div class="hglow"></div>
       <img class="hfoto" src="/img/curso/wagner-hero.png" alt="${m.titulo}" onerror="this.style.display='none'">
       <div class="hinfo">
-        <span class="hpill">${m.badge}</span>${feito?'<span class="concluido-tag">✓ Concluído</span>':''}
+        <span class="hpill">${m.badge}</span>${qtdNovas(cs)?`<span class="hpill" style="background:#1fa463;color:#fff;margin-left:6px">🆕 ${qtdNovas(cs)} nova${qtdNovas(cs)>1?'s':''}</span>`:''}${feito?'<span class="concluido-tag">✓ Concluído</span>':''}
         <h1>${m.titulo}</h1>
         <div class="hprof">${m.prof}</div>
         <div class="hstats">
@@ -757,6 +770,7 @@ function abrirCurso(slug){
       </div>
     </div>`}
     ${bannerResume(cs)}
+    ${blocoNovas(cs)}
     ${blocoCasais(cs)}
     ${blocoApostilas(cs)}
     <div class="busca" id="busca-box">
@@ -776,7 +790,7 @@ function abrirCurso(slug){
       : `<div class="n">${m.ordem}</div>`;
     html+=`<div class="mod${temCapas?' mod-cap':''}" data-mi="${mi}"><div class="mod-h" onclick="moduloTap(${mi})">
       ${esq}
-      <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${nA} aula${nA>1?'s':''}</span>${temCapas?`<div class="mbar"><i data-mb="${mi}" style="width:${pctM}%"></i></div>`:''}</div>
+      <div class="ti"><b>${limpaModulo(m.nome)}</b><span>${nA} aula${nA>1?'s':''}${(()=>{ const k=m.aulas.filter(ehNova).length; return k?` · <b style="color:#7be0a8">🆕 ${k} nova${k>1?'s':''}</b>`:''; })()}</span>${temCapas?`<div class="mbar"><i data-mb="${mi}" style="width:${pctM}%"></i></div>`:''}</div>
       <div class="cont" data-mc="${mi}"><b>${feitoMod}</b>/${nA}</div>
       <div class="seta">›</div></div><div class="aulas">`;
     if(!m.aulas.length){ html+=`<div class="vazio-mod">Subindo os vídeos deste módulo…</div>`; }
@@ -835,7 +849,7 @@ function toggleMod(mi){
       cont.innerHTML=m.aulas.map(a=>`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${a._gi}" data-t="${(limpaAula(a.titulo)||'').toLowerCase().replace(/"/g,'')}" onclick="abrir(${a._gi})">
         <div class="chk" title="Marcar como concluída" onclick="toggleVistaAula(event,${a._gi})">✓</div>
         <div class="pl">${a.tipo==='texto'?'📖':'▶'}</div>
-        <div class="txt">${limpaAula(a.titulo)}<small>${a.tipo==='texto'?'Apostila · leitura':'Aula '+a.ordem}${parouEm(a)}</small></div></div>`).join('');
+        <div class="txt">${limpaAula(a.titulo)}${ehNova(a)?'<i class="novo-tag">Nova</i>':''}<small>${a.tipo==='texto'?'Apostila · leitura':'Aula '+a.ordem}${parouEm(a)}</small></div></div>`).join('');
     }
     cont.dataset.pronto='1';
   }
@@ -899,7 +913,7 @@ function abrirModuloSolo(mi){
     body+=m.aulas.map(a=>'<div class="aula '+(estaVista(a.url)?'vista':'')+'" data-gi="'+a._gi+'" onclick="abrir('+a._gi+')" style="background:#fff;margin-bottom:8px;border-radius:12px">'
       +'<div class="chk" title="Marcar como concluída" onclick="toggleVistaAula(event,'+a._gi+')">✓</div>'
       +'<div class="pl">'+(a.tipo==='texto'?'📖':'▶')+'</div>'
-      +'<div class="txt">'+limpaAula(a.titulo)+'<small>'+(a.tipo==='texto'?'Apostila · leitura':'Aula '+a.ordem)+parouEm(a)+'</small></div></div>').join('');
+      +'<div class="txt">'+limpaAula(a.titulo)+(ehNova(a)?'<i class="novo-tag">Nova</i>':'')+'<small>'+(a.tipo==='texto'?'Apostila · leitura':'Aula '+a.ordem)+parouEm(a)+'</small></div></div>').join('');
   }
   document.getElementById('mod-solo-body').innerHTML=body;
   ov.style.display='block'; ov.scrollTop=0;

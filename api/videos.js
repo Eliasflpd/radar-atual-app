@@ -95,14 +95,14 @@ module.exports = async (req, res) => {
           titulo text not null, tipo text not null default 'video', blob_url text,
           tamanho_bytes bigint, criado_em timestamptz default now())`);
         // devolve TODOS os cursos (cada um com seus módulos/aulas) — o app lista vários cursos
-        const rc=await c.query('select curso,modulo_ordem,modulo_nome,aula_ordem,titulo,tipo,blob_url from curso_aulas where blob_url is not null order by curso,modulo_ordem,aula_ordem');
+        const rc=await c.query('select curso,modulo_ordem,modulo_nome,aula_ordem,titulo,tipo,blob_url,criado_em from curso_aulas where blob_url is not null order by curso,modulo_ordem,aula_ordem');
         const byCurso={};
         for(const row of rc.rows){
           const cs=row.curso||'escatologia-ivan-santos';
           if(!byCurso[cs]){ byCurso[cs]={curso:cs, modulos:[], idx:{}, total:0}; }
           const g=byCurso[cs];
           if(g.idx[row.modulo_ordem]===undefined){ g.idx[row.modulo_ordem]=g.modulos.length; g.modulos.push({ordem:row.modulo_ordem,nome:row.modulo_nome,aulas:[]}); }
-          g.modulos[g.idx[row.modulo_ordem]].aulas.push({ordem:row.aula_ordem,titulo:row.titulo,tipo:row.tipo,url:row.blob_url});
+          g.modulos[g.idx[row.modulo_ordem]].aulas.push({ordem:row.aula_ordem,titulo:row.titulo,tipo:row.tipo,url:row.blob_url,criado:row.criado_em});
           g.total++;
         }
         // ordem: escatologia primeiro, depois os demais (alfabético do slug)
@@ -301,6 +301,21 @@ module.exports = async (req, res) => {
         await c.query('insert into push_estado(id,ultimo_envio) values(1,$1) on conflict(id) do update set ultimo_envio=excluded.ultimo_envio',[hojeStr]);
         out.ebd={licao:e.n, ...rb};
       } else { out.ebd={pulou:true, dow:e.dow}; }
+
+      // ===== AULAS NOVAS DO CURSO DE TEOLOGIA — avisa uma vez por lote (15/10/2026) =====
+      try{
+        await c.query('alter table push_estado add column if not exists curso_aviso timestamptz');
+        const e2=(await c.query('select curso_aviso from push_estado where id=1')).rows[0]||{};
+        const desde=e2.curso_aviso||new Date(Date.now()-24*3600*1000);
+        const nv=await c.query("select modulo_nome,titulo,tipo from curso_aulas where criado_em>$1 and criado_em>now()-interval '3 days' and blob_url is not null order by criado_em",[desde]);
+        if(nv.rows.length){
+          const lim=(t)=>String(t||'').replace(/s*|s*Dr.?s*Wagner Cordeiros*$/i,'').trim();
+          const body=nv.rows.length===1?(lim(nv.rows[0].titulo)):(nv.rows.length+' novidades: '+nv.rows.slice(0,3).map(r=>lim(r.titulo)).join(' · ')+(nv.rows.length>3?'…':''));
+          const rn=await enviarPush(c,{title:nv.rows.length===1?(nv.rows[0].tipo==='texto'?'🆕 Nova apostila no curso':'🆕 Nova aula no curso'):'🆕 Novidades no curso de teologia', body:body, url:'/biblioteca/curso-teologia/', tag:'curso-novo'});
+          await c.query('insert into push_estado(id,curso_aviso) values(1,now()) on conflict(id) do update set curso_aviso=excluded.curso_aviso');
+          out.cursoNovo={aulas:nv.rows.length, ...rn};
+        } else { out.cursoNovo={aulas:0}; await c.query('insert into push_estado(id,curso_aviso) values(1,now()) on conflict(id) do update set curso_aviso=excluded.curso_aviso'); }
+      }catch(e){ out.cursoNovo={erro:String(e.message||e).slice(0,120)}; }
 
       res.status(200).json(out);
       return;
