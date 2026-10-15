@@ -387,10 +387,6 @@ const META={
       bio:'Pastor e professor à frente do Instituto Teológico GIOM, com ensino teológico semanal voltado a enriquecer o conhecimento da Palavra de Deus. As aulas percorrem temas como Parakletologia, Escatologia, Batalha Espiritual, o Tabernáculo e a Igreja, entre outros.',
       tags:['Pastor','Professor de Teologia','Instituto Teológico GIOM'],
       foot:'Conteúdo do Instituto Teológico GIOM Online.' }
-  },
-  'giom-a-dois':{
-    titulo:'Giom a Dois', prof:'Estudo para Casais · Instituto Teológico GIOM', foto:'/img/curso/giom-a-dois.png', badge:'Estudo para casais',
-    site:{href:'https://www.instagram.com/giomoficial/', label:'Instituto Teológico GIOM — @giomoficial'}
   }
 };
 function meta(slug){ return META[slug] || {titulo:slug, prof:'', foto:'', badge:'Curso'}; }
@@ -622,6 +618,14 @@ function proximaAlvo(cs){
   if(prim>=0) return prim; // senão, 1ª aula ainda não concluída
   return ult>=0?ult:0;     // tudo concluído: reabre a última
 }
+// destaque do módulo "Giom a Dois | Estudo Para Casais" (fica dentro do Instituto GIOM, como na plataforma)
+function blocoCasais(cs){
+  let it=null; cs.modulos.forEach(mo=>{ if(/Giom a Dois/i.test(mo.nome) && mo.aulas.length && !it) it={mo,a:mo.aulas[0]}; });
+  if(!it) return '';
+  const pos=lerPos(it.a.url), lida=estaVista(it.a.url);
+  const sub=lida?'✓ Assistida':(pos>10?'Parou em '+fmtPos(it.a,pos):'Culto de Casais · 1h20');
+  return `<div class="sec-mod" style="margin-top:4px">💑 Estudo para casais</div><div class="pdf-link" style="cursor:pointer;background:linear-gradient(135deg,#fff3ee,#fff8e6);border-color:#f0cbb8" onclick="abrir(${it.a._gi})"><img src="/img/curso/giom-a-dois.png" alt="" style="width:48px;height:64px;object-fit:cover;border-radius:9px;flex-shrink:0;box-shadow:0 3px 8px rgba(120,40,20,.25)" onerror="this.style.display='none'"><span style="flex:1"><b style="display:block;font-size:1rem;color:#7a2c14">Giom a Dois</b><span style="font-size:.8rem;color:#8a5a3c">Estudo para casais · ${sub}</span></span><span style="color:#b5532c;font-size:1.2rem">›</span></div><div style="height:8px"></div>`;
+}
 // seção "Apostilas": leitura dos textos do curso, em destaque (não só escondidas dentro dos módulos)
 function blocoApostilas(cs){
   const itens=[]; cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ if(a.tipo==='texto') itens.push({a,mo}); }));
@@ -732,6 +736,7 @@ function abrirCurso(slug){
       </div>
     </div>`}
     ${bannerResume(cs)}
+    ${blocoCasais(cs)}
     ${blocoApostilas(cs)}
     <div class="busca" id="busca-box">
       <span class="lupa">🔎</span>
