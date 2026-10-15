@@ -622,6 +622,16 @@ function proximaAlvo(cs){
   if(prim>=0) return prim; // senão, 1ª aula ainda não concluída
   return ult>=0?ult:0;     // tudo concluído: reabre a última
 }
+// seção "Apostilas": leitura dos textos do curso, em destaque (não só escondidas dentro dos módulos)
+function blocoApostilas(cs){
+  const itens=[]; cs.modulos.forEach(mo=>mo.aulas.forEach(a=>{ if(a.tipo==='texto') itens.push({a,mo}); }));
+  if(!itens.length) return '';
+  return `<div class="sec-mod" style="margin-top:4px">📖 Apostilas para ler (${itens.length})</div>`+itens.map(({a,mo})=>{
+    const lida=estaVista(a.url); const pos=lerPos(a.url);
+    const sub=lida?'✓ Lida':(pos>10?'Parou em '+fmtPos(a,pos):'Toque para ler');
+    return `<div class="pdf-link" style="cursor:pointer" onclick="abrir(${a._gi})"><span style="font-size:22px">📖</span><span style="flex:1"><b style="display:block;font-size:.98rem;color:#0f3d5c">${limpaAula(a.titulo)}</b><span style="font-size:.8rem;color:#6b551f">${limpaModulo(mo.nome)} · ${sub}</span></span><span style="color:#a9791c;font-size:1.2rem">›</span></div>`;
+  }).join('')+`<div style="height:6px"></div>`;
+}
 function bannerResume(cs){
   if(!PLANO.length) return '';
   const gi=proximaAlvo(cs); const p=PLANO[gi]; if(!p) return '';
@@ -722,6 +732,7 @@ function abrirCurso(slug){
       </div>
     </div>`}
     ${bannerResume(cs)}
+    ${blocoApostilas(cs)}
     <div class="busca" id="busca-box">
       <span class="lupa">🔎</span>
       <input id="busca-aula" type="search" placeholder="Buscar aula por nome…" enterkeyhint="search" oninput="filtrarAulas(this.value)">
