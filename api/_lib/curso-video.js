@@ -56,6 +56,22 @@ export default async function handler(req) {
     return new Response('não consegui conferir a lista do curso', { status: 503, headers: CORS });
   }
 
+  // ?fmt=txt -> APOSTILAS em Markdown (texto pequeno, sem Range). Mesma trava: só arquivo que é aula do curso.
+  // Limite de 2 MB: impede usar esta opção para puxar vídeo inteiro como "texto".
+  if (new URL(req.url).searchParams.get('fmt') === 'txt') {
+    let tup;
+    try {
+      tup = await fetch('https://drive.usercontent.google.com/download?id=' + encodeURIComponent(id) + '&export=download&confirm=t', { redirect: 'follow' });
+    } catch (e) { return new Response('Drive não respondeu', { status: 502, headers: CORS }); }
+    const tl = parseInt(tup.headers.get('content-length') || '0', 10);
+    if (tup.status !== 200 || (tl && tl > 2 * 1024 * 1024) || /text\/html/i.test(tup.headers.get('content-type') || '')) {
+      return new Response('não foi possível ler o texto (' + tup.status + ')', { status: tup.status === 200 ? 413 : 502, headers: CORS });
+    }
+    const corpo = await tup.text();
+    if (corpo.length > 2 * 1024 * 1024) return new Response('texto grande demais', { status: 413, headers: CORS });
+    return new Response(corpo, { status: 200, headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff' } });
+  }
+
   // Range pedido pelo navegador -> limitado a 16 MB
   let range = req.headers.get('range') || 'bytes=0-';
   const m = range.match(/^bytes=(\d*)-(\d*)$/);

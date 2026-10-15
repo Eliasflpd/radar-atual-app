@@ -187,6 +187,40 @@
   #player .vbox iframe,#player .vbox video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;object-fit:contain}
   #player .prox{padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:#0f1d2e;color:#cfe0ee;font-size:.85rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
   #player .prox button{background:var(--teal);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:800;font-family:inherit;cursor:pointer}
+
+  /* ===== LEITOR DE APOSTILAS (Markdown, feito para ler no celular) ===== */
+  #leitor{position:fixed;inset:0;background:#f7f4ec;z-index:60;display:none;flex-direction:column}
+  #leitor.on{display:flex}
+  #leitor .lbar{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;background:var(--navy);color:#fff;box-shadow:0 2px 12px rgba(15,61,92,.25);position:relative}
+  #leitor .lbar button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:10px;min-width:44px;min-height:44px;padding:0 12px;font-weight:800;font-family:inherit;font-size:.95rem;cursor:pointer}
+  #leitor .lbar button:active{background:rgba(255,255,255,.28)}
+  #leitor .lbar .lt{flex:1;min-width:0;font-size:.86rem;font-weight:700;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  #leitor .lprog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.18)}
+  #leitor .lprog i{display:block;height:100%;width:0;background:#e0b04a;transition:width .15s}
+  #leitor .lindice{display:none;position:absolute;left:10px;right:10px;top:calc(60px + env(safe-area-inset-top));max-height:62dvh;overflow:auto;background:#fff;border:1px solid var(--linha);border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.28);z-index:5;padding:6px}
+  #leitor .lindice.on{display:block}
+  #leitor .lindice a{display:block;padding:13px 12px;border-radius:9px;color:#0f3d5c;font-weight:700;font-size:.95rem;text-decoration:none;border-bottom:1px solid #eef1f5}
+  #leitor .lindice a:active{background:#eef4f8}
+  #leitor .lscroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  #leitor .ltexto{max-width:680px;margin:0 auto;padding:22px 20px 40px;font-family:Georgia,'Times New Roman',serif;font-size:var(--lfs,19px);line-height:1.72;color:#222a38}
+  #leitor .ltexto h1{font-size:1.45em;line-height:1.25;color:#0f3d5c;margin:.2em 0 .15em;font-family:'Segoe UI',system-ui,sans-serif}
+  #leitor .ltexto .lautor{font-family:'Segoe UI',system-ui,sans-serif;font-size:.8em;color:#7a6a45;margin:0 0 1.2em;font-style:normal;letter-spacing:.3px}
+  #leitor .ltexto h2{font-family:'Segoe UI',system-ui,sans-serif;font-size:1.12em;line-height:1.3;color:#fff;background:linear-gradient(135deg,#0f3d5c,#0f6d78);border-radius:12px;padding:13px 15px;margin:1.7em 0 .8em;scroll-margin-top:12px}
+  #leitor .ltexto h3{font-family:'Segoe UI',system-ui,sans-serif;font-size:1.02em;color:#0f3d5c;border-left:4px solid #c79233;padding:2px 0 2px 11px;margin:1.5em 0 .5em}
+  #leitor .ltexto p{margin:.7em 0}
+  #leitor .ltexto p.rot{font-family:'Segoe UI',system-ui,sans-serif;font-weight:800;color:#a9791c;font-size:.86em;letter-spacing:.4px;text-transform:uppercase;margin:1.2em 0 .3em}
+  #leitor .ltexto ul{margin:.4em 0 .9em;padding:0;list-style:none}
+  #leitor .ltexto li{position:relative;padding:.35em 0 .35em 1.35em}
+  #leitor .ltexto li::before{content:'';position:absolute;left:.2em;top:1.02em;width:.42em;height:.42em;border-radius:50%;background:#0f6d78}
+  #leitor .ltexto blockquote{margin:1.1em 0;padding:13px 15px;background:#fffdf6;border:1px solid #ecdfba;border-left:5px solid #c79233;border-radius:0 12px 12px 0;font-style:italic;color:#3b3220}
+  #leitor .ltexto blockquote b{font-style:normal;font-family:'Segoe UI',system-ui,sans-serif;font-size:.82em;color:#8a6414;white-space:nowrap}
+  #leitor .ltexto hr{border:none;border-top:1px solid #d9cfb4;margin:1.6em 0}
+  #leitor .lfim{max-width:680px;margin:0 auto;padding:6px 20px calc(34px + env(safe-area-inset-bottom));display:flex;gap:10px;flex-wrap:wrap}
+  #leitor .lfim button{flex:1;min-width:150px;min-height:52px;border:none;border-radius:13px;font-weight:800;font-family:'Segoe UI',system-ui,sans-serif;font-size:1rem;cursor:pointer;background:#0f6d78;color:#fff}
+  #leitor .lfim button.sec{background:#e5e9ef;color:#0f3d5c}
+  #leitor .lfim button.on{background:#1a8a4a;color:#fff}
+  #leitor .lmsg{padding:50px 24px;text-align:center;color:#6b7480;font-family:'Segoe UI',system-ui,sans-serif}
+
   /* ===== PLAYER NATIVO (controles grandes pro celular) ===== */
   body.pl-on #radar-uso-selo{display:none!important}
   #player:not(.compacto) .vwrap{flex:0 0 auto;padding:0 8px}
@@ -309,6 +343,27 @@
     </div>
   </div>
 
+
+  <!-- LEITOR DE APOSTILAS -->
+  <div id="leitor">
+    <div class="lbar">
+      <button onclick="fecharLeitor()" aria-label="Voltar">‹ Voltar</button>
+      <div class="lt" id="l-titulo"></div>
+      <button onclick="lIndice()" aria-label="Índice">☰</button>
+      <button onclick="lFonte(-1)" aria-label="Diminuir a letra" style="font-size:.85rem">A−</button>
+      <button onclick="lFonte(1)" aria-label="Aumentar a letra" style="font-size:1.15rem">A+</button>
+      <div class="lprog"><i id="l-prog"></i></div>
+    </div>
+    <div class="lindice" id="l-indice"></div>
+    <div class="lscroll" id="l-scroll">
+      <div class="ltexto" id="l-texto"><div class="lmsg">Carregando a apostila…</div></div>
+      <div class="lfim" id="l-fim" style="display:none">
+        <button id="l-chk" onclick="lConcluir()">✓ Marcar como lida</button>
+        <button class="sec" id="l-prox" onclick="lProxima()">Próxima aula ›</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 const $=id=>document.getElementById(id);
 let DADOS=null, PLANO=[], atual=-1, CURSO_ATUAL='', PERFIL='';
@@ -374,7 +429,7 @@ function lerPos(u){ try{ return parseInt(localStorage.getItem('curso_pos_'+PERFI
 function salvarUltima(slug,gi){ try{ localStorage.setItem('curso_ultima_'+PERFIL+'_'+slug, String(gi)); localStorage.setItem('curso_ult_curso_'+PERFIL, slug); }catch(_){} }
 function lerUltimoCurso(){ try{ return localStorage.getItem('curso_ult_curso_'+PERFIL)||''; }catch(_){ return ''; } }
 // "parou em 23:41" (só se começou e ainda não concluiu)
-function parouEm(a){ const p=lerPos(a.url); return (p>10 && !estaVista(a.url)) ? ' · parou em '+fmtT(p) : ''; }
+function parouEm(a){ const p=lerPos(a.url); return (p>10 && !estaVista(a.url)) ? ' · parou em '+fmtPos(a,p) : ''; }
 function lerUltima(slug){ try{ const v=localStorage.getItem('curso_ultima_'+PERFIL+'_'+slug); return v===null?-1:(parseInt(v,10)); }catch(_){ return -1; } }
 
 // ===== NUVEM: grava onde cada pessoa parou + serve pra contar quem está estudando =====
@@ -419,7 +474,7 @@ function continuarHome(cursos){
     if(!ach || cs.curso===pref) ach={cs,it,ult,pos};
   });
   if(!ach) return '';
-  return `<div class="resume" onclick="abrirCurso('${ach.cs.curso}');abrir(${ach.ult})"><div class="ic">▶</div><div class="rt"><small>Continuar de onde parou${ach.pos>10?' · '+fmtT(ach.pos):''}</small><b>${limpaModulo(ach.it.m)} · Aula ${ach.it.a.ordem}</b></div><div class="go">›</div></div>`;
+  return `<div class="resume" onclick="abrirCurso('${ach.cs.curso}');abrir(${ach.ult})"><div class="ic">▶</div><div class="rt"><small>Continuar de onde parou${ach.pos>10?' · '+fmtPos(ach.it.a,ach.pos):''}</small><b>${limpaModulo(ach.it.m)} · ${ach.it.a.tipo==='texto'?'Apostila':'Aula '+ach.it.a.ordem}</b></div><div class="go">›</div></div>`;
 }
 // NÍVEL 1 — lista de cursos (cada curso é um card; clica pra entrar)
 function render(){
@@ -575,7 +630,7 @@ function bannerResume(cs){
   const ic = algum? '▶' : '🎬';
   return `<div class="resume" onclick="abrir(${gi})">
     <div class="ic">${ic}</div>
-    <div class="rt"><small>${rot}${(lerPos(p.a.url)>10&&!estaVista(p.a.url))?' · '+fmtT(lerPos(p.a.url)):''}</small><b>${limpaAula(p.a.titulo)}</b></div>
+    <div class="rt"><small>${rot}${(lerPos(p.a.url)>10&&!estaVista(p.a.url))?' · '+fmtPos(p.a,lerPos(p.a.url)):''}</small><b>${limpaAula(p.a.titulo)}</b></div>
     <div class="go">›</div></div>`;
 }
 // marcar/desmarcar aula concluída direto na lista (não abre o player)
@@ -742,8 +797,8 @@ function toggleMod(mi){
     if(m && m.aulas.length){
       cont.innerHTML=m.aulas.map(a=>`<div class="aula ${estaVista(a.url)?'vista':''}" data-gi="${a._gi}" data-t="${(limpaAula(a.titulo)||'').toLowerCase().replace(/"/g,'')}" onclick="abrir(${a._gi})">
         <div class="chk" title="Marcar como concluída" onclick="toggleVistaAula(event,${a._gi})">✓</div>
-        <div class="pl">▶</div>
-        <div class="txt">${limpaAula(a.titulo)}<small>Aula ${a.ordem}${parouEm(a)}</small></div></div>`).join('');
+        <div class="pl">${a.tipo==='texto'?'📖':'▶'}</div>
+        <div class="txt">${limpaAula(a.titulo)}<small>${a.tipo==='texto'?'Apostila · leitura':'Aula '+a.ordem}${parouEm(a)}</small></div></div>`).join('');
     }
     cont.dataset.pronto='1';
   }
@@ -806,8 +861,8 @@ function abrirModuloSolo(mi){
   }else{
     body+=m.aulas.map(a=>'<div class="aula '+(estaVista(a.url)?'vista':'')+'" data-gi="'+a._gi+'" onclick="abrir('+a._gi+')" style="background:#fff;margin-bottom:8px;border-radius:12px">'
       +'<div class="chk" title="Marcar como concluída" onclick="toggleVistaAula(event,'+a._gi+')">✓</div>'
-      +'<div class="pl">▶</div>'
-      +'<div class="txt">'+limpaAula(a.titulo)+'<small>Aula '+a.ordem+parouEm(a)+'</small></div></div>').join('');
+      +'<div class="pl">'+(a.tipo==='texto'?'📖':'▶')+'</div>'
+      +'<div class="txt">'+limpaAula(a.titulo)+'<small>'+(a.tipo==='texto'?'Apostila · leitura':'Aula '+a.ordem)+parouEm(a)+'</small></div></div>').join('');
   }
   document.getElementById('mod-solo-body').innerHTML=body;
   ov.style.display='block'; ov.scrollTop=0;
@@ -836,6 +891,8 @@ function plAltura(){ const c=$('ctl'); if(c) $('player').style.setProperty('--ct
 
 function abrir(gi){
   const p=PLANO[gi]; if(!p) return;
+  if(ehTexto(p.a)){ abrirTexto(gi); return; }
+  if($('leitor').classList.contains('on')){ lGuardar(); $('leitor').classList.remove('on'); LT.ok=false; try{ if(history.state&&history.state.tx) history.replaceState({pl:1},''); }catch(_){} }
   if(PL.v) plParar(true);                       // guarda o ponto da aula que estava tocando
   atual=gi; salvarUltima(CURSO_ATUAL, gi);
   $('player').classList.add('on'); document.body.classList.add('pl-on');
@@ -1058,6 +1115,88 @@ function fecharPlayer(vindoDoVoltar){
   abrirCurso(CURSO_ATUAL);
 }
 window.addEventListener('popstate',()=>{ if($('player').classList.contains('on')) fecharPlayer(true); });
+
+
+// ===================== LEITOR DE APOSTILAS (Markdown) =====================
+// As apostilas da plataforma vinham em PDF; no RADAR nunca PDF: o texto é convertido em Markdown e lido aqui,
+// com letra grande, ajustável, índice por capítulo e posição salva (como o player de vídeo).
+// O arquivo .md fica no Drive e chega pelo repasse do servidor (/api/curso-video?fmt=txt), só para aulas do curso.
+const LT={gi:-1,url:'',ultSalva:0,concl:false,prog:0,ok:false,iv:0};
+function ehTexto(a){ return !!a && a.tipo==='texto'; }
+function fmtPos(a,p){ return ehTexto(a) ? Math.round(p/10)+'%' : fmtT(p); }
+function lEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function lInline(s){ return lEsc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\s][^*]*?)\*/g,'$1<i>$2</i>'); }
+function mdParaHtml(md){
+  const ls=String(md||'').replace(/\r/g,'').split('\n'); let h='', lista=false, par=[], ix=0; const idx=[];
+  const fechaP=()=>{ if(par.length){ h+='<p>'+lInline(par.join(' '))+'</p>'; par=[]; } };
+  const fechaL=()=>{ if(lista){ h+='</ul>'; lista=false; } };
+  for(const raw of ls){
+    const l=raw.trimEnd(); let m;
+    if(!l.trim()){ fechaP(); fechaL(); continue; }
+    if((m=l.match(/^# (.+)/))){ fechaP(); fechaL(); h+='<h1>'+lInline(m[1])+'</h1>'; continue; }
+    if((m=l.match(/^## (.+)/))){ fechaP(); fechaL(); const id='lh'+(ix++); idx.push([id,m[1]]); h+='<h2 id="'+id+'">'+lInline(m[1])+'</h2>'; continue; }
+    if((m=l.match(/^### (.+)/))){ fechaP(); fechaL(); h+='<h3>'+lInline(m[1])+'</h3>'; continue; }
+    if((m=l.match(/^> ?(.*)/))){ fechaP(); fechaL(); h+='<blockquote>'+lInline(m[1])+'</blockquote>'; continue; }
+    if(/^---+$/.test(l.trim())){ fechaP(); fechaL(); h+='<hr>'; continue; }
+    if((m=l.match(/^[-*] (.+)/))){ fechaP(); if(!lista){ h+='<ul>'; lista=true; } h+='<li>'+lInline(m[1])+'</li>'; continue; }
+    if((m=l.match(/^\*([^*].*)\*$/)) && !par.length){ fechaL(); h+='<p class="lautor">'+lInline(m[1])+'</p>'; continue; }
+    if((m=l.match(/^\*\*([^*]+)\*\*$/)) && !par.length){ fechaL(); h+='<p class="rot">'+lInline(m[1])+'</p>'; continue; }
+    fechaL(); par.push(l.trim());
+  }
+  fechaP(); fechaL();
+  return {html:h, idx};
+}
+function abrirTexto(gi){
+  const p=PLANO[gi]; if(!p) return;
+  if(PL.v) plParar(true);
+  $('player').classList.remove('on','compacto','escondido');
+  atual=gi; salvarUltima(CURSO_ATUAL,gi);
+  LT.gi=gi; LT.url=p.a.url||''; LT.concl=estaVista(LT.url); LT.ultSalva=0; LT.ok=false;
+  $('leitor').classList.add('on'); document.body.classList.add('pl-on');
+  clearInterval(LT.iv); LT.iv=setInterval(()=>{ if($('leitor').classList.contains('on')) lProg(); },1200);   // garante o progresso mesmo se o navegador atrasar o evento de rolagem
+  $('l-titulo').textContent=limpaAula(p.a.titulo); $('l-prog').style.width='0%'; $('l-fim').style.display='none'; $('l-indice').classList.remove('on');
+  $('l-texto').innerHTML='<div class="lmsg">Carregando a apostila…</div>';
+  try{ if(history.state && history.state.pl) history.replaceState({tx:1},''); else if(!history.state || !history.state.tx) history.pushState({tx:1},''); }catch(_){}
+  let fs=19; try{ fs=parseInt(localStorage.getItem('curso_fs_leitor'))||19; }catch(_){}
+  $('leitor').style.setProperty('--lfs',fs+'px');
+  const gid=idDrive(LT.url);
+  fetch('/api/curso-video?id='+encodeURIComponent(gid)+'&fmt=txt').then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); }).then(md=>{
+    if(LT.gi!==gi || !$('leitor').classList.contains('on')) return;
+    const r=mdParaHtml(md); $('l-texto').innerHTML=r.html; LT.ok=true;
+    $('l-indice').innerHTML=r.idx.map(x=>'<a href="#'+x[0]+'" onclick="lIr(event,\''+x[0]+'\')">'+lEsc(x[1])+'</a>').join('') || '<a>Sem capítulos</a>';
+    $('l-fim').style.display=''; lAtualizaChk();
+    $('l-prox').style.display=(gi+1<PLANO.length)?'':'none';
+    const sc=$('l-scroll'); sc.scrollTop=0;
+    const pos=lerPos(LT.url);
+    if(pos>10 && pos<980){ setTimeout(()=>{ sc.scrollTop=(sc.scrollHeight-sc.clientHeight)*pos/1000; lProg(); },80); }
+    else lProg();
+  }).catch(()=>{ $('l-texto').innerHTML='<div class="lmsg">Não consegui abrir a apostila agora.<br>Confira a internet e tente de novo.<br><br><button class="chip" style="background:#0f6d78;color:#fff;border:none;border-radius:12px;min-height:46px;padding:0 18px;font-weight:800" onclick="abrirTexto('+gi+')">↻ Tentar de novo</button></div>'; });
+}
+function lProg(){
+  const sc=$('l-scroll'); if(!sc) return; const max=sc.scrollHeight-sc.clientHeight; const f=max>0?Math.min(1,Math.max(0,sc.scrollTop/max)):0;
+  $('l-prog').style.width=(f*100)+'%';
+  if(LT.ok){
+    const n=Date.now(); if(n-LT.ultSalva>2500 && f>0.01){ LT.ultSalva=n; salvarPos(LT.url,Math.round(f*1000)); }
+    if(!LT.concl && f>=0.96){ LT.concl=true; marcarVista(LT.url,true); lAtualizaChk(); const el=document.querySelector('.aula[data-gi="'+LT.gi+'"]'); if(el) el.classList.add('vista'); atualizarProgresso(); }
+  }
+}
+function lAtualizaChk(){ const b=$('l-chk'); if(!b) return; b.classList.toggle('on',LT.concl); b.textContent=LT.concl?'✓ Lida':'✓ Marcar como lida'; }
+function lConcluir(){ const nv=!estaVista(LT.url); LT.concl=nv; marcarVista(LT.url,nv); lAtualizaChk(); const el=document.querySelector('.aula[data-gi="'+LT.gi+'"]'); if(el) el.classList.toggle('vista',nv); atualizarProgresso(); }
+function lProxima(){ if(LT.gi+1<PLANO.length){ lGuardar(); const g=LT.gi+1; abrir(g); } }
+function lIndice(){ $('l-indice').classList.toggle('on'); }
+function lIr(ev,id){ ev.preventDefault(); $('l-indice').classList.remove('on'); const el=document.getElementById(id); const sc=$('l-scroll'); if(el&&sc){ sc.scrollTo({top:el.offsetTop-8,behavior:'smooth'}); } }
+function lFonte(d){ let fs=19; try{ fs=parseInt(localStorage.getItem('curso_fs_leitor'))||19; }catch(_){} fs=Math.max(15,Math.min(28,fs+d*2)); try{ localStorage.setItem('curso_fs_leitor',String(fs)); }catch(_){} $('leitor').style.setProperty('--lfs',fs+'px'); setTimeout(lProg,50); }
+function lGuardar(){ if(!LT.ok) return; const sc=$('l-scroll'); const max=sc.scrollHeight-sc.clientHeight; if(max>0){ const f=sc.scrollTop/max; if(f>0.01){ salvarPos(LT.url,Math.round(Math.min(1,f)*1000)); } } }
+function fecharLeitor(vindoDoVoltar){
+  lGuardar(); flushSync(); LT.ok=false; clearInterval(LT.iv);
+  $('leitor').classList.remove('on'); document.body.classList.remove('pl-on'); $('l-indice').classList.remove('on');
+  try{ if(vindoDoVoltar!==true && history.state && history.state.tx) history.back(); }catch(_){}
+  abrirCurso(CURSO_ATUAL);
+}
+document.getElementById('l-scroll').addEventListener('scroll',lProg,{passive:true});
+window.addEventListener('popstate',()=>{ if($('leitor').classList.contains('on')) fecharLeitor(true); });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden && $('leitor').classList.contains('on')) lGuardar(); });
+window.addEventListener('pagehide',()=>{ if($('leitor').classList.contains('on')){ lGuardar(); flushSync(); } });
 
 // auto-desbloqueio (aparelho do Elias): se já entrou antes, não pede senha de novo
 (async function(){
