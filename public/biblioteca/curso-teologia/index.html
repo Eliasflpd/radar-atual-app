@@ -332,6 +332,10 @@ const META={
       bio:'Pastor e professor à frente do Instituto Teológico GIOM, com ensino teológico semanal voltado a enriquecer o conhecimento da Palavra de Deus. As aulas percorrem temas como Parakletologia, Escatologia, Batalha Espiritual, o Tabernáculo e a Igreja, entre outros.',
       tags:['Pastor','Professor de Teologia','Instituto Teológico GIOM'],
       foot:'Conteúdo do Instituto Teológico GIOM Online.' }
+  },
+  'giom-a-dois':{
+    titulo:'Giom a Dois', prof:'Estudo para Casais · Instituto Teológico GIOM', foto:'/img/curso/giom-a-dois.png', badge:'Estudo para casais',
+    site:{href:'https://www.instagram.com/giomoficial/', label:'Instituto Teológico GIOM — @giomoficial'}
   }
 };
 function meta(slug){ return META[slug] || {titulo:slug, prof:'', foto:'', badge:'Curso'}; }
@@ -422,6 +426,8 @@ function render(){
   $('gate').style.display='none';
   const cur=$('curso'); cur.style.display='block';
   const cursos = DADOS.cursos || (DADOS.modulos ? [{curso:DADOS.curso||'escatologia-ivan-santos', total:DADOS.total, modulos:DADOS.modulos}] : []);
+  // o curso principal do GIOM sempre aparece primeiro; os demais (ex.: Giom a Dois) vêm depois
+  cursos.sort((a,b)=>(a.curso==='giom-teologia'?-1:0)-(b.curso==='giom-teologia'?-1:0));
   const pa=perfilAtivo()||{nome:'Eu',emoji:'👤'};
   let html=`<div class="quem-bar">
     <button class="quem-pill" onclick="abrirQuem()"><span class="qe">${pa.emoji||'👤'}</span><b class="qn">${pa.nome}</b><span class="qc">⌄</span></button>
@@ -467,8 +473,8 @@ function render(){
         <h1>${m.titulo}</h1>
         <div class="prof">${m.prof}</div>
         <div class="stats">
-          <div><b>${cs.modulos.length}</b>módulos</div>
-          <div><b>${cs.total}</b>aulas</div>
+          <div><b>${cs.modulos.length}</b>${cs.modulos.length===1?'módulo':'módulos'}</div>
+          <div><b>${cs.total}</b>${cs.total===1?'aula':'aulas'}</div>
           <div><b>${pg.vistas}</b>assistidas</div>
         </div>
         <div class="prog">
