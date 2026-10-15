@@ -288,6 +288,25 @@
   .mod-h .mthumb.semimg{display:flex;align-items:center;justify-content:center}
   .mod-h .mthumb.semimg .mnum{position:static;background:transparent;font-size:1.1rem}
   .mod-cap .mod-h .ti b{font-size:1.02rem;font-weight:800}
+  /* ===== MÓDULOS DO GIOM COMO CARTÃO COM CAPA (igual ao card dos cursos): foto à esquerda, degradê até o azul, nome à direita ===== */
+  .mod-cap{border:none;border-radius:16px;box-shadow:0 8px 22px rgba(15,61,92,.20);background:linear-gradient(135deg,var(--navy),#14507a)}
+  .mod-cap .mod-h{position:relative;min-height:116px;padding:0;gap:0;background:linear-gradient(135deg,var(--navy),#14507a);color:#fff;overflow:hidden;align-items:stretch}
+  .mod-cap .mod-h .mthumb{position:absolute;left:0;top:0;width:60%;height:100%;border-radius:0;box-shadow:none;background:transparent;z-index:0;
+    -webkit-mask-image:linear-gradient(to right,#000 46%,rgba(0,0,0,.4) 72%,transparent 100%);mask-image:linear-gradient(to right,#000 46%,rgba(0,0,0,.4) 72%,transparent 100%)}
+  .mod-cap .mod-h .mthumb img{width:100%;height:100%;object-fit:cover;object-position:center 9%}
+  .mod-cap .mod-h .mthumb .mnum{left:9px;top:auto;bottom:9px;min-width:24px;height:24px;border-radius:8px;font-size:.78rem;background:rgba(10,20,32,.78)}
+  .mod-cap .mod-h .mthumb.semimg{background:rgba(255,255,255,.08);width:34%;mask-image:none;-webkit-mask-image:none}
+  .mod-cap .mod-h::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(15,61,92,0) 20%,rgba(15,61,92,.5) 42%,var(--navy) 62%)}
+  .mod-cap .mod-h .ti{position:relative;z-index:2;flex:none;width:55%;margin-left:auto;padding:26px 38px 14px 4px;display:flex;flex-direction:column;justify-content:center}
+  .mod-cap .mod-h .ti b{color:#fff;font-size:1.08rem;font-weight:800;line-height:1.15;text-shadow:0 1px 6px rgba(2,25,45,.45)}
+  .mod-cap .mod-h .ti span{color:#cfe3ec;font-size:.78rem;margin-top:3px}
+  .mod-cap .mod-h .mbar{background:rgba(255,255,255,.2);margin-top:9px}
+  .mod-cap .mod-h .mbar i{background:linear-gradient(90deg,#2f9e8f,#42c07a)}
+  .mod-cap .mod-h .cont{position:absolute;right:34px;top:9px;z-index:3;padding:0;margin:0;color:#e9f2f7;font-size:.72rem}
+  .mod-cap .mod-h .cont b{color:#f0c24b}
+  .mod-cap .mod-h .seta{position:absolute;right:11px;top:50%;transform:translateY(-50%);z-index:3;color:#f0c24b;font-size:1.4rem;font-weight:700;opacity:.9}
+  .mod-cap.aberto .mod-h .seta{transform:translateY(-50%) rotate(90deg)}
+  @media(max-width:360px){ .mod-cap .mod-h{min-height:104px} .mod-cap .mod-h .ti b{font-size:.98rem} }
   .mod-h .ti .mbar{height:4px;border-radius:3px;background:#e6ebf1;margin-top:8px;overflow:hidden;max-width:190px}
   .mod-h .ti .mbar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),#1a8a4a);border-radius:3px;transition:width .25s}
 </style>
