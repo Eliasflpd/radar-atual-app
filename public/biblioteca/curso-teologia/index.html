@@ -652,7 +652,9 @@ function blocoApostilas(cs){
   return `<div class="sec-mod" style="margin-top:4px">📖 Apostilas para ler (${itens.length})</div>`+itens.map(({a,mo})=>{
     const lida=estaVista(a.url); const pos=lerPos(a.url);
     const sub=lida?'✓ Lida':(pos>10?'Parou em '+fmtPos(a,pos):'Toque para ler');
-    return `<div class="pdf-link" style="cursor:pointer" onclick="abrir(${a._gi})"><span style="font-size:22px">📖</span><span style="flex:1"><b style="display:block;font-size:.98rem;color:#0f3d5c">${limpaAula(a.titulo)}</b><span style="font-size:.8rem;color:#6b551f">${limpaModulo(mo.nome)} · ${sub}</span></span><span style="color:#a9791c;font-size:1.2rem">›</span></div>`;
+    const capa=/Tabern/i.test(a.titulo)?'apostila-tabernaculo':/Homil/i.test(a.titulo)?'apostila-homiletica':/Missiol/i.test(a.titulo)?'apostila-missiologia':'';
+    const thumb=capa?`<img src="/biblioteca/curso-teologia/capas/${capa}.jpg" alt="" loading="lazy" style="width:70px;height:99px;object-fit:cover;object-position:top;border-radius:8px;flex-shrink:0;box-shadow:0 5px 14px rgba(60,40,10,.32);border:1px solid rgba(0,0,0,.08)" onerror="this.style.display='none'">`:`<span style="font-size:26px">📖</span>`;
+    return `<div class="pdf-link" style="cursor:pointer;gap:14px;padding:12px 14px" onclick="abrir(${a._gi})">${thumb}<span style="flex:1;min-width:0"><span style="display:inline-block;background:#f0dcaa;color:#6b4a0e;font-size:.6rem;font-weight:800;letter-spacing:.8px;padding:3px 9px;border-radius:20px;text-transform:uppercase">📖 Apostila</span><b style="display:block;font-size:1.02rem;color:#0f3d5c;line-height:1.2;margin-top:5px">${limpaAula(a.titulo).replace(/^Apostilas+/i,'')}</b><span style="display:block;font-size:.8rem;color:#6b551f;margin-top:4px">${limpaModulo(mo.nome)} · ${sub}</span></span><span style="color:#a9791c;font-size:1.3rem">›</span></div>`;
   }).join('')+`<div style="height:6px"></div>`;
 }
 function bannerResume(cs){
