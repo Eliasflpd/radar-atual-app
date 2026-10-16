@@ -102,6 +102,8 @@
     font-size:.72rem;font-weight:800;letter-spacing:.01em;
     box-shadow:0 5px 14px rgba(0,0,0,.45)}
 
+  /* selo NOVO — peça publicada há até 14 dias */
+  .card .novo-tag{position:absolute;top:13px;right:13px;z-index:6;background:linear-gradient(135deg,#27c46f,#1a8a4a);color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:999px;padding:4px 12px;font-size:.72rem;font-weight:900;letter-spacing:.08em;box-shadow:0 5px 14px rgba(0,0,0,.45)}
   .vazio{text-align:center;color:var(--creme-dim);padding:34px 0;font-size:.95rem}
 
   /* ───── rodapé: Forjar ───── */
@@ -151,6 +153,13 @@
 <script>
   // ── CRM de Mensagens — pra postar uma nova, é só adicionar aqui em cima ──
   var MENSAGENS = [
+    {arquivo:"a-resposta-que-saiu-no-primeiro-dia.html", data:"2026-10-15", titulo:"A Resposta que Saiu no Primeiro Dia", ref:"Daniel 10:1-14 · Efésios 6:12", emoji:"🛡️", fonte:"Inspirada em uma pregação do Pr. Miquéias Oliveira", desc:"Daniel orou vinte e um dias e só viu silêncio. Mas a resposta saiu no primeiro dia — houve guerra no caminho. Não pare no vigésimo dia."},
+    {arquivo:"quanto-mais-perto-mais-voce-sabe.html", data:"2026-10-15", titulo:"Quanto Mais Perto, Mais Você Sabe", ref:"João 13:21-30 · Salmo 25:14", emoji:"💞", fonte:"Inspirada em uma pregação de Yossef Akiva Avraham", desc:"Quinhentos, setenta, doze, três e um: ao redor de Jesus havia círculos. Quanto mais perto, mais nomes, mais revelação — e mais custo."},
+    {arquivo:"eu-te-vi-debaixo-da-figueira.html", data:"2026-10-15", titulo:"Eu Te Vi Debaixo da Figueira", ref:"João 1:43-51 · Salmo 139:1-4", emoji:"🌳", fonte:"Inspirada em uma pregação de Shimshon Temmo", desc:"Natanael chegou desconfiado e saiu confessando. O que fez a dúvida cair? Foi ser conhecido — antes de qualquer chamado."},
+    {arquivo:"a-porta-que-o-filho-abre.html", data:"2026-10-15", titulo:"A Porta que o Filho Abre", ref:"Hebreus 4:14-16 · Efésios 2:18", emoji:"🙏", fonte:"Inspirada em uma pregação de David Lindell", desc:"Um soldado chorava diante do portão, até que uma mão pequena o segurou. A oração não é o último recurso: é a primeira resposta."},
+    {arquivo:"os-tres-sinais-que-jesus-deu.html", data:"2026-10-15", titulo:"Os Três Sinais que Jesus Deu", ref:"Mateus 24:32-34 · Daniel 12:4 · 2 Tessalonicenses 2:4", emoji:"⏳", fonte:"Inspirada em uma pregação de Yossef Akiva Avraham", desc:"A figueira, o conhecimento que se multiplica e um templo que ainda não existe. Três sinais para despertar a igreja — não para marcar data."},
+    {arquivo:"uma-estrela-difere-de-outra-em-gloria.html", data:"2026-10-15", titulo:"Uma Estrela Difere de Outra em Glória", ref:"1 Coríntios 15:40-44 · Daniel 12:3", emoji:"🌟", fonte:"Inspirada em uma pregação de Wagner Cordeiro Santos", desc:"Será que todos brilharão igual no céu? A Bíblia fala de sol, lua e estrelas — e mostra o que faz uma estrela brilhar mais."},
+    {arquivo:"faz-dois-dias-que-ele-subiu.html", data:"2026-10-15", titulo:"Faz Dois Dias que Ele Subiu", ref:"2 Pedro 3:8-10 · Salmo 90:4 · Apocalipse 20:4-6", emoji:"🕰️", fonte:"Inspirada em uma pregação de Wagner Cordeiro Santos", desc:"Você acha que Jesus está demorando? Na conta de Deus, “um dia é como mil anos”. Do outro lado do relógio, Ele acabou de se assentar."},
     {arquivo:"a-dracma-na-testa-da-noiva.html", data:'2026-09-27', titulo:"A Dracma na Testa da Noiva", ref:"Lucas 15:8-10 · Gênesis 1:27", emoji:"🪙", desc:"As dez moedas não eram troco: eram o enfeite de casamento que o noivo dava à esposa, presas na testa como a nossa aliança. A que caiu no pó da própria casa ainda trazia o rosto do Rei — e o céu não fecha a conta com uma faltando."},
     {arquivo:"pao-para-o-irmao-pedra-para-o-gigante.html", data:'2026-09-26', titulo:"Pão para o Irmão, Pedra para o Gigante", ref:"1 Samuel 17 · Mateus 7:9", emoji:"🍞", desc:"Davi desceu ao vale com pão nos braços, não pedra. O primeiro a feri-lo não foi Golias — foi o irmão. Ao irmão, ele se esquivou; a pedra guardou para o gigante. A igreja inverteu as mãos."},
     {arquivo:"da-palavra-a-sombra.html", data:'2026-09-26', titulo:"Da Palavra à Sombra", ref:"Atos 3-5 · Atos 19 · 2 Coríntios 5:20", emoji:"👤", desc:"O bebê espiritual precisa gritar o nome de Jesus. Mas a sombra de Pedro curava sem citar o nome, e o avental de Paulo expulsava demônios longe dele. Do nome na boca à Pessoa no corpo: o embaixador de Cristo."},
@@ -271,7 +280,9 @@
     var alvo=(String(s.arquivo||'').charAt(0)==='/')?s.arquivo:'/biblioteca/mensagens/'+s.arquivo;
     var slug=slugCapa(s.arquivo);
     var img = slug ? '<img class="c-img" src="capas/'+esc(slug)+'.jpg" alt="" loading="lazy" onerror="this.remove()">' : '';
+    var novo = s.data && (Date.now()-new Date(s.data+'T12:00:00').getTime()) < 14*864e5;
     return '<a class="card" href="'+esc(alvo)+'">'
+      +(novo?'<span class="novo-tag">NOVO</span>':'')
       +'<div class="c-emoji">'+esc(s.emoji||'🔥')+'</div>'
       +img
       +'<div class="c-grad"></div>'
