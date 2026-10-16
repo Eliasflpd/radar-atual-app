@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dicas de IA — RADAR</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--verde:#1a8a4a}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:820px;background:#f6f8fb;color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.55;padding:14px 13px calc(46px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+  .voltar{display:inline-block;background:#1c2230;color:#fff;border:none;border-radius:999px;padding:8px 13px;font-size:.82rem;font-weight:700;font-family:inherit;cursor:pointer;margin-right:6px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.7rem;margin:14px 0 2px}
+  .sub{text-align:center;color:#6b7280;font-size:.88rem;margin-bottom:6px}
+  .divisor{height:3px;width:56px;background:var(--dourado);border-radius:3px;margin:8px auto 14px}
+  #busca{width:100%;border:2px solid #e4e7ec;border-radius:12px;padding:10px 12px;font-size:.95rem;font-family:inherit;background:#fff;margin-bottom:10px}
+  #busca:focus{outline:none;border-color:var(--teal)}
+  .chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px;-webkit-overflow-scrolling:touch}
+  .chip{flex:0 0 auto;border:1px solid #dde3ea;background:#fff;color:var(--navy);border-radius:999px;padding:7px 13px;font-size:.82rem;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
+  .chip.on{background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;border-color:transparent}
+  .card{position:relative;background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(15,61,92,.06)}
+  .novo{position:absolute;top:12px;right:12px;background:linear-gradient(135deg,#27c46f,#1a8a4a);color:#fff;font-size:.66rem;font-weight:900;letter-spacing:.08em;padding:3px 10px;border-radius:999px}
+  .top{display:flex;gap:12px;align-items:flex-start;padding-right:52px}
+  .ic{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--navy),var(--teal));display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto}
+  .tit{font-family:Georgia,serif;font-weight:800;font-size:1.12rem;color:var(--navy);line-height:1.25}
+  .st{display:inline-block;margin-top:4px;font-size:.7rem;font-weight:800;padding:2px 9px;border-radius:999px}
+  .st.ok{background:#e3f6ea;color:#176b3a}
+  .st.citado{background:#fff1d6;color:#8a5a00}
+  .resumo{margin:10px 0 8px;color:#3a4250;font-size:.98rem}
+  ol{margin:6px 0 10px;padding-left:22px}
+  li{margin:0 0 6px;font-size:.96rem}
+  li b{color:var(--vinho)}
+  .cuidado{background:#fff8ec;border:1px solid #f0dcae;border-left:5px solid var(--dourado);border-radius:10px;padding:9px 12px;font-size:.9rem;color:#5a4a1a;margin:6px 0 10px}
+  .fonte a{color:var(--teal);font-weight:700;font-size:.85rem;text-decoration:none}
+  .aviso{background:#fff;border:1px solid #f0c9c9;border-left:5px solid var(--vinho);border-radius:14px;padding:13px 14px;margin-bottom:12px}
+  .aviso .t{font-weight:800;color:var(--vinho);font-size:1rem}
+  .aviso .d{font-size:.92rem;margin-top:4px;color:#4a4a55}
+  h2{font-family:Georgia,serif;color:var(--vinho);font-size:1.2rem;margin:26px 0 10px}
+  .vazio{text-align:center;color:#9aa1ad;padding:26px 0;display:none}
+  .rodape{text-align:center;color:#9aa1ad;font-size:.8rem;margin-top:22px}
+</style>
+</head>
+<body>
+  <div><button class="voltar" onclick="location.href='/?mod=manuais'">← Biblioteca</button><button class="voltar" style="background:#0f3d5c" onclick="location.href='/'">🏠 Início</button></div>
+  <h1>🤖 Dicas de IA</h1>
+  <div class="sub">Ferramentas e truques garimpados de vídeos e conferidos para você</div>
+  <div class="divisor"></div>
+  <input id="busca" type="search" placeholder="🔎 Buscar dica…" autocomplete="off">
+  <div class="chips" id="chips"></div>
+  <div id="lista"></div>
+  <div class="vazio" id="vazio">Nenhuma dica encontrada.</div>
+
+  <h2>⚠️ Dicas que eu NÃO recomendo</h2>
+  <div id="avisos"></div>
+
+  <div class="rodape">✅ Conferi = existe / técnica conhecida · 🔎 Citado = é o que o vídeo diz; teste antes de confiar.<br>Atualizado em 15/10/2026.</div>
+
+<script>
+  var DIAS_NOVO = 14, DATA = '2026-10-15';
+  var CATS = {"todas":"✨ Todas","claude":"🧠 Claude","ia":"🤖 Ferramentas","criar":"🎨 Imagem e vídeo","slides":"📊 Slides","celular":"📱 Celular","familia":"👪 Família"};
+  var TIPS = [{"cat":"celular","emoji":"🔋","titulo":"Celular sem bateria: desvie as chamadas","st":"ok","fonte":[35,"Jornada Top"],"resumo":"Quando a bateria está acabando e você precisa receber ligações, mande tudo para o número de alguém que está com você.","passos":["Abra o discador do celular.","Digite \u003cb>**21*NÚMERO#\u003c/b> (o número é o de quem vai atender, com DDD) e toque em ligar.","Quando o seu celular estiver carregado, digite \u003cb>##21#\u003c/b> e ligue — o desvio é desfeito."],"cuidado":"É um código padrão das operadoras (GSM), mas teste antes, num momento tranquilo: alguns planos cobram pelo desvio, e é preciso lembrar de desativar depois.","url":"https://www.facebook.com/share/r/14osBd53KMg/","n":35,"autor":"Jornada Top"},{"cat":"celular","emoji":"🖼️","titulo":"Foto do WhatsApp sem cortar (formato quadrado)","st":"citado","fonte":[31,"Suha Tech AI"],"resumo":"Quando a foto não cabe no perfil do WhatsApp, a IA completa as bordas e deixa a imagem quadrada.","passos":["No ChatGPT, envie a foto.","Peça: “expanda esta foto para a proporção 1:1 (quadrada)”.","Baixe o resultado e use como foto de perfil."],"cuidado":"A IA inventa o que não existe nas bordas. Confira se o rosto e o fundo não ficaram estranhos.","url":"https://www.facebook.com/share/r/1GrJFhSBBr/","n":31,"autor":"Suha Tech AI"},{"cat":"slides","emoji":"🎞️","titulo":"Efeito de movimento nos slides do PowerPoint","st":"ok","fonte":[9,"Powerppt"],"resumo":"Dá para criar slides com cara de vídeo usando só formas e ícones — ótimo para os slides da EBD no telão.","passos":["Inserir → Formas → Retângulo; mude a cor e a cor da linha.","Coloque o texto e um ícone ou imagem (de preferência PNG com fundo transparente).","Repita para os outros temas. Por cima, ponha outro ícone/imagem para dar sensação de movimento.","Duplique o slide e, na cópia, mova ou gire o ícone.","Aplique a transição \u003cb>Morfar (Morph)\u003c/b> entre os dois slides para o movimento aparecer."],"cuidado":"O vídeo mostra a técnica; o nome “Morfar/Morph” é a transição do PowerPoint que faz esse efeito. Teste com poucos slides antes de refazer uma lição inteira.","url":"https://www.facebook.com/share/v/1MH5jq8RJH/","n":9,"autor":"Powerppt"},{"cat":"slides","emoji":"📑","titulo":"Apresentação pronta com IA","st":"citado","fonte":[20,"André Lug"],"resumo":"Uma ferramenta de slides que gera a apresentação (com gráficos) a partir de um pedido em texto e deixa editar com IA.","passos":["Entre no site, escolha “Slides” e cole o pedido (ex.: “apresentação moderna e limpa sobre…”).","Para ajustar um trecho, use o botão de editar com IA, selecione o que quer mudar e escreva o pedido."],"cuidado":"O nome da ferramenta não ficou claro no áudio do vídeo — veja o vídeo original antes de criar conta. Alternativas conhecidas: Gamma, Canva e o Designer do PowerPoint.","url":"https://www.facebook.com/share/v/1EUAGJz79r/","n":20,"autor":"André Lug"},{"cat":"claude","emoji":"⌨️","titulo":"7 comandos do Claude Code","st":"ok","fonte":[7,"Le Monde du Marketing"],"resumo":"Atalhos que poupam tempo no Claude Code, o programa que cuida do RADAR.","passos":["\u003cb>/compact\u003c/b> — resume uma conversa longa quando ele começa a esquecer coisas. ✅","\u003cb>/memory\u003c/b> — guarda suas preferências para as próximas sessões. ✅","\u003cb>/fast\u003c/b> — respostas mais rápidas. ✅","\u003cb>/security-review\u003c/b> — revisa a segurança do código antes de publicar. ✅","\u003cb>/goal\u003c/b> — fixa um objetivo e segue até cumprir (citado no vídeo).","\u003cb>/btw\u003c/b> — pergunta lateral sem perder o fio do projeto (citado no vídeo).","\u003cb>/mobile\u003c/b> — QR code para continuar a mesma sessão no celular (citado no vídeo)."],"cuidado":"Os quatro marcados com ✅ eu confirmei que existem. Os outros três vêm do vídeo; digite “/” no Claude Code para ver se aparecem na sua versão.","url":"https://www.facebook.com/share/r/1J3s2M4bRU/","n":7,"autor":"Le Monde du Marketing"},{"cat":"claude","emoji":"🧩","titulo":"4 plugins contra o limite de uso do Claude Code","st":"citado","fonte":[24,"100xEngineers"],"resumo":"Ideias para não esbarrar no limite de uso no meio do trabalho.","passos":["\u003cb>Roteador de modelos\u003c/b> — quando um modelo bate o limite, passa para o próximo sozinho.","\u003cb>Headroom\u003c/b> — comprime o seu pedido antes de enviar, gastando menos.","\u003cb>claude-mem\u003c/b> — memória de longo prazo entre as sessões (para não explicar o projeto toda vez).","\u003cb>Um quarto plugin\u003c/b> — analisa como você trabalha e cria skills para o que você repete."],"cuidado":"Os nomes vêm do áudio e podem estar imprecisos. Plugin de terceiros roda no seu computador: veja quem fez e leia o que ele pede antes de instalar.","url":"https://www.facebook.com/share/r/1HqTS82nST/","n":24,"autor":"100xEngineers"},{"cat":"ia","emoji":"🧪","titulo":"5 ferramentas de IA do Google","st":"citado","fonte":[13,"Izabela Anholett"],"resumo":"O vídeo fala de 9 ferramentas gratuitas do Google; cita estas cinco.","passos":["\u003cb>Pomelli\u003c/b> — você cola o link do seu site e ela cria posts, anúncios e fotos de produto no estilo da marca.","\u003cb>Stitch\u003c/b> — descreva a tela de um app e ele desenha o design e entrega o código.","\u003cb>Opal\u003c/b> — encadeia várias etapas (pesquisar, resumir, gerar imagem) num mini-aplicativo automático.","\u003cb>Antigravity\u003c/b> — plataforma onde você descreve o que quer construir e o agente escreve, testa e corrige o código.","\u003cb>Mixboard\u003c/b> — um quadro de ideias visuais: descreva, a IA gera várias imagens e você combina."],"cuidado":"Os nomes foram entendidos pelo áudio. “Grátis” costuma ser fase de testes: confira o preço atual antes de contar com a ferramenta.","url":"https://www.facebook.com/share/v/18ajNzmv3r/","n":13,"autor":"Izabela Anholett"},{"cat":"criar","emoji":"🎬","titulo":"Foto vira vídeo no Google Flow","st":"citado","fonte":[36,"Adnan Sleem"],"resumo":"Em vez de escrever pedidos longos, o vídeo mostra comandos curtos de câmera aplicados a uma foto.","passos":["Abra o Google Flow e envie a foto.","Escreva um comando de câmera, por exemplo: \u003cb>orbit 360\u003c/b> (gira em volta), \u003cb>drone fly\u003c/b> (vista aérea) ou \u003cb>speed ramp\u003c/b> (começa lento e acelera).","Compare os resultados e escolha o melhor."],"cuidado":"Os nomes dos comandos são os que aparecem nos vídeos (também no vídeo 32); podem mudar ou ter limite de uso na conta gratuita.","url":"https://www.facebook.com/share/r/1FuoU5Wyd1/","n":36,"autor":"Adnan Sleem"},{"cat":"criar","emoji":"🍌","titulo":"Fotos com efeitos: Banana Prompts + Nano Banana","st":"citado","fonte":[33,"Ediel Costa"],"resumo":"Um site de pedidos prontos que, colados no Nano Banana junto com sua foto, geram efeitos de “antes e depois”.","passos":["Abra o site \u003cb>Banana Prompts\u003c/b> e escolha um dos modelos de efeito.","Copie o pedido (prompt).","No Nano Banana (Gemini), envie a sua foto, cole o pedido e envie."],"cuidado":"Não envie fotos de crianças nem de outras pessoas sem permissão. A foto do seu rosto fica com a empresa da IA.","url":"https://www.facebook.com/share/r/1H3hQW5AdZ/","n":33,"autor":"Ediel Costa"},{"cat":"criar","emoji":"📦","titulo":"Vídeo de produto no Claude com o Morphix","st":"citado","fonte":[15,"Guilherme Vilas"],"resumo":"O vídeo conecta um serviço de vídeo ao Claude e cria animações de produto em 4K.","passos":["No site do serviço (morphix.pro), copie o link do MCP.","No Claude: Personalizar → Conectores → adicionar conector personalizado, com o nome e o link copiado.","Clique em vincular e autorize no site.","Ative a skill de motion design e peça o vídeo."],"cuidado":"Conectar um serviço de terceiro dá acesso à sua conta no Claude: só conecte se confiar. “Comente e receba o guia” é jeito de captar contato. Nunca digite senhas nesses fluxos.","url":"https://www.facebook.com/share/r/1MgYyuRUVf/","n":15,"autor":"Guilherme Vilas"},{"cat":"familia","emoji":"🌳","titulo":"Árvore genealógica com ChatGPT","st":"citado","fonte":[12,"Gabriel Barbosa"],"resumo":"Quatro pedidos em sequência para montar a história da sua família.","passos":["“Quero montar minha árvore genealógica completa. Faça todas as perguntas de que precisa” — ele pergunta nome, origem e parentes que você lembra (10 a 15 perguntas).","“Com base no meu sobrenome e na origem da minha família, conte a história da linhagem e até quantas gerações dá para traçar.”","“Procure em registros públicos, bases de genealogia e obituários parentes ligados à minha família que eu não conheço.”","“Agora monte a árvore genealógica visual completa.”"],"cuidado":"A IA pode inventar nomes e datas que parecem reais. Confirme em registros de verdade (certidões, cartório, FamilySearch). Não coloque dados de pessoas vivas sem permissão.","url":"https://www.facebook.com/share/r/1PwqXcrPXY/","n":12,"autor":"Gabriel Barbosa"}];
+  var AVISOS = [{"emoji":"🚫","t":"“Todas as IAs pagas de graça num só site”","d":"Aparece nos vídeos 14, 17, 19 e 22. Nenhum dá o endereço de forma verificável: pedem para “comentar” ou “seguir” para receber o link. Sites assim costumam ser golpe, captura de dados ou revenda irregular de contas. Nomes como “GPT-6 Astra” eu não consigo confirmar. Evite."},{"emoji":"🚫","t":"Achar qualquer pessoa pelo e-mail ou telefone","d":"Vídeos 18 e 21. Vasculha dados pessoais de terceiros sem consentimento, o que pode violar a privacidade e a LGPD. Não use."}];
+  var cat = 'todas';
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+  var novo = (Date.now() - new Date(DATA + 'T12:00:00').getTime()) < DIAS_NOVO * 864e5;
+  function desenhar(){
+    var q = norm(document.getElementById('busca').value.trim()), n = 0, h = '';
+    TIPS.forEach(function(t){
+      if (cat !== 'todas' && t.cat !== cat) return;
+      var texto = norm(t.titulo + ' ' + t.resumo + ' ' + t.passos.join(' ') + ' ' + (t.cuidado||''));
+      if (q && texto.indexOf(q) < 0) return;
+      n++;
+      h += '<div class="card">' + (novo ? '<span class="novo">NOVO</span>' : '')
+        + '<div class="top"><div class="ic">' + t.emoji + '</div><div><div class="tit">' + esc(t.titulo) + '</div>'
+        + '<span class="st ' + t.st + '">' + (t.st === 'ok' ? '✅ Conferi' : '🔎 Citado no vídeo') + '</span></div></div>'
+        + '<div class="resumo">' + esc(t.resumo) + '</div>'
+        + '<ol>' + t.passos.map(function(p){ return '<li>' + p + '</li>'; }).join('') + '</ol>'
+        + (t.cuidado ? '<div class="cuidado">⚠️ <b>Cuidado:</b> ' + esc(t.cuidado) + '</div>' : '')
+        + '<div class="fonte"><a href="' + esc(t.url) + '" target="_blank" rel="noopener noreferrer">▶ Ver o vídeo original (' + esc(t.autor) + ')</a></div></div>';
+    });
+    document.getElementById('lista').innerHTML = h;
+    document.getElementById('vazio').style.display = n ? 'none' : 'block';
+  }
+  document.getElementById('chips').innerHTML = Object.keys(CATS).map(function(k){
+    return '<button class="chip' + (k === 'todas' ? ' on' : '') + '" data-c="' + k + '">' + CATS[k] + '</button>'; }).join('');
+  document.getElementById('chips').addEventListener('click', function(e){
+    var b = e.target.closest('.chip'); if (!b) return; cat = b.getAttribute('data-c');
+    document.querySelectorAll('.chip').forEach(function(x){ x.classList.toggle('on', x === b); }); desenhar();
+  });
+  document.getElementById('busca').addEventListener('input', desenhar);
+  document.getElementById('avisos').innerHTML = AVISOS.map(function(a){
+    return '<div class="aviso"><div class="t">' + a.emoji + ' ' + esc(a.t) + '</div><div class="d">' + esc(a.d) + '</div></div>'; }).join('');
+  desenhar();
+</script>
+</body>
+</html>

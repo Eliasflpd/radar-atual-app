@@ -3363,6 +3363,8 @@ function renderManuais(){
   itens.push({onclick:"location.href='/biblioteca/mensagens/'", titulo:'Mensagens', autor:'Sermões em prosa', emoji:'🔥', cor:'#8a1c1c'});
   itens.push({onclick:"location.href='/biblioteca/concilio/'", titulo:'Concílio', autor:'42 expositores + Lupa', emoji:'📖', cor:'#0f3d5c'});
   itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', emoji:'🎓', cor:'#a9791c'});
+  // Dicas de IA (15/10/2026): garimpadas de vídeos e conferidas. Selo NOVO por 14 dias.
+  itens.push({onclick:"location.href='/biblioteca/dicas-ia/'", titulo:'Dicas de IA', autor:'Ferramentas e truques', emoji:'🤖', cor:'#0f6d78', novo:(Date.now()-new Date('2026-10-15T12:00:00').getTime())<14*864e5});
   itens.push({onclick:"location.href='/biblioteca/livros/'", titulo:'Livros', autor:'Biblioteca do obreiro', emoji:'📚', cor:'#2f6b4f'});
   itens.push({onclick:"location.href='/biblioteca/estudo/'", titulo:'Meu Estudo', autor:'Privado · senha', emoji:'🔒', cor:'#5b3a1a'});
   // Pérolas Descoberta (09/10/2026): os 15 PDFs da pasta MARIA do Elias (Parábolas, Jesus no AT,
@@ -3381,6 +3383,7 @@ function renderManuais(){
       : '';
     return '<div onclick="'+m.onclick+'" style="position:relative;background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:7px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06)">'
       +capa+btnComp
+      +(m.novo?'<span style="position:absolute;top:12px;left:12px;background:linear-gradient(135deg,#27c46f,#1a8a4a);color:#fff;font-size:9px;font-weight:900;letter-spacing:.08em;padding:2px 8px;border-radius:99px;box-shadow:0 2px 6px rgba(0,0,0,.35)">NOVO</span>':'')
       +'<div style="font-weight:800;font-size:12.5px;color:#0f3d5c;font-family:\'Playfair Display\',serif;margin-top:6px;line-height:1.15">'+m.titulo+'</div>'
       +'<div style="font-size:10.5px;color:#8a6a2f;margin-top:1px;line-height:1.15">'+m.autor+'</div></div>';
   }).join('')+'</div>';
