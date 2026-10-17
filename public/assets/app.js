@@ -2720,7 +2720,7 @@ function abrirLicaoDetalhe(idx){
   const n=String(lic.n>0?lic.n:0).padStart(2,'0');
   /* Adultos 4º tri (17/10/2026): capa nova (arte + LIÇÃO N + título), sem a foto da página da revista (letra miúda, ruim no celular) */
   const _licBanner=(lic.n>=1&&lic.n<=13)?(ebdTurmaAtual==='adulto4'
-    ?`<img src="/ebd/adulto4/img/capa-licao-${String(lic.n).padStart(2,'0')}.jpg" alt="Lição ${lic.n}" style="display:block;margin:0 auto 14px;max-width:100%;max-height:68vh;width:auto;height:auto;border-radius:14px;box-shadow:0 8px 22px rgba(0,0,0,.28)" onerror="this.style.display='none'">`
+    ?`<div id="ebd-capa-stage" style="text-align:center;transition:opacity .35s ease,transform .35s ease"><img src="/ebd/adulto4/img/capa-licao-${String(lic.n).padStart(2,'0')}.jpg" alt="Lição ${lic.n}" style="display:block;margin:0 auto 16px;max-width:100%;max-height:64vh;width:auto;height:auto;border-radius:14px;box-shadow:0 8px 22px rgba(0,0,0,.28)" onerror="ebdEntrarLicao(true)"><button type="button" onclick="ebdEntrarLicao()" style="display:block;width:100%;max-width:340px;margin:0 auto 6px;padding:15px 18px;border:none;border-radius:14px;font-size:16px;font-weight:900;letter-spacing:.4px;cursor:pointer;background:linear-gradient(150deg,#f0d488,#c99a3a);color:#0a3a33;box-shadow:0 6px 16px rgba(0,0,0,.35)">👆 Clique aqui</button></div>`
     :`<img src="/ebd/${ebdTurmaAtual}/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`):'';
   const itens=[
     {num:'1',icon:'📝',nome:'LIÇÃO',
@@ -2770,7 +2770,8 @@ function abrirLicaoDetalhe(idx){
         <div style="font-size:14px;line-height:1.55;color:#dceee3">${_pv.pratica}</div></div>`:''}
       <button onclick="pedirPinMaster(function(){abrirLicaoDetalhe(${idx});})" style="width:100%;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:var(--gold);color:#0a2a24;letter-spacing:.3px">🔓 ABRIR AGORA COM PIN</button>
     </div>`:'';
-  document.getElementById('ebd-det-body').innerHTML=_licBanner+_previaBlk+_btnConcluir+itens.map(it=>{
+  const _comCapa=(ebdTurmaAtual==='adulto4'&&lic.n>=1&&lic.n<=13);  /* capa + botão "Clique aqui" → a capa some e a lição entra */
+  const _conteudo=_previaBlk+_btnConcluir+itens.map(it=>{
     const tappable=it.ativo&&it.tap&&!_detLocked;
     const action=_detLocked?`<span class="ebd-em-breve">🔒 Em breve</span>`:(it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`));
     return `<div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}${tappable?' ppt-item':''}"${tappable?` onclick="${it.tap}"`:''}>
@@ -2780,9 +2781,28 @@ function abrirLicaoDetalhe(idx){
       ${action}
     </div>`;
   }).join('');
+  document.getElementById('ebd-det-body').innerHTML=_comCapa
+    ? _licBanner+'<div id="ebd-det-conteudo" style="display:none;opacity:0;transition:opacity .35s ease">'+_conteudo+'</div>'
+    : _licBanner+_conteudo;
   if(_needPrevia) carregarPrevia(function(){ if(ebdDetalheIdx===idx && document.getElementById('tela-ebd-detalhe').classList.contains('ativa')) abrirLicaoDetalhe(idx); });
   ocultarTodas();
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
+}
+
+/* Adultos 4º tri: toca em "Clique aqui" → a capa some (fade) e a lição entra. rapido=true: sem animação (capa não carregou). */
+function ebdEntrarLicao(rapido){
+  var st=document.getElementById('ebd-capa-stage'), ct=document.getElementById('ebd-det-conteudo');
+  if(!ct) return;
+  function entrar(){
+    if(st) st.style.display='none';
+    ct.style.display='block';
+    requestAnimationFrame(function(){ ct.style.opacity='1'; });
+    var b=document.getElementById('ebd-det-body'); if(b) b.scrollTop=0;
+    try{ window.scrollTo(0,0); }catch(e){}
+  }
+  if(rapido||!st){ entrar(); return; }
+  st.style.opacity='0'; st.style.transform='scale(.96)';
+  setTimeout(entrar,330);
 }
 
 function ebdMarcarConcluida(idx){
@@ -3046,25 +3066,55 @@ function irRecentes(){alert('Recentes — em breve');}
 // Empurra um estado no history quando entra no admin.
 // Quando o usuário pressiona o botão voltar do celular,
 // o popstate navega dentro do app em vez de sair para 404.
+/* ═══ BOTÃO VOLTAR DO CELULAR — REGRA PERMANENTE DO ELIAS (17/10/2026): nunca esquecer ═══
+   Antes, o app só tinha UM item no histórico, então "voltar" do Android fechava o app.
+   Agora há sempre uma "trava" no histórico. Cada toque em voltar:
+     1) fecha janela/modal aberto por cima;
+     2) senão volta para a tela anterior (pilha das telas visitadas);
+     3) na tela inicial: avisa "toque de novo para sair"; só o 2º toque (em 2,5 s) deixa sair.
+   Telas novas entram sozinhas na pilha (observa a classe 'ativa' de cada .tela) — não precisa registrar nada. */
 history.replaceState({admTela:'home'},'');
-window.addEventListener('popstate',function(e){
-  const tela=document.querySelector('.tela.ativa');
-  const id=tela?tela.id:'';
-  // sub-tela admin → volta pro menu admin
-  if(id&&id.startsWith('tela-adm-')){
-    history.pushState({admTela:'tela-painel-adm'},'');
-    ocultarTodas();
-    document.getElementById('tela-painel-adm').classList.add('ativa');
-  } else if(id==='tela-painel-adm'){
-    // menu admin → home
-    history.pushState({admTela:'home'},'');
-    irHome();
-  } else {
-    // qualquer outra tela → home (comportamento padrão seguro)
-    history.pushState({admTela:'home'},'');
-    irHome();
+(function(){
+  var pilha=[], tSair=0;
+  function telaAtiva(){ var t=document.querySelector('.tela.ativa'); return t?t.id:''; }
+  function armar(){ try{ history.pushState({radarNav:1},''); }catch(e){} }
+  function registrar(){
+    var id=telaAtiva(); if(!id) return;
+    if(id==='home'||id==='splash'){ pilha=[id]; return; }
+    var i=pilha.lastIndexOf(id);
+    if(i>=0) pilha.length=i+1; else pilha.push(id);
   }
-});
+  function fecharJanelaAberta(){
+    var abertos=[].slice.call(document.querySelectorAll('.open')).filter(function(e){
+      var cs=getComputedStyle(e); return cs.display!=='none'&&cs.visibility!=='hidden'&&cs.position==='fixed'; });
+    if(abertos.length){ abertos[abertos.length-1].classList.remove('open'); return true; }
+    var ids=['ref-overlay','ref-sheet','lupa-ov'];
+    for(var k=0;k<ids.length;k++){ var el=document.getElementById(ids[k]); if(el&&getComputedStyle(el).display!=='none'&&el.offsetParent!==null){
+      if(ids[k]==='ref-sheet'&&typeof fecharRefSheet==='function') fecharRefSheet(); else el.style.display='none'; return true; } }
+    return false;
+  }
+  function aoVoltar(){
+    if(fecharJanelaAberta()){ armar(); return; }
+    var id=telaAtiva();
+    if(!id||id==='home'||id==='splash'){
+      if(Date.now()-tSair<2500){ history.back(); return; }   /* 2º toque: deixa sair (não rearma) */
+      tSair=Date.now();
+      if(typeof showToast==='function') showToast('Toque voltar de novo para sair');
+      armar(); return;
+    }
+    var prev=pilha[pilha.length-2]||'home';
+    if(prev==='home'||prev==='splash'||!document.getElementById(prev)){ irHome(); }
+    else { ocultarTodas(); document.getElementById(prev).classList.add('ativa'); try{ window.scrollTo(0,0); }catch(e){} }
+    armar();
+  }
+  function iniciar(){
+    var mo=new MutationObserver(registrar);
+    document.querySelectorAll('.tela').forEach(function(t){ mo.observe(t,{attributes:true,attributeFilter:['class']}); });
+    registrar(); armar();
+    window.addEventListener('popstate',aoVoltar);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',iniciar); else iniciar();
+})();
 
 function abrirPainelAdm(){
   const u=JSON.parse(localStorage.getItem('radar_user')||'{}');
@@ -3076,12 +3126,10 @@ function abrirPainelAdm(){
   document.getElementById('adm-cnt-visitantes').textContent=vis.length+' cadastrado'+(vis.length!==1?'s':'');
   document.getElementById('adm-cnt-alunos').textContent=alunos.length+' cadastrado'+(alunos.length!==1?'s':'');
   document.getElementById('adm-cnt-eventos').textContent=evs.length+' programado'+(evs.length!==1?'s':'');
-  history.pushState({admTela:'home'},''); // base de segurança
   abrirTelaAdm('tela-painel-adm');
 }
 
 function abrirTelaAdm(telaId){
-  history.pushState({admTela:telaId},'');
   ocultarTodas();
   const el=document.getElementById(telaId);
   if(el) el.classList.add('ativa');
