@@ -3075,14 +3075,23 @@ function irRecentes(){alert('Recentes — em breve');}
    Telas novas entram sozinhas na pilha (observa a classe 'ativa' de cada .tela) — não precisa registrar nada. */
 history.replaceState({admTela:'home'},'');
 (function(){
-  var pilha=[], tSair=0;
+  /* Cada tela nova ganha UMA entrada no histórico, criada no momento do toque (com "ativação do usuário" — se o app
+     criasse a entrada sozinho, o Chrome ignoraria e o voltar fecharia o app). Cada entrada guarda qual tela ela é
+     ({n, tela}); voltar físico = pop da entrada → mostra a tela daquela entrada. Botão ‹ do app = go(-1) para alinhar. */
+  var entradas=[], pos=0, ignorar=0, restaurando=false;
   function telaAtiva(){ var t=document.querySelector('.tela.ativa'); return t?t.id:''; }
-  function armar(){ try{ history.pushState({radarNav:1},''); }catch(e){} }
+  function estado(n,tela){ return {radarNav:1,n:n,tela:tela}; }
+  function irAtras(k){ if(k<=0) return; ignorar++; setTimeout(function(){ ignorar=0; },700); try{ history.go(-k); }catch(e){ ignorar=0; } }
   function registrar(){
     var id=telaAtiva(); if(!id) return;
-    if(id==='home'||id==='splash'){ pilha=[id]; return; }
-    var i=pilha.lastIndexOf(id);
-    if(i>=0) pilha.length=i+1; else pilha.push(id);
+    if(restaurando){ restaurando=false; return; }
+    if(!entradas.length){ entradas=[id]; pos=0; try{ history.replaceState(estado(0,id),''); }catch(e){} return; }
+    if(id===entradas[pos]) return;
+    if(pos===0&&entradas[0]==='splash'&&id==='home'){ entradas[0]='home'; try{ history.replaceState(estado(0,'home'),''); }catch(e){} return; }
+    if(id==='home'&&entradas[0]==='home'&&pos>0){ var n=pos; pos=0; entradas.length=1; irAtras(n); return; }   /* voltou ao início */
+    if(pos>0&&id===entradas[pos-1]){ pos--; irAtras(1); return; }                                              /* ‹ do app */
+    entradas.length=pos+1; entradas.push(id); pos++;                                                          /* tela nova */
+    try{ history.pushState(estado(pos,id),''); }catch(e){}
   }
   function fecharJanelaAberta(){
     var abertos=[].slice.call(document.querySelectorAll('.open')).filter(function(e){
@@ -3093,24 +3102,23 @@ history.replaceState({admTela:'home'},'');
       if(ids[k]==='ref-sheet'&&typeof fecharRefSheet==='function') fecharRefSheet(); else el.style.display='none'; return true; } }
     return false;
   }
-  function aoVoltar(){
-    if(fecharJanelaAberta()){ armar(); return; }
-    var id=telaAtiva();
-    if(!id||id==='home'||id==='splash'){
-      if(Date.now()-tSair<2500){ history.back(); return; }   /* 2º toque: deixa sair (não rearma) */
-      tSair=Date.now();
-      if(typeof showToast==='function') showToast('Toque voltar de novo para sair');
-      armar(); return;
-    }
-    var prev=pilha[pilha.length-2]||'home';
-    if(prev==='home'||prev==='splash'||!document.getElementById(prev)){ irHome(); }
-    else { ocultarTodas(); document.getElementById(prev).classList.add('ativa'); try{ window.scrollTo(0,0); }catch(e){} }
-    armar();
+  function aoVoltar(e){
+    if(ignorar>0){ ignorar--; return; }
+    var st=e&&e.state;
+    if(fecharJanelaAberta()){ if(st&&st.radarNav){ ignorar++; setTimeout(function(){ ignorar=0; },700); try{ history.forward(); }catch(x){ ignorar=0; } } return; }  /* fecha a janela e mantém a tela */
+    if(!st||!st.radarNav) return;
+    var np=typeof st.n==='number'?st.n:0, alvo=entradas[np]||'home';
+    pos=np;
+    if(alvo===telaAtiva()) return;
+    restaurando=true;
+    if(alvo==='home'){ irHome(); } else { var el=document.getElementById(alvo); if(el){ ocultarTodas(); el.classList.add('ativa'); } else { irHome(); } }
+    setTimeout(function(){ restaurando=false; },300);
+    try{ window.scrollTo(0,0); }catch(x){}
   }
   function iniciar(){
     var mo=new MutationObserver(registrar);
     document.querySelectorAll('.tela').forEach(function(t){ mo.observe(t,{attributes:true,attributeFilter:['class']}); });
-    registrar(); armar();
+    registrar();
     window.addEventListener('popstate',aoVoltar);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',iniciar); else iniciar();
