@@ -3106,7 +3106,10 @@ history.replaceState({admTela:'home'},'');
     if(ignorar>0){ ignorar--; return; }
     var st=e&&e.state;
     if(fecharJanelaAberta()){ if(st&&st.radarNav){ ignorar++; setTimeout(function(){ ignorar=0; },700); try{ history.forward(); }catch(x){ ignorar=0; } } return; }  /* fecha a janela e mantém a tela */
-    if(!st||!st.radarNav) return;
+    if(!st||!st.radarNav){   /* entrada que não é nossa (início do histórico): na tela inicial, avisa antes de sair */
+      if(telaAtiva()==='home'&&typeof showToast==='function') showToast('Toque voltar de novo para sair');
+      return;
+    }
     var np=typeof st.n==='number'?st.n:0, alvo=entradas[np]||'home';
     pos=np;
     if(alvo===telaAtiva()) return;
