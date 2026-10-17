@@ -3443,7 +3443,7 @@ function renderManuais(){
   itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', emoji:'🎓', cor:'#a9791c'});
   // Dicas de IA (15/10/2026): garimpadas de vídeos e conferidas. Selo NOVO por 14 dias.
   itens.push({onclick:"location.href='/biblioteca/dicas-ia/'", titulo:'Dicas de IA', autor:'Ferramentas e truques', emoji:'🤖', cor:'#0f6d78', novo:(Date.now()-new Date('2026-10-15T12:00:00').getTime())<14*864e5});
-  itens.push({onclick:"location.href='/biblioteca/livros/'", titulo:'Livros', autor:'Biblioteca do obreiro', emoji:'📚', cor:'#2f6b4f'});
+  itens.push({onclick:"location.href='/biblioteca/livros/'", titulo:'Livros', autor:'Biblioteca do obreiro', emoji:'📚', cor:'#2f6b4f', novo:(Date.now()-new Date('2026-10-17T12:00:00').getTime())<14*864e5});
   itens.push({onclick:"location.href='/biblioteca/estudo/'", titulo:'Meu Estudo', autor:'Privado · senha', emoji:'🔒', cor:'#5b3a1a'});
   // Pérolas Descoberta (09/10/2026): os 15 PDFs da pasta MARIA do Elias (Parábolas, Jesus no AT,
   // 70 Semanas, Salmos Explicados, Curiosidades, 12 Apóstolos) — cifrados com a mesma senha

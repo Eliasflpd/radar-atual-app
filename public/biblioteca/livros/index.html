@@ -20,6 +20,7 @@
   .livro{background:#fff;border:1px solid var(--linha);border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:0 3px 10px rgba(15,61,92,.08);transition:transform .12s}
   .livro:active{transform:scale(.98)}
   .livro .capa{height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px 12px;position:relative;color:#fff}
+  .livro .novo-tag{position:absolute;top:8px;right:8px;background:#e0a100;color:#fff;font:800 .62rem/1 system-ui,sans-serif;letter-spacing:.08em;padding:4px 7px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
   .livro .capa .ico{font-size:2rem;margin-bottom:8px;opacity:.9}
   .livro .capa .ct{font-family:'Playfair Display',serif;font-weight:800;font-size:.98rem;line-height:1.15;text-shadow:0 1px 6px rgba(0,0,0,.35)}
   .livro .meta{padding:8px 11px 11px}
@@ -73,6 +74,7 @@
 // desenha tabela direito e ainda mostra a foto da capa. Livro sem `url` continua
 // abrindo no leitor de sempre — nada mudou pros outros cinco.
 var LIVROS=[
+  {slug:'pratica-presenca-de-deus', titulo:'A Prática da Presença de Deus', autor:'Irmão Lourenço da Ressurreição', cor:'#7a4a1e', ico:'🕯️', data:'2026-10-17'},
   {slug:'discipulado-diligente', titulo:'Discipulado Diligente', autor:'Samuel Rodrigues',
    cor:'#b0452a', ico:'📕', url:'discipulado-diligente.html', capa:'discipulado-diligente-capa.jpg'},
   {slug:'ele-veio-libertar-cativos', titulo:'Ele Veio para Libertar os Cativos', autor:'Rebecca Brown', cor:'#5b1a1a', ico:'⛓️'},
@@ -88,9 +90,11 @@ function progresso(slug){ try{ return parseFloat(localStorage.getItem('livro_pro
 function renderLista(){
   $('grid').innerHTML=LIVROS.map(function(l){
     var pg=Math.round(progresso(l.slug)*100);
+    var novo=l.data && (Date.now()-new Date(l.data+'T12:00:00').getTime())<14*864e5;
     var capa = l.capa
       ? '<div class="capa" style="background:#1a1220"><img src="'+l.capa+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>'
       : '<div class="capa" style="background:linear-gradient(150deg,'+l.cor+',#1a1220)">'
+        +(novo?'<span class="novo-tag">NOVO</span>':'')
         +'<div class="ico">'+l.ico+'</div><div class="ct">'+l.titulo+'</div></div>';
     return '<div class="livro" data-slug="'+l.slug+'" data-url="'+(l.url||'')+'">'
       +capa
