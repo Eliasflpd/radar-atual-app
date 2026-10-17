@@ -2623,7 +2623,7 @@ function previaLic(turma,n){ try{ return (EBD_PREVIA&&EBD_PREVIA[turma]&&EBD_PRE
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
   carregarPrevia();
-  try{ document.getElementById('tela-ebd-turma').classList.toggle('ebd-mag',turma==='adulto4'); }catch(_){}
+  try{ var _te=document.getElementById('tela-ebd-turma'); _te.classList.toggle('ebd-mag',turma==='adulto4'||turma==='jovem4'); _te.classList.toggle('j',turma==='jovem4'); }catch(_){}
   const lics=EBD_LICOES[turma];
   const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS',adolescentes:'LIÇÃO ADOLESCENTES',juniores:'LIÇÃO JUNIORES',adulto4:'ADULTO · 4º TRI',jovem4:'JOVEM · 4º TRI'}[turma]||'LIÇÃO';
   const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒',adolescentes:'🧑‍🎓',juniores:'🧒',adulto4:'📘',jovem4:'📗'}[turma]||'📖';
@@ -2665,8 +2665,8 @@ function abrirEbdTurma(turma){
           :'<div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.62);color:#fff;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px">🔒 Em breve</div>';
         return `<div class="ebd-item ppt-item" style="display:block;padding:0;overflow:hidden;margin-bottom:12px${lic.n>_at?';opacity:.9':''}" onclick="abrirLicaoDetalhe(${idx})">
           <div style="position:relative">
-            ${ebdTurmaAtual==='adulto4'
-              ?`<img src="/ebd/adulto4/img/capa-licao-${nn}.jpg?d=2" loading="lazy" alt="" style="width:100%;aspect-ratio:16/10;object-fit:cover;object-position:50% 42%;display:block" onerror="this.style.display='none'">`
+            ${(ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4')
+              ?`<img src="/ebd/${ebdTurmaAtual}/img/capa-licao-${nn}.jpg?d=2" loading="lazy" alt="" style="width:100%;aspect-ratio:16/10;object-fit:cover;object-position:50% 42%;display:block" onerror="this.style.display='none'">`
               :`<img src="/ebd/${ebdTurmaAtual}/img/licao-${nn}.jpg" loading="lazy" style="width:100%;display:block" onerror="this.style.display='none'">`}
             ${badge}${_selo}
           </div>
@@ -2728,8 +2728,8 @@ function abrirLicaoDetalhe(idx){
   document.getElementById('ebd-det-sub').textContent=lic.titulo;
   const n=String(lic.n>0?lic.n:0).padStart(2,'0');
   /* Adultos 4º tri (17/10/2026): capa nova (arte + LIÇÃO N + título), sem a foto da página da revista (letra miúda, ruim no celular) */
-  const _licBanner=(lic.n>=1&&lic.n<=13)?(ebdTurmaAtual==='adulto4'
-    ?`<div id="ebd-capa-stage" style="position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:60;display:flex;flex-direction:column;background:${['#021b41','#011941','#0a1c30','#01173f','#04162d','#02162f','#02142b','#011228','#01133b','#01123a','#02152c','#01162f','#01162d'][lic.n-1]};transition:opacity .35s ease,transform .35s ease"><img src="/ebd/adulto4/img/capa-licao-${String(lic.n).padStart(2,'0')}.jpg?d=2" alt="Lição ${lic.n}" style="flex:1 1 auto;min-height:0;width:100%;height:calc(100% - 80px);object-fit:contain;object-position:50% 0;display:block" onerror="ebdEntrarLicao(true)"><button type="button" onclick="fecharLicaoDetalhe()" aria-label="Voltar" style="position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;width:46px;height:46px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.62);color:#fff;font-size:28px;line-height:1;padding:0 0 4px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5)">‹</button><button type="button" onclick="ebdEntrarLicao()" style="position:absolute;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));height:54px;border:3px solid #fff;border-radius:16px;font-size:19px;font-weight:900;letter-spacing:.5px;cursor:pointer;background:#f2c14e;color:#0a164a;box-shadow:0 0 0 2px rgba(0,0,0,.6),0 8px 24px rgba(0,0,0,.65)">👆 Clique aqui</button></div>`
+  const _licBanner=(lic.n>=1&&lic.n<=13)?((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4')
+    ?`<div id="ebd-capa-stage" style="position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:60;display:flex;flex-direction:column;background:${(ebdTurmaAtual==='jovem4'?['#0a1b35','#03142d','#04152e','#001334','#001232','#001130','#001333','#001130','#00112f','#00112c','#001131','#001132','#001132']:['#021b41','#011941','#0a1c30','#01173f','#04162d','#02162f','#02142b','#011228','#01133b','#01123a','#02152c','#01162f','#01162d'])[lic.n-1]};transition:opacity .35s ease,transform .35s ease"><img src="/ebd/${ebdTurmaAtual}/img/capa-licao-${String(lic.n).padStart(2,'0')}.jpg?d=2" alt="Lição ${lic.n}" style="flex:1 1 auto;min-height:0;width:100%;height:calc(100% - 80px);object-fit:contain;object-position:50% 0;display:block" onerror="ebdEntrarLicao(true)"><button type="button" onclick="fecharLicaoDetalhe()" aria-label="Voltar" style="position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;width:46px;height:46px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.62);color:#fff;font-size:28px;line-height:1;padding:0 0 4px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5)">‹</button><button type="button" onclick="ebdEntrarLicao()" style="position:absolute;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));height:54px;border:3px solid #fff;border-radius:16px;font-size:19px;font-weight:900;letter-spacing:.5px;cursor:pointer;background:#f2c14e;color:#0a164a;box-shadow:0 0 0 2px rgba(0,0,0,.6),0 8px 24px rgba(0,0,0,.65)">👆 Clique aqui</button></div>`
     :`<img src="/ebd/${ebdTurmaAtual}/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`):'';
   const itens=[
     {num:'1',icon:'📝',nome:'LIÇÃO',
@@ -2762,7 +2762,7 @@ function abrirLicaoDetalhe(idx){
      tap:lic.n>0?`abrirPlanoAula(${idx})`:null}
   ].map((it,i)=>({...it,num:String(i+1)}));
   const _fnd=lic.n>0&&ebdConcluida(ebdTurmaAtual,lic.n);
-  const _btnConcluir=(lic.n>0&&!_detLocked)?`<button id="ebd-btn-concluir" onclick="ebdMarcarConcluida(${idx})" style="width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${_fnd?'background:#25D366;color:#fff':(ebdTurmaAtual==='adulto4'?'background:#962030;color:#f9f5da;border:1.5px solid #d9a441':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)')}">${_fnd?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA'}</button>`:'';
+  const _btnConcluir=(lic.n>0&&!_detLocked)?`<button id="ebd-btn-concluir" onclick="ebdMarcarConcluida(${idx})" style="width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${_fnd?'background:#25D366;color:#fff':((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4')?'background:'+(ebdTurmaAtual==='jovem4'?'#a34a5e':'#962030')+';color:#f9f5da;border:1.5px solid #d9a441':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)')}">${_fnd?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA'}</button>`:'';
   // PRÉVIA da lição bloqueada: capa (acima) + Texto Áureo + Verdade Prática + botão de PIN
   const _pv=_detLocked?previaLic(ebdTurmaAtual,lic.n):null;
   const _previaBlk=_detLocked?`<div style="background:linear-gradient(160deg,#0d1826,#12233a);border:1px solid rgba(240,226,184,.22);border-radius:16px;padding:16px;margin-bottom:14px">
@@ -2779,9 +2779,9 @@ function abrirLicaoDetalhe(idx){
         <div style="font-size:14px;line-height:1.55;color:#dceee3">${_pv.pratica}</div></div>`:''}
       <button onclick="pedirPinMaster(function(){abrirLicaoDetalhe(${idx});})" style="width:100%;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:var(--gold);color:#0a2a24;letter-spacing:.3px">🔓 ABRIR AGORA COM PIN</button>
     </div>`:'';
-  const _magTema=(ebdTurmaAtual==='adulto4');   /* tema da revista (paleta CPAD Adultos 4T/2026) */
+  const _magTema=(ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4');   /* tema da revista (paleta CPAD Adultos 4T/2026) */
   const _cardsMag=(_magTema&&!_detLocked&&lic.n>0)?`<div id="ebd-mag-cards">${cardsMagHtml(ebdTurmaAtual,lic.n)}</div>`:'';
-  const _comCapa=(ebdTurmaAtual==='adulto4'&&lic.n>=1&&lic.n<=13);  /* capa + botão "Clique aqui" → a capa some e a lição entra */
+  const _comCapa=((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4')&&lic.n>=1&&lic.n<=13);  /* capa + botão "Clique aqui" → a capa some e a lição entra */
   const _conteudo=_previaBlk+_cardsMag+_btnConcluir+itens.map(it=>{
     const tappable=it.ativo&&it.tap&&!_detLocked;
     const action=_detLocked?`<span class="ebd-em-breve">🔒 Em breve</span>`:(it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`));
@@ -2799,6 +2799,7 @@ function abrirLicaoDetalhe(idx){
   if(_cardsMag&&!EBD_PREVIA) carregarPrevia(function(){ var b=document.getElementById('ebd-mag-cards'); if(b) b.innerHTML=cardsMagHtml(ebdTurmaAtual,lic.n); });
   ocultarTodas();
   document.getElementById('tela-ebd-detalhe').classList.toggle('ebd-mag',_magTema);
+  document.getElementById('tela-ebd-detalhe').classList.toggle('j',ebdTurmaAtual==='jovem4');
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
 }
 
@@ -2824,7 +2825,7 @@ function ebdMarcarConcluida(idx){
   const b=document.getElementById('ebd-btn-concluir');
   if(b){
     b.textContent=feita?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA';
-    b.style.cssText=`width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${feita?'background:#25D366;color:#fff':(ebdTurmaAtual==='adulto4'?'background:#962030;color:#f9f5da;border:1.5px solid #d9a441':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)')}`;
+    b.style.cssText=`width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${feita?'background:#25D366;color:#fff':((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4')?'background:'+(ebdTurmaAtual==='jovem4'?'#a34a5e':'#962030')+';color:#f9f5da;border:1.5px solid #d9a441':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)')}`;
   }
   if(typeof showToast==='function') showToast(feita?'Lição marcada como concluída ✓':'Marcação removida');
 }

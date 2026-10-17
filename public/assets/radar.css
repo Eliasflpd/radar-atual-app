@@ -1296,3 +1296,12 @@ html[data-pele="azul"] #home::selection{background:rgba(231,184,79,.35)}
 .ebd-mag-card.pratica{background:var(--mag-ceu);border-color:var(--mag-azul)}
 .ebd-mag-card.pratica .mc-titulo{color:var(--mag-vinho)}
 .ebd-mag-btn-concluir{background:var(--mag-vinho) !important;color:var(--mag-creme) !important;border:1.5px solid var(--mag-ouro) !important}
+
+/* ══ EBD · variante JOVENS (revista de tom dourado/quente: âmbar, creme, rosa-vinho) ══ */
+.ebd-mag.j{--mag-navy:#2b1d10;--mag-navy2:#1a1108;--mag-azul:#b66e28;--mag-aco:#8e5513;--mag-ceu:#f1e4cc;--mag-vinho:#a34a5e;--mag-creme:#f6edda;--mag-bronze:#b66e28;--mag-ouro:#e3a845}
+.ebd-mag.j .std-header{border-bottom-color:rgba(227,168,69,.5)}
+.ebd-mag.j .ebd-item{background:rgba(182,110,40,.22);border-color:rgba(227,168,69,.45)}
+.ebd-mag.j .ebd-mag-card .mc-titulo{color:#5a3412}
+.ebd-mag.j .ebd-mag-card .mc-texto{color:#3a2814}
+.ebd-mag.j .ebd-mag-card.pratica{border-color:var(--mag-bronze)}
+.ebd-mag.j .ebd-mag-card.pratica .mc-titulo{color:var(--mag-vinho)}
