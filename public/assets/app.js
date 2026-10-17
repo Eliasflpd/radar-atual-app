@@ -2656,7 +2656,9 @@ function abrirEbdTurma(turma){
           :'<div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.62);color:#fff;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px">🔒 Em breve</div>';
         return `<div class="ebd-item ppt-item" style="display:block;padding:0;overflow:hidden;margin-bottom:12px${lic.n>_at?';opacity:.9':''}" onclick="abrirLicaoDetalhe(${idx})">
           <div style="position:relative">
-            <img src="/ebd/${ebdTurmaAtual}/img/licao-${nn}.jpg" loading="lazy" style="width:100%;display:block" onerror="this.style.display='none'">
+            ${ebdTurmaAtual==='adulto4'
+              ?`<img src="/ebd/adulto4/img/capa-licao-${nn}.jpg" loading="lazy" alt="" style="width:100%;aspect-ratio:16/10;object-fit:cover;object-position:50% 42%;display:block" onerror="this.style.display='none'">`
+              :`<img src="/ebd/${ebdTurmaAtual}/img/licao-${nn}.jpg" loading="lazy" style="width:100%;display:block" onerror="this.style.display='none'">`}
             ${badge}${_selo}
           </div>
           <div style="display:flex;align-items:center;gap:10px;padding:11px 14px">
@@ -2716,7 +2718,10 @@ function abrirLicaoDetalhe(idx){
   document.getElementById('ebd-det-titulo').textContent=nLabel;
   document.getElementById('ebd-det-sub').textContent=lic.titulo;
   const n=String(lic.n>0?lic.n:0).padStart(2,'0');
-  const _licBanner=(lic.n>=1&&lic.n<=13)?`<img src="/ebd/${ebdTurmaAtual}/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`:'';
+  /* Adultos 4º tri (17/10/2026): capa nova (arte + LIÇÃO N + título), sem a foto da página da revista (letra miúda, ruim no celular) */
+  const _licBanner=(lic.n>=1&&lic.n<=13)?(ebdTurmaAtual==='adulto4'
+    ?`<img src="/ebd/adulto4/img/capa-licao-${String(lic.n).padStart(2,'0')}.jpg" alt="Lição ${lic.n}" style="display:block;margin:0 auto 14px;max-width:100%;max-height:68vh;width:auto;height:auto;border-radius:14px;box-shadow:0 8px 22px rgba(0,0,0,.28)" onerror="this.style.display='none'">`
+    :`<img src="/ebd/${ebdTurmaAtual}/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`):'';
   const itens=[
     {num:'1',icon:'📝',nome:'LIÇÃO',
      ativo:!!lic.licao,
@@ -4326,7 +4331,7 @@ function licaoSemanaCard(){
   var n=licaoDaSemana4();
   if(n<1||n>13) return null;
   var nn=('0'+n).slice(-2);
-  return {id:'_licsem', tipo:'licaobanner', img:'/ebd/adulto4/img/licao-'+nn+'.jpg', n:n};
+  return {id:'_licsem', tipo:'licaobanner', img:'/ebd/adulto4/img/capa-licao-'+nn+'.jpg', n:n};
 }
 function abrirEbdAdultoLicao(n){
   try{
@@ -4435,7 +4440,7 @@ function renderCarousel(){
     } else if(c.tipo==='licaobanner'){
       inner=`<div onclick="abrirEbd4Licao(${c.n})" style="height:460px;background:linear-gradient(160deg,#0a3a33,#0e5347);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;overflow:hidden">
         <div style="background:linear-gradient(150deg,#f0d488,#c99a3a);color:#0a3a33;font-weight:900;font-size:12.5px;padding:7px 15px;border-radius:999px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(0,0,0,.35)">📖 LIÇÃO DA SEMANA</div>
-        <img src="${c.img}" style="width:100%;display:block;box-shadow:0 10px 26px rgba(0,0,0,.45)" onerror="this.style.display='none'">
+        <img src="${c.img}" style="max-width:78%;max-height:330px;width:auto;height:auto;display:block;border-radius:12px;box-shadow:0 10px 26px rgba(0,0,0,.45)" onerror="this.style.display='none'">
         <div style="color:#fff;font-size:13.5px;font-weight:800;opacity:.95">Toque para abrir a lição ›</div>
       </div>`;
     } else {
