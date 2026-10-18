@@ -42,6 +42,7 @@ import { embutirPergunta } from './busca-vetor.js';
 // recebe o redator por parâmetro). Import circular em ESM deixa `const` em TDZ
 // e o módulo morre no carregamento — e um globo que não carrega é tela morta.
 import { FERRAMENTA_MEMORIA, oQueJaFalamos } from './voz-memoria.js';
+import { iaTexto } from './ia.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) OS LIVROS — apelido → abreviação do biblia.json, nome por extenso, testamento.
@@ -535,7 +536,19 @@ export function chavesGemini() {
 const MODELO_TEXTO = 'gemini-3.8-flash';
 const MODELO_CF = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
-async function escrever(prompt) {
+async function escrever(prompt, opts) {
+  // CÉREBRO PREMIUM PRIMEIRO (só quando o chamador pede, hoje: a nota de pesquisa da biblioteca). A Claude (degrau
+  // `premium` da cascata em ia.js, chave do Elias na Vercel) escreve teologia melhor que o Gemini-flash e o Llama.
+  // Se ela falhar, ficar sem crédito (a cascata já trata "credit balance too low") ou demorar, cai sozinha no
+  // caminho de sempre abaixo — a voz nunca fica sem resposta por causa disso.
+  if (opts && opts.premium) {
+    try {
+      const r = await iaTexto({ sys: 'Você é um pesquisador de teologia que escreve notas de estudo para um pastor.', user: prompt,
+        premium: true, max_tokens: 900, tag: 'globo-nota' });
+      const t = r && typeof r.texto === 'string' ? r.texto.trim() : '';
+      if (t) return t;
+    } catch (_) { /* segue para o Gemini / Llama */ }
+  }
   for (const chave of chavesGemini()) {
     try {
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODELO_TEXTO}:generateContent`, {
@@ -656,7 +669,7 @@ async function pesquisarBiblioteca(pergunta, origem) {
       motivo: 'Procurei na biblioteca e não achei nada que sustente isso. Diga ao pastor, com todas as letras, que não encontrou apoio — e não preencha o vazio com erudição inventada.' };
   }
 
-  const nota = await escrever(ordemDeRedacao(q, bons));
+  const nota = await escrever(ordemDeRedacao(q, bons), { premium: true });
   if (!nota) {
     return { achou: false, motivo: 'Consultei a biblioteca mas não consegui fechar a pesquisa agora. Diga que a consulta falhou; não improvise erudição.' };
   }
