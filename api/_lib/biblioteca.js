@@ -203,7 +203,7 @@ module.exports = async (req, res) => {
     // pergunta digita em latinas. O indexador grava na `secao` do verbete "G0026 · αγαπη · agape / agape";
     // aqui casamos o que foi digitado (ou um número de Strong, "G26") com esse campo e pomos o verbete exato
     // no topo. É um complemento: se não casar nada, o resultado é o de sempre.
-    let achados = [];
+    let achados = [], erroLex = null;
     try {
       const lex = termosDaPergunta(pergunta);
       if (lex.strongs.length || lex.termos.length) {
@@ -216,7 +216,7 @@ module.exports = async (req, res) => {
             order by peso, id limit 3`, [lex.strongs, lex.termos]);
         achados = rl.rows.map((x) => ({ ...x, score: 1 }));
       }
-    } catch (_) { achados = []; }
+    } catch (e) { achados = []; erroLex = String((e && e.message) || e).slice(0, 160); }
 
     // Sem deduplicar, o union all devolve o mesmo trecho duas vezes.
     const vistos = new Set(), itens = [];
@@ -230,7 +230,22 @@ module.exports = async (req, res) => {
         score: Math.round(x.score * 1000) / 1000 });
       if (itens.length >= quantos) break;
     }
-    res.status(200).json({ ok: true, total: itens.length, itens });
+    // DIAGNÓSTICO (só quando pedido): números e contagens, nunca texto de livro. Serve para comparar o que a
+    // produção enxerga com o que o teste local enxerga (banco, vetor da pergunta, busca por palavra).
+    let diag;
+    if (b.diag) {
+      try {
+        const lex = termosDaPergunta(pergunta);
+        const dbn = await c.query(`select current_database() db,
+            (select count(*)::int from biblioteca_trechos) total,
+            (select count(*)::int from biblioteca_trechos where tipo = 'verbete' and secao like '% · %') verbetes_com_translit,
+            (select secao from biblioteca_trechos where livro = 'G0026' order by id limit 1) g26`);
+        const norma = Math.sqrt(v.reduce((s, x) => s + x * x, 0));
+        diag = { versao: 'diag-2026-10-18', db: dbn.rows[0], lex: { termos: lex.termos, strongs: lex.strongs, achados: achados.length, erro: erroLex },
+          emb: { dims: v.length, norma: Math.round(norma * 1000) / 1000, primeiros: v.slice(0, 4).map((x) => Math.round(x * 10000) / 10000) } };
+      } catch (e) { diag = { erro: String((e && e.message) || e).slice(0, 160) }; }
+    }
+    res.status(200).json({ ok: true, total: itens.length, itens, diag });
   } catch (e) {
     res.status(200).json({ ok: false, err: String((e && e.message) || e).slice(0, 160) });
   } finally { try { await c.end(); } catch (_) {} }

@@ -738,10 +738,13 @@ async function bibliotecaFonte(pergunta, origem, quantos, ctx) {
   try {
     const r = await fetch(origem + '/api/dados?fn=biblioteca', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
-      body: JSON.stringify({ q: String(pergunta).slice(0, 400), n: Math.max(quantos || 4, 4), token: tk }),
+      body: JSON.stringify({ q: String(pergunta).slice(0, 400), n: Math.max(quantos || 4, 4), token: tk,
+        diag: ctx && ctx.querDiag ? 1 : undefined }),
     });
-    if (!r.ok) return '';
+    if (!r.ok) { if (ctx && ctx.querDiag) ctx.diag = { http: r.status }; return ''; }
     const d = await r.json();
+    if (ctx && ctx.querDiag) ctx.diag = Object.assign({}, d && d.diag, d && !d.ok ? { rotaErro: d.err } : {},
+      { itensRota: ((d && d.itens) || []).map((x) => (x.livro || '') + ':' + x.score) });
     // abaixo deste corte o "melhor resultado" é só o menos ruim: melhor não dar fonte nenhuma do que fonte fraca
     const itens = ((d && d.ok && d.itens) || []).filter((x) => x && x.texto && x.score >= 0.5).slice(0, quantos || 4);
     if (!itens.length) return '';
@@ -775,11 +778,13 @@ async function fontesDeEstudo(pergunta, origem, quantos, ctx) {
 // Põe no cabeçalho da resposta QUAIS obras a biblioteca trouxe (só nomes). O corpo em streaming não é tocado.
 function comFontes(resp, ctx) {
   try {
-    if (!ctx || !ctx.fontes || !ctx.fontes.length) return resp;
+    const temFontes = !!(ctx && ctx.fontes && ctx.fontes.length), temDiag = !!(ctx && ctx.diag);
+    if (!temFontes && !temDiag) return resp;
     const h = new Headers(resp.headers);
-    h.set('x-fontes-estudo', encodeURIComponent(ctx.fontes.join(' | ')).slice(0, 900));
+    if (temFontes) h.set('x-fontes-estudo', encodeURIComponent(ctx.fontes.join(' | ')).slice(0, 900));
+    if (temDiag) h.set('x-biblioteca-diag', encodeURIComponent(JSON.stringify(ctx.diag)).slice(0, 3000));
     const exp = (h.get('access-control-expose-headers') || '').split(',').map((s) => s.trim()).filter(Boolean);
-    if (!exp.includes('x-fontes-estudo')) exp.push('x-fontes-estudo');
+    for (const n of ['x-fontes-estudo', 'x-biblioteca-diag']) if (!exp.includes(n)) exp.push(n);
     h.set('access-control-expose-headers', exp.join(', '));
     return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers: h });
   } catch (_) { return resp; }
@@ -1090,7 +1095,7 @@ export default async function handler(req) {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
     if (!tema) return new Response('Diga o texto ou o tema do sermão.', { status: 400, headers: CORS });
     const origem = _origemDe(req);
-    const ctxP = {};
+    const ctxP = { querDiag: !!b.diag };
     const fonteP = await fontesDeEstudo(tema, origem, undefined, ctxP);
     return comFontes(fluxoComFontes(await streamChat(SYS_PEROLA + blocoDoOriginal(tema) + fonteP, 'TEXTO / TEMA DO PASTOR: ' + tema,
       { temperature: 0.6, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema }), ctxP);
@@ -1102,7 +1107,7 @@ export default async function handler(req) {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 4000);
     if (!tema) return new Response('Diga o texto ou o tema da mensagem.', { status: 400, headers: CORS });
     const origem = _origemDe(req);
-    const ctxM = {};
+    const ctxM = { querDiag: !!b.diag };
     const fonteM = await fontesDeEstudo(tema, origem, undefined, ctxM);
     return comFontes(fluxoComFontes(await streamChat(SYS_MENSAGEM + blocoDoOriginal(tema) + fonteM, 'TEXTO / TEMA DO PASTOR: ' + tema,
       { temperature: 0.65, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema }), ctxM);
