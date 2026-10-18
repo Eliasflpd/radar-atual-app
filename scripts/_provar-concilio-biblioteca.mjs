@@ -1,6 +1,6 @@
 // Prova da ligação Concílio ↔ biblioteca de estudo. Sem banco e sem rede: o fetch é simulado.
 // Roda com:  node scripts/_provar-concilio-biblioteca.mjs
-import { bibliotecaFonte, fontesDeEstudo } from '../api/_lib/concilio.js';
+import { bibliotecaFonte, fontesDeEstudo, comFontes } from '../api/_lib/concilio.js';
 
 let ok = 0, falhou = 0;
 const prova = (nome, cond, detalhe) => { if (cond) { ok++; console.log('  ✅ ' + nome + (detalhe ? ' — ' + detalhe : '')); } else { falhou++; console.log('  ❌ ' + nome + (detalhe ? ' — ' + detalhe : '')); } };
@@ -32,6 +32,14 @@ prova('manda a pergunta e o token pro motor, servidor a servidor', chamadas.leng
 prova('rotula a ordem de autoridade (primária / aprovado / com filtro)', /FONTE PRIMÁRIA/.test(b) && /autor aprovado/.test(b) && /COM FILTRO/.test(b));
 prova('corta cada trecho em ~1300 letras (o prompt não incha)', b.length < 4 * 1500 + 1800, b.length + ' letras no total');
 prova('traz a ordem de NÃO copiar e de dizer de onde veio', /NÃO copie/.test(b) && /seis palavras/.test(b) && /nome do autor/.test(b));
+
+console.log('▸ cabeçalho com os nomes das fontes');
+const ctx = {};
+await bibliotecaFonte('espírito sobre as águas', 'http://x', 4, ctx);
+prova('guarda só NOMES (autor e onde) no contexto', Array.isArray(ctx.fontes) && ctx.fontes.length === 3 && ctx.fontes.every((s) => !/TEXTO-FICTICIO/.test(s)), ctx.fontes && ctx.fontes[0]);
+const resp = comFontes(new Response('corpo em streaming'), ctx);
+prova('põe x-fontes-estudo no cabeçalho, sem tocar no corpo', /Keil/.test(decodeURIComponent(resp.headers.get('x-fontes-estudo') || '')) && (await resp.text()) === 'corpo em streaming');
+prova('sem fontes, devolve a resposta como estava', comFontes(new Response('x'), {}).headers.get('x-fontes-estudo') === null);
 
 console.log('▸ junto com o Kittel (que hoje não responde)');
 chamadas.length = 0;

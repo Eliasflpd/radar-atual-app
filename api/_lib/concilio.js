@@ -729,7 +729,7 @@ async function kittelFonte(pergunta, origem, quantos) {
 // o que sai pra tela é a mensagem escrita pelo redator, com as palavras dele. O parágrafo do autor nunca viaja.
 // (A norma é a de scripts/indexar-biblioteca.mjs: pesquisar e citar a fonte pode; distribuir não.)
 // Falha em silêncio: sem banco, sem token ou sem resposta, devolve '' e o Concílio segue como sempre foi.
-async function bibliotecaFonte(pergunta, origem, quantos) {
+async function bibliotecaFonte(pergunta, origem, quantos, ctx) {
   if (!origem || !pergunta) return '';
   const tk = process.env.RADAR_ADMIN_TOKEN || '';
   if (!tk) return '';
@@ -745,6 +745,8 @@ async function bibliotecaFonte(pergunta, origem, quantos) {
     // abaixo deste corte o "melhor resultado" é só o menos ruim: melhor não dar fonte nenhuma do que fonte fraca
     const itens = ((d && d.ok && d.itens) || []).filter((x) => x && x.texto && x.score >= 0.5).slice(0, quantos || 4);
     if (!itens.length) return '';
+    // Só os NOMES (autor e onde), nunca o texto: quem chamou pode devolver isto no cabeçalho da resposta.
+    if (ctx) ctx.fontes = itens.map((x) => x.autor + ' — ' + (x.secao || x.livro || ''));
     const partes = itens.map((x, i) => {
       const selo = x.peso === 2 ? '[FONTE PRIMÁRIA — diz qual é a palavra no original]'
         : x.aprovado === false ? '[COM FILTRO — vale só em grego, crítica textual e estudo de palavra; nunca em interpretação disputada]'
@@ -765,9 +767,22 @@ async function bibliotecaFonte(pergunta, origem, quantos) {
 
 // As duas fontes juntas, em paralelo: o Kittel (verbetes) e a biblioteca (comentários, dicionários, livros).
 // É esta a função que os pontos de entrada do Concílio chamam — um lugar só pra acrescentar fonte nova.
-async function fontesDeEstudo(pergunta, origem, quantos) {
-  const [k, b] = await Promise.all([kittelFonte(pergunta, origem, quantos), bibliotecaFonte(pergunta, origem, 4)]);
+async function fontesDeEstudo(pergunta, origem, quantos, ctx) {
+  const [k, b] = await Promise.all([kittelFonte(pergunta, origem, quantos), bibliotecaFonte(pergunta, origem, 4, ctx)]);
   return (k || '') + (b || '');
+}
+
+// Põe no cabeçalho da resposta QUAIS obras a biblioteca trouxe (só nomes). O corpo em streaming não é tocado.
+function comFontes(resp, ctx) {
+  try {
+    if (!ctx || !ctx.fontes || !ctx.fontes.length) return resp;
+    const h = new Headers(resp.headers);
+    h.set('x-fontes-estudo', encodeURIComponent(ctx.fontes.join(' | ')).slice(0, 900));
+    const exp = (h.get('access-control-expose-headers') || '').split(',').map((s) => s.trim()).filter(Boolean);
+    if (!exp.includes('x-fontes-estudo')) exp.push('x-fontes-estudo');
+    h.set('access-control-expose-headers', exp.join(', '));
+    return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers: h });
+  } catch (_) { return resp; }
 }
 
 function _origemDe(req) {
@@ -1075,9 +1090,10 @@ export default async function handler(req) {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
     if (!tema) return new Response('Diga o texto ou o tema do sermão.', { status: 400, headers: CORS });
     const origem = _origemDe(req);
-    const fonteP = await fontesDeEstudo(tema, origem);
-    return fluxoComFontes(await streamChat(SYS_PEROLA + blocoDoOriginal(tema) + fonteP, 'TEXTO / TEMA DO PASTOR: ' + tema,
-      { temperature: 0.6, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema });
+    const ctxP = {};
+    const fonteP = await fontesDeEstudo(tema, origem, undefined, ctxP);
+    return comFontes(fluxoComFontes(await streamChat(SYS_PEROLA + blocoDoOriginal(tema) + fonteP, 'TEXTO / TEMA DO PASTOR: ' + tema,
+      { temperature: 0.6, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema }), ctxP);
   }
   if (acao === 'mensagem') {
     // 4000 (era 400) — pra caber uma TRANSCRIÇÃO inteira colada (ex.: o texto de
@@ -1086,9 +1102,10 @@ export default async function handler(req) {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 4000);
     if (!tema) return new Response('Diga o texto ou o tema da mensagem.', { status: 400, headers: CORS });
     const origem = _origemDe(req);
-    const fonteM = await fontesDeEstudo(tema, origem);
-    return fluxoComFontes(await streamChat(SYS_MENSAGEM + blocoDoOriginal(tema) + fonteM, 'TEXTO / TEMA DO PASTOR: ' + tema,
-      { temperature: 0.65, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema });
+    const ctxM = {};
+    const fonteM = await fontesDeEstudo(tema, origem, undefined, ctxM);
+    return comFontes(fluxoComFontes(await streamChat(SYS_MENSAGEM + blocoDoOriginal(tema) + fonteM, 'TEXTO / TEMA DO PASTOR: ' + tema,
+      { temperature: 0.65, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema }), ctxM);
   }
   if (acao === 'lupa') {
     const pergunta = (b.pergunta || b.tema || b.passagem || '').toString().trim().slice(0, 500);
@@ -1175,4 +1192,4 @@ FORMATO: use os cabeçalhos com emoji exatamente como pedidos abaixo. Comece dir
 }
 
 // Exportadas só para a bancada de provas (scripts/_provar-concilio-biblioteca.mjs).
-export { bibliotecaFonte, fontesDeEstudo };
+export { bibliotecaFonte, fontesDeEstudo, comFontes };
