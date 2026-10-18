@@ -276,6 +276,30 @@ function livroDoNome(arquivo) {
   return s.length > 44 ? s.slice(0, 44) : s;
 }
 
+// ─── verbete de léxico: a palavra em letras LATINAS também ───────────────────
+// O Thayer/Kittel guardam a palavra só em grego ("αγαπη"). Quem pergunta digita "ágape". Só por sentido o
+// verbete certo quase nunca aparece (medido em 18/10/2026: "ágape" trazia o verbete de Ágabo). Então a `secao`
+// do trecho passa a ser "G0026 · αγαπη · agape / agape": serve de pista pro embutidor E pra busca por palavra
+// da rota (api/_lib/biblioteca.js), que casa o termo digitado com este campo. Variante 2 = grafias comuns
+// em português (f no lugar de ph, u no lugar de y, t no lugar de th).
+const GREGO = { α: 'a', β: 'b', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'e', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n',
+  ξ: 'x', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'y', φ: 'ph', χ: 'ch', ψ: 'ps', ω: 'o' };
+function transliterarGrego(palavra) {
+  let s = String(palavra || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  s = s.replace(/γγ/g, 'ng').replace(/γκ/g, 'nk').replace(/γξ/g, 'nx').replace(/γχ/g, 'nch')
+    .replace(/(α|ε|η|ο)υ/g, (m, v) => GREGO[v] + 'u');
+  return [...s].map((c) => GREGO[c] || (/[a-z0-9]/.test(c) ? c : '')).join('');
+}
+function secaoDoVerbete(texto, livro) {
+  const m = String(texto || '').match(/^palavra:\s*(.+)$/m);
+  if (!m) return '';
+  const grego = m[1].trim();
+  const a = transliterarGrego(grego);
+  if (!a) return livro || '';
+  const b = a.replace(/ph/g, 'f').replace(/y/g, 'u').replace(/th/g, 't');
+  return `${livro} · ${grego} · ${a}${b !== a ? ' / ' + b : ''}`;
+}
+
 // ─── o embutidor ─────────────────────────────────────────────────────────────
 const dorme = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -504,12 +528,13 @@ function pedacosDe(f) {
       }
       continue;
     }
+    const secaoVerb = f.tipo === 'verbete' ? secaoDoVerbete(texto, livro) : '';
     for (const t of fatiar(corpo)) {
       pedacos.push({
         autor: f.autor,
         obra: f.obra,
         livro,
-        secao: f.tipo === 'comentario' ? pistaDeReferencia(t, livro) : livro,
+        secao: secaoVerb || (f.tipo === 'comentario' ? pistaDeReferencia(t, livro) : livro),
         tipo: f.tipo,
         texto: t,
       });

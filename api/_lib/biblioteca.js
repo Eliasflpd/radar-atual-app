@@ -102,6 +102,23 @@ function secaoLimpa(secao, livro) {
   return base + ' ' + m[1] + ':' + m[2];
 }
 
+// Palavras da pergunta que NÃO servem pra busca por palavra (comuns demais ou só enquadram a pergunta).
+const PARADAS = new Set(['palavra', 'palavras', 'grega', 'grego', 'gregas', 'gregos', 'hebraica', 'hebraico', 'sentido', 'significa',
+  'significado', 'carrega', 'neste', 'novo', 'testamento', 'antigo', 'sobre', 'como', 'qual', 'quais', 'porque', 'entre', 'desta',
+  'deste', 'esta', 'esse', 'essa', 'isso', 'pela', 'pelo', 'para', 'mais', 'muito', 'biblia', 'biblico', 'biblica', 'texto',
+  'versiculo', 'capitulo', 'verso', 'quando', 'onde', 'tambem', 'aquele', 'aquela', 'dizer', 'quer', 'tudo', 'cada', 'usado',
+  'usada', 'termo', 'original', 'letra', 'letras', 'fala', 'falar', 'explique', 'explica', 'diz', 'seja', 'sao', 'foi', 'ser']);
+
+// O que dá pra casar por PALAVRA: números de Strong ("G26", "g0026") e termos em letras latinas ou gregas.
+// Tudo sem acento e em minúsculas, igual ao que o indexador gravou na `secao` dos verbetes.
+function termosDaPergunta(q) {
+  const base = String(q || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const strongs = [...base.matchAll(/\bg0*(\d{1,4})\b/g)].map((m) => 'G' + m[1].padStart(4, '0'));
+  const latinas = (base.match(/[a-z]{4,}/g) || []).filter((w) => !PARADAS.has(w));
+  const gregas = base.match(/[α-ω]{3,}/g) || [];
+  return { strongs: [...new Set(strongs)], termos: [...new Set([...latinas, ...gregas])].slice(0, 8) };
+}
+
 module.exports = async (req, res) => {
   // Sem CORS de propósito: NINGUÉM deve chamar isto do navegador. Quem chama é o
   // /api/voz, servidor-pra-servidor. Deixar CORS aberto seria convidar o download.
@@ -181,9 +198,29 @@ module.exports = async (req, res) => {
          select * from perto
        ) t order by posto desc limit $2`, [vec, quantos]);
 
+    // BUSCA POR PALAVRA, além da busca por sentido. Só por sentido, "ágape" trazia o verbete de Ágabo e a
+    // palavra grega certa nem aparecia (medido em 18/10/2026): o léxico guarda a palavra em letras gregas e quem
+    // pergunta digita em latinas. O indexador grava na `secao` do verbete "G0026 · αγαπη · agape / agape";
+    // aqui casamos o que foi digitado (ou um número de Strong, "G26") com esse campo e pomos o verbete exato
+    // no topo. É um complemento: se não casar nada, o resultado é o de sempre.
+    let achados = [];
+    try {
+      const lex = termosDaPergunta(pergunta);
+      if (lex.strongs.length || lex.termos.length) {
+        const rl = await c.query(
+          `select autor, obra, livro, secao, tipo, texto, peso, aprovado
+             from biblioteca_trechos
+            where tipo = 'verbete'
+              and (livro = any($1::text[])
+                   or exists (select 1 from unnest($2::text[]) t where secao ~* ('(^|[ /·])' || t || '($| /)')))
+            order by peso, id limit 3`, [lex.strongs, lex.termos]);
+        achados = rl.rows.map((x) => ({ ...x, score: 1 }));
+      }
+    } catch (_) { achados = []; }
+
     // Sem deduplicar, o union all devolve o mesmo trecho duas vezes.
     const vistos = new Set(), itens = [];
-    for (const x of r.rows) {
+    for (const x of [...achados, ...r.rows]) {
       const k = x.autor + '|' + x.texto.slice(0, 60);
       if (vistos.has(k)) continue;
       vistos.add(k);
