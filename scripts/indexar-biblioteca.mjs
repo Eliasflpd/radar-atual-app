@@ -71,6 +71,13 @@ const FONTES = [
   { id: 'kittel',   autor: 'Kittel (TDNT)', peso: 2, aprovado: true,
     obra: 'Dicionário Teológico do Novo Testamento (Kittel), verbetes em português',
     dir: 'D:\\PR RAPHAEL\\KITTEL-PT\\verbetes', tipo: 'verbete' },
+  // Thayer (1889, domínio público): léxico grego do NT, MESMA chave de Strong do Kittel (G0026.md = G26), então os dois
+  // se cruzam. Tradução PT feita por IA em 10/10/2026, sem revisão humana (o aviso vai no cabeçalho de cada verbete).
+  // Mesmo escalão do Kittel (diz QUAL é a palavra). Se o Concílio quiser tratá-lo com a cautela do Champlin até revisar,
+  // troque `aprovado: true` por `aprovado: false`. Para entrar no banco: rodar este script (precisa do acesso ao Radar DB).
+  { id: 'thayer',   autor: 'Thayer (Léxico Grego do NT)', peso: 2, aprovado: true,
+    obra: 'Léxico Grego-Inglês do Novo Testamento (Thayer), verbetes em português',
+    dir: 'D:\\PR RAPHAEL\\THAYER-PT\\verbetes', tipo: 'verbete' },
 
   // ── 3º escalão: os aprovados. Primeiro os que mais rendem por palavra
   //    (originais, exegese e a linha pentecostal, que é a alma do app). ───────
