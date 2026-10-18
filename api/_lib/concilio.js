@@ -746,7 +746,7 @@ async function bibliotecaFonte(pergunta, origem, quantos, ctx) {
     const itens = ((d && d.ok && d.itens) || []).filter((x) => x && x.texto && x.score >= 0.5).slice(0, quantos || 4);
     if (!itens.length) return '';
     // Só os NOMES (autor e onde), nunca o texto: quem chamou pode devolver isto no cabeçalho da resposta.
-    if (ctx) ctx.fontes = itens.map((x) => x.autor + ' — ' + (x.secao || x.livro || ''));
+    if (ctx) ctx.fontes = itens.map((x) => x.autor + ' — ' + (x.secao || x.livro || '') + ' [nota ' + (x.score != null ? x.score : '?') + ']');
     const partes = itens.map((x, i) => {
       const selo = x.peso === 2 ? '[FONTE PRIMÁRIA — diz qual é a palavra no original]'
         : x.aprovado === false ? '[COM FILTRO — vale só em grego, crítica textual e estudo de palavra; nunca em interpretação disputada]'
