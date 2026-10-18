@@ -84,6 +84,12 @@ const FONTES = [
   { id: 'keil',     autor: 'Keil & Delitzsch', peso: 3, aprovado: true,
     obra: 'C. F. Keil & Franz Delitzsch — Comentário sobre o Antigo Testamento (tradução por IA)',
     dir: 'D:\\PR RAPHAEL\\KEIL-PT\\comentario', tipo: 'comentario', semCapa: true, capitulos: true },
+  // Duewel — Fogo do Avivamento (Hagnos, 2015; COM direitos autorais): motor invisível, texto só no Postgres, nunca no repo
+  // nem em página. O .md é o PDF do Elias convertido (D:\DUEWEL\), guardado FORA do repositório em D:\LIVROS-MOTOR\duewel.
+  // Livros novos do Elias entram assim: uma pasta em D:\LIVROS-MOTOR\<autor> com .md ("## Capítulo" por capítulo) + uma linha aqui.
+  { id: 'duewel',   autor: 'Wesley L. Duewel', peso: 3, aprovado: true,
+    obra: 'Wesley L. Duewel — Fogo do Avivamento (história dos avivamentos e sua aplicação)',
+    dir: 'D:\\LIVROS-MOTOR\\duewel', tipo: 'comentario', semCapa: true, capitulos: true },
   { id: 'motyer',   autor: 'Alec Motyer',    peso: 3, aprovado: true, obra: 'Alec Motyer — comentários',             dir: AUT('Alec-Motyer'),       tipo: 'comentario' },
   { id: 'horton',   autor: 'Stanley Horton', peso: 3, aprovado: true, obra: 'Stanley Horton — obras',                dir: AUT('Stanley-Horton'),    tipo: 'comentario' },
   { id: 'stronstad', autor: 'Roger Stronstad', peso: 3, aprovado: true, obra: 'Roger Stronstad — obras',             dir: AUT('Roger-Stronstad'),   tipo: 'comentario' },
