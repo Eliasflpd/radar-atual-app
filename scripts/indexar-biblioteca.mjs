@@ -76,6 +76,14 @@ const FONTES = [
   //    (originais, exegese e a linha pentecostal, que é a alma do app). ───────
   { id: 'waltke',   autor: 'Bruce Waltke',   peso: 3, aprovado: true, obra: 'Bruce Waltke — comentários',            dir: AUT('Bruce-Waltke'),      tipo: 'comentario' },
   { id: 'kidner',   autor: 'Derek Kidner',   peso: 3, aprovado: true, obra: 'Derek Kidner — comentários',            dir: AUT('Derek-Kidner'),      tipo: 'comentario' },
+  // Keil & Delitzsch (séc. XIX, domínio público no original). Tradução PT feita por IA no Tradutor Fiel (out/2026), sem revisão
+  // humana; cerca de 4% dos trechos ainda estão em inglês (blocos que o tradutor deixou pendentes) e falta Isaías.
+  // Os .md vêm de D:\KEIL\converter_todos.py (EPUB -> um .md por livro, com "## Livro N" por capítulo e "### Livro N:v" por seção).
+  // semCapa: não corta as primeiras 2500 letras (não tem capa de livro escaneado; é a introdução do livro).
+  // capitulos: a `secao` de cada trecho vira o capítulo/versículo em que ele está (o globo cita "Keil & Delitzsch, Josué 5").
+  { id: 'keil',     autor: 'Keil & Delitzsch', peso: 3, aprovado: true,
+    obra: 'C. F. Keil & Franz Delitzsch — Comentário sobre o Antigo Testamento (tradução por IA)',
+    dir: 'D:\\PR RAPHAEL\\KEIL-PT\\comentario', tipo: 'comentario', semCapa: true, capitulos: true },
   { id: 'motyer',   autor: 'Alec Motyer',    peso: 3, aprovado: true, obra: 'Alec Motyer — comentários',             dir: AUT('Alec-Motyer'),       tipo: 'comentario' },
   { id: 'horton',   autor: 'Stanley Horton', peso: 3, aprovado: true, obra: 'Stanley Horton — obras',                dir: AUT('Stanley-Horton'),    tipo: 'comentario' },
   { id: 'stronstad', autor: 'Roger Stronstad', peso: 3, aprovado: true, obra: 'Roger Stronstad — obras',             dir: AUT('Roger-Stronstad'),   tipo: 'comentario' },
@@ -470,7 +478,18 @@ function pedacosDe(f) {
     const livro = livroDoNome(arq);
     const texto = limpar(fs.readFileSync(arq, 'utf8'));
     // As primeiras ~2500 letras de livro escaneado são capa, ficha e dedicatória.
-    const corpo = f.tipo === 'comentario' && texto.length > 20000 ? texto.slice(2500) : texto;
+    const corpo = f.tipo === 'comentario' && !f.semCapa && texto.length > 20000 ? texto.slice(2500) : texto;
+    if (f.capitulos) {
+      // Comentário já dividido por capítulo ("## Livro N") e seção ("### Livro N:v"): a referência vem do próprio arquivo.
+      for (const bloco of corpo.split(/\n(?=## )/)) {
+        const cap = (bloco.match(/^## (.+)$/m) || [])[1] || livro;
+        for (const t of fatiar(bloco)) {
+          const sub = (t.match(/^### (.+)$/m) || [])[1];
+          pedacos.push({ autor: f.autor, obra: f.obra, livro, secao: (sub || cap).trim(), tipo: f.tipo, texto: t });
+        }
+      }
+      continue;
+    }
     for (const t of fatiar(corpo)) {
       pedacos.push({
         autor: f.autor,
