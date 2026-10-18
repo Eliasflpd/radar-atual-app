@@ -724,6 +724,52 @@ async function kittelFonte(pergunta, origem, quantos) {
       + '\n"""\n⚠️ Isto é FONTE, não texto pronto. NÃO copie nem parafraseie de perto: pegue o SENTIDO da palavra no original e escreva com as suas próprias palavras. Se a informação entrar no texto, pode indicar a origem assim: (Kittel, vol. X, p. Y). Se o verbete não tiver a ver com a pergunta, ignore-o por completo.';
   } catch (_) { return ''; }
 }
+// ── BIBLIOTECA DE ESTUDO: o mesmo motor invisível do globo de voz (tabela biblioteca_trechos, no banco do pastor).
+// Entra no Concílio do MESMO jeito que o Kittel entrava: o trecho vai só pro PROMPT, dentro do servidor, como FONTE;
+// o que sai pra tela é a mensagem escrita pelo redator, com as palavras dele. O parágrafo do autor nunca viaja.
+// (A norma é a de scripts/indexar-biblioteca.mjs: pesquisar e citar a fonte pode; distribuir não.)
+// Falha em silêncio: sem banco, sem token ou sem resposta, devolve '' e o Concílio segue como sempre foi.
+async function bibliotecaFonte(pergunta, origem, quantos) {
+  if (!origem || !pergunta) return '';
+  const tk = process.env.RADAR_ADMIN_TOKEN || '';
+  if (!tk) return '';
+  const ctl = new AbortController();
+  const corta = setTimeout(() => ctl.abort(), 9000);   // não segura o Concílio se a busca engasgar
+  try {
+    const r = await fetch(origem + '/api/dados?fn=biblioteca', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
+      body: JSON.stringify({ q: String(pergunta).slice(0, 400), n: Math.max(quantos || 4, 4), token: tk }),
+    });
+    if (!r.ok) return '';
+    const d = await r.json();
+    // abaixo deste corte o "melhor resultado" é só o menos ruim: melhor não dar fonte nenhuma do que fonte fraca
+    const itens = ((d && d.ok && d.itens) || []).filter((x) => x && x.texto && x.score >= 0.5).slice(0, quantos || 4);
+    if (!itens.length) return '';
+    const partes = itens.map((x, i) => {
+      const selo = x.peso === 2 ? '[FONTE PRIMÁRIA — diz qual é a palavra no original]'
+        : x.aprovado === false ? '[COM FILTRO — vale só em grego, crítica textual e estudo de palavra; nunca em interpretação disputada]'
+        : '[autor aprovado]';
+      return '■ [' + (i + 1) + '] ' + x.autor + (x.livro ? ' — ' + x.livro : '')
+        + (x.secao && x.secao !== x.livro ? ' (' + x.secao + ')' : '') + ' ' + selo + '\n'
+        + String(x.texto).slice(0, 1300);
+    });
+    return '\n\n📚 CONSULTA À BIBLIOTECA DE ESTUDO (livros, comentários e dicionários do pastor — material privado):\n"""\n'
+      + partes.join('\n\n— — —\n\n')
+      + '\n"""\n⚠️ Isto é FONTE, não texto pronto. NÃO copie nem parafraseie de perto — nunca reproduza mais de seis palavras seguidas de um autor: '
+      + 'pegue o SENTIDO e escreva com as suas próprias palavras. Se usar uma ideia, pode dizer de onde veio pelo nome do autor ("Keil e Delitzsch observam…", "o Thayer registra…"). '
+      + 'Obedeça o selo de cada trecho: fonte primária manda no sentido da palavra; autor aprovado pode sustentar interpretação; o que tiver filtro não é voz em ponto disputado. '
+      + 'A Escritura vale mais que qualquer comentarista. Se um trecho não tiver a ver com a pergunta, ignore-o por completo.';
+  } catch (_) { return ''; }
+  finally { clearTimeout(corta); }
+}
+
+// As duas fontes juntas, em paralelo: o Kittel (verbetes) e a biblioteca (comentários, dicionários, livros).
+// É esta a função que os pontos de entrada do Concílio chamam — um lugar só pra acrescentar fonte nova.
+async function fontesDeEstudo(pergunta, origem, quantos) {
+  const [k, b] = await Promise.all([kittelFonte(pergunta, origem, quantos), bibliotecaFonte(pergunta, origem, 4)]);
+  return (k || '') + (b || '');
+}
+
 function _origemDe(req) {
   try { return new URL(req.url).origin; } catch (_) { return ''; }
 }
@@ -803,7 +849,7 @@ Comece direto no TÍTULO (sem saudação e sem "claro!").`;
 
 // ── LUPA DO CONCÍLIO — o mago-mestre roteia sozinho + pesquisa na web ──
 async function lupaWeb(pergunta, contexto, historico, origem) {
-  const fonteK = await kittelFonte(pergunta, origem);
+  const fonteK = await fontesDeEstudo(pergunta, origem);
   const roster = ERUDITOS.map((e) => `- ${e.nome} (${e.tag}) — forte em: ${e.forte}`).join('\n');
   const SYS_MSG = `Você é o CONCÍLIO DOS EXPOSITORES do app RADAR (Assembleias de Deus, Brasil), conversando com o pastor Elias SOBRE uma mensagem/pregação que ele está lendo.
 
@@ -906,7 +952,7 @@ async function fonteWagner(pergunta) {
 // acrescenta nota à margem). ESTA ação é o contrário — ela devolve a mensagem
 // INTEIRA reescrita, pronta pra substituir a que está na tela.
 async function reescreverStream(texto, instrucao, mestreId, origem) {
-  const fonteK = await kittelFonte(instrucao + ' ' + String(texto).slice(0, 600), origem, 2);
+  const fonteK = await fontesDeEstudo(instrucao + ' ' + String(texto).slice(0, 600), origem, 2);
   const ficha = fichaMestre(mestreId);
   const wg = mestreId === 'wagner-cordeiro' ? await fonteWagner(instrucao + ' ' + String(texto).slice(0, 600)) : null;
   const fonteW = wg ? wg.bloco : '';
@@ -968,7 +1014,7 @@ async function conversarStream(mestreId, pergunta, contexto, historico, origem) 
   const bloco = ficha ? ficha.bloco
     : '▪ SERVO: Dr. Wagner Cordeiro\n▪ QUEM É: garimpeiro de tipologia — acha a figura de Cristo escondida no detalhe do Antigo Testamento\n▪ O QUE ELE CRÊ: pentecostal AD; toda a Escritura aponta pra Cristo\n▪ FORTE EM: tipologia, o detalhe do texto que ninguém repara, aplicação que arde';
 
-  const fonteK = await kittelFonte(pergunta, origem, 2);
+  const fonteK = await fontesDeEstudo(pergunta, origem, 2);
   // DE ONDE VEM. Pro Wagner são os pedaços do acervo dele (aulas + Caderno de Pérolas);
   // pros clássicos, as obras reais da ficha. Quem não tiver nada catalogado fica com a
   // lista vazia — e aí o bloco manda NÃO citar obra nenhuma, em vez de deixar a IA solta.
@@ -1029,7 +1075,7 @@ export default async function handler(req) {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 400);
     if (!tema) return new Response('Diga o texto ou o tema do sermão.', { status: 400, headers: CORS });
     const origem = _origemDe(req);
-    const fonteP = await kittelFonte(tema, origem);
+    const fonteP = await fontesDeEstudo(tema, origem);
     return fluxoComFontes(await streamChat(SYS_PEROLA + blocoDoOriginal(tema) + fonteP, 'TEXTO / TEMA DO PASTOR: ' + tema,
       { temperature: 0.6, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema });
   }
@@ -1040,7 +1086,7 @@ export default async function handler(req) {
     const tema = (b.tema || b.passagem || '').toString().trim().slice(0, 4000);
     if (!tema) return new Response('Diga o texto ou o tema da mensagem.', { status: 400, headers: CORS });
     const origem = _origemDe(req);
-    const fonteM = await kittelFonte(tema, origem);
+    const fonteM = await fontesDeEstudo(tema, origem);
     return fluxoComFontes(await streamChat(SYS_MENSAGEM + blocoDoOriginal(tema) + fonteM, 'TEXTO / TEMA DO PASTOR: ' + tema,
       { temperature: 0.65, max_tokens: 3600 }), [], '', { conferir: true, origem, assunto: tema });
   }
@@ -1127,3 +1173,6 @@ FORMATO: use os cabeçalhos com emoji exatamente como pedidos abaixo. Comece dir
   return fluxoComFontes(await streamChat(SYS, user, { temperature: 0.5, max_tokens: 2200, tag: 'concilio-erudito' }),
     rotulos, '', { conferir: true, origem: _origemDe(req), assunto: passagem });
 }
+
+// Exportadas só para a bancada de provas (scripts/_provar-concilio-biblioteca.mjs).
+export { bibliotecaFonte, fontesDeEstudo };
