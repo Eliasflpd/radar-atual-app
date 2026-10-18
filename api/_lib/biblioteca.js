@@ -118,6 +118,27 @@ module.exports = async (req, res) => {
   const veio = b.token || q.token;
   if (!ADM || veio !== ADM) { res.status(403).json({ ok: false, err: 'token' }); return; }
 
+  // CATÁLOGO: "o que a biblioteca tem?" — só NOMES e CONTAGENS, nunca texto de livro.
+  // É daqui que o globo de voz sabe, de verdade e sempre atualizado, quais obras e autores
+  // estão indexados (ferramenta meu_conhecimento). Sem isto ele só repetia uma lista escrita à mão.
+  if (b.catalogo || q.catalogo) {
+    const csCat = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
+    if (!csCat) { res.status(200).json({ ok: false, off: true, err: 'db não configurado' }); return; }
+    const cCat = new Client({ connectionString: csCat, ssl: { rejectUnauthorized: false } });
+    try {
+      await cCat.connect();
+      const rc = await cCat.query(
+        `select autor, obra, tipo, peso, aprovado, count(*)::int as trechos
+           from biblioteca_trechos
+          group by autor, obra, tipo, peso, aprovado
+          order by peso, autor, obra`);
+      res.status(200).json({ ok: true, total: rc.rows.reduce((s, x) => s + x.trechos, 0), obras: rc.rows });
+    } catch (_) {
+      res.status(200).json({ ok: false, err: 'catálogo indisponível agora' });
+    } finally { try { await cCat.end(); } catch (_) { /* já fechou */ } }
+    return;
+  }
+
   const pergunta = String(b.q || q.q || '').trim().slice(0, 500);
   if (pergunta.length < 3) { res.status(400).json({ ok: false, err: 'pergunta curta' }); return; }
   const quantos = Math.min(parseInt(b.n || q.n || '6', 10) || 6, 12);

@@ -790,7 +790,7 @@ export const FERRAMENTAS = [{
     },
     {
       name: 'pesquisar_biblioteca',
-      description: 'Pesquisa na BIBLIOTECA DE ESTUDO do pastor — os comentários e dicionários que ele tem (Champlin versículo por versículo, o Kittel, Waltke, Kidner, Pearlman, Horton, Antônio Gilberto) e as pregações do Pr. Sadrak. '
+      description: 'Pesquisa na BIBLIOTECA DE ESTUDO do pastor — os comentários, dicionários e livros que ele tem (quem exatamente está nela, a ferramenta meu_conhecimento diz). '
         + 'CHAME sempre que precisar de erudição de verdade: sentido de uma palavra no original, pano de fundo histórico, costume, crítica textual, o que os expositores dizem de uma passagem. '
         + 'Devolve uma NOTA DE PESQUISA já escrita, com o nome das obras que sustentam. Sem chamar isto, você não tem erudição nenhuma nesta conversa — só memória, e memória inventa.',
       parameters: {
@@ -834,6 +834,17 @@ export const FERRAMENTAS = [{
         required: ['pergunta'],
       },
     },
+    {
+      name: 'meu_conhecimento',
+      // Sem parâmetros de propósito: é só "me diga tudo o que eu tenho". A lista que ela devolve é
+      // montada na hora (ferramentas desta mesma declaração + o catálogo real do banco), então
+      // NUNCA envelhece nem fica diferente do que o globo realmente alcança.
+      description: 'O ESPELHO: devolve, sempre atualizado, TUDO o que você tem à disposição — todas as suas ferramentas, '
+        + 'as fontes fixas (Bíblia, EBD, acervo do pastor, memória, internet) e a lista REAL de autores e obras da biblioteca de estudo. '
+        + 'CHAME SEMPRE que o pastor perguntar o que você sabe, qual é o seu conhecimento, quais são as suas fontes de pesquisa, '
+        + 'quais livros ou autores você tem, o que você consegue fazer ou com o que você trabalha. '
+        + 'PROIBIDO responder isso de cabeça: sem chamar esta ferramenta você NÃO sabe a lista, e dizer "não sei o que eu tenho" é falha grave.',
+    },
     // A MEMÓRIA. Declarada por último de propósito: ela é a única que não busca
     // fora — busca DENTRO do que já foi conversado. Sem ela, o globo só podia
     // fingir que lembrava, e fingir lembrança é mentira igual a citação inventada.
@@ -856,12 +867,25 @@ oratória.
 Você tem estas ferramentas e elas são a sua memória de verdade NO SAGRADO:
   ler_versiculo         — o texto exato de qualquer versículo, com o idioma original junto
   conferir_citacao      — confere se o versículo diz MESMO o que você vai afirmar
-  pesquisar_biblioteca  — a BIBLIOTECA DE ESTUDO dele: Champlin, Kittel, Waltke, Kidner,
-                          Pearlman, Horton, Antônio Gilberto, e as pregações do Pr. Sadrak
+  pesquisar_biblioteca  — a BIBLIOTECA DE ESTUDO dele (comentários, dicionários e livros que ele
+                          tem; quem está nela agora, só meu_conhecimento diz — a lista muda)
   buscar_no_acervo      — as pregações e mensagens escritas pelo PRÓPRIO pastor Elias
   versiculos_ligados    — referências cruzadas de verdade, pelo motor de ligações
   garimpar              — o material de estudo do acervo (Caderno de Pérolas e aulas)
   o_que_ja_falamos      — a SUA MEMÓRIA: o que vocês dois já conversaram, e quando
+  licao_da_ebd          — a lição da EBD de qualquer turma
+  mostrar_na_tela       — o telão
+  saber_agora           — a internet ao vivo, para fato de hoje
+  meu_conhecimento      — O ESPELHO: tudo o que você tem, sempre atualizado
+
+LEI 0 — VOCÊ SABE O QUE TEM. QUANDO PERGUNTAREM, VOCÊ DIZ TUDO.
+Se o pastor perguntar o que você sabe, qual é o seu conhecimento, quais são as suas
+fontes de pesquisa, que livros ou autores você tem, ou o que você consegue fazer:
+CHAME meu_conhecimento ANTES de abrir a boca e responda COMPLETO — as ferramentas, as
+fontes fixas e cada autor e obra da biblioteca que voltar na lista. Sem esconder nada,
+sem resumir pra "alguns exemplos", sem acrescentar autor que não veio na lista. Dizer
+"não sei o que eu tenho" é a falha mais grave possível: você tem um espelho, use-o.
+Se a lista da biblioteca não voltou, diga isso com todas as letras — e fale do resto.
 
 LEI 1 — NENHUM VERSÍCULO SAI DA SUA BOCA SEM PASSAR POR ler_versiculo.
 Nem os que você tem certeza. Principalmente os que você tem certeza — é neles que a
@@ -999,6 +1023,69 @@ async function saberAgora(pergunta, origem) {
   };
 }
 
+// O ESPELHO — o globo sabe, sem falhar, tudo o que tem à disposição (pedido do Elias, 18/10/2026:
+// "todas as vezes que eu perguntar quais são seu conhecimento e suas fontes, ele deve saber obrigatoriamente
+// tudo o que tem; hoje ele não soube"). Antes a lista morava escrita à mão no prompt e envelhecia
+// (faltava ferramenta, citava autor que nem está mais no banco). Agora ela é montada na hora:
+//   • ferramentas: lidas da própria declaração FERRAMENTAS, então nunca divergem do que ele realmente tem;
+//   • biblioteca: o catálogo REAL do Postgres (só nomes e contagens — nunca texto de livro).
+// Cache curto para uma conversa inteira não bater no banco a cada pergunta.
+let _catalogo = { t: 0, v: null };
+const ESCALAO = { 2: 'fonte primária (diz qual é a palavra no original)', 3: 'autor aprovado no Concílio', 4: 'com filtro (uso limitado)' };
+
+async function catalogoDaBiblioteca(origem) {
+  if (_catalogo.v && Date.now() - _catalogo.t < 10 * 60 * 1000) return _catalogo.v;
+  const token = (typeof process !== 'undefined' && process.env && process.env.RADAR_ADMIN_TOKEN) || '';
+  if (!token) return { disponivel: false, motivo: 'a biblioteca não está configurada neste servidor' };
+  try {
+    const r = await fetch(origem + '/api/dados?fn=biblioteca', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ catalogo: true, token }),
+    });
+    const j = await r.json();
+    if (!j || !j.ok) return { disponivel: false, motivo: 'o catálogo da biblioteca não respondeu agora' };
+    const porAutor = new Map();
+    for (const x of j.obras || []) {
+      const a = porAutor.get(x.autor) || { autor: x.autor, obras: [], trechos: 0, escalao: ESCALAO[x.peso] || 'autor consultável' };
+      if (x.obra && !a.obras.includes(x.obra)) a.obras.push(x.obra);
+      a.trechos += x.trechos || 0;
+      porAutor.set(x.autor, a);
+    }
+    const v = { disponivel: true, total_trechos: j.total || 0, autores: [...porAutor.values()] };
+    _catalogo = { t: Date.now(), v };
+    return v;
+  } catch (_) {
+    return { disponivel: false, motivo: 'não consegui consultar o catálogo da biblioteca agora' };
+  }
+}
+
+async function meuConhecimento(origem) {
+  const decl = (FERRAMENTAS[0] && FERRAMENTAS[0].functionDeclarations) || [];
+  const ferramentas = decl.map((d) => ({
+    nome: d.name,
+    para_que: String(d.description || '').split(/\.\s/)[0].replace(/\s+/g, ' ').slice(0, 240),
+  }));
+  const biblioteca = await catalogoDaBiblioteca(origem);
+  return {
+    ferramentas,
+    fontes_fixas: [
+      'A Bíblia do RADAR, texto exato com o idioma original (ler_versiculo, conferir_citacao, versiculos_ligados)',
+      'As lições da EBD das turmas adultos, jovens, juvenis, juniores e adolescentes (licao_da_ebd)',
+      'As pregações e mensagens escritas pelo próprio pastor, no RADAR (buscar_no_acervo)',
+      'O material de estudo do acervo: Caderno de Pérolas, tipologias e transcrições de aulas (garimpar)',
+      'A memória das conversas anteriores com o pastor (o_que_ja_falamos)',
+      'A internet ao vivo, para fato de hoje (saber_agora)',
+    ],
+    biblioteca_de_estudo: biblioteca,
+    ordem: 'RESPONDA AGORA, COMPLETO E SEM ESCONDER NADA: diga as ferramentas que você tem, as fontes fixas e, da biblioteca de estudo, '
+      + 'os autores e obras da lista (cite os NOMES; pode dizer quantos trechos). Fale com naturalidade, em prosa, agrupando por tipo — '
+      + 'não leia como tabela. Só fale do que veio nesta lista; NÃO acrescente autor nem livro de cabeça. '
+      + (biblioteca.disponivel
+        ? 'Lembre que o texto dos livros fica guardado no servidor: você pesquisa e cita a fonte, mas não reproduz o livro.'
+        : 'ATENÇÃO: a lista da biblioteca NÃO veio agora (' + biblioteca.motivo + '). Diga isso com todas as letras, não invente a lista, e fale do resto.'),
+  };
+}
+
 export async function executarFerramenta(nome, args, origem, ctx) {
   const a = args || {};
   const c = ctx || {};
@@ -1039,6 +1126,8 @@ export async function executarFerramenta(nome, args, origem, ctx) {
       return oQueJaFalamos(a, origem, c.user || '');
     case 'saber_agora':
       return saberAgora(a.pergunta || a.q || a.assunto, origem);
+    case 'meu_conhecimento':
+      return meuConhecimento(origem);
     default:
       return { erro: 'ferramenta desconhecida: ' + nome,
         ordem: 'Não use isso. Siga com as ferramentas que você tem.' };

@@ -156,7 +156,8 @@ const FONTES = [
 // Pares (conta, token). Vem do ambiente quando só tem uma; do cofre quando é rodízio.
 function contasDoCofre() {
   const texto = (() => {
-    for (const c of ['D:/APIS-CLAUDE/CHAVES.md', 'D:\\APIS-CLAUDE\\CHAVES.md']) {
+    // APIS_COFRE aponta o cofre quando ele não está no lugar de sempre (hoje a cópia fica em D:\BACKUP\APIS-CLAUDE).
+    for (const c of [process.env.APIS_COFRE, 'D:/APIS-CLAUDE/CHAVES.md', 'D:\\APIS-CLAUDE\\CHAVES.md', 'D:/BACKUP/APIS-CLAUDE/CHAVES.md'].filter(Boolean)) {
       try { return fs.readFileSync(c, 'utf8'); } catch { /* segue */ }
     }
     return '';
