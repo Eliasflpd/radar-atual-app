@@ -339,60 +339,157 @@ async function abrirCatalogoEBD(origem) {
   } catch (_) { return null; }
 }
 
-// A MESMA conta do app (licaoDaSemana): o domingo que vem é o alvo; se hoje já
-// é domingo, o alvo é hoje. Cópia fiel de propósito — divergir aqui faria o
-// globo falar de uma lição e o app mostrar outra, que é pior que não saber.
-function licaoDeHoje(cat) {
-  const inicio = new Date(cat.inicio_trimestre + 'T00:00:00');
-  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+// ─── O TRIMESTRE DE VERDADE ───────────────────────────────────────────────────
+// 19/10/2026: a conta antiga contava semanas desde 05/07 (3º tri) e, em outubro, dava "lição 17" — que não
+// existe. O 4º trimestre começou em 04/10/2026 e mora nas turmas adulto4/jovem4 (mesma conta de
+// licaoDaSemana4 no app). Trimestre novo = acrescentar uma linha aqui (o mais novo em cima).
+const TRIMESTRES = [
+  { inicio: '2026-10-04', nome: '4º trimestre de 2026', turmas: { adulto: 'adulto4', jovem: 'jovem4' } },
+  { inicio: '2026-07-05', nome: '3º trimestre de 2026', turmas: { adulto: 'adulto', jovem: 'jovem', juvenis: 'juvenis', adolescentes: 'adolescentes', juniores: 'juniores' } },
+];
+function trimestreDe(dia) {
+  const d = dia.toISOString().slice(0, 10);
+  return TRIMESTRES.find((t) => d >= t.inicio) || TRIMESTRES[TRIMESTRES.length - 1];
+}
+// O domingo que vem é o alvo; se hoje já é domingo, o alvo é hoje (mesma regra do app). Horário de Brasília.
+function licaoDeHoje() {
+  const agora = new Date(Date.now() - 3 * 3600000);
+  const hoje = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), agora.getUTCDate()));
   const prox = new Date(hoje);
-  if (hoje.getDay() !== 0) prox.setDate(hoje.getDate() + (7 - hoje.getDay()));
-  return { n: Math.max(1, Math.round((prox - inicio) / (7 * 86400000)) + 1),
-           domingo: prox.toISOString().slice(0, 10) };
+  if (hoje.getUTCDay() !== 0) prox.setUTCDate(hoje.getUTCDate() + (7 - hoje.getUTCDay()));
+  const tri = trimestreDe(prox);
+  const inicio = new Date(tri.inicio + 'T00:00:00Z');
+  const n = Math.max(1, Math.min(13, Math.round((prox - inicio) / (7 * 86400000)) + 1));
+  return { n, domingo: prox.toISOString().slice(0, 10), tri };
+}
+
+// O pacote da lição (scripts/ebd-voz-pacote.mjs → public/ebd/<turma>/voz/NN.json), guardado em memória.
+const _pacote = new Map();
+async function pacoteDaLicao(origem, turma, n) {
+  const k = turma + '/' + n;
+  if (_pacote.has(k)) return _pacote.get(k);
+  try {
+    const r = await fetch(`${origem}/ebd/${turma}/voz/${String(n).padStart(2, '0')}.json`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    _pacote.set(k, j);
+    return j;
+  } catch (_) { return null; }
+}
+// Quem escreveu cada revista (public/ebd/voz-autores.json) — o globo fala do autor só com o que está ali.
+let _autores = null;
+async function autoresEBD(origem) {
+  if (_autores) return _autores;
+  try { const r = await fetch(origem + '/ebd/voz-autores.json'); _autores = r.ok ? await r.json() : {}; } catch (_) { _autores = {}; }
+  return _autores;
+}
+
+const PAGINA = 4500;   // texto longo (Cristão Alerta, livro de apoio, devocional) sai em páginas
+function pagina(txt, p) {
+  const t = String(txt || '');
+  const total = Math.max(1, Math.ceil(t.length / PAGINA));
+  const i = Math.max(1, Math.min(total, parseInt(p || 1, 10) || 1));
+  let ini = (i - 1) * PAGINA, fim = Math.min(t.length, i * PAGINA);
+  if (i > 1) { const q = t.lastIndexOf('\n', ini + 200); if (q > ini - 400 && q > 0) ini = q + 1; }
+  if (fim < t.length) { const q = t.lastIndexOf('\n', fim); if (q > ini + PAGINA / 2) fim = q; }
+  return { texto: t.slice(ini, fim).trim(), pagina: i, de: total };
+}
+
+// O JEITO DE ENSINAR — o Elias: "o texto nunca pode ser monótono". Vai em toda resposta de conteúdo.
+const COMO_ENSINAR = 'COMO FALAR ISTO (obrigatório): você é um PROFESSOR DE EBD apaixonado, não um leitor de revista. '
+  + 'NÃO leia o texto em voz alta palavra por palavra. Conte com as suas palavras, com calor e ritmo: comece por uma '
+  + 'pergunta, uma imagem ou um contraste que prenda; explique cada subtópico pelo texto bíblico dele (abra com ler_versiculo '
+  + 'quando for citar); traga UMA aplicação concreta para hoje; alterne frase curta e longa; e no fim faça UMA pergunta para '
+  + 'a classe ou ofereça o próximo ponto. Deixe claro que é o que a revista ensina ("o comentarista mostra que…"). '
+  + 'Fale SÓ do que está aqui: não invente o que a lição diz.';
+
+function turmaPedida(txt) {
+  const t = semAcento(String(txt || '')).toLowerCase();
+  if (/jove/.test(t)) return 'jovem';
+  if (/juveni/.test(t)) return 'juvenis';
+  if (/adolesc/.test(t)) return 'adolescentes';
+  if (/junior/.test(t)) return 'juniores';
+  if (/adult/.test(t)) return 'adulto';
+  return '';
 }
 
 async function licaoDaEBD(args, origem) {
-  const cat = await abrirCatalogoEBD(origem);
-  if (!cat) return { achou: false, ordem: 'O catálogo da EBD não respondeu agora. Diga que não conseguiu abrir as lições — NÃO invente título de lição nem número.' };
-
-  const turmaPedida = String((args && args.turma) || '').trim().toLowerCase();
-  const numero = parseInt((args && args.licao) || 0, 10);
-  const atual = licaoDeHoje(cat);
-  const turmas = Object.keys(cat.turmas);
-  const alvo = turmas.find((t) => t === turmaPedida)
-            || turmas.find((t) => turmaPedida && t.startsWith(turmaPedida.slice(0, 5)));
-
-  // 1) "quais são as lições?" -> a lista inteira daquela turma
-  if (args && args.listar) {
-    const t = alvo || 'adulto';
-    return {
-      achou: true, turma: t, licao_de_agora: atual.n, proximo_domingo: atual.domingo,
-      licoes: (cat.turmas[t] || []).map((l) => ({ numero: l.n, titulo: l.titulo, domingo: l.domingo })),
-      ordem: 'Esta é a lista REAL das lições desta turma. Diga o número e o título como estão aqui, sem reescrever o título. A lição de agora está em licao_de_agora.',
-    };
+  const a = args || {};
+  const agora = licaoDeHoje();
+  const tri = agora.tri;
+  const quem = turmaPedida(a.turma) || 'adulto';
+  const turma = tri.turmas[quem];
+  if (!turma) {
+    return { achou: false, turma: quem, trimestre: tri.nome,
+      ordem: `A revista de ${quem} do ${tri.nome} ainda não está no RADAR — só a de adultos e a de jovens. Diga isso com naturalidade e ofereça a de adultos ou a de jovens.` };
   }
 
-  // 2) "qual é a lição 3?" -> aquela lição, em todas as turmas ou na pedida
-  const n = numero > 0 ? numero : atual.n;
-  const achados = (alvo ? [alvo] : turmas).map((t) => {
-    const l = (cat.turmas[t] || []).find((x) => x.n === n);
-    return l ? { turma: t, numero: l.n, titulo: l.titulo, domingo: l.domingo,
-                 versiculo_aureo: l.aureo || '', verdade_pratica: l.pratica || '',
-                 pontos_da_licao: l.pontos || [] } : null;
-  }).filter(Boolean);
-
-  if (!achados.length) {
-    return { achou: false, pedido: n, ordem: 'Não existe lição com esse número no trimestre atual. Diga isso com todas as letras e ofereça a lição do domingo que vem (licao_de_agora).', licao_de_agora: atual.n };
+  // 1) a lista do trimestre
+  if (a.listar) {
+    const lic = [];
+    for (let i = 1; i <= 13; i++) {
+      const L = await pacoteDaLicao(origem, turma, i);
+      if (L) lic.push({ numero: i, titulo: L.titulo, domingo: L.data });
+    }
+    return { achou: !!lic.length, turma: quem, trimestre: tri.nome, licao_do_proximo_domingo: agora.n, licoes: lic,
+      ordem: 'Esta é a lista REAL. Diga número e título como estão, sem reescrever. A do domingo que vem está em licao_do_proximo_domingo.' };
   }
 
-  return {
-    achou: true,
-    é_a_lição_de_agora: n === atual.n,
-    licao_de_agora: atual.n,
-    proximo_domingo: atual.domingo,
-    licoes: achados,
-    ordem: 'Isto é a lição REAL. Use assim, e NESTA ORDEM, quando ele pedir a lição: (1) o TÍTULO exatamente como está escrito; (2) o VERSÍCULO ÁUREO — LEIA NA ÍNTEGRA, palavra por palavra, com a referência. É PROIBIDO resumir o áureo; (3) a VERDADE PRÁTICA, inteira; (4) os PONTOS (I, II, III) e, debaixo de cada um, os SUBPONTOS com a referência bíblica deles. Se "é_a_lição_de_agora" for verdadeiro, diga que é a do domingo que vem. Quando ele pedir pra EXPLICAR um ponto, explique AQUELE ponto pelo texto bíblico da referência dele — abra o versículo com ler_versiculo ANTES. NUNCA invente o que a lição ensina a partir do título.',
-  };
+  const n = parseInt(a.licao, 10) > 0 ? parseInt(a.licao, 10) : agora.n;
+  const L = await pacoteDaLicao(origem, turma, n);
+  if (!L) {
+    return { achou: false, pedido: n, licao_do_proximo_domingo: agora.n,
+      ordem: 'Não achei essa lição no RADAR. Diga isso com todas as letras e ofereça a do domingo que vem. NÃO invente.' };
+  }
+  const autores = await autoresEBD(origem);
+  const autor = autores[turma] || null;
+  const cab = { achou: true, turma: quem, trimestre: tri.nome, licao: n, titulo: L.titulo, data: L.data,
+    e_a_do_proximo_domingo: n === agora.n };
+  const parte = semAcento(String(a.parte || 'resumo')).toLowerCase();
+  const nTop = Math.max(1, parseInt(a.topico, 10) || 1);
+
+  if (/^top/.test(parte)) {
+    const T = L.topicos[nTop - 1];
+    if (!T) return { ...cab, achou: false, ordem: `Esta lição tem ${L.topicos.length} tópicos. Diga isso e ofereça um deles.` };
+    const ns = parseInt(a.subtopico, 10);
+    const subs = ns > 0 ? T.subtopicos.filter((_, i) => i === ns - 1) : T.subtopicos;
+    return { ...cab, topico: nTop, de_topicos: L.topicos.length, titulo_do_topico: T.titulo, subtopicos: subs,
+      ordem: COMO_ENSINAR + ' Explique este TÓPICO subtópico por subtópico, na ordem. Se ele pediu só um subtópico, só aquele. '
+        + (nTop < L.topicos.length ? `Ao terminar, ofereça o tópico ${nTop + 1}.` : 'É o último tópico: ofereça a conclusão.') };
+  }
+  if (/^intro/.test(parte)) return { ...cab, introducao: L.introducao, ordem: COMO_ENSINAR };
+  if (/^concl/.test(parte)) return { ...cab, conclusao: L.conclusao, ordem: COMO_ENSINAR };
+  if (/^revis|pergunt/.test(parte)) return { ...cab, perguntas_de_revisao: L.revisao,
+    ordem: 'São as perguntas de REVISÃO da revista. Faça UMA de cada vez, como professor; espere a resposta e comente.' };
+  if (/^leit/.test(parte)) return { ...cab, leitura_biblica: L.leitura,
+    ordem: 'É a LEITURA BÍBLICA EM CLASSE. Se ele pedir para ler, leia os versículos exatamente como estão (são da Bíblia), com pausa entre eles.' };
+  if (/^prof/.test(parte)) return { ...cab, ...(L.professor ? pagina(L.professor, a.pagina) : { texto: '' }),
+    ordem: L.professor ? 'Material do PROFESSOR (palavra-chave, hinos sugeridos, plano de aula, auxílios). Destaque o que ele pediu, sem ler tudo.' : 'Esta turma não tem material do professor no RADAR. Diga isso.' };
+  if (/alerta|subsid/.test(parte)) return { ...cab, ...(L.cristao_alerta ? pagina(L.cristao_alerta, a.pagina) : { texto: '' }),
+    ordem: L.cristao_alerta ? COMO_ENSINAR + ' Isto é a revista CRISTÃO ALERTA (subsídio da lição): diga que vem do Cristão Alerta. Se houver mais páginas (de > pagina), ofereça continuar.'
+      : 'A revista Cristão Alerta é só da classe de ADULTOS. Diga isso e ofereça a do adulto.' };
+  if (/apoio|livro/.test(parte)) return { ...cab, livro_de_apoio: (autor && autor.livro_de_apoio) || '', ...(L.livro_de_apoio ? pagina(L.livro_de_apoio, a.pagina) : { texto: '' }),
+    ordem: L.livro_de_apoio ? COMO_ENSINAR + ' Isto é o LIVRO DE APOIO do trimestre, do mesmo comentarista: diga o nome do livro. Se houver mais páginas, ofereça continuar.'
+      : 'O livro de apoio desta turma não está no RADAR. Diga isso.' };
+  if (/devoc/.test(parte)) return { ...cab, ...(L.devocional ? pagina(L.devocional, a.pagina) : { texto: '' }),
+    ordem: L.devocional ? 'É o DEVOCIONAL da semana (leitura diária). Leia o dia que ele pedir, com calor.' : 'Esta turma não tem devocional no RADAR. Diga isso.' };
+  if (/autor|coment/.test(parte)) return { ...cab, autor,
+    ordem: autor ? 'Fale do COMENTARISTA com tudo o que está aqui — nome, igreja, formação, livros, outras revistas — com naturalidade e respeito. Não acrescente nada que não esteja aqui; se ele perguntar algo que não está, diga que não tem essa informação.'
+      : 'Não tenho os dados do comentarista desta revista no RADAR. Diga isso — NÃO invente nome.' };
+
+  // RESUMO (padrão): o que se fala ao abrir a lição
+  return { ...cab,
+    comentarista: autor ? autor.nome : '',
+    texto_aureo: L.aureo, verdade_pratica: L.verdade_pratica, leitura_biblica: L.leitura.referencia,
+    introducao: L.introducao,
+    topicos: L.topicos.map((t, i) => ({ numero: i + 1, titulo: t.titulo, subtopicos: t.subtopicos.map((s) => s.titulo).filter(Boolean) })),
+    tem_tambem: [L.professor && 'material do professor', L.cristao_alerta && 'revista Cristão Alerta', L.livro_de_apoio && 'livro de apoio',
+      L.devocional && 'devocional da semana', 'perguntas de revisão', autor && 'dados do comentarista'].filter(Boolean),
+    ordem: 'Abra a lição assim, NESTA ORDEM: (1) número e TÍTULO exatamente como está; (2) o TEXTO ÁUREO NA ÍNTEGRA, palavra por palavra, com a referência — PROIBIDO resumir; mostre no telão; (3) a VERDADE PRÁTICA inteira; '
+      + '(4) os TÓPICOS, em uma frase cada. Se "e_a_do_proximo_domingo", diga que é a do domingo que vem. '
+      + 'Quando ele pedir para EXPLICAR um tópico ("o primeiro", "agora o segundo"), chame licao_da_ebd de novo com parte="topico" e topico=N — '
+      + 'o texto completo do tópico vem de lá. Para Cristão Alerta, livro de apoio, professor, devocional, revisão ou o autor, use parte=alerta/apoio/professor/devocional/revisao/autor. '
+      + COMO_ENSINAR };
 }
 
 async function buscarNoAcervo(pergunta, origem, quantos = 4) {
@@ -1008,13 +1105,21 @@ export const FERRAMENTAS = [{
     },
     {
       name: 'licao_da_ebd',
-      description: 'A LIÇÃO DA EBD: número, título, versículo áureo, verdade prática e os pontos, das 7 turmas. Sem argumento devolve a do PRÓXIMO DOMINGO. Use sempre que ele falar lição/revista/EBD/domingo. PROIBIDO dizer número ou título de lição sem chamar isto.',
+      description: 'A LIÇÃO DA EBD COMPLETA (adultos e jovens do trimestre atual): título, data, texto áureo, verdade prática, leitura bíblica, '
+        + 'introdução, os TÓPICOS com o texto inteiro de cada subtópico, conclusão, perguntas de revisão, e ainda o material do professor, '
+        + 'a revista Cristão Alerta, o livro de apoio, o devocional e os dados do comentarista. Sem argumento devolve a lição do PRÓXIMO DOMINGO. '
+        + 'CHAME sempre que ele falar de lição, revista, EBD, domingo, tópico, áureo, comentarista, Cristão Alerta ou livro de apoio. '
+        + '"Me explique o primeiro tópico" = parte "topico", topico 1; "agora o segundo" = topico 2. PROIBIDO falar da lição sem chamar isto.',
       parameters: {
         type: 'OBJECT',
         properties: {
-          licao: { type: 'NUMBER', description: 'O número da lição (ex.: 3, 12). Deixe vazio para a lição do próximo domingo.' },
-          turma: { type: 'STRING', description: 'adulto, jovem, juvenis, juniores ou adolescentes. Vazio = todas as turmas.' },
-          listar: { type: 'BOOLEAN', description: 'true para a lista completa das lições do trimestre daquela turma.' },
+          licao: { type: 'NUMBER', description: 'O número da lição (1 a 13). Vazio = a do próximo domingo.' },
+          turma: { type: 'STRING', description: 'adulto ou jovem (as do trimestre atual). Vazio = adulto.' },
+          parte: { type: 'STRING', description: 'resumo (padrão: título, áureo, verdade prática e tópicos), topico, introducao, conclusao, leitura, revisao, professor, alerta (Cristão Alerta), apoio (livro de apoio), devocional ou autor (o comentarista).' },
+          topico: { type: 'NUMBER', description: 'Com parte "topico": 1, 2 ou 3 (I, II, III).' },
+          subtopico: { type: 'NUMBER', description: 'Opcional, com parte "topico": só aquele subtópico (1, 2 ou 3).' },
+          pagina: { type: 'NUMBER', description: 'Para textos longos (alerta, apoio, professor, devocional): a página seguinte, 2, 3…' },
+          listar: { type: 'BOOLEAN', description: 'true para a lista das 13 lições do trimestre daquela turma.' },
         },
       },
     },
@@ -1186,7 +1291,8 @@ Você tem estas ferramentas e elas são a sua memória de verdade NO SAGRADO:
   versiculos_ligados    — referências cruzadas de verdade, pelo motor de ligações
   garimpar              — o material de estudo do acervo (Caderno de Pérolas e aulas)
   o_que_ja_falamos      — a SUA MEMÓRIA: o que vocês dois já conversaram, e quando
-  licao_da_ebd          — a lição da EBD de qualquer turma
+  licao_da_ebd          — a lição da EBD INTEIRA (adulto e jovem): áureo, tópicos, Cristão Alerta,
+                          livro de apoio, professor, devocional, revisão e o comentarista
   mostrar_na_tela       — o telão
   saber_agora           — a internet ao vivo, para fato de hoje
   meu_conhecimento      — O ESPELHO: tudo o que você tem, sempre atualizado
@@ -1398,7 +1504,7 @@ async function meuConhecimento(origem) {
     ferramentas,
     fontes_fixas: [
       'A Bíblia do RADAR, texto exato com o idioma original (ler_versiculo, conferir_citacao, versiculos_ligados)',
-      'As lições da EBD das turmas adultos, jovens, juvenis, juniores e adolescentes (licao_da_ebd)',
+      'A lição da EBD completa de adultos e jovens do trimestre: texto áureo, tópicos e subtópicos inteiros, Cristão Alerta, livro de apoio, material do professor, devocional e o comentarista (licao_da_ebd)',
       'As pregações e mensagens escritas pelo próprio pastor, no RADAR (buscar_no_acervo)',
       'O material de estudo do acervo: Caderno de Pérolas, tipologias e transcrições de aulas (garimpar)',
       'A memória das conversas anteriores com o pastor (o_que_ja_falamos)',
