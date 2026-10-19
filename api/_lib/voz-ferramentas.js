@@ -896,12 +896,14 @@ async function ensinosDoPastor(a, origem, user) {
 
 // A LACUNA. voz.js chama isto (fora do caminho da resposta) quando uma ferramenta de busca
 // volta sem apoio. Peneira de segredo ANTES de gravar, como em toda gravação do globo.
-const BUSCAS_QUE_ANOTAM_LACUNA = new Set(['pesquisar_biblioteca', 'buscar_no_acervo', 'garimpar', 'pensar_a_fundo']);
+// buscar_no_acervo NÃO entra: não achar uma pregação dele não é livro faltando na biblioteca.
+const BUSCAS_QUE_ANOTAM_LACUNA = new Set(['pesquisar_biblioteca', 'garimpar', 'pensar_a_fundo']);
 export async function registrarLacuna(origem, nome, args, resposta) {
   if (!BUSCAS_QUE_ANOTAM_LACUNA.has(nome) || !resposta || resposta.achou !== false || resposta.demorou) return null;
   const a = args || {};
   const q = semSegredo(a.pergunta || a.assunto || a.q || '', { max: 200 });
-  if (!q.ok) return null;
+  // Se a peneira teve que trocar nome por "alguém", a pergunta era sobre pessoa, não assunto de livro.
+  if (!q.ok || /algu[ée]m/i.test(q.texto)) return null;
   return caderno(origem, { acao: 'lacuna', assunto: q.texto, ferramenta: nome });
 }
 
