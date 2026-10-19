@@ -17,7 +17,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
    larga que a tela do A22). Agora a MESMA capa, ampliada e desfocada, enche o fundo inteiro; a arte nítida fica por cima,
    inteira, sem cortar nenhum dos 4 cartões. As bordas da arte são azul-escuras, então a emenda não aparece. */
 #splash{position:fixed;overflow:hidden}
-#splash::before{content:'';position:absolute;inset:-40px;background:url(/capa.jpg) center/cover no-repeat;filter:blur(22px) brightness(.75);transform:scale(1.15);z-index:0}
+#splash{background:linear-gradient(180deg,#000614 0%,#000614 30%,#000f20 70%,#000f20 100%)} /* as cores exatas da borda de cima e de baixo da arte: a emenda some */
+#splash::before{content:none}
 
 /* ══ HOME ══ */
 #home{background:var(--bg)}
