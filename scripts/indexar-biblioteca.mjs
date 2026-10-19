@@ -148,6 +148,18 @@ const FONTES = [
     dir: AUT('Champlin'), tipo: 'comentario' },
 ];
 
+// ═══ A PASTA DE ALIMENTAÇÃO (18/10/2026) ═════════════════════════════════════
+// Livro novo do Elias entra SEM mexer neste arquivo: uma pasta em D:\RADAR-ALIMENTAR\<nome> com os
+// .pdf/.docx/.txt/.md (ou um fonte.json apontando "origem" para onde eles já estão). Toda noite
+// scripts/alimentar-biblioteca.mjs converte para texto em <nome>\_texto, escreve a lista em
+// D:\RADAR-ALIMENTAR\_fontes.json e chama este indexador só com essas fontes. Fica FORA do
+// repositório de propósito (livro comprado = motor invisível, nunca no repo nem em página).
+const ALIMENTAR = process.env.RADAR_ALIMENTAR || 'D:\\RADAR-ALIMENTAR';
+try {
+  const lista = JSON.parse(fs.readFileSync(path.join(ALIMENTAR, '_fontes.json'), 'utf8'));
+  for (const f of lista) if (f && f.id && f.dir && !FONTES.some((x) => x.id === f.id)) FONTES.push(f);
+} catch (_) { /* sem pasta de alimentação: só as fontes fixas */ }
+
 // ═══ AS CONTAS DO CLOUDFLARE, EM RODIZIO ═════════════════════════════════════
 // Cada conta da 10.000 neurons POR DIA, de graca. Uma conta sozinha nao aguenta a
 // biblioteca inteira — bati nesse teto hoje, ao vivo:
