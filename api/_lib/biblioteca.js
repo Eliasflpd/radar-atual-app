@@ -184,7 +184,7 @@ module.exports = async (req, res) => {
       `with perto as (
          select autor, obra, livro, secao, tipo, texto, peso, aprovado,
                 1 - (emb <=> $1::halfvec) as score,
-                (1 - (emb <=> $1::halfvec)) + case peso when 2 then 0.04 when 3 then 0.02 else 0 end as posto
+                (1 - (emb <=> $1::halfvec)) + case peso when 2 then 0.04 when 3 then 0.02 when 4 then -0.03 else 0 end as posto
            from biblioteca_trechos
           where emb is not null
           order by emb <=> $1::halfvec
@@ -196,7 +196,7 @@ module.exports = async (req, res) => {
          select * from porautor
          union all
          select * from perto
-       ) t order by posto desc limit $2`, [vec, quantos]);
+       ) t order by posto desc limit $2`, [vec, quantos + 8]);
 
     // BUSCA POR PALAVRA, além da busca por sentido. Só por sentido, "ágape" trazia o verbete de Ágabo e a
     // palavra grega certa nem aparecia (medido em 18/10/2026): o léxico guarda a palavra em letras gregas e quem
@@ -219,10 +219,16 @@ module.exports = async (req, res) => {
     } catch (e) { achados = []; erroLex = String((e && e.message) || e).slice(0, 160); }
 
     // Sem deduplicar, o union all devolve o mesmo trecho duas vezes.
+    // 19/10/2026: autor COM FILTRO (aprovado=false: Champlin, Witness Lee, Kaung…) entra no máximo UM por
+    // pesquisa. Com os comentários de Provérbios as notas ficam coladas (0,73 x 0,71) e, sem este teto, os
+    // de filtro ocupavam metade das vagas e Waltke/Kidner nem chegavam ao redator.
     const vistos = new Set(), itens = [];
+    let comFiltro = 0;
     for (const x of [...achados, ...r.rows]) {
       const k = x.autor + '|' + x.texto.slice(0, 60);
       if (vistos.has(k)) continue;
+      if (x.aprovado === false && comFiltro >= 1) continue;
+      if (x.aprovado === false) comFiltro++;
       vistos.add(k);
       itens.push({ autor: x.autor, obra: x.obra, livro: rotuloLimpo(x.livro),
         secao: secaoLimpa(x.secao, x.livro), tipo: x.tipo, texto: x.texto,
