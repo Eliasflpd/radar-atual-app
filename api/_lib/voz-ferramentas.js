@@ -41,7 +41,7 @@ import { embutirPergunta } from './busca-vetor.js';
 // ⚠️ A seta aponta só pra cá: voz-memoria.js NÃO importa este arquivo (ele
 // recebe o redator por parâmetro). Import circular em ESM deixa `const` em TDZ
 // e o módulo morre no carregamento — e um globo que não carrega é tela morta.
-import { FERRAMENTA_MEMORIA, oQueJaFalamos } from './voz-memoria.js';
+import { FERRAMENTA_MEMORIA, oQueJaFalamos, semSegredo } from './voz-memoria.js';
 import { iaTexto } from './ia.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -695,6 +695,238 @@ async function pesquisarBiblioteca(pergunta, origem) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 6-B) O CÉREBRO DE ESTUDIOSO + O CADERNO DE APRENDIZADO (18/10/2026, pedido do Elias:
+// "agora que tem a API, faz essa voz ter conhecimento melhor que o do ChatGPT, um PhD,
+// que aprenda com cada pergunta e se atualize").
+//
+// O Gemini Live continua sendo a VOZ (fala natural, rápida, de graça). Mas pergunta funda
+// — doutrina, exegese disputada, juntar vários textos, "me explica isso a fundo" — ele
+// passa pra CLAUDE, que lê a Bíblia do RADAR, a biblioteca de estudo e as correções do
+// próprio pastor, e devolve um PARECER de estudioso. A voz fala em cima disso.
+//
+// O "aprender" é um ciclo, porque modelo nenhum se re-treina no meio da conversa:
+//   • lacuna (o que a biblioteca não respondeu) fica anotada → vira lista do que falta;
+//   • correção / resposta aprovada / ensino do pastor fica no caderno → volta no prompt da
+//     próxima sessão e entra no parecer da Claude antes dos comentaristas.
+// O armazém é api/_lib/globo-aprendizado.js (Node + pg, via /api/dados?fn=aprendizado).
+// ─────────────────────────────────────────────────────────────────────────────
+function tokenAdm() {
+  return (typeof process !== 'undefined' && process.env && process.env.RADAR_ADMIN_TOKEN) || '';
+}
+
+// fetch com prazo: o Edge corta a resposta aos 25 s e o Gemini fica mudo esperando.
+async function comPrazo(url, init, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try { return await fetch(url, { ...init, signal: ctrl.signal }); } finally { clearTimeout(t); }
+}
+
+async function caderno(origem, corpo) {
+  const token = tokenAdm();
+  if (!token) return null;
+  try {
+    const r = await comPrazo(origem + '/api/dados?fn=aprendizado', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...corpo, token }),
+    }, 6000);
+    return await r.json();
+  } catch (_) { return null; }
+}
+
+// As referências que vieram DENTRO da pergunta ("o que Romanos 8:28 e Gênesis 50:20 têm em
+// comum") são abertas na Bíblia do RADAR e entram no parecer como texto exato.
+const RE_REF_SOLTA = /(?:^|[^\p{L}\d])((?:[123]\s*)?[A-Za-zÀ-ÿ]{2,22}\.?\s+\d{1,3}(?:\s*[:.]\s*\d{1,3}(?:\s*[-–]\s*\d{1,3})?)?)/gu;
+function refsDaPergunta(q) {
+  const out = [];
+  for (const m of String(q || '').matchAll(RE_REF_SOLTA)) {
+    const ref = m[1].trim();
+    const p = partirRef(ref);
+    if (p && p.v && !out.includes(ref)) out.push(ref);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
+const SELO = (x) => x.peso === 2 ? '[FONTE PRIMÁRIA — diz qual é a palavra no original]'
+  : x.aprovado === false ? '[COM FILTRO — só em grego, crítica textual e estudo de palavra; nunca em interpretação]'
+  : '[autor aprovado no Concílio]';
+
+function ordemDoParecer(q, versos, itens, ensinos) {
+  const blocoBiblia = versos.length
+    ? versos.map((v) => `${v.referencia} (${v.testamento}; original em ${v.idioma_original}): "${v.texto}"`).join('\n')
+    : '(nenhuma referência veio na pergunta)';
+  const blocoLivros = itens.length
+    ? itens.map((x, i) => `[${i + 1}] ${x.autor}${x.secao ? ' — ' + x.secao : ''} ${SELO(x)}\n${String(x.texto || '').slice(0, 1400)}`).join('\n\n───\n\n')
+    : '(a biblioteca não trouxe nada que case com a pergunta)';
+  const blocoEnsinos = ensinos.length
+    ? ensinos.map((e) => `• (${e.tipo === 'correcao' ? 'CORREÇÃO' : e.tipo === 'aprovada' ? 'RESPOSTA QUE ELE APROVOU' : 'ENSINO'}) ${e.assunto}: ${e.conteudo}`).join('\n')
+    : '(nada guardado sobre este assunto)';
+
+  return `PERGUNTA DO PASTOR: ${q}
+
+1) O TEXTO BÍBLICO (Almeida, da Bíblia do RADAR — é a última palavra):
+${blocoBiblia}
+
+2) O QUE O PRÓPRIO PASTOR JÁ TE CORRIGIU OU ENSINOU SOBRE ISSO (vale acima dos comentaristas, abaixo da Escritura):
+${blocoEnsinos}
+
+3) A BIBLIOTECA DE ESTUDO DELE (uso interno — ele NÃO vai ver este texto; é livro comprado):
+"""
+${blocoLivros}
+"""
+
+ESCREVA O PARECER. Regras absolutas:
+• Comece pela resposta, sem introdução. Depois aprofunde: o sentido do texto no contexto, a palavra
+  no original quando ajudar, a ligação com o resto da Escritura e a aplicação para o púlpito.
+• Use os livros COM AS SUAS PALAVRAS. É proibido copiar mais de seis palavras seguidas de um autor.
+  Diga sempre de quem veio pelo NOME ("Keil e Delitzsch observam…", "o léxico de Thayer registra…").
+• Você pode usar o seu próprio conhecimento de estudioso, mas SEPARE: o que é consenso geral de estudo
+  você diz como "os estudiosos em geral entendem…", NUNCA atribuído a um autor que não está no material
+  acima, e nunca com número de página, ano ou citação entre aspas que você não tenha aqui.
+• Palavra hebraica ou grega: Antigo Testamento é hebraico (aramaico em Daniel 2–7 e Esdras 4–7), Novo é
+  grego — nunca troque. Se a palavra não veio do material e você não tem certeza absoluta, não diga.
+• Linha doutrinária: pentecostal clássica (Assembleia de Deus). Em ponto disputado, apresente as posições
+  com honestidade e diga qual a linha pentecostal sustenta. Se uma correção do pastor contrariar o texto
+  bíblico, diga com respeito o que o texto diz.
+• Se nem o texto, nem os livros, nem o conhecimento sólido sustentam uma resposta, escreva exatamente:
+  NAO SUSTENTA — e uma linha do que dá para dizer com segurança.
+• No máximo 14 linhas, texto corrido em português do Brasil, sem marcadores, sem negrito, sem título:
+  isto vai virar FALA de um mestre numa conversa por voz.`;
+}
+
+const SISTEMA_DO_ESTUDIOSO = 'Você é um teólogo e exegeta com doutorado em Antigo e Novo Testamento, '
+  + 'hebraico e grego bíblicos, que assessora um pastor pentecostal (Assembleia de Deus) no Brasil. '
+  + 'Você é rigoroso: a Escritura é a autoridade final, fonte se cita pelo nome, e o que não tem base não se afirma.';
+
+async function pensarAFundo(pergunta, origem, user) {
+  const t0 = Date.now();
+  const q = String(pergunta || '').trim().slice(0, 600);
+  if (q.length < 6) return { achou: false, motivo: 'pergunta curta demais para pensar a fundo' };
+  const token = tokenAdm();
+
+  // As três coletas correm JUNTAS: Bíblia, biblioteca e caderno do pastor.
+  const [versos, itens, ensinos] = await Promise.all([
+    Promise.all(refsDaPergunta(q).map((r) => lerVersiculo(r, origem).catch(() => null)))
+      .then((vs) => vs.filter((v) => v && v.achou)),
+    (async () => {
+      if (!token) return [];
+      try {
+        const r = await comPrazo(origem + '/api/dados?fn=biblioteca', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ q, n: 8, token }),
+        }, 8000);
+        const j = await r.json();
+        return ((j && j.itens) || []).filter((x) => x.score >= 0.45).slice(0, 7);
+      } catch (_) { return []; }
+    })(),
+    user ? caderno(origem, { acao: 'buscar', user, q, n: 5 }).then((j) => (j && j.itens) || []) : Promise.resolve([]),
+  ]);
+
+  // O prazo que sobra pra Claude: o Edge corta aos 25 s, e o Gemini está esperando calado.
+  const sobra = Math.max(6000, 21000 - (Date.now() - t0));
+  let r = null;
+  try {
+    r = await Promise.race([
+      iaTexto({ sys: SISTEMA_DO_ESTUDIOSO, user: ordemDoParecer(q, versos, itens, ensinos),
+        premium: true, max_tokens: 800, tag: 'globo-fundo' }),
+      new Promise((ok) => setTimeout(() => ok(null), sobra)),
+    ]);
+  } catch (_) { r = null; }
+  const texto = r && typeof r.texto === 'string' ? r.texto.trim() : '';
+
+  const fontes = [
+    ...versos.map((v) => ({ autor: 'Bíblia (Almeida)', onde: v.referencia })),
+    ...itens.map((x) => ({ autor: x.autor, obra: x.obra, onde: x.secao || x.livro || '' })),
+  ].filter((f, i, a) => a.findIndex((y) => y.autor === f.autor && y.onde === f.onde) === i).slice(0, 8);
+
+  if (!texto) {
+    return { achou: false, demorou: true,
+      motivo: 'O estudo a fundo não fechou a tempo. Siga com pesquisar_biblioteca e ler_versiculo, e diga ao pastor que o estudo longo vai ficar pra depois — NÃO improvise erudição.' };
+  }
+  if (/^\s*N[AÃ]O SUSTENTA/i.test(texto)) {
+    return { achou: false, parecer: texto, fontes,
+      motivo: 'O estudo a fundo NÃO achou base para isso. Diga com todas as letras e fale só do que é seguro.' };
+  }
+  return {
+    achou: true,
+    parecer: texto,
+    fontes,
+    usou_correcoes_do_pastor: ensinos.length,
+    cerebro: (r && r.provedorNome) || '',
+    ordem: 'Este é o PARECER do estudioso. Fale em cima dele com as suas palavras, com calor de mestre, e DIGA O NOME '
+      + 'de quem sustenta. Não leia como texto pronto. Antes de citar um versículo entre aspas, ainda passe por ler_versiculo. '
+      + (ensinos.length ? 'Ele levou em conta o que o próprio pastor já te corrigiu — respeite isso. ' : '')
+      + 'Se o pastor quiser mais, ofereça aprofundar um ponto só.',
+  };
+}
+
+// guardar_ensino — o pastor ensinando. Só com dono provado (voz.js confere o crachá).
+async function guardarEnsino(a, origem, user) {
+  if (!user) return { guardado: false, ordem: 'Nesta conversa você não tem caderno ligado (aparelho sem cadastro confirmado). Diga isso com naturalidade.' };
+  const tipo = ['correcao', 'aprovada', 'ensino'].includes(a.tipo) ? a.tipo : 'ensino';
+  const assunto = semSegredo(a.assunto || '', { max: 200 });
+  const conteudo = semSegredo(a.conteudo || a.o_que_aprendi || '', { max: 1500 });
+  if (!assunto.ok || !conteudo.ok) {
+    return { guardado: false,
+      ordem: 'NÃO guardei: isso parece ter nome de pessoa, caso pastoral ou dado pessoal, e esses o caderno não guarda. '
+        + 'Diga isso com naturalidade e ofereça guardar só o ensino, sem o caso.' };
+  }
+  const j = await caderno(origem, { acao: 'ensinar', user, tipo, assunto: assunto.texto, conteudo: conteudo.texto });
+  if (!j || !j.ok) return { guardado: false, ordem: 'O caderno não respondeu agora. Diga que não conseguiu guardar e peça pra ele repetir depois.' };
+  return { guardado: true, tipo, assunto: assunto.texto,
+    ordem: 'Guardado. Confirme em UMA frase curta ("anotado, da próxima vez eu já sigo isso") e continue a conversa.' };
+}
+
+async function ensinosDoPastor(a, origem, user) {
+  if (!user) return { achou: false, ordem: 'Nesta conversa você não tem caderno ligado. Diga isso com naturalidade.' };
+  const assunto = String(a.assunto || '').trim().slice(0, 200);
+  if (a.apagar) {
+    if (!assunto) return { apagados: 0, ordem: 'Pergunte QUAL ensino ele quer que você esqueça.' };
+    const j = await caderno(origem, { acao: 'apagar', user, assunto });
+    return { apagados: (j && j.apagados) || 0, assuntos: (j && j.assuntos) || [],
+      ordem: (j && j.apagados) ? 'Apagado. Confirme em uma frase.' : 'Não achei esse ensino no caderno. Diga isso.' };
+  }
+  const j = assunto ? await caderno(origem, { acao: 'buscar', user, q: assunto, n: 8 })
+    : await caderno(origem, { acao: 'ler', user, n: 20 });
+  const itens = (j && j.itens) || [];
+  if (!itens.length) return { achou: false, ordem: 'O caderno está vazio sobre isso. Diga que ele ainda não te ensinou nada sobre esse assunto.' };
+  return { achou: true, ensinos: itens.map((e) => ({ tipo: e.tipo, assunto: e.assunto, conteudo: e.conteudo, vezes: e.vezes })),
+    ordem: 'Isto é o que ele já te ensinou ou corrigiu. Fale disso com naturalidade, sem ler como lista.' };
+}
+
+// A LACUNA. voz.js chama isto (fora do caminho da resposta) quando uma ferramenta de busca
+// volta sem apoio. Peneira de segredo ANTES de gravar, como em toda gravação do globo.
+const BUSCAS_QUE_ANOTAM_LACUNA = new Set(['pesquisar_biblioteca', 'buscar_no_acervo', 'garimpar', 'pensar_a_fundo']);
+export async function registrarLacuna(origem, nome, args, resposta) {
+  if (!BUSCAS_QUE_ANOTAM_LACUNA.has(nome) || !resposta || resposta.achou !== false || resposta.demorou) return null;
+  const a = args || {};
+  const q = semSegredo(a.pergunta || a.assunto || a.q || '', { max: 200 });
+  if (!q.ok) return null;
+  return caderno(origem, { acao: 'lacuna', assunto: q.texto, ferramenta: nome });
+}
+
+// O BLOCO DO PROMPT: o que o pastor já ensinou entra na instrução de sistema da sessão,
+// pra o globo já ABRIR sabendo. Teto curto — o prompt da voz já é grande.
+export async function blocoDosEnsinos(origem, user) {
+  if (!user) return '';
+  const j = await caderno(origem, { acao: 'ler', user, n: 12 });
+  const itens = (j && j.itens) || [];
+  if (!itens.length) return '';
+  const L = ['════ O QUE ESTE PASTOR JÁ TE CORRIGIU E ENSINOU ════',
+    'Isto vale acima de qualquer comentarista (abaixo só da Escritura). Siga sem ele precisar repetir:'];
+  let total = 0;
+  for (const e of itens) {
+    const rot = e.tipo === 'correcao' ? 'CORREÇÃO' : e.tipo === 'aprovada' ? 'RESPOSTA QUE ELE APROVOU' : 'ENSINO';
+    const l = `  · (${rot}) ${e.assunto}: ${String(e.conteudo || '').slice(0, 300)}`;
+    if (total + l.length > 2600) break;
+    total += l.length;
+    L.push(l);
+  }
+  L.push('Se ele perguntar o que já te ensinou, chame ensinos_do_pastor.');
+  return L.join('\n');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 7) A DECLARAÇÃO PRO GEMINI LIVE.
 // Vai embutida no token efêmero (voz.js), dentro de bidiGenerateContentSetup.tools.
 // Formato: Schema do Gemini em MAIÚSCULA (OBJECT/STRING), como já era no garimpar.
@@ -858,6 +1090,56 @@ export const FERRAMENTAS = [{
         + 'quais livros ou autores você tem, o que você consegue fazer ou com o que você trabalha. '
         + 'PROIBIDO responder isso de cabeça: sem chamar esta ferramenta você NÃO sabe a lista, e dizer "não sei o que eu tenho" é falha grave.',
     },
+    {
+      name: 'pensar_a_fundo',
+      // O cérebro de estudioso (Claude). A descrição separa bem de pesquisar_biblioteca, senão o
+      // modelo chama as duas ou a errada: biblioteca = UM dado erudito; pensar_a_fundo = PARECER.
+      description: 'O ESTUDIOSO: um teólogo com doutorado em hebraico, grego, Antigo e Novo Testamento pensa a pergunta A FUNDO — lê a Bíblia, '
+        + 'a biblioteca de estudo e o que o próprio pastor já te corrigiu — e devolve um PARECER pronto, com as fontes. '
+        + 'CHAME quando a pergunta pede mais que um dado: doutrina, exegese difícil ou disputada, juntar vários textos, comparar posições, '
+        + '"me explica isso a fundo", "o que a Bíblia ensina sobre", preparação de estudo ou pregação. '
+        + 'Para UM dado só (o sentido de uma palavra, um costume), use pesquisar_biblioteca, que é mais rápida. '
+        + 'Leva uns quinze segundos: ANTES de chamar, diga ao pastor algo como "deixa eu pensar nisso direito".',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          pergunta: {
+            type: 'STRING',
+            description: 'A pergunta completa, em português, com as referências bíblicas por extenso quando houver '
+              + '(ex.: "como Romanos 9:13 se concilia com o amor de Deus, à luz de Malaquias 1:2-3").',
+          },
+        },
+        required: ['pergunta'],
+      },
+    },
+    {
+      name: 'guardar_ensino',
+      description: 'O CADERNO DO PASTOR: guarda, para sempre, o que ele te ensina. '
+        + 'CHAME quando ele te CORRIGIR ("isso está errado, o certo é…"), quando ele APROVAR uma resposta ("essa foi boa, guarda isso") '
+        + 'ou quando ele mandar você lembrar de algo de doutrina, do método dele ou de como ele quer as coisas ("guarda isso: …"). '
+        + 'Da próxima vez você já vai abrir a conversa sabendo. NUNCA guarde nome de membro, caso de aconselhamento ou dado pessoal.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          tipo: { type: 'STRING', description: 'correcao (ele te corrigiu), aprovada (ele aprovou a sua resposta) ou ensino (ele mandou lembrar).' },
+          assunto: { type: 'STRING', description: 'O assunto em poucas palavras, ex.: "a palavra escada em Gênesis 28:12", "como ele quer o esboço do sermão".' },
+          conteudo: { type: 'STRING', description: 'O que ficou valendo, completo e claro, nas palavras certas — a correção dele, ou o resumo fiel da resposta que ele aprovou.' },
+        },
+        required: ['tipo', 'assunto', 'conteudo'],
+      },
+    },
+    {
+      name: 'ensinos_do_pastor',
+      description: 'Lê o caderno: o que este pastor já te corrigiu, aprovou ou ensinou. CHAME quando ele perguntar "o que eu já te ensinei", '
+        + '"o que eu te corrigi sobre…", ou antes de responder um assunto em que ele já te corrigiu. Com apagar=true, esquece o ensino daquele assunto (só se ele pedir).',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          assunto: { type: 'STRING', description: 'O assunto a procurar. Vazio = os ensinos mais recentes.' },
+          apagar: { type: 'BOOLEAN', description: 'true SÓ quando ele pedir pra você esquecer aquele ensino.' },
+        },
+      },
+    },
     // A MEMÓRIA. Declarada por último de propósito: ela é a única que não busca
     // fora — busca DENTRO do que já foi conversado. Sem ela, o globo só podia
     // fingir que lembrava, e fingir lembrança é mentira igual a citação inventada.
@@ -890,6 +1172,20 @@ Você tem estas ferramentas e elas são a sua memória de verdade NO SAGRADO:
   mostrar_na_tela       — o telão
   saber_agora           — a internet ao vivo, para fato de hoje
   meu_conhecimento      — O ESPELHO: tudo o que você tem, sempre atualizado
+  pensar_a_fundo        — O ESTUDIOSO: um doutor em teologia pensa a pergunta funda e te devolve
+                          um parecer com fontes (doutrina, exegese difícil, juntar textos)
+  guardar_ensino        — o CADERNO: guarda o que o pastor te corrige, aprova ou manda lembrar
+  ensinos_do_pastor     — lê o caderno (o que ele já te ensinou)
+
+LEI 0-B — PERGUNTA FUNDA VAI PRO ESTUDIOSO. CORREÇÃO DO PASTOR VAI PRO CADERNO.
+• Doutrina, exegese difícil, "me explica a fundo", comparar textos ou posições: diga
+  "deixa eu pensar nisso direito" e CHAME pensar_a_fundo. Depois fale em cima do parecer,
+  com as suas palavras e com o nome das fontes. Um dado só (uma palavra, um costume):
+  pesquisar_biblioteca basta.
+• Ele te corrigiu? Agradeça em meia frase, CHAME guardar_ensino (tipo correcao) e siga já
+  corrigido. Ele elogiou uma resposta e mandou guardar? guardar_ensino (tipo aprovada).
+  É assim que você aprende com cada conversa — e o que está no caderno vale acima de
+  qualquer comentarista, abaixo só da Escritura.
 
 LEI 0 — VOCÊ SABE O QUE TEM. QUANDO PERGUNTAREM, VOCÊ DIZ TUDO.
 Se o pastor perguntar o que você sabe, qual é o seu conhecimento, quais são as suas
@@ -1088,6 +1384,8 @@ async function meuConhecimento(origem) {
       'O material de estudo do acervo: Caderno de Pérolas, tipologias e transcrições de aulas (garimpar)',
       'A memória das conversas anteriores com o pastor (o_que_ja_falamos)',
       'A internet ao vivo, para fato de hoje (saber_agora)',
+      'O estudioso: a Claude, com doutorado em teologia e línguas originais, pensa as perguntas fundas e devolve parecer com fontes (pensar_a_fundo)',
+      'O caderno do pastor: as correções, respostas aprovadas e ensinos que ele já me deu, que eu sigo daqui pra frente (guardar_ensino, ensinos_do_pastor)',
     ],
     biblioteca_de_estudo: biblioteca,
     ordem: 'RESPONDA AGORA, COMPLETO E SEM ESCONDER NADA: diga as ferramentas que você tem, as fontes fixas e, da biblioteca de estudo, '
@@ -1141,6 +1439,14 @@ export async function executarFerramenta(nome, args, origem, ctx) {
       return saberAgora(a.pergunta || a.q || a.assunto, origem);
     case 'meu_conhecimento':
       return meuConhecimento(origem);
+    // As três do APRENDIZADO recebem `user` JÁ CONFERIDO pelo crachá (voz.js) — sem dono
+    // provado, guardar/ler o caderno responde "sem caderno ligado", nunca o de outra pessoa.
+    case 'pensar_a_fundo':
+      return pensarAFundo(a.pergunta || a.q || a.assunto, origem, c.user || '');
+    case 'guardar_ensino':
+      return guardarEnsino(a, origem, c.user || '');
+    case 'ensinos_do_pastor':
+      return ensinosDoPastor(a, origem, c.user || '');
     default:
       return { erro: 'ferramenta desconhecida: ' + nome,
         ordem: 'Não use isso. Siga com as ferramentas que você tem.' };
@@ -1149,7 +1455,8 @@ export async function executarFerramenta(nome, args, origem, ctx) {
 
 // Exportadas para o banco de provas (scripts/_provar-voz-ferramentas.mjs) poder
 // bater em cada uma sem subir sessão de voz nenhuma.
-export { lerVersiculo, conferirCitacao, buscarNoAcervo, versiculosLigados, pesquisarBiblioteca, partirRef, medir };
+export { lerVersiculo, conferirCitacao, buscarNoAcervo, versiculosLigados, pesquisarBiblioteca, partirRef, medir,
+  pensarAFundo, guardarEnsino, ensinosDoPastor, refsDaPergunta };
 
 // O REDATOR, exportado. Quem resume a conversa (voz-memoria.js) precisa dele,
 // mas NÃO pode importar este arquivo — seria import circular. Então o voz.js

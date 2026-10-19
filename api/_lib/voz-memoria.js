@@ -75,6 +75,7 @@ pascoa pentecostes tabernaculo templo arca queruvim querubim serafim urim tumim
 torah tora talmude midrash septuaginta massoretico vulgata pergaminho
 champlin kittel waltke kidner pearlman horton gilberto keener fee moo morris
 motyer stronstad arrington cabral severino owens sadrak
+keil delitzsch thayer duewel trench strong lawrence foster wiersbe spurgeon cambridge
 brasil radar concilio
 `.trim().split(/\s+/));
 

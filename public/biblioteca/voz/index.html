@@ -247,7 +247,7 @@
       <h3>A voz</h3>
       <div class="provaVoz" id="provaVoz">
         <div class="linha" id="linhaVozes"></div>
-        <div class="obs">Toque para ouvir. A escolhida fica valendo nesta conversa.</div>
+        <div class="obs">Toque para ouvir. A escolhida fica guardada e vale a partir da próxima vez que você ligar a conversa.</div>
       </div>
 
       <h3>A conversa</h3>
@@ -369,15 +369,22 @@
 
   // Voz: padrão Orus (rótulo "Firm" do Google — o timbre de professor).
   // Dá pra trocar por ?voz=Charon, ou tocando nos botões de prova aqui em cima.
+  // 18/10/2026: + 4 personas (timbre + jeito de falar, montadas no servidor — ver VOZES em api/_lib/voz.js).
+  // A escolha agora FICA guardada no aparelho (voz.timbre): antes voltava pro Orus a cada vez.
   var VOZES = [
-    { id:'Orus',       rotulo:'Firme' },
-    { id:'Charon',     rotulo:'Expositiva' },
-    { id:'Sadaltager', rotulo:'Douta' },
-    { id:'Gacrux',     rotulo:'Madura' }
+    { id:'Orus',        rotulo:'Firme' },
+    { id:'Charon',      rotulo:'Expositiva' },
+    { id:'Sadaltager',  rotulo:'Douta' },
+    { id:'Gacrux',      rotulo:'Madura' },
+    { id:'Narrador',    rotulo:'Locutor solene' },
+    { id:'Pregador',    rotulo:'Com fogo' },
+    { id:'Conselheiro', rotulo:'Calma, acolhe' },
+    { id:'Infantil',    rotulo:'Para crianças' }
   ];
   function vozDaURL(){
     var q=(location.search.match(/[?&]voz=([^&]+)/)||[])[1];
     q = q ? decodeURIComponent(q) : '';
+    if(!q){ try{ q=localStorage.getItem('voz.timbre')||''; }catch(e){} }
     for(var i=0;i<VOZES.length;i++) if(VOZES[i].id.toLowerCase()===q.toLowerCase()) return VOZES[i].id;
     return 'Orus';
   }
@@ -439,7 +446,12 @@
     buscar_no_acervo:     ['🗂️ Procurando nas suas mensagens','Foi ver o que você já pregou.'],
     versiculos_ligados:   ['🔗 Puxando textos ligados','Foi buscar as referências cruzadas.'],
     o_que_ja_falamos:     ['🧠 Lembrando','Foi ver o que vocês já conversaram.'],
-    garimpar:             ['⛏️ Buscando no material','Foi conferir nas fontes.']
+    garimpar:             ['⛏️ Buscando no material','Foi conferir nas fontes.'],
+    pensar_a_fundo:       ['🎓 Pensando a fundo','O estudioso está lendo a Bíblia e a biblioteca.'],
+    guardar_ensino:       ['✍️ Anotando no caderno','Guardando o que você ensinou.'],
+    ensinos_do_pastor:    ['📒 Abrindo o caderno','Vendo o que você já ensinou.'],
+    meu_conhecimento:     ['🪞 Conferindo o que eu tenho','Listando as fontes de verdade.'],
+    saber_agora:          ['🌐 Olhando a internet','Buscando o fato de hoje.']
   };
   function rotuloDaFerramenta(nome){
     var r=ROTULOS[nome]||ROTULOS.garimpar;
@@ -2426,6 +2438,7 @@
         if(v.id===S.voz) b.className='atual';
         b.addEventListener('click',function(){
           S.voz=v.id;
+          try{ localStorage.setItem('voz.timbre', v.id); }catch(e){}
           Array.prototype.forEach.call(elLinha.children,function(x){ x.className=''; });
           b.className='atual';
           try{ if(S.amostra){ S.amostra.pause(); } }catch(e){}

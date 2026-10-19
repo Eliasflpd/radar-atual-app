@@ -48,7 +48,8 @@ import { ERUDITOS } from './concilio.js';
 // mecânica de citação), mais a doutrina que manda ele usá-las. Tudo em
 // voz-ferramentas.js para caber aqui numa linha — e para ferramenta nova não
 // obrigar ninguém a mexer no index.html do globo.
-import { FERRAMENTAS, REGRA_DE_OURO, executarFerramenta, chavesGemini, escrever } from './voz-ferramentas.js';
+import { FERRAMENTAS, REGRA_DE_OURO, executarFerramenta, chavesGemini, escrever,
+         registrarLacuna, blocoDosEnsinos } from './voz-ferramentas.js';
 // A MEMÓRIA. A terceira perna do que o Elias comparou com o ChatGPT: ele já
 // SABE (as ferramentas) e já não TRAVA — faltava LEMBRAR. Antes disto, fechar a
 // página apagava a conversa inteira, e cair a rede apagava de novo.
@@ -71,12 +72,45 @@ const MODELO = 'models/gemini-3.8-live';
 //   Gacrux      — "Mature" (madura). Mais velha, mais pausada.
 // O pastor ouve as quatro PARADO e, se quiser trocar, abre a página com ?voz=Charon.
 // A lista é fechada de propósito: ninguém injeta nome de voz arbitrário no token.
-const VOZES = ['Orus', 'Charon', 'Sadaltager', 'Gacrux'];
+//
+// 18/10/2026 — pedido do Elias: "pelo menos 5 vozes, uma tão poderosa quanto a do Cid Moreira
+// (não a dele)" e "uma voz infantil, compassada, que a gente entende direitinho". Viraram
+// PERSONAS: um timbre do Google + um JEITO DE FALAR que entra na instrução de sistema.
+// O timbre foi escolhido MEDINDO, não no chute (D:\RADAR-AUDITORIAS\vozes\amostras.mjs grava a
+// mesma frase em todas as vozes masculinas e mede o tom fundamental):
+//   Narrador    — Algieba ("Smooth"), a MAIS GRAVE de todas (~92–97 Hz) + leitura solene de locutor.
+//                 Nada de imitar pessoa nenhuma: é o ESTILO de grande locutor bíblico, com voz própria.
+//   Pregador    — Fenrir ("Excitable") + fogo de púlpito pentecostal.
+//   Conselheiro — Achird ("Friendly") + calma de pastor que aconselha.
+//   Infantil    — Vindemiatrix ("Gentle", a mais aguda e doce das femininas) + contadora de
+//                 histórias para criança: compassada, palavra por palavra, pronúncia caprichada.
+const VOZES = [
+  { id: 'Orus', google: 'Orus' },
+  { id: 'Charon', google: 'Charon' },
+  { id: 'Sadaltager', google: 'Sadaltager' },
+  { id: 'Gacrux', google: 'Gacrux' },
+  { id: 'Narrador', google: 'Algieba', estilo:
+      'JEITO DE FALAR (vale para TODA a conversa): voz de grande locutor lendo a Bíblia — grave, encorpada, '
+    + 'aveludada e majestosa. Ritmo lento e solene, pausas longas entre as frases, dicção perfeita, peso em cada '
+    + 'palavra. Ao ler a Escritura, leia como quem anuncia algo sagrado. Nunca apressado, nunca gritado.' },
+  { id: 'Pregador', google: 'Fenrir', estilo:
+      'JEITO DE FALAR (vale para TODA a conversa): pregador pentecostal no púlpito — firme, com fogo, '
+    + 'energia que cresce na hora da verdade, ênfase forte nas palavras de poder. Fogo, mas sempre claro de entender.' },
+  { id: 'Conselheiro', google: 'Achird', estilo:
+      'JEITO DE FALAR (vale para TODA a conversa): pastor que aconselha — calmo, acolhedor, voz baixa e próxima, '
+    + 'ritmo tranquilo, sem pressa, como quem senta do lado.' },
+  { id: 'Infantil', google: 'Vindemiatrix', estilo:
+      'JEITO DE FALAR (vale para TODA a conversa): contadora de histórias bíblicas para crianças — voz doce, alegre '
+    + 'e carinhosa, BEM COMPASSADA: devagar, palavra por palavra, com pausas curtas entre as frases e pronúncia '
+    + 'caprichada para a criança entender direitinho. Frases curtas, palavras simples, explique palavra difícil. '
+    + 'O conteúdo continua fiel à Bíblia e às mesmas regras de sempre.' },
+];
 const VOZ_PADRAO = 'Orus';
-function escolherVoz(pedida) {
-  const p = String(pedida || '').trim();
-  return VOZES.find((v) => v.toLowerCase() === p.toLowerCase()) || VOZ_PADRAO;
+function personaDe(pedida) {
+  const p = String(pedida || '').trim().toLowerCase();
+  return VOZES.find((v) => v.id.toLowerCase() === p) || VOZES.find((v) => v.id === VOZ_PADRAO);
 }
+function escolherVoz(pedida) { return personaDe(pedida).id; }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) COMO ELE FALA (substitui o FORMATO escrito: nada de cabeçalho, emoji ou JSON)
@@ -714,12 +748,13 @@ function setupDaSessao(handle, voz, memoria) {
     generationConfig: {
       responseModalities: ['AUDIO'],
       // pt-BR nativo, confirmado na lista de idiomas aceitos pelo campo languageCode.
-      speechConfig: { languageCode: 'pt-BR', voiceConfig: { prebuiltVoiceConfig: { voiceName: escolherVoz(voz) } } },
+      speechConfig: { languageCode: 'pt-BR', voiceConfig: { prebuiltVoiceConfig: { voiceName: personaDe(voz).google } } },
       // 0.7 (era 0.55): um pouco mais de solta na escolha das palavras tira o tom
       // monótono. Com o affective dialog junto, a fala ganha vida sem perder o fio.
       temperature: 0.7,
     },
-    systemInstruction: { parts: [{ text: SISTEMA + (memoria ? '\n\n' + memoria : '') }] },
+    systemInstruction: { parts: [{ text: SISTEMA + (personaDe(voz).estilo ? '\n\n' + personaDe(voz).estilo : '')
+      + (memoria ? '\n\n' + memoria : '') }] },
     tools: FERRAMENTAS,
     // O servidor manda um handle a cada tanto; guardando ele, uma queda de rede não
     // apaga a conversa — o front pede token novo com o handle e retoma do ponto.
@@ -936,12 +971,23 @@ export default async function handler(req, ctx) {
     // responde "não tenho memória ligada nesta conversa", que é o caminho
     // honesto que já existia pra quem nunca se cadastrou. Nada de erro, nada
     // de dado de ninguém.
-    const donoFerr = (user && nome === 'o_que_ja_falamos') ? await confirmar() : user;
+    // O CADERNO DE APRENDIZADO (guardar_ensino, ensinos_do_pastor, e pensar_a_fundo, que lê
+    // as correções) paga a mesma conferência: sem ela, quem soubesse um telefone plantaria
+    // "correções" na voz de outra pessoa. Sem crachá bom, essas recebem `user` VAZIO.
+    const PEDEM_DONO = ['o_que_ja_falamos', 'guardar_ensino', 'ensinos_do_pastor', 'pensar_a_fundo'];
+    const donoFerr = PEDEM_DONO.includes(nome) ? (user ? await confirmar() : '') : user;
     try {
       resposta = await executarFerramenta(nome, args, origem, { user: donoFerr });
     } catch (e) {
       resposta = { erro: 'a consulta falhou: ' + (e && e.message ? e.message : 'motivo desconhecido'),
         ordem: 'NÃO invente para tapar o buraco. Diga ao pastor que a consulta falhou agora.' };
+    }
+    // A LACUNA: busca que voltou sem apoio vira linha na lista do que falta na biblioteca.
+    // Fora do caminho da resposta (waitUntil) — o pastor não espera por isto. A peneira de
+    // segredo roda lá dentro, antes de gravar.
+    {
+      const esperarLacuna = depois(ctx, registrarLacuna(origem, nome, args, resposta));
+      if (esperarLacuna) await esperarLacuna;
     }
     // A PENEIRA TAMBÉM AQUI — e este é o lugar que mais importa.
     // Limpar só o prompt não resolvia: o rótulo do garimpo ("Aula do Dr. Wagner
@@ -1061,7 +1107,14 @@ export default async function handler(req, ctx) {
       // abre exatamente como abre pra quem nunca conversou antes.
       try {
         const dono = await confirmar();
-        if (dono) memoria = semNome(await blocoDoSistema(new URL(req.url).origin, dono) || '');
+        if (dono) {
+          // A memória da conversa e o CADERNO (o que ele já corrigiu/ensinou) vêm juntos, em paralelo.
+          const [mem, ens] = await Promise.all([
+            blocoDoSistema(new URL(req.url).origin, dono).catch(() => ''),
+            blocoDosEnsinos(new URL(req.url).origin, dono).catch(() => ''),
+          ]);
+          memoria = semNome([mem, ens].filter(Boolean).join(String.fromCharCode(10, 10)));
+        }
       } catch (_) { memoria = ''; }
     }
     if (quemFala) {

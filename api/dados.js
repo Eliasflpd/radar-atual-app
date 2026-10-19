@@ -538,6 +538,9 @@ const HANDLERS = {
   // pastor conversou, e sem trava qualquer um leria a memória de qualquer um.
   // Ver o cabeçalho de api/_lib/globo-memoria.js.
   memoria:      require('./_lib/globo-memoria.js'),
+  // O CADERNO DE APRENDIZADO DO GLOBO (lacunas, correções e respostas aprovadas do pastor).
+  // Mesmo motivo e mesma trava da memória. Ver o cabeçalho de api/_lib/globo-aprendizado.js.
+  aprendizado:  require('./_lib/globo-aprendizado.js'),
   // A CHAVE DO APARELHO — o crachá que prova "estes dados são MEUS". Entra AQUI
   // pelos mesmos dois motivos de sempre: precisa de pg (o /api/voz é Edge e não
   // tem) e nenhuma função nova cabe no plano Hobby. Protegida por
