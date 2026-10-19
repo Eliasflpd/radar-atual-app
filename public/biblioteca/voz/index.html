@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="color-scheme" content="only light">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 19/10/2026: SEM viewport-fit=cover. Com ele, o Chrome do A22 desenhava a página POR BAIXO dos
+     botões do Android (‖‖‖ ○ ‹) e a barra de escrever/microfone ficava meio escondida (print do Elias). -->
 <meta name="theme-color" content="#0f3d5c">
 <title>Conversa por Voz — RADAR</title>
 <style>
@@ -36,7 +38,7 @@
     color:var(--texto);
     font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.5;
     -webkit-font-smoothing:antialiased;
-    padding:calc(8px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom));
+    padding:calc(8px + env(safe-area-inset-top)) 12px max(14px, calc(10px + env(safe-area-inset-bottom)));
   }
 
   /* ── topo: só o caminho de volta e a engrenagem ── */
