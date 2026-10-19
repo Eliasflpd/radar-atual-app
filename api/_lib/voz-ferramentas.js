@@ -1113,6 +1113,22 @@ export const FERRAMENTAS = [{
       },
     },
     {
+      name: 'trocar_voz',
+      // Resolvida NO NAVEGADOR (como o telão): o timbre do Google é fixado na abertura da linha, então
+      // a página abre uma linha nova com a voz escolhida depois da frase de aviso. Ver index.html do globo.
+      description: 'TROCA A SUA VOZ na hora. CHAME quando ele pedir outra voz ("troca a voz", "fala com a voz do narrador", '
+        + '"voz de criança", "voz mais grave", "volta pra voz normal"). As vozes: Orus (firme, a padrão), Charon (expositiva), '
+        + 'Sadaltager (douta), Gacrux (madura), Narrador (locutor solene, a mais grave), Pregador (com fogo), '
+        + 'Conselheiro (calma, acolhe) e Infantil (para crianças, bem compassada). Se ele perguntar quais vozes você tem, diga esta lista.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          voz: { type: 'STRING', description: 'O nome da voz: Orus, Charon, Sadaltager, Gacrux, Narrador, Pregador, Conselheiro ou Infantil.' },
+        },
+        required: ['voz'],
+      },
+    },
+    {
       name: 'guardar_ensino',
       description: 'O CADERNO DO PASTOR: guarda, para sempre, o que ele te ensina. '
         + 'CHAME quando ele te CORRIGIR ("isso está errado, o certo é…"), quando ele APROVAR uma resposta ("essa foi boa, guarda isso") '
@@ -1176,6 +1192,7 @@ Você tem estas ferramentas e elas são a sua memória de verdade NO SAGRADO:
                           um parecer com fontes (doutrina, exegese difícil, juntar textos)
   guardar_ensino        — o CADERNO: guarda o que o pastor te corrige, aprova ou manda lembrar
   ensinos_do_pastor     — lê o caderno (o que ele já te ensinou)
+  trocar_voz            — troca a sua voz quando ele pedir (Narrador, Pregador, Infantil…)
 
 LEI 0-B — PERGUNTA FUNDA VAI PRO ESTUDIOSO. CORREÇÃO DO PASTOR VAI PRO CADERNO.
 • Doutrina, exegese difícil, "me explica a fundo", comparar textos ou posições: diga
@@ -1447,6 +1464,9 @@ export async function executarFerramenta(nome, args, origem, ctx) {
       return guardarEnsino(a, origem, c.user || '');
     case 'ensinos_do_pastor':
       return ensinosDoPastor(a, origem, c.user || '');
+    // Como o telão: quem troca a voz é o NAVEGADOR. Este caso é só pra bancada de provas.
+    case 'trocar_voz':
+      return { ok: true, nova_voz: String(a.voz || ''), ordem: 'Diga só "vou trocar a voz agora" e pare.' };
     default:
       return { erro: 'ferramenta desconhecida: ' + nome,
         ordem: 'Não use isso. Siga com as ferramentas que você tem.' };

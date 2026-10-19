@@ -247,7 +247,7 @@
       <h3>A voz</h3>
       <div class="provaVoz" id="provaVoz">
         <div class="linha" id="linhaVozes"></div>
-        <div class="obs">Toque para ouvir. A escolhida fica guardada e vale a partir da próxima vez que você ligar a conversa.</div>
+        <div class="obs">Toque para ouvir. A escolhida fica guardada. Com a conversa ligada, a voz troca na hora — e dá pra pedir falando: "troca pra voz do narrador".</div>
       </div>
 
       <h3>A conversa</h3>
@@ -544,16 +544,20 @@
   var TOKEN_PRONTO = null;
   setTimeout(function(){
     try{
+      TOKEN_PRONTO_VOZ = S.voz;
       TOKEN_PRONTO = pedir({ acao:'token', voz:S.voz })
         .then(function(t){ TOKEN_PRONTO_EM = Date.now(); return t; })
         ['catch'](function(){ TOKEN_PRONTO=null; return null; });
     }catch(e){ TOKEN_PRONTO=null; }
   }, 1200);
-  var TOKEN_PRONTO_EM = 0;
+  var TOKEN_PRONTO_EM = 0, TOKEN_PRONTO_VOZ = '';
   // Token do Google vale 30 min; uso o adiantado so nos primeiros 20 pra nunca
   // entregar um vencido na mao do pastor.
   function tokenAdiantado(){
     if(!TOKEN_PRONTO || !TOKEN_PRONTO_EM) return null;
+    // 19/10/2026: o token adiantado leva a voz DENTRO. Se ele trocou a voz no ⚙️
+    // depois que a página abriu, esse token sairia com a voz VELHA — joga fora.
+    if(TOKEN_PRONTO_VOZ !== S.voz){ TOKEN_PRONTO=null; return null; }
     if(Date.now()-TOKEN_PRONTO_EM > 20*60*1000) return null;
     var t=TOKEN_PRONTO; TOKEN_PRONTO=null; return t;
   }
@@ -1656,6 +1660,43 @@
 
   // Espera o áudio da despedida terminar de tocar e AÍ desliga. Sem esta
   // espera, o "Certo, pastor. Até a próxima." era cortado no meio.
+  // Aceita o nome ("Narrador"), o rótulo ("locutor solene") ou o jeito de pedir
+  // ("voz de criança", "a do Cid Moreira", "mais grave").
+  function resolverVoz(pedida){
+    var p=String(pedida||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+    if(!p) return null;
+    var APELIDOS=[
+      [/narrador|locutor|solene|cid|grave|radio|majest/,'Narrador'],
+      [/pregador|fogo|pulpito|uncao|forte/,'Pregador'],
+      [/conselh|calm|acolh|suave|tranquil/,'Conselheiro'],
+      [/infantil|crianc|menin|compassad|devagar|historinha/,'Infantil'],
+      [/orus|firme|padrao|normal|original/,'Orus'],
+      [/charon|exposit/,'Charon'],
+      [/sadaltager|dout/,'Sadaltager'],
+      [/gacrux|madur|velh/,'Gacrux']
+    ];
+    for(var i=0;i<VOZES.length;i++) if(p===VOZES[i].id.toLowerCase()) return VOZES[i].id;
+    for(var j=0;j<APELIDOS.length;j++) if(APELIDOS[j][0].test(p)) return APELIDOS[j][1];
+    return null;
+  }
+
+  // Espera a frase "vou trocar a voz" terminar de tocar e abre a linha nova.
+  function trocarVozAgora(){
+    var nova=S.trocarVozPara; if(!nova) return;
+    S.trocarVozPara=null;
+    var vezes=0;
+    (function esperar(){
+      var tocando=(S.tocando&&S.tocando.length)||(S.fila&&S.fila.length);
+      if(tocando && ++vezes<30){ setTimeout(esperar,300); return; }
+      if(!S.ligado) return;
+      S.voz=nova; S.vozTrocada=nova;
+      S.handle=null; S.handleRuim=0;           // voz e jeito de falar nascem na abertura: linha limpa
+      try{ var bs=elLinha.children; for(var k=0;k<bs.length;k++) bs[k].className=(bs[k].querySelector('b')&&bs[k].querySelector('b').textContent===nova)?'atual':''; }catch(e){}
+      S.tentativas=0;
+      reconectar(true);
+    })();
+  }
+
   function despedirEDesligar(){
     if(S.desligando) return;
     S.desligando = true;
@@ -1796,6 +1837,18 @@
         // linha nova = fila velha não presta mais. Se sobrasse áudio da conexão
         // anterior na fila, ele sairia misturado com o da nova: voz dupla.
         calarMestre('linha nova');
+        if(S.vozTrocada){
+          // Linha nova por TROCA DE VOZ (não foi queda): o fio do assunto vai junto
+          // e a voz nova se apresenta numa frase, pra ele ouvir na hora como ficou.
+          var _vt=S.vozTrocada; S.vozTrocada=null;
+          reinjetarFio();
+          nota('— voz trocada para '+_vt+' —');
+          if(S.ws&&S.ws.readyState===1) S.ws.send(JSON.stringify({ clientContent:{ turns:[{ role:'user', parts:[{
+            text:'(A voz acabou de ser trocada a pedido dele. Diga UMA frase curta, já com o seu novo jeito de falar, confirmando a troca, e pergunte se pode continuar de onde pararam.)'
+          }]}], turnComplete:true }}));
+          fase();
+          return;
+        }
         // o handle não voltou a conversa? então reinjeta o resumo na mão.
         if(!S.handle) reinjetarFio();
         nota('— a linha caiu e voltou; a conversa continua —');
@@ -1829,6 +1882,28 @@
           if(fc.name==='mostrar_na_tela'){
             try{ telao(fc.args||{}); }catch(e){}
             responderFerramenta(fc,{ ok:true, ordem:'A tela já mudou. NÃO comente que mostrou nada — continue falando.' });
+            return;
+          }
+          // ── TROCAR A VOZ PELA CONVERSA (19/10/2026, pedido do Elias) ─────
+          // "se eu pedir no próprio diálogo ele deve mudar de voz". O timbre do
+          // Google é fixado na abertura da linha, então trocar = abrir linha nova
+          // com a voz escolhida, DEPOIS que ele terminar a frase de aviso, e
+          // reinjetar o fio do assunto. A escolha fica guardada no aparelho.
+          if(fc.name==='trocar_voz'){
+            var nova=resolverVoz((fc.args||{}).voz);
+            if(!nova){
+              responderFerramenta(fc,{ ok:false, opcoes:VOZES.map(function(v){ return v.id+' ('+v.rotulo+')'; }),
+                ordem:'Não reconheci essa voz. Diga as opções em uma frase e pergunte qual ele quer.' });
+              return;
+            }
+            if(nova===S.voz){
+              responderFerramenta(fc,{ ok:true, ja_era:nova, ordem:'Essa já é a voz atual. Diga isso em meia frase e siga.' });
+              return;
+            }
+            S.trocarVozPara=nova;
+            try{ localStorage.setItem('voz.timbre', nova); }catch(e){}
+            responderFerramenta(fc,{ ok:true, nova_voz:nova,
+              ordem:'Diga SÓ uma frase bem curta, tipo "certo, vou trocar a voz agora", e PARE. A troca acontece sozinha assim que você terminar a frase.' });
             return;
           }
           rotuloDaFerramenta(fc.name);
@@ -1904,6 +1979,7 @@
           S.memEu=''; S.memMestre='';
         }
         if(S.vaiDesligar) despedirEDesligar();
+        else if(S.trocarVozPara) trocarVozAgora();
       }
     }
 
@@ -2437,10 +2513,15 @@
         b.innerHTML='<b>'+v.id+'</b>'+v.rotulo;
         if(v.id===S.voz) b.className='atual';
         b.addEventListener('click',function(){
-          S.voz=v.id;
           try{ localStorage.setItem('voz.timbre', v.id); }catch(e){}
           Array.prototype.forEach.call(elLinha.children,function(x){ x.className=''; });
           b.className='atual';
+          // Conversa ligada: troca NA HORA (linha nova com a voz nova), sem tocar a amostra por cima.
+          if(S.ligado){
+            if(v.id!==S.voz){ S.trocarVozPara=v.id; trocarVozAgora(); elConfig.hidden=true; }
+            return;
+          }
+          S.voz=v.id;
           try{ if(S.amostra){ S.amostra.pause(); } }catch(e){}
           S.amostra=new Audio('vozes/'+v.id.toLowerCase()+'.wav');
           S.amostra.play().catch(function(){});
