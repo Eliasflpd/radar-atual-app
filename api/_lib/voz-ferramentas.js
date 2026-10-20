@@ -934,14 +934,18 @@ async function pensarAFundo(pergunta, origem, user) {
   // O prazo que sobra pra Claude: o Edge corta aos 25 s, e o Gemini está esperando calado.
   // Com a resposta em fluxo (voz.js), o limite deixou de ser os 25 s do Edge: até ~50 s no total.
   const sobra = Math.max(8000, 50000 - (Date.now() - t0));
-  let r = null;
+  let r = null, erroIa = '';
+  const tColeta = Date.now() - t0;
   try {
     r = await Promise.race([
       iaTexto({ sys: SISTEMA_DO_ESTUDIOSO, user: ordemDoParecer(q, versos, itens, ensinos),
         premium: true, max_tokens: 800, tag: 'globo-fundo', prazoPremium: Math.max(8000, sobra - 1000) }),
       new Promise((ok) => setTimeout(() => ok(null), sobra)),
     ]);
-  } catch (_) { r = null; }
+    if (!r) erroIa = 'tempo esgotado (' + sobra + ' ms)';
+  } catch (e) { r = null; erroIa = String((e && e.message) || e).slice(0, 160) + ' | ' + ((e && e.tentativas) || []).slice(0, 5).join(' | ').slice(0, 400); }
+  // diagnóstico sem segredo (tempos e o motivo da falha) — o globo não fala disto, serve para consertar
+  const diag = { coleta_ms: tColeta, ia_ms: Date.now() - t0 - tColeta, trechos: itens.length, versos: versos.length, erro: erroIa };
   const texto = r && typeof r.texto === 'string' ? r.texto.trim() : '';
 
   const fontes = [
@@ -950,7 +954,7 @@ async function pensarAFundo(pergunta, origem, user) {
   ].filter((f, i, a) => a.findIndex((y) => y.autor === f.autor && y.onde === f.onde) === i).slice(0, 8);
 
   if (!texto) {
-    return { achou: false, demorou: true,
+    return { achou: false, demorou: true, diag,
       motivo: 'O estudo a fundo não fechou a tempo. Siga com pesquisar_biblioteca e ler_versiculo, e diga ao pastor que o estudo longo vai ficar pra depois — NÃO improvise erudição.' };
   }
   if (/^\s*N[AÃ]O SUSTENTA/i.test(texto)) {
