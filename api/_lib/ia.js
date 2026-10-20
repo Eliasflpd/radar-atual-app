@@ -419,6 +419,9 @@ function corpoAnthropic(degrau, modelo, p, stream) {
   };
   if (sys) b.system = sys;
   if (stream) b.stream = true;
+  // 21/10/2026: o Sonnet 5 PENSA por padrão e o pensamento come o mesmo max_tokens — com 800 voltava vazio
+  // (stop_reason max_tokens, só bloco de pensamento) e a voz dizia "não consegui". Quem chama pode baixar o esforço.
+  if (p.effort) b.output_config = { ...(b.output_config || {}), effort: p.effort };
   return { url: degrau.url, body: b, headers: {
     'Content-Type': 'application/json', 'x-api-key': p.__chave,
     'anthropic-version': '2023-06-01', 'User-Agent': UA,

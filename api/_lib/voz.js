@@ -1033,7 +1033,8 @@ export default async function handler(req, ctx) {
     // da resposta HTTP, fora de `resposta` — o Gemini nunca vê isto.
     return JSON.stringify({ ok: true, nome, fundo, chave_nova: _chaveNova || undefined, resposta: limpa });
     };
-    if (nome !== 'pensar_a_fundo') return new Response(await montar(), { headers: JSONH });
+    // As que chamam a Claude (estudo a fundo e nota da biblioteca) respondem em fluxo; as outras, direto.
+    if (nome !== 'pensar_a_fundo' && nome !== 'pesquisar_biblioteca') return new Response(await montar(), { headers: JSONH });
     const enc = new TextEncoder();
     const corpo = new ReadableStream({
       async start(c) {

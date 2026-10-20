@@ -653,7 +653,7 @@ async function escrever(prompt, opts) {
   if (opts && opts.premium) {
     try {
       const r = await iaTexto({ sys: 'Você é um pesquisador de teologia que escreve notas de estudo para um pastor.', user: prompt,
-        premium: true, max_tokens: 900, tag: 'globo-nota' });
+        premium: true, max_tokens: 3000, effort: 'low', prazoPremium: 30000, tag: 'globo-nota' });
       const t = r && typeof r.texto === 'string' ? r.texto.trim() : '';
       if (t) return t;
     } catch (_) { /* segue para o Gemini / Llama */ }
@@ -939,7 +939,7 @@ async function pensarAFundo(pergunta, origem, user) {
   try {
     r = await Promise.race([
       iaTexto({ sys: SISTEMA_DO_ESTUDIOSO, user: ordemDoParecer(q, versos, itens, ensinos),
-        premium: true, max_tokens: 800, tag: 'globo-fundo', prazoPremium: Math.max(8000, sobra - 1000) }),
+        premium: true, max_tokens: 3500, effort: 'low', tag: 'globo-fundo', prazoPremium: Math.max(8000, sobra - 1000) }),
       new Promise((ok) => setTimeout(() => ok(null), sobra)),
     ]);
     if (!r) erroIa = 'tempo esgotado (' + sobra + ' ms)';
