@@ -968,6 +968,10 @@ export default async function handler(req, ctx) {
     // busca/*) e a rota /api/estudo-busca são sempre os DESTE deploy — nunca os de
     // outro ambiente, que é como se serve versículo velho sem ninguém perceber.
     const origem = new URL(req.url).origin;
+    // 21/10/2026: o estudo a fundo (Claude) passa dos 25 s que o Edge dá para COMEÇAR a responder — o pastor
+    // ouvia "não consegui". Agora a resposta dessa ferramenta sai em FLUXO: um espaço já, outro a cada 4 s
+    // (JSON aceita espaço antes), e o JSON de verdade quando o parecer fica pronto. As outras seguem iguais.
+    const montar = async () => {
     let resposta;
     // A ÚNICA ferramenta que devolve dado de pessoa é a da memória — e é ela
     // que paga a conferência. Sem crachá bom, ela recebe `user` vazio e
@@ -1027,7 +1031,21 @@ export default async function handler(req, ctx) {
     // `fundo` é diagnóstico, não contrato: diz se a gravação saiu do caminho da
     // resposta (waitUntil) ou se o pastor teve que esperar por ela. Fica no topo
     // da resposta HTTP, fora de `resposta` — o Gemini nunca vê isto.
-    return new Response(JSON.stringify({ ok: true, nome, fundo, chave_nova: _chaveNova || undefined, resposta: limpa }), { headers: JSONH });
+    return JSON.stringify({ ok: true, nome, fundo, chave_nova: _chaveNova || undefined, resposta: limpa });
+    };
+    if (nome !== 'pensar_a_fundo') return new Response(await montar(), { headers: JSONH });
+    const enc = new TextEncoder();
+    const corpo = new ReadableStream({
+      async start(c) {
+        c.enqueue(enc.encode(' '));
+        const vivo = setInterval(() => { try { c.enqueue(enc.encode(' ')); } catch (_) {} }, 4000);
+        try { c.enqueue(enc.encode(await montar())); }
+        catch (_) { c.enqueue(enc.encode(JSON.stringify({ ok: true, nome, resposta: { achou: false, erro: 'a consulta falhou',
+          ordem: 'NÃO invente para tapar o buraco. Diga ao pastor que o estudo a fundo falhou agora.' } }))); }
+        finally { clearInterval(vivo); c.close(); }
+      },
+    });
+    return new Response(corpo, { headers: JSONH });
   }
 
   // ─── A MEMÓRIA CURTA: o globo contando pra cá o que acabou de ser dito ───

@@ -482,7 +482,7 @@ async function tentar(degrau, modelo, chave, p, stream) {
   // O prazo é DO DEGRAU: num provedor que mede 2s, esperar 12s antes de desistir é
   // jogar 10 segundos fora na cara do pastor. Num lento de propósito (Z.ai), é o
   // contrário: com 9s ele nunca chegaria a responder.
-  const prazo = degrau.timeout || TIMEOUT_MS;
+  const prazo = (degrau.premium && p.prazoPremium) || degrau.timeout || TIMEOUT_MS;   // o estudo a fundo pede mais fôlego
   const relogio = setTimeout(() => { try { ctrl.abort(); } catch (_) {} }, prazo);
   let r;
   try {

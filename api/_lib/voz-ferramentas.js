@@ -932,12 +932,13 @@ async function pensarAFundo(pergunta, origem, user) {
   ]);
 
   // O prazo que sobra pra Claude: o Edge corta aos 25 s, e o Gemini está esperando calado.
-  const sobra = Math.max(6000, 21000 - (Date.now() - t0));
+  // Com a resposta em fluxo (voz.js), o limite deixou de ser os 25 s do Edge: até ~50 s no total.
+  const sobra = Math.max(8000, 50000 - (Date.now() - t0));
   let r = null;
   try {
     r = await Promise.race([
       iaTexto({ sys: SISTEMA_DO_ESTUDIOSO, user: ordemDoParecer(q, versos, itens, ensinos),
-        premium: true, max_tokens: 800, tag: 'globo-fundo' }),
+        premium: true, max_tokens: 800, tag: 'globo-fundo', prazoPremium: Math.max(8000, sobra - 1000) }),
       new Promise((ok) => setTimeout(() => ok(null), sobra)),
     ]);
   } catch (_) { r = null; }
