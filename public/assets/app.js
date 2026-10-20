@@ -2754,7 +2754,9 @@ function abrirLicaoDetalhe(idx){
     // 4º tri 2026 (Adultos): material exclusivo do professor e o devocional "Leitura Diária" de cada lição
     ...(ebdTurmaAtual==='adulto4'&&lic.n>0?[
       {num:'',icon:'🎓',nome:'MATERIAL DO PROFESSOR',ativo:true,tap:`abrirReader(${idx},'professor')`},
-      {num:'',icon:'🌅',nome:'DEVOCIONAL LEITURA DIÁRIA',ativo:true,tap:`abrirReader(${idx},'devocional')`}
+      {num:'',icon:'🌅',nome:'DEVOCIONAL LEITURA DIÁRIA',ativo:true,tap:`abrirReader(${idx},'devocional')`},
+      // 20/10/2026: a revista Obreiro Aprovado nº 115 (CPAD, tema Missões) acompanha o trimestre inteiro — uma página só
+      {num:'',icon:'🕊️',nome:'REVISTA OBREIRO APROVADO',ativo:true,tap:`abrirReader(${idx},'obreiro')`}
     ]:[]),
     // Igreja Squad: a Priscila monta a aula a partir desta lição (api/_lib/ebd-plano.js)
     {num:'7',icon:'👩‍🏫',nome:'PLANO DE AULA',
@@ -2833,11 +2835,11 @@ function ebdMarcarConcluida(idx){
 function abrirReader(idx,tipo){
   const lic=EBD_LICOES[ebdTurmaAtual][idx];
   const nLabel=lic.n>0?`LIÇÃO ${String(lic.n).padStart(2,'0')}`:'EXTRA';
-  const tipoLabel=tipo==='licao'?'LIÇÃO':tipo==='apoio'?'APOIO':tipo==='professor'?'MATERIAL DO PROFESSOR':tipo==='devocional'?'DEVOCIONAL':tipo==='mapa'?'MAPA MENTAL':'CRISTÃO ALERTA';
+  const tipoLabel=tipo==='licao'?'LIÇÃO':tipo==='apoio'?'APOIO':tipo==='professor'?'MATERIAL DO PROFESSOR':tipo==='devocional'?'DEVOCIONAL':tipo==='mapa'?'MAPA MENTAL':tipo==='obreiro'?'OBREIRO APROVADO':'CRISTÃO ALERTA';
   document.getElementById('reader-titulo').textContent=tipoLabel+' — '+nLabel;
   document.getElementById('reader-sub').textContent=lic.titulo;
   const n=String(lic.n).padStart(2,'0');
-  document.getElementById('reader-frame').src=`/ebd/${ebdTurmaAtual}/html/${tipo}-${n}.html`;
+  document.getElementById('reader-frame').src=tipo==='obreiro'?'/ebd/adulto4/html/obreiro-115.html':`/ebd/${ebdTurmaAtual}/html/${tipo}-${n}.html`;
   ocultarTodas();
   document.getElementById('tela-ebd-reader').classList.add('ativa');
   // Lupa da Lição: guarda a lição aberta e mostra o botão (só em lição/apoio de nº válido)

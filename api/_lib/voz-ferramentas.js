@@ -471,6 +471,18 @@ async function licaoDaEBD(args, origem) {
   if (/apoio|livro/.test(parte)) return { ...cab, livro_de_apoio: (autor && autor.livro_de_apoio) || '', ...(L.livro_de_apoio ? pagina(L.livro_de_apoio, a.pagina) : { texto: '' }),
     ordem: L.livro_de_apoio ? COMO_ENSINAR + ' Isto é o LIVRO DE APOIO do trimestre, do mesmo comentarista: diga o nome do livro. Se houver mais páginas, ofereça continuar.'
       : 'O livro de apoio desta turma não está no RADAR. Diga isso.' };
+  if (/obreiro/.test(parte)) {
+    let O = null;
+    try { const r = await fetch(origem + '/ebd/adulto4/voz/obreiro.json'); O = r.ok ? await r.json() : null; } catch (_) { O = null; }
+    if (!O) return { ...cab, achou: false, ordem: 'A revista Obreiro Aprovado não respondeu agora. Diga isso.' };
+    const nA = parseInt(a.artigo, 10);
+    const S = nA > 0 ? O.secoes[nA - 1] : null;
+    if (!S) return { ...cab, revista: O.revista, tema: O.tema,
+      sumario: O.secoes.map((x) => ({ numero: x.n, titulo: x.titulo, autor: x.autor })),
+      ordem: 'É a revista OBREIRO APROVADO (para líderes), que acompanha o trimestre. Diga o tema e as seções com os autores, e pergunte qual ele quer ouvir — depois chame de novo com artigo=N.' };
+    return { ...cab, revista: O.revista, artigo: S.n, titulo_do_artigo: S.titulo, autor_do_artigo: S.autor, ...pagina(S.texto, a.pagina),
+      ordem: COMO_ENSINAR + ' É um artigo da revista Obreiro Aprovado: diga o título e o autor. Se houver mais páginas (de > pagina), ofereça continuar.' };
+  }
   if (/devoc/.test(parte)) return { ...cab, ...(L.devocional ? pagina(L.devocional, a.pagina) : { texto: '' }),
     ordem: L.devocional ? 'É o DEVOCIONAL da semana (leitura diária). Leia o dia que ele pedir, com calor.' : 'Esta turma não tem devocional no RADAR. Diga isso.' };
   if (/autor|coment/.test(parte)) return { ...cab, autor,
@@ -484,7 +496,7 @@ async function licaoDaEBD(args, origem) {
     introducao: L.introducao,
     topicos: L.topicos.map((t, i) => ({ numero: i + 1, titulo: t.titulo, subtopicos: t.subtopicos.map((s) => s.titulo).filter(Boolean) })),
     tem_tambem: [L.professor && 'material do professor', L.cristao_alerta && 'revista Cristão Alerta', L.livro_de_apoio && 'livro de apoio',
-      L.devocional && 'devocional da semana', 'perguntas de revisão', autor && 'dados do comentarista'].filter(Boolean),
+      L.devocional && 'devocional da semana', quem === 'adulto' && 'revista Obreiro Aprovado nº 115 (Missões)', 'perguntas de revisão', autor && 'dados do comentarista'].filter(Boolean),
     ordem: 'Abra a lição assim, NESTA ORDEM: (1) número e TÍTULO exatamente como está; (2) o TEXTO ÁUREO NA ÍNTEGRA, palavra por palavra, com a referência — PROIBIDO resumir; mostre no telão; (3) a VERDADE PRÁTICA inteira; '
       + '(4) os TÓPICOS, em uma frase cada. Se "e_a_do_proximo_domingo", diga que é a do domingo que vem. '
       + 'Quando ele pedir para EXPLICAR um tópico ("o primeiro", "agora o segundo"), chame licao_da_ebd de novo com parte="topico" e topico=N — '
@@ -1115,10 +1127,11 @@ export const FERRAMENTAS = [{
         properties: {
           licao: { type: 'NUMBER', description: 'O número da lição (1 a 13). Vazio = a do próximo domingo.' },
           turma: { type: 'STRING', description: 'adulto ou jovem (as do trimestre atual). Vazio = adulto.' },
-          parte: { type: 'STRING', description: 'resumo (padrão: título, áureo, verdade prática e tópicos), topico, introducao, conclusao, leitura, revisao, professor, alerta (Cristão Alerta), apoio (livro de apoio), devocional ou autor (o comentarista).' },
+          parte: { type: 'STRING', description: 'resumo (padrão: título, áureo, verdade prática e tópicos), topico, introducao, conclusao, leitura, revisao, professor, alerta (Cristão Alerta), apoio (livro de apoio), devocional, obreiro (revista Obreiro Aprovado, só adultos) ou autor (o comentarista).' },
           topico: { type: 'NUMBER', description: 'Com parte "topico": 1, 2 ou 3 (I, II, III).' },
           subtopico: { type: 'NUMBER', description: 'Opcional, com parte "topico": só aquele subtópico (1, 2 ou 3).' },
-          pagina: { type: 'NUMBER', description: 'Para textos longos (alerta, apoio, professor, devocional): a página seguinte, 2, 3…' },
+          pagina: { type: 'NUMBER', description: 'Para textos longos (alerta, apoio, professor, devocional, obreiro): a página seguinte, 2, 3…' },
+          artigo: { type: 'NUMBER', description: 'Com parte "obreiro": o número da seção da revista Obreiro Aprovado (veja o sumário).' },
           listar: { type: 'BOOLEAN', description: 'true para a lista das 13 lições do trimestre daquela turma.' },
         },
       },
