@@ -8,16 +8,40 @@
       "Lições Bíblicas Adultos, 2º trimestre de 2024 — A Carreira que nos Está Proposta",
       "Lições Bíblicas Adultos, 4º trimestre de 2019 — com o livro de apoio O Governo Divino em Mãos Humanas"
     ],
-    "livros": ["O Deus da Aliança (CPAD)", "O Governo Divino em Mãos Humanas (CPAD)", "Mais Palavra, Menos Emocionalismo (CPAD)", "As Obras da Carne e o Fruto do Espírito (CPAD)", "Jesus, o Maior Presente (CPAD)"],
+    "livros": [
+      "O Deus da Aliança (CPAD)",
+      "O Governo Divino em Mãos Humanas (CPAD)",
+      "Mais Palavra, Menos Emocionalismo (CPAD)",
+      "As Obras da Carne e o Fruto do Espírito (CPAD)",
+      "Jesus, o Maior Presente (CPAD)"
+    ],
     "incerto": "Há fontes que citam doutorado em andamento e um cargo na diretoria da CEADEMA, mas divergem nos detalhes: se perguntarem, diga que as fontes não batem.",
-    "fontes": ["Revista Lições Bíblicas Professor, 4º tri 2026, plano de aula da lição 1", "cpadnews.com.br (entrevista)", "cpad.com.br (loja)", "estudantesdabiblia.com.br"]
+    "fontes": [
+      "Revista Lições Bíblicas Professor, 4º tri 2026, plano de aula da lição 1",
+      "cpadnews.com.br (entrevista)",
+      "cpad.com.br (loja)",
+      "estudantesdabiblia.com.br"
+    ]
   },
   "jovem4": {
     "nome": "Pr. Reynaldo Odilo Martins Soares",
     "revista": "Lições Bíblicas Jovens (CPAD), 4º trimestre de 2026 — Regozijai-vos no Senhor: Vivendo com Propósito à Luz da Carta aos Filipenses",
     "quem_e": "Pastor em Natal (RN) e juiz de direito. Bacharel em Teologia e em Direito; mestre e doutorando em Direito pela Universidade do País Vasco (Espanha).",
-    "outras_revistas": ["Lições Bíblicas Jovens, 1º trimestre de 2019 — sobre o livro de Números"],
-    "livros": ["Eu e Minha Casa (CPAD, 2013)", "Tempo para Todas as Coisas (CPAD)", "Rumo à Terra Prometida (CPAD)", "Josué — Tempo de Conquistas (CPAD, 2020, com Samuel de Oliveira Martins)"],
-    "fontes": ["cpad.com.br/autores", "estudantesdabiblia.com.br (sumário Jovens 2026-4T)", "tvcpad.com.br"]
+    "outras_revistas": [
+      "Lições Bíblicas Jovens, 1º trimestre de 2019 — sobre o livro de Números"
+    ],
+    "livros": [
+      "Regozijai-vos no Senhor — livro de apoio da revista Jovens, 4º tri 2026 (CPAD)",
+      "Eu e Minha Casa (CPAD, 2013)",
+      "Tempo para Todas as Coisas (CPAD)",
+      "Rumo à Terra Prometida (CPAD)",
+      "Josué — Tempo de Conquistas (CPAD, 2020, com Samuel de Oliveira Martins)"
+    ],
+    "fontes": [
+      "cpad.com.br/autores",
+      "estudantesdabiblia.com.br (sumário Jovens 2026-4T)",
+      "tvcpad.com.br"
+    ],
+    "livro_de_apoio": "Regozijai-vos no Senhor (CPAD), do mesmo autor, que acompanha as 13 lições do trimestre"
   }
 }
