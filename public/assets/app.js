@@ -2784,12 +2784,14 @@ function abrirLicaoDetalhe(idx){
   const _magTema=(ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4');   /* tema da revista (paleta CPAD Adultos 4T/2026) */
   const _cardsMag=(_magTema&&!_detLocked&&lic.n>0)?`<div id="ebd-mag-cards">${cardsMagHtml(ebdTurmaAtual,lic.n)}</div>`:'';
   const _comCapa=((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4')&&lic.n>=1&&lic.n<=13);  /* capa + botão "Clique aqui" → a capa some e a lição entra */
+  // 20/10/2026: capa de cada material do 4º tri (Adultos) no lugar do ícone — o Elias mandou as capas
+  const _capaMat={'APOIO':'capa-livro-apoio','REVISTA CRISTÃO ALERTA':'capa-cristao-alerta','DEVOCIONAL LEITURA DIÁRIA':'capa-devocional','REVISTA OBREIRO APROVADO':'capa-obreiro-115'};
   const _conteudo=_previaBlk+_cardsMag+_btnConcluir+itens.map(it=>{
     const tappable=it.ativo&&it.tap&&!_detLocked;
     const action=_detLocked?`<span class="ebd-em-breve">🔒 Em breve</span>`:(it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`));
     return `<div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}${tappable?' ppt-item':''}"${tappable?` onclick="${it.tap}"`:''}>
       <div class="ebd-det-num">${it.num}</div>
-      <div class="ebd-item-icon">${it.icon}</div>
+      <div class="ebd-item-icon">${(_capaMat[it.nome]&&ebdTurmaAtual==='adulto4')?`<img src="/ebd/adulto4/img/${_capaMat[it.nome]}.jpg?v=1" alt="" style="width:34px;height:46px;object-fit:cover;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.35);display:block;margin:0 auto">`:it.icon}</div>
       <div class="ebd-item-info"><div class="ebd-item-titulo">${it.nome}</div></div>
       ${action}
     </div>`;
