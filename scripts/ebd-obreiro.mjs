@@ -50,5 +50,7 @@ secoes.forEach((s, i) => {
     out.push(`<p>${inline(t.replace(/^[-*] /, '• '))}</p>`);
   }
 });
-fs.writeFileSync(path.join(RAIZ, 'public', 'ebd', 'adulto4', 'html', 'obreiro-115.html'), HEAD + '<body>\n' + out.join('\n') + '\n' + SCRIPTS);
+// capa ORIGINAL da revista (print do Elias; skill capa-original)
+const CAPA = '<div data-capa="capa-obreiro-115" style="text-align:center;margin:4px 0 14px"><img src="/ebd/adulto4/img/capa-obreiro-115.jpg?v=1" alt="Capa" style="width:46%;max-width:210px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.28)"></div>';
+fs.writeFileSync(path.join(RAIZ, 'public', 'ebd', 'adulto4', 'html', 'obreiro-115.html'), HEAD + '<body>\n' + CAPA + '\n' + out.join('\n') + '\n' + SCRIPTS);
 console.log(`✔ Obreiro Aprovado 115: ${secoes.length} seções →`, secoes.map((s) => s.titulo).join(' | '));

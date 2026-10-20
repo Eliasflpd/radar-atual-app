@@ -46,7 +46,9 @@ function paraHtml(md, n, titulo) {
     out.push('<p class="sec-head">NOTAS</p>');
     for (const x of notas) out.push(`<p style="font-size:16px;text-align:left">${inline(x.replace(/^\[\^(\d+)\]:\s*/, '$1. '))}</p>`);
   }
-  return HEAD + '<body>\n' + out.join('\n') + '\n' + SCRIPTS;
+  // capa ORIGINAL do livro (1ª página do PDF do Elias; skill capa-original)
+  const capa = '<div data-capa="capa-livro-apoio" style="text-align:center;margin:4px 0 14px"><img src="/ebd/jovem4/img/capa-livro-apoio.jpg?v=1" alt="Capa" style="width:46%;max-width:210px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.28)"></div>';
+  return HEAD + '<body>\n' + capa + '\n' + out.join('\n') + '\n' + SCRIPTS;
 }
 
 let n = 0;

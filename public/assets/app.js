@@ -2793,7 +2793,7 @@ function abrirLicaoDetalhe(idx){
     const action=_detLocked?`<span class="ebd-em-breve">🔒 Em breve</span>`:(it.btn??(tappable?`<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>`:`<span class="ebd-em-breve">Em breve</span>`));
     return `<div class="ebd-item${it.ativo?'':' ebd-item-em-breve'}${tappable?' ppt-item':''}"${tappable?` onclick="${it.tap}"`:''}>
       <div class="ebd-det-num">${it.num}</div>
-      <div class="ebd-item-icon">${(_capaMat[it.nome]&&ebdTurmaAtual==='adulto4')?`<img src="/ebd/adulto4/img/${_capaMat[it.nome]}.jpg?v=1" alt="" style="width:34px;height:46px;object-fit:cover;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.35);display:block;margin:0 auto">`:it.icon}</div>
+      <div class="ebd-item-icon">${(_capaMat[it.nome]&&(ebdTurmaAtual==='adulto4'||(ebdTurmaAtual==='jovem4'&&it.nome==='APOIO')))?`<img src="/ebd/${ebdTurmaAtual}/img/${_capaMat[it.nome]}.jpg?v=1" alt="" style="width:34px;height:46px;object-fit:cover;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.35);display:block;margin:0 auto">`:it.icon}</div>
       <div class="ebd-item-info"><div class="ebd-item-titulo">${it.nome}</div></div>
       ${action}
     </div>`;
