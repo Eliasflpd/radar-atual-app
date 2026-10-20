@@ -23,7 +23,7 @@
     --teal:#4fb3c0; --vinho:#c0564f;
   }
   *{box-sizing:border-box;-webkit-text-size-adjust:100%}
-  html{font-size:17px}
+  html{font-size:17px;height:100%}
 
   /* A PÁGINA NÃO ROLA. NUNCA.
      Era isto que fazia "o globo subir e o texto passar": a página inteira
@@ -31,7 +31,10 @@
      relance. Agora a altura é travada no aparelho (100dvh), o globo fica de
      frente no lugar dele, e quem rola é a caixa da transcrição — sozinha. */
   body{
-    margin:0 auto;max-width:720px;height:100dvh;overflow:hidden;
+    /* 20/10/2026: NO A22 o Chrome dava 100dvh = 733px com só 677px visíveis — os 56px a mais são a barra dos
+       botões do Android, e a barra de escrever/microfone ficava atrás dela (print do Elias). Agora a altura
+       vem da janela de verdade (--alt, medida por JS no carregar/girar/redimensionar); 100% é o reserva. */
+    margin:0 auto;max-width:720px;height:var(--alt,100%);overflow:hidden;
     display:flex;flex-direction:column;
     background:
       radial-gradient(115% 80% at 50% 8%, #0e2c40 0%, #071723 45%, #02070c 100%);
@@ -197,6 +200,7 @@
 </style>
 </head>
 <body>
+<script>(function(){function m(){document.documentElement.style.setProperty('--alt',window.innerHeight+'px');}m();addEventListener('resize',m);addEventListener('orientationchange',function(){setTimeout(m,250);});addEventListener('pageshow',m);})();</script>
 
   <div class="topo">
     <button class="voltar" id="inicio">← Início</button>
