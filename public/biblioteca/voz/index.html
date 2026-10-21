@@ -2668,7 +2668,8 @@
   function mdParaHtml(md){
     var linhas=String(md||'').replace(/\r/g,'').split('\n'), out=[], lista='', par=[];
     function inl(t){ return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<i>$2</i>'); }
-    function fechaPar(){ if(par.length){ out.push('<p>'+inl(par.join(' '))+'</p>'); par=[]; } }
+    // cada quebra de linha do texto vira quebra na tela ("Texto base:" e "Texto de apoio:" grudavam numa linha só)
+    function fechaPar(){ if(par.length){ out.push('<p>'+par.map(inl).join('<br>')+'</p>'); par=[]; } }
     function fechaLista(){ if(lista){ out.push('</'+lista+'>'); lista=''; } }
     for(var i=0;i<linhas.length;i++){
       var l=linhas[i], m;
