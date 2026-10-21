@@ -910,6 +910,19 @@ async function conferirCracha(origem, user, cracha) {
   } catch (_) { return { ok: false, motivo: 'rede' }; }
 }
 
+// O MODO CLAUDE é pago: só abre pra aparelho da lista (ver o ramo 'claude' no handler).
+const CRACHAS_CLAUDE = [
+  'dffef7e95ac42d2db2f45fdff67cb46db7dd0a21b5b77ac9e7eba5fb4973b70f',   // Galaxy A22 do Elias (21/10/2026)
+];
+function LIBERADOS_CLAUDE() {
+  const env = (typeof process !== 'undefined' && process.env && process.env.VOZ_CLAUDE_CRACHAS) || '';
+  return CRACHAS_CLAUDE.concat(String(env).split(/[,\s]+/).map((x) => x.trim().toLowerCase()).filter((x) => /^[0-9a-f]{64}$/.test(x)));
+}
+async function sha256Hex(s) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(s)));
+  return Array.from(new Uint8Array(d)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 // Guardar não pode atrasar a conversa. Na Vercel Edge existe waitUntil: a
 // resposta sai na hora e a gravação termina depois. Onde não existe (o banco de
 // provas roda num http comum), a gente espera — e é bom que espere, senão a
@@ -1118,9 +1131,16 @@ export default async function handler(req, ctx) {
     // A conferência comum ADOTA aparelho novo na hora (id sorteado ganha crachá na primeira chamada) — ótimo pra
     // memória, péssimo aqui: qualquer um inventaria um id e usaria a Claude na conta do Elias. Então o modo
     // Claude exige MAIS: número de WhatsApp (cadastro) com crachá que JÁ existia, nada recém-emitido nem legado.
+    // MEDIDO em 21/10/2026: nenhum número de WhatsApp tem crachá no banco (os 18 que existem são de aparelho);
+    // quem tem cadastro passa pela TOLERÂNCIA (legado), que não prova nada — qualquer número inventado passa igual.
+    // Então a porta paga tem LISTA PRÓPRIA: a impressão digital (sha-256) do crachá de cada aparelho liberado.
+    // O segredo fica só no aparelho; aqui mora só o hash, que não serve pra entrar. Mais aparelhos: env
+    // VOZ_CLAUDE_CRACHAS (hashes separados por vírgula), sem mexer no código.
     let dono = user ? await confirmar() : '';
     const prova = _porte ? await _porte : null;
-    if (!(dono && /^\d{8,}$/.test(dono) && prova && prova.ok && prova.dono && !prova.chave_nova && !prova.legado)) dono = '';
+    const provado = prova && prova.ok && prova.dono && !prova.chave_nova && !prova.legado && /^\d{8,}$/.test(dono);
+    const liberado = cracha && LIBERADOS_CLAUDE().includes(await sha256Hex(cracha));
+    if (!(dono && (provado || liberado))) dono = '';
     const memoria = dono ? await montarMemoria() : '';
     return conversarComClaude({
       texto: String(b.texto || '').slice(0, 2000), historico: b.historico, voz: escolherVoz(b.voz),

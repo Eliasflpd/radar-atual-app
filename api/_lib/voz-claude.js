@@ -400,7 +400,7 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
   const trabalho = async () => {
     mandar({ t: 'oi', modelo: MODELO_CLAUDE, nome: NOME_DO_MODELO[MODELO_CLAUDE] || MODELO_CLAUDE, chave_nova: chaveNova || undefined });
     if (!dono) {
-      const aviso = 'O modo Claude só abre para quem tem cadastro confirmado no RADAR, neste aparelho. Use o modo Gemini, na engrenagem, ou entre no RADAR com o seu WhatsApp.';
+      const aviso = 'O modo Claude só abre nos aparelhos liberados pelo pastor, porque ele é pago. Use o modo Gemini, na engrenagem.';
       mandar({ t: 'erro', msg: aviso }); aoTexto(aviso); cortar(true); await corrente; return;
     }
     // Esforço: medido em 21/10/2026 na mesma pergunta (Dt 5:33). No "low" a Claude trocou a referência de Jeremias
