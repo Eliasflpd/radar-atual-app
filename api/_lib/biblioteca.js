@@ -159,6 +159,8 @@ module.exports = async (req, res) => {
   const pergunta = String(b.q || q.q || '').trim().slice(0, 500);
   if (pergunta.length < 3) { res.status(400).json({ ok: false, err: 'pergunta curta' }); return; }
   const quantos = Math.min(parseInt(b.n || q.n || '6', 10) || 6, 12);
+  // 21/10/2026: busca SÓ num autor (a voz abre "as aulas do Dr. Wagner" sem misturar comentarista).
+  const soAutor = String(b.autor || '').trim().slice(0, 80);
 
   const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   if (!cs) { res.status(200).json({ ok: false, off: true, err: 'db não configurado' }); return; }
@@ -186,7 +188,7 @@ module.exports = async (req, res) => {
                 1 - (emb <=> $1::halfvec) as score,
                 (1 - (emb <=> $1::halfvec)) + case peso when 2 then 0.04 when 3 then 0.02 when 4 then -0.03 else 0 end as posto
            from biblioteca_trechos
-          where emb is not null
+          where emb is not null and ($3 = '' or autor = $3)
           order by emb <=> $1::halfvec
           limit 60
        ), porautor as (
@@ -196,7 +198,7 @@ module.exports = async (req, res) => {
          select * from porautor
          union all
          select * from perto
-       ) t order by posto desc limit $2`, [vec, quantos + 8]);
+       ) t order by posto desc limit $2`, [vec, quantos + 8, soAutor]);
 
     // BUSCA POR PALAVRA, além da busca por sentido. Só por sentido, "ágape" trazia o verbete de Ágabo e a
     // palavra grega certa nem aparecia (medido em 18/10/2026): o léxico guarda a palavra em letras gregas e quem
@@ -206,7 +208,7 @@ module.exports = async (req, res) => {
     let achados = [], erroLex = null;
     try {
       const lex = termosDaPergunta(pergunta);
-      if (lex.strongs.length || lex.termos.length) {
+      if (!soAutor && (lex.strongs.length || lex.termos.length)) {
         const rl = await c.query(
           `select autor, obra, livro, secao, tipo, texto, peso, aprovado
              from biblioteca_trechos

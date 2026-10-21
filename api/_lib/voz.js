@@ -1144,7 +1144,8 @@ export default async function handler(req, ctx) {
     const memoria = dono ? await montarMemoria() : '';
     return conversarComClaude({
       texto: String(b.texto || '').slice(0, 2000), historico: b.historico, voz: escolherVoz(b.voz),
-      origem: origemReq, ctx, dono, chaveNova: _chaveNova, semNome, personaDe, memoria, depois,
+      // semNome NÃO passa aqui: no modo Claude o Dr. Wagner é FONTE citada pelo nome (pedido do Elias, 21/10/2026).
+      origem: origemReq, ctx, dono, chaveNova: _chaveNova, semNome: (t) => String(t || ''), personaDe, memoria, depois,
     });
   }
 

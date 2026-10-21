@@ -24,6 +24,11 @@
 
 import { FERRAMENTAS, executarFerramenta, chavesGemini, registrarLacuna } from './voz-ferramentas.js';
 import { temasDeFerramenta, gravarTemas } from './voz-memoria.js';
+// O DR. WAGNER (21/10/2026, pedido do Elias: "preciso de todo o conhecimento do Dr. Wagner; ela diz que não sabe
+// quem ele é"). No modo Gemini o nome é peneirado (semNome, em voz.js) porque o globo não pode SER ele. Aqui a
+// Claude o conhece como FONTE: sabe quem é, sabe o que ele ensina (o resumo de doutrina do Concílio) e abre as
+// aulas pela busca do corpus — e cita pelo nome, sem fingir ser ele.
+import { buscarContexto, METODO } from './concilio-wagner.js';
 
 // Uma linha só pra trocar de cérebro (ex.: ANTHROPIC_MODEL_VOZ=claude-opus-5-5 na Vercel).
 export const MODELO_CLAUDE = (typeof process !== 'undefined' && process.env && process.env.ANTHROPIC_MODEL_VOZ) || 'claude-sonnet-5-5';
@@ -48,7 +53,7 @@ const esfriando = new Map();     // `${chave}|${modelo}` -> até quando não ten
 // Ficam de fora pensar_a_fundo e pesquisar_biblioteca: as duas chamam a Claude por dentro (era o bilhete
 // pro Gemini). Aqui quem lê os livros é a própria Claude, pela buscar_biblioteca.
 // ─────────────────────────────────────────────────────────────────────────────
-const DO_GLOBO = ['ler_versiculo', 'conferir_citacao', 'versiculos_ligados', 'licao_da_ebd', 'buscar_no_acervo', 'garimpar',
+const DO_GLOBO = ['ler_versiculo', 'conferir_citacao', 'versiculos_ligados', 'licao_da_ebd', 'buscar_no_acervo',
   'saber_agora', 'meu_conhecimento', 'guardar_ensino', 'ensinos_do_pastor', 'o_que_ja_falamos', 'trocar_voz'];
 // (mostrar_na_tela saiu: custava uma volta inteira da Claude, ~3 s de silêncio medidos. O versículo que ela abre
 // com ler_versiculo vai pro telão sozinho, aqui do servidor.)
@@ -91,6 +96,29 @@ const BUSCAR_BIBLIOTECA = {
   },
 };
 
+const AULAS_DO_DR_WAGNER = {
+  name: 'aulas_do_dr_wagner',
+  description: 'O MATERIAL DO DR. WAGNER CORDEIRO (Instituto Teológico GIOM), o curso que o pastor comprou: as transcrições das aulas, '
+    + 'o Caderno de Pérolas e as tipologias catalogadas. Use sempre que ele pedir o ensino, a visão, o método ou a tipologia do '
+    + 'Dr. Wagner, e quando for garimpar um texto, um objeto, um número ou uma figura do Antigo Testamento. Devolve os trechos que '
+    + 'mais casam, com a aula de onde vieram. Pode chamar de novo com palavras mais concretas se a primeira não trouxer.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      assunto: { type: 'string', description: 'O que procurar, com as palavras CONCRETAS do texto ou do tema (ex.: "pomba arca Noé três solturas", '
+        + '"dispensações", "pele de texugo tabernáculo", "primícias gômer efa ômer"). Termo concreto acha; termo vago não.' },
+    },
+    required: ['assunto'],
+  },
+};
+
+// O resumo do que ele ensina, tirado do Concílio (lá está escrito NA VOZ dele, em primeira pessoa).
+const ENSINO_DO_DR_WAGNER = (() => {
+  const t = String(METODO || '');
+  const a = t.indexOf('════ O QUE VOCÊ CRÊ E ENSINA'), b = t.indexOf('════ HONESTIDADE');
+  return a >= 0 && b > a ? t.slice(t.indexOf('\n', a) + 1, b).trim() : '';
+})();
+
 const DECL = (FERRAMENTAS[0] && FERRAMENTAS[0].functionDeclarations) || [];
 export const FERRAMENTAS_CLAUDE = (() => {
   const lista = DO_GLOBO.map((n) => DECL.find((d) => d.name === n)).filter(Boolean).map((d) => ({
@@ -98,7 +126,7 @@ export const FERRAMENTAS_CLAUDE = (() => {
     description: DESCRICAO_PROPRIA[d.name] || d.description,
     input_schema: d.parameters ? paraJsonSchema(d.parameters) : { type: 'object', properties: {} },
   }));
-  lista.push(BUSCAR_BIBLIOTECA);
+  lista.push(AULAS_DO_DR_WAGNER, BUSCAR_BIBLIOTECA);
   // O cache da Anthropic guarda tudo até esta marca: ferramentas + a parte fixa do sistema.
   lista[lista.length - 1] = { ...lista[lista.length - 1], cache_control: { type: 'ephemeral' } };
   return lista;
@@ -110,11 +138,16 @@ export const FERRAMENTAS_CLAUDE = (() => {
 // ─────────────────────────────────────────────────────────────────────────────
 const SISTEMA_CLAUDE = `Você é a voz de estudo do RADAR, o app de uma igreja Assembleia de Deus no Brasil. Você conversa POR VOZ com um pastor: tudo o que você escreve é lido em voz alta por um sintetizador e aparece escrito na tela dele.
 
+ISTO É UMA CONVERSA, NÃO UMA PALESTRA
+- Ele quer conversar, discutir e expor as ideias dele com você, como numa boa conversa entre dois pastores. Fale em turnos curtos e devolva a palavra.
+- Quando ele expuser uma ideia ou opinião, primeiro reaja a ela de verdade: concorde e acrescente, ou discorde com respeito e com o texto na mão, ou pergunte o que ele quis dizer. Não transforme a ideia dele numa aula sua.
+- Ele pode te cortar a qualquer momento falando por cima. Quando a sua última fala aparecer com "[ele cortou aqui]", ele não ouviu o resto: não repita tudo, responda ao que ele disse agora e, se for preciso, retome só o ponto essencial numa frase.
+
 COMO FALAR
 - Português do Brasil, conversa natural, calorosa e firme, como um irmão culto que é homem de Deus. A resposta vem na primeira frase.
 - Só frases faladas: sem markdown, sem listas, sem títulos, sem emoji, sem asterisco, sem parênteses longos. Frases curtas e médias, com ritmo de fala.
 - Referência bíblica sempre por extenso, do jeito que se fala: "Deuteronômio cinco, versículo trinta e três", nunca "Dt 5:33". Números também por extenso.
-- Tamanho: pergunta simples, de uma a três frases. Explicação ou estudo: pesquise a fundo, mas FALE curto — de quatro a sete frases (uns trinta a quarenta segundos), com o ponto principal primeiro e a melhor pérola bem entregue. O resto do que você achou fica guardado para quando ele pedir. Se o assunto der para mais, ofereça aprofundar numa frase curta no fim, e não faça isso em toda resposta. Quando ele pedir para aprofundar, continuar ou falar mais, aí vá longe.
+- Tamanho: pergunta simples ou papo, de uma a três frases. Explicação ou estudo: pesquise a fundo, mas FALE curto — de três a seis frases (uns vinte a trinta segundos), com o ponto principal primeiro e a melhor pérola bem entregue. O resto do que você achou fica guardado para quando ele pedir. Se o assunto der para mais, ofereça aprofundar numa frase curta no fim, e não faça isso em toda resposta. Quando ele pedir para aprofundar, continuar ou falar mais, aí vá longe.
 - Não termine toda resposta com pergunta. Nada de "claro!", "ótima pergunta" ou "espero ter ajudado".
 - Antes de uma consulta, diga em poucas palavras o que vai fazer e chame a ferramenta. Varie essa frase de uma pergunta para outra ("deixa eu abrir o texto", "vou ver o que os comentaristas dizem", "peraí que eu confiro") e não a repita depois que o resultado voltar.
 - O que ele fala chega pelo reconhecimento de voz do celular, que às vezes erra palavras. Se a frase veio truncada ou sem sentido, pergunte com naturalidade o que ele quis dizer.
@@ -125,18 +158,26 @@ BÍBLIA E ESTUDO — aqui você é mestre, e o pastor confere tudo
 - Seu conhecimento próprio de estudioso vale, mas não atribua a um autor nada que a ferramenta não trouxe, e não invente página, ano, número ou citação entre aspas.
 - Antigo Testamento é hebraico (aramaico em Daniel dois a sete e Esdras quatro a sete); Novo Testamento é grego. Nunca troque. Palavra no original só com fonte ou certeza absoluta.
 - Linha pentecostal clássica (Assembleia de Deus), cristocêntrica. Em ponto disputado, apresente as posições com honestidade e diga qual a linha pentecostal sustenta. Respeite as outras tradições sem atacar.
-- O que ele mesmo já pregou: buscar_no_acervo. A lição da Escola Dominical: licao_da_ebd, sempre antes de falar da lição. Referências cruzadas: versiculos_ligados. O material das aulas do acervo: garimpar.
+- O que ele mesmo já pregou: buscar_no_acervo. A lição da Escola Dominical: licao_da_ebd, sempre antes de falar da lição. Referências cruzadas: versiculos_ligados.
 - Não achou apoio? Diga que não achou e siga pelo que tem. Não saber é resposta; inventar não é.
+
+O DR. WAGNER CORDEIRO — o professor do pastor
+- O Pr. Dr. Wagner Cordeiro é o fundador do Instituto Teológico GIOM, em Guarulhos (São Paulo): assembleiano do Ministério do Belém, doutor em teologia e professor de hebraico bíblico. O pastor estuda o curso dele (vinte e seis módulos: Parakletologia, Tabernáculo, Escatologia, Angeologia, Tipologia, Cristologia, Primícias e outros). O método dele é o garimpo: ler o texto, definir a palavra no original, ver o que está materialmente no texto, ligar a figura do Antigo Testamento ao Novo pela FUNÇÃO (nunca por imagem bonita), dar a prova com um segundo texto e demolir o erro corrente.
+- Quando ele pedir a visão, o ensino ou o método do Dr. Wagner, ou "responda como o Dr. Wagner ensina", abra aulas_do_dr_wagner e responda pelo que voltou e pelo resumo abaixo, dizendo o nome dele ("o Dr. Wagner ensina que…", "na aula de Escatologia ele mostra…"). Você NÃO é ele e não fala na primeira pessoa como se fosse.
+- O material dele é curso comprado: fale com as suas palavras; uma frase curta e marcante dele pode ser citada como dele.
+- Se o assunto não estiver nas aulas que voltaram nem no resumo, diga que não achou isso nas aulas dele e responda pela Escritura, deixando claro que ali é você, não ele.
+- Onde ele diverge do que outros ensinam (por exemplo, três dispensações em vez de sete, a igreja como esposa e não noiva), apresente a posição dele como dele, com honestidade.
 
 O RESTO
 - Assunto geral (história, saúde, conselho, o dia a dia) você responde do que sabe, direto. Fato de hoje (notícia, jogo, cotação, tempo): saber_agora.
 - Use as ferramentas para conferir o que precisa ser exato ou pode ter mudado, mesmo quando se sentir seguro.
 - Se ele te corrigir, agradeça em meia frase, guarde com guardar_ensino (tipo correcao) e siga corrigido. Se aprovar uma resposta e mandar guardar, guardar_ensino (tipo aprovada). O que ele ensinou vale acima dos comentaristas, abaixo só da Escritura.
 - Memória: só lembre do que está no bloco de memória abaixo ou do que o_que_ja_falamos trouxer. Nunca invente que já conversaram algo.
-- Nunca cite professor, autor vivo ou instituição por nome ao falar de você ou do seu método. Autor de livro consultado se cita, sim: é fonte.
+- Você não é personagem de ninguém: não se apresente como professor nenhum. Fonte se cita pelo nome, seja autor de livro, seja o Dr. Wagner.
 - Perguntado sobre o que você sabe ou quais fontes tem: chame meu_conhecimento e responda completo.
 - O versículo que você abre com ler_versiculo aparece sozinho, grande, na tela dele; não comente isso. Troca de voz: trocar_voz.
-- Nunca guarde nome de membro nem caso de aconselhamento.`;
+- Nunca guarde nome de membro nem caso de aconselhamento.`
+  + (ENSINO_DO_DR_WAGNER ? '\n\nRESUMO DO QUE O DR. WAGNER CORDEIRO ENSINA NAS AULAS (está escrito como se fosse ele falando — "você" ali é o Dr. Wagner, não você):\n' + ENSINO_DO_DR_WAGNER : '');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A BIBLIOTECA, CRUA — a mesma coleta do pensarAFundo, entregue à própria Claude.
@@ -173,6 +214,21 @@ async function buscarBiblioteca(pergunta, origem) {
     regra: 'Uso interno: o pastor não vê este texto. Fale com as suas palavras, cite o autor pelo nome, '
       + 'nunca copie mais de seis palavras seguidas, e descarte o trecho que não trata da pergunta.',
   };
+}
+
+// As aulas do Dr. Wagner que foram para o Postgres (transcritas em 21/10/2026 em diante).
+async function aulasNoBanco(assunto, origem) {
+  const token = (typeof process !== 'undefined' && process.env && process.env.RADAR_ADMIN_TOKEN) || '';
+  if (!token || String(assunto || '').length < 4) return [];
+  try {
+    const r = await comPrazo(origem + '/api/dados?fn=biblioteca', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: assunto, n: 5, token, autor: 'Dr. Wagner Cordeiro' }),
+    }, 9000);
+    const j = await r.json();
+    return ((j && j.itens) || []).filter((x) => x.score >= 0.4).slice(0, 4)
+      .map((x) => ({ aula: x.livro || x.secao || 'aula', texto: String(x.texto || '').slice(0, 1800) }));
+  } catch (_) { return []; }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -458,6 +514,21 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
             persona = nova;
             mandar({ t: 'voz', voz: nova.id });
             res = { ok: true, nova_voz: nova.id, ordem: 'A voz já trocou. Siga a conversa normalmente.' };
+          } else if (b.name === 'aulas_do_dr_wagner') {
+            const assunto = String((b.input || {}).assunto || '').trim().slice(0, 300);
+            // duas fontes juntas: o corpus antigo (Caderno de Pérolas, tipologias, 12 aulas) e as aulas transcritas
+            // depois, que moram no Postgres (motor invisível) com autor "Dr. Wagner Cordeiro"
+            const [achado, doBanco] = await Promise.all([
+              Promise.resolve(assunto ? buscarContexto(assunto, 9000) : { texto: '', fontes: [] }),
+              aulasNoBanco(assunto, origem),
+            ]);
+            const material = [achado.texto, ...doBanco.map((x) => '[' + x.aula + ']\n' + x.texto)].filter(Boolean).join('\n\n───\n\n');
+            res = material
+              ? { achou: true, material, aulas: [...(achado.fontes || []).map((f) => f.titulo || f.fonte), ...doBanco.map((x) => x.aula)],
+                  regra: 'Material do curso do Dr. Wagner Cordeiro (comprado pelo pastor): cite o Dr. Wagner pelo nome, fale com as suas palavras.' }
+              : { achou: false, motivo: 'Não achei isso nas aulas do Dr. Wagner que estão transcritas. Diga isso e responda pela Escritura.' };
+            if (material && !fontesVistas.some((f) => f.autor === 'Dr. Wagner Cordeiro')) fontesVistas.push({ autor: 'Dr. Wagner Cordeiro', onde: 'aulas do GIOM' });
+            const pg = depois(ctx, registrarLacuna(origem, 'garimpar', { assunto }, res)); if (pg) await pg;
           } else if (b.name === 'buscar_biblioteca') {
             res = await buscarBiblioteca((b.input || {}).pergunta, origem);
             if (res.achou) for (const x of res.trechos) if (!fontesVistas.some((f) => f.autor === x.autor)) fontesVistas.push({ autor: x.autor, onde: x.onde });
@@ -469,7 +540,7 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
             if (b.name === 'garimpar') { const pg = depois(ctx, registrarLacuna(origem, 'garimpar', b.input, res)); if (pg) await pg; }
           }
           // assunto da conversa vai pra memória, como no modo Gemini (fora do caminho da resposta)
-          const temas = temasDeFerramenta(b.name === 'buscar_biblioteca' ? 'pesquisar_biblioteca' : b.name, b.input || {});
+          const temas = temasDeFerramenta(b.name === 'buscar_biblioteca' ? 'pesquisar_biblioteca' : b.name === 'aulas_do_dr_wagner' ? 'garimpar' : b.name, b.input || {});
           if (temas.length) { const pg = depois(ctx, gravarTemas(origem, dono, JSON.parse(semNome(JSON.stringify(temas))))); if (pg) await pg; }
         } catch (e) {
           erro = true;
