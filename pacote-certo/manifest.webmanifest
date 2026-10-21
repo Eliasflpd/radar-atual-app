@@ -1,0 +1,15 @@
+{
+  "name": "Pacote Certo",
+  "short_name": "Pacote Certo",
+  "description": "Organize as entregas do dia: etiquetas, endereços e pacotes.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "lang": "pt-BR",
+  "background_color": "#F5F7FA",
+  "theme_color": "#1749C6",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

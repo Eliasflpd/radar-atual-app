@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#1749C6">
+  <meta name="description" content="Organize as entregas do dia: etiquetas, endereços e pacotes.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Pacote Certo">
+  <title>Pacote Certo</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app"></div>
+  <div id="avisos" aria-live="polite"></div>
+  <dialog id="dialogo"></dialog>
+
+  <input type="file" id="entrada-camera" accept="image/*" capture="environment" hidden>
+  <input type="file" id="entrada-galeria" accept="image/*" multiple hidden>
+  <input type="file" id="entrada-backup" accept="application/json,.json" hidden>
+
+  <noscript>O Pacote Certo precisa de JavaScript ativado no navegador.</noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

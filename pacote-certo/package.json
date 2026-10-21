@@ -1,0 +1,9 @@
+{
+  "name": "pacote-certo",
+  "private": true,
+  "type": "module",
+  "description": "Organização de entregas por etiqueta, endereço e pacote.",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}
