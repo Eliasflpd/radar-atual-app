@@ -216,6 +216,21 @@ async function buscarBiblioteca(pergunta, origem) {
   };
 }
 
+// As aulas do Dr. Wagner que foram para o Postgres (transcritas em 21/10/2026 em diante).
+async function aulasNoBanco(assunto, origem) {
+  const token = (typeof process !== 'undefined' && process.env && process.env.RADAR_ADMIN_TOKEN) || '';
+  if (!token || String(assunto || '').length < 4) return [];
+  try {
+    const r = await comPrazo(origem + '/api/dados?fn=biblioteca', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: assunto, n: 5, token, autor: 'Dr. Wagner Cordeiro' }),
+    }, 9000);
+    const j = await r.json();
+    return ((j && j.itens) || []).filter((x) => x.score >= 0.4).slice(0, 4)
+      .map((x) => ({ aula: x.livro || x.secao || 'aula', texto: String(x.texto || '').slice(0, 1800) }));
+  } catch (_) { return []; }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // A VOZ (Gemini TTS) — rodízio de chaves × modelos; 429 esfria aquele par por um minuto.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -501,12 +516,18 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
             res = { ok: true, nova_voz: nova.id, ordem: 'A voz já trocou. Siga a conversa normalmente.' };
           } else if (b.name === 'aulas_do_dr_wagner') {
             const assunto = String((b.input || {}).assunto || '').trim().slice(0, 300);
-            const achado = assunto ? buscarContexto(assunto, 12000) : { texto: '', fontes: [] };
-            res = achado.texto
-              ? { achou: true, material: achado.texto, aulas: (achado.fontes || []).map((f) => f.titulo || f.fonte),
+            // duas fontes juntas: o corpus antigo (Caderno de Pérolas, tipologias, 12 aulas) e as aulas transcritas
+            // depois, que moram no Postgres (motor invisível) com autor "Dr. Wagner Cordeiro"
+            const [achado, doBanco] = await Promise.all([
+              Promise.resolve(assunto ? buscarContexto(assunto, 9000) : { texto: '', fontes: [] }),
+              aulasNoBanco(assunto, origem),
+            ]);
+            const material = [achado.texto, ...doBanco.map((x) => '[' + x.aula + ']\n' + x.texto)].filter(Boolean).join('\n\n───\n\n');
+            res = material
+              ? { achou: true, material, aulas: [...(achado.fontes || []).map((f) => f.titulo || f.fonte), ...doBanco.map((x) => x.aula)],
                   regra: 'Material do curso do Dr. Wagner Cordeiro (comprado pelo pastor): cite o Dr. Wagner pelo nome, fale com as suas palavras.' }
               : { achou: false, motivo: 'Não achei isso nas aulas do Dr. Wagner que estão transcritas. Diga isso e responda pela Escritura.' };
-            if (achado.texto && !fontesVistas.some((f) => f.autor === 'Dr. Wagner Cordeiro')) fontesVistas.push({ autor: 'Dr. Wagner Cordeiro', onde: 'aulas do GIOM' });
+            if (material && !fontesVistas.some((f) => f.autor === 'Dr. Wagner Cordeiro')) fontesVistas.push({ autor: 'Dr. Wagner Cordeiro', onde: 'aulas do GIOM' });
             const pg = depois(ctx, registrarLacuna(origem, 'garimpar', { assunto }, res)); if (pg) await pg;
           } else if (b.name === 'buscar_biblioteca') {
             res = await buscarBiblioteca((b.input || {}).pergunta, origem);
