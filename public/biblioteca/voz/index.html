@@ -2337,6 +2337,7 @@
         break;
       case 'som':
         S.turnoMudo=false;
+        if(e.m) diario('voz pedaço '+e.i+': '+e.m+' em '+e.ms+' ms');
         enfileirarPCM(e.pcm);
         despejarSobra();        // cada pedaço termina inteiro: a última sílaba não fica presa esperando o próximo
         break;

@@ -1183,6 +1183,8 @@ export default async function handler(req, ctx) {
       // NUNCA o cargo grudado como titulo ("Pastor Fulano"). O cargo serve so
       // pra medir a profundidade da conversa, nao pra tratar a pessoa.
       var primeiroNome = quemFala.split(/\s+/)[0] || quemFala;
+      // cadastro em CAIXA ALTA virava "ELIAS" na fala e na tela: nome de gente, com inicial maiúscula
+      primeiroNome = primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1).toLowerCase();
       memoria = (memoria ? memoria + String.fromCharCode(10,10) : '') + [
         'COM QUEM VOCE ESTA FALANDO:',
         'O primeiro nome dele e ' + primeiroNome + '.'

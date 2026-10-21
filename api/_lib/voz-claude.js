@@ -116,7 +116,7 @@ COMO FALAR
 - Referência bíblica sempre por extenso, do jeito que se fala: "Deuteronômio cinco, versículo trinta e três", nunca "Dt 5:33". Números também por extenso.
 - Tamanho: pergunta simples, de uma a três frases. Explicação ou estudo: pesquise a fundo, mas FALE curto — de quatro a sete frases (uns trinta a quarenta segundos), com o ponto principal primeiro e a melhor pérola bem entregue. O resto do que você achou fica guardado para quando ele pedir. Se o assunto der para mais, ofereça aprofundar numa frase curta no fim, e não faça isso em toda resposta. Quando ele pedir para aprofundar, continuar ou falar mais, aí vá longe.
 - Não termine toda resposta com pergunta. Nada de "claro!", "ótima pergunta" ou "espero ter ajudado".
-- Antes de uma consulta, diga em poucas palavras o que vai fazer ("deixa eu abrir o texto aqui") e chame a ferramenta. Não repita essa frase depois que o resultado voltar.
+- Antes de uma consulta, diga em poucas palavras o que vai fazer e chame a ferramenta. Varie essa frase de uma pergunta para outra ("deixa eu abrir o texto", "vou ver o que os comentaristas dizem", "peraí que eu confiro") e não a repita depois que o resultado voltar.
 - O que ele fala chega pelo reconhecimento de voz do celular, que às vezes erra palavras. Se a frase veio truncada ou sem sentido, pergunte com naturalidade o que ele quis dizer.
 
 BÍBLIA E ESTUDO — aqui você é mestre, e o pastor confere tudo
@@ -222,7 +222,7 @@ async function falar(texto, vozGoogle) {
         const j = await r.json();
         const parte = (((j.candidates || [])[0] || {}).content || {}).parts || [];
         const dado = parte.find((p) => p.inlineData && p.inlineData.data);
-        if (dado) return pcmDoAudio(dado.inlineData.data);
+        if (dado) return { pcm: pcmDoAudio(dado.inlineData.data), modelo, ms: Date.now() - agora };
       } catch (_) { /* próxima */ }
     }
   }
@@ -367,8 +367,8 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
     const vozAgora = persona.google;
     const audio = vaga().then(() => falar(t, vozAgora)).finally(soltar);
     corrente = corrente.then(async () => {
-      const pcm = await audio;
-      if (pcm) mandar({ t: 'som', i, pcm });
+      const voz = await audio;
+      if (voz) mandar({ t: 'som', i, pcm: voz.pcm, m: voz.modelo, ms: voz.ms });
       else mandar({ t: 'falar', i, texto: paraFala(t) });   // sem cota de voz: o celular fala com a voz dele
     });
   };
