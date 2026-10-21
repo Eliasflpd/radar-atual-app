@@ -1115,7 +1115,12 @@ export default async function handler(req, ctx) {
   // ── O MODO CLAUDE (21/10/2026) — a Claude é o cérebro inteiro; o celular ouve e o Google só dá a voz.
   // Ver voz-claude.js. Só abre com o crachá conferido: o modelo é pago e o repositório é público.
   if (acao === 'claude') {
-    const dono = user ? await confirmar() : '';
+    // A conferência comum ADOTA aparelho novo na hora (id sorteado ganha crachá na primeira chamada) — ótimo pra
+    // memória, péssimo aqui: qualquer um inventaria um id e usaria a Claude na conta do Elias. Então o modo
+    // Claude exige MAIS: número de WhatsApp (cadastro) com crachá que JÁ existia, nada recém-emitido nem legado.
+    let dono = user ? await confirmar() : '';
+    const prova = _porte ? await _porte : null;
+    if (!(dono && /^\d{8,}$/.test(dono) && prova && prova.ok && prova.dono && !prova.chave_nova && !prova.legado)) dono = '';
     const memoria = dono ? await montarMemoria() : '';
     return conversarComClaude({
       texto: String(b.texto || '').slice(0, 2000), historico: b.historico, voz: escolherVoz(b.voz),
