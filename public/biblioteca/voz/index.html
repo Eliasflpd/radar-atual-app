@@ -258,6 +258,11 @@
         <button id="cerebroClaude" type="button"><b>🎓 Claude</b>mais firme e fundo</button>
       </div>
       <div class="obs" id="obsCerebro" style="font-size:.8rem;color:var(--suave);margin-top:7px"></div>
+      <div class="linhaCfg cerebro" style="margin-top:8px">
+        <button id="cortarFalando" type="button"><b>🗣️ Cortar falando</b>ligado</button>
+      </div>
+      <div class="obs" style="font-size:.8rem;color:var(--suave);margin-top:7px">No modo Claude: falou por cima, ela cala e escuta você.
+      Se ela estiver se cortando sozinha (eco no viva-voz), desligue aqui; aí o corte é tocando no globo.</div>
 
       <h3>A voz</h3>
       <div class="provaVoz" id="provaVoz">
@@ -869,7 +874,7 @@
       S.fase='eleFala';
       // dica curta de propósito: no viva-voz ela divide a tela com a resposta
       // escrita, e frase comprida empurrava tudo pra cima do texto.
-      estado('🔊 RESPONDENDO', (S.cerebro==='claude' && typeof C!=='undefined' && C && C.semVigia) ? 'Toque no globo para cortar.'
+      estado('🔊 RESPONDENDO', (S.cerebro==='claude' && typeof C!=='undefined' && C && (C.semVigia || !cortarFalandoLigado())) ? 'Toque no globo para cortar.'
         : S.meioDuplex
         ? 'Fale ALTO para cortar.'
         : 'Pode falar por cima.');
@@ -2268,10 +2273,11 @@
     return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
       .split(/[^a-z0-9]+/).filter(function(w){ return w.length>=3; });
   }
+  function cortarFalandoLigado(){ try{ return localStorage.getItem('voz.cortarFalando')!=='nao'; }catch(e){ return true; } }
   function claudeVigiar(){
     var falando = S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal;
     if(C.vigia && !C.vigiaCortou && !falando){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; return; }   // ela acabou: o ouvido normal assume
-    if(!S.ligado || S.cerebro!=='claude' || S.semMic || !RECONHECER || C.semVigia) return;
+    if(!S.ligado || S.cerebro!=='claude' || S.semMic || !RECONHECER || C.semVigia || !cortarFalandoLigado()) return;
     if(C.vigia || C.ouvindo || S.pausado || !falando) return;
     if(document.visibilityState!=='visible') return;
     var r; try{ r=new RECONHECER(); }catch(e){ C.semVigia=true; return; }
@@ -2358,7 +2364,7 @@
     if(C.rec){ try{ C.rec.abort(); }catch(e){} C.rec=null; C.ouvindo=false; }
     if(C.emTurno || S.tocandoAgora || S.fila.length) claudeCalar('nova pergunta por cima');
     var g=++C.geracao;
-    C.emTurno=true; C.pergunta=t; C.resposta='';
+    C.emTurno=true; C.pergunta=t; C.resposta=''; C.avisouReserva=false;
     S.bolhaMestre=null; S.turnoMudo=false;
     rotuloDaFerramenta('pensando'); S.garimpando=true; fase();
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null; C.abort=ctl;
@@ -2417,6 +2423,8 @@
         despejarSobra();        // cada pedaço termina inteiro: a última sílaba não fica presa esperando o próximo
         break;
       case 'falar':
+        // TROCA VISÍVEL: a voz do Google ficou sem cota e quem fala agora é a voz do próprio celular
+        if(!C.avisouReserva){ C.avisouReserva=true; nota('🔈 Voz reserva do celular: a cota grátis da voz do Google acabou por agora.'); }
         claudeFalarLocal(e.texto,g);
         break;
       case 'tela':
@@ -2817,6 +2825,14 @@
       elConfig.hidden=true;
       estado(q==='claude'?'🎓 Modo Claude':'⚡ Modo Gemini', estava?'Toque no globo para conversar de novo.':'Toque no globo para começar.');
     }
+    var bF=document.getElementById('cortarFalando');
+    function pintarCorte(){ if(!bF) return; var on=cortarFalandoLigado(); bF.className=on?'atual':''; bF.innerHTML='<b>🗣️ Cortar falando</b>'+(on?'ligado':'desligado'); }
+    if(bF) bF.addEventListener('click',function(){
+      try{ localStorage.setItem('voz.cortarFalando', cortarFalandoLigado()?'nao':'sim'); }catch(e){}
+      if(!cortarFalandoLigado() && C.vigia && !C.vigiaCortou){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; }
+      pintarCorte(); fase();
+    });
+    pintarCorte();
     bG.addEventListener('click',function(){ escolher('gemini'); });
     bC.addEventListener('click',function(){ escolher('claude'); });
     pintar();
