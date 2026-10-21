@@ -20,6 +20,8 @@ import { prepararFoto } from './fotos.js';
 import { icone } from './icones.js';
 import { dadosDemonstracao } from './demo.js';
 
+const VERSAO_APP = 3;
+
 // O modo demonstração usa outro banco, para nunca misturar dados fictícios com a lista real.
 const DEMO = new URLSearchParams(location.search).has('demo');
 const repo = criarRepositorio(DEMO ? 'pacote-certo-demo' : 'pacote-certo');
@@ -479,7 +481,14 @@ async function processarLote(loteId) {
 }
 
 async function retomarLotes() {
-  const itens = await repo.listar('itens');
+  let itens = await repo.listar('itens');
+  // Fotos importadas antes de a leitura estar ligada entram na fila sozinhas.
+  if (leituraAutomaticaConfigurada()) {
+    for (const item of itens.filter((i) => i.status === 'falha' && i.erro === 'nao-configurado' && i.fotoId)) {
+      await atualizarItem(item.id, { status: 'pendente', erro: null });
+    }
+    itens = await repo.listar('itens');
+  }
   const lotes = new Set(itens.filter((i) => i.status === 'pendente' || i.status === 'processando').map((i) => i.loteId));
   lotes.forEach((loteId) => processarLote(loteId));
 }
@@ -557,10 +566,11 @@ async function telaLote(loteId) {
         <a class="botao-icone" href="#/adicionar" aria-label="Voltar">${icone('chevronLeft')}</a>
         <h1>Leitura das fotos</h1>
       </header>
-      ${semConfig ? aviso('atencao', 'alert', leituraAutomaticaConfigurada() ? '<p>Algumas fotos foram importadas antes de a leitura automática estar pronta. Toque em "Tentar ler de novo as falhas", logo abaixo da lista.</p>' : '<p>A leitura automática não está configurada neste aplicativo. As fotos estão guardadas: abra cada uma e preencha os dados.</p>') : ''}
+      ${semConfig ? aviso('atencao', 'alert', leituraAutomaticaConfigurada() ? '<p>Algumas fotos foram importadas antes de a leitura automática estar pronta. Elas já estão sendo lidas sozinhas. Se alguma ficar sem leitura, toque em "Ler de novo as fotos sem leitura".</p>' : '<p>A leitura automática não está configurada neste aplicativo. As fotos estão guardadas: abra cada uma e preencha os dados.</p>') : ''}
       ${aguardando && !navigator.onLine ? aviso('info', 'clock', '<p>Sem internet. As fotos ficam guardadas e serão lidas quando a conexão voltar.</p>') : ''}
       ${lote.repetidas ? aviso('info', 'info', `<p>${lote.repetidas === 1 ? '1 foto repetida não foi contada' : `${lote.repetidas} fotos repetidas não foram contadas`} de novo.</p>`) : ''}
       ${progresso}
+      ${falhasRepetiveis && leituraAutomaticaConfigurada() ? `<button class="botao botao-principal" data-acao="reprocessar-lote" data-lote="${lote.id}">${icone('undo')}Ler de novo as fotos sem leitura (${falhasRepetiveis})</button>` : ''}
       <div class="linha-status">
         ${selo('sucesso', 'check', `${prontos} ${prontos === 1 ? 'pronto' : 'prontos'}`)}
         ${selo('atencao', 'alert', `${conferir} para conferir`)}
@@ -569,9 +579,9 @@ async function telaLote(loteId) {
       <ul class="lista-simples">${linhas.join('')}</ul>
       <div class="acoes-coluna">
         ${prontos ? `<button class="botao botao-principal" data-acao="salvar-prontos" data-lote="${lote.id}">${icone('check')}Salvar prontos (${prontos})</button>` : ''}
-        ${falhasRepetiveis && leituraAutomaticaConfigurada() ? `<button class="botao botao-secundario" data-acao="reprocessar-lote" data-lote="${lote.id}">${icone('undo')}Tentar ler de novo as falhas</button>` : ''}
         <a class="botao botao-secundario" href="#/adicionar">Continuar depois</a>
       </div>
+      <p class="nota">${icone('info')}<span>Versão ${VERSAO_APP} · leitura automática ${leituraAutomaticaConfigurada() ? 'ligada' : 'desligada'}</span></p>
     </main>`;
 }
 
