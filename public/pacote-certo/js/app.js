@@ -21,7 +21,7 @@ import { icone } from './icones.js';
 import { dadosDemonstracao } from './demo.js';
 
 // Ao publicar uma versão nova, aumente este número e o CACHE em sw.js: é a troca do sw.js que faz o app avisar.
-const VERSAO_APP = 4;
+const VERSAO_APP = 5;
 
 // O modo demonstração usa outro banco, para nunca misturar dados fictícios com a lista real.
 const DEMO = new URLSearchParams(location.search).has('demo');
@@ -283,38 +283,47 @@ function listaHtml(dia) {
         <h2>${esc(grupo.nome)}</h2>
         <span class="selo-neutro">${pacotesTexto(grupo.pacotes)}</span>
       </div>
-      ${grupo.enderecos.map(cartaoEndereco).join('')}
+      ${grupo.ruas.map(cartaoRua).join('')}
     </section>`).join('');
 }
 
-function cartaoEndereco(e) {
+// Uma rua por cartão; cada número vira uma linha com a quantidade e o botão de entregar.
+function cartaoRua(rua) {
+  return `
+    <article class="cartao rua">
+      <div class="rua-topo">
+        <h3>${esc(rua.nome)}</h3>
+        <span class="selo">${pacotesTexto(rua.pacotes)}</span>
+      </div>
+      <ul class="numeros">${rua.enderecos.map(linhaNumero).join('')}</ul>
+    </article>`;
+}
+
+function linhaNumero(e) {
   const total = e.pacotes.length;
   const entregues = e.pacotes.filter((p) => p.entregue).length;
   const pendentes = total - entregues;
-  const destinatarios = new Set(e.pacotes.map((p) => (p.destinatario || '').trim()).filter(Boolean));
-  const local = [e.complemento, e.bairro].filter(Boolean).join(' · ');
+  const numero = e.semNumero ? 'S/N' : (e.numero || '?');
+  const detalhe = [pacotesTexto(total), e.complemento].filter(Boolean).join(' · ');
 
-  const status = [];
-  if (precisaRevisao(e)) status.push(selo('atencao', 'alert', 'Revisar endereço'));
-  if (!pendentes) status.push(selo('sucesso', 'check', 'Entregue'));
-  else if (entregues) status.push(`<span class="texto-status">${entregues} de ${total} entregues</span>`);
+  let status = '';
+  if (precisaRevisao(e)) status = selo('atencao', 'alert', 'Revisar endereço');
+  else if (!pendentes) status = selo('sucesso', 'check', 'Entregue');
+  else if (entregues) status = `<span class="texto-status">${entregues} de ${total} entregues</span>`;
 
   return `
-    <article class="cartao endereco ${pendentes ? '' : 'concluido'}">
-      <div class="endereco-topo">
-        <div class="endereco-texto">
-          <h3>${esc(linhaRua(e))}</h3>
-          ${local ? `<p class="secundario">${esc(local)}</p>` : ''}
-          ${destinatarios.size ? `<p class="secundario">${plural(destinatarios.size, 'destinatário', 'destinatários')}</p>` : ''}
-        </div>
-        <span class="selo">${pacotesTexto(total)}</span>
-      </div>
-      ${status.length ? `<div class="linha-status">${status.join('')}</div>` : ''}
-      <div class="acoes-cartao ${pendentes ? '' : 'solitario'}">
-        ${pendentes ? `<button class="botao botao-secundario" data-acao="entregar-todos" data-id="${e.id}">${icone('check')}Marcar como entregue</button>` : ''}
-        <a class="botao botao-secundario" href="#/endereco/${e.id}">Detalhes</a>
-      </div>
-    </article>`;
+    <li class="numero ${pendentes ? '' : 'concluido'}">
+      <a class="numero-link" href="#/endereco/${e.id}" aria-label="Detalhes de ${esc(linhaRua(e))}">
+        <span class="numero-valor">${esc(numero)}</span>
+        <span class="numero-texto">
+          <span class="numero-detalhe">${esc(detalhe)}</span>
+          ${status}
+        </span>
+      </a>
+      ${pendentes
+        ? `<button class="botao-entregar" data-acao="entregar-todos" data-id="${e.id}" aria-label="Marcar ${esc(linhaRua(e))} como entregue">${icone('check')}<span>Entregar</span></button>`
+        : ''}
+    </li>`;
 }
 
 // ---------- tela: adicionar ----------
@@ -428,57 +437,112 @@ async function atualizarItem(itemId, mudancas) {
   return item;
 }
 
-// Lê uma foto por vez e grava cada resultado na hora: uma falha não apaga as leituras anteriores.
+const LEITURAS_SIMULTANEAS = 3;
+
+// Gravações de endereço em fila: leituras em paralelo não podem sobrescrever umas às outras.
+let filaGravacao = Promise.resolve();
+function gravarEmOrdem(tarefa) {
+  const resultado = filaGravacao.then(tarefa);
+  filaGravacao = resultado.catch(() => {});
+  return resultado;
+}
+
+// Salva sozinho uma leitura completa e sem dúvidas. Só pede conferência quando precisa.
+async function salvarItemLido(lote, item) {
+  const d = item.dados;
+  const resultado = await gravarEmOrdem(() => registrarEntrega({
+    data: lote.data,
+    origem: 'foto',
+    modo: 'lote',
+    fotoId: item.fotoId,
+    leitura: d,
+    extras: { cidade: d.cidade, estado: d.estado, cep: d.cep },
+    campos: { ...d, quantidade: 1 },
+  }));
+  if (resultado.resultado === 'possivel-duplicado') {
+    await atualizarItem(item.id, { status: 'revisar', erro: 'possivel-duplicado' });
+  } else if (resultado.resultado !== 'erro') {
+    await atualizarItem(item.id, { status: 'salvo', enderecoId: resultado.enderecoId, jaEstava: resultado.resultado === 'duplicado', erro: null });
+  }
+}
+
+// Lê uma foto e grava o resultado na hora: uma falha não apaga as leituras anteriores.
+async function lerItem(lote, item) {
+  await atualizarItem(item.id, { status: 'processando' });
+  renderizarSeLote(lote.id);
+  try {
+    const imagem = await repo.obter('imagens', item.fotoId);
+    if (!imagem) throw Object.assign(new Error('Foto não encontrada.'), { codigo: 'imagem' });
+    const { dados, incertos } = await lerEtiqueta(imagem.blob);
+    const revisar = incertos.length > 0 || precisaRevisao(dados);
+    const lido = await atualizarItem(item.id, { status: revisar ? 'revisar' : 'pronto', dados, incertos, erro: null });
+    if (!revisar) await salvarItemLido(lote, lido);
+    return 'ok';
+  } catch (erro) {
+    if (erro.codigo === 'offline') {
+      await atualizarItem(item.id, { status: 'pendente' });
+      return 'offline';
+    }
+    await atualizarItem(item.id, { status: 'falha', erro: erro.codigo ?? 'servico' });
+    return 'falha';
+  } finally {
+    renderizarSeLote(lote.id);
+  }
+}
+
 async function processarLote(loteId) {
   if (estado.processando.has(loteId)) return;
   estado.processando.add(loteId);
   try {
+    const lote = await repo.obter('lotes', loteId);
+    if (!lote) return;
     for (const item of await itensDoLote(loteId)) {
       if (item.status === 'processando') await atualizarItem(item.id, { status: 'pendente' });
+      if (item.status === 'pronto') await salvarItemLido(lote, item);
     }
 
-    for (;;) {
-      const itens = await itensDoLote(loteId);
-      const item = itens.find((i) => i.status === 'pendente');
-      if (!item) break;
-
-      if (!leituraAutomaticaConfigurada()) {
-        for (const pendente of itens.filter((i) => i.status === 'pendente')) {
-          await atualizarItem(pendente.id, { status: 'falha', erro: 'nao-configurado' });
+    const fila = (await itensDoLote(loteId)).filter((i) => i.status === 'pendente');
+    if (!leituraAutomaticaConfigurada()) {
+      for (const item of fila) await atualizarItem(item.id, { status: 'falha', erro: 'nao-configurado' });
+    } else {
+      let semRede = false;
+      const leitor = async () => {
+        while (fila.length && !semRede) {
+          if (await lerItem(lote, fila.shift()) === 'offline') semRede = true;
         }
-        break;
-      }
-
-      await atualizarItem(item.id, { status: 'processando' });
-      renderizarSeLote(loteId);
-      try {
-        const imagem = await repo.obter('imagens', item.fotoId);
-        if (!imagem) throw Object.assign(new Error('Foto não encontrada.'), { codigo: 'imagem' });
-        const { dados, incertos } = await lerEtiqueta(imagem.blob);
-        const revisar = incertos.length > 0 || precisaRevisao(dados);
-        await atualizarItem(item.id, { status: revisar ? 'revisar' : 'pronto', dados, incertos, erro: null });
-      } catch (erro) {
-        if (erro.codigo === 'offline') {
-          await atualizarItem(item.id, { status: 'pendente' });
-          break;
-        }
-        await atualizarItem(item.id, { status: 'falha', erro: erro.codigo ?? 'servico' });
-      }
-      renderizarSeLote(loteId);
+      };
+      await Promise.all(Array.from({ length: LEITURAS_SIMULTANEAS }, leitor));
     }
   } finally {
     estado.processando.delete(loteId);
   }
+  await concluirLote(loteId);
+}
 
-  // Uma única foto: abre direto a conferência, sem passar pela lista.
-  const itens = await itensDoLote(loteId);
+// Fim da leitura: se tudo foi salvo, volta para a lista; uma foto com dúvida abre a conferência.
+async function concluirLote(loteId) {
   const { partes } = rotaAtual();
-  const naTelaDoLote = partes[0] === 'lote' && partes[1] === loteId;
-  if (naTelaDoLote && itens.length === 1 && ['pronto', 'revisar', 'falha'].includes(itens[0].status)) {
-    location.hash = `#/novo?lote=${loteId}&item=${itens[0].id}`;
-  } else {
-    renderizarSeLote(loteId);
+  if (partes[0] !== 'lote' || partes[1] !== loteId) return;
+  const itens = await itensDoLote(loteId);
+  const conferir = itens.filter((i) => i.status === 'revisar' || i.status === 'falha');
+  const aguardando = itens.some((i) => i.status === 'pendente');
+
+  if (!aguardando && !conferir.length) {
+    const salvos = itens.filter((i) => i.status === 'salvo');
+    let texto = `${plural(salvos.length, 'etiqueta salva', 'etiquetas salvas')}.`;
+    if (salvos.length === 1) {
+      const e = await repo.obter('enderecos', salvos[0].enderecoId);
+      if (e) texto = `${salvos[0].jaEstava ? 'Já estava na lista' : 'Salvo'}: ${linhaRua(e)}`;
+    }
+    location.hash = '#/entregas';
+    avisar(texto, { id: 'escanear', rotulo: 'Escanear outra' });
+    return;
   }
+  if (!aguardando && itens.length === 1) {
+    location.hash = `#/novo?lote=${loteId}&item=${itens[0].id}`;
+    return;
+  }
+  renderizarSeLote(loteId);
 }
 
 async function retomarLotes() {
@@ -538,7 +602,12 @@ async function telaLote(loteId) {
   const aguardando = !ativo && conta('pendente') > 0;
   const semConfig = itens.some((i) => i.erro === 'nao-configurado');
 
-  const linhas = await Promise.all(itens.map(async (item, indice) => {
+  // O que precisa de você aparece primeiro; o que já foi salvo fica no fim.
+  const prioridade = { revisar: 0, falha: 1, processando: 2, pendente: 3, pronto: 4, salvo: 5 };
+  const ordenados = itens.map((item, indice) => ({ item, indice }))
+    .sort((a, b) => (prioridade[a.item.status] - prioridade[b.item.status]) || (a.indice - b.indice));
+  const salvos = conta('salvo');
+  const linhas = await Promise.all(ordenados.map(async ({ item, indice }) => {
     const url = await miniatura(item.fotoId);
     const titulo = item.dados?.logradouro ? linhaRua(item.dados) : `Etiqueta ${indice + 1}`;
     const link = item.status === 'salvo' && item.enderecoId
@@ -569,12 +638,13 @@ async function telaLote(loteId) {
       </header>
       ${semConfig ? aviso('atencao', 'alert', leituraAutomaticaConfigurada() ? '<p>Algumas fotos foram importadas antes de a leitura automática estar pronta. Elas já estão sendo lidas sozinhas. Se alguma ficar sem leitura, toque em "Ler de novo as fotos sem leitura".</p>' : '<p>A leitura automática não está configurada neste aplicativo. As fotos estão guardadas: abra cada uma e preencha os dados.</p>') : ''}
       ${aguardando && !navigator.onLine ? aviso('info', 'clock', '<p>Sem internet. As fotos ficam guardadas e serão lidas quando a conexão voltar.</p>') : ''}
+      ${conferir && !ativo ? aviso('atencao', 'alert', `<p>Toque ${conferir === 1 ? 'na etiqueta' : 'nas etiquetas'} em amarelo para conferir. As outras já foram salvas.</p>`) : ''}
       ${lote.repetidas ? aviso('info', 'info', `<p>${lote.repetidas === 1 ? '1 foto repetida não foi contada' : `${lote.repetidas} fotos repetidas não foram contadas`} de novo.</p>`) : ''}
       ${progresso}
       ${falhasRepetiveis && leituraAutomaticaConfigurada() ? `<button class="botao botao-principal" data-acao="reprocessar-lote" data-lote="${lote.id}">${icone('undo')}Ler de novo as fotos sem leitura (${falhasRepetiveis})</button>` : ''}
       <div class="linha-status">
-        ${selo('sucesso', 'check', `${prontos} ${prontos === 1 ? 'pronto' : 'prontos'}`)}
-        ${selo('atencao', 'alert', `${conferir} para conferir`)}
+        ${selo('sucesso', 'check', `${salvos} ${salvos === 1 ? 'salva' : 'salvas'}`)}
+        ${conferir ? selo('atencao', 'alert', `${conferir} para conferir`) : ''}
         ${falhas ? selo('erro', 'alert', `${falhas} sem leitura`) : ''}
       </div>
       <ul class="lista-simples">${linhas.join('')}</ul>
@@ -589,32 +659,10 @@ async function telaLote(loteId) {
 async function salvarProntos(loteId) {
   const lote = await repo.obter('lotes', loteId);
   if (!lote) return;
-  let salvos = 0;
-  let conferir = 0;
-
   for (const item of (await itensDoLote(loteId)).filter((i) => i.status === 'pronto')) {
-    const d = item.dados;
-    const resultado = await registrarEntrega({
-      data: lote.data,
-      origem: 'foto',
-      modo: 'lote',
-      fotoId: item.fotoId,
-      leitura: d,
-      extras: { cidade: d.cidade, estado: d.estado, cep: d.cep },
-      campos: { ...d, quantidade: 1 },
-    });
-    if (resultado.resultado === 'possivel-duplicado') {
-      await atualizarItem(item.id, { status: 'revisar', erro: 'possivel-duplicado' });
-      conferir += 1;
-    } else if (resultado.resultado !== 'erro') {
-      await atualizarItem(item.id, { status: 'salvo', enderecoId: resultado.enderecoId, jaEstava: resultado.resultado === 'duplicado', erro: null });
-      salvos += 1;
-    }
+    await salvarItemLido(lote, item);
   }
-
-  avisar(conferir
-    ? `${plural(salvos, 'item salvo', 'itens salvos')}. ${plural(conferir, 'possível duplicado', 'possíveis duplicados')} para conferir.`
-    : `${plural(salvos, 'item salvo', 'itens salvos')}.`);
+  avisar('Leituras salvas.');
   renderizar();
 }
 
@@ -765,6 +813,8 @@ function formularioHtml(r, previa) {
   };
 
   const descricao = (nome) => (mensagem(nome) ? `aria-describedby="msg-${nome}"` : '');
+  // Campos opcionais ficam recolhidos, a não ser que já tenham algo ou precisem de atenção.
+  const abrirDetalhes = ['destinatario', 'rastreio', 'observacoes'].some((nome) => Boolean(c[nome]) || erros[nome] || incertos.has(nome));
 
   const campoTexto = (nome, rotulo, { opcional = false, extra = '', dica = '' } = {}) => `
     <div class="campo-grupo">
@@ -823,9 +873,6 @@ function formularioHtml(r, previa) {
             ${mensagem('numero')}
           </div>
           ${campoTexto('complemento', 'Complemento', { opcional: true, extra: 'placeholder="Ex.: Apto 101, Casa A, Bloco 2"' })}` : ''}
-        ${mostrarPacote ? `
-          ${campoTexto('destinatario', 'Destinatário', { opcional: true, extra: 'autocapitalize="words"' })}
-          ${campoTexto('rastreio', 'Código de rastreio', { opcional: true, extra: 'autocapitalize="characters" spellcheck="false"' })}` : ''}
         <div class="campo-grupo">
           <span class="rotulo-campo" id="rotulo-quantidade">Quantidade de pacotes</span>
           <div class="passo">
@@ -836,11 +883,17 @@ function formularioHtml(r, previa) {
           </div>
           ${mensagem('quantidade')}
         </div>
-        ${mostrarEndereco ? `
-          <div class="campo-grupo">
-            <label class="rotulo-campo" for="f-observacoes">Observações <span class="opcional">(opcional)</span></label>
-            <textarea class="campo" id="f-observacoes" name="observacoes" rows="2">${esc(c.observacoes)}</textarea>
-          </div>` : ''}
+        <details class="mais-detalhes" ${abrirDetalhes ? 'open' : ''}>
+          <summary>Mais detalhes <span class="opcional">(destinatário, rastreio${mostrarEndereco ? ', observações' : ''})</span></summary>
+          ${mostrarPacote ? `
+            ${campoTexto('destinatario', 'Destinatário', { opcional: true, extra: 'autocapitalize="words"' })}
+            ${campoTexto('rastreio', 'Código de rastreio', { opcional: true, extra: 'autocapitalize="characters" spellcheck="false"' })}` : ''}
+          ${mostrarEndereco ? `
+            <div class="campo-grupo">
+              <label class="rotulo-campo" for="f-observacoes">Observações <span class="opcional">(opcional)</span></label>
+              <textarea class="campo" id="f-observacoes" name="observacoes" rows="2">${esc(c.observacoes)}</textarea>
+            </div>` : ''}
+        </details>
         <div class="rodape-fixo">
           <button class="botao botao-principal" type="submit">${icone('check')}${r.modo === 'editar' ? 'Salvar alterações' : 'Salvar entrega'}</button>
         </div>
@@ -896,7 +949,7 @@ async function enviarFormulario(form) {
     return;
   }
 
-  const resultado = await registrarEntrega({
+  const resultado = await gravarEmOrdem(() => registrarEntrega({
     data: r.data,
     origem: r.origem,
     modo: r.modo,
@@ -905,7 +958,7 @@ async function enviarFormulario(form) {
     extras: r.extras,
     enderecoId: r.enderecoId,
     campos,
-  }, { confirmado: r.confirmado });
+  }, { confirmado: r.confirmado }));
 
   if (resultado.resultado === 'duplicado') {
     r.duplicado = { enderecoId: resultado.enderecoId };

@@ -257,8 +257,8 @@ describe('textoCompartilhar', () => {
   }
 
   test('texto completo exato', () => {
-    const esperado = 'ENTREGAS — 21/10/2026\n\nBOA VISTA\n[ ] Avenida Brasil, 450 — Apto 202 — 2 pacotes\n\n'
-      + 'CENTRO\n[ ] Rua das Flores, 120 — Casa A — 3 pacotes\n[ ] Rua São José, 85 — 1 pacote\n\n'
+    const esperado = 'ENTREGAS — 21/10/2026\n\nBOA VISTA\nAvenida Brasil\n[ ] 450 — Apto 202 — 2 pacotes\n\n'
+      + 'CENTRO\nRua das Flores\n[ ] 120 — Casa A — 3 pacotes\nRua São José\n[ ] 85 — 1 pacote\n\n'
       + 'Total: 6 pacotes · 3 endereços';
     assert.equal(textoCompartilhar(base(), '2026-10-21'), esperado);
   });
@@ -272,7 +272,7 @@ describe('textoCompartilhar', () => {
     assert.ok(pendentes.endsWith('Total: 5 pacotes · 2 endereços'));
 
     const completa = textoCompartilhar(lista, '2026-10-21');
-    assert.ok(completa.includes('[x] Rua São José, 85 — 1 pacote'));
+    assert.ok(completa.includes('Rua São José\n[x] 85 — 1 pacote'));
     assert.ok(completa.endsWith('Total: 6 pacotes · 3 endereços'));
   });
 
@@ -280,7 +280,24 @@ describe('textoCompartilhar', () => {
     const lista = base();
     lista[2].pacotes[0].entregue = true; // Rua das Flores: 1 de 3 entregue
     const texto = textoCompartilhar(lista, '2026-10-21', { somentePendentes: true });
-    assert.ok(texto.includes('[ ] Rua das Flores, 120 — Casa A — 2 pacotes'));
+    assert.ok(texto.includes('Rua das Flores\n[ ] 120 — Casa A — 2 pacotes'));
     assert.ok(texto.endsWith('Total: 5 pacotes · 3 endereços'));
+  });
+});
+
+describe('agruparPorRua', () => {
+  test('mesma rua com números diferentes aparece uma vez só', () => {
+    const lista = [
+      endereco({ bairro: 'Centro', logradouro: 'Rua dos Andrades', numero: '45', pacotes: pacotes(1) }),
+      endereco({ bairro: 'Centro', logradouro: 'R. dos Andrades', numero: '12', pacotes: pacotes(2) }),
+      endereco({ bairro: 'Centro', logradouro: 'Rua Bahia', numero: '3', pacotes: pacotes(1) }),
+    ];
+    const [grupo] = agruparPorBairro(lista);
+    assert.equal(grupo.ruas.length, 2);
+    const andrades = grupo.ruas.find((r) => r.enderecos.length === 2);
+    assert.equal(andrades.pacotes, 3);
+    assert.deepEqual(andrades.enderecos.map((e) => e.numero), ['12', '45']);
+    const texto = textoCompartilhar(lista, '2026-10-21');
+    assert.equal(texto.split('\n').filter((l) => /Andrades/.test(l)).length, 1);
   });
 });

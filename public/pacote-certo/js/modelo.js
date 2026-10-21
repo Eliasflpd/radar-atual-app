@@ -139,7 +139,23 @@ export function agruparPorBairro(enderecos) {
   }
 
   if (revisar.length) grupos.push({ nome: 'Revisar endereço', revisar: true, enderecos: revisar });
-  return grupos.map((grupo) => ({ ...grupo, pacotes: contarPacotes(grupo.enderecos) }));
+  return grupos.map((grupo) => ({ ...grupo, pacotes: contarPacotes(grupo.enderecos), ruas: agruparPorRua(grupo.enderecos) }));
+}
+
+// Dentro de um bairro, cada rua aparece uma vez só, com os números embaixo.
+export function agruparPorRua(enderecos) {
+  const ruas = [];
+  const porRua = new Map();
+  for (const endereco of enderecos) {
+    const chave = normalizarLogradouro(endereco.logradouro);
+    if (!porRua.has(chave)) {
+      const rua = { nome: String(endereco.logradouro ?? '').trim() || 'Endereço sem rua', enderecos: [] };
+      porRua.set(chave, rua);
+      ruas.push(rua);
+    }
+    porRua.get(chave).enderecos.push(endereco);
+  }
+  return ruas.map((rua) => ({ ...rua, pacotes: contarPacotes(rua.enderecos) }));
 }
 
 export function encontrarPacotePorRastreio(enderecos, rastreio, ignorarId = null) {
@@ -196,9 +212,9 @@ export function dataHoje(data = new Date()) {
   return `${data.getFullYear()}-${mes}-${dia}`;
 }
 
-export function descreverLocal(endereco) {
-  const rua = [endereco.logradouro, endereco.semNumero ? 's/n' : endereco.numero].filter(Boolean).join(', ');
-  return [rua, endereco.complemento].filter(Boolean).join(' — ') || 'Endereço sem identificação';
+export function descreverNumero(endereco) {
+  const numero = endereco.semNumero ? 's/n' : (String(endereco.numero ?? '').trim() || 'sem número informado');
+  return [numero, endereco.complemento].filter(Boolean).join(' — ');
 }
 
 export function textoCompartilhar(enderecos, data, { somentePendentes = false } = {}) {
@@ -216,11 +232,15 @@ export function textoCompartilhar(enderecos, data, { somentePendentes = false } 
     if (!itens.length) continue;
 
     linhas.push('', grupo.nome.toUpperCase());
-    for (const { endereco, contados } of itens) {
-      const marca = endereco.pacotes.every((p) => p.entregue) ? '[x]' : '[ ]';
-      linhas.push(`${marca} ${descreverLocal(endereco)} — ${plural(contados, 'pacote', 'pacotes')}`);
-      pacotes += contados;
-      areas += 1;
+    for (const rua of agruparPorRua(itens.map((item) => item.endereco))) {
+      linhas.push(rua.nome);
+      for (const endereco of rua.enderecos) {
+        const { contados } = itens.find((item) => item.endereco === endereco);
+        const marca = endereco.pacotes.every((p) => p.entregue) ? '[x]' : '[ ]';
+        linhas.push(`${marca} ${descreverNumero(endereco)} — ${plural(contados, 'pacote', 'pacotes')}`);
+        pacotes += contados;
+        areas += 1;
+      }
     }
   }
 

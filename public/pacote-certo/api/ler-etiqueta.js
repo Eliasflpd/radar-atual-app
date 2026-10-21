@@ -18,19 +18,28 @@ const ESQUEMA = {
   },
 };
 
-const INSTRUCOES = `Você lê fotos de etiquetas de entrega no Brasil (Mercado Livre, Shein, TikTok Shop, Correios, transportadoras) para um entregador.
+const INSTRUCOES = `Você lê fotos de etiquetas de entrega no Brasil para um entregador. As fotos são tiradas na rua, às vezes tortas, com reflexo ou cortadas. Mercado Livre, Shein, TikTok Shop, Shopee, Amazon, Correios, J&T, Loggi, Jadlog, Total Express e outras transportadoras.
 
-Extraia os dados do DESTINATÁRIO. Etiquetas também trazem o endereço do remetente (loja, centro de distribuição, "Remetente", "De:"): nunca use esse endereço. Se não der para saber qual endereço é o do destinatário, deixe os campos de endereço vazios e marque-os em "incertos".
+Extraia SÓ os dados do DESTINATÁRIO, quem vai receber o pacote:
+- Procure blocos com "Destinatário", "Para", "Entregar para", "DEST", "Comprador" ou o nome da pessoa seguido do endereço.
+- Ignore o REMETENTE ("Remetente", "De", "REM", "Vendedor", "Devolução", nome de loja, CNPJ, centro de distribuição, "Agência"). Etiquetas do Mercado Livre e Shein trazem os dois; o do remetente costuma ser menor, em cima ou no rodapé.
+- Se não der para saber com segurança qual endereço é do destinatário, deixe os campos de endereço vazios e marque-os em "incertos".
 
 Campos:
-- bairro, logradouro (tipo + nome, ex.: "Rua das Flores"), numero, complemento (apto, bloco, casa, referência curta), destinatario (nome), rastreio (código de rastreio ou do pacote, sem espaços), cidade, estado (sigla UF), cep (só números com hífen, ex.: 01234-567).
-- semNumero: true só se a etiqueta disser "S/N", "sem número" ou equivalente.
-- observacoes: só informação útil para a entrega escrita na etiqueta (ex.: "deixar na portaria"). Caso contrário, vazio.
+- logradouro: tipo + nome por extenso como está escrito ("Rua dos Andrades", "Av. Brasil"). Não inclua número, bairro nem complemento aqui.
+- numero: só o número do imóvel (ex.: "12", "450-A"). Não confunda com CEP, número do pedido, apto ou quantidade.
+- semNumero: true só se estiver escrito "S/N", "SN", "sem número" ou equivalente.
+- complemento: apto, bloco, casa, fundos, loja, andar, ponto de referência curto. Ex.: "Apto 202 Bl B".
+- bairro: o bairro do destinatário (às vezes aparece depois do complemento, separado por " - " ou ","). Nunca use a cidade como bairro.
+- cidade, estado (sigla UF de 2 letras), cep (formato 00000-000).
+- destinatario: nome de quem recebe.
+- rastreio: o código de rastreio do pacote (ex.: "BR1234567890", "SHNBR...", "LGI...", "NX123456789BR", "AM..."). Prefira o código impresso junto ao código de barras principal. Sem espaços. Não use número de pedido, NF ou CEP.
+- observacoes: só instrução útil de entrega escrita na etiqueta (ex.: "deixar na portaria"). Senão, vazio.
 
 Regras:
-- Nunca invente nem complete dados que não estão legíveis. Campo ausente ou ilegível = string vazia.
-- Copie o texto como está escrito, sem corrigir nomes de rua.
-- Coloque em "incertos" o nome de cada campo preenchido em que a leitura ficou duvidosa (letra borrada, corte, reflexo, dígito ambíguo).`;
+- Nunca invente nem complete dado ilegível ou ausente: deixe a string vazia.
+- Copie o texto como está, sem corrigir grafia.
+- Em "incertos" coloque cada campo preenchido em que a leitura ficou duvidosa (borrado, cortado, reflexo, dígito ambíguo como 1/7, 0/8, 5/6). Campos vazios não entram em "incertos". Leitura nítida = lista vazia.`;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -53,10 +62,10 @@ export default async function handler(req, res) {
     const cliente = new Anthropic();
     const resposta = await cliente.beta.messages.create({
       model: MODELO,
-      max_tokens: 4000,
+      max_tokens: 16000,
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
-      output_config: { effort: 'low', format: { type: 'json_schema', schema: ESQUEMA } },
+      output_config: { effort: 'medium', format: { type: 'json_schema', schema: ESQUEMA } },
       system: INSTRUCOES,
       messages: [{
         role: 'user',
