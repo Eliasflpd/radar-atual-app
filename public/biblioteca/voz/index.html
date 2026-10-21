@@ -169,6 +169,30 @@
 
   .cerebro button b{display:block;font-size:.95rem;color:var(--dourado)}
   .cerebro button.atual{border-color:var(--dourado);background:rgba(201,161,74,.16)}
+  /* MATERIAIS (sermão, mensagem, estudo, esboço) gerados pela voz — 21/10/2026 */
+  .cartaoMat{background:rgba(201,161,74,.1);border:1px solid rgba(201,161,74,.45);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+  .cartaoMat .tipo{font-size:.68rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--dourado)}
+  .cartaoMat .tit{font-family:Georgia,serif;font-size:1.05rem;color:var(--texto);margin:2px 0 8px}
+  .cartaoMat .acoes, #matTela .acoes{display:flex;gap:6px;flex-wrap:wrap}
+  .cartaoMat button, #matTela .acoes button{flex:1;min-width:84px;padding:9px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.07);color:var(--texto);font:700 .85rem system-ui,sans-serif;cursor:pointer}
+  .cartaoMat button.ler, #matTela .acoes button.copiar{background:var(--dourado);color:#10202c;border-color:var(--dourado)}
+  #matTela{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#07141d}
+  #matTela[hidden]{display:none}
+  #matTela .cab{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(201,161,74,.35)}
+  #matTela .cab b{flex:1;font-family:Georgia,serif;color:var(--dourado);font-size:1.05rem}
+  #matTela .cab button{width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.09);color:var(--texto);font-size:1rem}
+  #matTela .corpo{flex:1;overflow-y:auto;padding:16px 18px 30px;color:var(--texto);font-size:1.08rem;line-height:1.65}
+  #matTela .corpo h1{font-family:Georgia,serif;color:var(--dourado);font-size:1.45rem;line-height:1.25;margin:4px 0 12px}
+  #matTela .corpo h2{font-family:Georgia,serif;color:var(--dourado);font-size:1.2rem;margin:22px 0 8px}
+  #matTela .corpo h3{font-size:1.05rem;color:#f0d9a6;margin:16px 0 6px}
+  #matTela .corpo p{margin:0 0 12px}
+  #matTela .corpo ul, #matTela .corpo ol{margin:0 0 12px;padding-left:22px}
+  #matTela .corpo blockquote{margin:0 0 12px;padding:8px 12px;border-left:3px solid var(--dourado);background:rgba(201,161,74,.08);border-radius:0 8px 8px 0}
+  #matTela .rodape{padding:10px 14px calc(12px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.1)}
+  #matLista .item{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+  #matLista .item div{flex:1;min-width:0}
+  #matLista .item small{color:var(--suave)}
   .provaVoz{display:none}
   .provaVoz .linha{display:flex;gap:6px;flex-wrap:wrap}
   .provaVoz button{
@@ -206,6 +230,7 @@
 
   <div class="topo">
     <button class="voltar" id="inicio">← Início</button>
+    <button class="engrenagem" id="abrirMateriais" aria-label="Meus sermões e estudos" hidden style="margin-left:auto;margin-right:8px">📄</button>
     <button class="engrenagem" id="abrirConfig" aria-label="Configuração">⚙️</button>
   </div>
 
@@ -311,6 +336,16 @@
         endereço ou valor. Uma peneira no servidor joga fora antes de gravar, e no que sobra o nome
         próprio vira “alguém”. O botão <b>🧠 Apagar a memória</b>, aqui em cima, apaga tudo na hora.</p>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══ O MATERIAL (sermão, mensagem, estudo, esboço) — ler, copiar, excluir ═══ -->
+  <div id="matTela" hidden>
+    <div class="cab"><b id="matTitulo">Material</b><button type="button" id="matFechar" aria-label="Fechar">✕</button></div>
+    <div class="corpo" id="matCorpo"></div>
+    <div class="rodape acoes" id="matAcoes">
+      <button type="button" class="copiar" id="matCopiar">📋 Copiar</button>
+      <button type="button" id="matExcluir">🗑️ Excluir</button>
     </div>
   </div>
 
@@ -481,6 +516,8 @@
     guardar_ensino:       ['✍️ Anotando no caderno','Guardando o que você ensinou.'],
     ensinos_do_pastor:    ['📒 Abrindo o caderno','Vendo o que você já ensinou.'],
     buscar_biblioteca:    ['📚 Consultando a biblioteca','Lendo os comentaristas e os léxicos.'],
+    aulas_do_dr_wagner:   ['🎓 Abrindo as aulas do Dr. Wagner','Procurando o que ele ensina sobre isso.'],
+    entregar_material:    ['✍️ Escrevendo o material','Montando o texto completo para a tela.'],
     licao_da_ebd:         ['📘 Abrindo a lição','Foi buscar a lição da Escola Dominical.'],
     pensando:             ['🎓 Pensando','A Claude está pensando na sua pergunta.'],
     meu_conhecimento:     ['🪞 Conferindo o que eu tenho','Listando as fontes de verdade.'],
@@ -2552,6 +2589,9 @@
         enfileirarPCM(e.pcm, FATOR_VOZ_SINTETICA);
         despejarSobra();        // cada pedaço termina inteiro: a última sílaba não fica presa esperando o próximo
         break;
+      case 'material':        // sermão, mensagem, estudo ou esboço pronto: vira cartão (ler, copiar, excluir)
+        matChegou(e);
+        break;
       case 'trecho':          // o texto do pedaço: quem lê é o leitor (Gemini ao vivo)
         leitorFalar(e.texto);
         break;
@@ -2609,6 +2649,106 @@
     C.geracao++; C.ouvindo=false; C.emTurno=false;
     L.fila=[]; leitorFechar();
   }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // OS MATERIAIS (21/10/2026) — sermão, mensagem, estudo e esboço pedidos por voz.
+  // A Claude pesquisa e entrega o texto inteiro (evento 'material'); aqui ele vira um cartão na conversa
+  // (📖 Ler · 📋 Copiar · 🗑️ Excluir) e fica guardado NO APARELHO (voz.materiais) até ele excluir.
+  // O botão 📄 do topo reabre a lista depois que a página fecha.
+  // ══════════════════════════════════════════════════════════════════════════
+  var MAT_K='voz.materiais', TIPO_MAT={ sermao:'Sermão', mensagem:'Mensagem', estudo:'Estudo bíblico', esboco:'Esboço' };
+  function matLer(){ try{ return JSON.parse(localStorage.getItem(MAT_K)||'[]')||[]; }catch(e){ return []; } }
+  function matGravar(l){
+    // o celular tem limite de espaço: se não couber, vão saindo os mais antigos
+    for(var n=l.length;n>=0;n--){ try{ localStorage.setItem(MAT_K, JSON.stringify(l.slice(0,n))); return; }catch(e){} }
+  }
+  function matPintarBotao(){ var b=$('abrirMateriais'); if(b) b.hidden = !matLer().length; }
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // markdown simples → HTML (título, seções, negrito, itálico, listas, citação). Escapa tudo antes.
+  function mdParaHtml(md){
+    var linhas=String(md||'').replace(/\r/g,'').split('\n'), out=[], lista='', par=[];
+    function inl(t){ return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<i>$2</i>'); }
+    function fechaPar(){ if(par.length){ out.push('<p>'+inl(par.join(' '))+'</p>'); par=[]; } }
+    function fechaLista(){ if(lista){ out.push('</'+lista+'>'); lista=''; } }
+    for(var i=0;i<linhas.length;i++){
+      var l=linhas[i], m;
+      if(!l.trim()){ fechaPar(); fechaLista(); continue; }
+      if((m=l.match(/^(#{1,3})\s+(.*)$/))){ fechaPar(); fechaLista(); var n=m[1].length; out.push('<h'+n+'>'+inl(m[2])+'</h'+n+'>'); continue; }
+      if((m=l.match(/^\s*[-*•]\s+(.*)$/))){ fechaPar(); if(lista!=='ul'){ fechaLista(); out.push('<ul>'); lista='ul'; } out.push('<li>'+inl(m[1])+'</li>'); continue; }
+      if((m=l.match(/^\s*\d+[.)]\s+(.*)$/))){ fechaPar(); if(lista!=='ol'){ fechaLista(); out.push('<ol>'); lista='ol'; } out.push('<li>'+inl(m[1])+'</li>'); continue; }
+      if((m=l.match(/^>\s?(.*)$/))){ fechaPar(); fechaLista(); out.push('<blockquote>'+inl(m[1])+'</blockquote>'); continue; }
+      fechaLista(); par.push(l.trim());
+    }
+    fechaPar(); fechaLista();
+    return out.join('');
+  }
+  function matTexto(m){ return (m.titulo?m.titulo+'\n':'')+(m.texto_base?'Texto base: '+m.texto_base+'\n\n':'\n')+m.conteudo; }
+  function matCopiar(m, botao){
+    var t=matTexto(m);
+    function fb(){ var a=document.createElement('textarea'); a.value=t; a.style.cssText='position:fixed;opacity:0';
+      document.body.appendChild(a); a.focus(); a.select(); try{ document.execCommand('copy'); }catch(e){} a.remove(); }
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t)['catch'](fb); else fb();
+    if(botao){ var o=botao.textContent; botao.textContent='✅ Copiado'; setTimeout(function(){ botao.textContent=o; },1500); }
+  }
+  function matExcluir(id, botao){
+    if(botao && botao.dataset.certeza!=='1'){                 // dois toques: o solavanco do carro não apaga sermão
+      botao.dataset.certeza='1'; var o=botao.textContent; botao.textContent='Toque de novo';
+      setTimeout(function(){ botao.dataset.certeza=''; botao.textContent=o; },4000); return false;
+    }
+    matGravar(matLer().filter(function(x){ return x.id!==id; }));
+    var c=document.querySelector('.cartaoMat[data-id="'+id+'"]'); if(c) c.remove();
+    matPintarBotao(); return true;
+  }
+  function matAbrir(m){
+    $('matTitulo').textContent=(TIPO_MAT[m.tipo]||'Material');
+    $('matCorpo').innerHTML=(m.texto_base?'<p><small style="color:var(--suave)">Texto base: '+esc(m.texto_base)+'</small></p>':'')
+      +mdParaHtml(/^#\s/.test(m.conteudo)?m.conteudo:'# '+m.titulo+'\n\n'+m.conteudo);
+    $('matCorpo').scrollTop=0;
+    $('matAcoes').hidden=false;
+    $('matCopiar').onclick=function(){ matCopiar(m,this); };
+    $('matExcluir').onclick=function(){ if(matExcluir(m.id,this)) $('matTela').hidden=true; };
+    $('matTela').hidden=false;
+  }
+  function matCartao(m){
+    limpaVazio();
+    var d=document.createElement('div'); d.className='cartaoMat'; d.setAttribute('data-id',m.id);
+    d.innerHTML='<div class="tipo">📄 '+esc(TIPO_MAT[m.tipo]||'Material')+(m.texto_base?' · '+esc(m.texto_base):'')+'</div>'
+      +'<div class="tit">'+esc(m.titulo)+'</div>'
+      +'<div class="acoes"><button type="button" class="ler">📖 Ler</button><button type="button" class="cp">📋 Copiar</button><button type="button" class="ex">🗑️ Excluir</button></div>';
+    d.querySelector('.ler').onclick=function(){ matAbrir(m); };
+    d.querySelector('.cp').onclick=function(){ matCopiar(m,this); };
+    d.querySelector('.ex').onclick=function(){ matExcluir(m.id,this); };
+    elConversa.appendChild(d); rolar();
+  }
+  function matChegou(e){
+    var m={ id:'m'+Date.now().toString(36), tipo:e.tipo||'estudo', titulo:e.titulo||'Material', texto_base:e.texto_base||'',
+            conteudo:e.conteudo||'', quando:Date.now() };
+    var l=matLer(); l.unshift(m); matGravar(l.slice(0,40));
+    matCartao(m); matPintarBotao();
+    S.texto.push((TIPO_MAT[m.tipo]||'Material')+': '+m.titulo+'\n\n'+m.conteudo);
+  }
+  // a lista dos guardados (botão 📄 do topo)
+  function matLista(){
+    var l=matLer();
+    $('matTitulo').textContent='Meus sermões e estudos ('+l.length+')';
+    $('matAcoes').hidden=true;
+    var h='<div id="matLista">';
+    for(var i=0;i<l.length;i++){
+      var m=l[i];
+      h+='<div class="item" data-i="'+i+'"><div><b>'+esc(m.titulo)+'</b><br><small>'+esc(TIPO_MAT[m.tipo]||'Material')
+        +(m.texto_base?' · '+esc(m.texto_base):'')+' · '+new Date(m.quando).toLocaleDateString('pt-BR')+'</small></div>'
+        +'<button type="button" class="ab" style="flex:none;min-width:auto;padding:8px 12px;border-radius:10px;border:1px solid var(--dourado);background:transparent;color:var(--dourado);font-weight:800">📖 Ler</button></div>';
+    }
+    $('matCorpo').innerHTML=h+'</div>';
+    var it=$('matCorpo').querySelectorAll('.item .ab');
+    for(var k=0;k<it.length;k++) (function(m){ it[k].onclick=function(){ matAbrir(m); }; })(l[k]);
+    $('matTela').hidden=false;
+  }
+  (function(){
+    var b=$('abrirMateriais'); if(b) b.addEventListener('click',matLista);
+    var f=$('matFechar'); if(f) f.addEventListener('click',function(){ $('matTela').hidden=true; });
+    matPintarBotao();
+  })();
 
   // ── ligar / desligar ──────────────────────────────────────────────────────
   async function ligar(opc){

@@ -112,6 +112,29 @@ const AULAS_DO_DR_WAGNER = {
   },
 };
 
+// SERMÃO, MENSAGEM E ESTUDO POR VOZ (21/10/2026, pedido do Elias: "basta eu pedir e ele gera; conhecimento
+// profundo, nunca superficial; o material aparece pronto na mesma página, com copiar e excluir").
+// A Claude pesquisa com as ferramentas e entrega o texto inteiro AQUI; o celular mostra num cartão (ler/copiar/
+// excluir) e guarda no aparelho. A voz só fala o resumo — material longo não se lê em voz alta.
+const ENTREGAR_MATERIAL = {
+  name: 'entregar_material',
+  description: 'Põe na TELA do pastor um material escrito completo — sermão, mensagem, estudo bíblico ou esboço — para ele ler, '
+    + 'copiar e guardar. Use quando ele pedir para gerar, preparar, montar ou escrever um sermão, pregação, mensagem, esboço ou estudo. '
+    + 'Só chame DEPOIS de pesquisar a fundo (ler_versiculo em todo texto que for citar, buscar_biblioteca, aulas_do_dr_wagner, '
+    + 'buscar_no_acervo). O conteúdo vai completo aqui, em markdown simples (# título, ## seções, **negrito**, listas). '
+    + 'Não leia o material em voz alta: depois de entregar, diga só um resumo de duas ou três frases.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      tipo: { type: 'string', enum: ['sermao', 'mensagem', 'estudo', 'esboco'], description: 'O tipo do material.' },
+      titulo: { type: 'string', description: 'O título do material.' },
+      texto_base: { type: 'string', description: 'A referência do texto base, por extenso (ex.: "Deuteronômio 5:28-33").' },
+      conteudo: { type: 'string', description: 'O material inteiro, em markdown simples.' },
+    },
+    required: ['tipo', 'titulo', 'conteudo'],
+  },
+};
+
 // O resumo do que ele ensina, tirado do Concílio (lá está escrito NA VOZ dele, em primeira pessoa).
 const ENSINO_DO_DR_WAGNER = (() => {
   const t = String(METODO || '');
@@ -126,7 +149,7 @@ export const FERRAMENTAS_CLAUDE = (() => {
     description: DESCRICAO_PROPRIA[d.name] || d.description,
     input_schema: d.parameters ? paraJsonSchema(d.parameters) : { type: 'object', properties: {} },
   }));
-  lista.push(AULAS_DO_DR_WAGNER, BUSCAR_BIBLIOTECA);
+  lista.push(AULAS_DO_DR_WAGNER, ENTREGAR_MATERIAL, BUSCAR_BIBLIOTECA);
   // O cache da Anthropic guarda tudo até esta marca: ferramentas + a parte fixa do sistema.
   lista[lista.length - 1] = { ...lista[lista.length - 1], cache_control: { type: 'ephemeral' } };
   return lista;
@@ -168,6 +191,14 @@ O DR. WAGNER CORDEIRO — o professor do pastor
 - O material dele é curso comprado: fale com as suas palavras; uma frase curta e marcante dele pode ser citada como dele.
 - Se o assunto não estiver nas aulas que voltaram nem no resumo, diga que não achou isso nas aulas dele e responda pela Escritura, deixando claro que ali é você, não ele.
 - Onde ele diverge do que outros ensinam (por exemplo, três dispensações em vez de sete, a igreja como esposa e não noiva), apresente a posição dele como dele, com honestidade.
+
+SERMÃO, MENSAGEM, ESTUDO E ESBOÇO POR ENCOMENDA
+- Quando ele pedir para gerar, preparar ou montar um sermão, uma pregação, uma mensagem, um estudo ou um esboço, diga numa frase que vai preparar ("deixa eu preparar isso com calma") e faça um trabalho de verdade, nunca superficial:
+  1. Pesquise ANTES de escrever: ler_versiculo no texto base inteiro (o capítulo ou a perícope, não só um versículo) e em cada texto que for citar; buscar_biblioteca para o original, o contexto histórico e o que os comentaristas dizem; aulas_do_dr_wagner para a tipologia e o garimpo dele; buscar_no_acervo para ver o que ele mesmo já pregou sobre isso; versiculos_ligados para as referências cruzadas.
+  2. Escreva com profundidade de mestre: o contexto do livro e da passagem; a palavra-chave no original (hebraico no Antigo, grego no Novo), transliterada e explicada, só com fonte; o pano de fundo histórico e cultural; o que os autores da biblioteca e o Dr. Wagner observam, citados pelo nome; a ligação com Cristo e com o resto da Escritura; e a aplicação concreta para a igreja de hoje.
+  3. Estrutura do SERMÃO: título; texto base; introdução com gancho; três ou quatro pontos, cada um com explicação do texto, prova bíblica, ilustração ou imagem concreta e aplicação; conclusão; apelo. ESTUDO: contexto, exposição versículo a versículo, palavras no original, doutrina, aplicação e perguntas para o grupo. MENSAGEM: mais curta e devocional, mas com a mesma fundamentação. ESBOÇO: os tópicos com as referências e uma frase de explicação em cada.
+  4. Entregue o texto inteiro com entregar_material. Depois, FALE só um resumo de duas ou três frases (o título e a linha mestra) e diga que está na tela para ler, copiar ou excluir. Não leia o material.
+- Fidelidade: os versículos citados no material têm que ter saído de ler_versiculo; não invente autor, número, data nem palavra no original. Linha pentecostal clássica.
 
 O RESTO
 - Assunto geral (história, saúde, conselho, o dia a dia) você responde do que sabe, direto. Fato de hoje (notícia, jogo, cotação, tempo): saber_agora.
@@ -302,6 +333,8 @@ function chavesAnthropic() {
   return String(env.ANTHROPIC_API_KEYS || env.ANTHROPIC_API_KEY || '').split(/[,\s]+/).filter(Boolean);
 }
 
+// pedido de material = verbo de fazer + o que fazer ("prepara um sermão", "gera uma mensagem sobre", "me faz um estudo")
+const PEDE_MATERIAL = /\b(ger|prepar|mont|fa[zç]|escrev|cri|elabor)\w*\b[\s\S]{0,40}\b(serm[aãoõ]|prega[cç]|esbo[cç]|mensage|estudo|aula)/i;
 const PEDE_FUNDO = /\b(a fundo|aprofund|mais fundo|estudo|explica(r)? (melhor|direito|tudo)|detalh|exegese|doutrina|comparar|compara|prepar(ar|a) (um|uma|o|a) (serm|prega|estudo|aula))/i;
 
 async function chamarClaude(corpo, aoTexto) {
@@ -473,9 +506,14 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
     // Esforço: medido em 21/10/2026 na mesma pergunta (Dt 5:33). No "low" a Claude trocou a referência de Jeremias
     // por "Deuteronômio cinco, trinta"; no "medium" acertou e trouxe os versículos 29 e 32, por só ~1,5 s a mais
     // até a primeira fala. Firmeza vem antes: medium é o padrão; low só pra conversa curta, sem referência.
-    const fundo = PEDE_FUNDO.test(String(texto || ''));
+    // Material escrito (sermão, mensagem, estudo, esboço): esforço ALTO, mais voltas de pesquisa, mais fôlego de
+    // escrita e de tempo (o Edge da Vercel aguenta o fluxo até ~300 s).
+    const material = PEDE_MATERIAL.test(String(texto || ''));
+    const fundo = material || PEDE_FUNDO.test(String(texto || ''));
     const papo = !fundo && String(texto || '').trim().length < 40 && !/\d/.test(String(texto || ''));
-    const esforco = papo ? 'low' : 'medium';
+    const esforco = material ? 'high' : papo ? 'low' : 'medium';
+    const rodadasMax = material ? 10 : MAX_RODADAS;
+    const prazoTotal = material ? 270000 : PRAZO_TOTAL_MS;
     const sistema = [
       { type: 'text', text: SISTEMA_CLAUDE + (persona.estilo ? '\n\n' + persona.estilo : ''), cache_control: { type: 'ephemeral' } },
       { type: 'text', text: 'Hoje é ' + hojeEmBrasilia() + ' (horário de Brasília).' + (memoria ? '\n\n' + memoria : '') },
@@ -485,11 +523,11 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
     const marca = (o) => etapas.push({ ms: Date.now() - t0, ...o });
     let modeloQueRespondeu = '', parouPor = '', entrada = 0, saida = 0, cache = 0;
 
-    for (let rodada = 0; rodada < MAX_RODADAS; rodada++) {
-      if (Date.now() - t0 > PRAZO_TOTAL_MS) break;
+    for (let rodada = 0; rodada < rodadasMax; rodada++) {
+      if (Date.now() - t0 > prazoTotal) break;
       const corpo = {
         model: MODELO_CLAUDE,
-        max_tokens: fundo ? 16000 : 8000,
+        max_tokens: material ? 32000 : fundo ? 16000 : 8000,
         stream: true,
         // A 1ª volta só decide o que abrir e diz "deixa eu abrir o texto": low basta e a voz sai mais cedo.
         // Quem escreve a resposta (depois das ferramentas) pensa no esforço da pergunta.
@@ -520,7 +558,15 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
         let res, erro = false;
         try {
           if (b._erroJson) throw new Error('argumentos ilegíveis');
-          if (b.name === 'trocar_voz') {
+          if (b.name === 'entregar_material') {
+            const m = b.input || {};
+            const conteudo = String(m.conteudo || '').trim();
+            if (conteudo.length < 200) throw new Error('o material veio vazio ou curto demais');
+            mandar({ t: 'material', tipo: String(m.tipo || 'estudo'), titulo: String(m.titulo || 'Material').slice(0, 200),
+              texto_base: String(m.texto_base || '').slice(0, 200), conteudo: conteudo.slice(0, 120000) });
+            res = { ok: true, ordem: 'O material já está na tela dele. Agora FALE só um resumo de duas ou três frases '
+              + '(o título e a linha mestra) e diga que está na tela para ler, copiar ou excluir. Não leia o material.' };
+          } else if (b.name === 'trocar_voz') {
             const nova = personaDe((b.input || {}).voz);
             persona = nova;
             mandar({ t: 'voz', voz: nova.id });
