@@ -2466,17 +2466,26 @@
   if(window.speechSynthesis && speechSynthesis.getVoices){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){ speechSynthesis.getVoices(); }; }catch(e){} }
 
   // Sem cota de voz no Google: o próprio celular fala aquele pedaço, depois do que já está tocando.
-  function claudeFalarLocal(texto, g){
+  // TRAVA MEDIDA NO A22 (21/10/2026): a voz do celular às vezes EMPACA — fica "falando" sem som e sem fim, e tudo
+  // que vinha atrás esperava pra sempre. Agora: espera no máximo 4 s por uma fala alheia (depois cancela), e cada
+  // fala tem prazo pelo tamanho do texto; estourou, cancela e segue.
+  function claudeFalarLocal(texto, g, desde){
     if(g!==C.geracao) return;
-    if(S.tocandoAgora || S.fila.length || (window.speechSynthesis && speechSynthesis.speaking)){
-      setTimeout(function(){ claudeFalarLocal(texto,g); },300); return;
+    desde=desde||Date.now();
+    var ocupado = S.tocandoAgora || S.fila.length || (window.speechSynthesis && speechSynthesis.speaking);
+    if(ocupado && !(window.speechSynthesis && speechSynthesis.speaking && !S.falandoLocal && Date.now()-desde>4000)){
+      setTimeout(function(){ claudeFalarLocal(texto,g,desde); },300); return;
     }
     if(!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
     try{
+      if(speechSynthesis.speaking && !S.falandoLocal) speechSynthesis.cancel();   // fala empacada de antes
       var u=new SpeechSynthesisUtterance(texto); u.lang='pt-BR'; u.rate=1.12;
       var melhor=melhorVozDoCelular(); if(melhor){ u.voice=melhor; u.lang=melhor.lang; }
       S.falandoLocal=true; S.eleFalando=true; fase();
-      u.onend=u.onerror=function(){ S.falandoLocal=false; S.eleFalando=false; fase(); };
+      var acabou=false;
+      var fim=function(){ if(acabou) return; acabou=true; clearTimeout(prazo); S.falandoLocal=false; S.eleFalando=false; fase(); };
+      var prazo=setTimeout(function(){ try{ speechSynthesis.cancel(); }catch(e){} fim(); }, 6000+texto.length*110);
+      u.onend=u.onerror=fim;
       speechSynthesis.speak(u);
     }catch(e){ S.falandoLocal=false; }
   }
