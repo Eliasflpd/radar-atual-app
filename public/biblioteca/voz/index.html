@@ -869,7 +869,8 @@
       S.fase='eleFala';
       // dica curta de propósito: no viva-voz ela divide a tela com a resposta
       // escrita, e frase comprida empurrava tudo pra cima do texto.
-      estado('🔊 RESPONDENDO', S.meioDuplex
+      estado('🔊 RESPONDENDO', (S.cerebro==='claude' && typeof C!=='undefined' && C && C.semVigia) ? 'Toque no globo para cortar.'
+        : S.meioDuplex
         ? 'Fale ALTO para cortar.'
         : 'Pode falar por cima.');
       return;
@@ -2201,7 +2202,7 @@
     if(!S.ligado || S.cerebro!=='claude' || S.semMic || !RECONHECER) return;
     // Android que só abre o microfone com toque: o laço automático para e o globo pede o toque
     if(!peloToque && (C.precisaToque || C.soComToque)) return;
-    if(C.ouvindo || C.emTurno || S.pausado || S.falandoLocal) return;
+    if(C.ouvindo || C.vigia || C.emTurno || S.pausado || S.falandoLocal) return;
     if(S.eleFalando || S.tocandoAgora || S.fila.length) return;
     if(Date.now() < C.esperarAte) return;
     // tela apagada / aba escondida: o Chrome não deixa ouvir (dá "not-allowed"). Espera a tela voltar.
@@ -2258,10 +2259,69 @@
     try{ r.start(); }catch(e){ C.ouvindo=false; C.rec=null; }
   }
 
+  // ── CORTAR FALANDO (21/10/2026, o Elias: "ela não aceita ser interrompida, não consigo discutir com ela") ──
+  // Enquanto ela fala, um segundo ouvido fica ligado (o VIGIA). O problema do viva-voz é o eco: o microfone ouve
+  // a própria resposta. Mas aqui a gente SABE o que ela está falando — então o vigia compara: palavra que está na
+  // resposta é eco; frase com palavras NOVAS é ele. Aí ela cala na hora e o que ele disse vira a próxima pergunta.
+  // Se o aparelho não deixar dois usos do microfone, o vigia se desliga sozinho e fica o toque no globo.
+  function palavrasDe(t){
+    return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+      .split(/[^a-z0-9]+/).filter(function(w){ return w.length>=3; });
+  }
+  function claudeVigiar(){
+    var falando = S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal;
+    if(C.vigia && !C.vigiaCortou && !falando){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; return; }   // ela acabou: o ouvido normal assume
+    if(!S.ligado || S.cerebro!=='claude' || S.semMic || !RECONHECER || C.semVigia) return;
+    if(C.vigia || C.ouvindo || S.pausado || !falando) return;
+    if(document.visibilityState!=='visible') return;
+    var r; try{ r=new RECONHECER(); }catch(e){ C.semVigia=true; return; }
+    r.lang='pt-BR'; r.interimResults=true; r.continuous=true; r.maxAlternatives=1;
+    var inicioDele=-1;
+    C.vigia=r; C.vigiaCortou=false; C.textoVigia='';
+    r.onresult=function(e){
+      if(!C.vigiaCortou){
+        var eco={}; palavrasDe((C.resposta||'')+' '+(C.ultimaResposta||'')).forEach(function(w){ eco[w]=1; });
+        var minimo = S.meioDuplex ? 3 : 2;          // no viva-voz o eco é mais forte: pede mais prova
+        for(var i=e.resultIndex;i<e.results.length;i++){
+          var p=palavrasDe(e.results[i][0].transcript); if(!p.length) continue;
+          var novas=p.filter(function(w){ return !eco[w]; });
+          if(novas.length>=minimo && novas.length/p.length>=0.6){ C.vigiaCortou=true; inicioDele=i; break; }
+        }
+        if(C.vigiaCortou){
+          diario('ele falou por cima — cortei');
+          claudeCalar('ele falou por cima');
+          C.bolhaEu=bolha('eu','Você');
+        }
+      }
+      if(C.vigiaCortou){
+        var t=''; for(var j=inicioDele;j<e.results.length;j++) t+=e.results[j][0].transcript+' ';
+        C.textoVigia=t.replace(/\s+/g,' ').trim();
+        S.euFalando=true; fase();
+        if(C.bolhaEu){ C.bolhaEu.textContent=C.textoVigia; rolar(); }
+      }
+    };
+    r.onerror=function(e){
+      var er=e.error||'';
+      if(er==='not-allowed'||er==='audio-capture'||er==='service-not-allowed'){ C.semVigia=true; diario('vigia desligado: '+er+' — corte só pelo toque'); fase(); }
+    };
+    r.onend=function(){
+      var t=C.textoVigia, cortou=C.vigiaCortou;
+      C.vigia=null; C.vigiaCortou=false; C.textoVigia=''; S.euFalando=false;
+      if(cortou && t && S.ligado && S.cerebro==='claude'){
+        if(C.bolhaEu){ C.bolhaEu.textContent=t; C.bolhaEu=null; }
+        S.texto.push('Você: '+t);
+        if(!S.vaiDesligar && DESPEDIDA.test(t)) S.vaiDesligar=true;
+        claudePerguntar(t);
+      } else if(cortou){ if(C.bolhaEu && C.bolhaEu.parentNode && !C.bolhaEu.textContent) C.bolhaEu.parentNode.remove(); C.bolhaEu=null; fase(); }
+    };
+    try{ r.start(); }catch(e){ C.vigia=null; }
+  }
+
   function claudeCalar(motivo){
     C.geracao++;
     if(C.abort){ try{ C.abort.abort(); }catch(e){} C.abort=null; }
     if(C.rec){ try{ C.rec.abort(); }catch(e){} C.rec=null; C.ouvindo=false; }
+    if(C.vigia && !C.vigiaCortou){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; }
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
     S.falandoLocal=false;
     // resposta cortada no meio entra no histórico do jeito que ficou, marcada
@@ -2274,7 +2334,7 @@
     C.hist.push({ r:'eu', t:eu });
     if(ele) C.hist.push({ r:'ele', t:ele });
     if(C.hist.length>40) C.hist=C.hist.slice(-40);
-    if(ele) S.texto.push('Resposta: '+ele);
+    if(ele){ S.texto.push('Resposta: '+ele); C.ultimaResposta=ele; }
     guardarNaMemoria({ eu:eu, mestre:ele||'' });
     C.pergunta=''; C.resposta='';
   }
@@ -2395,13 +2455,14 @@
   function claudeLigar(){
     C.esperarAte=0; C.emTurno=false; C.recusas=0; C.precisaToque=false;
     clearInterval(C.laco);
-    C.laco=setInterval(claudeOuvir,350);
+    C.laco=setInterval(function(){ claudeOuvir(); claudeVigiar(); },350);
     nota('🎓 Modo Claude ('+(C.nomeModelo||'Claude Sonnet 5.5')+'): eu ouço, a Claude pensa com a conversa inteira, e o Google só empresta a voz.');
   }
   function claudeDesligar(){
     clearInterval(C.laco); C.laco=null;
     if(C.abort){ try{ C.abort.abort(); }catch(e){} C.abort=null; }
     if(C.rec){ try{ C.rec.abort(); }catch(e){} C.rec=null; }
+    if(C.vigia){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; C.vigiaCortou=false; }
     if(C.emTurno && C.pergunta) claudeGuardarTurno(C.pergunta, (C.resposta||'').trim());
     C.geracao++; C.ouvindo=false; C.emTurno=false;
   }
