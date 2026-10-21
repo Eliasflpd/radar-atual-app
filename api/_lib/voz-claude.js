@@ -408,7 +408,7 @@ function hojeEmBrasilia() {
 // ─────────────────────────────────────────────────────────────────────────────
 // A CONVERSA — devolve a Response em fluxo. `apoio` vem do voz.js (crachá conferido, peneira, persona…).
 // ─────────────────────────────────────────────────────────────────────────────
-export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, chaveNova, semNome, personaDe, memoria, depois }) {
+export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, chaveNova, semNome, personaDe, memoria, depois, vozNoCelular }) {
   const enc = new TextEncoder();
   const t0 = Date.now();
   let ctrl = null, ultimaSaida = Date.now(), fechado = false;
@@ -429,6 +429,8 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
   const pedacoPronto = (p) => {
     const t = p.trim(); if (!t) return;
     const i = nPedaco++; noTrecho++;
+    // LEITOR NO CELULAR: o Gemini ao vivo lê lá; aqui só sai o texto do pedaço, na ordem
+    if (vozNoCelular) { corrente = corrente.then(() => mandar({ t: 'trecho', i, texto: paraFala(t) })); return; }
     const vozAgora = persona.google;
     const audio = vaga().then(() => falar(t, vozAgora)).finally(soltar);
     corrente = corrente.then(async () => {

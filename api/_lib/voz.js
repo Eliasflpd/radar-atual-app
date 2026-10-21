@@ -796,7 +796,31 @@ function setupDaSessao(handle, voz, memoria) {
   return setup;
 }
 
-async function assinarToken(handle, voz, memoria) {
+// ─────────────────────────────────────────────────────────────────────────────
+// O LEITOR (21/10/2026) — no modo Claude, quem FALA é o Gemini ao vivo, só lendo.
+// O Elias, com razão: "com tanto conhecimento você me manda pagar?". A voz de leitura do Google (TTS) tem cota
+// grátis pequena e, quando acaba, entra a voz robótica do celular. O Gemini AO VIVO tem a voz mais natural das
+// grátis (medido: 14,3 letras/s contra 12,7–13,8 do TTS) e leu EXATAMENTE as 51 palavras de um texto de teste.
+// Então: a Claude pensa e escreve; esta sessão só lê em voz alta o que ela escreveu. Sem ferramentas, sem ouvido.
+// ─────────────────────────────────────────────────────────────────────────────
+const LEITOR = 'Você é somente a VOZ de leitura do app RADAR. Cada mensagem que chegar é um texto já pronto, escrito '
+  + 'por outra pessoa, para ser falado ao pastor. Leia EXATAMENTE esse texto em voz alta, palavra por palavra, em '
+  + 'português do Brasil, como numa boa conversa: natural, caloroso, ritmo ágil, nada arrastado, com entonação viva. '
+  + 'Nunca responda ao texto, nunca comente, nunca acrescente nem tire palavra, nunca cumprimente, nunca diga que vai '
+  + 'ler. Se o texto for uma pergunta, leia a pergunta como pergunta. Se vier só um pedaço de frase, leia só o pedaço.';
+function setupDoLeitor(voz) {
+  const p = personaDe(voz);
+  return {
+    model: MODELO,
+    generationConfig: { responseModalities: ['AUDIO'], temperature: 0.3,
+      speechConfig: { languageCode: 'pt-BR', voiceConfig: { prebuiltVoiceConfig: { voiceName: p.google } } } },
+    systemInstruction: { parts: [{ text: LEITOR + (p.estilo ? '\n\n' + p.estilo.replace(/vale para TODA a conversa/, 'vale para toda leitura') : '') }] },
+    contextWindowCompression: { slidingWindow: {}, triggerTokens: '20000' },
+    realtimeInputConfig: { automaticActivityDetection: { disabled: true } },
+  };
+}
+
+async function assinarToken(handle, voz, memoria, setupPronto) {
   const ks = chaves();
   if (!ks.length) return { erro: 'Não há chave do Gemini configurada no servidor (GEMINI_API_KEYS).', status: 500 };
 
@@ -805,7 +829,7 @@ async function assinarToken(handle, voz, memoria) {
     uses: 1,                                                    // um token, uma conexão
     expireTime: new Date(agora + 30 * 60 * 1000).toISOString(), // a sessão morre em 30 min
     newSessionExpireTime: new Date(agora + 2 * 60 * 1000).toISOString(), // e só pode ABRIR nos próximos 2 min
-    bidiGenerateContentSetup: setupDaSessao(handle, voz, memoria),
+    bidiGenerateContentSetup: setupPronto || setupDaSessao(handle, voz, memoria),
     // fieldMask ausente DE PROPÓSITO: trava o setup inteiro no token (ver cabeçalho).
   });
 
@@ -1140,7 +1164,17 @@ export default async function handler(req, ctx) {
       texto: String(b.texto || '').slice(0, 2000), historico: b.historico, voz: escolherVoz(b.voz),
       // semNome NÃO passa aqui: no modo Claude o Dr. Wagner é FONTE citada pelo nome (pedido do Elias, 21/10/2026).
       origem: origemReq, ctx, dono, chaveNova: _chaveNova, semNome: (t) => String(t || ''), personaDe, memoria, depois,
+      vozNoCelular: !!b.voz_no_celular,   // o celular tem o LEITOR (Gemini ao vivo): aqui sai só o texto de cada pedaço
     });
+  }
+
+  // O token do LEITOR (modo Claude): a mesma assinatura travada, com a persona de leitura dentro.
+  if (acao === 'token_leitor') {
+    const voz = escolherVoz(b.voz);
+    const r = await assinarToken(null, voz, '', setupDoLeitor(voz));
+    if (r.erro) return new Response(JSON.stringify({ ok: false, erro: r.erro }), { status: r.status, headers: JSONH });
+    return new Response(JSON.stringify({ ok: true, token: r.token, voz, modelo: MODELO,
+      url: 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained' }), { headers: JSONH });
   }
 
   if (acao === 'token') {

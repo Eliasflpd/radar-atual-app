@@ -2202,7 +2202,78 @@
   var C = { hist:[], ouvindo:false, rec:null, emTurno:false, abort:null, geracao:0, laco:null,
             nomeModelo:'', resposta:'', pergunta:'', erroOuvir:'', esperarAte:0, bolhaEu:null };
 
+  // ── O LEITOR (21/10/2026) ─────────────────────────────────────────────────
+  // O Elias: "com tanto conhecimento você me manda pagar?". A voz de leitura do Google (TTS) tem cota grátis
+  // pequena; acabou, entra a voz robótica do celular. Então quem FALA no modo Claude passa a ser o Gemini AO VIVO
+  // (a voz mais natural das grátis, cota folgada), numa linha que só LÊ: a Claude escreve, o servidor manda cada
+  // pedaço de texto ("trecho"), e este leitor manda o Gemini ler. Testado: leu as 51 palavras exatas de um texto.
+  // Se o leitor não abrir, o pedido seguinte volta a usar a voz do servidor (TTS) — nada fica mudo.
+  var L = { ws:null, abrindo:null, pronto:false, ocupado:false, fila:[], voz:'', falhas:0, fio:Promise.resolve() };
+  function leitorFechar(){
+    var w=L.ws; L.ws=null; L.pronto=false; L.ocupado=false;
+    try{ if(w) w.close(); }catch(e){}
+  }
+  function leitorAbrir(){
+    if(L.ws && L.ws.readyState===1 && L.pronto && L.voz===S.voz) return Promise.resolve(L.ws);
+    if(L.abrindo) return L.abrindo;
+    if(L.ws) leitorFechar();
+    var vozPedida=S.voz;
+    L.abrindo = pedir({ acao:'token_leitor', voz:vozPedida }).then(function(t){
+      return new Promise(function(ok, falhou){
+        var ws=new WebSocket(t.url+'?access_token='+encodeURIComponent(t.token));
+        var prazo=setTimeout(function(){ try{ ws.close(); }catch(e){} falhou(new Error('o leitor não abriu')); }, 7000);
+        ws.onopen=function(){ ws.send(JSON.stringify({ setup:{} })); };
+        ws.onmessage=function(ev){
+          // mensagens chegam como Blob: a corrente mantém a ORDEM (senão um pedaço de áudio passa na frente do outro)
+          L.fio = L.fio.then(function(){ return typeof ev.data==='string' ? ev.data : ev.data.text(); }).then(function(s){
+            var m; try{ m=JSON.parse(s); }catch(e){ return; }
+            if(m.setupComplete){ clearTimeout(prazo); L.ws=ws; L.pronto=true; L.voz=vozPedida; ok(ws); return; }
+            if(L.ws===ws) leitorMensagem(m);
+          })['catch'](function(){});
+        };
+        ws.onclose=function(){ clearTimeout(prazo); if(L.ws===ws){ L.ws=null; L.pronto=false; L.ocupado=false; } falhou(new Error('o leitor fechou')); };
+        ws.onerror=function(){};
+      });
+    }).then(function(ws){ L.abrindo=null; L.falhas=0; return ws; }, function(e){ L.abrindo=null; L.falhas++; throw e; });
+    return L.abrindo;
+  }
+  function leitorMensagem(m){
+    var sc=m.serverContent||{};
+    var partes=(sc.modelTurn&&sc.modelTurn.parts)||[];
+    for(var i=0;i<partes.length;i++){
+      var p=partes[i];
+      if(p.inlineData && p.inlineData.data){ S.turnoMudo=false; enfileirarPCM(p.inlineData.data); }
+    }
+    if(sc.turnComplete){ despejarSobra(); L.ocupado=false; leitorProximo(); }
+  }
+  function leitorFalar(texto){
+    texto=String(texto||'').trim(); if(!texto) return;
+    L.fila.push(texto); leitorProximo();
+  }
+  // um trecho por vez; o que chegou enquanto ele lia vai junto, numa leitura só (menos pausa entre os pedaços)
+  function leitorProximo(){
+    if(L.ocupado || !L.fila.length) return;
+    var t=L.fila.join(' '); L.fila=[];
+    L.ocupado=true;
+    var g=C.geracao;
+    leitorAbrir().then(function(ws){
+      if(g!==C.geracao){ L.ocupado=false; return; }
+      ws.send(JSON.stringify({ clientContent:{ turns:[{ role:'user', parts:[{ text:t }] }], turnComplete:true } }));
+    })['catch'](function(){
+      L.ocupado=false;
+      if(L.falhas>=2){ C.semLeitor=true; diario('leitor desligado — volta a voz do servidor'); }
+      claudeFalarLocal(t, g);
+    });
+  }
+  // corte: joga fora a fila e DERRUBA a linha (o Gemini continuaria lendo o trecho velho); já abre outra pra próxima
+  function leitorCalar(){
+    L.fila=[];
+    if(L.ocupado){ leitorFechar(); if(S.ligado && S.cerebro==='claude') leitorAbrir()['catch'](function(){}); }
+  }
+  function leitorFalando(){ return L.ocupado || L.fila.length>0; }
+
   function claudeTrocouVoz(nova){
+    if(nova!==S.voz) leitorFechar();     // a voz do leitor nasce na abertura da linha: troca = linha nova
     S.voz=nova;
     try{ localStorage.setItem('voz.timbre',nova); }catch(e){}
     try{ var bs=elLinha.children; for(var k=0;k<bs.length;k++) bs[k].className=(bs[k].querySelector('b')&&bs[k].querySelector('b').textContent===nova)?'atual':''; }catch(e){}
@@ -2213,7 +2284,7 @@
     // Android que só abre o microfone com toque: o laço automático para e o globo pede o toque
     if(!peloToque && (C.precisaToque || C.soComToque)) return;
     if(C.ouvindo || C.vigia || C.emTurno || S.pausado || S.falandoLocal) return;
-    if(S.eleFalando || S.tocandoAgora || S.fila.length) return;
+    if(S.eleFalando || S.tocandoAgora || S.fila.length || leitorFalando()) return;
     if(Date.now() < C.esperarAte) return;
     // tela apagada / aba escondida: o Chrome não deixa ouvir (dá "not-allowed"). Espera a tela voltar.
     if(document.visibilityState!=='visible') return;
@@ -2293,7 +2364,7 @@
   }
   function cortarFalandoLigado(){ try{ return localStorage.getItem('voz.cortarFalando')!=='nao'; }catch(e){ return true; } }
   function claudeVigiar(){
-    var falando = S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal;
+    var falando = S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal || leitorFalando();
     if(C.vigia && !C.vigiaCortou && !falando){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; return; }   // ela acabou: o ouvido normal assume
     if(!S.ligado || S.cerebro!=='claude' || S.semMic || !RECONHECER || C.semVigia || !cortarFalandoLigado()) return;
     if(C.vigia || C.ouvindo || S.pausado || !falando) return;
@@ -2353,6 +2424,7 @@
     if(C.abort){ try{ C.abort.abort(); }catch(e){} C.abort=null; }
     if(C.rec){ try{ C.rec.abort(); }catch(e){} C.rec=null; C.ouvindo=false; }
     if(C.vigia && !C.vigiaCortou){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; }
+    leitorCalar();
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
     S.falandoLocal=false;
     // resposta cortada no meio entra no histórico do jeito que ficou, marcada
@@ -2393,7 +2465,7 @@
     S.bolhaMestre=null; S.turnoMudo=false;
     rotuloDaFerramenta('pensando'); S.garimpando=true; fase();
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null; C.abort=ctl;
-    var corpo={ acao:'claude', texto:t, historico:C.hist.slice(-24), voz:S.voz };
+    var corpo={ acao:'claude', texto:t, historico:C.hist.slice(-24), voz:S.voz, voz_no_celular: !C.semLeitor && !!window.WebSocket };
     if(EU_SOU) corpo.user=EU_SOU;
     try{
       var _u=JSON.parse(localStorage.getItem('radar_user')||'null');
@@ -2447,6 +2519,9 @@
         enfileirarPCM(e.pcm, FATOR_VOZ_SINTETICA);
         despejarSobra();        // cada pedaço termina inteiro: a última sílaba não fica presa esperando o próximo
         break;
+      case 'trecho':          // o texto do pedaço: quem lê é o leitor (Gemini ao vivo)
+        leitorFalar(e.texto);
+        break;
       case 'falar':
         // TROCA VISÍVEL: a voz do Google ficou sem cota e quem fala agora é a voz do próprio celular
         if(!C.avisouReserva){ C.avisouReserva=true; nota('🔈 Voz reserva do celular: a cota grátis da voz do Google acabou por agora.'); }
@@ -2480,7 +2555,7 @@
     S.garimpando=false; S.bolhaMestre=null; fase();
     if(S.vaiDesligar){
       // "tchau": espera a voz terminar e desliga, como no modo Gemini
-      (function esperar(n){ if((S.tocandoAgora||S.fila.length||S.falandoLocal) && n<80){ setTimeout(function(){ esperar(n+1); },300); return; }
+      (function esperar(n){ if((S.tocandoAgora||S.fila.length||S.falandoLocal||leitorFalando()) && n<80){ setTimeout(function(){ esperar(n+1); },300); return; }
         S.vaiDesligar=false; if(S.ligado) desligar(); })(0);
     }
   }
@@ -2489,7 +2564,8 @@
     C.esperarAte=0; C.emTurno=false; C.recusas=0; C.precisaToque=false;
     clearInterval(C.laco);
     C.laco=setInterval(function(){ claudeOuvir(); claudeVigiar(); },350);
-    nota('🎓 Modo Claude ('+(C.nomeModelo||'Claude Sonnet 5.5')+'): eu ouço, a Claude pensa com a conversa inteira, e o Google só empresta a voz.');
+    if(!C.semLeitor) leitorAbrir()['catch'](function(){});
+    nota('🎓 Modo Claude ('+(C.nomeModelo||'Claude Sonnet 5.5')+'): a Claude pensa com a conversa inteira; quem lê a resposta é a voz do Gemini ao vivo.');
   }
   function claudeDesligar(){
     clearInterval(C.laco); C.laco=null;
@@ -2498,6 +2574,7 @@
     if(C.vigia){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; C.vigiaCortou=false; }
     if(C.emTurno && C.pergunta) claudeGuardarTurno(C.pergunta, (C.resposta||'').trim());
     C.geracao++; C.ouvindo=false; C.emTurno=false;
+    L.fila=[]; leitorFechar();
   }
 
   // ── ligar / desligar ──────────────────────────────────────────────────────
@@ -2666,7 +2743,7 @@
   function toqueNoGlobo(){
     if(S.pausado){ retomarDoCarro(); return; }
     // modo Claude: falando ou pensando, o toque CORTA e ele volta a ouvir; parado, desliga.
-    if(S.ligado && S.cerebro==='claude' && (C.emTurno || S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal)){
+    if(S.ligado && S.cerebro==='claude' && (C.emTurno || S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal || leitorFalando())){
       claudeCalar('ele tocou no globo'); fase();
       if(C.soComToque) claudeOuvir(true);          // celular que só ouve com toque: este toque já abre o ouvido
       return;
