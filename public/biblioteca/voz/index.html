@@ -875,6 +875,8 @@
       return;
     }
     if(S.euFalando){ S.fase='euFalo'; estado('🎤 OUVINDO VOCÊ','Pode continuar.'); return; }
+    if(S.cerebro==='claude' && typeof C!=='undefined' && C && !C.ouvindo && (C.precisaToque||C.soComToque) && !S.semMic){
+      S.fase='ouvindo'; estado('👆 TOQUE NO GLOBO PARA FALAR','Este celular só abre o microfone com um toque.'); return; }
     S.fase='ouvindo';
     if(S.semMic) estado('⌨️ ESCREVA SUA PERGUNTA','Toque no microfone se quiser falar.');
     else estado('👂 PODE FALAR', S.cerebro==='claude' ? 'Estou ouvindo · 🎓 '+((typeof C!=='undefined'&&C&&C.nomeModelo)||'Claude') : 'Estou ouvindo.');
@@ -2195,15 +2197,20 @@
     try{ var bs=elLinha.children; for(var k=0;k<bs.length;k++) bs[k].className=(bs[k].querySelector('b')&&bs[k].querySelector('b').textContent===nova)?'atual':''; }catch(e){}
   }
 
-  function claudeOuvir(){
+  function claudeOuvir(peloToque){
     if(!S.ligado || S.cerebro!=='claude' || S.semMic || !RECONHECER) return;
+    // Android que só abre o microfone com toque: o laço automático para e o globo pede o toque
+    if(!peloToque && (C.precisaToque || C.soComToque)) return;
     if(C.ouvindo || C.emTurno || S.pausado || S.falandoLocal) return;
     if(S.eleFalando || S.tocandoAgora || S.fila.length) return;
     if(Date.now() < C.esperarAte) return;
+    // tela apagada / aba escondida: o Chrome não deixa ouvir (dá "not-allowed"). Espera a tela voltar.
+    if(document.visibilityState!=='visible') return;
     var r; try{ r=new RECONHECER(); }catch(e){ return; }
     r.lang='pt-BR'; r.interimResults=true; r.continuous=false; r.maxAlternatives=1;
     var firme='', parcial='';
     C.bolhaEu=null; C.ouvindo=true; C.erroOuvir='';
+    r.onstart=function(){ C.recusas=0; if(peloToque && C.precisaToque){ C.soComToque=true; } C.precisaToque=false; };
     r.onspeechstart=function(){ S.euFalando=true; fase(); };
     r.onresult=function(e){
       parcial='';
@@ -2219,8 +2226,16 @@
     r.onerror=function(e){
       C.erroOuvir=e.error||'';
       if(C.erroOuvir==='not-allowed'||C.erroOuvir==='service-not-allowed'){
-        erro('O celular não deixou eu ouvir. Libere o microfone para o RADAR, ou escreva a pergunta aqui embaixo.');
-        S.semMic=true; atualizarAcao();
+        // Recusa com a tela acesa, duas vezes seguidas, é microfone bloqueado de verdade. Uma só (ou com a
+        // tela apagando) é o Android segurando: tenta de novo daqui a pouco, sem desligar o ouvido.
+        C.recusas=(C.recusas||0)+1; C.esperarAte=Date.now()+2500;
+        if(peloToque && document.visibilityState==='visible'){
+          // recusou até com toque: microfone bloqueado de verdade
+          erro('O celular não deixou eu ouvir. Libere o microfone para o RADAR, ou escreva a pergunta aqui embaixo.');
+          S.semMic=true; C.precisaToque=false; atualizarAcao();
+        } else if(C.recusas>=2 && document.visibilityState==='visible'){
+          C.precisaToque=true; fase();     // sem toque ele não abre: o quadro pede o toque
+        }
       }
       // sem rede o reconhecimento falha na hora: espera um pouco antes de tentar de novo
       if(C.erroOuvir==='network') C.esperarAte=Date.now()+3000;
@@ -2378,7 +2393,7 @@
   }
 
   function claudeLigar(){
-    C.esperarAte=0; C.emTurno=false;
+    C.esperarAte=0; C.emTurno=false; C.recusas=0; C.precisaToque=false;
     clearInterval(C.laco);
     C.laco=setInterval(claudeOuvir,350);
     nota('🎓 Modo Claude ('+(C.nomeModelo||'Claude Sonnet 5.5')+'): eu ouço, a Claude pensa com a conversa inteira, e o Google só empresta a voz.');
@@ -2558,8 +2573,11 @@
     if(S.pausado){ retomarDoCarro(); return; }
     // modo Claude: falando ou pensando, o toque CORTA e ele volta a ouvir; parado, desliga.
     if(S.ligado && S.cerebro==='claude' && (C.emTurno || S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal)){
-      claudeCalar('ele tocou no globo'); fase(); return;
+      claudeCalar('ele tocou no globo'); fase();
+      if(C.soComToque) claudeOuvir(true);          // celular que só ouve com toque: este toque já abre o ouvido
+      return;
     }
+    if(S.ligado && S.cerebro==='claude' && (C.precisaToque || C.soComToque) && !C.ouvindo){ claudeOuvir(true); return; }
     S.ligado?desligar():ligar();
   }
   cv.addEventListener('click',toqueNoGlobo);
