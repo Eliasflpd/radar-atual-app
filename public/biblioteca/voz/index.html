@@ -861,6 +861,8 @@
     // O rótulo é POR FERRAMENTA: "abrindo o texto" é outra coisa de "procurando
     // nas suas mensagens", e o pastor no volante lê o quadro de canto de olho.
     // Sem ferramenta nomeada, cai no rótulo velho do garimpo.
+    // modo Claude: entre um pedaço de fala e outro ela ainda está consultando ou escrevendo — o quadro diz isso
+    if(S.cerebro==='claude' && typeof C!=='undefined' && C && C.emTurno && !S.eleFalando && !S.falandoLocal) S.garimpando=true;
     if(S.garimpando){ S.fase='garimpo';
       estado(S.rotuloFerr||'⛏️ Buscando no material', S.dicaFerr||'Foi conferir nas fontes.'); return; }
     if(S.eleFalando){
@@ -2329,6 +2331,9 @@
         break;
       case 'ferr':
         rotuloDaFerramenta(e.nome); S.garimpando=true; fase();
+        break;
+      case 'pensa':             // as consultas voltaram: agora ela está escrevendo a resposta
+        rotuloDaFerramenta('pensando'); if(!S.eleFalando) S.garimpando=true; fase();
         break;
       case 'som':
         S.turnoMudo=false;

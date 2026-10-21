@@ -49,7 +49,9 @@ const esfriando = new Map();     // `${chave}|${modelo}` -> até quando não ten
 // pro Gemini). Aqui quem lê os livros é a própria Claude, pela buscar_biblioteca.
 // ─────────────────────────────────────────────────────────────────────────────
 const DO_GLOBO = ['ler_versiculo', 'conferir_citacao', 'versiculos_ligados', 'licao_da_ebd', 'buscar_no_acervo', 'garimpar',
-  'saber_agora', 'meu_conhecimento', 'guardar_ensino', 'ensinos_do_pastor', 'o_que_ja_falamos', 'mostrar_na_tela', 'trocar_voz'];
+  'saber_agora', 'meu_conhecimento', 'guardar_ensino', 'ensinos_do_pastor', 'o_que_ja_falamos', 'trocar_voz'];
+// (mostrar_na_tela saiu: custava uma volta inteira da Claude, ~3 s de silêncio medidos. O versículo que ela abre
+// com ler_versiculo vai pro telão sozinho, aqui do servidor.)
 
 // Descrições reescritas onde a do Gemini empurrava para o lugar errado nesta conversa.
 const DESCRICAO_PROPRIA = {
@@ -133,7 +135,7 @@ O RESTO
 - Memória: só lembre do que está no bloco de memória abaixo ou do que o_que_ja_falamos trouxer. Nunca invente que já conversaram algo.
 - Nunca cite professor, autor vivo ou instituição por nome ao falar de você ou do seu método. Autor de livro consultado se cita, sim: é fonte.
 - Perguntado sobre o que você sabe ou quais fontes tem: chame meu_conhecimento e responda completo.
-- Telão: mostrar_na_tela põe um versículo ou tópicos grandes na tela enquanto você fala; não comente que mostrou. Troca de voz: trocar_voz.
+- O versículo que você abre com ler_versiculo aparece sozinho, grande, na tela dele; não comente isso. Troca de voz: trocar_voz.
 - Nunca guarde nome de membro nem caso de aconselhamento.`;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -215,7 +217,7 @@ async function falar(texto, vozGoogle) {
           body: JSON.stringify({ contents: [{ parts: [{ text: t }] }],
             generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: vozGoogle } } } } }),
         }, 20000);
-        if (r.status === 429) { esfriando.set(par, Date.now() + 65000); continue; }
+        if (r.status === 429) { esfriando.set(par, Date.now() + 5 * 60000); continue; }   // cota do minuto ou do dia: deixa descansar
         if (!r.ok) continue;
         const j = await r.json();
         const parte = (((j.candidates || [])[0] || {}).content || {}).parts || [];
@@ -373,7 +375,7 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
   const fimDeFrase = /[.!?…](?=\s|$)|[:;](?=\s)/g;
   const cortar = (fim) => {
     for (;;) {
-      const minimo = noTrecho === 0 ? 12 : noTrecho === 1 ? 90 : 240;
+      const minimo = noTrecho === 0 ? 12 : noTrecho === 1 ? 150 : 450;   // pedaço maior = menos chamadas da cota grátis
       fimDeFrase.lastIndex = 0;
       let m, corte = -1;
       while ((m = fimDeFrase.exec(pend))) {
@@ -412,7 +414,8 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
       { type: 'text', text: 'Hoje é ' + hojeEmBrasilia() + ' (horário de Brasília).' + (memoria ? '\n\n' + memoria : '') },
     ];
     const msgs = historicoLimpo(historico, texto);
-    const usadas = [], fontesVistas = [];
+    const usadas = [], fontesVistas = [], etapas = [];
+    const marca = (o) => etapas.push({ ms: Date.now() - t0, ...o });
     let modeloQueRespondeu = '', parouPor = '', entrada = 0, saida = 0, cache = 0;
 
     for (let rodada = 0; rodada < MAX_RODADAS; rodada++) {
@@ -421,13 +424,18 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
         model: MODELO_CLAUDE,
         max_tokens: fundo ? 16000 : 8000,
         stream: true,
-        output_config: { effort: esforco },
+        // A 1ª volta só decide o que abrir e diz "deixa eu abrir o texto": low basta e a voz sai mais cedo.
+        // Quem escreve a resposta (depois das ferramentas) pensa no esforço da pergunta.
+        output_config: { effort: rodada === 0 ? 'low' : esforco },
         fallbacks: 'default',
         system: sistema,
         tools: FERRAMENTAS_CLAUDE,
         messages: msgs,
       };
-      const r = await chamarClaude(corpo, aoTexto);
+      marca({ rodada, pediu: 'claude' });
+      let primeira = true;
+      const r = await chamarClaude(corpo, (d) => { if (primeira) { primeira = false; marca({ rodada, primeiro_texto: true }); } aoTexto(d); });
+      marca({ rodada, claude_fim: r.parar });
       modeloQueRespondeu = r.modelo || modeloQueRespondeu;
       parouPor = r.parar || '';
       if (r.usos) { entrada += (r.usos.input_tokens || 0); saida += (r.usos.output_tokens || 0); cache += (r.usos.cache_read_input_tokens || 0); }
@@ -445,8 +453,7 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
         let res, erro = false;
         try {
           if (b._erroJson) throw new Error('argumentos ilegíveis');
-          if (b.name === 'mostrar_na_tela') { mandar({ t: 'tela', args: b.input || {} }); res = { ok: true, ordem: 'A tela já mudou; não comente.' }; }
-          else if (b.name === 'trocar_voz') {
+          if (b.name === 'trocar_voz') {
             const nova = personaDe((b.input || {}).voz);
             persona = nova;
             mandar({ t: 'voz', voz: nova.id });
@@ -458,6 +465,7 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
             if (pg) await pg;
           } else {
             res = await executarFerramenta(b.name, b.input || {}, origem, { user: dono });
+            if (b.name === 'ler_versiculo' && res && res.achou) mandar({ t: 'tela', args: { tipo: 'versiculo', texto: String(res.texto || '').slice(0, 700), referencia: res.referencia || '' } });
             if (b.name === 'garimpar') { const pg = depois(ctx, registrarLacuna(origem, 'garimpar', b.input, res)); if (pg) await pg; }
           }
           // assunto da conversa vai pra memória, como no modo Gemini (fora do caminho da resposta)
@@ -470,6 +478,8 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
         const conteudo = semNome(JSON.stringify(res)).slice(0, 24000);
         return { type: 'tool_result', tool_use_id: b.id, content: conteudo, ...(erro ? { is_error: true } : {}) };
       }));
+      marca({ rodada, ferramentas_fim: pedidas.map((b) => b.name).join(',') });
+      mandar({ t: 'pensa' });
       msgs.push({ role: 'user', content: resultados });
     }
     cortar(true);
@@ -481,7 +491,7 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
     await corrente;
     mandar({ t: 'fim', modelo: modeloQueRespondeu || MODELO_CLAUDE,
       nome: NOME_DO_MODELO[modeloQueRespondeu] || modeloQueRespondeu || MODELO_CLAUDE,
-      parou: parouPor, ferramentas: usadas, ms: Date.now() - t0, tokens: { entrada, saida, cache }, falado: falado.length });
+      parou: parouPor, ferramentas: usadas, ms: Date.now() - t0, etapas, tokens: { entrada, saida, cache }, falado: falado.length });
   };
 
   const corpo = new ReadableStream({
