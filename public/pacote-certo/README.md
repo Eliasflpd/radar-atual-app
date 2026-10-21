@@ -11,7 +11,7 @@ Funciona no navegador do celular, também sem internet, e pode ser instalado na 
 1. Abra o terminal na pasta do projeto e rode:
 
    ```
-   cd pacote-certo
+   cd public/pacote-certo
    python3 -m http.server 8080
    ```
 
@@ -21,10 +21,9 @@ Funciona no navegador do celular, também sem internet, e pode ser instalado na 
 
 ## Como abrir no celular
 
-O celular precisa abrir o app por um link com **HTTPS**. Para isso, publique a pasta `pacote-certo` como site:
+O app fica em `public/pacote-certo`, a pasta que a Vercel já publica a cada envio para a branch `master`. O link é:
 
-- **Netlify Drop:** entre em app.netlify.com/drop e arraste a pasta `pacote-certo`. Ele cria um link na hora.
-- **Vercel:** crie um projeto separado e, em *Root Directory*, coloque `pacote-certo`.
+**https://radar-atual.vercel.app/pacote-certo/**
 
 Depois:
 
@@ -53,7 +52,7 @@ Sem esse serviço, tudo continua funcionando: você preenche os dados à mão, e
 
 ## Testes
 
-Para quem mexe no código. Dentro da pasta `pacote-certo`, rode:
+Para quem mexe no código. Dentro da pasta `public/pacote-certo`, rode:
 
 ```
 npm test
