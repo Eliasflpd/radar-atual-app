@@ -2208,6 +2208,10 @@
   // (a voz mais natural das grátis, cota folgada), numa linha que só LÊ: a Claude escreve, o servidor manda cada
   // pedaço de texto ("trecho"), e este leitor manda o Gemini ler. Testado: leu as 51 palavras exatas de um texto.
   // Se o leitor não abrir, o pedido seguinte volta a usar a voz do servidor (TTS) — nada fica mudo.
+  // DESLIGADO em 21/10/2026, depois do teste: sem trava, o Gemini ao vivo NÃO só lê — numa frase de 6 palavras falou
+  // 16 s e 70 s (inventou fala), em produção não leu nada, e a cota dele também acaba (erro 1011). Só volta com trava
+  // de contagem de palavras (outputAudioTranscription) e vigia de tempo. Até lá: voz do servidor.
+  var LEITOR_LIGADO = false;
   var L = { ws:null, abrindo:null, pronto:false, ocupado:false, fila:[], voz:'', falhas:0, fio:Promise.resolve() };
   function leitorFechar(){
     var w=L.ws; L.ws=null; L.pronto=false; L.ocupado=false;
@@ -2465,7 +2469,7 @@
     S.bolhaMestre=null; S.turnoMudo=false;
     rotuloDaFerramenta('pensando'); S.garimpando=true; fase();
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null; C.abort=ctl;
-    var corpo={ acao:'claude', texto:t, historico:C.hist.slice(-24), voz:S.voz, voz_no_celular: !C.semLeitor && !!window.WebSocket };
+    var corpo={ acao:'claude', texto:t, historico:C.hist.slice(-24), voz:S.voz, voz_no_celular: LEITOR_LIGADO && !C.semLeitor && !!window.WebSocket };
     if(EU_SOU) corpo.user=EU_SOU;
     try{
       var _u=JSON.parse(localStorage.getItem('radar_user')||'null');
@@ -2564,8 +2568,8 @@
     C.esperarAte=0; C.emTurno=false; C.recusas=0; C.precisaToque=false;
     clearInterval(C.laco);
     C.laco=setInterval(function(){ claudeOuvir(); claudeVigiar(); },350);
-    if(!C.semLeitor) leitorAbrir()['catch'](function(){});
-    nota('🎓 Modo Claude ('+(C.nomeModelo||'Claude Sonnet 5.5')+'): a Claude pensa com a conversa inteira; quem lê a resposta é a voz do Gemini ao vivo.');
+    if(LEITOR_LIGADO && !C.semLeitor) leitorAbrir()['catch'](function(){});
+    nota('🎓 Modo Claude ('+(C.nomeModelo||'Claude Sonnet 5.5')+'): a Claude pensa com a conversa inteira, e o Google empresta a voz.');
   }
   function claudeDesligar(){
     clearInterval(C.laco); C.laco=null;
