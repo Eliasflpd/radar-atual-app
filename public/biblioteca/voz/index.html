@@ -2305,10 +2305,16 @@
         }
       }
       if(C.vigiaCortou){
-        var t=''; for(var j=inicioDele;j<e.results.length;j++) t+=e.results[j][0].transcript+' ';
-        C.textoVigia=t.replace(/\s+/g,' ').trim();
+        // MEDIDO NO A22 (21/10/2026): no modo contínuo o Chrome do Android REPETE o que já ouviu a cada resultado
+        // ("não não não…" sessenta vezes). Então vale só a versão mais recente — a do último resultado — e não a soma.
+        var ult=(e.results[e.results.length-1][0].transcript||'').replace(/\s+/g,' ').trim();
+        if(ult && ult.length >= (C.textoVigia||'').length*0.5) C.textoVigia=ult;
         S.euFalando=true; fase();
         if(C.bolhaEu){ C.bolhaEu.textContent=C.textoVigia; rolar(); }
+        // fecha o ouvido 1,3 s depois que ele para de falar (antes ficou 50 s aberto), e no máximo 15 s depois do corte
+        clearTimeout(C.fimVigia);
+        C.fimVigia=setTimeout(function(){ try{ r.stop(); }catch(_){} }, 1300);
+        if(!C.tetoVigia) C.tetoVigia=setTimeout(function(){ try{ r.stop(); }catch(_){} }, 15000);
       }
     };
     r.onerror=function(e){
@@ -2316,6 +2322,7 @@
       if(er==='not-allowed'||er==='audio-capture'||er==='service-not-allowed'){ C.semVigia=true; diario('vigia desligado: '+er+' — corte só pelo toque'); fase(); }
     };
     r.onend=function(){
+      clearTimeout(C.fimVigia); clearTimeout(C.tetoVigia); C.fimVigia=C.tetoVigia=null;
       var t=C.textoVigia, cortou=C.vigiaCortou;
       C.vigia=null; C.vigiaCortou=false; C.textoVigia=''; S.euFalando=false;
       if(cortou && t && S.ligado && S.cerebro==='claude'){
