@@ -58,6 +58,8 @@ import { FERRAMENTAS, REGRA_DE_OURO, executarFerramenta, chavesGemini, escrever,
 // Quem decide o que pode ser guardado é a peneira semSegredo(), lá dentro.
 import { blocoDoSistema, LEI_DA_MEMORIA, registrarTurno, gravarTemas,
          temasDeFerramenta, esquecerTudo } from './voz-memoria.js';
+// O MODO CLAUDE: a mesma casa (crachá, memória, ferramentas), outro cérebro. Ver o arquivo.
+import { conversarComClaude } from './voz-claude.js';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
 const JSONH = { ...CORS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
@@ -1110,8 +1112,19 @@ export default async function handler(req, ctx) {
     }), { headers: JSONH });
   }
 
+  // ── O MODO CLAUDE (21/10/2026) — a Claude é o cérebro inteiro; o celular ouve e o Google só dá a voz.
+  // Ver voz-claude.js. Só abre com o crachá conferido: o modelo é pago e o repositório é público.
+  if (acao === 'claude') {
+    const dono = user ? await confirmar() : '';
+    const memoria = dono ? await montarMemoria() : '';
+    return conversarComClaude({
+      texto: String(b.texto || '').slice(0, 2000), historico: b.historico, voz: escolherVoz(b.voz),
+      origem: origemReq, ctx, dono, chaveNova: _chaveNova, semNome, personaDe, memoria, depois,
+    });
+  }
+
   if (acao === 'token') {
-    const handle = (b.handle || '').toString().slice(0, 4000) || null;
+    const handle =(b.handle || '').toString().slice(0, 4000) || null;
     const voz = escolherVoz(b.voz);
 
     // ── A MEMÓRIA ENTRA AQUI, ANTES DA ASSINATURA ──────────────────────────
@@ -1122,6 +1135,30 @@ export default async function handler(req, ctx) {
     // abre é tela morta.
     // A peneira do nome próprio passa por cima do bloco inteiro, como passa em
     // tudo o que entra na instrução de sistema desde que ela existe.
+    const memoria = await montarMemoria();
+    const r = await assinarToken(handle, voz, memoria);
+    if (r.erro) return new Response(JSON.stringify({ ok: false, erro: r.erro }), { status: r.status, headers: JSONH });
+    return new Response(JSON.stringify({
+      ok: true,
+      token: r.token,   // <- é ISTO que desce pro navegador. A chave real fica aqui.
+      modelo: MODELO,
+      voz,
+      // O crachá do aparelho, quando ele acabou de nascer. Desce UMA vez.
+      chave_nova: _chaveNova || undefined,
+      // O globo mostra isto na tela: "retomando de onde vocês pararam". O
+      // CONTEÚDO da memória não desce — só o aviso de que ela existe.
+      lembrando: !!memoria,
+      // O endpoint "Constrained" é o que aceita token efêmero no lugar da chave.
+      url: 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained',
+      retomando: !!handle,
+      expiraEmMin: 30,
+    }), { headers: JSONH });
+  }
+
+  return new Response(JSON.stringify({ ok: false, erro: 'ação desconhecida: ' + acao }), { status: 400, headers: JSONH });
+
+  // A MEMÓRIA + O NOME, montados pra instrução de sistema. Vale pros dois cérebros (Gemini e Claude).
+  async function montarMemoria() {
     let memoria = '';
     if (user) {
       // Aqui a conferência custa uma ida ao servidor na ABERTURA da sessão —
@@ -1163,25 +1200,6 @@ export default async function handler(req, ctx) {
         + 'com naturalidade como ele gosta de ser chamado, e passe a usar so isso. '
         + 'Nao invente nome nem titulo.';
     }
-
-    const r = await assinarToken(handle, voz, memoria);
-    if (r.erro) return new Response(JSON.stringify({ ok: false, erro: r.erro }), { status: r.status, headers: JSONH });
-    return new Response(JSON.stringify({
-      ok: true,
-      token: r.token,   // <- é ISTO que desce pro navegador. A chave real fica aqui.
-      modelo: MODELO,
-      voz,
-      // O crachá do aparelho, quando ele acabou de nascer. Desce UMA vez.
-      chave_nova: _chaveNova || undefined,
-      // O globo mostra isto na tela: "retomando de onde vocês pararam". O
-      // CONTEÚDO da memória não desce — só o aviso de que ela existe.
-      lembrando: !!memoria,
-      // O endpoint "Constrained" é o que aceita token efêmero no lugar da chave.
-      url: 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained',
-      retomando: !!handle,
-      expiraEmMin: 30,
-    }), { headers: JSONH });
+    return memoria;
   }
-
-  return new Response(JSON.stringify({ ok: false, erro: 'ação desconhecida: ' + acao }), { status: 400, headers: JSONH });
 }
