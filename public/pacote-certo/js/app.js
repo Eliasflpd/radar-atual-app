@@ -20,7 +20,8 @@ import { prepararFoto } from './fotos.js';
 import { icone } from './icones.js';
 import { dadosDemonstracao } from './demo.js';
 
-const VERSAO_APP = 3;
+// Ao publicar uma versão nova, aumente este número e o CACHE em sw.js: é a troca do sw.js que faz o app avisar.
+const VERSAO_APP = 4;
 
 // O modo demonstração usa outro banco, para nunca misturar dados fictícios com a lista real.
 const DEMO = new URLSearchParams(location.search).has('demo');
@@ -96,13 +97,13 @@ async function miniatura(fotoId) {
 
 let temporizadorAviso = null;
 
-function avisar(texto, acao = null) {
+function avisar(texto, acao = null, { fixo = false } = {}) {
   let botao = '';
   if (acao?.href) botao = `<a class="aviso-acao" href="${acao.href}">${esc(acao.rotulo)}</a>`;
   else if (acao) botao = `<button class="aviso-acao" data-acao="${acao.id}">${esc(acao.rotulo)}</button>`;
   avisos.innerHTML = `<div class="aviso" role="status"><span>${esc(texto)}</span>${botao}</div>`;
   clearTimeout(temporizadorAviso);
-  temporizadorAviso = setTimeout(() => { avisos.innerHTML = ''; }, 6000);
+  if (!fixo) temporizadorAviso = setTimeout(() => { avisos.innerHTML = ''; }, 6000);
 }
 
 function abrirDialogo(html) {
@@ -1469,6 +1470,7 @@ const ACOES = {
   },
   compartilhar,
   desfazer,
+  'atualizar-app': () => location.reload(),
   'entregar-todos': ({ id }) => entregarTodos(id),
   'alternar-pacote': ({ id, pacote }) => alternarPacote(id, pacote),
   'editar-pacote': ({ id, pacote }) => editarPacote(id, pacote),
@@ -1531,6 +1533,24 @@ document.getElementById('entrada-camera').addEventListener('change', (e) => rece
 document.getElementById('entrada-galeria').addEventListener('change', (e) => receberFotos(e.target).catch(tratarErro));
 document.getElementById('entrada-backup').addEventListener('change', (e) => importarBackup(e.target).catch(tratarErro));
 
+// Quando uma versão nova é publicada, o service worker novo assume e o app pede para atualizar.
+// Não recarrega sozinho, para não perder um cadastro que esteja sendo digitado.
+async function registrarServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  // Na primeira instalação também há troca de controle; só as trocas seguintes são versão nova.
+  let temVersaoInstalada = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (temVersaoInstalada) avisar('Nova versão do Pacote Certo disponível.', { id: 'atualizar-app', rotulo: 'Atualizar' }, { fixo: true });
+    temVersaoInstalada = true;
+  });
+  const registro = await navigator.serviceWorker.register('sw.js');
+  const verificar = () => registro.update().catch(() => {});
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') verificar();
+  });
+  setInterval(verificar, 30 * 60 * 1000);
+}
+
 async function iniciar() {
   if (DEMO && (await repo.listar('enderecos')).length === 0) {
     await repo.salvarTudo('enderecos', dadosDemonstracao(dataHoje()));
@@ -1540,7 +1560,7 @@ async function iniciar() {
   if (!location.hash) location.hash = '#/entregas';
   else await renderizar();
   retomarLotes().catch(tratarErro);
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  registrarServiceWorker().catch(() => {});
 }
 
 iniciar().catch(tratarErro);
