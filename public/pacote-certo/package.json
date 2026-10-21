@@ -5,5 +5,8 @@
   "description": "Organização de entregas por etiqueta, endereço e pacote.",
   "scripts": {
     "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.137.0"
   }
 }

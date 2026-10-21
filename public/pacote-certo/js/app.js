@@ -524,7 +524,7 @@ async function telaLote(loteId) {
   const prontos = conta('pronto');
   const conferir = conta('revisar');
   const falhas = conta('falha');
-  const falhasRepetiveis = itens.filter((i) => i.status === 'falha' && i.fotoId && i.erro !== 'nao-configurado').length;
+  const falhasRepetiveis = itens.filter((i) => i.status === 'falha' && i.fotoId && i.erro !== 'imagem').length;
   const aguardando = !ativo && conta('pendente') > 0;
   const semConfig = itens.some((i) => i.erro === 'nao-configurado');
 
@@ -557,7 +557,7 @@ async function telaLote(loteId) {
         <a class="botao-icone" href="#/adicionar" aria-label="Voltar">${icone('chevronLeft')}</a>
         <h1>Leitura das fotos</h1>
       </header>
-      ${semConfig ? aviso('atencao', 'alert', '<p>A leitura automática não está configurada neste aplicativo. As fotos estão guardadas: abra cada uma e preencha os dados.</p>') : ''}
+      ${semConfig ? aviso('atencao', 'alert', leituraAutomaticaConfigurada() ? '<p>Algumas fotos foram importadas antes de a leitura automática estar pronta. Toque em "Tentar ler de novo as falhas", logo abaixo da lista.</p>' : '<p>A leitura automática não está configurada neste aplicativo. As fotos estão guardadas: abra cada uma e preencha os dados.</p>') : ''}
       ${aguardando && !navigator.onLine ? aviso('info', 'clock', '<p>Sem internet. As fotos ficam guardadas e serão lidas quando a conexão voltar.</p>') : ''}
       ${lote.repetidas ? aviso('info', 'info', `<p>${lote.repetidas === 1 ? '1 foto repetida não foi contada' : `${lote.repetidas} fotos repetidas não foram contadas`} de novo.</p>`) : ''}
       ${progresso}
@@ -612,7 +612,7 @@ async function salvarProntos(loteId) {
 function avisoDoItem(item) {
   if (item.status === 'falha') {
     if (item.erro === 'nao-configurado') {
-      return { tipo: 'atencao', texto: 'A leitura automática não está configurada neste aplicativo. Preencha os dados olhando a foto.' };
+      return { tipo: 'atencao', texto: 'A leitura automática não estava configurada quando esta foto foi importada. Tente ler de novo ou preencha os dados olhando a foto.', tentar: true };
     }
     if (item.erro === 'imagem') {
       return { tipo: 'erro', texto: 'Esta imagem não pôde ser aberta. Você pode tentar outra foto ou preencher os dados.' };

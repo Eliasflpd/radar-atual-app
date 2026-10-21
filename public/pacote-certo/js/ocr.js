@@ -32,7 +32,11 @@ export async function lerEtiqueta(blob) {
   } catch {
     throw new ErroLeitura('offline', 'Sem conexão com o serviço de leitura.');
   }
-  if (!resposta.ok) throw new ErroLeitura('servico', `Serviço de leitura respondeu ${resposta.status}.`);
+  if (!resposta.ok) {
+    const corpo = await resposta.json().catch(() => ({}));
+    if (corpo.erro === 'nao-configurado') throw new ErroLeitura('nao-configurado', 'Serviço de leitura sem chave.');
+    throw new ErroLeitura('servico', `Serviço de leitura respondeu ${resposta.status}.`);
+  }
 
   const json = await resposta.json();
   if (!json || typeof json.dados !== 'object' || json.dados === null) {
