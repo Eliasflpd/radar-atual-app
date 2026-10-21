@@ -2224,12 +2224,24 @@
     r.onstart=function(){ C.recusas=0; if(peloToque && C.precisaToque){ C.soComToque=true; } C.precisaToque=false; };
     r.onspeechstart=function(){ S.euFalando=true; fase(); };
     r.onresult=function(e){
+      // O Chrome do Android manda o mesmo trecho de novo, às vezes já com mais palavras ("os dois os dois os dois
+      // Jardins…", medido no A22 em 21/10/2026). Somar repetia. Agora: trecho que COMEÇA com o que já veio, ou que
+      // já está dentro dele, substitui ou é ignorado; só trecho novo de verdade é somado.
+      function juntar(base, novo){
+        var b=base.replace(/\s+/g,' ').trim(), n=String(novo||'').replace(/\s+/g,' ').trim();
+        if(!n) return b;
+        if(!b) return n;
+        var bl=b.toLowerCase(), nl=n.toLowerCase();
+        if(nl.indexOf(bl)===0) return n;        // o novo já traz tudo o que veio antes
+        if(bl.indexOf(nl)>=0) return b;         // repetição do que já estava
+        return b+' '+n;
+      }
       parcial='';
       for(var i=e.resultIndex;i<e.results.length;i++){
-        if(e.results[i].isFinal) firme+=e.results[i][0].transcript;
-        else parcial+=e.results[i][0].transcript;
+        if(e.results[i].isFinal) firme=juntar(firme, e.results[i][0].transcript);
+        else parcial=juntar(parcial, e.results[i][0].transcript);
       }
-      var t=(firme+' '+parcial).trim();
+      var t=juntar(firme, parcial);
       if(!t) return;
       if(!C.bolhaEu) C.bolhaEu=bolha('eu','Você');
       C.bolhaEu.textContent=t; rolar();
@@ -2253,7 +2265,8 @@
     };
     r.onend=function(){
       C.ouvindo=false; C.rec=null; S.euFalando=false;
-      var t=(firme+' '+parcial).replace(/\s+/g,' ').trim();
+      // o texto da bolha já é o juntado sem repetição; o parcial só entra se trouxer coisa nova
+      var t=((C.bolhaEu && C.bolhaEu.textContent) || (firme+' '+parcial)).replace(/\s+/g,' ').trim();
       if(t && S.ligado && S.cerebro==='claude'){
         if(!C.bolhaEu) C.bolhaEu=bolha('eu','Você');
         C.bolhaEu.textContent=t; C.bolhaEu=null;
