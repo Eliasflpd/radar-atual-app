@@ -2446,6 +2446,25 @@
     C.pergunta=''; C.resposta='';
   }
 
+  // A VOZ RESERVA, A MELHOR QUE O CELULAR TIVER (21/10/2026). É grátis, não tem cota e sai na hora — mas a padrão
+  // do aparelho é a robótica. Entre as vozes em português, a "de rede" (localService=false) costuma ser a neural, bem
+  // mais natural; depois vale uma pt-BR com nome de voz de verdade; por último qualquer pt. A escolha pode ser forçada
+  // por localStorage 'voz.reserva' (nome exato da voz).
+  function melhorVozDoCelular(){
+    if(!window.speechSynthesis || !speechSynthesis.getVoices) return null;
+    var vs=speechSynthesis.getVoices()||[];
+    var pt=vs.filter(function(v){ return /^pt[-_]?BR/i.test(v.lang||''); });
+    if(!pt.length) pt=vs.filter(function(v){ return /^pt/i.test(v.lang||''); });
+    if(!pt.length) return null;
+    var pedida=''; try{ pedida=localStorage.getItem('voz.reserva')||''; }catch(e){}
+    for(var i=0;i<pt.length;i++) if(pedida && pt[i].name===pedida) return pt[i];
+    var rede=pt.filter(function(v){ return v.localService===false; });
+    if(rede.length) return rede[0];
+    var comNome=pt.filter(function(v){ return !/default|padr/i.test(v.name||''); });
+    return (comNome[0]||pt[0]);
+  }
+  if(window.speechSynthesis && speechSynthesis.getVoices){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){ speechSynthesis.getVoices(); }; }catch(e){} }
+
   // Sem cota de voz no Google: o próprio celular fala aquele pedaço, depois do que já está tocando.
   function claudeFalarLocal(texto, g){
     if(g!==C.geracao) return;
@@ -2454,7 +2473,8 @@
     }
     if(!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
     try{
-      var u=new SpeechSynthesisUtterance(texto); u.lang='pt-BR'; u.rate=1.05;
+      var u=new SpeechSynthesisUtterance(texto); u.lang='pt-BR'; u.rate=1.12;
+      var melhor=melhorVozDoCelular(); if(melhor){ u.voice=melhor; u.lang=melhor.lang; }
       S.falandoLocal=true; S.eleFalando=true; fase();
       u.onend=u.onerror=function(){ S.falandoLocal=false; S.eleFalando=false; fase(); };
       speechSynthesis.speak(u);
