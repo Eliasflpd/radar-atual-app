@@ -262,24 +262,32 @@ async function falar(texto, vozGoogle) {
   const ks = chavesGemini();
   const agora = Date.now();
   const inicio = ks.length ? (agora / 60000 | 0) % ks.length : 0;
+  // PRAZO (medido no A22 em 21/10/2026): cada tentativa esperava até 20 s e, com 3 chaves x 4 modelos, um pedaço
+  // chegou a ficar mais de 30 s sem voz — ela falava a 1ª frase e emudecia. Agora: tentativa curta (proporcional
+  // ao texto), prazo total de 16 s; estourou, o celular fala aquele pedaço com a voz dele e a conversa segue.
+  const prazoTotal = agora + 16000;
+  const prazoTentativa = Math.min(12000, 3500 + 14 * t.length);
   for (const modelo of MODELOS_TTS) {
     for (let n = 0; n < ks.length; n++) {
       const chave = ks[(inicio + n) % ks.length];
       const par = chave.slice(-6) + '|' + modelo;
       if ((esfriando.get(par) || 0) > Date.now()) continue;
+      const sobra = prazoTotal - Date.now();
+      if (sobra < 1500) return null;
       try {
         const r = await comPrazo(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
           method: 'POST', headers: { 'x-goog-api-key': chave, 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents: [{ parts: [{ text: t }] }],
             generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: vozGoogle } } } } }),
-        }, 20000);
+        }, Math.min(prazoTentativa, sobra));
         if (r.status === 429) { esfriando.set(par, Date.now() + 5 * 60000); continue; }   // cota do minuto ou do dia: deixa descansar
+        if (r.status >= 500) { esfriando.set(par, Date.now() + 60000); continue; }        // modelo sobrecarregado
         if (!r.ok) continue;
         const j = await r.json();
         const parte = (((j.candidates || [])[0] || {}).content || {}).parts || [];
         const dado = parte.find((p) => p.inlineData && p.inlineData.data);
         if (dado) return { pcm: pcmDoAudio(dado.inlineData.data), modelo, ms: Date.now() - agora };
-      } catch (_) { /* próxima */ }
+      } catch (_) { esfriando.set(par, Date.now() + 60000); /* lento demais: descansa um minuto, vai pro próximo */ }
     }
   }
   return null;
