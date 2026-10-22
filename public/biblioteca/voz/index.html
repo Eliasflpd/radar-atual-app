@@ -2674,6 +2674,7 @@
     for(var i=0;i<linhas.length;i++){
       var l=linhas[i], m;
       if(!l.trim()){ fechaPar(); fechaLista(); continue; }
+      if(/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(l)){ fechaPar(); fechaLista(); out.push('<hr style="border:none;border-top:1px solid rgba(201,161,74,.35);margin:18px 0">'); continue; }
       if((m=l.match(/^(#{1,3})\s+(.*)$/))){ fechaPar(); fechaLista(); var n=m[1].length; out.push('<h'+n+'>'+inl(m[2])+'</h'+n+'>'); continue; }
       if((m=l.match(/^\s*[-*•]\s+(.*)$/))){ fechaPar(); if(lista!=='ul'){ fechaLista(); out.push('<ul>'); lista='ul'; } out.push('<li>'+inl(m[1])+'</li>'); continue; }
       if((m=l.match(/^\s*\d+[.)]\s+(.*)$/))){ fechaPar(); if(lista!=='ol'){ fechaLista(); out.push('<ol>'); lista='ol'; } out.push('<li>'+inl(m[1])+'</li>'); continue; }
