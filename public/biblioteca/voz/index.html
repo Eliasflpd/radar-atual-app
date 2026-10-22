@@ -2749,6 +2749,8 @@
     var b=$('abrirMateriais'); if(b) b.addEventListener('click',matLista);
     var f=$('matFechar'); if(f) f.addEventListener('click',function(){ $('matTela').hidden=true; });
     matPintarBotao();
+    // vindo do ⭐ Favoritos da tela inicial: abre direto a lista dos sermões e estudos
+    if(/[?&]materiais=1/.test(location.search)) setTimeout(matLista, 300);
   })();
 
   // ── ligar / desligar ──────────────────────────────────────────────────────
