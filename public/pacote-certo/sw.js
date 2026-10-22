@@ -1,6 +1,6 @@
 // Guarda o aplicativo no aparelho para abrir sem internet.
 // Ao publicar mudanças, troque o número da versão do cache para forçar a atualização.
-const CACHE = 'pacote-certo-v6';
+const CACHE = 'pacote-certo-v7';
 const ARQUIVOS = [
   './',
   'index.html',
@@ -15,6 +15,7 @@ const ARQUIVOS = [
   'js/fotos.js',
   'js/icones.js',
   'js/demo.js',
+  'js/cidade.js',
 ];
 
 self.addEventListener('install', (evento) => {

@@ -1,6 +1,6 @@
 // Armazenamento local em IndexedDB. Os dados ficam no aparelho e sobrevivem a fechar o app.
-const VERSAO = 1;
-export const LOJAS = ['enderecos', 'fotos', 'imagens', 'lotes', 'itens'];
+const VERSAO = 2;
+export const LOJAS = ['enderecos', 'fotos', 'imagens', 'lotes', 'itens', 'config'];
 
 export function criarRepositorio(nome) {
   const banco = new Promise((resolver, rejeitar) => {

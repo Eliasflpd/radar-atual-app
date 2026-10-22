@@ -108,6 +108,12 @@ export function ruasParecidas(a, b) {
 
 const bairrosCompativeis = (a, b) => !normalizarTexto(a) || !normalizarTexto(b) || normalizarTexto(a) === normalizarTexto(b);
 
+// Troca um nome lido com erro pelo nome conhecido mais parecido (ruas ou bairros da cidade).
+export function nomeConhecido(valor, conhecidos) {
+  if (!normalizarTexto(valor)) return valor;
+  return conhecidos.find((nome) => ruasParecidas(nome, valor)) ?? valor;
+}
+
 // Usa a grafia da rua (e o bairro, se faltar) de um endereço do dia que seja da mesma rua.
 export function canonizarRua(campos, enderecosDoDia) {
   if (!normalizarLogradouro(campos.logradouro)) return campos;

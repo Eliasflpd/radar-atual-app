@@ -1,7 +1,7 @@
 // Integração de leitura de etiquetas. Fica isolada aqui para trocar o serviço sem mexer nas telas.
 //
 // Contrato esperado do serviço (POST, JSON):
-//   envio:   { "imagem": "data:image/jpeg;base64,...", "ruasConhecidas": ["Rua X - Bairro", ...] }
+//   envio:   { "imagem": "data:image/jpeg;base64,...", "cidade": "Tuntum - MA", "ruasConhecidas": ["Rua X - Bairro", ...], "bairrosConhecidos": ["Centro", ...] }
 //   resposta: { "dados": { bairro, logradouro, numero, semNumero, complemento, destinatario,
 //               rastreio, cidade, estado, cep, observacoes }, "incertos": ["numero", ...] }
 //
@@ -17,7 +17,7 @@ export class ErroLeitura extends Error {
 
 export const leituraAutomaticaConfigurada = () => Boolean(OCR_ENDPOINT);
 
-export async function lerEtiqueta(blob, { ruasConhecidas = [] } = {}) {
+export async function lerEtiqueta(blob, { cidade = '', ruasConhecidas = [], bairrosConhecidos = [] } = {}) {
   if (!OCR_ENDPOINT) throw new ErroLeitura('nao-configurado', 'Leitura automática não configurada.');
   if (!navigator.onLine) throw new ErroLeitura('offline', 'Sem conexão.');
 
@@ -27,7 +27,7 @@ export async function lerEtiqueta(blob, { ruasConhecidas = [] } = {}) {
     resposta = await fetch(OCR_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imagem, ruasConhecidas: ruasConhecidas.slice(0, 200) }),
+      body: JSON.stringify({ imagem, cidade, ruasConhecidas: ruasConhecidas.slice(0, 300), bairrosConhecidos: bairrosConhecidos.slice(0, 150) }),
     });
   } catch {
     throw new ErroLeitura('offline', 'Sem conexão com o serviço de leitura.');

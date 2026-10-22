@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  nomeConhecido,
   ruasParecidas,
   canonizarRua,
   agruparPorRua,
@@ -343,5 +344,15 @@ describe('ruas escritas de jeitos diferentes (caso real)', () => {
       { id: 'b', rastreio: '', destinatario: 'João Lima', entregue: false, entregueEm: null },
     ] })];
     assert.ok(textoCompartilhar(lista, '2026-10-22').includes('[ ] 12 — Maria Silva, João Lima — 2 pacotes'));
+  });
+});
+
+describe('nomes conhecidos da cidade', () => {
+  test('nome lido com erro vira o nome da lista; nome novo fica como está', () => {
+    const ruas = ['Rua Orfileno Leda', 'Rua Frei Aniceto'];
+    assert.equal(nomeConhecido('TV Orf i leno L ed a', ruas), 'Rua Orfileno Leda');
+    assert.equal(nomeConhecido('Rua Frei Anisseto', ruas), 'Rua Frei Aniceto');
+    assert.equal(nomeConhecido('Rua das Palmeiras', ruas), 'Rua das Palmeiras');
+    assert.equal(nomeConhecido('Sao Joaquim dos Mellos', ['Centro', 'São Joaquim dos Melos']), 'São Joaquim dos Melos');
   });
 });

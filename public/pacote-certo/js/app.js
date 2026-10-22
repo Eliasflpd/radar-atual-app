@@ -3,6 +3,7 @@ import {
   agruparPorBairro,
   canonizarRua,
   destinatariosDe,
+  nomeConhecido,
   chaveEndereco,
   criarPacotes,
   dataHoje,
@@ -21,9 +22,10 @@ import { lerEtiqueta, leituraAutomaticaConfigurada } from './ocr.js';
 import { prepararFoto } from './fotos.js';
 import { icone } from './icones.js';
 import { dadosDemonstracao } from './demo.js';
+import { BAIRROS_BASE, CIDADE, RUAS_BASE } from './cidade.js';
 
 // Ao publicar uma versão nova, aumente este número e o CACHE em sw.js: é a troca do sw.js que faz o app avisar.
-const VERSAO_APP = 6;
+const VERSAO_APP = 7;
 
 // O modo demonstração usa outro banco, para nunca misturar dados fictícios com a lista real.
 const DEMO = new URLSearchParams(location.search).has('demo');
@@ -430,6 +432,31 @@ async function receberFotos(input) {
   processarLote(loteId);
 }
 
+// Ruas e bairros da cidade: a lista que o entregador editou, depois os nomes que ele já salvou
+// (os mais usados primeiro) e por fim os nomes de partida. Vale para todos os dias.
+async function nomesDaCidade() {
+  const config = await repo.obter('config', 'cidade') ?? { ruas: [], bairros: [] };
+  const contar = (valores) => {
+    const contagem = new Map();
+    for (const valor of valores) {
+      const nome = String(valor ?? '').trim();
+      if (nome) contagem.set(nome, (contagem.get(nome) ?? 0) + 1);
+    }
+    return [...contagem.entries()].sort((a, b) => b[1] - a[1]).map(([nome]) => nome);
+  };
+  const enderecos = await repo.listar('enderecos');
+  const juntar = (...listas) => {
+    const vistos = [];
+    for (const nome of listas.flat()) if (!vistos.some((v) => v.toLowerCase() === nome.toLowerCase())) vistos.push(nome);
+    return vistos;
+  };
+  return {
+    config,
+    ruas: juntar(config.ruas, contar(enderecos.map((e) => e.logradouro)), RUAS_BASE).slice(0, 300),
+    bairros: juntar(config.bairros, contar(enderecos.map((e) => e.bairro)), BAIRROS_BASE).slice(0, 150),
+  };
+}
+
 async function itensDoLote(loteId) {
   return (await repo.listar('itens')).filter((i) => i.loteId === loteId).sort((a, b) => a.ordem - b.ordem);
 }
@@ -479,10 +506,15 @@ async function lerItem(lote, item) {
   try {
     const imagem = await repo.obter('imagens', item.fotoId);
     if (!imagem) throw Object.assign(new Error('Foto não encontrada.'), { codigo: 'imagem' });
-    const ruasConhecidas = [...new Set((await repo.listar('enderecos'))
+    const cidade = await nomesDaCidade();
+    const ruasDoDia = (await repo.listar('enderecos'))
       .filter((e) => e.data === lote.data && e.logradouro)
-      .map((e) => [e.logradouro, e.bairro].filter(Boolean).join(' - ')))];
-    const { dados, incertos } = await lerEtiqueta(imagem.blob, { ruasConhecidas });
+      .map((e) => [e.logradouro, e.bairro].filter(Boolean).join(' - '));
+    const { dados, incertos } = await lerEtiqueta(imagem.blob, {
+      cidade: CIDADE,
+      ruasConhecidas: [...new Set([...ruasDoDia, ...cidade.ruas])],
+      bairrosConhecidos: cidade.bairros,
+    });
     // Com rua e número, salva; a dúvida em algum campo vira um aviso "Confira" no endereço.
     const revisar = precisaRevisao(dados);
     const lido = await atualizarItem(item.id, { status: revisar ? 'revisar' : 'pronto', dados, incertos, erro: null });
@@ -1020,7 +1052,16 @@ async function registrarEntrega(entrada, { confirmado = false } = {}) {
   const { modo } = entrada;
   const enderecos = await repo.listar('enderecos');
   // A mesma rua escrita de outro jeito ("TV Orfileno" x "Rua Orfleno") usa a grafia que já está no dia.
-  const campos = modo === 'pacote' ? entrada.campos : canonizarRua(entrada.campos, enderecos.filter((e) => e.data === entrada.data));
+  let campos = entrada.campos;
+  if (modo !== 'pacote') {
+    const cidade = await nomesDaCidade();
+    campos = canonizarRua(campos, enderecos.filter((e) => e.data === entrada.data));
+    campos = {
+      ...campos,
+      logradouro: nomeConhecido(campos.logradouro, cidade.ruas),
+      bairro: nomeConhecido(campos.bairro, cidade.bairros),
+    };
+  }
   const rastreio = normalizarRastreio(campos.rastreio);
 
   const achado = rastreio ? encontrarPacotePorRastreio(enderecos, rastreio) : null;
@@ -1393,6 +1434,7 @@ async function telaHistorico() {
     porDia.get(e.data).push(e);
   }
   const dias = [...porDia.entries()].sort(([a], [b]) => b.localeCompare(a));
+  const cidade = await nomesDaCidade();
 
   const cartoes = dias.map(([dia, lista]) => {
     const r = resumo(lista);
@@ -1417,6 +1459,22 @@ async function telaHistorico() {
         <p class="secundario">Toque em um dia para abrir a lista.</p>
       </header>
       ${dias.length ? cartoes : `<div class="vazio">${icone('history')}<p>Nenhum dia com entregas ainda.</p></div>`}
+
+      <section class="cartao dados">
+        <h2>Ruas e bairros de ${esc(CIDADE)}</h2>
+        <p class="secundario">A leitura das fotos usa estes nomes para acertar a rua e o bairro, mesmo com a foto ruim. Um nome por linha. As ruas que você salva entram sozinhas (${cidade.ruas.length} ruas e ${cidade.bairros.length} bairros conhecidos agora).</p>
+        <form id="form-cidade" class="formulario">
+          <div class="campo-grupo">
+            <label class="rotulo-campo" for="f-ruas">Ruas</label>
+            <textarea class="campo" id="f-ruas" name="ruas" rows="6" placeholder="Rua Orfileno Leda&#10;Rua Frei Aniceto">${esc(cidade.config.ruas.join('\n'))}</textarea>
+          </div>
+          <div class="campo-grupo">
+            <label class="rotulo-campo" for="f-bairros">Bairros</label>
+            <textarea class="campo" id="f-bairros" name="bairros" rows="4" placeholder="Centro">${esc(cidade.config.bairros.join('\n'))}</textarea>
+          </div>
+          <button class="botao botao-secundario" type="submit">${icone('check')}Salvar nomes</button>
+        </form>
+      </section>
 
       <section class="cartao dados">
         <h2>Backup e dados</h2>
@@ -1610,7 +1668,19 @@ document.addEventListener('input', (evento) => {
   if (lista) lista.innerHTML = listaHtml(estado.dia);
 });
 
+async function salvarNomesDaCidade(form) {
+  const linhas = (nome) => [...new Set(String(form.elements[nome].value).split('\n').map((l) => l.trim()).filter(Boolean))];
+  await repo.salvar('config', { id: 'cidade', ruas: linhas('ruas'), bairros: linhas('bairros') });
+  avisar('Nomes salvos. A leitura das fotos já vai usar.');
+  renderizar();
+}
+
 document.addEventListener('submit', (evento) => {
+  if (evento.target.id === 'form-cidade') {
+    evento.preventDefault();
+    salvarNomesDaCidade(evento.target).catch(tratarErro);
+    return;
+  }
   if (evento.target.id !== 'formulario') return;
   evento.preventDefault();
   enviarFormulario(evento.target).catch(tratarErro);

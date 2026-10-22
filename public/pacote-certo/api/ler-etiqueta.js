@@ -38,7 +38,7 @@ Campos:
 
 Regras:
 - Nunca invente nem complete dado ilegível ou ausente: deixe a string vazia.
-- Se receber uma lista de ruas já cadastradas e a rua da etiqueta for a mesma de uma delas (mesmo com letra trocada, faltando ou tipo diferente, como "TV" x "Rua"), use EXATAMENTE o nome da lista. Só crie um nome novo se for outra rua de verdade.
+- Se receber listas de ruas ou bairros conhecidos e o nome da etiqueta for o mesmo de um deles (mesmo com letra trocada, faltando ou tipo diferente, como "TV" x "Rua"), use EXATAMENTE o nome da lista. Só crie um nome novo se for outra rua de verdade.
 - "incertos" é só para dúvida real sobre o valor de um campo: um dígito do número que pode ser outro (1/7, 0/8, 5/6), letras borradas ou cortadas que mudam o nome. Foto torta, com reflexo ou com fundo bagunçado, mas legível, NÃO é dúvida. Campos vazios não entram. Na maioria das etiquetas a lista deve ficar vazia.`;
 
 export default async function handler(req, res) {
@@ -52,13 +52,19 @@ export default async function handler(req, res) {
   }
 
   const imagem = typeof req.body?.imagem === 'string' ? req.body.imagem : '';
-  const ruasConhecidas = (Array.isArray(req.body?.ruasConhecidas) ? req.body.ruasConhecidas : [])
-    .filter((rua) => typeof rua === 'string' && rua.trim())
-    .map((rua) => rua.trim().slice(0, 120))
-    .slice(0, 200);
-  const pedido = ruasConhecidas.length
-    ? `Ruas já cadastradas hoje (rua - bairro):\n${ruasConhecidas.map((rua) => `- ${rua}`).join('\n')}\n\nLeia esta etiqueta e devolva os dados do destinatário.`
-    : 'Leia esta etiqueta e devolva os dados do destinatário.';
+  const lista = (valor, limite) => (Array.isArray(valor) ? valor : [])
+    .filter((item) => typeof item === 'string' && item.trim())
+    .map((item) => item.trim().slice(0, 120))
+    .slice(0, limite);
+  const ruasConhecidas = lista(req.body?.ruasConhecidas, 300);
+  const bairrosConhecidos = lista(req.body?.bairrosConhecidos, 150);
+  const cidade = typeof req.body?.cidade === 'string' ? req.body.cidade.trim().slice(0, 60) : '';
+  const pedido = [
+    cidade && `As entregas são em ${cidade}.`,
+    ruasConhecidas.length && `Ruas conhecidas da cidade (use exatamente um destes nomes se a etiqueta for da mesma rua, mesmo com a foto ruim, letras trocadas ou tipo diferente):\n${ruasConhecidas.map((rua) => `- ${rua}`).join('\n')}`,
+    bairrosConhecidos.length && `Bairros conhecidos da cidade (use exatamente um destes nomes se o bairro da etiqueta for um deles):\n${bairrosConhecidos.map((bairro) => `- ${bairro}`).join('\n')}`,
+    'Leia esta etiqueta e devolva os dados do destinatário.',
+  ].filter(Boolean).join('\n\n');
   const partes = imagem.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,(.+)$/);
   if (!partes) {
     res.status(400).json({ erro: 'imagem' });
