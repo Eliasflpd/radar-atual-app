@@ -1,6 +1,9 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ruasParecidas,
+  canonizarRua,
+  agruparPorRua,
   chaveEndereco,
   precisaRevisao,
   agruparPorBairro,
@@ -81,15 +84,15 @@ describe('chaveEndereco', () => {
 });
 
 describe('precisaRevisao e agruparPorBairro', () => {
-  test('precisaRevisao detecta bairro, rua ou número faltando', () => {
+  test('precisaRevisao detecta rua ou número faltando (bairro é opcional)', () => {
     assert.equal(precisaRevisao(endereco()), false);
-    assert.equal(precisaRevisao(endereco({ bairro: '' })), true);
+    assert.equal(precisaRevisao(endereco({ bairro: '' })), false);
     assert.equal(precisaRevisao(endereco({ logradouro: '  ' })), true);
     assert.equal(precisaRevisao(endereco({ numero: '' })), true);
     assert.equal(precisaRevisao(endereco({ numero: '', semNumero: true })), false);
   });
 
-  test('grupos em ordem alfabética, total por grupo, incompletos no fim', () => {
+  test('grupos em ordem alfabética, sem bairro e incompletos no fim', () => {
     const lista = [
       endereco({ bairro: 'Centro', pacotes: pacotes(2) }),
       endereco({ bairro: '', pacotes: pacotes(1) }),
@@ -98,9 +101,9 @@ describe('precisaRevisao e agruparPorBairro', () => {
       endereco({ bairro: 'Centro', numero: '', pacotes: pacotes(4) }),
     ];
     const grupos = agruparPorBairro(lista);
-    assert.deepEqual(grupos.map((g) => g.nome), ['Boa Vista', 'Centro', 'Revisar endereço']);
-    assert.deepEqual(grupos.map((g) => g.pacotes), [3, 3, 5]);
-    assert.deepEqual(grupos.map((g) => g.enderecos.length), [1, 2, 2]);
+    assert.deepEqual(grupos.map((g) => g.nome), ['Boa Vista', 'Centro', 'Sem bairro', 'Revisar endereço']);
+    assert.deepEqual(grupos.map((g) => g.pacotes), [3, 3, 1, 4]);
+    assert.deepEqual(grupos.map((g) => g.enderecos.length), [1, 2, 1, 1]);
     assert.equal(grupos.at(-1).revisar, true);
     assert.ok(!grupos[0].revisar);
     assert.ok(!grupos[1].revisar);
@@ -299,5 +302,46 @@ describe('agruparPorRua', () => {
     assert.deepEqual(andrades.enderecos.map((e) => e.numero), ['12', '45']);
     const texto = textoCompartilhar(lista, '2026-10-21');
     assert.equal(texto.split('\n').filter((l) => /Andrades/.test(l)).length, 1);
+  });
+});
+
+describe('ruas escritas de jeitos diferentes (caso real)', () => {
+  const variantes = ['TV Orfileno Leda', 'TV Orfleno Leda', 'orfeno leda', 'travessa Orfileno leda', 'Rua ofi eno Leda', 'Rua Orfileno leda'];
+
+  test('todas as grafias da mesma rua são reconhecidas como uma só', () => {
+    for (const v of variantes) assert.ok(ruasParecidas('Travessa Orfileno Leda', v), v);
+  });
+
+  test('ruas diferentes e nomes curtos parecidos continuam separados', () => {
+    assert.ok(!ruasParecidas('Rua São Bernardo', 'TV Orfileno Leda'));
+    assert.ok(!ruasParecidas('Rua Bahia', 'Rua Baia'));
+    assert.ok(!ruasParecidas('Rua das Flores', 'Rua das Palmeiras'));
+  });
+
+  test('a lista mostra a rua uma vez, com os números e os nomes embaixo', () => {
+    const numeros = ['170', '170', '314', '810', '125', '110'];
+    const lista = variantes.map((v, i) => endereco({ bairro: '', logradouro: v, numero: numeros[i] ?? '1', pacotes: pacotes(1) }));
+    lista.push(endereco({ bairro: '', logradouro: 'Rua São Bernardo', numero: '810', pacotes: pacotes(1) }));
+    const ruas = agruparPorRua(lista);
+    assert.equal(ruas.length, 2);
+    assert.equal(ruas[0].enderecos.length + ruas[1].enderecos.length, 7);
+  });
+
+  test('ao salvar, usa a grafia e o bairro de quem já está no dia', () => {
+    const dia = [endereco({ bairro: 'Centro', logradouro: 'Travessa Orfileno Leda', numero: '170' })];
+    const campos = canonizarRua({ bairro: '', logradouro: 'Rua ofi eno Leda', numero: '170' }, dia);
+    assert.equal(campos.logradouro, 'Travessa Orfileno Leda');
+    assert.equal(campos.bairro, 'Centro');
+    assert.equal(chaveEndereco(campos), chaveEndereco(dia[0]));
+    const outroBairro = canonizarRua({ bairro: 'Boa Vista', logradouro: 'TV Orfileno Leda', numero: '170' }, dia);
+    assert.equal(outroBairro.logradouro, 'TV Orfileno Leda');
+  });
+
+  test('texto compartilhado traz os nomes das pessoas quando existem', () => {
+    const lista = [endereco({ bairro: 'Centro', logradouro: 'Rua dos Andrades', numero: '12', pacotes: [
+      { id: 'a', rastreio: '', destinatario: 'Maria Silva', entregue: false, entregueEm: null },
+      { id: 'b', rastreio: '', destinatario: 'João Lima', entregue: false, entregueEm: null },
+    ] })];
+    assert.ok(textoCompartilhar(lista, '2026-10-22').includes('[ ] 12 — Maria Silva, João Lima — 2 pacotes'));
   });
 });

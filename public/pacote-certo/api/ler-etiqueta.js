@@ -26,7 +26,7 @@ Extraia SÓ os dados do DESTINATÁRIO, quem vai receber o pacote:
 - Se não der para saber com segurança qual endereço é do destinatário, deixe os campos de endereço vazios e marque-os em "incertos".
 
 Campos:
-- logradouro: tipo + nome por extenso como está escrito ("Rua dos Andrades", "Av. Brasil"). Não inclua número, bairro nem complemento aqui.
+- logradouro: tipo por extenso + nome, com a grafia correta mais provável ("Rua dos Andrades", "Avenida Brasil", "Travessa Orfileno Leda"). Escreva TV como Travessa, Av como Avenida, R como Rua. Não inclua número, bairro nem complemento aqui.
 - numero: só o número do imóvel (ex.: "12", "450-A"). Não confunda com CEP, número do pedido, apto ou quantidade.
 - semNumero: true só se estiver escrito "S/N", "SN", "sem número" ou equivalente.
 - complemento: apto, bloco, casa, fundos, loja, andar, ponto de referência curto. Ex.: "Apto 202 Bl B".
@@ -38,8 +38,8 @@ Campos:
 
 Regras:
 - Nunca invente nem complete dado ilegível ou ausente: deixe a string vazia.
-- Copie o texto como está, sem corrigir grafia.
-- Em "incertos" coloque cada campo preenchido em que a leitura ficou duvidosa (borrado, cortado, reflexo, dígito ambíguo como 1/7, 0/8, 5/6). Campos vazios não entram em "incertos". Leitura nítida = lista vazia.`;
+- Se receber uma lista de ruas já cadastradas e a rua da etiqueta for a mesma de uma delas (mesmo com letra trocada, faltando ou tipo diferente, como "TV" x "Rua"), use EXATAMENTE o nome da lista. Só crie um nome novo se for outra rua de verdade.
+- "incertos" é só para dúvida real sobre o valor de um campo: um dígito do número que pode ser outro (1/7, 0/8, 5/6), letras borradas ou cortadas que mudam o nome. Foto torta, com reflexo ou com fundo bagunçado, mas legível, NÃO é dúvida. Campos vazios não entram. Na maioria das etiquetas a lista deve ficar vazia.`;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -52,6 +52,13 @@ export default async function handler(req, res) {
   }
 
   const imagem = typeof req.body?.imagem === 'string' ? req.body.imagem : '';
+  const ruasConhecidas = (Array.isArray(req.body?.ruasConhecidas) ? req.body.ruasConhecidas : [])
+    .filter((rua) => typeof rua === 'string' && rua.trim())
+    .map((rua) => rua.trim().slice(0, 120))
+    .slice(0, 200);
+  const pedido = ruasConhecidas.length
+    ? `Ruas já cadastradas hoje (rua - bairro):\n${ruasConhecidas.map((rua) => `- ${rua}`).join('\n')}\n\nLeia esta etiqueta e devolva os dados do destinatário.`
+    : 'Leia esta etiqueta e devolva os dados do destinatário.';
   const partes = imagem.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,(.+)$/);
   if (!partes) {
     res.status(400).json({ erro: 'imagem' });
@@ -71,7 +78,7 @@ export default async function handler(req, res) {
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: partes[1], data: partes[2] } },
-          { type: 'text', text: 'Leia esta etiqueta e devolva os dados do destinatário.' },
+          { type: 'text', text: pedido },
         ],
       }],
     });

@@ -1,6 +1,8 @@
 import {
   LIMITE_QUANTIDADE,
   agruparPorBairro,
+  canonizarRua,
+  destinatariosDe,
   chaveEndereco,
   criarPacotes,
   dataHoje,
@@ -21,7 +23,7 @@ import { icone } from './icones.js';
 import { dadosDemonstracao } from './demo.js';
 
 // Ao publicar uma versão nova, aumente este número e o CACHE em sw.js: é a troca do sw.js que faz o app avisar.
-const VERSAO_APP = 5;
+const VERSAO_APP = 6;
 
 // O modo demonstração usa outro banco, para nunca misturar dados fictícios com a lista real.
 const DEMO = new URLSearchParams(location.search).has('demo');
@@ -304,10 +306,12 @@ function linhaNumero(e) {
   const entregues = e.pacotes.filter((p) => p.entregue).length;
   const pendentes = total - entregues;
   const numero = e.semNumero ? 'S/N' : (e.numero || '?');
+  const nomes = destinatariosDe(e);
   const detalhe = [pacotesTexto(total), e.complemento].filter(Boolean).join(' · ');
 
   let status = '';
   if (precisaRevisao(e)) status = selo('atencao', 'alert', 'Revisar endereço');
+  else if (pendentes && e.conferir?.length) status = selo('atencao', 'alert', 'Confira a etiqueta');
   else if (!pendentes) status = selo('sucesso', 'check', 'Entregue');
   else if (entregues) status = `<span class="texto-status">${entregues} de ${total} entregues</span>`;
 
@@ -317,6 +321,7 @@ function linhaNumero(e) {
         <span class="numero-valor">${esc(numero)}</span>
         <span class="numero-texto">
           <span class="numero-detalhe">${esc(detalhe)}</span>
+          ${nomes.length ? `<span class="numero-nomes">${esc(nomes.join(', '))}</span>` : ''}
           ${status}
         </span>
       </a>
@@ -456,6 +461,7 @@ async function salvarItemLido(lote, item) {
     modo: 'lote',
     fotoId: item.fotoId,
     leitura: d,
+    conferir: item.incertos ?? [],
     extras: { cidade: d.cidade, estado: d.estado, cep: d.cep },
     campos: { ...d, quantidade: 1 },
   }));
@@ -473,8 +479,12 @@ async function lerItem(lote, item) {
   try {
     const imagem = await repo.obter('imagens', item.fotoId);
     if (!imagem) throw Object.assign(new Error('Foto não encontrada.'), { codigo: 'imagem' });
-    const { dados, incertos } = await lerEtiqueta(imagem.blob);
-    const revisar = incertos.length > 0 || precisaRevisao(dados);
+    const ruasConhecidas = [...new Set((await repo.listar('enderecos'))
+      .filter((e) => e.data === lote.data && e.logradouro)
+      .map((e) => [e.logradouro, e.bairro].filter(Boolean).join(' - ')))];
+    const { dados, incertos } = await lerEtiqueta(imagem.blob, { ruasConhecidas });
+    // Com rua e número, salva; a dúvida em algum campo vira um aviso "Confira" no endereço.
+    const revisar = precisaRevisao(dados);
     const lido = await atualizarItem(item.id, { status: revisar ? 'revisar' : 'pronto', dados, incertos, erro: null });
     if (!revisar) await salvarItemLido(lote, lido);
     return 'ok';
@@ -498,7 +508,9 @@ async function processarLote(loteId) {
     if (!lote) return;
     for (const item of await itensDoLote(loteId)) {
       if (item.status === 'processando') await atualizarItem(item.id, { status: 'pendente' });
-      if (item.status === 'pronto') await salvarItemLido(lote, item);
+      const completo = item.dados && !precisaRevisao(item.dados);
+      const aguardandoConferencia = item.status === 'revisar' && item.erro !== 'possivel-duplicado' && completo;
+      if (item.status === 'pronto' || aguardandoConferencia) await salvarItemLido(lote, item);
     }
 
     const fila = (await itensDoLote(loteId)).filter((i) => i.status === 'pendente');
@@ -1005,8 +1017,10 @@ async function enviarFormulario(form) {
 // Grava a entrega. Junta ao endereço já existente do dia só quando bairro, rua, número e
 // complemento normalizados são iguais; endereços incompletos nunca são juntados.
 async function registrarEntrega(entrada, { confirmado = false } = {}) {
-  const { campos, modo } = entrada;
+  const { modo } = entrada;
   const enderecos = await repo.listar('enderecos');
+  // A mesma rua escrita de outro jeito ("TV Orfileno" x "Rua Orfleno") usa a grafia que já está no dia.
+  const campos = modo === 'pacote' ? entrada.campos : canonizarRua(entrada.campos, enderecos.filter((e) => e.data === entrada.data));
   const rastreio = normalizarRastreio(campos.rastreio);
 
   const achado = rastreio ? encontrarPacotePorRastreio(enderecos, rastreio) : null;
@@ -1029,9 +1043,11 @@ async function registrarEntrega(entrada, { confirmado = false } = {}) {
   const momento = agora();
   const pacotes = criarPacotes(campos.quantidade, { rastreio, destinatario: campos.destinatario });
 
+  const conferir = entrada.conferir ?? [];
   if (alvo) {
     alvo.pacotes.push(...pacotes);
     if (entrada.fotoId) alvo.fotoIds.push(entrada.fotoId);
+    if (conferir.length) alvo.conferir = [...new Set([...(alvo.conferir ?? []), ...conferir])];
     if (campos.observacoes) alvo.observacoes = [alvo.observacoes, campos.observacoes].filter(Boolean).join(' · ');
     alvo.atualizadoEm = momento;
     await repo.salvar('enderecos', alvo);
@@ -1052,6 +1068,7 @@ async function registrarEntrega(entrada, { confirmado = false } = {}) {
     cep: entrada.extras?.cep ?? '',
     pacotes,
     fotoIds: entrada.fotoId ? [entrada.fotoId] : [],
+    conferir,
     leitura: entrada.leitura ?? null,
     criadoEm: momento,
     atualizadoEm: momento,
@@ -1090,6 +1107,7 @@ async function salvarEdicao(r) {
     semNumero: campos.semNumero,
     complemento: campos.complemento,
     observacoes: campos.observacoes,
+    conferir: [],
     atualizadoEm: agora(),
   });
 
@@ -1169,7 +1187,13 @@ async function telaDetalhe(id) {
         <p class="resumo-linha">${pacotesTexto(e.pacotes.length)} · ${entregues} ${entregues === 1 ? 'entregue' : 'entregues'} · ${pendentes} ${pendentes === 1 ? 'pendente' : 'pendentes'}</p>
       </section>
 
-      ${precisaRevisao(e) ? aviso('atencao', 'alert', '<p>Revisar endereço: complete bairro, rua e número para que outros pacotes deste local sejam agrupados.</p>') : ''}
+      ${precisaRevisao(e) ? aviso('atencao', 'alert', '<p>Revisar endereço: complete rua e número para que outros pacotes deste local sejam agrupados.</p>') : ''}
+      ${e.conferir?.length ? aviso('atencao', 'alert', `
+        <p>A leitura ficou com dúvida em: ${esc(e.conferir.map((c) => NOMES_CAMPOS[c] ?? c).join(', '))}. Confira na foto da etiqueta.</p>
+        <div class="acoes-aviso">
+          <button class="botao botao-secundario" data-acao="conferido" data-id="${e.id}">${icone('check')}Está certo</button>
+          <a class="botao botao-secundario" href="#/novo?editar=${e.id}">${icone('pencil')}Corrigir</a>
+        </div>`) : ''}
       ${e.observacoes ? `<section class="cartao"><h2 class="secao" style="margin:0 0 4px">Observações</h2><p>${esc(e.observacoes)}</p></section>` : ''}
 
       <h2 class="secao">Pacotes</h2>
@@ -1193,6 +1217,21 @@ async function telaDetalhe(id) {
         <button class="botao botao-perigo" data-acao="excluir-endereco" data-id="${e.id}">${icone('trash')}Excluir endereço</button>
       </div>
     </main>`;
+}
+
+const NOMES_CAMPOS = {
+  bairro: 'bairro', logradouro: 'rua', numero: 'número', semNumero: 'sem número', complemento: 'complemento',
+  destinatario: 'destinatário', rastreio: 'rastreio', cidade: 'cidade', estado: 'estado', cep: 'CEP', observacoes: 'observações',
+};
+
+async function marcarConferido(id) {
+  const e = await repo.obter('enderecos', id);
+  if (!e) return;
+  e.conferir = [];
+  e.atualizadoEm = agora();
+  await repo.salvar('enderecos', e);
+  avisar('Endereço conferido.');
+  renderizar();
 }
 
 function registrarDesfazer(enderecoId, antes, mensagem) {
@@ -1528,6 +1567,7 @@ const ACOES = {
   'alternar-pacote': ({ id, pacote }) => alternarPacote(id, pacote),
   'editar-pacote': ({ id, pacote }) => editarPacote(id, pacote),
   'excluir-endereco': ({ id }) => excluirEndereco(id),
+  conferido: ({ id }) => marcarConferido(id),
   'ver-foto': ({ id, foto }) => verFoto(id, foto),
   menos: () => ajustarQuantidade(-1),
   mais: () => ajustarQuantidade(1),
@@ -1604,7 +1644,36 @@ async function registrarServiceWorker() {
   setInterval(verificar, 30 * 60 * 1000);
 }
 
+// Junta endereços já salvos que são o mesmo lugar com a rua escrita de outro jeito
+// (ex.: "TV Orfileno Leda, 170" e "TV Orfleno Leda, 170"), mantendo a grafia do mais antigo.
+async function juntarEnderecosRepetidos() {
+  const enderecos = (await repo.listar('enderecos')).sort((a, b) => a.criadoEm.localeCompare(b.criadoEm));
+  const vistosPorDia = new Map();
+  for (const e of enderecos) {
+    const vistos = vistosPorDia.get(e.data) ?? [];
+    vistosPorDia.set(e.data, vistos);
+    const canonico = canonizarRua(e, vistos);
+    const chave = chaveEndereco(canonico);
+    const igual = chave && vistos.find((v) => chaveEndereco(v) === chave);
+    if (igual) {
+      igual.pacotes.push(...e.pacotes);
+      igual.fotoIds.push(...e.fotoIds);
+      igual.conferir = [...new Set([...(igual.conferir ?? []), ...(e.conferir ?? [])])];
+      igual.atualizadoEm = agora();
+      await repo.salvar('enderecos', igual);
+      await repo.remover('enderecos', e.id);
+      continue;
+    }
+    if (canonico.logradouro !== e.logradouro || canonico.bairro !== e.bairro) {
+      Object.assign(e, { logradouro: canonico.logradouro, bairro: canonico.bairro, atualizadoEm: agora() });
+      await repo.salvar('enderecos', e);
+    }
+    vistos.push(e);
+  }
+}
+
 async function iniciar() {
+  await juntarEnderecosRepetidos().catch(tratarErro);
   if (DEMO && (await repo.listar('enderecos')).length === 0) {
     await repo.salvarTudo('enderecos', dadosDemonstracao(dataHoje()));
   }

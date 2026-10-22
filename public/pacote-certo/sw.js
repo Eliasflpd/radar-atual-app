@@ -1,6 +1,6 @@
 // Guarda o aplicativo no aparelho para abrir sem internet.
 // Ao publicar mudanças, troque o número da versão do cache para forçar a atualização.
-const CACHE = 'pacote-certo-v5';
+const CACHE = 'pacote-certo-v6';
 const ARQUIVOS = [
   './',
   'index.html',

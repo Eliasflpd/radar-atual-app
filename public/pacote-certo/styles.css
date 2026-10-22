@@ -348,6 +348,7 @@ textarea.campo { min-height: 88px; resize: vertical; }
 
 .numero-texto { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
 .numero-detalhe { font-weight: 600; overflow-wrap: anywhere; }
+.numero-nomes { font-size: 14px; color: var(--texto-2); overflow-wrap: anywhere; }
 .numero.concluido .numero-valor { background: var(--sucesso-fundo); color: var(--sucesso); }
 .numero.concluido .numero-detalhe { color: var(--texto-2); }
 

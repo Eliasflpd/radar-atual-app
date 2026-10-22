@@ -1,7 +1,7 @@
 // Integração de leitura de etiquetas. Fica isolada aqui para trocar o serviço sem mexer nas telas.
 //
 // Contrato esperado do serviço (POST, JSON):
-//   envio:   { "imagem": "data:image/jpeg;base64,..." }
+//   envio:   { "imagem": "data:image/jpeg;base64,...", "ruasConhecidas": ["Rua X - Bairro", ...] }
 //   resposta: { "dados": { bairro, logradouro, numero, semNumero, complemento, destinatario,
 //               rastreio, cidade, estado, cep, observacoes }, "incertos": ["numero", ...] }
 //
@@ -17,7 +17,7 @@ export class ErroLeitura extends Error {
 
 export const leituraAutomaticaConfigurada = () => Boolean(OCR_ENDPOINT);
 
-export async function lerEtiqueta(blob) {
+export async function lerEtiqueta(blob, { ruasConhecidas = [] } = {}) {
   if (!OCR_ENDPOINT) throw new ErroLeitura('nao-configurado', 'Leitura automática não configurada.');
   if (!navigator.onLine) throw new ErroLeitura('offline', 'Sem conexão.');
 
@@ -27,7 +27,7 @@ export async function lerEtiqueta(blob) {
     resposta = await fetch(OCR_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imagem }),
+      body: JSON.stringify({ imagem, ruasConhecidas: ruasConhecidas.slice(0, 200) }),
     });
   } catch {
     throw new ErroLeitura('offline', 'Sem conexão com o serviço de leitura.');

@@ -63,21 +63,77 @@ export function normalizarRastreio(rastreio = '') {
   return String(rastreio ?? '').replace(/\s/g, '').toUpperCase();
 }
 
-// Endereço só é agrupado automaticamente quando bairro, rua e número estão completos.
+// Endereço só é agrupado automaticamente quando rua e número estão completos.
+// O bairro ajuda a separar ruas de mesmo nome, mas muitas etiquetas não o trazem legível.
 export function precisaRevisao(endereco) {
-  return !normalizarTexto(endereco.bairro)
-    || !normalizarLogradouro(endereco.logradouro)
+  return !normalizarLogradouro(endereco.logradouro)
     || !normalizarNumero(endereco.numero, endereco.semNumero);
+}
+
+const TIPOS_LOGRADOURO = new Set([
+  'rua', 'r', 'avenida', 'av', 'avn', 'travessa', 'tv', 'trav', 'tr', 'alameda', 'al', 'estrada', 'estr',
+  'rodovia', 'rod', 'praca', 'pc', 'pca', 'largo', 'lg', 'beco', 'viela', 'passagem', 'servidao', 'ladeira',
+]);
+
+// Nome da rua sem o tipo (Rua, TV, Av...), sem acentos e sem espaços: "TV Orfileno Leda" -> "orfilenoleda".
+export function nomeDaRua(logradouro = '') {
+  const palavras = normalizarTexto(logradouro).split(' ').filter(Boolean);
+  while (palavras.length > 1 && TIPOS_LOGRADOURO.has(palavras[0])) palavras.shift();
+  return palavras.join('');
+}
+
+function distancia(a, b) {
+  let anterior = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const atual = [i];
+    for (let j = 1; j <= b.length; j++) {
+      atual[j] = Math.min(anterior[j] + 1, atual[j - 1] + 1, anterior[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    anterior = atual;
+  }
+  return anterior[b.length];
+}
+
+// A leitura da foto erra letras ("Orfleno", "ofi eno") e o tipo da via (TV x Rua).
+// Nomes curtos precisam ser iguais, para não juntar "Bahia" com "Baia".
+export function ruasParecidas(a, b) {
+  const na = nomeDaRua(a);
+  const nb = nomeDaRua(b);
+  if (!na || !nb) return false;
+  if (na === nb) return true;
+  const maior = Math.max(na.length, nb.length);
+  if (maior < 6) return false;
+  return distancia(na, nb) <= Math.max(1, Math.floor(maior * 0.2));
+}
+
+const bairrosCompativeis = (a, b) => !normalizarTexto(a) || !normalizarTexto(b) || normalizarTexto(a) === normalizarTexto(b);
+
+// Usa a grafia da rua (e o bairro, se faltar) de um endereço do dia que seja da mesma rua.
+export function canonizarRua(campos, enderecosDoDia) {
+  if (!normalizarLogradouro(campos.logradouro)) return campos;
+  const igual = enderecosDoDia.find((e) => ruasParecidas(e.logradouro, campos.logradouro) && bairrosCompativeis(e.bairro, campos.bairro));
+  if (!igual) return campos;
+  return { ...campos, logradouro: igual.logradouro, bairro: String(campos.bairro ?? '').trim() || igual.bairro || '' };
 }
 
 export function chaveEndereco(endereco) {
   if (precisaRevisao(endereco)) return null;
   return [
     normalizarTexto(endereco.bairro),
-    normalizarLogradouro(endereco.logradouro),
+    nomeDaRua(endereco.logradouro),
     normalizarNumero(endereco.numero, endereco.semNumero),
     normalizarComplemento(endereco.complemento),
   ].join('|');
+}
+
+function compararNumeros(a, b) {
+  return (Number(Boolean(a.semNumero)) - Number(Boolean(b.semNumero)))
+    || colador.compare(a.numero || '', b.numero || '')
+    || colador.compare(a.complemento || '', b.complemento || '');
+}
+
+export function destinatariosDe(endereco) {
+  return [...new Set(endereco.pacotes.map((p) => String(p.destinatario ?? '').trim()).filter(Boolean))];
 }
 
 export function compararEnderecos(a, b) {
@@ -123,10 +179,15 @@ export function agruparPorBairro(enderecos) {
   const grupos = [];
   const porBairro = new Map();
   const revisar = [];
+  const semBairro = [];
 
   for (const endereco of [...enderecos].sort(compararEnderecos)) {
     if (precisaRevisao(endereco)) {
       revisar.push(endereco);
+      continue;
+    }
+    if (!normalizarTexto(endereco.bairro)) {
+      semBairro.push(endereco);
       continue;
     }
     const chave = normalizarTexto(endereco.bairro);
@@ -138,6 +199,7 @@ export function agruparPorBairro(enderecos) {
     porBairro.get(chave).enderecos.push(endereco);
   }
 
+  if (semBairro.length) grupos.push({ nome: 'Sem bairro', enderecos: semBairro });
   if (revisar.length) grupos.push({ nome: 'Revisar endereço', revisar: true, enderecos: revisar });
   return grupos.map((grupo) => ({ ...grupo, pacotes: contarPacotes(grupo.enderecos), ruas: agruparPorRua(grupo.enderecos) }));
 }
@@ -147,15 +209,21 @@ export function agruparPorRua(enderecos) {
   const ruas = [];
   const porRua = new Map();
   for (const endereco of enderecos) {
-    const chave = normalizarLogradouro(endereco.logradouro);
-    if (!porRua.has(chave)) {
-      const rua = { nome: String(endereco.logradouro ?? '').trim() || 'Endereço sem rua', enderecos: [] };
-      porRua.set(chave, rua);
+    const nome = String(endereco.logradouro ?? '').trim();
+    let rua = nome ? ruas.find((r) => r.nome && ruasParecidas(r.nome, nome)) : porRua.get('');
+    if (!rua) {
+      rua = { nome, enderecos: [] };
+      if (!nome) porRua.set('', rua);
       ruas.push(rua);
     }
-    porRua.get(chave).enderecos.push(endereco);
+    rua.enderecos.push(endereco);
   }
-  return ruas.map((rua) => ({ ...rua, pacotes: contarPacotes(rua.enderecos) }));
+  return ruas.map((rua) => ({
+    ...rua,
+    nome: rua.nome || 'Endereço sem rua',
+    enderecos: [...rua.enderecos].sort(compararNumeros),
+    pacotes: contarPacotes(rua.enderecos),
+  }));
 }
 
 export function encontrarPacotePorRastreio(enderecos, rastreio, ignorarId = null) {
@@ -237,7 +305,8 @@ export function textoCompartilhar(enderecos, data, { somentePendentes = false } 
       for (const endereco of rua.enderecos) {
         const { contados } = itens.find((item) => item.endereco === endereco);
         const marca = endereco.pacotes.every((p) => p.entregue) ? '[x]' : '[ ]';
-        linhas.push(`${marca} ${descreverNumero(endereco)} — ${plural(contados, 'pacote', 'pacotes')}`);
+        const nomes = destinatariosDe(endereco).join(', ');
+        linhas.push(`${marca} ${descreverNumero(endereco)}${nomes ? ` — ${nomes}` : ''} — ${plural(contados, 'pacote', 'pacotes')}`);
         pacotes += contados;
         areas += 1;
       }
