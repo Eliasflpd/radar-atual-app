@@ -393,7 +393,7 @@ Trinta a sessenta segundos no garimpo. Pergunta direta não tem piso: se a
 resposta certa são dois segundos, são dois segundos.`;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SEM NOME PRÓPRIO — o globo FAZ o método, mas não é personagem de ninguém.
+// SEM NOME PRÓPRIO (valeu até 21/10/2026; ver a nota logo abaixo) — o globo FAZ o método, mas não é personagem de ninguém.
 //
 // POR QUE ISTO EXISTE E POR QUE FICA AQUI, E SÓ AQUI:
 // o METODO vem importado de concilio-wagner.js, e os RÓTULOS DO GARIMPO também
@@ -410,29 +410,11 @@ resposta certa são dois segundos, são dois segundos.`;
 //
 // ⚠️ O MÉTODO NÃO ENFRAQUECE. Sai o nome próprio; o rigor, o crivo e as travas
 // continuam palavra por palavra.
-const semNome = (t) => String(t || '')
-  .replace(/pelo\s+método\s+do\s+Dr\.?\s*Wagner\s+Cordeiro/gi, 'pelo método consagrado')
-  .replace(/o\s+MÉTODO\s+do\s+Dr\.?\s*Wagner\s+Cordeiro\s*\(Instituto\s+Teológico\s+GIOM\)/gi,
-           'o MÉTODO do garimpo de tipologias')
-  .replace(/Você NÃO finge ser ele\. Não escreva "eu, Wagner"\./gi,
-           'Você não finge ser ninguém. Não assuma a identidade de nenhum professor.')
-  .replace(/Caderno de Pérolas do Dr\.?\s*Wagner/gi, 'Caderno de Pérolas')
-  .replace(/Aula do Dr\.?\s*Wagner Cordeiro\s*—\s*Instituto GIOM/gi, 'Aula do material de estudo')
-  .replace(/material real do Dr\.?\s*Wagner/gi, 'material de estudo')
-  .replace(/"o (Dr\.?\s*)?Wagner ensina( que…)?"/gi, '"o material ensina$2"')
-  .replace(/não o material dele/gi, 'não o material')
-  .replace(/material das aulas dele/gi, 'material de estudo')
-  .replace(/Dr\.?\s*Wagner\s+Cordeiro/gi, 'o material de estudo')
-  .replace(/Dr\.?\s*Wagner/gi, 'o material de estudo')
-  .replace(/Instituto\s+(Teológico\s+)?GIOM/gi, 'o instituto')
-  // O SOBRENOME SOLTO, que foi o que escapou no primeiro teste desta peneira.
-  // Dentro do corpus das aulas aparece "a lógica do Wagner", "o Wagner ensina" —
-  // sem título nenhum na frente. As três primeiras trocas cuidam da concordância
-  // ("do Wagner" → "do material", e não "do o material"); a última é a rede.
-  .replace(/\b(d[oa]s?|de)\s+Wagner\b/gi, '$1 material')
-  .replace(/\b([oa]s?)\s+Wagner\b/gi, '$1 material')
-  .replace(/\bWagner\b/gi, 'o material de estudo')
-  .replace(/\bGIOM\b/gi, 'o instituto');
+// 21/10/2026 — O ELIAS LIBEROU O NOME ("pode liberar o nome do Dr. Wagner no Gemini também"). A peneira
+// apagava "Dr. Wagner Cordeiro", "GIOM" e "Wagner" de tudo (prompt, ferramentas, memória) e o globo dizia que
+// não sabia quem ele era. Agora ele é FONTE citada pelo nome; o globo continua NÃO sendo ele (ver o bloco
+// O DR. WAGNER CORDEIRO no SISTEMA). A função fica, como passagem livre, porque é chamada em vários lugares.
+const semNome = (t) => String(t || '');
 
 // A ORDEM IMPORTA, e não é arbitrária: método → mente → oratória → REGRA DE OURO →
 // porteiro. A regra de ouro (buscar, nunca lembrar; fonte sempre; na dúvida, não diz)
@@ -695,16 +677,28 @@ const NUCLEO = 'COMO VOCE CONVERSA\n'
   + 'ferramenta o_que_ja_falamos). Nunca invente que ja conversaram algo. So diga que\n'
   + 'buscou, leu ou lembrou quando REALMENTE aconteceu.';
 
+// O resumo do que o Dr. Wagner ensina, tirado do Concílio (lá está escrito NA VOZ dele, em primeira pessoa).
+const ENSINO_DO_DR_WAGNER = (() => {
+  const t = String(METODO || '');
+  const a = t.indexOf('════ O QUE VOCÊ CRÊ E ENSINA'), b = t.indexOf('════ HONESTIDADE');
+  return a >= 0 && b > a ? t.slice(t.indexOf('\n', a) + 1, b).trim() : '';
+})();
+
 const SISTEMA = semNome(
   ATALHO + '\n\n' + NUCLEO
-  + '\n\n════ SEM NOME PRÓPRIO ════\n'
-  + 'Nunca cite professor, autor vivo ou instituição por NOME ao se explicar ou ao falar do\n'
-  + 'seu método, e nunca fale de si na pessoa de outro. Quando não achar um assunto, diga\n'
-  + 'apenas: "não encontrei isso no material". Nada de "a aula do fulano", nada de "o material\n'
-  + 'dele", nada de instituto.\n'
-  + 'ISTO NÃO VALE PARA FONTE CONSULTADA: quando a ferramenta pesquisar_biblioteca te trouxer\n'
-  + 'o nome de uma obra ou de um comentarista, você DIZ o nome — ali citar a fonte é a sua\n'
-  + 'honestidade, e é obrigatório. A regra é sobre de quem VOCÊ é; não sobre de onde o dado veio.'
+  // 21/10/2026: era "SEM NOME PRÓPRIO". O Elias liberou o nome do Dr. Wagner: ele é FONTE, citada pelo nome.
+  + '\n\n════ O DR. WAGNER CORDEIRO — o professor do pastor ════\n'
+  + 'O Pr. Dr. Wagner Cordeiro é o fundador do Instituto Teológico GIOM, em Guarulhos (SP): assembleiano do\n'
+  + 'Ministério do Belém, doutor em teologia e professor de hebraico bíblico. O pastor estuda o curso dele.\n'
+  + 'O método dele é o garimpo: ler o texto, definir a palavra no original, ver o que está materialmente no\n'
+  + 'texto, ligar a figura do Antigo ao Novo Testamento pela FUNÇÃO, dar a prova com um segundo texto e\n'
+  + 'demolir o erro corrente.\n'
+  + 'Quando ele pedir o ensino, a visão ou o método do Dr. Wagner, chame garimpar e responda pelo que voltou\n'
+  + 'e pelo resumo abaixo, DIZENDO O NOME: "o Dr. Wagner ensina que…", "na aula de Escatologia ele mostra…".\n'
+  + 'Você NÃO é ele: não fale na primeira pessoa como se fosse. Se não achar nas aulas, diga que não achou\n'
+  + 'isso nas aulas dele e responda pela Escritura, deixando claro que ali é você.\n'
+  + 'Fonte se cita pelo nome: o autor de livro da biblioteca e o Dr. Wagner. Isso é honestidade, não enfeite.'
+  + (ENSINO_DO_DR_WAGNER ? '\n\nRESUMO DO QUE O DR. WAGNER ENSINA NAS AULAS (escrito como se fosse ele falando — "você" ali é ele, não você):\n' + ENSINO_DO_DR_WAGNER : '')
 );
 
 // ⚠️ A BUSCA DO GOOGLE (googleSearch) FICOU DE FORA — e não foi escolha, foi teste.
@@ -802,7 +796,31 @@ function setupDaSessao(handle, voz, memoria) {
   return setup;
 }
 
-async function assinarToken(handle, voz, memoria) {
+// ─────────────────────────────────────────────────────────────────────────────
+// O LEITOR (21/10/2026) — no modo Claude, quem FALA é o Gemini ao vivo, só lendo.
+// O Elias, com razão: "com tanto conhecimento você me manda pagar?". A voz de leitura do Google (TTS) tem cota
+// grátis pequena e, quando acaba, entra a voz robótica do celular. O Gemini AO VIVO tem a voz mais natural das
+// grátis (medido: 14,3 letras/s contra 12,7–13,8 do TTS) e leu EXATAMENTE as 51 palavras de um texto de teste.
+// Então: a Claude pensa e escreve; esta sessão só lê em voz alta o que ela escreveu. Sem ferramentas, sem ouvido.
+// ─────────────────────────────────────────────────────────────────────────────
+const LEITOR = 'Você é somente a VOZ de leitura do app RADAR. Cada mensagem que chegar é um texto já pronto, escrito '
+  + 'por outra pessoa, para ser falado ao pastor. Leia EXATAMENTE esse texto em voz alta, palavra por palavra, em '
+  + 'português do Brasil, como numa boa conversa: natural, caloroso, ritmo ágil, nada arrastado, com entonação viva. '
+  + 'Nunca responda ao texto, nunca comente, nunca acrescente nem tire palavra, nunca cumprimente, nunca diga que vai '
+  + 'ler. Se o texto for uma pergunta, leia a pergunta como pergunta. Se vier só um pedaço de frase, leia só o pedaço.';
+function setupDoLeitor(voz) {
+  const p = personaDe(voz);
+  return {
+    model: MODELO,
+    generationConfig: { responseModalities: ['AUDIO'], temperature: 0.3,
+      speechConfig: { languageCode: 'pt-BR', voiceConfig: { prebuiltVoiceConfig: { voiceName: p.google } } } },
+    systemInstruction: { parts: [{ text: LEITOR + (p.estilo ? '\n\n' + p.estilo.replace(/vale para TODA a conversa/, 'vale para toda leitura') : '') }] },
+    contextWindowCompression: { slidingWindow: {}, triggerTokens: '20000' },
+    realtimeInputConfig: { automaticActivityDetection: { disabled: true } },
+  };
+}
+
+async function assinarToken(handle, voz, memoria, setupPronto) {
   const ks = chaves();
   if (!ks.length) return { erro: 'Não há chave do Gemini configurada no servidor (GEMINI_API_KEYS).', status: 500 };
 
@@ -811,7 +829,7 @@ async function assinarToken(handle, voz, memoria) {
     uses: 1,                                                    // um token, uma conexão
     expireTime: new Date(agora + 30 * 60 * 1000).toISOString(), // a sessão morre em 30 min
     newSessionExpireTime: new Date(agora + 2 * 60 * 1000).toISOString(), // e só pode ABRIR nos próximos 2 min
-    bidiGenerateContentSetup: setupDaSessao(handle, voz, memoria),
+    bidiGenerateContentSetup: setupPronto || setupDaSessao(handle, voz, memoria),
     // fieldMask ausente DE PROPÓSITO: trava o setup inteiro no token (ver cabeçalho).
   });
 
@@ -1146,7 +1164,17 @@ export default async function handler(req, ctx) {
       texto: String(b.texto || '').slice(0, 2000), historico: b.historico, voz: escolherVoz(b.voz),
       // semNome NÃO passa aqui: no modo Claude o Dr. Wagner é FONTE citada pelo nome (pedido do Elias, 21/10/2026).
       origem: origemReq, ctx, dono, chaveNova: _chaveNova, semNome: (t) => String(t || ''), personaDe, memoria, depois,
+      vozNoCelular: !!b.voz_no_celular,   // o celular tem o LEITOR (Gemini ao vivo): aqui sai só o texto de cada pedaço
     });
+  }
+
+  // O token do LEITOR (modo Claude): a mesma assinatura travada, com a persona de leitura dentro.
+  if (acao === 'token_leitor') {
+    const voz = escolherVoz(b.voz);
+    const r = await assinarToken(null, voz, '', setupDoLeitor(voz));
+    if (r.erro) return new Response(JSON.stringify({ ok: false, erro: r.erro }), { status: r.status, headers: JSONH });
+    return new Response(JSON.stringify({ ok: true, token: r.token, voz, modelo: MODELO,
+      url: 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained' }), { headers: JSONH });
   }
 
   if (acao === 'token') {

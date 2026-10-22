@@ -983,7 +983,41 @@ function buscaGlobal(q){
     : '<div style="text-align:center;padding:32px 0;color:var(--sub);font-size:13px">Nenhum resultado</div>';
 }
 function focusBusca(){ document.getElementById('home-busca').focus(); }
-function irFavoritos(){ alert('Favoritos — em breve'); }
+// ⭐ FAVORITOS (22/10/2026). Era um alert('em breve') — na auditoria dos botões, o botão "que não abre" da
+// barra de baixo (em vários Android o alert nem aparece). Agora abre um menu com o que o app JÁ guarda:
+// os favoritos da Harpa, as anotações da Bíblia e os sermões/estudos gerados pela voz.
+function irFavoritos(){
+  var velho=document.getElementById('fav-folha'); if(velho){ velho.remove(); return; }
+  var nH=0,nB=0,nM=0;
+  try{ nH=getData('crm_harpa').length; nB=getData('crm_biblia').length; }catch(e){}
+  try{ nM=(JSON.parse(localStorage.getItem('voz.materiais')||'[]')||[]).length; }catch(e){}
+  var fundo=document.createElement('div'); fundo.id='fav-folha';
+  fundo.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(3,10,16,.6);display:flex;align-items:flex-end';
+  var item=function(ic,tit,sub,n,acao){
+    return '<button type="button" data-a="'+acao+'" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;'
+      +'padding:14px 12px;margin:0 0 8px;border-radius:14px;border:1px solid rgba(201,161,74,.35);background:rgba(255,255,255,.05);'
+      +'color:#e9f1f8;font:600 1rem system-ui,sans-serif;cursor:pointer"><span style="font-size:1.5rem">'+ic+'</span>'
+      +'<span style="flex:1"><b style="display:block">'+tit+'</b><small style="color:#93a8b8">'+sub+'</small></span>'
+      +'<b style="color:#C9A14A">'+n+'</b></button>';
+  };
+  fundo.innerHTML='<div style="width:100%;background:#0b1e2c;border-top:2px solid #C9A14A;border-radius:20px 20px 0 0;'
+    +'padding:14px 16px calc(18px + env(safe-area-inset-bottom))">'
+    +'<div style="display:flex;align-items:center;margin-bottom:10px"><b style="flex:1;font-family:Georgia,serif;color:#C9A14A;font-size:1.15rem">⭐ Favoritos</b>'
+    +'<button type="button" data-a="fechar" style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.09);color:#e9f1f8;font-size:1rem">✕</button></div>'
+    +item('🎵','Favoritos da Harpa','Os hinos que você marcou',nH,'harpa')
+    +item('📖','Anotações da Bíblia','Os versículos que você anotou',nB,'biblia')
+    +item('📄','Meus sermões e estudos','Os que a voz preparou pra você',nM,'materiais')
+    +'</div>';
+  fundo.addEventListener('click',function(e){
+    var b=e.target.closest('button'); var a=b?b.getAttribute('data-a'):(e.target===fundo?'fechar':'');
+    if(!a) return;
+    fundo.remove();
+    if(a==='harpa') abrirCRM('crm_harpa','Favoritos da Harpa','⭐','harpa-lista');
+    else if(a==='biblia') abrirCRM('crm_biblia','Anotações da Bíblia','📋','biblia');
+    else if(a==='materiais') location.href='/biblioteca/voz/?materiais=1';
+  });
+  document.body.appendChild(fundo);
+}
 function irPerfil(){
   const u=getUser();
   if(!u){ if(typeof checkAuth==='function'){checkAuth();} return; }

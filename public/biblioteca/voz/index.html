@@ -169,6 +169,30 @@
 
   .cerebro button b{display:block;font-size:.95rem;color:var(--dourado)}
   .cerebro button.atual{border-color:var(--dourado);background:rgba(201,161,74,.16)}
+  /* MATERIAIS (sermão, mensagem, estudo, esboço) gerados pela voz — 21/10/2026 */
+  .cartaoMat{background:rgba(201,161,74,.1);border:1px solid rgba(201,161,74,.45);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+  .cartaoMat .tipo{font-size:.68rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--dourado)}
+  .cartaoMat .tit{font-family:Georgia,serif;font-size:1.05rem;color:var(--texto);margin:2px 0 8px}
+  .cartaoMat .acoes, #matTela .acoes{display:flex;gap:6px;flex-wrap:wrap}
+  .cartaoMat button, #matTela .acoes button{flex:1;min-width:84px;padding:9px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.07);color:var(--texto);font:700 .85rem system-ui,sans-serif;cursor:pointer}
+  .cartaoMat button.ler, #matTela .acoes button.copiar{background:var(--dourado);color:#10202c;border-color:var(--dourado)}
+  #matTela{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:#07141d}
+  #matTela[hidden]{display:none}
+  #matTela .cab{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(201,161,74,.35)}
+  #matTela .cab b{flex:1;font-family:Georgia,serif;color:var(--dourado);font-size:1.05rem}
+  #matTela .cab button{width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.09);color:var(--texto);font-size:1rem}
+  #matTela .corpo{flex:1;overflow-y:auto;padding:16px 18px 30px;color:var(--texto);font-size:1.08rem;line-height:1.65}
+  #matTela .corpo h1{font-family:Georgia,serif;color:var(--dourado);font-size:1.45rem;line-height:1.25;margin:4px 0 12px}
+  #matTela .corpo h2{font-family:Georgia,serif;color:var(--dourado);font-size:1.2rem;margin:22px 0 8px}
+  #matTela .corpo h3{font-size:1.05rem;color:#f0d9a6;margin:16px 0 6px}
+  #matTela .corpo p{margin:0 0 12px}
+  #matTela .corpo ul, #matTela .corpo ol{margin:0 0 12px;padding-left:22px}
+  #matTela .corpo blockquote{margin:0 0 12px;padding:8px 12px;border-left:3px solid var(--dourado);background:rgba(201,161,74,.08);border-radius:0 8px 8px 0}
+  #matTela .rodape{padding:10px 14px calc(12px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.1)}
+  #matLista .item{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+  #matLista .item div{flex:1;min-width:0}
+  #matLista .item small{color:var(--suave)}
   .provaVoz{display:none}
   .provaVoz .linha{display:flex;gap:6px;flex-wrap:wrap}
   .provaVoz button{
@@ -206,6 +230,7 @@
 
   <div class="topo">
     <button class="voltar" id="inicio">← Início</button>
+    <button class="engrenagem" id="abrirMateriais" aria-label="Meus sermões e estudos" hidden style="margin-left:auto;margin-right:8px">📄</button>
     <button class="engrenagem" id="abrirConfig" aria-label="Configuração">⚙️</button>
   </div>
 
@@ -311,6 +336,16 @@
         endereço ou valor. Uma peneira no servidor joga fora antes de gravar, e no que sobra o nome
         próprio vira “alguém”. O botão <b>🧠 Apagar a memória</b>, aqui em cima, apaga tudo na hora.</p>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══ O MATERIAL (sermão, mensagem, estudo, esboço) — ler, copiar, excluir ═══ -->
+  <div id="matTela" hidden>
+    <div class="cab"><b id="matTitulo">Material</b><button type="button" id="matFechar" aria-label="Fechar">✕</button></div>
+    <div class="corpo" id="matCorpo"></div>
+    <div class="rodape acoes" id="matAcoes">
+      <button type="button" class="copiar" id="matCopiar">📋 Copiar</button>
+      <button type="button" id="matExcluir">🗑️ Excluir</button>
     </div>
   </div>
 
@@ -481,6 +516,8 @@
     guardar_ensino:       ['✍️ Anotando no caderno','Guardando o que você ensinou.'],
     ensinos_do_pastor:    ['📒 Abrindo o caderno','Vendo o que você já ensinou.'],
     buscar_biblioteca:    ['📚 Consultando a biblioteca','Lendo os comentaristas e os léxicos.'],
+    aulas_do_dr_wagner:   ['🎓 Abrindo as aulas do Dr. Wagner','Procurando o que ele ensina sobre isso.'],
+    entregar_material:    ['✍️ Escrevendo o material','Montando o texto completo para a tela.'],
     licao_da_ebd:         ['📘 Abrindo a lição','Foi buscar a lição da Escola Dominical.'],
     pensando:             ['🎓 Pensando','A Claude está pensando na sua pergunta.'],
     meu_conhecimento:     ['🪞 Conferindo o que eu tenho','Listando as fontes de verdade.'],
@@ -948,14 +985,18 @@
   }
 
   // Chegou áudio: NÃO toca na hora. Junta até fechar 7680 amostras.
-  function enfileirarPCM(b64){
+  // fator: a voz sintética do modo Claude já chega no volume máximo (pico 0 dBFS, medido em 21/10/2026). Com o
+  // reforço de 3,6x do globo, 11% do som batia no limitador e saía rouco — o "catarro na garganta" que o Elias
+  // ouviu. Ela entra multiplicada por FATOR_VOZ_SINTETICA e fica no mesmo nível do Gemini ao vivo.
+  function enfileirarPCM(b64, fator){
     if(!S.ctxSom||S.turnoMudo) return;
+    var f=(fator>0&&fator<=1)?fator:1;
     var bytes=deBase64(b64), n=bytes.length>>1;
     if(!n) return;
     var pcm=new Int16Array(bytes.buffer,bytes.byteOffset,n);
     if(!S.sobra) S.sobra=new Float32Array(BUF_SAIDA);
     for(var i=0;i<n;i++){
-      S.sobra[S.sobraN++]=pcm[i]/32768;
+      S.sobra[S.sobraN++]=pcm[i]/32768*f;
       if(S.sobraN===BUF_SAIDA){ S.fila.push(S.sobra.slice(0)); S.sobraN=0; S.pedacos++; }
     }
     partir();
@@ -2194,10 +2235,86 @@
   // Tocar no globo enquanto ela fala ou pensa = cortar e ouvir de novo.
   // ══════════════════════════════════════════════════════════════════════════
   var RECONHECER = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var FATOR_VOZ_SINTETICA = 0.28;   // ≈ 1/3,6: com o reforço padrão, sai no nível natural, sem estourar
   var C = { hist:[], ouvindo:false, rec:null, emTurno:false, abort:null, geracao:0, laco:null,
             nomeModelo:'', resposta:'', pergunta:'', erroOuvir:'', esperarAte:0, bolhaEu:null };
 
+  // ── O LEITOR (21/10/2026) ─────────────────────────────────────────────────
+  // O Elias: "com tanto conhecimento você me manda pagar?". A voz de leitura do Google (TTS) tem cota grátis
+  // pequena; acabou, entra a voz robótica do celular. Então quem FALA no modo Claude passa a ser o Gemini AO VIVO
+  // (a voz mais natural das grátis, cota folgada), numa linha que só LÊ: a Claude escreve, o servidor manda cada
+  // pedaço de texto ("trecho"), e este leitor manda o Gemini ler. Testado: leu as 51 palavras exatas de um texto.
+  // Se o leitor não abrir, o pedido seguinte volta a usar a voz do servidor (TTS) — nada fica mudo.
+  // DESLIGADO em 21/10/2026, depois do teste: sem trava, o Gemini ao vivo NÃO só lê — numa frase de 6 palavras falou
+  // 16 s e 70 s (inventou fala), em produção não leu nada, e a cota dele também acaba (erro 1011). Só volta com trava
+  // de contagem de palavras (outputAudioTranscription) e vigia de tempo. Até lá: voz do servidor.
+  var LEITOR_LIGADO = false;
+  var L = { ws:null, abrindo:null, pronto:false, ocupado:false, fila:[], voz:'', falhas:0, fio:Promise.resolve() };
+  function leitorFechar(){
+    var w=L.ws; L.ws=null; L.pronto=false; L.ocupado=false;
+    try{ if(w) w.close(); }catch(e){}
+  }
+  function leitorAbrir(){
+    if(L.ws && L.ws.readyState===1 && L.pronto && L.voz===S.voz) return Promise.resolve(L.ws);
+    if(L.abrindo) return L.abrindo;
+    if(L.ws) leitorFechar();
+    var vozPedida=S.voz;
+    L.abrindo = pedir({ acao:'token_leitor', voz:vozPedida }).then(function(t){
+      return new Promise(function(ok, falhou){
+        var ws=new WebSocket(t.url+'?access_token='+encodeURIComponent(t.token));
+        var prazo=setTimeout(function(){ try{ ws.close(); }catch(e){} falhou(new Error('o leitor não abriu')); }, 7000);
+        ws.onopen=function(){ ws.send(JSON.stringify({ setup:{} })); };
+        ws.onmessage=function(ev){
+          // mensagens chegam como Blob: a corrente mantém a ORDEM (senão um pedaço de áudio passa na frente do outro)
+          L.fio = L.fio.then(function(){ return typeof ev.data==='string' ? ev.data : ev.data.text(); }).then(function(s){
+            var m; try{ m=JSON.parse(s); }catch(e){ return; }
+            if(m.setupComplete){ clearTimeout(prazo); L.ws=ws; L.pronto=true; L.voz=vozPedida; ok(ws); return; }
+            if(L.ws===ws) leitorMensagem(m);
+          })['catch'](function(){});
+        };
+        ws.onclose=function(){ clearTimeout(prazo); if(L.ws===ws){ L.ws=null; L.pronto=false; L.ocupado=false; } falhou(new Error('o leitor fechou')); };
+        ws.onerror=function(){};
+      });
+    }).then(function(ws){ L.abrindo=null; L.falhas=0; return ws; }, function(e){ L.abrindo=null; L.falhas++; throw e; });
+    return L.abrindo;
+  }
+  function leitorMensagem(m){
+    var sc=m.serverContent||{};
+    var partes=(sc.modelTurn&&sc.modelTurn.parts)||[];
+    for(var i=0;i<partes.length;i++){
+      var p=partes[i];
+      if(p.inlineData && p.inlineData.data){ S.turnoMudo=false; enfileirarPCM(p.inlineData.data); }
+    }
+    if(sc.turnComplete){ despejarSobra(); L.ocupado=false; leitorProximo(); }
+  }
+  function leitorFalar(texto){
+    texto=String(texto||'').trim(); if(!texto) return;
+    L.fila.push(texto); leitorProximo();
+  }
+  // um trecho por vez; o que chegou enquanto ele lia vai junto, numa leitura só (menos pausa entre os pedaços)
+  function leitorProximo(){
+    if(L.ocupado || !L.fila.length) return;
+    var t=L.fila.join(' '); L.fila=[];
+    L.ocupado=true;
+    var g=C.geracao;
+    leitorAbrir().then(function(ws){
+      if(g!==C.geracao){ L.ocupado=false; return; }
+      ws.send(JSON.stringify({ clientContent:{ turns:[{ role:'user', parts:[{ text:t }] }], turnComplete:true } }));
+    })['catch'](function(){
+      L.ocupado=false;
+      if(L.falhas>=2){ C.semLeitor=true; diario('leitor desligado — volta a voz do servidor'); }
+      claudeFalarLocal(t, g);
+    });
+  }
+  // corte: joga fora a fila e DERRUBA a linha (o Gemini continuaria lendo o trecho velho); já abre outra pra próxima
+  function leitorCalar(){
+    L.fila=[];
+    if(L.ocupado){ leitorFechar(); if(S.ligado && S.cerebro==='claude') leitorAbrir()['catch'](function(){}); }
+  }
+  function leitorFalando(){ return L.ocupado || L.fila.length>0; }
+
   function claudeTrocouVoz(nova){
+    if(nova!==S.voz) leitorFechar();     // a voz do leitor nasce na abertura da linha: troca = linha nova
     S.voz=nova;
     try{ localStorage.setItem('voz.timbre',nova); }catch(e){}
     try{ var bs=elLinha.children; for(var k=0;k<bs.length;k++) bs[k].className=(bs[k].querySelector('b')&&bs[k].querySelector('b').textContent===nova)?'atual':''; }catch(e){}
@@ -2208,7 +2325,7 @@
     // Android que só abre o microfone com toque: o laço automático para e o globo pede o toque
     if(!peloToque && (C.precisaToque || C.soComToque)) return;
     if(C.ouvindo || C.vigia || C.emTurno || S.pausado || S.falandoLocal) return;
-    if(S.eleFalando || S.tocandoAgora || S.fila.length) return;
+    if(S.eleFalando || S.tocandoAgora || S.fila.length || leitorFalando()) return;
     if(Date.now() < C.esperarAte) return;
     // tela apagada / aba escondida: o Chrome não deixa ouvir (dá "not-allowed"). Espera a tela voltar.
     if(document.visibilityState!=='visible') return;
@@ -2219,12 +2336,24 @@
     r.onstart=function(){ C.recusas=0; if(peloToque && C.precisaToque){ C.soComToque=true; } C.precisaToque=false; };
     r.onspeechstart=function(){ S.euFalando=true; fase(); };
     r.onresult=function(e){
+      // O Chrome do Android manda o mesmo trecho de novo, às vezes já com mais palavras ("os dois os dois os dois
+      // Jardins…", medido no A22 em 21/10/2026). Somar repetia. Agora: trecho que COMEÇA com o que já veio, ou que
+      // já está dentro dele, substitui ou é ignorado; só trecho novo de verdade é somado.
+      function juntar(base, novo){
+        var b=base.replace(/\s+/g,' ').trim(), n=String(novo||'').replace(/\s+/g,' ').trim();
+        if(!n) return b;
+        if(!b) return n;
+        var bl=b.toLowerCase(), nl=n.toLowerCase();
+        if(nl.indexOf(bl)===0) return n;        // o novo já traz tudo o que veio antes
+        if(bl.indexOf(nl)>=0) return b;         // repetição do que já estava
+        return b+' '+n;
+      }
       parcial='';
       for(var i=e.resultIndex;i<e.results.length;i++){
-        if(e.results[i].isFinal) firme+=e.results[i][0].transcript;
-        else parcial+=e.results[i][0].transcript;
+        if(e.results[i].isFinal) firme=juntar(firme, e.results[i][0].transcript);
+        else parcial=juntar(parcial, e.results[i][0].transcript);
       }
-      var t=(firme+' '+parcial).trim();
+      var t=juntar(firme, parcial);
       if(!t) return;
       if(!C.bolhaEu) C.bolhaEu=bolha('eu','Você');
       C.bolhaEu.textContent=t; rolar();
@@ -2248,7 +2377,8 @@
     };
     r.onend=function(){
       C.ouvindo=false; C.rec=null; S.euFalando=false;
-      var t=(firme+' '+parcial).replace(/\s+/g,' ').trim();
+      // o texto da bolha já é o juntado sem repetição; o parcial só entra se trouxer coisa nova
+      var t=((C.bolhaEu && C.bolhaEu.textContent) || (firme+' '+parcial)).replace(/\s+/g,' ').trim();
       if(t && S.ligado && S.cerebro==='claude'){
         if(!C.bolhaEu) C.bolhaEu=bolha('eu','Você');
         C.bolhaEu.textContent=t; C.bolhaEu=null;
@@ -2275,7 +2405,7 @@
   }
   function cortarFalandoLigado(){ try{ return localStorage.getItem('voz.cortarFalando')!=='nao'; }catch(e){ return true; } }
   function claudeVigiar(){
-    var falando = S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal;
+    var falando = S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal || leitorFalando();
     if(C.vigia && !C.vigiaCortou && !falando){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; return; }   // ela acabou: o ouvido normal assume
     if(!S.ligado || S.cerebro!=='claude' || S.semMic || !RECONHECER || C.semVigia || !cortarFalandoLigado()) return;
     if(C.vigia || C.ouvindo || S.pausado || !falando) return;
@@ -2300,10 +2430,16 @@
         }
       }
       if(C.vigiaCortou){
-        var t=''; for(var j=inicioDele;j<e.results.length;j++) t+=e.results[j][0].transcript+' ';
-        C.textoVigia=t.replace(/\s+/g,' ').trim();
+        // MEDIDO NO A22 (21/10/2026): no modo contínuo o Chrome do Android REPETE o que já ouviu a cada resultado
+        // ("não não não…" sessenta vezes). Então vale só a versão mais recente — a do último resultado — e não a soma.
+        var ult=(e.results[e.results.length-1][0].transcript||'').replace(/\s+/g,' ').trim();
+        if(ult && ult.length >= (C.textoVigia||'').length*0.5) C.textoVigia=ult;
         S.euFalando=true; fase();
         if(C.bolhaEu){ C.bolhaEu.textContent=C.textoVigia; rolar(); }
+        // fecha o ouvido 1,3 s depois que ele para de falar (antes ficou 50 s aberto), e no máximo 15 s depois do corte
+        clearTimeout(C.fimVigia);
+        C.fimVigia=setTimeout(function(){ try{ r.stop(); }catch(_){} }, 1300);
+        if(!C.tetoVigia) C.tetoVigia=setTimeout(function(){ try{ r.stop(); }catch(_){} }, 15000);
       }
     };
     r.onerror=function(e){
@@ -2311,6 +2447,7 @@
       if(er==='not-allowed'||er==='audio-capture'||er==='service-not-allowed'){ C.semVigia=true; diario('vigia desligado: '+er+' — corte só pelo toque'); fase(); }
     };
     r.onend=function(){
+      clearTimeout(C.fimVigia); clearTimeout(C.tetoVigia); C.fimVigia=C.tetoVigia=null;
       var t=C.textoVigia, cortou=C.vigiaCortou;
       C.vigia=null; C.vigiaCortou=false; C.textoVigia=''; S.euFalando=false;
       if(cortou && t && S.ligado && S.cerebro==='claude'){
@@ -2328,6 +2465,7 @@
     if(C.abort){ try{ C.abort.abort(); }catch(e){} C.abort=null; }
     if(C.rec){ try{ C.rec.abort(); }catch(e){} C.rec=null; C.ouvindo=false; }
     if(C.vigia && !C.vigiaCortou){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; }
+    leitorCalar();
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
     S.falandoLocal=false;
     // resposta cortada no meio entra no histórico do jeito que ficou, marcada
@@ -2345,17 +2483,46 @@
     C.pergunta=''; C.resposta='';
   }
 
+  // A VOZ RESERVA, A MELHOR QUE O CELULAR TIVER (21/10/2026). É grátis, não tem cota e sai na hora — mas a padrão
+  // do aparelho é a robótica. Entre as vozes em português, a "de rede" (localService=false) costuma ser a neural, bem
+  // mais natural; depois vale uma pt-BR com nome de voz de verdade; por último qualquer pt. A escolha pode ser forçada
+  // por localStorage 'voz.reserva' (nome exato da voz).
+  function melhorVozDoCelular(){
+    if(!window.speechSynthesis || !speechSynthesis.getVoices) return null;
+    var vs=speechSynthesis.getVoices()||[];
+    var pt=vs.filter(function(v){ return /^pt[-_]?BR/i.test(v.lang||''); });
+    if(!pt.length) pt=vs.filter(function(v){ return /^pt/i.test(v.lang||''); });
+    if(!pt.length) return null;
+    var pedida=''; try{ pedida=localStorage.getItem('voz.reserva')||''; }catch(e){}
+    for(var i=0;i<pt.length;i++) if(pedida && pt[i].name===pedida) return pt[i];
+    var rede=pt.filter(function(v){ return v.localService===false; });
+    if(rede.length) return rede[0];
+    var comNome=pt.filter(function(v){ return !/default|padr/i.test(v.name||''); });
+    return (comNome[0]||pt[0]);
+  }
+  if(window.speechSynthesis && speechSynthesis.getVoices){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){ speechSynthesis.getVoices(); }; }catch(e){} }
+
   // Sem cota de voz no Google: o próprio celular fala aquele pedaço, depois do que já está tocando.
-  function claudeFalarLocal(texto, g){
+  // TRAVA MEDIDA NO A22 (21/10/2026): a voz do celular às vezes EMPACA — fica "falando" sem som e sem fim, e tudo
+  // que vinha atrás esperava pra sempre. Agora: espera no máximo 4 s por uma fala alheia (depois cancela), e cada
+  // fala tem prazo pelo tamanho do texto; estourou, cancela e segue.
+  function claudeFalarLocal(texto, g, desde){
     if(g!==C.geracao) return;
-    if(S.tocandoAgora || S.fila.length || (window.speechSynthesis && speechSynthesis.speaking)){
-      setTimeout(function(){ claudeFalarLocal(texto,g); },300); return;
+    desde=desde||Date.now();
+    var ocupado = S.tocandoAgora || S.fila.length || (window.speechSynthesis && speechSynthesis.speaking);
+    if(ocupado && !(window.speechSynthesis && speechSynthesis.speaking && !S.falandoLocal && Date.now()-desde>4000)){
+      setTimeout(function(){ claudeFalarLocal(texto,g,desde); },300); return;
     }
     if(!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
     try{
-      var u=new SpeechSynthesisUtterance(texto); u.lang='pt-BR'; u.rate=1.05;
+      if(speechSynthesis.speaking && !S.falandoLocal) speechSynthesis.cancel();   // fala empacada de antes
+      var u=new SpeechSynthesisUtterance(texto); u.lang='pt-BR'; u.rate=1.12;
+      var melhor=melhorVozDoCelular(); if(melhor){ u.voice=melhor; u.lang=melhor.lang; }
       S.falandoLocal=true; S.eleFalando=true; fase();
-      u.onend=u.onerror=function(){ S.falandoLocal=false; S.eleFalando=false; fase(); };
+      var acabou=false;
+      var fim=function(){ if(acabou) return; acabou=true; clearTimeout(prazo); S.falandoLocal=false; S.eleFalando=false; fase(); };
+      var prazo=setTimeout(function(){ try{ speechSynthesis.cancel(); }catch(e){} fim(); }, 6000+texto.length*110);
+      u.onend=u.onerror=fim;
       speechSynthesis.speak(u);
     }catch(e){ S.falandoLocal=false; }
   }
@@ -2368,7 +2535,7 @@
     S.bolhaMestre=null; S.turnoMudo=false;
     rotuloDaFerramenta('pensando'); S.garimpando=true; fase();
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null; C.abort=ctl;
-    var corpo={ acao:'claude', texto:t, historico:C.hist.slice(-24), voz:S.voz };
+    var corpo={ acao:'claude', texto:t, historico:C.hist.slice(-24), voz:S.voz, voz_no_celular: LEITOR_LIGADO && !C.semLeitor && !!window.WebSocket };
     if(EU_SOU) corpo.user=EU_SOU;
     try{
       var _u=JSON.parse(localStorage.getItem('radar_user')||'null');
@@ -2419,8 +2586,14 @@
       case 'som':
         S.turnoMudo=false;
         if(e.m) diario('voz pedaço '+e.i+': '+e.m+' em '+e.ms+' ms');
-        enfileirarPCM(e.pcm);
+        enfileirarPCM(e.pcm, FATOR_VOZ_SINTETICA);
         despejarSobra();        // cada pedaço termina inteiro: a última sílaba não fica presa esperando o próximo
+        break;
+      case 'material':        // sermão, mensagem, estudo ou esboço pronto: vira cartão (ler, copiar, excluir)
+        matChegou(e);
+        break;
+      case 'trecho':          // o texto do pedaço: quem lê é o leitor (Gemini ao vivo)
+        leitorFalar(e.texto);
         break;
       case 'falar':
         // TROCA VISÍVEL: a voz do Google ficou sem cota e quem fala agora é a voz do próprio celular
@@ -2455,7 +2628,7 @@
     S.garimpando=false; S.bolhaMestre=null; fase();
     if(S.vaiDesligar){
       // "tchau": espera a voz terminar e desliga, como no modo Gemini
-      (function esperar(n){ if((S.tocandoAgora||S.fila.length||S.falandoLocal) && n<80){ setTimeout(function(){ esperar(n+1); },300); return; }
+      (function esperar(n){ if((S.tocandoAgora||S.fila.length||S.falandoLocal||leitorFalando()) && n<80){ setTimeout(function(){ esperar(n+1); },300); return; }
         S.vaiDesligar=false; if(S.ligado) desligar(); })(0);
     }
   }
@@ -2464,7 +2637,8 @@
     C.esperarAte=0; C.emTurno=false; C.recusas=0; C.precisaToque=false;
     clearInterval(C.laco);
     C.laco=setInterval(function(){ claudeOuvir(); claudeVigiar(); },350);
-    nota('🎓 Modo Claude ('+(C.nomeModelo||'Claude Sonnet 5.5')+'): eu ouço, a Claude pensa com a conversa inteira, e o Google só empresta a voz.');
+    if(LEITOR_LIGADO && !C.semLeitor) leitorAbrir()['catch'](function(){});
+    nota('🎓 Modo Claude ('+(C.nomeModelo||'Claude Sonnet 5.5')+'): a Claude pensa com a conversa inteira, e o Google empresta a voz.');
   }
   function claudeDesligar(){
     clearInterval(C.laco); C.laco=null;
@@ -2473,7 +2647,112 @@
     if(C.vigia){ try{ C.vigia.abort(); }catch(e){} C.vigia=null; C.vigiaCortou=false; }
     if(C.emTurno && C.pergunta) claudeGuardarTurno(C.pergunta, (C.resposta||'').trim());
     C.geracao++; C.ouvindo=false; C.emTurno=false;
+    L.fila=[]; leitorFechar();
   }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // OS MATERIAIS (21/10/2026) — sermão, mensagem, estudo e esboço pedidos por voz.
+  // A Claude pesquisa e entrega o texto inteiro (evento 'material'); aqui ele vira um cartão na conversa
+  // (📖 Ler · 📋 Copiar · 🗑️ Excluir) e fica guardado NO APARELHO (voz.materiais) até ele excluir.
+  // O botão 📄 do topo reabre a lista depois que a página fecha.
+  // ══════════════════════════════════════════════════════════════════════════
+  var MAT_K='voz.materiais', TIPO_MAT={ sermao:'Sermão', mensagem:'Mensagem', estudo:'Estudo bíblico', esboco:'Esboço' };
+  function matLer(){ try{ return JSON.parse(localStorage.getItem(MAT_K)||'[]')||[]; }catch(e){ return []; } }
+  function matGravar(l){
+    // o celular tem limite de espaço: se não couber, vão saindo os mais antigos
+    for(var n=l.length;n>=0;n--){ try{ localStorage.setItem(MAT_K, JSON.stringify(l.slice(0,n))); return; }catch(e){} }
+  }
+  function matPintarBotao(){ var b=$('abrirMateriais'); if(b) b.hidden = !matLer().length; }
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // markdown simples → HTML (título, seções, negrito, itálico, listas, citação). Escapa tudo antes.
+  function mdParaHtml(md){
+    var linhas=String(md||'').replace(/\r/g,'').split('\n'), out=[], lista='', par=[];
+    function inl(t){ return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<i>$2</i>'); }
+    // cada quebra de linha do texto vira quebra na tela ("Texto base:" e "Texto de apoio:" grudavam numa linha só)
+    function fechaPar(){ if(par.length){ out.push('<p>'+par.map(inl).join('<br>')+'</p>'); par=[]; } }
+    function fechaLista(){ if(lista){ out.push('</'+lista+'>'); lista=''; } }
+    for(var i=0;i<linhas.length;i++){
+      var l=linhas[i], m;
+      if(!l.trim()){ fechaPar(); fechaLista(); continue; }
+      if(/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(l)){ fechaPar(); fechaLista(); out.push('<hr style="border:none;border-top:1px solid rgba(201,161,74,.35);margin:18px 0">'); continue; }
+      if((m=l.match(/^(#{1,3})\s+(.*)$/))){ fechaPar(); fechaLista(); var n=m[1].length; out.push('<h'+n+'>'+inl(m[2])+'</h'+n+'>'); continue; }
+      if((m=l.match(/^\s*[-*•]\s+(.*)$/))){ fechaPar(); if(lista!=='ul'){ fechaLista(); out.push('<ul>'); lista='ul'; } out.push('<li>'+inl(m[1])+'</li>'); continue; }
+      if((m=l.match(/^\s*\d+[.)]\s+(.*)$/))){ fechaPar(); if(lista!=='ol'){ fechaLista(); out.push('<ol>'); lista='ol'; } out.push('<li>'+inl(m[1])+'</li>'); continue; }
+      if((m=l.match(/^>\s?(.*)$/))){ fechaPar(); fechaLista(); out.push('<blockquote>'+inl(m[1])+'</blockquote>'); continue; }
+      fechaLista(); par.push(l.trim());
+    }
+    fechaPar(); fechaLista();
+    return out.join('');
+  }
+  function matTexto(m){ return (m.titulo?m.titulo+'\n':'')+(m.texto_base?'Texto base: '+m.texto_base+'\n\n':'\n')+m.conteudo; }
+  function matCopiar(m, botao){
+    var t=matTexto(m);
+    function fb(){ var a=document.createElement('textarea'); a.value=t; a.style.cssText='position:fixed;opacity:0';
+      document.body.appendChild(a); a.focus(); a.select(); try{ document.execCommand('copy'); }catch(e){} a.remove(); }
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t)['catch'](fb); else fb();
+    if(botao){ var o=botao.textContent; botao.textContent='✅ Copiado'; setTimeout(function(){ botao.textContent=o; },1500); }
+  }
+  function matExcluir(id, botao){
+    if(botao && botao.dataset.certeza!=='1'){                 // dois toques: o solavanco do carro não apaga sermão
+      botao.dataset.certeza='1'; var o=botao.textContent; botao.textContent='Toque de novo';
+      setTimeout(function(){ botao.dataset.certeza=''; botao.textContent=o; },4000); return false;
+    }
+    matGravar(matLer().filter(function(x){ return x.id!==id; }));
+    var c=document.querySelector('.cartaoMat[data-id="'+id+'"]'); if(c) c.remove();
+    matPintarBotao(); return true;
+  }
+  function matAbrir(m){
+    $('matTitulo').textContent=(TIPO_MAT[m.tipo]||'Material');
+    $('matCorpo').innerHTML=(m.texto_base?'<p><small style="color:var(--suave)">Texto base: '+esc(m.texto_base)+'</small></p>':'')
+      +mdParaHtml(/^#\s/.test(m.conteudo)?m.conteudo:'# '+m.titulo+'\n\n'+m.conteudo);
+    $('matCorpo').scrollTop=0;
+    $('matAcoes').hidden=false;
+    $('matCopiar').onclick=function(){ matCopiar(m,this); };
+    $('matExcluir').onclick=function(){ if(matExcluir(m.id,this)) $('matTela').hidden=true; };
+    $('matTela').hidden=false;
+  }
+  function matCartao(m){
+    limpaVazio();
+    var d=document.createElement('div'); d.className='cartaoMat'; d.setAttribute('data-id',m.id);
+    d.innerHTML='<div class="tipo">📄 '+esc(TIPO_MAT[m.tipo]||'Material')+(m.texto_base?' · '+esc(m.texto_base):'')+'</div>'
+      +'<div class="tit">'+esc(m.titulo)+'</div>'
+      +'<div class="acoes"><button type="button" class="ler">📖 Ler</button><button type="button" class="cp">📋 Copiar</button><button type="button" class="ex">🗑️ Excluir</button></div>';
+    d.querySelector('.ler').onclick=function(){ matAbrir(m); };
+    d.querySelector('.cp').onclick=function(){ matCopiar(m,this); };
+    d.querySelector('.ex').onclick=function(){ matExcluir(m.id,this); };
+    elConversa.appendChild(d); rolar();
+  }
+  function matChegou(e){
+    var m={ id:'m'+Date.now().toString(36), tipo:e.tipo||'estudo', titulo:e.titulo||'Material', texto_base:e.texto_base||'',
+            conteudo:e.conteudo||'', quando:Date.now() };
+    var l=matLer(); l.unshift(m); matGravar(l.slice(0,40));
+    matCartao(m); matPintarBotao();
+    S.texto.push((TIPO_MAT[m.tipo]||'Material')+': '+m.titulo+'\n\n'+m.conteudo);
+  }
+  // a lista dos guardados (botão 📄 do topo)
+  function matLista(){
+    var l=matLer();
+    $('matTitulo').textContent='Meus sermões e estudos ('+l.length+')';
+    $('matAcoes').hidden=true;
+    var h='<div id="matLista">';
+    for(var i=0;i<l.length;i++){
+      var m=l[i];
+      h+='<div class="item" data-i="'+i+'"><div><b>'+esc(m.titulo)+'</b><br><small>'+esc(TIPO_MAT[m.tipo]||'Material')
+        +(m.texto_base?' · '+esc(m.texto_base):'')+' · '+new Date(m.quando).toLocaleDateString('pt-BR')+'</small></div>'
+        +'<button type="button" class="ab" style="flex:none;min-width:auto;padding:8px 12px;border-radius:10px;border:1px solid var(--dourado);background:transparent;color:var(--dourado);font-weight:800">📖 Ler</button></div>';
+    }
+    $('matCorpo').innerHTML=h+'</div>';
+    var it=$('matCorpo').querySelectorAll('.item .ab');
+    for(var k=0;k<it.length;k++) (function(m){ it[k].onclick=function(){ matAbrir(m); }; })(l[k]);
+    $('matTela').hidden=false;
+  }
+  (function(){
+    var b=$('abrirMateriais'); if(b) b.addEventListener('click',matLista);
+    var f=$('matFechar'); if(f) f.addEventListener('click',function(){ $('matTela').hidden=true; });
+    matPintarBotao();
+    // vindo do ⭐ Favoritos da tela inicial: abre direto a lista dos sermões e estudos
+    if(/[?&]materiais=1/.test(location.search)) setTimeout(matLista, 300);
+  })();
 
   // ── ligar / desligar ──────────────────────────────────────────────────────
   async function ligar(opc){
@@ -2641,7 +2920,7 @@
   function toqueNoGlobo(){
     if(S.pausado){ retomarDoCarro(); return; }
     // modo Claude: falando ou pensando, o toque CORTA e ele volta a ouvir; parado, desliga.
-    if(S.ligado && S.cerebro==='claude' && (C.emTurno || S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal)){
+    if(S.ligado && S.cerebro==='claude' && (C.emTurno || S.eleFalando || S.tocandoAgora || S.fila.length || S.falandoLocal || leitorFalando())){
       claudeCalar('ele tocou no globo'); fase();
       if(C.soComToque) claudeOuvir(true);          // celular que só ouve com toque: este toque já abre o ouvido
       return;

@@ -1053,14 +1053,12 @@ export const FERRAMENTAS = [{
   functionDeclarations: [
     {
       name: 'garimpar',
-      // SEM NOME PRÓPRIO: o globo não é personagem de professor nenhum. A descrição
-      // da ferramenta é lida pelo modelo, então um nome aqui reaparece na resposta —
-      // foi assim que saiu, no celular do pastor, um "não achei aula do Dr. Fulano".
-      // O /api/concilio-wagner (Concílio escrito) continua citando o nome: lá é
-      // legítimo. Aqui, não.
-      description: 'Busca no material de estudo do acervo (Caderno de Pérolas, tipologias catalogadas e transcrições de aulas). '
-        + 'Use ANTES de afirmar o que esse material ensina, e sempre que for cavar um texto, um objeto, um número, uma raiz do original ou um costume judaico. '
-        + 'Devolve os trechos que mais casam com o assunto.',
+      // 21/10/2026: o Elias liberou o nome. Antes a descrição escondia de quem era o material e o globo
+      // respondia que não sabia quem era o Dr. Wagner.
+      description: 'AS AULAS DO DR. WAGNER CORDEIRO (Instituto Teológico GIOM), o curso que o pastor estuda: transcrições das aulas, '
+        + 'o Caderno de Pérolas e as tipologias catalogadas. CHAME sempre que ele pedir o ensino, a visão ou o método do Dr. Wagner, '
+        + 'e ANTES de afirmar o que ele ensina; também para cavar um texto, um objeto, um número, uma raiz do original ou um costume judaico. '
+        + 'Devolve os trechos que mais casam com o assunto, com a aula de onde vieram.',
       parameters: {
         type: 'OBJECT',
         properties: {
@@ -1307,7 +1305,7 @@ Você tem estas ferramentas e elas são a sua memória de verdade NO SAGRADO:
                           tem; quem está nela agora, só meu_conhecimento diz — a lista muda)
   buscar_no_acervo      — as pregações e mensagens escritas pelo PRÓPRIO pastor Elias
   versiculos_ligados    — referências cruzadas de verdade, pelo motor de ligações
-  garimpar              — o material de estudo do acervo (Caderno de Pérolas e aulas)
+  garimpar              — as aulas do Dr. Wagner Cordeiro (GIOM): transcrições, Caderno de Pérolas, tipologias
   o_que_ja_falamos      — a SUA MEMÓRIA: o que vocês dois já conversaram, e quando
   licao_da_ebd          — a lição da EBD INTEIRA (adulto e jovem): áureo, tópicos, Cristão Alerta,
                           livro de apoio, professor, devocional, revisão e o comentarista
@@ -1374,9 +1372,9 @@ Gênesis. Nunca mais.
 LEI 3 — DIGA SEMPRE DE ONDE VEIO.
 Toda afirmação de peso tem endereço, falado com naturalidade, como um mestre fala:
 "isso está em Daniel doze, versículo quatro", "você mesmo pregou isso numa mensagem
-chamada A Escada que Ninguém Subiu", "isso está no material de estudo do acervo".
-E nunca cite PROFESSOR nem INSTITUIÇÃO por nome ao falar de si ou do seu método: você não é
-personagem de ninguém. Autor de livro consultado, sim — esse é fonte, e fonte se cita.
+chamada A Escada que Ninguém Subiu", "o Dr. Wagner ensina isso na aula de Escatologia".
+Você não é personagem de ninguém: não fale como se fosse o Dr. Wagner nem professor nenhum.
+Mas fonte se cita pelo nome — autor de livro consultado e o Dr. Wagner.
 Se você não consegue dizer de onde veio, aquilo não entra na resposta.
 
 LEI 4 — O ACERVO DELE É DELE. NÃO INVENTE PREGAÇÃO.
@@ -1524,7 +1522,7 @@ async function meuConhecimento(origem) {
       'A Bíblia do RADAR, texto exato com o idioma original (ler_versiculo, conferir_citacao, versiculos_ligados)',
       'A lição da EBD completa de adultos e jovens do trimestre: texto áureo, tópicos e subtópicos inteiros, Cristão Alerta, livro de apoio, material do professor, devocional e o comentarista (licao_da_ebd)',
       'As pregações e mensagens escritas pelo próprio pastor, no RADAR (buscar_no_acervo)',
-      'O material de estudo do acervo: Caderno de Pérolas, tipologias e transcrições de aulas (garimpar)',
+      'As aulas do Dr. Wagner Cordeiro (Instituto Teológico GIOM): transcrições, Caderno de Pérolas e tipologias (garimpar)',
       'A memória das conversas anteriores com o pastor (o_que_ja_falamos)',
       'A internet ao vivo, para fato de hoje (saber_agora)',
       'O estudioso: a Claude, com doutorado em teologia e línguas originais, pensa as perguntas fundas e devolve parecer com fontes (pensar_a_fundo)',
@@ -1540,20 +1538,41 @@ async function meuConhecimento(origem) {
   };
 }
 
+// As aulas do Dr. Wagner que foram para o Postgres (transcritas a partir de 21/10/2026).
+async function aulasDoWagnerNoBanco(assunto, origem) {
+  const token = tokenAdm();
+  if (!token || String(assunto || '').length < 4) return [];
+  try {
+    const r = await comPrazo(origem + '/api/dados?fn=biblioteca', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: assunto, n: 4, token, autor: 'Dr. Wagner Cordeiro' }),
+    }, 8000);
+    const j = await r.json();
+    return ((j && j.itens) || []).filter((x) => x.score >= 0.4).slice(0, 3)
+      .map((x) => ({ aula: x.livro || x.secao || 'aula', texto: String(x.texto || '').slice(0, 1500) }));
+  } catch (_) { return []; }
+}
+
 export async function executarFerramenta(nome, args, origem, ctx) {
   const a = args || {};
   const c = ctx || {};
   switch (String(nome || '')) {
     case 'garimpar': {
       const assunto = String(a.assunto || a.q || '').trim().slice(0, 300);
-      const ctx = assunto ? buscarContexto(assunto, 4500) : { texto: '', fontes: [] };
+      // duas fontes: o corpus antigo (Caderno de Pérolas, tipologias, 12 aulas) e as aulas transcritas depois,
+      // que moram no Postgres com autor "Dr. Wagner Cordeiro" (motor invisível — curso comprado)
+      const [ctx, doBanco] = await Promise.all([
+        Promise.resolve(assunto ? buscarContexto(assunto, 4500) : { texto: '', fontes: [] }),
+        aulasDoWagnerNoBanco(assunto, origem),
+      ]);
+      const material = [ctx.texto, ...doBanco.map((x) => '[' + x.aula + ']\n' + x.texto)].filter(Boolean).join('\n\n───\n\n');
       return {
-        achou: !!ctx.texto,
-        material: ctx.texto || '',
-        fontes: (ctx.fontes || []).map((f) => ({ fonte: f.fonte, titulo: f.titulo })),
-        ordem: ctx.texto
-          ? 'Isto é o material de estudo do acervo. Fale em cima dele e diga que veio do material — SEM citar professor nem instituição por nome.'
-          : 'NÃO achei esse assunto no material das aulas. Diga isso com todas as letras e avise que a partir daqui é você trabalhando pelo texto e pelo método, não o material dele.',
+        achou: !!material,
+        material,
+        fontes: [...(ctx.fontes || []).map((f) => ({ fonte: f.fonte, titulo: f.titulo })), ...doBanco.map((x) => ({ fonte: 'Dr. Wagner Cordeiro', titulo: x.aula }))],
+        ordem: material
+          ? 'Isto é das aulas do Dr. Wagner Cordeiro. Fale em cima disso com as suas palavras e DIGA O NOME dele ("o Dr. Wagner ensina que…"). Você não é ele: não fale na primeira pessoa como se fosse.'
+          : 'NÃO achei esse assunto nas aulas do Dr. Wagner. Diga isso com todas as letras e avise que daqui pra frente é você trabalhando pelo texto, não ele.',
       };
     }
     case 'ler_versiculo':
