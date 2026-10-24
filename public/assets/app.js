@@ -3476,34 +3476,35 @@ function abrirManuais(){ mostrarTela('tela-manuais'); renderManuais(); }
 function renderManuais(){
   // Manual de Cerimônias e Declaração de Fé saíram daqui → vão pro Meu Estudo (livros particulares)
   var itens=[];
-  itens.push({onclick:"location.href='/biblioteca/biblias/'", titulo:'Bíblias', autor:'A Palavra pra ler', capa:'/biblioteca/biblias/biblia-icone2.png', emoji:'📖', cor:'#8b6a1e'});
-  itens.push({onclick:"location.href='/biblioteca/sermoes/'", titulo:'Sermões', autor:'Escavador de Pérolas', emoji:'📜', cor:'#0f6d78'});
-  itens.push({onclick:"location.href='/biblioteca/mensagens/'", titulo:'Mensagens', autor:'Sermões em prosa', emoji:'🔥', cor:'#8a1c1c'});
-  itens.push({onclick:"location.href='/biblioteca/concilio/'", titulo:'Concílio', autor:'42 expositores + Lupa', emoji:'📖', cor:'#0f3d5c'});
-  itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', emoji:'🎓', cor:'#a9791c'});
+  // 24/10/2026: cada cartão ganhou a foto do mockup "módulos premium" do Elias (public/biblioteca/img/modulos/).
+  var IMG='/biblioteca/img/modulos/';
+  itens.push({onclick:"location.href='/biblioteca/biblias/'", titulo:'Bíblias', autor:'A Palavra pra ler', img:IMG+'biblias.jpg'});
+  itens.push({onclick:"location.href='/biblioteca/sermoes/'", titulo:'Sermões', autor:'Escavador de Pérolas', img:IMG+'sermoes.jpg'});
+  itens.push({onclick:"location.href='/biblioteca/mensagens/'", titulo:'Mensagens', autor:'Sermões em prosa', img:IMG+'mensagens.jpg'});
+  itens.push({onclick:"location.href='/biblioteca/concilio/'", titulo:'Concílio', autor:'42 expositores + Lupa', img:IMG+'concilio.jpg'});
+  itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', img:IMG+'escola-de-pregacao.jpg'});
   // Dicas de IA (15/10/2026): garimpadas de vídeos e conferidas. Selo NOVO por 14 dias.
-  itens.push({onclick:"location.href='/biblioteca/dicas-ia/'", titulo:'Dicas de IA', autor:'Ferramentas e truques', emoji:'🤖', cor:'#0f6d78', novo:(Date.now()-new Date('2026-10-15T12:00:00').getTime())<14*864e5});
-  itens.push({onclick:"location.href='/biblioteca/livros/'", titulo:'Livros', autor:'Biblioteca do obreiro', emoji:'📚', cor:'#2f6b4f', novo:(Date.now()-new Date('2026-10-17T12:00:00').getTime())<14*864e5});
-  itens.push({onclick:"location.href='/biblioteca/estudo/'", titulo:'Meu Estudo', autor:'Privado · senha', emoji:'🔒', cor:'#5b3a1a'});
+  itens.push({onclick:"location.href='/biblioteca/dicas-ia/'", titulo:'Dicas de IA', autor:'Ferramentas e truques', img:IMG+'dicas-de-ia.jpg', novo:(Date.now()-new Date('2026-10-15T12:00:00').getTime())<14*864e5});
+  itens.push({onclick:"location.href='/biblioteca/livros/'", titulo:'Livros', autor:'Biblioteca do obreiro', img:IMG+'livros.jpg', novo:(Date.now()-new Date('2026-10-17T12:00:00').getTime())<14*864e5});
+  itens.push({onclick:"location.href='/biblioteca/estudo/'", titulo:'Meu Estudo', autor:'Seu estudo particular', img:IMG+'meu-estudo.jpg', senha:true});
   // Pérolas Descoberta (09/10/2026): os 15 PDFs da pasta MARIA do Elias (Parábolas, Jesus no AT,
   // 70 Semanas, Salmos Explicados, Curiosidades, 12 Apóstolos) — cifrados com a mesma senha
   // do Meu Estudo, porque é material comprado e o repositório é público.
-  itens.push({onclick:"location.href='/biblioteca/perolas-descoberta/'", titulo:'Pérolas Descoberta', autor:'Privado · senha', emoji:'🗂️', cor:'#2f4a6b', comp:'compartilharPerolas()'});
+  itens.push({onclick:"location.href='/biblioteca/perolas-descoberta/'", titulo:'Pérolas Descoberta', autor:'Estudos para compartilhar', img:IMG+'perolas-descoberta.jpg', senha:true, comp:'compartilharPerolas()'});
   var box=document.getElementById('manuais-lista');
-  box.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">'+itens.map(function(m){
-    var capa = m.capa
-      ? '<img src="'+m.capa+'" style="width:100%;height:70px;object-fit:cover;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.22)" onerror="this.outerHTML=\'<div style=&quot;width:100%;height:70px;border-radius:10px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:30px&quot;>'+m.emoji+'</div>\'">'
-      : '<div style="width:100%;height:70px;border-radius:10px;background:linear-gradient(135deg,'+m.cor+',#20122a);display:flex;align-items:center;justify-content:center;font-size:30px">'+m.emoji+'</div>';
-    // botão COMPARTILHAR no canto da capa (12/10/2026, pedido do Elias para o card Pérolas Descoberta).
+  box.innerHTML='<div class="bib-intro">Biblioteca do obreiro</div><div class="bib-intro-sub">Tudo o que você precisa para estudar, preparar e pregar.</div>'
+    +'<div class="bib-grade">'+itens.map(function(m){
+    // botão COMPARTILHAR no canto da foto (12/10/2026, pedido do Elias para o card Pérolas Descoberta).
     // stopPropagation: tocar no botão NÃO abre o módulo; tocar no resto do card abre como sempre.
     var btnComp = m.comp
-      ? '<button type="button" id="btn-comp-perolas" title="Compartilhar" aria-label="Compartilhar '+m.titulo+'" onclick="event.stopPropagation();'+m.comp+'" style="position:absolute;top:13px;right:13px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.35);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">📤</button>'
+      ? '<button type="button" id="btn-comp-perolas" class="bm-comp" title="Compartilhar" aria-label="Compartilhar '+m.titulo+'" onclick="event.stopPropagation();'+m.comp+'">📤</button>'
       : '';
-    return '<div onclick="'+m.onclick+'" style="position:relative;background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:7px;cursor:pointer;box-shadow:0 2px 8px rgba(15,61,92,.06)">'
-      +capa+btnComp
-      +(m.novo?'<span style="position:absolute;top:12px;left:12px;background:linear-gradient(135deg,#27c46f,#1a8a4a);color:#fff;font-size:9px;font-weight:900;letter-spacing:.08em;padding:2px 8px;border-radius:99px;box-shadow:0 2px 6px rgba(0,0,0,.35)">NOVO</span>':'')
-      +'<div style="font-weight:800;font-size:12.5px;color:#0f3d5c;font-family:\'Playfair Display\',serif;margin-top:6px;line-height:1.15">'+m.titulo+'</div>'
-      +'<div style="font-size:10.5px;color:#8a6a2f;margin-top:1px;line-height:1.15">'+m.autor+'</div></div>';
+    return '<div class="bib-mod'+(m.comp?' com-comp':'')+'" onclick="'+m.onclick+'" role="button" aria-label="'+m.titulo+'">'
+      +'<img src="'+m.img+'" alt="" decoding="async">'
+      +(m.novo?'<span class="bm-novo">NOVO</span>':'')
+      +(m.senha?'<span class="bm-cadeado">🔒 senha</span>':'')
+      +btnComp
+      +'<div class="bm-txt"><b>'+m.titulo+'</b><span>'+m.autor+'</span></div></div>';
   }).join('')+'</div>';
 }
 // Compartilha o módulo Pérolas Descoberta (nome, o que tem dentro e o link). Mesmo padrão dos outros

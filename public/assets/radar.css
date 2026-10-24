@@ -1311,3 +1311,26 @@ html[data-pele="azul"] #home::selection{background:rgba(231,184,79,.35)}
 .ebd-mag.j .ebd-mag-card .mc-texto{color:#3a2814}
 .ebd-mag.j .ebd-mag-card.pratica{border-color:var(--mag-bronze)}
 .ebd-mag.j .ebd-mag-card.pratica .mc-titulo{color:var(--mag-vinho)}
+
+/* ══ BIBLIOTECA — cartões com foto (24/10/2026, mockup "módulos premium" do Elias) ══════════════════
+   A foto ocupa o cartão inteiro; título e subtítulo por cima, num degradê escuro embaixo. */
+#tela-manuais{background:#f3efe6}
+#tela-manuais .std-header{background:#fff}
+#tela-manuais .std-titulo{color:#0f3d5c!important;font-family:'Playfair Display',Georgia,serif;font-size:17px}
+#tela-manuais .std-sub{color:#8a6a2f!important}
+.bib-intro{font-family:'Playfair Display',Georgia,serif;color:#0f3d5c;font-size:19px;font-weight:800;margin:2px 2px 2px}
+.bib-intro-sub{color:#7a6a4f;font-size:12.5px;margin:0 2px 14px}
+.bib-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.bib-mod{position:relative;aspect-ratio:5/4;border-radius:16px;overflow:hidden;cursor:pointer;background:#2a1d10;
+  box-shadow:0 6px 18px rgba(40,25,5,.22),0 1px 0 rgba(255,255,255,.4) inset;transition:transform .15s}
+.bib-mod:active{transform:scale(.97)}
+.bib-mod img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.bib-mod::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 38%,rgba(12,8,2,.55) 64%,rgba(12,8,2,.92) 100%)}
+.bib-mod .bm-txt{position:absolute;left:11px;right:11px;bottom:9px;z-index:2;color:#fff}
+.bib-mod .bm-txt b{display:block;font-family:'Playfair Display',Georgia,serif;font-weight:800;font-size:15.5px;line-height:1.1;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.bib-mod .bm-txt span{display:block;font-size:11px;color:#f0d28a;margin-top:3px;line-height:1.15;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.bib-mod .bm-novo{position:absolute;top:9px;left:9px;z-index:2;background:linear-gradient(135deg,#27c46f,#1a8a4a);color:#fff;font-size:9.5px;font-weight:900;letter-spacing:.08em;padding:3px 9px;border-radius:99px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.bib-mod .bm-cadeado{position:absolute;top:9px;right:9px;z-index:2;background:rgba(15,10,3,.6);color:#f0d28a;border:1px solid rgba(240,210,138,.55);font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;backdrop-filter:blur(3px)}
+.bib-mod .bm-comp{position:absolute;top:8px;right:8px;z-index:3;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.35);font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.bib-mod.com-comp .bm-cadeado{right:46px}
+@media (max-width:520px){ .bib-grade .bib-mod:last-child:nth-child(odd){grid-column:1/-1;aspect-ratio:5/2.2} }
