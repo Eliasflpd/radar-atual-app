@@ -1314,14 +1314,14 @@ html[data-pele="azul"] #home::selection{background:rgba(231,184,79,.35)}
 
 /* ══ BIBLIOTECA — cartões com foto (24/10/2026, mockup "módulos premium" do Elias) ══════════════════
    A foto ocupa o cartão inteiro; título e subtítulo por cima, num degradê escuro embaixo. */
-#tela-manuais{background:#f3efe6}
+#tela-manuais,#tela-manuais .dash-scroll{background:#f3efe6}
 #tela-manuais .std-header{background:#fff}
 #tela-manuais .std-titulo{color:#0f3d5c!important;font-family:'Playfair Display',Georgia,serif;font-size:17px}
 #tela-manuais .std-sub{color:#8a6a2f!important}
 .bib-intro{font-family:'Playfair Display',Georgia,serif;color:#0f3d5c;font-size:19px;font-weight:800;margin:2px 2px 2px}
 .bib-intro-sub{color:#7a6a4f;font-size:12.5px;margin:0 2px 14px}
 .bib-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-@media (min-width:700px){ #manuais-lista{max-width:980px;margin:0 auto;width:100%} .bib-grade{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px} }
+@media (min-width:700px){ .bib-intro,.bib-intro-sub,.bib-grade{max-width:980px;margin-left:auto;margin-right:auto} .bib-grade{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px} }
 .bib-mod{position:relative;aspect-ratio:5/4;border-radius:16px;overflow:hidden;cursor:pointer;background:#2a1d10;
   box-shadow:0 6px 18px rgba(40,25,5,.22),0 1px 0 rgba(255,255,255,.4) inset;transition:transform .15s}
 .bib-mod:active{transform:scale(.97)}
