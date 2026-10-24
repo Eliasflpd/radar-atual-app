@@ -61,7 +61,8 @@
 // por /api/livro-particular, e só sai para o aparelho dele (crachá conferido no servidor). Nada fica em cache.
 var $=function(id){return document.getElementById(id);};
 var LIVRO=(new URLSearchParams(location.search).get('id')||'').replace(/[^a-z0-9-]/g,'');
-var CAPS=[], TIT='', AUTOR='', capAtual=0;
+var CAPS=[], TIT='', AUTOR='', CAPA='', capAtual=0;
+function capaOk(s){ return !!s && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(s); }
 function ler(k){ try{ return localStorage.getItem(k)||''; }catch(_){ return ''; } }
 // Abre com o PIN do Elias (o servidor devolve um token, que fica aqui — a senha não) ou com o crachá dos aparelhos dele.
 function api(corpo){
@@ -114,7 +115,8 @@ function mostrarSumario(){
   capAtual=0; window.onscroll=null;
   cabecalho('📖 '+TIT, AUTOR+' · só para você', false);
   var L=lidos(), ult=parseInt(guardado('ultimo')||'0',10);
-  var h='<div class="aviso">🔒 Livro particular: só abre neste aparelho. Não fica aberto no site e não aparece para os membros.</div>';
+  var h=(CAPA?'<img src="'+CAPA+'" alt="Capa" style="display:block;width:62%;max-width:260px;margin:4px auto 16px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25)">':'')
+    +'<div class="aviso">🔒 Livro particular: abre só com a sua senha. Não fica aberto no site e não aparece para os membros.</div>';
   if(ult) { var c=CAPS.filter(function(x){return x.ordem===ult;})[0]; if(c) h+='<button class="continuar" data-cap="'+ult+'">▶ Continuar: '+esc(c.titulo)+'</button>'; }
   h+='<div class="caps">'+CAPS.map(function(c){
     var ehLivro=/^Livro [IVX]+ — /.test(c.titulo);
@@ -166,14 +168,15 @@ function iniciar(){
       if(!d.ok){ if(d.motivo==='particular') pedirPin(iniciar); else falhou(); return; }
       cabecalho('🔒 Biblioteca particular','Só para você',false);
       $('wrap').innerHTML='<div class="caps">'+d.livros.map(function(l){
-        return '<a class="cap" style="text-decoration:none;color:inherit" href="particular.html?id='+encodeURIComponent(l.livro)+'"><span class="n">📜</span><span class="t"><b>'+esc(l.titulo)+'</b><br><small>'+esc(l.autor)+' · '+l.caps+' capítulos</small></span></a>';
+        var mini=capaOk(l.capa)?'<img src="'+l.capa+'" alt="" style="width:54px;height:81px;object-fit:cover;border-radius:6px;display:block">':'📜';
+        return '<a class="cap" style="text-decoration:none;color:inherit;align-items:center" href="particular.html?id='+encodeURIComponent(l.livro)+'"><span class="n">'+mini+'</span><span class="t"><b>'+esc(l.titulo)+'</b><br><small>'+esc(l.autor)+' · '+l.caps+' capítulos</small></span></a>';
       }).join('')+'</div>';
     }).catch(falhou);
     return;
   }
   api({livro:LIVRO}).then(function(d){
     if(!d.ok){ if(d.motivo==='particular') pedirPin(iniciar); else falhou(); return; }
-    CAPS=d.caps; TIT=d.titulo; AUTOR=d.autor; mostrarSumario();
+    CAPS=d.caps; TIT=d.titulo; AUTOR=d.autor; CAPA=capaOk(d.capa)?d.capa:''; mostrarSumario();
   }).catch(falhou);
 }
 function falhou(){ $('wrap').innerHTML='<div class="carregando">Não consegui abrir agora. Confira a internet.</div>'; }

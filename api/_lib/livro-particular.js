@@ -27,6 +27,11 @@ function liberados() {
 }
 const tokenDe = (cfg) => crypto.createHmac('sha256', cfg.segredo).update('livros-particulares').digest('hex');
 const igual = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+// A capa também fica só no banco (livros_particulares_capas, subida com `livro-particular-subir.mjs <id> --capa`).
+async function capasDe(c) {
+  const r = await c.query('select livro, capa from livros_particulares_capas').catch(() => ({ rows: [] }));
+  const m = {}; r.rows.forEach((x) => { m[x.livro] = x.capa; }); return m;
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -69,13 +74,16 @@ module.exports = async (req, res) => {
     if (!livro) {
       const r = await c.query(`select livro, max(livro_titulo) titulo, max(autor) autor, count(*)::int caps
                                  from livros_particulares group by livro order by 2`);
-      res.json({ ok: true, livros: r.rows });
+      const capas = await capasDe(c);
+      res.json({ ok: true, livros: r.rows.map((l) => ({ ...l, capa: capas[l.livro] || '' })) });
       return;
     }
     if (b.cap === undefined || b.cap === null || b.cap === '') {
       const r = await c.query('select ordem, titulo, livro_titulo, autor from livros_particulares where livro=$1 order by ordem', [livro]);
       if (!r.rows[0]) { res.json({ ok: false, err: 'livro não encontrado' }); return; }
-      res.json({ ok: true, titulo: r.rows[0].livro_titulo, autor: r.rows[0].autor, caps: r.rows.map((x) => ({ ordem: x.ordem, titulo: x.titulo })) });
+      const capas = await capasDe(c);
+      res.json({ ok: true, titulo: r.rows[0].livro_titulo, autor: r.rows[0].autor, capa: capas[livro] || '',
+        caps: r.rows.map((x) => ({ ordem: x.ordem, titulo: x.titulo })) });
       return;
     }
     const cap = parseInt(b.cap, 10) || 0;

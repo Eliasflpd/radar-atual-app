@@ -2,8 +2,21 @@
 // Sobe um livro particular (só o dono lê) para a tabela livros_particulares. Ver api/_lib/livro-particular.js.
 // O .md fica FORA do repositório (D:\LIVROS-MOTOR\...); cada "## " vira um capítulo, na ordem do arquivo.
 //   RADAR_DB=... node scripts/livro-particular-subir.mjs <id> "<arquivo.md>" "<Título>" "<Autor>"
+//   RADAR_DB=... node scripts/livro-particular-subir.mjs <id> --capa "<capa.jpg>"   (capa também só no banco)
 import fs from 'node:fs';
 import pg from 'pg';
+
+if (process.argv[3] === '--capa') {
+  const [id, , img] = process.argv.slice(2);
+  const c = new pg.Client({ connectionString: process.env.RADAR_DB, ssl: { rejectUnauthorized: false } });
+  await c.connect();
+  await c.query('create table if not exists livros_particulares_capas(livro text primary key, capa text)');
+  const url = 'data:image/jpeg;base64,' + fs.readFileSync(img).toString('base64');
+  await c.query('insert into livros_particulares_capas(livro,capa) values($1,$2) on conflict(livro) do update set capa=$2', [id, url]);
+  console.log(`✅ capa de ${id}: ${Math.round(url.length / 1024)} KB`);
+  await c.end();
+  process.exit(0);
+}
 
 const [id, arq, titulo, autor] = process.argv.slice(2);
 if (!id || !arq || !titulo) { console.log('uso: node scripts/livro-particular-subir.mjs <id> <arquivo.md> <Título> <Autor>'); process.exit(1); }
