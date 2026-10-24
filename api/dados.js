@@ -549,7 +549,9 @@ const HANDLERS = {
   chave:        require('./_lib/chave.js'),
   painel:       painel,
   uso:          uso,
-  pregado:      pregado
+  pregado:      pregado,
+  // livro comprado que só o dono lê (texto no Postgres, nunca no repo). Ver api/_lib/livro-particular.js.
+  'livro-particular': require('./_lib/livro-particular.js')
 };
 
 module.exports = async (req, res) => {

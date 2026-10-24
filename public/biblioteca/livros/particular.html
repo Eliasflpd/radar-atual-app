@@ -1,0 +1,142 @@
+<!doctype html><html lang="pt-br"><head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Livro particular — RADAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0f3d5c;--gold:#C8A24A;--tinta:#22303c;--papel:#f6f3ec;--suave:#7488a0;--linha:#e4e7ec}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Lora,Georgia,serif;background:#eef3f7;color:var(--tinta);-webkit-text-size-adjust:100%}
+  header{background:var(--navy);color:#fff;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 12px;position:sticky;top:0;z-index:10}
+  header .voltar{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:9px;width:38px;height:38px;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+  header .tit{flex:1;min-width:0}
+  header .tit b{font-family:'Playfair Display',serif;font-size:1.05rem;display:block;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header .tit span{font-size:.76rem;opacity:.85;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ferramentas{display:flex;gap:8px}
+  .ferramentas button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;width:34px;height:34px;font-size:1rem;cursor:pointer}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px calc(40px + env(safe-area-inset-bottom))}
+  .aviso{background:#fff7e0;border:1px solid #ecd9a0;color:#6b5320;border-radius:12px;padding:10px 13px;font-size:.82rem;margin-bottom:14px}
+  .continuar{display:block;width:100%;background:var(--gold);color:#1d1606;border:none;border-radius:12px;padding:13px;font:700 1rem Lora,serif;margin-bottom:14px;cursor:pointer}
+  .caps{background:#fff;border:1px solid var(--linha);border-radius:14px;overflow:hidden}
+  .cap{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-bottom:1px solid var(--linha);cursor:pointer;font-size:.95rem;line-height:1.35}
+  .cap:last-child{border-bottom:none}
+  .cap:active{background:#f3f6f9}
+  .cap .n{color:var(--suave);font-size:.8rem;min-width:26px;padding-top:2px}
+  .cap.livro{background:#f4efe2;font-family:'Playfair Display',serif;color:#6b4a1e;font-weight:700}
+  .cap.lido .t{color:var(--suave)}
+  .cap.lido .n:after{content:' ✓';color:#3a8a4a}
+  .conteudo{background:var(--papel);border-radius:14px;padding:22px 20px 30px;box-shadow:0 4px 16px rgba(15,61,92,.08);font-size:var(--fs,18px);line-height:1.75}
+  .conteudo h1{font-family:'Playfair Display',serif;font-size:1.35em;color:var(--navy);margin:4px 0 18px;text-align:center;line-height:1.25}
+  .conteudo p{margin:0 0 15px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+  .conteudo .notas{font-family:'Playfair Display',serif;color:#6b4a1e;margin:28px 0 12px;font-size:1.05em;border-top:1px solid #dfd8c6;padding-top:18px}
+  .conteudo .nota{font-size:.88em;line-height:1.6;color:#4b5866}
+  .nav{display:flex;gap:10px;margin-top:16px}
+  .nav button{flex:1;background:#fff;border:1px solid var(--linha);border-radius:12px;padding:12px 8px;font:600 .9rem Lora,serif;color:var(--navy);cursor:pointer}
+  .nav button:disabled{opacity:.35}
+  .carregando{text-align:center;color:var(--suave);padding:50px 20px}
+</style></head>
+<body>
+  <header>
+    <button class="voltar" id="btn-voltar" aria-label="Voltar">‹</button>
+    <div class="tit"><b id="h-tit">📖 Livro particular</b><span id="h-sub">Só para você</span></div>
+    <div class="ferramentas" id="ferramentas" style="display:none">
+      <button onclick="fonte(-1)" aria-label="Diminuir letra">A−</button>
+      <button onclick="fonte(1)" aria-label="Aumentar letra">A+</button>
+    </div>
+  </header>
+  <div class="wrap" id="wrap"><div class="carregando">📖 Abrindo…</div></div>
+
+<script>
+// LIVRO PARTICULAR (24/10/2026): livro comprado que só o Elias lê. O texto NÃO está neste site: vem do banco,
+// por /api/livro-particular, e só sai para o aparelho dele (crachá conferido no servidor). Nada fica em cache.
+var $=function(id){return document.getElementById(id);};
+var LIVRO=(new URLSearchParams(location.search).get('id')||'').replace(/[^a-z0-9-]/g,'');
+var CAPS=[], TIT='', AUTOR='', capAtual=0;
+function cracha(){ try{ return localStorage.getItem('radar_chave')||''; }catch(_){ return ''; } }
+function api(corpo){
+  corpo.cracha=cracha();
+  return fetch('/api/livro-particular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo),cache:'no-store'})
+    .then(function(r){ return r.json(); });
+}
+function guardado(k,v){ try{ if(v===undefined) return localStorage.getItem('lp_'+LIVRO+'_'+k); localStorage.setItem('lp_'+LIVRO+'_'+k,String(v)); }catch(_){ return null; } }
+function lidos(){ try{ return JSON.parse(guardado('lidos')||'{}'); }catch(_){ return {}; } }
+
+function fonte(d){
+  var fs=parseInt(localStorage.getItem('livro_fs')||'18',10)+d;
+  fs=Math.max(14,Math.min(28,fs)); localStorage.setItem('livro_fs',fs);
+  document.documentElement.style.setProperty('--fs',fs+'px');
+}
+document.documentElement.style.setProperty('--fs',(localStorage.getItem('livro_fs')||'18')+'px');
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inl(s){ return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<i>$2</i>'); }
+function textoHtml(t){
+  var emNotas=false;
+  return t.split(/\n\s*\n/).map(function(p){
+    p=p.trim(); if(!p) return '';
+    if(p==='**NOTAS**'){ emNotas=true; return '<div class="notas">Notas</div>'; }
+    return '<p'+(emNotas?' class="nota"':'')+'>'+inl(p)+'</p>';
+  }).join('');
+}
+
+function cabecalho(t,s,ferr){ $('h-tit').textContent=t; $('h-sub').textContent=s; $('ferramentas').style.display=ferr?'flex':'none'; }
+
+function mostrarSumario(){
+  capAtual=0; window.onscroll=null;
+  cabecalho('📖 '+TIT, AUTOR+' · só para você', false);
+  var L=lidos(), ult=parseInt(guardado('ultimo')||'0',10);
+  var h='<div class="aviso">🔒 Livro particular: só abre neste aparelho. Não fica aberto no site e não aparece para os membros.</div>';
+  if(ult) { var c=CAPS.filter(function(x){return x.ordem===ult;})[0]; if(c) h+='<button class="continuar" data-cap="'+ult+'">▶ Continuar: '+esc(c.titulo)+'</button>'; }
+  h+='<div class="caps">'+CAPS.map(function(c){
+    var ehLivro=/^Livro [IVX]+ — /.test(c.titulo);
+    return '<div class="cap'+(ehLivro?' livro':'')+(L[c.ordem]?' lido':'')+'" data-cap="'+c.ordem+'"><span class="n">'+(ehLivro?'':c.ordem)+'</span><span class="t">'+esc(c.titulo)+'</span></div>';
+  }).join('')+'</div>';
+  $('wrap').innerHTML=h;
+  window.scrollTo(0,parseInt(sessionStorage.getItem('lp_sum_y')||'0',10));
+}
+
+function abrirCap(n, empilhar){
+  sessionStorage.setItem('lp_sum_y', capAtual?sessionStorage.getItem('lp_sum_y')||'0':String(window.scrollY));
+  if(empilhar) history.pushState({cap:n},'','');
+  capAtual=n; guardado('ultimo',n);
+  var c=CAPS.filter(function(x){return x.ordem===n;})[0]||{titulo:''};
+  cabecalho(c.titulo, TIT, true);
+  $('wrap').innerHTML='<div class="carregando">📖 Abrindo o capítulo…</div>';
+  window.scrollTo(0,0);
+  api({livro:LIVRO, cap:n}).then(function(d){
+    if(!d.ok) throw 0;
+    $('wrap').innerHTML='<div class="conteudo"><h1>'+esc(d.titulo)+'</h1>'+textoHtml(d.texto)+'</div>'
+      +'<div class="nav"><button id="ant"'+(n<=1?' disabled':'')+'>‹ Anterior</button><button id="sum">☰ Sumário</button><button id="prox"'+(n>=d.total?' disabled':'')+'>Próximo ›</button></div>';
+    $('ant').onclick=function(){ if(n>1) trocar(n-1); };
+    $('prox').onclick=function(){ if(n<d.total) trocar(n+1); };
+    $('sum').onclick=function(){ history.back(); };
+    var y=parseFloat(guardado('y_'+n)||'0');
+    if(y>0.01) setTimeout(function(){ window.scrollTo(0,(document.body.scrollHeight-window.innerHeight)*y); },60);
+    var t=null;
+    window.onscroll=function(){ if(t) return; t=setTimeout(function(){ t=null;
+      var max=document.body.scrollHeight-window.innerHeight, p=max>0?Math.min(1,window.scrollY/max):0;
+      guardado('y_'+n,p);
+      if(p>0.92){ var L=lidos(); if(!L[n]){ L[n]=1; guardado('lidos',JSON.stringify(L)); } }
+    },400); };
+  }).catch(function(){ $('wrap').innerHTML='<div class="carregando">Não consegui abrir agora. Confira a internet e toque em ‹ para tentar de novo.</div>'; });
+}
+// Anterior/Próximo troca o capítulo no lugar (não empilha), então o voltar do celular leva sempre ao sumário.
+function trocar(n){ history.replaceState({cap:n},'',''); abrirCap(n,false); }
+
+$('wrap').addEventListener('click',function(ev){
+  var el=ev.target.closest&&ev.target.closest('[data-cap]'); if(!el||capAtual) return;
+  abrirCap(parseInt(el.getAttribute('data-cap'),10), true);
+});
+window.addEventListener('popstate',function(){ if(capAtual) mostrarSumario(); });
+$('btn-voltar').onclick=function(){ if(capAtual) history.back(); else location.href='./'; };
+
+if(!LIVRO){ location.replace('./'); }
+else api({livro:LIVRO}).then(function(d){
+  if(!d.ok){ $('wrap').innerHTML='<div class="carregando">🔒 Este livro é particular e só abre no aparelho do dono.</div>'; return; }
+  CAPS=d.caps; TIT=d.titulo; AUTOR=d.autor; mostrarSumario();
+}).catch(function(){ $('wrap').innerHTML='<div class="carregando">Não consegui abrir agora. Confira a internet.</div>'; });
+</script>
+</body></html>
