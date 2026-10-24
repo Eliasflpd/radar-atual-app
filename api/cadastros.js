@@ -54,6 +54,17 @@ function confereCodigo(token, code, whatsapp) {
   } catch (_) { return false; }
 }
 
+// 24/10/2026 — na troca para o banco novo (13/10) as outras tabelas se criaram sozinhas, mas esta
+// não tinha `create table`: todo cadastro falhava calado e o "Já cadastrado?" nunca achava ninguém.
+let _tabelaOk = false;
+async function garantirTabela(c) {
+  if (_tabelaOk) return;
+  await c.query(`create table if not exists radar_cadastros(
+    id bigserial primary key, nome text, cargo text, whatsapp text,
+    criado_em timestamptz default now(), trial_inicio timestamptz default now(), liberado_ate timestamptz)`);
+  _tabelaOk = true;
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -65,6 +76,7 @@ module.exports = async (req, res) => {
   const c = new Client({ connectionString: cs, ssl: { rejectUnauthorized: false } });
   try {
     await c.connect();
+    await garantirTabela(c);
     if (req.method === 'POST') {
       let b = req.body; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }
       const nome = (b && b.nome || '').trim();
