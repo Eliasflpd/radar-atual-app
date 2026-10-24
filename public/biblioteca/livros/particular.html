@@ -37,6 +37,13 @@
   .nav button{flex:1;background:#fff;border:1px solid var(--linha);border-radius:12px;padding:12px 8px;font:600 .9rem Lora,serif;color:var(--navy);cursor:pointer}
   .nav button:disabled{opacity:.35}
   .carregando{text-align:center;color:var(--suave);padding:50px 20px}
+  .pin{background:#fff;border:1px solid var(--linha);border-radius:16px;padding:28px 20px;text-align:center;max-width:360px;margin:30px auto}
+  .pin .cadeado{font-size:2.4rem;margin-bottom:8px}
+  .pin p{color:var(--tinta);margin-bottom:16px}
+  .pin input{width:100%;font-size:1.8rem;letter-spacing:.5em;text-align:center;padding:12px;border:2px solid var(--linha);border-radius:12px;margin-bottom:14px;font-family:inherit}
+  .pin input:focus{outline:none;border-color:var(--gold)}
+  .pin button{width:100%;background:var(--gold);color:#1d1606;border:none;border-radius:12px;padding:13px;font:700 1.05rem Lora,serif;cursor:pointer}
+  .pin button:disabled{opacity:.6}
 </style></head>
 <body>
   <header>
@@ -55,11 +62,30 @@
 var $=function(id){return document.getElementById(id);};
 var LIVRO=(new URLSearchParams(location.search).get('id')||'').replace(/[^a-z0-9-]/g,'');
 var CAPS=[], TIT='', AUTOR='', capAtual=0;
-function cracha(){ try{ return localStorage.getItem('radar_chave')||''; }catch(_){ return ''; } }
+function ler(k){ try{ return localStorage.getItem(k)||''; }catch(_){ return ''; } }
+// Abre com o PIN do Elias (o servidor devolve um token, que fica aqui — a senha não) ou com o crachá dos aparelhos dele.
 function api(corpo){
-  corpo.cracha=cracha();
+  corpo.cracha=ler('radar_chave'); corpo.token=ler('lp_token');
   return fetch('/api/livro-particular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo),cache:'no-store'})
     .then(function(r){ return r.json(); });
+}
+function pedirPin(depois, msg){
+  cabecalho('🔒 Biblioteca particular','Digite a senha',false);
+  $('wrap').innerHTML='<div class="pin"><div class="cadeado">🔒</div><p>'+(msg||'Livros particulares. Digite a senha para abrir.')+'</p>'
+    +'<input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="••••">'
+    +'<button id="entrar">Abrir</button></div>';
+  var campo=$('pin'); campo.focus();
+  function entrar(){
+    var v=campo.value.trim(); if(!v) return;
+    $('entrar').disabled=true; $('entrar').textContent='Conferindo…';
+    fetch('/api/livro-particular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:v}),cache:'no-store'})
+      .then(function(r){ return r.json(); }).then(function(d){
+        if(d.ok&&d.token){ try{ localStorage.setItem('lp_token',d.token); }catch(_){} depois(); return; }
+        pedirPin(depois, d.motivo==='travado'?'Muitas tentativas erradas. Espere uma hora e tente de novo.':'Senha errada. Tente de novo.');
+      }).catch(function(){ pedirPin(depois,'Não consegui conferir agora. Confira a internet.'); });
+  }
+  $('entrar').onclick=entrar;
+  campo.onkeydown=function(e){ if(e.key==='Enter') entrar(); };
 }
 function guardado(k,v){ try{ if(v===undefined) return localStorage.getItem('lp_'+LIVRO+'_'+k); localStorage.setItem('lp_'+LIVRO+'_'+k,String(v)); }catch(_){ return null; } }
 function lidos(){ try{ return JSON.parse(guardado('lidos')||'{}'); }catch(_){ return {}; } }
@@ -133,10 +159,24 @@ $('wrap').addEventListener('click',function(ev){
 window.addEventListener('popstate',function(){ if(capAtual) mostrarSumario(); });
 $('btn-voltar').onclick=function(){ if(capAtual) history.back(); else location.href='./'; };
 
-if(!LIVRO){ location.replace('./'); }
-else api({livro:LIVRO}).then(function(d){
-  if(!d.ok){ $('wrap').innerHTML='<div class="carregando">🔒 Este livro é particular e só abre no aparelho do dono.</div>'; return; }
-  CAPS=d.caps; TIT=d.titulo; AUTOR=d.autor; mostrarSumario();
-}).catch(function(){ $('wrap').innerHTML='<div class="carregando">Não consegui abrir agora. Confira a internet.</div>'; });
+// Sem ?id= : a estante particular (lista dos livros). Com ?id= : o sumário daquele livro.
+function iniciar(){
+  if(!LIVRO){
+    api({}).then(function(d){
+      if(!d.ok){ if(d.motivo==='particular') pedirPin(iniciar); else falhou(); return; }
+      cabecalho('🔒 Biblioteca particular','Só para você',false);
+      $('wrap').innerHTML='<div class="caps">'+d.livros.map(function(l){
+        return '<a class="cap" style="text-decoration:none;color:inherit" href="particular.html?id='+encodeURIComponent(l.livro)+'"><span class="n">📜</span><span class="t"><b>'+esc(l.titulo)+'</b><br><small>'+esc(l.autor)+' · '+l.caps+' capítulos</small></span></a>';
+      }).join('')+'</div>';
+    }).catch(falhou);
+    return;
+  }
+  api({livro:LIVRO}).then(function(d){
+    if(!d.ok){ if(d.motivo==='particular') pedirPin(iniciar); else falhou(); return; }
+    CAPS=d.caps; TIT=d.titulo; AUTOR=d.autor; mostrarSumario();
+  }).catch(falhou);
+}
+function falhou(){ $('wrap').innerHTML='<div class="carregando">Não consegui abrir agora. Confira a internet.</div>'; }
+iniciar();
 </script>
 </body></html>

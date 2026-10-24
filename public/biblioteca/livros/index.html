@@ -181,21 +181,27 @@ $('btn-voltar').onclick=function(){
 };
 renderLista();
 
-// LIVROS PARTICULARES (24/10/2026): livro comprado que só o Elias lê. A lista vem do servidor e só volta para o
-// aparelho liberado (crachá conferido lá); para todo o resto a resposta é 403 e esta parte nem aparece.
+// LIVROS PARTICULARES (24/10/2026): livro comprado que só o Elias lê. A lista (com os títulos) só volta do servidor
+// para quem já entrou com o PIN ou para os aparelhos dele; para os outros aparece só o cartão trancado, sem título.
 (function(){
-  var k=''; try{ k=localStorage.getItem('radar_chave')||''; }catch(_){}
-  if(!k) return;
-  fetch('/api/livro-particular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cracha:k}),cache:'no-store'})
+  function trancado(){
+    $('particulares').innerHTML='<div class="sec" style="margin-top:22px">🔒 Biblioteca particular</div><div class="grid">'
+      +'<a class="livro" style="text-decoration:none;color:inherit" href="particular.html">'
+      +'<div class="capa" style="background:linear-gradient(150deg,#3a3f48,#1a1220)"><div class="ico">🔒</div><div class="ct">Biblioteca particular</div></div>'
+      +'<div class="meta"><b>Biblioteca particular</b><span>Abre com senha</span></div></a></div>';
+  }
+  var k='', t=''; try{ k=localStorage.getItem('radar_chave')||''; t=localStorage.getItem('lp_token')||''; }catch(_){}
+  if(!k&&!t){ trancado(); return; }
+  fetch('/api/livro-particular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cracha:k,token:t}),cache:'no-store'})
     .then(function(r){ return r.ok?r.json():null; }).then(function(d){
-      if(!d||!d.ok||!d.livros||!d.livros.length) return;
+      if(!d||!d.ok||!d.livros||!d.livros.length){ trancado(); return; }
       $('particulares').innerHTML='<div class="sec" style="margin-top:22px">🔒 Só para você</div><div class="grid">'
         +d.livros.map(function(l){
           return '<a class="livro" style="text-decoration:none;color:inherit" href="particular.html?id='+encodeURIComponent(l.livro)+'">'
             +'<div class="capa" style="background:linear-gradient(150deg,#6a430c,#1a1220)"><div class="ico">📜</div><div class="ct">'+esc(l.titulo)+'</div></div>'
             +'<div class="meta"><b>'+esc(l.titulo)+'</b><span>'+esc(l.autor)+' · '+l.caps+' capítulos</span></div></a>';
         }).join('')+'</div>';
-    }).catch(function(){});
+    }).catch(trancado);
 })();
 </script>
 </body></html>
