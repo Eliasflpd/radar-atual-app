@@ -97,6 +97,12 @@ const FONTES = [
   { id: 'duewel',   autor: 'Wesley L. Duewel', peso: 3, aprovado: true,
     obra: 'Wesley L. Duewel — Fogo do Avivamento (história dos avivamentos e sua aplicação)',
     dir: 'D:\\LIVROS-MOTOR\\duewel', tipo: 'comentario', semCapa: true, capitulos: true },
+  // Edersheim — A Vida e os Tempos de Jesus, o Messias (1883/1886; o original é domínio público, a tradução PT do PDF do
+  // Elias não). Motor invisível, como o Duewel. O .md sai de D:\LIVROS-MOTOR\converter-edersheim.py, cortado pelos 107
+  // marcadores do PDF: a seção citada fica "Livro III, cap. XIV — ...".
+  { id: 'edersheim', autor: 'Alfred Edersheim', peso: 3, aprovado: true,
+    obra: 'Alfred Edersheim — A Vida e os Tempos de Jesus, o Messias',
+    dir: 'D:\\LIVROS-MOTOR\\edersheim', tipo: 'comentario', semCapa: true, capitulos: true },
   { id: 'motyer',   autor: 'Alec Motyer',    peso: 3, aprovado: true, obra: 'Alec Motyer — comentários',             dir: AUT('Alec-Motyer'),       tipo: 'comentario' },
   { id: 'horton',   autor: 'Stanley Horton', peso: 3, aprovado: true, obra: 'Stanley Horton — obras',                dir: AUT('Stanley-Horton'),    tipo: 'comentario' },
   { id: 'stronstad', autor: 'Roger Stronstad', peso: 3, aprovado: true, obra: 'Roger Stronstad — obras',             dir: AUT('Roger-Stronstad'),   tipo: 'comentario' },
