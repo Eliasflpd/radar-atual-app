@@ -34,8 +34,12 @@ await c.connect();
 await c.query(`create table if not exists livros_particulares(
   livro text not null, ordem int not null, titulo text, texto text, livro_titulo text, autor text,
   primary key(livro, ordem))`);
+// TRAVA DOS LIVROS (25/10/2026): substituir um livro que já está na estante exige --autorizado-pelo-elias
+// (o banco recusa o delete sem isso). Livro novo entra sem flag.
 await c.query('begin');
-await c.query('delete from livros_particulares where livro=$1', [id]);
+if (process.argv.includes('--autorizado-pelo-elias')) await c.query("select set_config('radar.elias_autorizou','SIM',true)");
+try { await c.query('delete from livros_particulares where livro=$1', [id]); }
+catch (e) { await c.query('rollback'); console.log(`🔒 ${id} já está na estante e a TRAVA DOS LIVROS não deixou substituir. Só com --autorizado-pelo-elias.`); process.exit(1); }
 for (const k of caps) {
   await c.query('insert into livros_particulares(livro,ordem,titulo,texto,livro_titulo,autor) values($1,$2,$3,$4,$5,$6)',
     [id, k.ordem, k.titulo, k.texto, titulo, autor || '']);

@@ -209,12 +209,16 @@ module.exports = async (req, res) => {
     try {
       const lex = termosDaPergunta(pergunta);
       if (!soAutor && (lex.strongs.length || lex.termos.length)) {
+        // 25/10/2026: um verbete por DICIONÁRIO (distinct on autor). Antes as 3 vagas iam para 3 pedaços do mesmo
+        // verbete do Thayer e o Kittel, que voltou ao banco nesse dia, ficava fora do topo.
         const rl = await c.query(
-          `select autor, obra, livro, secao, tipo, texto, peso, aprovado
-             from biblioteca_trechos
-            where tipo = 'verbete'
-              and (livro = any($1::text[])
-                   or exists (select 1 from unnest($2::text[]) t where secao ~* ('(^|[ /·])' || t || '($| /)')))
+          `select autor, obra, livro, secao, tipo, texto, peso, aprovado from (
+             select distinct on (autor) autor, obra, livro, secao, tipo, texto, peso, aprovado, id
+               from biblioteca_trechos
+              where tipo = 'verbete'
+                and (livro = any($1::text[])
+                     or exists (select 1 from unnest($2::text[]) t where secao ~* ('(^|[ /·])' || t || '($| /)')))
+              order by autor, peso, id) x
             order by peso, id limit 3`, [lex.strongs, lex.termos]);
         achados = rl.rows.map((x) => ({ ...x, score: 1 }));
       }

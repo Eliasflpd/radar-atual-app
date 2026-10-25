@@ -17,6 +17,7 @@ const crypto = require('crypto');
 
 const DONOS = [
   'dffef7e95ac42d2db2f45fdff67cb46db7dd0a21b5b77ac9e7eba5fb4973b70f',   // Galaxy A22 do Elias (igual a CRACHAS_CLAUDE em voz.js)
+  'ba100082c4638273a71424d9af49afb0760e7f68e44647bb2bb5b572225c4c3b',   // Galaxy A22 do Elias, crachá novo (25/10/2026)
   'ca09a49b07fa94e7533c68352ae8d9f9adeca400ea650f95e2312306b5fb0d28',   // Chrome do PC do Elias (24/10/2026)
 ];
 const MAX_ERROS = 8;

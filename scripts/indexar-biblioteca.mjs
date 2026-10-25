@@ -68,9 +68,12 @@ const FONTES = [
   { id: 'owens',    autor: 'John Joseph Owens (Analytical Key)', peso: 2, aprovado: true,
     obra: 'Analytical Key to the Old Testament — hebraico do AT palavra por palavra, com análise gramatical',
     dir: 'D:\\RADAR\\COMENTARIOS-PENTECOSTAIS\\BAIXADOS DA LOGOS', tipo: 'hebraico', formato: 'docx' },
+  // 25/10/2026: a pasta antiga (D:\PR RAPHAEL\KITTEL-PT\verbetes) sumiu e o banco estava SEM Kittel. Agora vem do KITTEL.docx
+  // do Elias (Kittel condensado por Bromiley, ed. Cultura Cristã), convertido por D:\LIVROS-MOTOR\converter-kittel.py:
+  // um "## termo — sentido" por verbete (1.033), e a seção citada é o próprio verbete.
   { id: 'kittel',   autor: 'Kittel (TDNT)', peso: 2, aprovado: true,
-    obra: 'Dicionário Teológico do Novo Testamento (Kittel), verbetes em português',
-    dir: 'D:\\PR RAPHAEL\\KITTEL-PT\\verbetes', tipo: 'verbete' },
+    obra: 'Dicionário Teológico do Novo Testamento (Kittel, condensado por Bromiley), verbetes em português',
+    dir: 'D:\\LIVROS-MOTOR\\kittel', tipo: 'verbete', semCapa: true, capitulos: true },
   // Thayer (1889, domínio público): léxico grego do NT, MESMA chave de Strong do Kittel (G0026.md = G26), então os dois
   // se cruzam. Tradução PT feita por IA em 10/10/2026, sem revisão humana (o aviso vai no cabeçalho de cada verbete).
   // Mesmo escalão do Kittel (diz QUAL é a palavra). Se o Concílio quiser tratá-lo com a cautela do Champlin até revisar,
@@ -698,7 +701,18 @@ async function subir(quais) {
     if (!fs.existsSync(ai)) continue;
     const meta = JSON.parse(fs.readFileSync(ai, 'utf8'));
     const vec = fs.readFileSync(av);
-    await c.query('delete from biblioteca_trechos where fonte=$1', [f.id]);
+    // TRAVA DOS LIVROS (25/10/2026): o banco recusa apagar trechos de livro sem a autorização do Elias (ver
+    // D:\LIVROS-MOTOR\travas-livros.mjs). Fonte que já está no banco só é substituída com --autorizado-pelo-elias;
+    // sem a flag, pula esta fonte e segue as outras (as aulas do Dr. Wagner estão na exceção e passam sempre).
+    const jaTem = (await c.query('select count(*)::int n from biblioteca_trechos where fonte=$1', [f.id])).rows[0].n;
+    if (jaTem && process.argv.includes('--autorizado-pelo-elias')) {
+      await c.query("select set_config('radar.elias_autorizou','SIM',false)");
+    }
+    try { await c.query('delete from biblioteca_trechos where fonte=$1', [f.id]); }
+    catch (e) {
+      console.log(`\n   🔒 ${f.id}: já tem ${jaTem} trechos no banco e a TRAVA DOS LIVROS não deixou substituir. Só com --autorizado-pelo-elias.`);
+      continue;
+    }
     // Teto opcional por fonte. Serve pra caber num banco apertado (o Neon grátis
     // são 512 MB e a biblioteca inteira passa disso) e pra provar uma fonte nova
     // sem subir a obra completa. Sem a variável, sobe tudo.

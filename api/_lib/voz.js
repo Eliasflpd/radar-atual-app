@@ -931,6 +931,7 @@ async function conferirCracha(origem, user, cracha) {
 // O MODO CLAUDE é pago: só abre pra aparelho da lista (ver o ramo 'claude' no handler).
 const CRACHAS_CLAUDE = [
   'dffef7e95ac42d2db2f45fdff67cb46db7dd0a21b5b77ac9e7eba5fb4973b70f',   // Galaxy A22 do Elias (21/10/2026)
+  'ba100082c4638273a71424d9af49afb0760e7f68e44647bb2bb5b572225c4c3b',   // Galaxy A22 do Elias, crachá novo (25/10/2026)
 ];
 function LIBERADOS_CLAUDE() {
   const env = (typeof process !== 'undefined' && process.env && process.env.VOZ_CLAUDE_CRACHAS) || '';
