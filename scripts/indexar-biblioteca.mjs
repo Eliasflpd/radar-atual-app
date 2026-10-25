@@ -103,6 +103,16 @@ const FONTES = [
   { id: 'edersheim', autor: 'Alfred Edersheim', peso: 3, aprovado: true,
     obra: 'Alfred Edersheim — A Vida e os Tempos de Jesus, o Messias',
     dir: 'D:\\LIVROS-MOTOR\\edersheim', tipo: 'comentario', semCapa: true, capitulos: true },
+  // Moldenke — Plantas da Bíblia (1952) e Wood — Animais da Bíblia (1869), da coleção Cultura Bíblica do Elias. Motor
+  // invisível. Os .md saem de D:\LIVROS-MOTOR\converter-plantas-animais.py (cada planta/animal vira "## Nome"; o Moldenke
+  // comenta várias espécies juntas, então o título junta os nomes com " · "; o PDF traduzido por máquina trazia
+  // "madeira de merda" no lugar de "madeira de sitim", corrigido lá).
+  { id: 'moldenke', autor: 'Harold N. Moldenke & Alma L. Moldenke', peso: 3, aprovado: true,
+    obra: 'Harold N. e Alma L. Moldenke — Plantas da Bíblia',
+    dir: 'D:\\LIVROS-MOTOR\\moldenke', tipo: 'comentario', semCapa: true, capitulos: true },
+  { id: 'wood', autor: 'J. G. Wood', peso: 3, aprovado: true,
+    obra: 'J. G. Wood — Animais da Bíblia',
+    dir: 'D:\\LIVROS-MOTOR\\wood', tipo: 'comentario', semCapa: true, capitulos: true },
   { id: 'motyer',   autor: 'Alec Motyer',    peso: 3, aprovado: true, obra: 'Alec Motyer — comentários',             dir: AUT('Alec-Motyer'),       tipo: 'comentario' },
   { id: 'horton',   autor: 'Stanley Horton', peso: 3, aprovado: true, obra: 'Stanley Horton — obras',                dir: AUT('Stanley-Horton'),    tipo: 'comentario' },
   { id: 'stronstad', autor: 'Roger Stronstad', peso: 3, aprovado: true, obra: 'Roger Stronstad — obras',             dir: AUT('Roger-Stronstad'),   tipo: 'comentario' },
