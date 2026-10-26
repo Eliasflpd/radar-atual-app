@@ -598,29 +598,53 @@ async function indexar(f) {
   const textos = pedacos.map((p) => `${p.autor} — ${p.livro || p.obra}${p.secao ? ' (' + p.secao + ')' : ''}\n${p.texto}`);
 
   const vetores = new Array(pedacos.length);
+  // REAPROVEITA o que não mudou (26/10/2026). Antes, cada aula nova do Dr. Wagner fazia refazer o vetor das 6.871
+  // partes de todas as aulas: a cota grátis diária da Cloudflare acabava de madrugada e a voz amanhecia sem busca
+  // por sentido. Agora o trecho idêntico ao do índice anterior (mesmo autor, livro, seção e texto) usa o vetor antigo;
+  // só o texto novo vai para a Cloudflare.
+  let reaproveitados = 0;
+  if (fs.existsSync(alvoIdx) && fs.existsSync(alvoVec) && !process.env.REFAZER) {
+    try {
+      const velho = JSON.parse(fs.readFileSync(alvoIdx, 'utf8'));
+      const vbuf = fs.readFileSync(alvoVec);
+      if (velho.modelo === MODELO && velho.dims === DIMS && Array.isArray(velho.itens) && vbuf.length === velho.itens.length * DIMS) {
+        const chave = (a, l, s, t) => a + '\u0001' + l + '\u0001' + s + '\u0001' + t;
+        const antes = new Map(velho.itens.map((x, k) => [chave(x[0], x[2], x[3], x[5]), k]));
+        pedacos.forEach((p, i) => {
+          const k = antes.get(chave(p.autor, p.livro, p.secao, p.texto));
+          if (k === undefined) return;
+          const v = new Array(DIMS);
+          for (let d = 0; d < DIMS; d++) { const b = vbuf[k * DIMS + d]; v[d] = (b > 127 ? b - 256 : b) * velho.escala; }
+          vetores[i] = v; reaproveitados++;
+        });
+      }
+    } catch (_) { /* índice antigo ilegível: refaz tudo, como antes */ }
+    if (reaproveitados) console.log(`      ${reaproveitados} trechos reaproveitados do índice anterior; ${pedacos.length - reaproveitados} novos`);
+  }
   let feitos = 0, t0 = Date.now();
   // O Cloudflare cobra o LOTE INTEIRO contra um teto de 60.000 tokens. Contar só
   // "quantos textos" não basta — o que estoura é a soma. Fechamos o lote pelo que
   // vier primeiro: 24 textos ou ~55.000 caracteres (bem abaixo do teto, com folga
   // pro português, que gasta mais token por letra que o inglês).
   const TETO_LETRAS = 55000;
+  const faltam = textos.map((_, i) => i).filter((i) => !vetores[i]);   // só o que não foi reaproveitado
   const lotes = [];
-  for (let i = 0; i < textos.length;) {
-    let j = i, letras = 0;
-    while (j < textos.length && (j - i) < LOTE && (letras + textos[j].length) <= TETO_LETRAS) {
-      letras += textos[j].length; j++;
+  for (let a = 0; a < faltam.length;) {
+    let b = a, letras = 0;
+    while (b < faltam.length && (b - a) < LOTE && (letras + textos[faltam[b]].length) <= TETO_LETRAS) {
+      letras += textos[faltam[b]].length; b++;
     }
-    if (j === i) j = i + 1;                    // um texto sozinho já passa do teto: vai só ele
-    lotes.push([i, j]);
-    i = j;
+    if (b === a) b = a + 1;                    // um texto sozinho já passa do teto: vai só ele
+    lotes.push(faltam.slice(a, b));
+    a = b;
   }
 
   let prox = 0;
   await Promise.all(Array.from({ length: LANES }, async () => {
     while (prox < lotes.length) {
-      const [de, ate] = lotes[prox++];
-      const vs = await embutir(textos.slice(de, ate));
-      for (let k = 0; k < vs.length; k++) vetores[de + k] = vs[k];
+      const idx = lotes[prox++];
+      const vs = await embutir(idx.map((i) => textos[i]));
+      for (let k = 0; k < vs.length; k++) vetores[idx[k]] = vs[k];
       feitos += vs.length;
       if (feitos % (LOTE * 12) < LOTE) {
         const seg = (Date.now() - t0) / 1000;
