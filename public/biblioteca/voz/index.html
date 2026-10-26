@@ -223,6 +223,40 @@
     #globo{width:min(70vw,38vh);height:min(70vw,38vh)}
     body.ligado #globo{width:min(78vw,46vh);height:min(78vw,46vh)}
   }
+
+  /* ── MAPA DAS CÉLULAS (26/10/2026) ── */
+  .topo #abrirMapaCel{margin-left:0}
+  .topo #abrirMateriais[hidden] + #abrirMapaCel{margin-left:auto}
+  #mapaCel{position:fixed;inset:0;z-index:45;background:#06121c;display:flex;flex-direction:column;color:var(--texto);
+    padding:calc(8px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom))}
+  #mapaCel[hidden]{display:none}
+  #mapaCel .mcTopo{display:flex;align-items:center;gap:8px;font-size:1rem}
+  #mapaCel .mcTopo b{flex:1}
+  #mapaCel .mcTopo button,#mapaCel .mcBotoes button{background:rgba(255,255,255,.08);color:var(--texto);border:1px solid rgba(255,255,255,.15);
+    border-radius:9px;padding:6px 10px;font:inherit;font-size:.78rem;cursor:pointer}
+  #mapaCel .mcBotoes{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 6px}
+  #mapaCel .mcBotoes button.on{background:var(--dourado);color:#1a1205;border-color:var(--dourado)}
+  #mapaCel .mcSelo{font-size:.68rem;font-weight:800;letter-spacing:.05em;padding:3px 8px;border-radius:99px}
+  #mapaCel .mcSelo.real{background:#2f9e6b;color:#fff}
+  #mapaCel .mcSelo.sim{background:#c97a1e;color:#fff}
+  #mapaCel .mcSelo.parado{background:rgba(255,255,255,.1);color:var(--suave)}
+  #mapaCel .mcLegenda{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.68rem;color:var(--suave);margin-bottom:4px}
+  #mapaCel .mcL{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+  #mapaCel .mcDecor{background:rgba(147,168,184,.45)}
+  #mapaCel .mcSim{border:2px dashed #e0a14a}
+  #mapaCel .mcReal{background:#3ccf86;box-shadow:0 0 8px #3ccf86}
+  #mapaCel .mcAviso{font-size:.78rem;background:rgba(201,161,74,.15);border:1px solid rgba(201,161,74,.45);border-radius:9px;padding:6px 9px;margin-bottom:6px}
+  #mapaCel canvas{flex:1;min-height:200px;width:100%;touch-action:none;border-radius:12px;background:radial-gradient(circle at 50% 45%,#0d2638,#06121c 70%)}
+  #mapaCel #mcPainel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 11px;margin-top:6px;
+    font-size:.78rem;line-height:1.4;max-height:30vh;overflow:auto}
+  #mapaCel #mcPainel h4{margin:0 0 4px;font-size:.92rem;color:var(--dourado)}
+  #mapaCel #mcPainel .lin{margin:2px 0}
+  #mapaCel #mcPainel .lin b{color:#cfe0ec}
+  #mapaCel .mcRegCab{font-size:.7rem;color:var(--suave);margin-top:6px}
+  #mapaCel #mcRegistro{font-size:.7rem;max-height:16vh;overflow:auto;font-family:ui-monospace,Consolas,monospace;color:#bcd0de}
+  #mapaCel #mcRegistro div{padding:1px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+  .fontesNum{font-size:.78rem;color:var(--suave);margin:4px 0 8px;line-height:1.45}
+  .fontesNum b{color:var(--dourado)}
 </style>
 </head>
 <body>
@@ -231,7 +265,35 @@
   <div class="topo">
     <button class="voltar" id="inicio">← Início</button>
     <button class="engrenagem" id="abrirMateriais" aria-label="Meus sermões e estudos" hidden style="margin-left:auto;margin-right:8px">📄</button>
+    <button class="engrenagem" id="abrirMapaCel" aria-label="Mapa das células da voz" style="margin-left:auto;margin-right:8px">🧬</button>
     <button class="engrenagem" id="abrirConfig" aria-label="Configuração">⚙️</button>
+  </div>
+
+  <!-- ═══ O MAPA VIVO DAS CÉLULAS (26/10/2026) — ver o bloco "MAPA DAS CÉLULAS" no script ═══ -->
+  <div id="mapaCel" hidden>
+    <div class="mcTopo">
+      <b>🧬 Células da voz</b>
+      <span id="mcModo" class="mcSelo"></span>
+      <button id="mcFechar" aria-label="Fechar o mapa">✕</button>
+    </div>
+    <div class="mcBotoes">
+      <button id="mcTudo">Ver tudo</button>
+      <button id="mcMenos" aria-label="Diminuir">−</button>
+      <button id="mcMais" aria-label="Aumentar">+</button>
+      <button id="mcPausa">Pausar movimento</button>
+      <button id="mcAmpliar">Ampliar</button>
+      <button id="mcSimular">▶ Simulação</button>
+    </div>
+    <div class="mcLegenda">
+      <span><i class="mcL mcDecor"></i>movimento decorativo (sem significado)</span>
+      <span><i class="mcL mcSim"></i>SIMULAÇÃO (demonstração)</span>
+      <span><i class="mcL mcReal"></i>atividade REAL registrada</span>
+    </div>
+    <div id="mcAviso" class="mcAviso" hidden></div>
+    <canvas id="mcTela"></canvas>
+    <div id="mcPainel" hidden></div>
+    <div class="mcRegCab">Registro real (só eventos do servidor)</div>
+    <div id="mcRegistro"></div>
   </div>
 
   <div class="palco">
@@ -288,6 +350,11 @@
       </div>
       <div class="obs" style="font-size:.8rem;color:var(--suave);margin-top:7px">No modo Claude: falou por cima, ela cala e escuta você.
       Se ela estiver se cortando sozinha (eco no viva-voz), desligue aqui; aí o corte é tocando no globo.</div>
+      <div class="linhaCfg cerebro" style="margin-top:8px">
+        <button id="celulasBtn" type="button"><b>🧬 Células</b>ligado</button>
+      </div>
+      <div class="obs" style="font-size:.8rem;color:var(--suave);margin-top:7px">No modo Claude: pesquisa com verificação. Antes de falar, ela confere
+      se cada autor citado veio mesmo da biblioteca e mostra as fontes numeradas. Veja tudo acontecendo no 🧬 do topo.</div>
 
       <h3>A voz</h3>
       <div class="provaVoz" id="provaVoz">
@@ -2350,7 +2417,11 @@
       }
       parcial='';
       for(var i=e.resultIndex;i<e.results.length;i++){
-        if(e.results[i].isFinal) firme=juntar(firme, e.results[i][0].transcript);
+        if(e.results[i].isFinal){
+          firme=juntar(firme, e.results[i][0].transcript);
+          // CÉLULA ESCUTA: a certeza do reconhecedor vai junto da pergunta (o Chrome do Android às vezes manda 0 = sem dado)
+          var cf=Number(e.results[i][0].confidence); if(cf>0) C.confianca=cf;
+        }
         else parcial=juntar(parcial, e.results[i][0].transcript);
       }
       var t=juntar(firme, parcial);
@@ -2471,6 +2542,7 @@
     // resposta cortada no meio entra no histórico do jeito que ficou, marcada
     if(C.emTurno && C.pergunta){ claudeGuardarTurno(C.pergunta, (C.resposta||'').trim()+' [ele cortou aqui]'); }
     C.emTurno=false; S.garimpando=false;
+    try{ MapaCel.corte(); }catch(_){}
     calarMestre(motivo||'cortado');
   }
 
@@ -2527,6 +2599,263 @@
     }catch(e){ S.falandoLocal=false; }
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // AS CÉLULAS NO CELULAR (26/10/2026) — ver api/_lib/celulas.js.
+  // O servidor manda um evento {t:'cel', cel, estado, resumo, fontes…} por ação REAL de cada célula. Aqui:
+  // (1) a pergunta leva células ligadas, id da conversa, o assunto anterior e a certeza do reconhecedor;
+  // (2) o MAPA VIVO desenha as células; uma célula só acende como ATIVA entre o 'inicio' e o fim REAIS dela.
+  // O movimento dos pontos é decorativo (não significa nada) e a SIMULAÇÃO tem botão e selo próprios.
+  // Nunca aparece texto de livro nem raciocínio interno: só ações, fontes (autor/obra/onde) e resumos.
+  // ══════════════════════════════════════════════════════════════════════════
+  function celulasLigadas(){ try{ return localStorage.getItem('voz.celulas')!=='nao'; }catch(e){ return true; } }
+  function conversaId(){
+    try{ var c=sessionStorage.getItem('voz.conversa'); if(!c){ c='c_'+Math.random().toString(36).slice(2,10); sessionStorage.setItem('voz.conversa',c); } return c; }
+    catch(e){ return 'c_semid'; }
+  }
+  function contextoGuardado(){ try{ return JSON.parse(sessionStorage.getItem('voz.ctx.'+conversaId())||'null'); }catch(e){ return null; } }
+  function guardarContexto(e){
+    try{ sessionStorage.setItem('voz.ctx.'+conversaId(), JSON.stringify({ tema:String(e.tema||'').slice(0,160), autores:(e.autores||[]).slice(0,6) })); }catch(_){}
+  }
+  // [E3] na tela vira [3]; uma etiqueta partida entre dois pedaços espera o resto antes de aparecer
+  var _etqPend='';
+  function semEtiquetaTela(d, fim){
+    var t=_etqPend+String(d||''); _etqPend='';
+    if(!fim){ var a=t.lastIndexOf('['); if(a>=0 && t.indexOf(']',a)<0 && t.length-a<24){ _etqPend=t.slice(a); t=t.slice(0,a); } }
+    return t.replace(/\[(E\d+(?:\s*[,;]\s*E?\d+)*)\]/g, function(m,g){ return '['+g.split(/[,;]/).map(function(x){ return x.replace(/\D/g,''); }).join(', ')+']'; });
+  }
+  function semEtiquetaHist(t){ return String(t||'').replace(/\s?\[E\d+(?:\s*[,;]\s*E?\d+)*\]/g,'').replace(/\s?\[\d+(?:,\s*\d+)*\]/g,''); }
+  function fontesNumeradas(e){
+    limpaVazio();
+    var d=document.createElement('div'); d.className='fontesNum';
+    var h='<b>📚 Fontes conferidas</b>';
+    (e.fontes||[]).forEach(function(f){ h+='<br>['+(f.n||String(f.id||'').replace(/\D/g,''))+'] '+escHtml(f.autor)+(f.obra?' — <i>'+escHtml(f.obra)+'</i>':'')+(f.onde?' — '+escHtml(f.onde):''); });
+    if(e.versiculos&&e.versiculos.length) h+='<br>📖 Lido na Bíblia: '+e.versiculos.map(escHtml).join(' · ');
+    d.innerHTML=h; elConversa.appendChild(d); rolar();
+  }
+  function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  var MapaCel=(function(){
+    var CEL=[
+      { id:'escuta', nome:'Escuta', ico:'👂', fun:'Recebe a fala já transcrita pelo Chrome e marca quando o entendimento pode ter falhado.', ent:'texto + certeza do reconhecedor', sai:'texto + aviso de dúvida' },
+      { id:'intencao', nome:'Intenção', ico:'🎯', fun:'Classifica: conversa, pergunta, pesquisa ou material. Regras, sem IA.', ent:'texto', sai:'tipo + motivo' },
+      { id:'contexto', nome:'Contexto', ico:'🧭', fun:'Liga a fala ao assunto anterior ("e o Kittel?", "isso").', ent:'texto + assunto anterior (deste aparelho)', sai:'consulta completa + assunto' },
+      { id:'memoria', nome:'Memória', ico:'💭', fun:'Lembranças do pastor guardadas pelo crachá do aparelho.', ent:'crachá', sai:'resumo da memória' },
+      { id:'biblioteca', nome:'Biblioteca', ico:'📚', fun:'Preparo dos livros fora da conversa: autor, obra e lugar presos a cada trecho; travas contra apagar.', ent:'livros do pastor', sai:'trechos no banco' },
+      { id:'pesquisa', nome:'Pesquisa', ico:'🔎', fun:'Busca por sentido, por termo e por referência bíblica; etiqueta cada trecho [1], [2]…', ent:'consulta', sai:'evidências com autor, obra e onde' },
+      { id:'analise', nome:'Análise', ico:'🧠', fun:'A Claude compara as evidências e escreve separando Bíblia, autor, síntese e o que não foi confirmado.', ent:'pergunta + evidências', sai:'rascunho com etiquetas' },
+      { id:'verificacao', nome:'Verificação', ico:'✅', fun:'Confere sem IA: autor citado tem trecho? citação existe? Falhou: 1 correção; falhou de novo: ressalva.', ent:'rascunho + evidências', sai:'aprovado ou lista do que não tem apoio' },
+      { id:'expressao', nome:'Expressão', ico:'🗣️', fun:'Fala a resposta conferida sem ler etiquetas e mostra as fontes numeradas.', ent:'resposta aprovada', sai:'voz + fontes na tela' },
+      { id:'coordenacao', nome:'Coordenação', ico:'⚙️', fun:'Ids da conversa e da tarefa, prazo, limite de 1 correção; para tudo quando o pastor corta.', ent:'pedido do pastor', sai:'eventos reais das células' }
+    ];
+    var LIG=[['coordenacao','escuta'],['escuta','intencao'],['intencao','contexto'],['contexto','memoria'],['contexto','pesquisa'],
+      ['memoria','analise'],['biblioteca','pesquisa'],['pesquisa','analise'],['analise','pesquisa'],['analise','verificacao'],
+      ['verificacao','analise'],['verificacao','expressao'],['coordenacao','analise'],['coordenacao','expressao']];
+    var porId={}; CEL.forEach(function(c,i){ var a=i*2*Math.PI/CEL.length; c.x=Math.cos(a)*150; c.y=Math.sin(a)*150; c.vx=0; c.vy=0; porId[c.id]=c; });
+    var el=null, tela=null, cx=null, aberto=false, empurrou=false, pausado=false, raf=0, dpr=1;
+    var vista={ s:1, ox:0, oy:0 }, sel=null, arr=null, toques={}, pinca=null, ajustarAte=0, mexeuVista=false;
+    var ativo={}, ultimo={}, pulsos=[], reg=[], fimRecente=null, tarefa='';
+    var sim={ on:false, ativo:{}, timers:[] };
+
+    function $m(id){ return document.getElementById(id); }
+    function hora(){ var d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2); }
+    function selo(){
+      var m=$m('mcModo'); if(!m) return;
+      if(sim.on){ m.className='mcSelo sim'; m.textContent='SIMULAÇÃO — não é atividade real'; }
+      else if(Object.keys(ativo).length){ m.className='mcSelo real'; m.textContent='REAL · tarefa '+tarefa.slice(-6); }
+      else { m.className='mcSelo parado'; m.textContent=reg.length?'parado · último turno registrado':'parado'; }
+    }
+    function aviso(){
+      var a=$m('mcAviso'); if(!a) return;
+      var t='';
+      if(cerebroEscolhido()!=='claude') t='Modo Gemini: células não instrumentadas. O mapa só registra atividade real no modo Claude (engrenagem → Quem pensa).';
+      else if(!celulasLigadas()) t='Células desligadas na engrenagem: a voz responde como antes e nada é registrado aqui.';
+      a.hidden=!t; a.textContent=t;
+    }
+    function medir(){
+      if(!tela) return;
+      dpr=window.devicePixelRatio||1;
+      var w=tela.clientWidth, h=tela.clientHeight; tela.width=Math.max(1,w*dpr); tela.height=Math.max(1,h*dpr);
+    }
+    function verTudo(){
+      if(!tela) return;
+      var minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+      CEL.forEach(function(c){ minx=Math.min(minx,c.x); miny=Math.min(miny,c.y); maxx=Math.max(maxx,c.x); maxy=Math.max(maxy,c.y); });
+      var w=tela.clientWidth, h=tela.clientHeight, larg=Math.max(80,maxx-minx+120), alt=Math.max(80,maxy-miny+120);
+      vista.s=Math.max(0.3,Math.min(2.5,Math.min(w/larg,h/alt)));
+      vista.ox=w/2-vista.s*(minx+maxx)/2; vista.oy=h/2-vista.s*(miny+maxy)/2;
+    }
+    function paraMundo(px,py){ return { x:(px-vista.ox)/vista.s, y:(py-vista.oy)/vista.s }; }
+    function achar(px,py){ var p=paraMundo(px,py), r=null; CEL.forEach(function(c){ var dx=c.x-p.x, dy=c.y-p.y; if(dx*dx+dy*dy<30*30) r=c; }); return r; }
+
+    // forças simples: repulsão, molas nas ligações, puxão leve ao centro; o "balanço" é decorativo
+    function passo(t){
+      if(pausado) return;
+      for(var i=0;i<CEL.length;i++){ var a=CEL[i];
+        for(var j=i+1;j<CEL.length;j++){ var b=CEL[j], dx=a.x-b.x, dy=a.y-b.y, d2=Math.max(400,dx*dx+dy*dy), f=9000/d2, d=Math.sqrt(d2);
+          a.vx+=f*dx/d; a.vy+=f*dy/d; b.vx-=f*dx/d; b.vy-=f*dy/d; } }
+      LIG.forEach(function(l){ var a=porId[l[0]], b=porId[l[1]], dx=b.x-a.x, dy=b.y-a.y, d=Math.sqrt(dx*dx+dy*dy)||1, f=(d-120)*0.012;
+        a.vx+=f*dx/d; a.vy+=f*dy/d; b.vx-=f*dx/d; b.vy-=f*dy/d; });
+      CEL.forEach(function(c,i){
+        if(arr && arr.no===c) return;
+        c.vx+=-c.x*0.004 + Math.sin(t/1700+i)*0.05; c.vy+=-c.y*0.004 + Math.cos(t/1900+i*1.3)*0.05;   // balanço decorativo
+        c.vx*=0.82; c.vy*=0.82; c.x+=c.vx; c.y+=c.vy;
+      });
+    }
+    function desenhar(t){
+      if(!cx) return;
+      var w=tela.width, h=tela.height;
+      cx.setTransform(1,0,0,1,0,0); cx.clearRect(0,0,w,h);
+      cx.setTransform(dpr*vista.s,0,0,dpr*vista.s,dpr*vista.ox,dpr*vista.oy);
+      LIG.forEach(function(l){ var a=porId[l[0]], b=porId[l[1]];
+        cx.strokeStyle='rgba(147,168,184,.28)'; cx.lineWidth=1.4/vista.s*vista.s; cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke(); });
+      pulsos=pulsos.filter(function(p){ return t-p.t0<1400; });
+      pulsos.forEach(function(p){ var a=porId[p.a], b=porId[p.b], k=(t-p.t0)/1400, x=a.x+(b.x-a.x)*k, y=a.y+(b.y-a.y)*k;
+        cx.strokeStyle=p.sim?'rgba(224,161,74,.9)':'rgba(60,207,134,.9)'; cx.lineWidth=3; cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke();
+        cx.fillStyle=p.sim?'#e0a14a':'#3ccf86'; cx.beginPath(); cx.arc(x,y,5,0,7); cx.fill(); });
+      CEL.forEach(function(c){
+        var u=ultimo[c.id], real=ativo[c.id], s=sim.on && sim.ativo[c.id], r=24;
+        if(real){ var g=0.5+0.5*Math.sin(t/180); cx.fillStyle='rgba(60,207,134,'+(0.25+0.35*g)+')'; cx.beginPath(); cx.arc(c.x,c.y,r+10+6*g,0,7); cx.fill(); }
+        cx.fillStyle='#0f2a3d'; cx.beginPath(); cx.arc(c.x,c.y,r,0,7); cx.fill();
+        cx.lineWidth=3;
+        cx.strokeStyle= real ? '#3ccf86' : !u ? 'rgba(147,168,184,.45)' : u.estado==='ok' ? '#3ccf86' : u.estado==='ressalva' ? '#e0b34a' : u.estado==='falha' ? '#e05a4f' : 'rgba(147,168,184,.7)';
+        cx.setLineDash([]); cx.beginPath(); cx.arc(c.x,c.y,r,0,7); cx.stroke();
+        if(s){ cx.strokeStyle='#e0a14a'; cx.setLineDash([5,4]); cx.beginPath(); cx.arc(c.x,c.y,r+7,0,7); cx.stroke(); cx.setLineDash([]); }
+        if(sel===c){ cx.strokeStyle='#C9A14A'; cx.lineWidth=2; cx.beginPath(); cx.arc(c.x,c.y,r+13,0,7); cx.stroke(); }
+        cx.font='20px system-ui, sans-serif'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillStyle='#fff'; cx.fillText(c.ico,c.x,c.y+1);
+        cx.font='600 12px system-ui, sans-serif'; cx.fillStyle='#e9f1f8'; cx.fillText(c.nome,c.x,c.y+r+13);
+      });
+    }
+    function laco(t){ if(!aberto) return; passo(t); if(!mexeuVista && t<ajustarAte) verTudo(); desenhar(t); raf=requestAnimationFrame(laco); }
+
+    function painel(){
+      var p=$m('mcPainel'); if(!p) return;
+      if(!sel){ p.hidden=true; return; }
+      var c=sel, u=ultimo[c.id];
+      var liga=LIG.filter(function(l){ return l[0]===c.id||l[1]===c.id; }).map(function(l){ return l[0]===c.id ? '→ '+porId[l[1]].nome : '← '+porId[l[0]].nome; });
+      var h='<h4>'+c.ico+' '+c.nome+'</h4>'
+        +'<div class="lin"><b>Função:</b> '+escHtml(c.fun)+'</div>'
+        +'<div class="lin"><b>Entradas:</b> '+escHtml(c.ent)+'</div>'
+        +'<div class="lin"><b>Saídas:</b> '+escHtml(c.sai)+'</div>'
+        +'<div class="lin"><b>Ligações:</b> '+escHtml(liga.join(' · '))+'</div>';
+      if(u){
+        h+='<div class="lin"><b>Estado real:</b> '+escHtml(u.estado)+(ativo[c.id]?' (trabalhando agora)':'')+' · '+escHtml(u.hora)+'</div>';
+        if(u.resumo) h+='<div class="lin">'+escHtml(u.resumo)+'</div>';
+        if(u.fontes&&u.fontes.length) h+='<div class="lin"><b>Fontes:</b><br>'+u.fontes.map(function(f){ return '['+String(f.id||'').replace(/\D/g,'')+'] '+escHtml(f.autor)+(f.obra?' — '+escHtml(f.obra):'')+(f.onde?' — '+escHtml(f.onde):''); }).join('<br>')+'</div>';
+        if(u.problemas&&u.problemas.length) h+='<div class="lin"><b>Sem apoio:</b><br>'+u.problemas.map(escHtml).join('<br>')+'</div>';
+      } else h+='<div class="lin"><b>Estado real:</b> nenhuma atividade real registrada nesta sessão'+(c.id==='biblioteca'?' (o preparo dos livros acontece fora da conversa)':'')+'.</div>';
+      if(sim.on) h+='<div class="lin" style="color:#e0a14a">A simulação em curso não muda este estado.</div>';
+      p.innerHTML=h; p.hidden=false;
+    }
+    function registro(){ var r=$m('mcRegistro'); if(!r) return;
+      r.innerHTML=reg.slice(-60).reverse().map(function(x){ return '<div>'+escHtml(x.hora)+' · '+escHtml(x.nome)+' · '+escHtml(x.estado)+(x.resumo?' — '+escHtml(x.resumo):'')+'</div>'; }).join('') || '<div>nada registrado ainda — faça uma pergunta no modo Claude.</div>'; }
+
+    function pararSim(){ sim.timers.forEach(clearTimeout); sim.timers=[]; sim.on=false; sim.ativo={}; var b=$m('mcSimular'); if(b){ b.className=''; b.textContent='▶ Simulação'; } selo(); painel(); }
+    function simular(){
+      if(sim.on){ pararSim(); return; }
+      sim.on=true; var b=$m('mcSimular'); if(b){ b.className='on'; b.textContent='■ Parar simulação'; }
+      var seq=['coordenacao','escuta','intencao','contexto','memoria','pesquisa','analise','verificacao','analise','verificacao','expressao'], t=0;
+      seq.forEach(function(id,i){
+        sim.timers.push(setTimeout(function(){ sim.ativo={}; sim.ativo[id]=true; if(i>0) pulsos.push({ a:seq[i-1], b:id, t0:performance.now(), sim:true }); },t));
+        t+=900;
+      });
+      sim.timers.push(setTimeout(pararSim,t+400));
+      selo(); painel();
+    }
+
+    // ── O EVENTO REAL (vem do servidor) ──
+    function evento(e){
+      if(!e||!porId[e.cel]) return;
+      if(sim.on) pararSim();                              // atividade real tem prioridade e nunca se mistura com a demonstração
+      tarefa=e.tarefa||tarefa;
+      var c=porId[e.cel], agora=performance.now();
+      ultimo[e.cel]={ estado:e.estado, resumo:e.resumo||'', fontes:e.fontes||[], problemas:e.problemas||[], hora:hora() };
+      if(e.estado==='inicio'){
+        ativo[e.cel]=true;
+        if(fimRecente && agora-fimRecente.t<4000 && LIG.some(function(l){ return l[0]===fimRecente.cel && l[1]===e.cel; })) pulsos.push({ a:fimRecente.cel, b:e.cel, t0:agora });
+      } else {
+        delete ativo[e.cel];
+        fimRecente={ cel:e.cel, t:agora };
+      }
+      reg.push({ hora:hora(), nome:c.nome, estado:e.estado, resumo:e.resumo||'' });
+      if(reg.length>300) reg.splice(0,reg.length-300);
+      if(aberto){ selo(); registro(); if(sel===c) painel(); }
+    }
+    function fimDoTurno(){ ativo={}; if(aberto){ selo(); registro(); painel(); } }
+    function corte(){ if(Object.keys(ativo).length){ reg.push({ hora:hora(), nome:'Coordenação', estado:'cancelado', resumo:'o pastor cortou; o servidor foi avisado para parar' }); } ativo={}; if(aberto){ selo(); registro(); painel(); } }
+
+    function abrir(viaToque){
+      el=$m('mapaCel'); tela=$m('mcTela'); if(!el||!tela) return;
+      cx=tela.getContext('2d');
+      el.hidden=false; aberto=true; aviso(); medir(); verTudo(); selo(); registro(); painel();
+      mexeuVista=false; ajustarAte=performance.now()+3000;   // enquadra sozinho enquanto as células se acomodam
+      if(viaToque && !empurrou){ try{ history.pushState({ mapaCel:1 },''); empurrou=true; }catch(_){} }
+      cancelAnimationFrame(raf); raf=requestAnimationFrame(laco);
+    }
+    function fechar(peloVoltar){
+      if(!aberto) return;
+      aberto=false; cancelAnimationFrame(raf); pararSim();
+      if(el) el.hidden=true;
+      try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(_){}
+      if(empurrou){ empurrou=false; if(!peloVoltar){ try{ history.back(); }catch(_){} } }
+    }
+    window.addEventListener('popstate',function(){ if(aberto) fechar(true); });
+    window.addEventListener('resize',function(){ if(aberto) medir(); });
+
+    function ligarControles(){
+      var b=function(id,fn){ var x=$m(id); if(x) x.addEventListener('click',fn); };
+      b('abrirMapaCel',function(){ abrir(true); });
+      b('mcFechar',function(){ fechar(false); });
+      b('mcTudo',verTudo);
+      b('mcMais',function(){ zoom(1.25); });
+      b('mcMenos',function(){ zoom(0.8); });
+      b('mcPausa',function(){ pausado=!pausado; var x=$m('mcPausa'); x.className=pausado?'on':''; x.textContent=pausado?'Retomar movimento':'Pausar movimento'; });
+      b('mcAmpliar',function(){ try{ if(document.fullscreenElement) document.exitFullscreen(); else if(el.requestFullscreen) el.requestFullscreen(); }catch(_){} setTimeout(medir,300); });
+      b('mcSimular',simular);
+      var t=$m('mcTela'); if(!t) return;
+      t.addEventListener('wheel',function(ev){ ev.preventDefault(); var r=t.getBoundingClientRect(); zoom(ev.deltaY<0?1.12:0.89, ev.clientX-r.left, ev.clientY-r.top); },{ passive:false });
+      t.addEventListener('pointerdown',function(ev){
+        try{ t.setPointerCapture(ev.pointerId); }catch(_){}
+        var r=t.getBoundingClientRect(), px=ev.clientX-r.left, py=ev.clientY-r.top;
+        toques[ev.pointerId]={ x:px, y:py };
+        var ids=Object.keys(toques);
+        if(ids.length===2){ var a=toques[ids[0]], c=toques[ids[1]]; pinca={ d:Math.hypot(a.x-c.x,a.y-c.y), s:vista.s }; arr=null; return; }
+        var no=achar(px,py);
+        arr={ no:no, x0:px, y0:py, ox:vista.ox, oy:vista.oy, mexeu:false };
+      });
+      t.addEventListener('pointermove',function(ev){
+        if(!toques[ev.pointerId]) return;
+        var r=t.getBoundingClientRect(), px=ev.clientX-r.left, py=ev.clientY-r.top;
+        toques[ev.pointerId]={ x:px, y:py };
+        var ids=Object.keys(toques);
+        if(pinca && ids.length===2){ var a=toques[ids[0]], c=toques[ids[1]], d=Math.hypot(a.x-c.x,a.y-c.y);
+          var alvo=Math.max(0.3,Math.min(3,pinca.s*d/(pinca.d||1))); zoom(alvo/vista.s,(a.x+c.x)/2,(a.y+c.y)/2); return; }
+        if(!arr) return;
+        if(Math.abs(px-arr.x0)+Math.abs(py-arr.y0)>6){ arr.mexeu=true; mexeuVista=true; }
+        if(arr.no){ var m=paraMundo(px,py); arr.no.x=m.x; arr.no.y=m.y; arr.no.vx=0; arr.no.vy=0; }
+        else { vista.ox=arr.ox+(px-arr.x0); vista.oy=arr.oy+(py-arr.y0); }
+      });
+      var solta=function(ev){
+        delete toques[ev.pointerId];
+        if(Object.keys(toques).length<2) pinca=null;
+        if(arr && !arr.mexeu){ sel=arr.no||null; painel(); }
+        arr=null;
+      };
+      t.addEventListener('pointerup',solta); t.addEventListener('pointercancel',solta);
+    }
+    function zoom(f,px,py){
+      if(!tela) return;
+      if(px==null){ px=tela.clientWidth/2; py=tela.clientHeight/2; }
+      mexeuVista=true;
+      var ns=Math.max(0.3,Math.min(3,vista.s*f)), k=ns/vista.s;
+      vista.ox=px-(px-vista.ox)*k; vista.oy=py-(py-vista.oy)*k; vista.s=ns;
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',ligarControles); else ligarControles();
+    return { evento:evento, fimDoTurno:fimDoTurno, corte:corte, abrir:abrir, fechar:fechar, simular:simular,
+      _estado:function(){ return { aberto:aberto, ativo:Object.keys(ativo), sim:sim.on, reg:reg.length, ultimo:Object.keys(ultimo), sel:sel&&sel.id }; },
+      _pos:function(id){ var c=porId[id]; return c ? { x:c.x*vista.s+vista.ox, y:c.y*vista.s+vista.oy } : null; } };
+  })();
+  window.MapaCel=MapaCel;   // para os testes (CDP): ler o estado e injetar eventos de prova
+
   function claudePerguntar(t){
     if(C.rec){ try{ C.rec.abort(); }catch(e){} C.rec=null; C.ouvindo=false; }
     if(C.emTurno || S.tocandoAgora || S.fila.length) claudeCalar('nova pergunta por cima');
@@ -2536,6 +2865,9 @@
     rotuloDaFerramenta('pensando'); S.garimpando=true; fase();
     var ctl=(typeof AbortController!=='undefined')?new AbortController():null; C.abort=ctl;
     var corpo={ acao:'claude', texto:t, historico:C.hist.slice(-24), voz:S.voz, voz_no_celular: LEITOR_LIGADO && !C.semLeitor && !!window.WebSocket };
+    // AS CÉLULAS: ligadas, id desta conversa, o assunto anterior (guardado neste aparelho) e a certeza da escuta
+    if(celulasLigadas()){ corpo.celulas=true; corpo.conversa=conversaId(); corpo.contexto=contextoGuardado(); corpo.confianca=C.confianca||0; }
+    C.confianca=0; _etqPend='';
     if(EU_SOU) corpo.user=EU_SOU;
     try{
       var _u=JSON.parse(localStorage.getItem('radar_user')||'null');
@@ -2575,7 +2907,14 @@
         break;
       case 'txt':
         if(!S.bolhaMestre) S.bolhaMestre=bolha('mestre','Resposta · 🎓 '+(C.nomeModelo||'Claude'));
-        S.bolhaMestre.textContent+=e.d; C.resposta+=e.d; rolar();
+        // a etiqueta [E3] aparece como [3] (bate com a lista de fontes) e não vai para o histórico
+        S.bolhaMestre.textContent+=semEtiquetaTela(e.d); C.resposta+=semEtiquetaHist(e.d); rolar();
+        break;
+      case 'cel':                // célula REAL trabalhando (vem do servidor)
+        try{ MapaCel.evento(e); }catch(_){}
+        break;
+      case 'contexto':           // o assunto desta fala, para a próxima pergunta ("e o Kittel?")
+        guardarContexto(e);
         break;
       case 'ferr':
         rotuloDaFerramenta(e.nome); S.garimpando=true; fase();
@@ -2607,7 +2946,9 @@
         if(e.voz) claudeTrocouVoz(e.voz);
         break;
       case 'fontes':
-        if(e.fontes&&e.fontes.length) nota('📚 Fontes: '+e.fontes.map(function(f){ return f.autor+(f.onde?' — '+f.onde:''); }).join(' · '));
+        if(S.bolhaMestre && _etqPend){ S.bolhaMestre.textContent+=semEtiquetaTela('',true); }
+        if(e.etiquetadas){ if((e.fontes&&e.fontes.length)||(e.versiculos&&e.versiculos.length)) fontesNumeradas(e); }
+        else if(e.fontes&&e.fontes.length) nota('📚 Fontes: '+e.fontes.map(function(f){ return f.autor+(f.onde?' — '+f.onde:''); }).join(' · '));
         break;
       case 'erro':
         erro(e.msg||'A Claude não respondeu.');
@@ -2625,6 +2966,8 @@
     if(g!==C.geracao) return;
     C.abort=null;
     if(C.emTurno){ C.emTurno=false; claudeGuardarTurno(pergunta, C.resposta.trim()); }
+    if(S.bolhaMestre && _etqPend){ S.bolhaMestre.textContent+=semEtiquetaTela('',true); }
+    try{ MapaCel.fimDoTurno(); }catch(_){}
     S.garimpando=false; S.bolhaMestre=null; fase();
     if(S.vaiDesligar){
       // "tchau": espera a voz terminar e desliga, como no modo Gemini
@@ -3112,6 +3455,14 @@
       pintarCorte(); fase();
     });
     pintarCorte();
+    // AS CÉLULAS (26/10/2026): pesquisa com verificação no modo Claude. Padrão LIGADO; desligado, tudo como antes.
+    var bCel=document.getElementById('celulasBtn');
+    function pintarCel(){ if(!bCel) return; var on=celulasLigadas(); bCel.className=on?'atual':''; bCel.innerHTML='<b>🧬 Células</b>'+(on?'ligado':'desligado'); }
+    if(bCel) bCel.addEventListener('click',function(){
+      try{ localStorage.setItem('voz.celulas', celulasLigadas()?'nao':'sim'); }catch(e){}
+      pintarCel();
+    });
+    pintarCel();
     bG.addEventListener('click',function(){ escolher('gemini'); });
     bC.addEventListener('click',function(){ escolher('claude'); });
     pintar();

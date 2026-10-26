@@ -1166,6 +1166,12 @@ export default async function handler(req, ctx) {
       // semNome NÃO passa aqui: no modo Claude o Dr. Wagner é FONTE citada pelo nome (pedido do Elias, 21/10/2026).
       origem: origemReq, ctx, dono, chaveNova: _chaveNova, semNome: (t) => String(t || ''), personaDe, memoria, depois,
       vozNoCelular: !!b.voz_no_celular,   // o celular tem o LEITOR (Gemini ao vivo): aqui sai só o texto de cada pedaço
+      // AS CÉLULAS (25/10/2026): ligadas no celular; o assunto anterior e o id da conversa vivem NO APARELHO
+      // (cada aparelho só manda o seu — nada de estado de um pastor misturado com outro aqui no servidor).
+      celulas: !!b.celulas, conversa: String(b.conversa || '').slice(0, 40),
+      contexto: b.contexto && typeof b.contexto === 'object' ? { tema: String(b.contexto.tema || '').slice(0, 160),
+        autores: Array.isArray(b.contexto.autores) ? b.contexto.autores.slice(0, 6).map((x) => String(x).slice(0, 60)) : [] } : null,
+      confianca: Number(b.confianca) || 0,
     });
   }
 

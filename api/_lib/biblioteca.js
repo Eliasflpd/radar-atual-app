@@ -46,6 +46,11 @@ async function embutirPergunta(pergunta) {
         const v = ((j.result && (j.result.data || j.result.response)) || [])[0];
         if (Array.isArray(v) && v.length === DIMS) return v;
       } else if (r.status !== 429 && r.status < 500) return null;
+      else if (r.status === 429) {
+        // cota DO DIA acabou (não é limite do minuto): insistir só atrasa a voz; vai direto para a busca por termo
+        const corpo = await r.text().catch(() => '');
+        if (/daily free allocation|neurons/i.test(corpo)) return null;
+      }
     } catch (_) { /* rede tropeçou */ }
     await new Promise((s) => setTimeout(s, 400 * (t + 1)));
   }
@@ -93,7 +98,13 @@ function secaoLimpa(secao, livro) {
   const s = String(secao || '').trim();
   const m = s.match(/\b(\d{1,3})\s*:\s*(\d{1,3})\b/);
   const base = rotuloLimpo(livro);
-  if (!m) return base;
+  // 25/10/2026: livro dividido por capítulo ou verbete (Kittel "agápē — amor", Edersheim "Livro III, cap. II — …",
+  // Keil "Rute 4", Wood "O leão (Mamíferos)") guarda o LUGAR na seção: devolve esse lugar, não só o nome da obra.
+  // O " / agape / agapao" do fim é só para a busca por palavra e não vai para a tela.
+  if (!m) {
+    const titulo = s.split(' / ')[0].trim();
+    return titulo && titulo.toLowerCase() !== base.toLowerCase() && titulo.length > 2 ? titulo.slice(0, 90) : base;
+  }
   const chave = base.toLowerCase().replace(/^[123]\s+/, '');
   const teto = CAPS[chave];
   // sem livro reconhecido, ou capítulo/versículo fora do que o livro comporta:
@@ -107,7 +118,8 @@ const PARADAS = new Set(['palavra', 'palavras', 'grega', 'grego', 'gregas', 'gre
   'significado', 'carrega', 'neste', 'novo', 'testamento', 'antigo', 'sobre', 'como', 'qual', 'quais', 'porque', 'entre', 'desta',
   'deste', 'esta', 'esse', 'essa', 'isso', 'pela', 'pelo', 'para', 'mais', 'muito', 'biblia', 'biblico', 'biblica', 'texto',
   'versiculo', 'capitulo', 'verso', 'quando', 'onde', 'tambem', 'aquele', 'aquela', 'dizer', 'quer', 'tudo', 'cada', 'usado',
-  'usada', 'termo', 'original', 'letra', 'letras', 'fala', 'falar', 'explique', 'explica', 'diz', 'seja', 'sao', 'foi', 'ser']);
+  'usada', 'termo', 'original', 'letra', 'letras', 'fala', 'falar', 'explique', 'explica', 'diz', 'seja', 'sao', 'foi', 'ser',
+  'dizem', 'falam', 'ensina', 'ensinam', 'escreve', 'escreveu', 'comenta', 'compare', 'concordam', 'acham', 'pensam']);
 
 // O que dá pra casar por PALAVRA: números de Strong ("G26", "g0026") e termos em letras latinas ou gregas.
 // Tudo sem acento e em minúsculas, igual ao que o indexador gravou na `secao` dos verbetes.
@@ -165,13 +177,57 @@ module.exports = async (req, res) => {
   const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
   if (!cs) { res.status(200).json({ ok: false, off: true, err: 'db não configurado' }); return; }
 
+  // 25/10/2026: sem o vetor da pergunta (a cota grátis diária da Cloudflare acabou, ou ela caiu), a busca NÃO
+  // morre: cai na BUSCA POR TERMO, direto no banco, sem acento e sem serviço de fora. É mais pobre que a busca por
+  // sentido (só acha a palavra escrita), por isso o resultado diz `modo: 'termo'` e quem chama pode avisar.
   const v = await embutirPergunta(pergunta);
-  if (!v) { res.status(200).json({ ok: false, err: 'não consegui transformar a pergunta em busca' }); return; }
-  const vec = '[' + v.map((x) => x.toFixed(6)).join(',') + ']';
+  const vec = v ? '[' + v.map((x) => x.toFixed(6)).join(',') + ']' : null;
+  const termosBusca = termosDaPergunta(pergunta).termos.filter((t) => /^[a-z]{4,}$/.test(t)).slice(0, 8);
+  if (!vec && !termosBusca.length) { res.status(200).json({ ok: false, err: 'não consegui transformar a pergunta em busca' }); return; }
 
   const c = new Client({ connectionString: cs, ssl: { rejectUnauthorized: false } });
   try {
     await c.connect();
+    if (!vec) {
+      const DE = 'áàâãäéèêëíìîïóòôõöúùûüçāēīōūḗṓǵ', PARA = 'aaaaaeeeeiiiiooooouuuucaeioueog';
+      // nome de autor na pergunta ("o que o Kittel diz") não é assunto: vira preferência por aquele autor
+      const NOMES = /^(kittel|thayer|keil|delitzsch|edersheim|champlin|owens|waltke|kidner|spurgeon|henry|moldenke|wood|duewel|foster|wiersbe|macdonald|hartley|mesquita|merkh|gill|wagner|cordeiro|mouser|broadman|moody|beacon|eetad)$/;
+      const autoresPedidos = termosBusca.filter((t) => NOMES.test(t));
+      const assunto = termosBusca.filter((t) => !NOMES.test(t));
+      const usar = assunto.length ? assunto : termosBusca;
+      // Rápido o bastante para a voz (medido em 25/10/2026: a 1ª versão varria 55 mil textos e levava 50–70 s):
+      // o texto sem acento é calculado UMA vez por trecho (não uma vez por palavra); com autor na pergunta, só os
+      // trechos daquele autor entram; e a consulta tem teto de 9 s (estourou, a busca diz que falhou — não trava a voz).
+      await c.query('set statement_timeout = 9000');
+      const rt = await c.query(
+        `with base as materialized (
+           select autor, obra, livro, secao, tipo, texto, peso, aprovado,
+                  translate(lower(texto), $3, $4) as t, translate(lower(coalesce(secao, '')), $3, $4) as s
+             from biblioteca_trechos
+            where ($2 = '' or autor = $2)
+              and (cardinality($5::text[]) = 0 or translate(lower(autor), $3, $4) like any (select '%' || a || '%' from unnest($5::text[]) a))
+              -- sem autor na pergunta: primeiro filtra pelos TÍTULOS (capítulo, verbete, livro — colunas pequenas), e só esses
+              -- trechos têm o texto aberto. Varrer o texto dos 86 mil trechos passava de 9 s (26/10/2026); um índice de texto
+              -- custaria 30–50 MB num banco já em 400 de 512 MB, por isso ficou assim.
+              and (cardinality($5::text[]) > 0 or translate(lower(coalesce(secao, '') || ' ' || coalesce(livro, '') || ' ' || coalesce(obra, '')), $3, $4)
+                   like any (select '%' || x || '%' from unnest($1::text[]) x))
+         ), c as (
+           select autor, obra, livro, secao, tipo, texto, peso, aprovado,
+                  (select count(*) from unnest($1::text[]) x where t like '%' || x || '%')::float
+                  + (select count(*) from unnest($1::text[]) x where s ~ ('(^|[^a-z])' || x || '($|[^a-z])'))::float * 2
+                  + case when cardinality($5::text[]) > 0 then 3 else 0 end as hits
+             from base
+         ) select autor, obra, livro, secao, tipo, texto, peso, aprovado, hits from c where hits > 0 order by hits desc, peso limit 60`,
+        [usar, soAutor, DE, PARA, autoresPedidos]);
+      const vistosT = new Set(), melhores = [], resto = [];
+      for (const x of rt.rows) { (vistosT.has(x.autor) ? resto : melhores).push(x); vistosT.add(x.autor); }
+      const maxHits = usar.length * 3 + 3;
+      const itensT = [...melhores, ...resto].slice(0, quantos).map((x) => ({ autor: x.autor, obra: x.obra, livro: rotuloLimpo(x.livro),
+        secao: secaoLimpa(x.secao, x.livro), tipo: x.tipo, texto: x.texto, peso: x.peso, aprovado: x.aprovado !== false,
+        score: Math.round((0.46 + 0.4 * Math.min(1, x.hits / maxHits)) * 1000) / 1000 }));
+      res.status(200).json({ ok: true, total: itensT.length, itens: itensT, modo: 'termo', termos: usar, autores_pedidos: autoresPedidos });
+      return;
+    }
     // Um trecho por OBRA no topo seria pobre; o que queremos é o melhor de cada
     // AUTOR — é assim que o globo consegue dizer "Champlin vê assim, Waltke assim".
     // distinct on (autor) pega o mais próximo de cada um, depois ordena o conjunto.

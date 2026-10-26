@@ -29,6 +29,10 @@ import { temasDeFerramenta, gravarTemas } from './voz-memoria.js';
 // Claude o conhece como FONTE: sabe quem é, sabe o que ele ensina (o resumo de doutrina do Concílio) e abre as
 // aulas pela busca do corpus — e cita pelo nome, sem fingir ser ele.
 import { buscarContexto, METODO } from './concilio-wagner.js';
+// AS CÉLULAS (25/10/2026): escuta, intenção, contexto, pesquisa, verificação e expressão viram unidades com entrada,
+// saída e eventos reais ({t:'cel'}) — ver celulas.js. Ligadas pelo celular (voz.celulas); desligadas, tudo como antes.
+import { LIMITES, idsDaTarefa, criarEmissor, escutar, intencao, referenciasDe, contextualizar, rotular, blocoDeEvidencias,
+  verificar, pedidoDeCorrecao, ressalva, REGRAS_DAS_CELULAS } from './celulas.js';
 
 // Uma linha só pra trocar de cérebro (ex.: ANTHROPIC_MODEL_VOZ=claude-opus-5-5 na Vercel).
 export const MODELO_CLAUDE = (typeof process !== 'undefined' && process.env && process.env.ANTHROPIC_MODEL_VOZ) || 'claude-sonnet-5-5';
@@ -218,13 +222,17 @@ const SELO = (x) => x.peso === 2 ? 'fonte primária (diz qual é a palavra no or
   : x.aprovado === false ? 'COM FILTRO (só grego, crítica textual e estudo de palavra; nunca interpretação)'
   : 'autor aprovado';
 
-async function comPrazo(url, init, ms) {
+// `sinal`: o corte do pastor (25/10/2026). Antes, interromper só calava o fluxo e a Claude e as ferramentas seguiam
+// rodando — e cobrando — até o fim. Agora o mesmo sinal derruba o fetch e a leitura do corpo.
+async function comPrazo(url, init, ms, sinal) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), ms);
+  const cortar = () => ctrl.abort();
+  if (sinal) { if (sinal.aborted) ctrl.abort(); else sinal.addEventListener('abort', cortar, { once: true }); }
   try { return await fetch(url, { ...init, signal: ctrl.signal }); } finally { clearTimeout(t); }
 }
 
-async function buscarBiblioteca(pergunta, origem) {
+async function buscarBiblioteca(pergunta, origem, sinal) {
   const q = String(pergunta || '').trim().slice(0, 400);
   if (q.length < 4) return { achou: false, motivo: 'pergunta curta demais' };
   const token = (typeof process !== 'undefined' && process.env && process.env.RADAR_ADMIN_TOKEN) || '';
@@ -233,7 +241,7 @@ async function buscarBiblioteca(pergunta, origem) {
   try {
     const r = await comPrazo(origem + '/api/dados?fn=biblioteca', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q, n: 8, token }),
-    }, 10000);
+    }, 10000, sinal);
     j = await r.json();
   } catch (_) { j = null; }
   if (!j || !j.ok) return { achou: false, motivo: 'a biblioteca não respondeu agora' };
@@ -241,10 +249,12 @@ async function buscarBiblioteca(pergunta, origem) {
   if (!bons.length) return { achou: false, motivo: 'nada na biblioteca casou com essa pergunta' };
   return {
     achou: true,
+    modo: j.modo === 'termo' ? 'termo' : 'sentido',
     trechos: bons.map((x) => ({ autor: x.autor, obra: x.obra || '', onde: x.secao || x.livro || '', selo: SELO(x),
       nota: x.score, texto: String(x.texto || '').slice(0, 1400) })),
     regra: 'Uso interno: o pastor não vê este texto. Fale com as suas palavras, cite o autor pelo nome, '
-      + 'nunca copie mais de seis palavras seguidas, e descarte o trecho que não trata da pergunta.',
+      + 'nunca copie mais de seis palavras seguidas, e descarte o trecho que não trata da pergunta.'
+      + (j.modo === 'termo' ? ' ATENÇÃO: a busca por sentido está fora agora; estes trechos vieram da busca POR TERMO (só acham a palavra escrita) — descarte o que não trata do assunto.' : ''),
   };
 }
 
@@ -282,6 +292,7 @@ function pcmDoAudio(b64) {
 
 function paraFala(t) {
   return String(t || '')
+    .replace(/\s?\[E\d+(?:\s*[,;]\s*E?\d+)*\]/g, '')   // etiqueta de evidência ([E2]) nunca é lida em voz alta
     .replace(/[*_#`>|]+/g, ' ')
     .replace(/^\s*[-•]\s+/gm, '')
     .replace(/\s+/g, ' ')
@@ -337,11 +348,12 @@ function chavesAnthropic() {
 const PEDE_MATERIAL = /\b(ger|prepar|mont|fa[zç]|escrev|cri|elabor)\w*\b[\s\S]{0,40}\b(serm[aãoõ]|prega[cç]|esbo[cç]|mensage|estudo|aula)/i;
 const PEDE_FUNDO = /\b(a fundo|aprofund|mais fundo|estudo|explica(r)? (melhor|direito|tudo)|detalh|exegese|doutrina|comparar|compara|prepar(ar|a) (um|uma|o|a) (serm|prega|estudo|aula))/i;
 
-async function chamarClaude(corpo, aoTexto) {
+async function chamarClaude(corpo, aoTexto, sinal) {
   const ks = chavesAnthropic();
   if (!ks.length) throw new Error('não há chave da Anthropic configurada no servidor');
   let ultimo = '';
   for (let n = 0; n < Math.min(ks.length + 1, 3); n++) {
+    if (sinal && sinal.aborted) throw new Error('cancelado pelo pastor');
     const chave = ks[((Date.now() / 1000 | 0) + n) % ks.length];
     let r;
     try {
@@ -350,8 +362,8 @@ async function chamarClaude(corpo, aoTexto) {
         headers: { 'x-api-key': chave, 'anthropic-version': '2023-06-01', 'content-type': 'application/json',
           'anthropic-beta': 'server-side-fallback-2026-07-01' },
         body: JSON.stringify(corpo),
-      }, 90000);
-    } catch (e) { ultimo = 'rede: ' + ((e && e.message) || e); continue; }
+      }, 90000, sinal);
+    } catch (e) { if (sinal && sinal.aborted) throw new Error('cancelado pelo pastor'); ultimo = 'rede: ' + ((e && e.message) || e); continue; }
     if (!r.ok) {
       const txt = await r.text().catch(() => '');
       ultimo = 'HTTP ' + r.status + ' ' + txt.slice(0, 200);
@@ -441,7 +453,8 @@ function hojeEmBrasilia() {
 // ─────────────────────────────────────────────────────────────────────────────
 // A CONVERSA — devolve a Response em fluxo. `apoio` vem do voz.js (crachá conferido, peneira, persona…).
 // ─────────────────────────────────────────────────────────────────────────────
-export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, chaveNova, semNome, personaDe, memoria, depois, vozNoCelular }) {
+export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, chaveNova, semNome, personaDe, memoria, depois, vozNoCelular,
+  celulas, conversa, contexto, confianca }) {
   const enc = new TextEncoder();
   const t0 = Date.now();
   let ctrl = null, ultimaSaida = Date.now(), fechado = false;
@@ -449,6 +462,16 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
     if (fechado || !ctrl) return;
     try { ctrl.enqueue(enc.encode(JSON.stringify(o) + '\n')); ultimaSaida = Date.now(); } catch (_) {}
   };
+  // COORDENAÇÃO: o corte do pastor (nova pergunta, "para", fechar a página) derruba TUDO que ainda roda.
+  const aborto = new AbortController();
+  const cortado = () => aborto.signal.aborted;
+  const ligadas = !!celulas;
+  const ids = idsDaTarefa(conversa);
+  const E = criarEmissor(mandar, ids);
+  const cel = (c, estado, extra) => { if (ligadas) E.cel(c, estado, extra); };
+  // Pergunta de PESQUISA com as células ligadas: o rascunho da Análise fica guardado (não é falado) até a
+  // Verificação conferir; só então a Expressão fala. Conversa comum segue falando na hora, como sempre.
+  let segurando = false, rascunho = '';
 
   let persona = personaDe(voz);
   // ── a fila de fala: corta o texto em pedaços, sintetiza já, e entrega NA ORDEM ──
@@ -492,6 +515,7 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
     if (fim && pend.trim()) { pedacoPronto(pend); pend = ''; }
   };
   const aoTexto = (d) => {
+    if (segurando) { rascunho += d; return; }
     // texto que volta depois de uma ferramenta: um espaço antes, senão "aqui.Pastor" gruda na tela
     if (novoTrecho) { novoTrecho = false; if (falado && !/\s$/.test(falado) && !/^\s/.test(d)) d = ' ' + d; }
     falado += d; mandar({ t: 'txt', d }); pend += d; cortar(false);
@@ -514,112 +538,243 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
     const esforco = material ? 'high' : papo ? 'low' : 'medium';
     const rodadasMax = material ? 10 : MAX_RODADAS;
     const prazoTotal = material ? 270000 : PRAZO_TOTAL_MS;
+    // ── AS CÉLULAS ANTES DA ANÁLISE (só com voz.celulas ligado) ─────────────────────────────────────────
+    let it = null, cx = null, esc = null;
+    const evid = [], versiculos = [];
+    if (ligadas) {
+      cel('coordenacao', 'inicio', { resumo: 'tarefa nova · no máximo ' + LIMITES.correcoes + ' correção · para tudo se o pastor cortar' });
+      esc = escutar(texto, confianca);
+      cel('escuta', esc.duvida ? 'ressalva' : 'ok', { resumo: esc.motivo });
+      it = intencao(texto);
+      cel('intencao', 'ok', { resumo: it.tipo + ' — ' + it.motivo, tipo: it.tipo });
+      cx = contextualizar(texto, contexto, it.tipo);
+      cel('contexto', 'ok', { resumo: cx.resumo });
+      cel('memoria', memoria ? 'ok' : 'ressalva', { resumo: memoria ? 'lembranças do pastor carregadas' : 'sem memória neste aparelho' });
+      if (!esc.duvida && (it.tipo === 'pesquisa' || it.tipo === 'material')) {
+        cel('pesquisa', 'inicio', { resumo: 'procurando: ' + cx.consulta.slice(0, 100) });
+        const refs = referenciasDe(texto);
+        const [bib, ...vs] = await Promise.all([
+          buscarBiblioteca(cx.consulta, origem, aborto.signal),
+          ...refs.map((ref) => executarFerramenta('ler_versiculo', { ref }, origem, { user: dono }).catch(() => null)),
+        ]);
+        if (cortado()) return;
+        for (const v of vs) if (v && v.achou) {
+          versiculos.push({ referencia: v.referencia, texto: String(v.texto || '').slice(0, 900) });
+          mandar({ t: 'tela', args: { tipo: 'versiculo', texto: String(v.texto || '').slice(0, 700), referencia: v.referencia || '' } });
+        }
+        if (bib.achou) evid.push(...rotular(bib.trechos));
+        const falhou = !bib.achou && /respondeu|configurada/.test(bib.motivo || '');
+        cel('pesquisa', falhou ? 'falha' : (evid.length || versiculos.length) ? 'ok' : 'ressalva', {
+          resumo: (evid.length ? evid.length + ' trecho(s) na biblioteca' + (bib.modo === 'termo' ? ' (busca por termo: a busca por sentido está fora agora)' : '') : 'nenhum trecho (' + (bib.motivo || 'sem motivo') + ')')
+            + (versiculos.length ? ' · ' + versiculos.length + ' versículo(s) lido(s)' : ''),
+          fontes: evid.map((e) => ({ id: e.id, autor: e.autor, obra: e.obra, onde: e.onde })), versiculos: versiculos.map((v) => v.referencia) });
+      }
+    }
+    const segurar = ligadas && it && it.tipo === 'pesquisa' && !esc.duvida;
+
     const sistema = [
       { type: 'text', text: SISTEMA_CLAUDE + (persona.estilo ? '\n\n' + persona.estilo : ''), cache_control: { type: 'ephemeral' } },
-      { type: 'text', text: 'Hoje é ' + hojeEmBrasilia() + ' (horário de Brasília).' + (memoria ? '\n\n' + memoria : '') },
+      { type: 'text', text: 'Hoje é ' + hojeEmBrasilia() + ' (horário de Brasília).' + (memoria ? '\n\n' + memoria : '')
+        + (ligadas ? '\n' + REGRAS_DAS_CELULAS : '')
+        + (esc && esc.duvida ? '\n\nA ESCUTA avisa: ' + esc.motivo + '. Se a fala não fizer sentido, pergunte ao pastor o que ele quis dizer antes de pesquisar.' : '')
+        + (cx && cx.usouAnterior ? '\n\nO CONTEXTO avisa: esta fala continua o assunto anterior — ' + cx.tema + '.' : '') },
     ];
     const msgs = historicoLimpo(historico, texto);
+    if (ligadas && it && (it.tipo === 'pesquisa' || it.tipo === 'material')) {
+      const ult = msgs[msgs.length - 1];
+      const bloco = blocoDeEvidencias(evid, versiculos);
+      ult.content = typeof ult.content === 'string' ? [{ type: 'text', text: ult.content }, { type: 'text', text: bloco }] : [...ult.content, { type: 'text', text: bloco }];
+    }
     const usadas = [], fontesVistas = [], etapas = [];
     const marca = (o) => etapas.push({ ms: Date.now() - t0, ...o });
-    let modeloQueRespondeu = '', parouPor = '', entrada = 0, saida = 0, cache = 0;
+    let modeloQueRespondeu = '', parouPor = '', entrada = 0, saida = 0, cache = 0, voltas = 0, ultimosBlocos = [];
 
-    for (let rodada = 0; rodada < rodadasMax; rodada++) {
-      if (Date.now() - t0 > prazoTotal) break;
-      const corpo = {
-        model: MODELO_CLAUDE,
-        max_tokens: material ? 32000 : fundo ? 16000 : 8000,
-        stream: true,
-        // A 1ª volta só decide o que abrir e diz "deixa eu abrir o texto": low basta e a voz sai mais cedo.
-        // Quem escreve a resposta (depois das ferramentas) pensa no esforço da pergunta.
-        output_config: { effort: rodada === 0 ? 'low' : esforco },
-        fallbacks: 'default',
-        system: sistema,
-        tools: FERRAMENTAS_CLAUDE,
-        messages: msgs,
-      };
-      marca({ rodada, pediu: 'claude' });
-      let primeira = true;
-      const r = await chamarClaude(corpo, (d) => { if (primeira) { primeira = false; marca({ rodada, primeiro_texto: true }); } aoTexto(d); });
-      marca({ rodada, claude_fim: r.parar });
-      modeloQueRespondeu = r.modelo || modeloQueRespondeu;
-      parouPor = r.parar || '';
-      if (r.usos) { entrada += (r.usos.input_tokens || 0); saida += (r.usos.output_tokens || 0); cache += (r.usos.cache_read_input_tokens || 0); }
-      if (parouPor === 'refusal') { aoTexto(' Essa eu não consigo responder por aqui.'); break; }
-      const pedidas = r.blocos.filter((b) => b.type === 'tool_use');
-      if (parouPor !== 'tool_use' && parouPor !== 'pause_turn') break;
-      // o que ficou escrito antes da ferramenta ("deixa eu abrir o texto") já sai falado,
-      // e o que vier depois começa trecho novo (primeira frase curta, pra voz voltar logo)
-      cortar(true); noTrecho = 0; novoTrecho = true;
-      msgs.push({ role: 'assistant', content: r.blocos.filter((b) => !(b.type === 'text' && !b.text)) });
-      if (!pedidas.length) continue;
-      const resultados = await Promise.all(pedidas.map(async (b) => {
-        usadas.push(b.name);
-        mandar({ t: 'ferr', nome: b.name });
-        let res, erro = false;
-        try {
-          if (b._erroJson) throw new Error('argumentos ilegíveis');
-          if (b.name === 'entregar_material') {
-            const m = b.input || {};
-            const conteudo = String(m.conteudo || '').trim();
-            if (conteudo.length < 200) throw new Error('o material veio vazio ou curto demais');
-            mandar({ t: 'material', tipo: String(m.tipo || 'estudo'), titulo: String(m.titulo || 'Material').slice(0, 200),
-              texto_base: String(m.texto_base || '').slice(0, 200), conteudo: conteudo.slice(0, 120000) });
-            res = { ok: true, ordem: 'O material já está na tela dele. Agora FALE só um resumo de duas ou três frases '
-              + '(o título e a linha mestra) e diga que está na tela para ler, copiar ou excluir. Não leia o material.' };
-          } else if (b.name === 'trocar_voz') {
-            const nova = personaDe((b.input || {}).voz);
-            persona = nova;
-            mandar({ t: 'voz', voz: nova.id });
-            res = { ok: true, nova_voz: nova.id, ordem: 'A voz já trocou. Siga a conversa normalmente.' };
-          } else if (b.name === 'aulas_do_dr_wagner') {
-            const assunto = String((b.input || {}).assunto || '').trim().slice(0, 300);
-            // duas fontes juntas: o corpus antigo (Caderno de Pérolas, tipologias, 12 aulas) e as aulas transcritas
-            // depois, que moram no Postgres (motor invisível) com autor "Dr. Wagner Cordeiro"
-            const [achado, doBanco] = await Promise.all([
-              Promise.resolve(assunto ? buscarContexto(assunto, 9000) : { texto: '', fontes: [] }),
-              aulasNoBanco(assunto, origem),
-            ]);
-            const material = [achado.texto, ...doBanco.map((x) => '[' + x.aula + ']\n' + x.texto)].filter(Boolean).join('\n\n───\n\n');
-            res = material
-              ? { achou: true, material, aulas: [...(achado.fontes || []).map((f) => f.titulo || f.fonte), ...doBanco.map((x) => x.aula)],
-                  regra: 'Material do curso do Dr. Wagner Cordeiro (comprado pelo pastor): cite o Dr. Wagner pelo nome, fale com as suas palavras.' }
-              : { achou: false, motivo: 'Não achei isso nas aulas do Dr. Wagner que estão transcritas. Diga isso e responda pela Escritura.' };
-            if (material && !fontesVistas.some((f) => f.autor === 'Dr. Wagner Cordeiro')) fontesVistas.push({ autor: 'Dr. Wagner Cordeiro', onde: 'aulas do GIOM' });
-            const pg = depois(ctx, registrarLacuna(origem, 'garimpar', { assunto }, res)); if (pg) await pg;
-          } else if (b.name === 'buscar_biblioteca') {
-            res = await buscarBiblioteca((b.input || {}).pergunta, origem);
-            if (res.achou) for (const x of res.trechos) if (!fontesVistas.some((f) => f.autor === x.autor)) fontesVistas.push({ autor: x.autor, onde: x.onde });
-            const pg = depois(ctx, registrarLacuna(origem, 'pesquisar_biblioteca', b.input, res));
-            if (pg) await pg;
-          } else {
-            res = await executarFerramenta(b.name, b.input || {}, origem, { user: dono });
-            if (b.name === 'ler_versiculo' && res && res.achou) mandar({ t: 'tela', args: { tipo: 'versiculo', texto: String(res.texto || '').slice(0, 700), referencia: res.referencia || '' } });
-            if (b.name === 'garimpar') { const pg = depois(ctx, registrarLacuna(origem, 'garimpar', b.input, res)); if (pg) await pg; }
+    // ── ANÁLISE: a Claude, com as ferramentas, em voltas (a mesma de sempre, agora com corte e etiquetas) ──
+    const rodar = async (limite) => {
+      for (let rodada = 0; rodada < limite; rodada++) {
+        if (cortado()) break;
+        // O PRAZO acabou com as buscas já feitas e sem resposta escrita (medido em 25/10/2026: a pergunta de
+        // divergência saiu só com "deixa eu procurar…"): uma última volta, SEM ferramentas, para responder com o
+        // que já foi achado. Só uma, e só dentro de 40 s a mais.
+        const ultimaVolta = Date.now() - t0 > prazoTotal;
+        if (ultimaVolta && (parouPor !== 'tool_use' || Date.now() - t0 > prazoTotal + 40000)) break;
+        voltas++;
+        // segurando o rascunho, cada volta começa do zero: o "deixa eu abrir o Kittel" de antes da ferramenta
+        // não é resposta e não deve ser falado depois de conferido
+        if (segurando) rascunho = '';
+        const corpo = {
+          model: MODELO_CLAUDE,
+          max_tokens: material ? 32000 : fundo ? 16000 : 8000,
+          stream: true,
+          // A 1ª volta só decide o que abrir e diz "deixa eu abrir o texto": low basta e a voz sai mais cedo.
+          // Quem escreve a resposta (depois das ferramentas) pensa no esforço da pergunta.
+          output_config: { effort: (rodada === 0 && !segurar) ? 'low' : esforco },
+          fallbacks: 'default',
+          system: sistema,
+          tools: FERRAMENTAS_CLAUDE,
+          ...(ultimaVolta ? { tool_choice: { type: 'none' } } : {}),
+          messages: msgs,
+        };
+        marca({ rodada, pediu: 'claude', ultima_volta: ultimaVolta || undefined });
+        let primeira = true;
+        const r = await chamarClaude(corpo, (d) => { if (primeira) { primeira = false; marca({ rodada, primeiro_texto: true }); } aoTexto(d); }, aborto.signal);
+        marca({ rodada, claude_fim: r.parar });
+        modeloQueRespondeu = r.modelo || modeloQueRespondeu;
+        parouPor = r.parar || '';
+        ultimosBlocos = r.blocos.filter((b) => !(b.type === 'text' && !b.text));
+        if (r.usos) { entrada += (r.usos.input_tokens || 0); saida += (r.usos.output_tokens || 0); cache += (r.usos.cache_read_input_tokens || 0); }
+        if (parouPor === 'refusal') { aoTexto(' Essa eu não consigo responder por aqui.'); break; }
+        const pedidas = r.blocos.filter((b) => b.type === 'tool_use');
+        if (parouPor !== 'tool_use' && parouPor !== 'pause_turn') break;
+        if (ultimaVolta) break;
+        // o que ficou escrito antes da ferramenta ("deixa eu abrir o texto") já sai falado,
+        // e o que vier depois começa trecho novo (primeira frase curta, pra voz voltar logo)
+        cortar(true); noTrecho = 0; novoTrecho = true;
+        msgs.push({ role: 'assistant', content: ultimosBlocos });
+        if (!pedidas.length) continue;
+        if (cortado()) break;
+        const resultados = await Promise.all(pedidas.map(async (b) => {
+          usadas.push(b.name);
+          mandar({ t: 'ferr', nome: b.name });
+          let res, erro = false;
+          try {
+            if (b._erroJson) throw new Error('argumentos ilegíveis');
+            if (b.name === 'entregar_material') {
+              const m = b.input || {};
+              const conteudo = String(m.conteudo || '').trim();
+              if (conteudo.length < 200) throw new Error('o material veio vazio ou curto demais');
+              mandar({ t: 'material', tipo: String(m.tipo || 'estudo'), titulo: String(m.titulo || 'Material').slice(0, 200),
+                texto_base: String(m.texto_base || '').slice(0, 200), conteudo: conteudo.slice(0, 120000) });
+              res = { ok: true, ordem: 'O material já está na tela dele. Agora FALE só um resumo de duas ou três frases '
+                + '(o título e a linha mestra) e diga que está na tela para ler, copiar ou excluir. Não leia o material.' };
+            } else if (b.name === 'trocar_voz') {
+              const nova = personaDe((b.input || {}).voz);
+              persona = nova;
+              mandar({ t: 'voz', voz: nova.id });
+              res = { ok: true, nova_voz: nova.id, ordem: 'A voz já trocou. Siga a conversa normalmente.' };
+            } else if (b.name === 'aulas_do_dr_wagner') {
+              const assunto = String((b.input || {}).assunto || '').trim().slice(0, 300);
+              // duas fontes juntas: o corpus antigo (Caderno de Pérolas, tipologias, 12 aulas) e as aulas transcritas
+              // depois, que moram no Postgres (motor invisível) com autor "Dr. Wagner Cordeiro"
+              const [achado, doBanco] = await Promise.all([
+                Promise.resolve(assunto ? buscarContexto(assunto, 9000) : { texto: '', fontes: [] }),
+                aulasNoBanco(assunto, origem),
+              ]);
+              const materialW = [achado.texto, ...doBanco.map((x) => '[' + x.aula + ']\n' + x.texto)].filter(Boolean).join('\n\n───\n\n');
+              res = materialW
+                ? { achou: true, material: materialW, aulas: [...(achado.fontes || []).map((f) => f.titulo || f.fonte), ...doBanco.map((x) => x.aula)],
+                    regra: 'Material do curso do Dr. Wagner Cordeiro (comprado pelo pastor): cite o Dr. Wagner pelo nome, fale com as suas palavras.' }
+                : { achou: false, motivo: 'Não achei isso nas aulas do Dr. Wagner que estão transcritas. Diga isso e responda pela Escritura.' };
+              if (materialW && !fontesVistas.some((f) => f.autor === 'Dr. Wagner Cordeiro')) fontesVistas.push({ autor: 'Dr. Wagner Cordeiro', onde: 'aulas do GIOM' });
+              // as aulas também viram evidência etiquetada, para a Verificação aceitar o Dr. Wagner citado
+              if (ligadas && materialW) {
+                const novas = rotular([{ autor: 'Dr. Wagner Cordeiro', obra: 'aulas do Instituto GIOM', onde: assunto.slice(0, 80), selo: 'autor aprovado', texto: materialW.slice(0, 6000) }], evid.length + 1);
+                evid.push(...novas); res.etiqueta = novas[0].id;
+                cel('pesquisa', 'ok', { resumo: 'aulas do Dr. Wagner abertas a pedido da Análise', fontes: novas.map((e) => ({ id: e.id, autor: e.autor, obra: e.obra, onde: e.onde })) });
+              }
+              const pg = depois(ctx, registrarLacuna(origem, 'garimpar', { assunto }, res)); if (pg) await pg;
+            } else if (b.name === 'buscar_biblioteca') {
+              if (ligadas) cel('pesquisa', 'inicio', { resumo: 'a Análise pediu mais uma busca: ' + String((b.input || {}).pergunta || '').slice(0, 90) });
+              res = await buscarBiblioteca((b.input || {}).pergunta, origem, aborto.signal);
+              if (res.achou) for (const x of res.trechos) if (!fontesVistas.some((f) => f.autor === x.autor)) fontesVistas.push({ autor: x.autor, onde: x.onde });
+              if (ligadas) {
+                if (res.achou) {
+                  const novos = rotular(res.trechos, evid.length + 1);
+                  evid.push(...novos);
+                  res.trechos = novos.map((e) => ({ id: e.id, autor: e.autor, obra: e.obra, onde: e.onde, selo: e.selo, texto: e.texto }));
+                  res.regra += ' Cite com a etiqueta do trecho, ex.: [' + novos[0].id + '].';
+                }
+                cel('pesquisa', res.achou ? 'ok' : /respondeu|configurada/.test(res.motivo || '') ? 'falha' : 'ressalva', {
+                  resumo: res.achou ? res.trechos.length + ' trecho(s) a mais' : 'nada novo (' + (res.motivo || '') + ')',
+                  fontes: res.achou ? res.trechos.map((e) => ({ id: e.id, autor: e.autor, obra: e.obra, onde: e.onde })) : [] });
+              }
+              const pg = depois(ctx, registrarLacuna(origem, 'pesquisar_biblioteca', b.input, res));
+              if (pg) await pg;
+            } else {
+              res = await executarFerramenta(b.name, b.input || {}, origem, { user: dono });
+              if (b.name === 'ler_versiculo' && res && res.achou) {
+                versiculos.push({ referencia: res.referencia, texto: String(res.texto || '').slice(0, 900) });
+                mandar({ t: 'tela', args: { tipo: 'versiculo', texto: String(res.texto || '').slice(0, 700), referencia: res.referencia || '' } });
+              }
+              if (b.name === 'garimpar') { const pg = depois(ctx, registrarLacuna(origem, 'garimpar', b.input, res)); if (pg) await pg; }
+            }
+            // assunto da conversa vai pra memória, como no modo Gemini (fora do caminho da resposta)
+            const temas = temasDeFerramenta(b.name === 'buscar_biblioteca' ? 'pesquisar_biblioteca' : b.name === 'aulas_do_dr_wagner' ? 'garimpar' : b.name, b.input || {});
+            if (temas.length) { const pg = depois(ctx, gravarTemas(origem, dono, JSON.parse(semNome(JSON.stringify(temas))))); if (pg) await pg; }
+          } catch (e) {
+            erro = true;
+            if (ligadas && b.name === 'buscar_biblioteca') cel('pesquisa', 'falha', { resumo: 'a busca falhou: ' + ((e && e.message) || 'motivo desconhecido') });
+            res = { erro: 'a consulta falhou: ' + ((e && e.message) || 'motivo desconhecido'), ordem: 'Não invente para tapar o buraco; diga que a consulta falhou.' };
           }
-          // assunto da conversa vai pra memória, como no modo Gemini (fora do caminho da resposta)
-          const temas = temasDeFerramenta(b.name === 'buscar_biblioteca' ? 'pesquisar_biblioteca' : b.name === 'aulas_do_dr_wagner' ? 'garimpar' : b.name, b.input || {});
-          if (temas.length) { const pg = depois(ctx, gravarTemas(origem, dono, JSON.parse(semNome(JSON.stringify(temas))))); if (pg) await pg; }
-        } catch (e) {
-          erro = true;
-          res = { erro: 'a consulta falhou: ' + ((e && e.message) || 'motivo desconhecido'), ordem: 'Não invente para tapar o buraco; diga que a consulta falhou.' };
-        }
-        const conteudo = semNome(JSON.stringify(res)).slice(0, 24000);
-        return { type: 'tool_result', tool_use_id: b.id, content: conteudo, ...(erro ? { is_error: true } : {}) };
-      }));
-      marca({ rodada, ferramentas_fim: pedidas.map((b) => b.name).join(',') });
-      mandar({ t: 'pensa' });
-      msgs.push({ role: 'user', content: resultados });
+          const conteudo = semNome(JSON.stringify(res)).slice(0, 24000);
+          return { type: 'tool_result', tool_use_id: b.id, content: conteudo, ...(erro ? { is_error: true } : {}) };
+        }));
+        marca({ rodada, ferramentas_fim: pedidas.map((b) => b.name).join(',') });
+        mandar({ t: 'pensa' });
+        msgs.push({ role: 'user', content: resultados });
+      }
+    };
+
+    if (segurar) { aoTexto('Deixa eu conferir isso nas fontes. '); cortar(true); noTrecho = 0; novoTrecho = true; segurando = true; }
+    cel('analise', 'inicio', { resumo: segurar ? 'escrevendo o rascunho — vai ser conferido antes de falar' : 'respondendo' });
+    await rodar(rodadasMax);
+    if (cortado()) return;
+    cel('analise', 'ok', { resumo: voltas + ' volta(s) da Claude' + (usadas.length ? ' · ferramentas: ' + [...new Set(usadas)].join(', ') : '') });
+
+    // ── VERIFICAÇÃO ⟲ ANÁLISE (no máximo 1 correção) → EXPRESSÃO ───────────────────────────────────────
+    let veredito = null, correcoes = 0;
+    const relatar = (v, depoisDeCorrigir) => cel('verificacao', v.ok ? 'ok' : 'ressalva', {
+      resumo: v.ok ? (depoisDeCorrigir ? 'agora tudo com apoio' : 'tudo com apoio') + (v.citadas.length ? ' (' + v.citadas.length + ' evidência(s) citada(s))' : '')
+        : v.problemas.length + ' ponto(s) sem apoio' + (depoisDeCorrigir ? ' — sai com ressalva' : ''),
+      problemas: v.problemas.map((p) => p.resumo) });
+    if (segurar) {
+      cel('verificacao', 'inicio', { resumo: 'conferindo autores, etiquetas e citações do rascunho' });
+      veredito = verificar(rascunho, evid, versiculos, cx && cx.autoresAntes);
+      relatar(veredito, false);
+      if (!veredito.ok && correcoes < LIMITES.correcoes && !cortado() && Date.now() - t0 < prazoTotal - 25000) {
+        correcoes++;
+        cel('analise', 'inicio', { resumo: 'corrigindo o que a Verificação apontou' });
+        msgs.push({ role: 'assistant', content: ultimosBlocos.length ? ultimosBlocos : [{ type: 'text', text: rascunho || '(vazio)' }] });
+        msgs.push({ role: 'user', content: pedidoDeCorrecao(veredito.problemas) });
+        rascunho = '';
+        await rodar(3);
+        if (cortado()) return;
+        cel('analise', 'ok', { resumo: 'rascunho corrigido' });
+        cel('verificacao', 'inicio', { resumo: 'conferindo de novo' });
+        veredito = verificar(rascunho, evid, versiculos, cx && cx.autoresAntes);
+        relatar(veredito, true);
+      }
+      let final = rascunho.trim() || 'Não consegui montar uma resposta com apoio nas fontes agora.';
+      if (!veredito.ok) final += ' ' + ressalva(veredito.problemas);
+      segurando = false;
+      cel('expressao', 'inicio', { resumo: 'falando a resposta conferida' });
+      aoTexto(final);
+    } else if (ligadas && evid.length) {
+      // conversa que abriu livro sem segurar (pergunta direta): confere depois e, se faltar apoio, avisa no fim
+      veredito = verificar(falado, evid, versiculos, cx && cx.autoresAntes);
+      relatar(veredito, false);
+      if (!veredito.ok) aoTexto(' ' + ressalva(veredito.problemas));
     }
     cortar(true);
-    // Na tela, só as fontes que a Claude CITOU na fala (a busca traz autor que ela descartou por não servir).
-    const semAc = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-    const dito = semAc(falado);
-    const citadas = fontesVistas.filter((f) => semAc(f.autor).split(/[^a-z]+/).filter((p) => p.length >= 4).some((p) => dito.includes(p)));
-    if (citadas.length) mandar({ t: 'fontes', fontes: citadas });
+    if (ligadas) {
+      const citadas = veredito ? veredito.citadas : [];
+      const lista = evid.filter((e) => citadas.includes(e.id)).map((e) => ({ id: e.id, n: Number(e.id.slice(1)), autor: e.autor, obra: e.obra, onde: e.onde }));
+      if (lista.length || versiculos.length) mandar({ t: 'fontes', fontes: lista, versiculos: versiculos.map((v) => v.referencia), etiquetadas: true });
+      mandar({ t: 'contexto', conversa: ids.conversa, tema: (cx && cx.tema) || '', autores: [...new Set(lista.map((f) => f.autor))].slice(0, 6) });
+    } else {
+      // Na tela, só as fontes que a Claude CITOU na fala (a busca traz autor que ela descartou por não servir).
+      const semAc = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+      const dito = semAc(falado);
+      const citadas = fontesVistas.filter((f) => semAc(f.autor).split(/[^a-z]+/).filter((p) => p.length >= 4).some((p) => dito.includes(p)));
+      if (citadas.length) mandar({ t: 'fontes', fontes: citadas });
+    }
     await corrente;
+    cel('expressao', 'ok', { resumo: 'resposta falada (' + falado.length + ' letras)' });
+    cel('coordenacao', 'ok', { resumo: voltas + ' volta(s) da Claude · ' + correcoes + ' correção · ' + Math.round((Date.now() - t0) / 100) / 10 + ' s' });
     mandar({ t: 'fim', modelo: modeloQueRespondeu || MODELO_CLAUDE,
       nome: NOME_DO_MODELO[modeloQueRespondeu] || modeloQueRespondeu || MODELO_CLAUDE,
-      parou: parouPor, ferramentas: usadas, ms: Date.now() - t0, etapas, tokens: { entrada, saida, cache }, falado: falado.length });
+      parou: parouPor, ferramentas: usadas, ms: Date.now() - t0, etapas, tokens: { entrada, saida, cache }, falado: falado.length,
+      ...(ligadas ? { celulas: { conversa: ids.conversa, tarefa: ids.tarefa, correcoes, voltas } } : {}) });
   };
 
   const corpo = new ReadableStream({
@@ -637,7 +792,10 @@ export function conversarComClaude({ texto, historico, voz, origem, ctx, dono, c
         })
         .finally(() => { clearInterval(vivo); fechado = true; try { c.close(); } catch (_) {} });
     },
-    cancel() { fechado = true; },
+    cancel() {
+      fechado = true; aborto.abort();
+      if (ligadas) console.log('[células] tarefa ' + ids.tarefa + ' cancelada pelo pastor aos ' + (Date.now() - t0) + ' ms');
+    },
   });
   return new Response(corpo, { headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
