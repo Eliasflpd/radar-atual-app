@@ -460,6 +460,7 @@ function renderHome(){
   fetchCloudVideos();   // busca vídeos da nuvem (YouTube/Facebook do Elias) e re-renderiza
   seedAgendaCeadema();   // agenda CEADEMA (avisos até o fim do ano)
   checkNovidade();       // 🔔 avisa "NOVIDADE" (apito + banner) se saiu conteúdo novo
+  avisarNovoMusicas();   // 🎵 avisa 1x que chegou a área de Músicas
 
   // Painel Hoje
   const hoje = new Date();
@@ -4079,6 +4080,15 @@ function mostrarNovidade(){
   setTimeout(function(){ b.classList.remove('show'); setTimeout(function(){b.remove();},450); }, 8000);
 }
 var _novidadeAlvo=null; // pra onde o balão de NOVIDADE leva ao clicar
+// 🎵 MÚSICAS (27/10/2026): 1x por aparelho, o mesmo apito/balão de NOVIDADE avisa que chegou a área de Músicas;
+// no painel, o item abre direto a tela de Músicas. Se o balão de outra novidade já estiver na tela, entra na mesma lista.
+function avisarNovoMusicas(){
+  try{ if(localStorage.getItem('radar_nov_musicas_v1')) return; localStorage.setItem('radar_nov_musicas_v1','1'); }catch(_){ return; }
+  var item={id:'musicas',titulo:'Músicas — louvores de qualquer cantor',tipo:'musicas'};
+  var antes=(_novidadeAlvo && _novidadeAlvo.tipo==='lista' && _novidadeAlvo.itens) ? _novidadeAlvo.itens : [];
+  _novidadeAlvo={tipo:'lista', itens:[item].concat(antes)};
+  if(!document.querySelector('.nv-toast')) setTimeout(mostrarNovidade, 1200);
+}
 function checkNovidade(){
   var sig=novidadeSig();
   var last=localStorage.getItem('radar_novidade_sig');
@@ -4105,6 +4115,7 @@ function novidadeLabel(tp){
   if(tp==='aviso') return {ic:'📢',txt:'Novo aviso'};
   if(tp==='notapesar') return {ic:'🕊️',txt:'Nota de pesar'};
   if(tp==='licaobanner') return {ic:'📖',txt:'Lição nova'};
+  if(tp==='musicas') return {ic:'🎵',txt:'Novo no RADAR'};
   return {ic:'✨',txt:'Novidade'};
 }
 // leva ao carrossel e destaca o card novo
@@ -4149,7 +4160,7 @@ function mostrarNovidadesPanel(itens){
   var cl=document.getElementById('nvp-close'); if(cl) cl.onclick=function(){ ov.remove(); };
   var hm=document.getElementById('nvp-home'); if(hm) hm.onclick=function(){ ov.remove(); try{ voltarHome(); }catch(_){} var sc=document.querySelector('.home-scroll'); if(sc) sc.scrollTo({top:0,behavior:'smooth'}); };
   Array.prototype.forEach.call(ov.querySelectorAll('.nvp-item'),function(btn){
-    btn.onclick=function(){ var id=btn.getAttribute('data-id'); ov.remove(); irParaCard(id); };
+    btn.onclick=function(){ var id=btn.getAttribute('data-id'); ov.remove(); if(id==='musicas'){ if(window.abrirMusicas) abrirMusicas(); return; } irParaCard(id); };
   });
 }
 
