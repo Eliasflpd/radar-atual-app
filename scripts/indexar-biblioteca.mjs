@@ -31,6 +31,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
+import { createHash } from 'node:crypto';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // FORA do repositório, de propósito. Se um dia alguém mudar isto pra dentro de
@@ -686,7 +687,7 @@ async function subir(quais) {
   // banco até o teto pra indexar comentário derruba coisa que o pastor usa todo
   // dia. Então medimos o tamanho a cada lote e PARAMOS antes de apertar.
   // Teto em MB; muda com PARAR_EM_MB se um dia o plano crescer.
-  const TETO_MB = parseInt(process.env.PARAR_EM_MB || '1100', 10);
+  const TETO_MB = parseInt(process.env.PARAR_EM_MB || '440', 10);   // 27/10/2026: era 1100, acima do limite real do Neon grátis (512 MB)
   const tamanhoMB = async () => {
     const r = await c.query('select pg_database_size(current_database()) b');
     return Math.round(Number(r.rows[0].b) / 1048576);
@@ -735,20 +736,34 @@ async function subir(quais) {
     }
     // 27/10/2026: cada fonte sobe numa TRANSAÇÃO. Antes, o freio de mão parava no meio e deixava a fonte pela metade
     // no banco — e a TRAVA DOS LIVROS não deixa apagar a metade para tentar de novo. Agora ou entra inteira, ou nada.
-    await c.query('begin');
-    try { await c.query('delete from biblioteca_trechos where fonte=$1', [f.id]); }
-    catch (e) {
-      await c.query('rollback');
-      console.log(`\n   🔒 ${f.id}: já tem ${jaTem} trechos no banco e a TRAVA DOS LIVROS não deixou substituir. Só com --autorizado-pelo-elias.`);
-      continue;
+    // O DR. WAGNER É ABSOLUTO (norma do Elias, 27/10/2026: "nada dele pode ser apagado nem deixado de fora"). A fonte
+    // dele NUNCA é apagada para ser regravada: só ACRESCENTA o trecho que ainda não está no banco (mesmo texto = já está).
+    const soAcrescentar = /dr-wagner/i.test(f.id) || /wagner cordeiro/i.test(String((meta.itens[0] && meta.itens[0][0]) || ''));
+    let ordem = null;
+    if (soAcrescentar) {
+      const ja = new Set((await c.query('select md5(texto) h from biblioteca_trechos where fonte=$1', [f.id])).rows.map((r) => r.h));
+      ordem = meta.itens.map((_, k) => k).filter((k) => !ja.has(createHash('md5').update(semNulo(meta.itens[k][5]), 'utf8').digest('hex')));
+      console.log(`\n   ➕ ${f.id}: só acrescentar — ${ja.size} textos já no banco, ${ordem.length} novos`);
+      if (!ordem.length) continue;
+      await c.query('begin');
+    } else {
+      await c.query('begin');
+      try { await c.query('delete from biblioteca_trechos where fonte=$1', [f.id]); }
+      catch (e) {
+        await c.query('rollback');
+        console.log(`\n   🔒 ${f.id}: já tem ${jaTem} trechos no banco e a TRAVA DOS LIVROS não deixou substituir. Só com --autorizado-pelo-elias.`);
+        continue;
+      }
     }
+    if (!ordem) ordem = meta.itens.map((_, k) => k);
     // Teto opcional por fonte. Serve pra caber num banco apertado (o Neon grátis
     // são 512 MB e a biblioteca inteira passa disso) e pra provar uma fonte nova
     // sem subir a obra completa. Sem a variável, sobe tudo.
-    const teto = Math.min(meta.total, parseInt(process.env.SUBIR_MAX || "0", 10) || meta.total);
+    const teto = Math.min(ordem.length, parseInt(process.env.SUBIR_MAX || "0", 10) || ordem.length);
     for (let i = 0; i < teto; i += 200) {
       const vals = [], params = [];
-      for (let k = i; k < Math.min(i + 200, teto); k++) {
+      for (let j = i; j < Math.min(i + 200, teto); j++) {
+        const k = ordem[j];
         const [autor, obra, livro, secao, tipo, texto] = meta.itens[k];
         const v = [];
         for (let d = 0; d < DIMS; d++) { const b = vec[k * DIMS + d]; v.push(((b > 127 ? b - 256 : b) * meta.escala).toFixed(6)); }
