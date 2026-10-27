@@ -1,4 +1,4 @@
-const V='radar-v296';               // cache do SHELL — troca a cada versão do app
+const V='radar-v297';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
 // ⚠️ 27/09/2026 — POR QUE ESTE CACHE EXISTE (bug real: "clico na mensagem e não abre"):
 // o `activate` apagava o cache da versão anterior a CADA subida de versão. Como as
@@ -23,6 +23,8 @@ const SHELL=[
   '/assets/app.js',
   '/assets/radar.css',
   '/assets/lupa.js',
+  '/assets/musicas.js',   // MÚSICAS (27/10/2026)
+  '/assets/musicas.css',
   '/_uso.js',
   '/icon-192.png',
   '/capa-2026-10.jpg',    // 19/10/2026 (nome novo a cada capa nova: o cache permanente do aparelho guarda a antiga pelo nome): a capa de abertura sai do cache na hora, sem esperar a rede
@@ -160,7 +162,9 @@ function documento(req){
 const API_NUNCA_GUARDA=/^\/api\/(acesso|verify-otp|send-otp|assinar|cadastros|pix|asaas|voz)/;
 
 function api(req,url){
-  const guardavel=!API_NUNCA_GUARDA.test(url.pathname);
+  // MÚSICAS (27/10): a biblioteca da pessoa (fn=musicas) e a busca/link do player (fn=disco)
+  // sempre vêm da rede — o app já guarda a cópia dele no próprio celular.
+  const guardavel=!API_NUNCA_GUARDA.test(url.pathname) && !/[?&]fn=musicas/.test(url.search) && url.pathname!=='/api/disco';
   return fetch(req).then(r=>{
     if(r && r.ok && guardavel){
       const clone=r.clone();

@@ -13,8 +13,9 @@ import buscaVetor from './_lib/busca-vetor.js';
 import voz from './_lib/voz.js';
 import ebdPlano from './_lib/ebd-plano.js';
 import cursoVideo from './_lib/curso-video.js';
+import disco from './_lib/disco.js';   // MÚSICAS (27/10): Deezer + achar a faixa no YouTube
 
-const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor, voz, 'ebd-plano': ebdPlano, 'curso-video': cursoVideo };
+const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor, voz, 'ebd-plano': ebdPlano, 'curso-video': cursoVideo, disco };
 
 // ⚠️ O SEGUNDO ARGUMENTO NÃO É ENFEITE — MEDIDO EM PRODUÇÃO (22/09/2026).
 // A Vercel entrega um `context` com `waitUntil`: é ele que deixa a resposta sair

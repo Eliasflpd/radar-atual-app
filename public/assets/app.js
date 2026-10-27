@@ -3087,6 +3087,7 @@ function fecharLeitor(){
   document.getElementById('tela-noticias').classList.add('ativa');
 }
 function abrirYT(videoId,titulo,canal){
+  try{ if(window.radarPausarMusica) window.radarPausarMusica(); }catch(e){}   // MÚSICAS: vídeo de notícia pausa a música
   document.getElementById('yt-titulo-h').textContent=titulo||'Vídeo';
   document.getElementById('yt-canal-h').textContent=canal||'';
   document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0&modestbranding=1';
@@ -4666,6 +4667,7 @@ function verHistorinha(id){ var h=_histById(id); if(!h)return;
   var v=h.video||''; if((h.tipo=='mp4')||v.indexOf('.mp4')>=0||v.indexOf('/videos')===0){ abrirVideoTela(v, h.titulo||'Historinha', 'hist-'+id); } else { var yt=_ytId(v); if(yt){ _playYT(yt, h.titulo||'Historinha'); } else { window.open(v,'_blank'); } } }
 function _ytId(u){ var m=(u||'').match(/(?:v=|youtu\.be\/|\/embed\/)([A-Za-z0-9_-]{11})/); return m?m[1]:''; }
 function _playYT(id,titulo){
+  try{ if(window.radarPausarMusica) window.radarPausarMusica(); }catch(e){}   // MÚSICAS: historinha pausa a música
   var ov=document.getElementById('yt-ov');
   if(!ov){ ov=document.createElement('div'); ov.id='yt-ov';
     ov.style.cssText='position:fixed;inset:0;z-index:100050;background:#000;display:none;flex-direction:column';

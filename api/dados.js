@@ -517,6 +517,66 @@ async function pregado(req, res){
   }finally{ try{ await c.end(); }catch(_){} }
 }
 
+// ═══════════════════════════════════════════════════════════
+// MÚSICAS (27/10/2026) — a biblioteca de cada pessoa na área de músicas:
+// curtidas, playlists, pastas, cantores seguidos e tocadas recentemente.
+//   GET  /api/dados?fn=musicas&user=<chave>      -> { ok, dados }
+//   POST /api/dados?fn=musicas  { user, dados }  -> grava (um JSON por pessoa)
+// Mora AQUI pelo motivo de sempre: 11/12 funções no plano Hobby.
+// Mesma trava do caderno de pregações (crachá do aparelho, CHAVE.conferir) e
+// mesma regra: erro NUNCA trava a tela — o app tem cópia no próprio celular.
+// ═══════════════════════════════════════════════════════════
+const MUS_MAX = 400 * 1024;   // ~400 KB por pessoa (milhares de músicas)
+
+async function musicas(req, res){
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, x-radar-chave');
+  res.setHeader('Cache-Control','no-store');
+  if(req.method === 'OPTIONS'){ res.status(200).end(); return; }
+
+  const q = req.query || {};
+  let b = req.body;
+  if(typeof b === 'string'){ try{ b = JSON.parse(b); }catch(_){ b = {}; } }
+  if(Buffer.isBuffer(b)){ try{ b = JSON.parse(b.toString('utf8')); }catch(_){ b = {}; } }
+  b = b || {};
+
+  const chave = chaveDe(req.method === 'POST' ? b.user : q.user).slice(0,60);
+  if(!chave){ res.status(200).json({ ok:true, dados:null, sem_dono:true }); return; }
+
+  const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
+  if(!cs){ res.status(200).json({ ok:true, dados:null, off:true, salvo:false }); return; }
+
+  const c = new Client({ connectionString: cs, ssl:{ rejectUnauthorized:false } });
+  try{
+    await c.connect();
+    await c.query(`create table if not exists radar_musicas(
+      user_key text primary key,
+      dados jsonb not null default '{}'::jsonb,
+      atualizado timestamptz default now()
+    )`);
+    const porte = await CHAVE.conferir(c, chave, CHAVE.daRequisicao(req, b));
+    if(!porte.ok){ res.status(200).json({ ok:true, dados:null, salvo:false, precisa_chave:true, motivo: porte.motivo }); return; }
+    const selo = {};
+    if(porte.chave_nova) selo.chave_nova = porte.chave_nova;
+    if(porte.renove)     selo.renove = true;
+
+    if(req.method === 'POST'){
+      const txt = JSON.stringify(b.dados && typeof b.dados === 'object' ? b.dados : {});
+      if(txt.length > MUS_MAX){ res.status(200).json({ ok:false, salvo:false, err:'grande-demais', ...selo }); return; }
+      await c.query(
+        `insert into radar_musicas(user_key,dados,atualizado) values($1,$2::jsonb,now())
+         on conflict (user_key) do update set dados=excluded.dados, atualizado=now()`, [chave, txt]);
+      res.status(200).json({ ok:true, salvo:true, ...selo });
+      return;
+    }
+    const r = await c.query(`select dados, atualizado from radar_musicas where user_key=$1`, [chave]);
+    res.status(200).json({ ok:true, dados: r.rowCount ? r.rows[0].dados : null, atualizado: r.rowCount ? r.rows[0].atualizado : null, ...selo });
+  }catch(e){
+    res.status(200).json({ ok:true, dados:null, salvo:false, err:String(e && e.message || e).slice(0,160) });
+  }finally{ try{ await c.end(); }catch(_){} }
+}
+
 const HANDLERS = {
   hit:          require('./_lib/hit.js'),
   hist:         require('./_lib/hist.js'),
@@ -550,6 +610,7 @@ const HANDLERS = {
   painel:       painel,
   uso:          uso,
   pregado:      pregado,
+  musicas:      musicas,   // MÚSICAS: curtidas/playlists/pastas/seguidos de cada pessoa
   // livro comprado que só o dono lê (texto no Postgres, nunca no repo). Ver api/_lib/livro-particular.js.
   'livro-particular': require('./_lib/livro-particular.js')
 };
