@@ -733,8 +733,12 @@ async function subir(quais) {
     if (jaTem && process.argv.includes('--autorizado-pelo-elias')) {
       await c.query("select set_config('radar.elias_autorizou','SIM',false)");
     }
+    // 27/10/2026: cada fonte sobe numa TRANSAÇÃO. Antes, o freio de mão parava no meio e deixava a fonte pela metade
+    // no banco — e a TRAVA DOS LIVROS não deixa apagar a metade para tentar de novo. Agora ou entra inteira, ou nada.
+    await c.query('begin');
     try { await c.query('delete from biblioteca_trechos where fonte=$1', [f.id]); }
     catch (e) {
+      await c.query('rollback');
       console.log(`\n   🔒 ${f.id}: já tem ${jaTem} trechos no banco e a TRAVA DOS LIVROS não deixou substituir. Só com --autorizado-pelo-elias.`);
       continue;
     }
@@ -755,23 +759,24 @@ async function subir(quais) {
         params.push(f.id, autor, obra, semNulo(livro), semNulo(secao), tipo, semNulo(texto),
           f.peso || 3, f.aprovado !== false, '[' + v.join(',') + ']');
       }
-      await c.query(`insert into biblioteca_trechos(fonte,autor,obra,livro,secao,tipo,texto,peso,aprovado,emb) values ${vals.join(',')}`, params);
+      try { await c.query(`insert into biblioteca_trechos(fonte,autor,obra,livro,secao,tipo,texto,peso,aprovado,emb) values ${vals.join(',')}`, params); }
+      catch (e) { await c.query('rollback'); throw e; }
       process.stdout.write(`\r   ${f.id}: ${Math.min(i + 200, teto)}/${teto}   `);
 
-      // Confere o tamanho a cada ~2000 linhas. E barato, e e o que evita o estrago:
+      // Confere o tamanho a cada lote. E barato, e e o que evita o estrago:
       // este banco e o do app NO AR — cadastro, acesso e push dos irmaos moram nele.
-      if (i % 2000 === 0) {
-        const agora = await tamanhoMB();
-        if (agora >= TETO_MB) {
-          console.log(`\n   🛑 PAREI: o banco chegou a ${agora} MB (teto ${TETO_MB} MB).`);
-          console.log(`      ${f.id} entrou ate o trecho ${i}. O cache local continua inteiro —`);
-          console.log('      e so rodar --subir de novo quando houver espaco.');
-          parou = { fonte: f.id, ate: i, mb: agora };
-          break;
-        }
+      const agora = await tamanhoMB();
+      if (agora >= TETO_MB) {
+        await c.query('rollback');
+        console.log(`\n   🛑 PAREI: o banco chegou a ${agora} MB (teto ${TETO_MB} MB) no trecho ${i} de ${f.id}.`);
+        console.log('      Desfiz a fonte inteira: nada dela ficou no banco. O cache local continua inteiro —');
+        console.log('      e so rodar --subir de novo quando houver espaco.');
+        parou = { fonte: f.id, ate: i, mb: agora };
+        break;
       }
     }
     if (parou) break;
+    await c.query('commit');
     console.log(`\r   ✅ ${f.id} no banco (${teto})  ·  banco em ${await tamanhoMB()} MB      `);
   }
   // ÍNDICE HNSW: SÓ SE PEDIR (--hnsw). Medido neste acervo, ele pesa 58 MB para
