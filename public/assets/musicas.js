@@ -66,8 +66,14 @@
     sair: 'M10 17l-5-5 5-5M5 12h12', onda: 'M2 12h2l2-6 3 12 3-9 2 6 2-3h6', parar: 'M6 6h12v12H6z'
   };
   function ic(n, t, cheio) { return '<svg width="' + (t || 18) + '" height="' + (t || 18) + '" viewBox="0 0 24 24" fill="' + (cheio ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + IC[n] + '"/></svg>'; }
+  // Deezer manda 250px; no celular (tela de alta densidade) o nome escrito na capa sai borrado.
+  // O CDN tem 500 e 1000 do mesmo arquivo: pede o tamanho que o lugar precisa.
+  var TAM_CAPA = { 'mus-cardimg': 500, 'mus-atimg': 500, 'mus-topimg': 500, 'mus-bibcapa': 500, 'mus-heroimg': 1000 };
+  function nitida(src, px) {
+    return !px ? src : String(src).replace(/\/(\d{2,4})x\1-000000-80-0-0\.jpg$/, function (m, n) { return +n >= px ? m : '/' + px + 'x' + px + '-000000-80-0-0.jpg'; });
+  }
   function capa(src, cls, redondo, icone) {
-    return '<div class="' + cls + (redondo ? ' redondo' : '') + '">' + (src ? '<img src="' + esc(src) + '" alt="" loading="lazy">' : ic(icone || 'nota', 22)) + '</div>';
+    return '<div class="' + cls + (redondo ? ' redondo' : '') + '">' + (src ? '<img src="' + esc(nitida(src, TAM_CAPA[cls])) + '" alt="" loading="lazy" decoding="async">' : ic(icone || 'nota', 22)) + '</div>';
   }
 
   // ───────────────────────── registro dos itens da tela ─────────────────────────
