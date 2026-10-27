@@ -48,7 +48,8 @@ export function escutar(texto, confianca) {
 export const PEDE_MATERIAL = /\b(ger|prepar|mont|fa[zç]|escrev|cri|elabor)\w*\b[\s\S]{0,40}\b(serm[aãoõ]|prega[cç]|esbo[cç]|mensage|estudo|aula)/i;
 const LIVROS_BIBLIA = 'genesis|exodo|levitico|numeros|deuteronomio|josue|juizes|rute|samuel|reis|cronicas|esdras|neemias|ester|jo|salmos?|proverbios|eclesiastes|cantares|isaias|jeremias|lamentacoes|ezequiel|daniel|oseias|joel|amos|obadias|jonas|miqueias|naum|habacuque|sofonias|ageu|zacarias|malaquias|mateus|marcos|lucas|joao|atos|romanos|corintios|galatas|efesios|filipenses|colossenses|tessalonicenses|timoteo|tito|filemom|hebreus|tiago|pedro|judas|apocalipse';
 const REF = new RegExp('\\b(?:[123]\\s*)?(' + LIVROS_BIBLIA + ')\\s+\\d{1,3}(?:\\s*[:.]\\s*\\d{1,3}(?:\\s*-\\s*\\d{1,3})?)?', 'i');
-const PESQUISA = /\b(segundo|o que (diz|dizem|fala|falam|ensina)|fonte|fontes|comentaris|autor|autores|livro|biblioteca|grego|hebraico|aramaico|original|significa|significado|sentido|exegese|hermeneut|contexto historic|historia|doutrina|teolog|compar|diferen[cç]a entre|kittel|thayer|keil|edersheim|champlin|owens|wagner|strong|verbete|palavra .{0,20}(grega|hebraica)|interpreta)/;
+// 27/10/2026: jornal/notícia/relato também é pergunta de fonte ("o que o Mensageiro da Paz contava sobre…")
+const PESQUISA = /\b(mensageiro|jornal|noticia|contava|relat|registr|segundo|o que (diz|dizem|fala|falam|ensina|conta|contam)|fonte|fontes|comentaris|autor|autores|livro|biblioteca|grego|hebraico|aramaico|original|significa|significado|sentido|exegese|hermeneut|contexto historic|historia|doutrina|teolog|compar|diferen[cç]a entre|kittel|thayer|keil|edersheim|champlin|owens|wagner|strong|verbete|palavra .{0,20}(grega|hebraica)|interpreta)/;
 const PAPO = /^(oi|ola|bom dia|boa (tarde|noite)|tudo bem|obrigad|valeu|amem|amém|tchau|ate (logo|mais)|beleza|ok|certo|entendi|isso mesmo|pode (parar|continuar)|para|chega)\b/;
 export function intencao(texto) {
   const t = semAcento(texto).trim();
