@@ -32,7 +32,7 @@ import { buscarContexto, METODO } from './concilio-wagner.js';
 // AS CÉLULAS (25/10/2026): escuta, intenção, contexto, pesquisa, verificação e expressão viram unidades com entrada,
 // saída e eventos reais ({t:'cel'}) — ver celulas.js. Ligadas pelo celular (voz.celulas); desligadas, tudo como antes.
 import { LIMITES, idsDaTarefa, criarEmissor, escutar, intencao, referenciasDe, contextualizar, rotular, blocoDeEvidencias,
-  verificar, pedidoDeCorrecao, ressalva, REGRAS_DAS_CELULAS } from './celulas.js';
+  verificar, pedidoDeCorrecao, ressalva, REGRAS_DAS_CELULAS, SELO_HISTORICO, ehHistorico } from './celulas.js';
 
 // Uma linha só pra trocar de cérebro (ex.: ANTHROPIC_MODEL_VOZ=claude-opus-5-5 na Vercel).
 export const MODELO_CLAUDE = (typeof process !== 'undefined' && process.env && process.env.ANTHROPIC_MODEL_VOZ) || 'claude-sonnet-5-5';
@@ -182,7 +182,7 @@ COMO FALAR
 
 BÍBLIA E ESTUDO — aqui você é mestre, e o pastor confere tudo
 - Antes de citar ou explicar um versículo, leia o texto exato com ler_versiculo, mesmo tendo certeza: ele usa a Almeida, e citação de memória sai diferente. Fale em cima do texto que voltou.
-- Erudição (palavra no original, pano de fundo, costume, o que os comentaristas dizem) vem de buscar_biblioteca. Use com as suas palavras e diga de quem veio pelo nome ("Keil e Delitzsch observam…"). Nunca copie mais de seis palavras seguidas de um livro: são livros comprados e o texto deles não pode ser repetido. Descarte trecho que não trata da pergunta. Autor marcado "com filtro" só vale para grego, crítica textual e estudo de palavra, nunca para interpretação.
+- Erudição (palavra no original, pano de fundo, costume, o que os comentaristas dizem) vem de buscar_biblioteca. Use com as suas palavras e diga de quem veio pelo nome ("Keil e Delitzsch observam…"). Nunca copie mais de seis palavras seguidas de um livro: são livros comprados e o texto deles não pode ser repetido. Descarte trecho que não trata da pergunta. Autor marcado "com filtro" só vale para grego, crítica textual e estudo de palavra, nunca para interpretação. Trecho marcado "FONTE HISTÓRICA" (o jornal Mensageiro da Paz) serve para história, testemunho e ilustração ("o Mensageiro da Paz de dezembro de 1945 noticiava…"), nunca para sustentar doutrina; e pode trazer artigo de outra corrente.
 - Seu conhecimento próprio de estudioso vale, mas não atribua a um autor nada que a ferramenta não trouxe, e não invente página, ano, número ou citação entre aspas.
 - Antigo Testamento é hebraico (aramaico em Daniel dois a sete e Esdras quatro a sete); Novo Testamento é grego. Nunca troque. Palavra no original só com fonte ou certeza absoluta.
 - Linha pentecostal clássica (Assembleia de Deus), cristocêntrica. Em ponto disputado, apresente as posições com honestidade e diga qual a linha pentecostal sustenta. Respeite as outras tradições sem atacar.
@@ -218,7 +218,8 @@ O RESTO
 // ─────────────────────────────────────────────────────────────────────────────
 // A BIBLIOTECA, CRUA — a mesma coleta do pensarAFundo, entregue à própria Claude.
 // ─────────────────────────────────────────────────────────────────────────────
-const SELO = (x) => x.peso === 2 ? 'fonte primária (diz qual é a palavra no original)'
+const SELO = (x) => ehHistorico(x) ? SELO_HISTORICO
+  : x.peso === 2 ? 'fonte primária (diz qual é a palavra no original)'
   : x.aprovado === false ? 'COM FILTRO (só grego, crítica textual e estudo de palavra; nunca interpretação)'
   : 'autor aprovado';
 

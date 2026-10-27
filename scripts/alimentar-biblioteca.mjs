@@ -6,7 +6,8 @@
 //     <Autor - Obra>\            ← uma pasta por obra (o nome vira autor/obra se não houver fonte.json)
 //        livro.pdf | .docx | .txt | .md
 //        fonte.json (opcional)   ← { "autor", "obra", "peso": 3, "aprovado": true, "livro": "Provérbios",
-//                                    "origem": "D:\\caminho\\do\\arquivo-ou-pasta", "capitulos": false }
+//                                    "origem": "D:\\caminho\\do\\arquivo-ou-pasta", "capitulos": false,
+//                                    "tipo": "historico" }  ← jornal/fonte histórica: selo próprio, nunca doutrina
 //        _texto\                 ← criado aqui: o texto extraído (é isto que o indexador lê)
 //     _fontes.json               ← criado aqui: a lista que o indexador acrescenta às fontes fixas
 //     _registro.txt              ← o que aconteceu em cada noite
@@ -95,7 +96,7 @@ for (const d of fs.readdirSync(PASTA, { withFileTypes: true })) {
   };
   fontes.push(f);
   diz(`  • ${f.id}: ${f.autor} — ${arquivos.length} arquivo(s)${convertidos ? `, ${convertidos} convertido(s) agora` : ''}`
-    + (f.aprovado ? '' : ' [COM FILTRO]'));
+    + (f.tipo === 'historico' ? ' [FONTE HISTÓRICA]' : f.aprovado ? '' : ' [COM FILTRO]'));
 }
 fs.writeFileSync(path.join(PASTA, '_fontes.json'), JSON.stringify(fontes, null, 2));
 

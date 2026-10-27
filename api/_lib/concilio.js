@@ -4,6 +4,7 @@ export const config = { runtime: 'edge' };
 // OpenAI). Era aqui que doía: com uma conta só, o dia em que ela secou levou junto o
 // Concílio inteiro e o Escavador de Pérolas. Ver api/_lib/ia.js.
 import { respostaStream, respostaTexto, respostaErro } from './ia.js';
+import { SELO_HISTORICO, ehHistorico } from './celulas.js';
 
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 
@@ -751,7 +752,8 @@ async function bibliotecaFonte(pergunta, origem, quantos, ctx) {
     // Só os NOMES (autor e onde), nunca o texto: quem chamou pode devolver isto no cabeçalho da resposta.
     if (ctx) ctx.fontes = itens.map((x) => x.autor + ' — ' + (x.secao || x.livro || '') + ' [nota ' + (x.score != null ? x.score : '?') + ']');
     const partes = itens.map((x, i) => {
-      const selo = x.peso === 2 ? '[FONTE PRIMÁRIA — diz qual é a palavra no original]'
+      const selo = ehHistorico(x) ? '[' + SELO_HISTORICO + ']'
+        : x.peso === 2 ? '[FONTE PRIMÁRIA — diz qual é a palavra no original]'
         : x.aprovado === false ? '[COM FILTRO — vale só em grego, crítica textual e estudo de palavra; nunca em interpretação disputada]'
         : '[autor aprovado]';
       return '■ [' + (i + 1) + '] ' + x.autor + (x.livro ? ' — ' + x.livro : '')

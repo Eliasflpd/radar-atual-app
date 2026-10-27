@@ -285,12 +285,13 @@ module.exports = async (req, res) => {
     // pesquisa. Com os comentários de Provérbios as notas ficam coladas (0,73 x 0,71) e, sem este teto, os
     // de filtro ocupavam metade das vagas e Waltke/Kidner nem chegavam ao redator.
     const vistos = new Set(), itens = [];
-    let comFiltro = 0;
+    let comFiltro = 0, historicos = 0;
     for (const x of [...achados, ...r.rows]) {
       const k = x.autor + '|' + x.texto.slice(0, 60);
       if (vistos.has(k)) continue;
-      if (x.aprovado === false && comFiltro >= 1) continue;
-      if (x.aprovado === false) comFiltro++;
+      // 27/10/2026: o jornal (tipo 'historico') tem o próprio teto, 2: não disputa a vaga do Champlin nem enche a resposta.
+      if (x.tipo === 'historico') { if (historicos >= 2) continue; historicos++; }
+      else if (x.aprovado === false) { if (comFiltro >= 1) continue; comFiltro++; }
       vistos.add(k);
       itens.push({ autor: x.autor, obra: x.obra, livro: rotuloLimpo(x.livro),
         secao: secaoLimpa(x.secao, x.livro), tipo: x.tipo, texto: x.texto,

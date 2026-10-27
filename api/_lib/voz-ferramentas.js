@@ -43,6 +43,7 @@ import { embutirPergunta } from './busca-vetor.js';
 // e o módulo morre no carregamento — e um globo que não carrega é tela morta.
 import { FERRAMENTA_MEMORIA, oQueJaFalamos, semSegredo } from './voz-memoria.js';
 import { iaTexto } from './ia.js';
+import { SELO_HISTORICO, ehHistorico } from './celulas.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) OS LIVROS — apelido → abreviação do biblia.json, nome por extenso, testamento.
@@ -699,7 +700,8 @@ function ordemDeRedacao(pergunta, itens) {
     // A etiqueta de procedência viaja COM o trecho. Sem ela o redator trata um
     // comentarista reprovado igual a quem dá a palavra do original — e é aí que
     // a opinião de um vira "a Bíblia ensina".
-    const selo = x.peso === 2 ? '[FONTE PRIMÁRIA — diz QUAL é a palavra no original]'
+    const selo = ehHistorico(x) ? '[' + SELO_HISTORICO + ']'
+      : x.peso === 2 ? '[FONTE PRIMÁRIA — diz QUAL é a palavra no original]'
       : x.aprovado === false ? '[REPROVADO NO CONCÍLIO — vale só em grego, crítica textual e estudo de palavra; NUNCA em interpretação, NUNCA como palavra final]'
       : '[autor aprovado]';
     return `[${i + 1}] ${x.autor}${x.livro ? ' — ' + x.livro : ''}${x.secao && x.secao !== x.livro ? ' (' + x.secao + ')' : ''} ${selo}\n${x.texto}`;
@@ -737,6 +739,9 @@ COMO ESCREVER A NOTA — as regras são absolutas:
    • [REPROVADO NO CONCÍLIO] (Champlin) entra SÓ em grego, crítica textual e
      estudo de palavra, onde ele é forte. Em interpretação disputada ele NÃO é
      voz: descarte, ou diga que é opinião dele. Nunca é a palavra final.
+   • [FONTE HISTÓRICA] (jornal Mensageiro da Paz) entra SÓ como história,
+     testemunho e ilustração: "o Mensageiro da Paz de 1945 noticiava…". Nunca
+     sustenta doutrina, e pode trazer artigo de outra corrente.
    E acima de todos: o texto bíblico. Se o comentarista disser uma coisa e o
    versículo disser outra, ganha o versículo — sempre.
 6. TAMANHO: no máximo doze linhas, denso, sem enrolação, sem introdução do tipo
@@ -856,7 +861,8 @@ function refsDaPergunta(q) {
   return out;
 }
 
-const SELO = (x) => x.peso === 2 ? '[FONTE PRIMÁRIA — diz qual é a palavra no original]'
+const SELO = (x) => ehHistorico(x) ? '[' + SELO_HISTORICO + ']'
+  : x.peso === 2 ? '[FONTE PRIMÁRIA — diz qual é a palavra no original]'
   : x.aprovado === false ? '[COM FILTRO — só em grego, crítica textual e estudo de palavra; nunca em interpretação]'
   : '[autor aprovado no Concílio]';
 
@@ -1496,7 +1502,7 @@ async function catalogoDaBiblioteca(origem) {
     if (!j || !j.ok) return { disponivel: false, motivo: 'o catálogo da biblioteca não respondeu agora' };
     const porAutor = new Map();
     for (const x of j.obras || []) {
-      const a = porAutor.get(x.autor) || { autor: x.autor, obras: [], trechos: 0, escalao: ESCALAO[x.peso] || 'autor consultável' };
+      const a = porAutor.get(x.autor) || { autor: x.autor, obras: [], trechos: 0, escalao: ehHistorico(x) ? SELO_HISTORICO.toLowerCase() : ESCALAO[x.peso] || 'autor consultável' };
       if (x.obra && !a.obras.includes(x.obra)) a.obras.push(x.obra);
       a.trechos += x.trechos || 0;
       porAutor.set(x.autor, a);

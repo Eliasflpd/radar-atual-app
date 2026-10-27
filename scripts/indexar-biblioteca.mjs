@@ -298,13 +298,13 @@ function pistaDeReferencia(trecho, livroDoArquivo) {
   return ((livroDoArquivo || '') + ' ' + m[1] + ':' + m[2]).trim();
 }
 // "1- GÊNESIS -  CHAMPLIN ANTIGO NOVA EDIÇÃO.md" -> "Gênesis"
-function livroDoNome(arquivo) {
+function livroDoNome(arquivo, teto = 44) {
   let s = path.basename(arquivo, '.md');
   s = s.replace(/^\s*\d+\s*[-–—]\s*/, '');                    // tira "1 - "
   s = s.replace(/[-–—]\s*(CHAMPLIN|COMENT[ÁA]RIO)[\s\S]*$/i, '');
   s = s.replace(/\s{2,}/g, ' ').trim();
   if (!s) return '';
-  return s.length > 44 ? s.slice(0, 44) : s;
+  return s.length > teto ? s.slice(0, teto) : s;
 }
 
 // ─── verbete de léxico: a palavra em letras LATINAS também ───────────────────
@@ -544,7 +544,8 @@ function pedacosDe(f) {
   if (f.formato === 'docx') return pedacosOwens(f);
   const pedacos = [];
   for (const arq of arquivosDe(f)) {
-    const livro = livroDoNome(arq);
+    // Edição de jornal (tipo 'historico'): o nome inteiro É a citação ("Mensageiro da Paz nº 24 — dezembro de 1945 (2ª quinzena)").
+    const livro = livroDoNome(arq, f.tipo === 'historico' ? 90 : 44);
     const texto = limpar(fs.readFileSync(arq, 'utf8'));
     // As primeiras ~2500 letras de livro escaneado são capa, ficha e dedicatória.
     const corpo = f.tipo === 'comentario' && !f.semCapa && texto.length > 20000 ? texto.slice(2500) : texto;

@@ -82,6 +82,12 @@ export function contextualizar(texto, anterior, tipo) {
     resumo: refere ? 'a fala parece depender da anterior, mas não há assunto guardado' : (tipo === 'papo' ? 'conversa, mantém o assunto' : 'assunto novo') };
 }
 
+// ── FONTE HISTÓRICA (27/10/2026): o jornal Mensageiro da Paz entrou com aprovado=false e ganhava o selo do Champlin,
+// "COM FILTRO (só grego…)", que não tem nada a ver com jornal. O tipo 'historico' (do fonte.json) tem selo próprio.
+export const SELO_HISTORICO = 'FONTE HISTÓRICA (jornal antigo da AD: use para história, testemunho e ilustração; '
+  + 'nunca como autoridade de doutrina; pode conter texto de outras correntes)';
+export const ehHistorico = (x) => !!x && x.tipo === 'historico';
+
 // ── PESQUISA: etiqueta cada evidência ([E1], [E2]…) para a Análise citar e a Verificação conferir ─────────
 export function rotular(trechos, inicio = 1) {
   return (trechos || []).map((x, i) => ({ id: 'E' + (inicio + i), autor: x.autor, obra: x.obra || '', onde: x.onde || '', selo: x.selo || '', texto: x.texto || '' }));

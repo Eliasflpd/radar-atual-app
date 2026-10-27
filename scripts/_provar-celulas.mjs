@@ -39,6 +39,14 @@ const EVID = C.rotular([
 ]);
 const VERS = [{ referencia: '1 João 4:8', texto: 'Aquele que não ama não conhece a Deus, porque Deus é amor.' }];
 
+test('Fonte histórica: o jornal tem selo próprio (história, nunca doutrina), não o "com filtro" do Champlin', () => {
+  assert.equal(C.ehHistorico({ tipo: 'historico', aprovado: false, peso: 4 }), true);
+  assert.equal(C.ehHistorico({ tipo: 'comentario', aprovado: false, peso: 4 }), false);
+  assert.match(C.SELO_HISTORICO, /^FONTE HISTÓRICA/);
+  assert.match(C.SELO_HISTORICO, /nunca como autoridade de doutrina/);
+  assert.doesNotMatch(C.SELO_HISTORICO, /grego/);
+});
+
 test('Pesquisa: cada evidência ganha id na ordem', () => {
   assert.deepEqual(EVID.map((e) => e.id), ['E1', 'E2']);
   assert.match(C.blocoDeEvidencias(EVID, VERS), /\[E2\] Thayer/);
