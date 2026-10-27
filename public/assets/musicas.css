@@ -354,3 +354,25 @@
 body:has(#tela-musicas.ativa) #push-prompt { display: none !important; }
 .mus-top { position: relative; }
 .mus-top .mus-cardplay.sempre { position: absolute; right: 16px; bottom: 16px; }
+
+/* ── celular: o vídeo ENCAIXADO no mini tocador (27/10/2026) ──
+   Antes o vídeo flutuava no canto e cobria a lista e os botões. Agora ele ocupa o
+   lugar da capa, dentro da barra de baixo (como o Spotify): nada fica por cima de nada.
+   No "Tocando agora" continua grande (aba Vídeo) ou no canto (Letra/Fila). */
+@media (max-width: 899px) {
+  .mus:has(> .mus-ytbox.ligado:not(.grande):not(.canto)) .mus-barra { min-height: 80px; padding-left: 134px; }
+  .mus:has(> .mus-ytbox.ligado:not(.grande):not(.canto)) .mus-bcapa { display: none; }
+  .mus:has(> .mus-ytbox.ligado:not(.grande):not(.canto)) .mus-barra .mus-cor { display: none; }   /* o nome da música ganha espaço; curtir fica no "Tocando agora" e no ⋯ */
+  .mus-ytbox.ligado:not(.grande):not(.canto) {
+    left: 14px; right: auto; width: 116px;
+    bottom: calc(max(env(safe-area-inset-bottom), 8px) + 62px + 6px);
+    border-radius: 6px; box-shadow: none;
+  }
+  .mus-ytbox.ligado:not(.grande):not(.canto) .mus-ytx { display: none; }
+  .mus-ytbox.precisa-toque:not(.grande):not(.canto)::after { content: 'Toque para tocar'; font-size: 10px; padding: 2px 4px; }
+  .mus.tem-musica .mus-main { padding-bottom: 190px; }
+}
+/* "Tocando agora" nas abas Letra/Fila: o vídeo fica no canto de cima e a área que rola começa ABAIXO dele
+   (antes a letra rolava por baixo do vídeo) */
+.mus:has(> .mus-ytbox.canto) .mus-agcorpo { margin-top: 90px; }
+.mus:has(> .mus-ytbox.canto) .mus-agletra, .mus:has(> .mus-ytbox.canto) .mus-agfila { padding-top: 6px !important; }
