@@ -678,44 +678,53 @@ async function subir(quais) {
     return false;
   }
   const { default: pg } = await import('pg');
-  const c = new pg.Client({ connectionString: cs, ssl: { rejectUnauthorized: false } });
-  await c.connect();
-  await c.query('create extension if not exists vector');
 
-  // ⚠️ FREIO DE MÃO — este banco é o do app NO AR.
-  // O cadastro dos irmãos, o controle de acesso e o push moram nele. Encher o
-  // banco até o teto pra indexar comentário derruba coisa que o pastor usa todo
-  // dia. Então medimos o tamanho a cada lote e PARAMOS antes de apertar.
-  // Teto em MB; muda com PARAR_EM_MB se um dia o plano crescer.
-  const TETO_MB = parseInt(process.env.PARAR_EM_MB || '440', 10);   // 27/10/2026: era 1100, acima do limite real do Neon grátis (512 MB)
-  const tamanhoMB = async () => {
+  // 28/10/2026: DOIS BANCOS. O banco 1 (RADAR_DB) é o do app NO AR e chegou a 427 de 512 MB; o banco 2 (RADAR_DB2,
+  // Neon "radar-biblioteca-2") é só da biblioteca. Regra: fonte que JÁ TEM trechos no banco 1 continua no banco 1
+  // (inclusive as do Dr. Wagner, que só acrescentam); fonte NOVA vai para o banco 2. Sem RADAR_DB2, tudo no banco 1.
+  // Cada banco tem o seu freio de mão e é medido sozinho.
+  const BANCOS = [
+    { nome: 'banco 1', cs, teto: parseInt(process.env.PARAR_EM_MB || '440', 10) },   // 27/10/2026: era 1100, acima do limite real do Neon grátis (512 MB)
+    ...(process.env.RADAR_DB2 ? [{ nome: 'banco 2', cs: process.env.RADAR_DB2, teto: parseInt(process.env.PARAR_EM_MB2 || '900', 10) }] : []),  // plano grátis da Neon pela Vercel (free_v3): 1 GB por projeto
+  ];
+  const tamanhoMB = async (c) => {
     const r = await c.query('select pg_database_size(current_database()) b');
     return Math.round(Number(r.rows[0].b) / 1048576);
   };
-  const inicio = await tamanhoMB();
-  console.log(`   banco em ${inicio} MB · freio de mão em ${TETO_MB} MB`);
-  let parou = null;
-  await c.query(`create table if not exists biblioteca_trechos(
-    id bigserial primary key,
-    fonte text not null,
-    autor text not null,
-    obra  text not null,
-    livro text,
-    secao text,
-    tipo  text,
-    texto text not null,
-    -- A PROCEDENCIA, que o globo usa pra saber em quem acreditar:
-    --   peso 2 = Owens/Kittel (dizem QUAL e a palavra)
-    --   peso 3 = autores aprovados pelo Concilio
-    --   peso 4 = Champlin, REPROVADO: consulta com filtro, nunca voz
-    peso  int  not null default 3,
-    aprovado boolean not null default true,
-    emb   halfvec(${DIMS})
-  )`);
-  // tabela que ja existia de uma rodada anterior ganha as colunas novas sem drama
-  for (const col of ['peso int not null default 3', 'aprovado boolean not null default true']) {
-    try { await c.query('alter table biblioteca_trechos add column if not exists ' + col); } catch (_) {}
+  for (const B of BANCOS) {
+    B.c = new pg.Client({ connectionString: B.cs, ssl: { rejectUnauthorized: false } });
+    await B.c.connect();
+    await B.c.query('create extension if not exists vector');
+    // ⚠️ FREIO DE MÃO — o banco 1 é o do app NO AR.
+    // O cadastro dos irmãos, o controle de acesso e o push moram nele. Encher o
+    // banco até o teto pra indexar comentário derruba coisa que o pastor usa todo
+    // dia. Então medimos o tamanho a cada lote e PARAMOS antes de apertar.
+    // Teto em MB; muda com PARAR_EM_MB (banco 1) e PARAR_EM_MB2 (banco 2).
+    B.inicio = await tamanhoMB(B.c);
+    console.log(`   ${B.nome} em ${B.inicio} MB · freio de mão em ${B.teto} MB`);
+    await B.c.query(`create table if not exists biblioteca_trechos(
+      id bigserial primary key,
+      fonte text not null,
+      autor text not null,
+      obra  text not null,
+      livro text,
+      secao text,
+      tipo  text,
+      texto text not null,
+      -- A PROCEDENCIA, que o globo usa pra saber em quem acreditar:
+      --   peso 2 = Owens/Kittel (dizem QUAL e a palavra)
+      --   peso 3 = autores aprovados pelo Concilio
+      --   peso 4 = Champlin, REPROVADO: consulta com filtro, nunca voz
+      peso  int  not null default 3,
+      aprovado boolean not null default true,
+      emb   halfvec(${DIMS})
+    )`);
+    // tabela que ja existia de uma rodada anterior ganha as colunas novas sem drama
+    for (const col of ['peso int not null default 3', 'aprovado boolean not null default true']) {
+      try { await B.c.query('alter table biblioteca_trechos add column if not exists ' + col); } catch (_) {}
+    }
   }
+  let parou = null;
 
   // A ORDEM DOS ARGUMENTOS MANDA. Com o freio de mao ligado, a carga pode parar no
   // meio — entao o que vale mais tem que entrar PRIMEIRO. Quem chama decide a ordem.
@@ -727,10 +736,17 @@ async function subir(quais) {
     if (!fs.existsSync(ai)) continue;
     const meta = JSON.parse(fs.readFileSync(ai, 'utf8'));
     const vec = fs.readFileSync(av);
+    // Em qual banco esta fonte mora: onde ela já tem trechos; se em nenhum, no último (o banco 2, quando existe).
+    let B = BANCOS[BANCOS.length - 1], jaTem = 0;
+    for (const X of BANCOS) {
+      const n = (await X.c.query('select count(*)::int n from biblioteca_trechos where fonte=$1', [f.id])).rows[0].n;
+      if (n) { B = X; jaTem = n; break; }
+    }
+    if (B.cheio) { console.log(`\n   ⏭ ${f.id}: o ${B.nome} já bateu no freio nesta rodada — fica para a próxima.`); continue; }
+    const c = B.c;
     // TRAVA DOS LIVROS (25/10/2026): o banco recusa apagar trechos de livro sem a autorização do Elias (ver
     // D:\LIVROS-MOTOR\travas-livros.mjs). Fonte que já está no banco só é substituída com --autorizado-pelo-elias;
     // sem a flag, pula esta fonte e segue as outras (as aulas do Dr. Wagner estão na exceção e passam sempre).
-    const jaTem = (await c.query('select count(*)::int n from biblioteca_trechos where fonte=$1', [f.id])).rows[0].n;
     if (jaTem && process.argv.includes('--autorizado-pelo-elias')) {
       await c.query("select set_config('radar.elias_autorizou','SIM',false)");
     }
@@ -743,7 +759,7 @@ async function subir(quais) {
     if (soAcrescentar) {
       const ja = new Set((await c.query('select md5(texto) h from biblioteca_trechos where fonte=$1', [f.id])).rows.map((r) => r.h));
       ordem = meta.itens.map((_, k) => k).filter((k) => !ja.has(createHash('md5').update(semNulo(meta.itens[k][5]), 'utf8').digest('hex')));
-      console.log(`\n   ➕ ${f.id}: só acrescentar — ${ja.size} textos já no banco, ${ordem.length} novos`);
+      console.log(`\n   ➕ ${f.id} (${B.nome}): só acrescentar — ${ja.size} textos já no banco, ${ordem.length} novos`);
       if (!ordem.length) continue;
       await c.query('begin');
     } else {
@@ -751,7 +767,7 @@ async function subir(quais) {
       try { await c.query('delete from biblioteca_trechos where fonte=$1', [f.id]); }
       catch (e) {
         await c.query('rollback');
-        console.log(`\n   🔒 ${f.id}: já tem ${jaTem} trechos no banco e a TRAVA DOS LIVROS não deixou substituir. Só com --autorizado-pelo-elias.`);
+        console.log(`\n   🔒 ${f.id}: já tem ${jaTem} trechos no ${B.nome} e a TRAVA DOS LIVROS não deixou substituir. Só com --autorizado-pelo-elias.`);
         continue;
       }
     }
@@ -760,6 +776,7 @@ async function subir(quais) {
     // são 512 MB e a biblioteca inteira passa disso) e pra provar uma fonte nova
     // sem subir a obra completa. Sem a variável, sobe tudo.
     const teto = Math.min(ordem.length, parseInt(process.env.SUBIR_MAX || "0", 10) || ordem.length);
+    let estourou = false;
     for (let i = 0; i < teto; i += 200) {
       const vals = [], params = [];
       for (let j = i; j < Math.min(i + 200, teto); j++) {
@@ -779,20 +796,22 @@ async function subir(quais) {
       process.stdout.write(`\r   ${f.id}: ${Math.min(i + 200, teto)}/${teto}   `);
 
       // Confere o tamanho a cada lote. E barato, e e o que evita o estrago:
-      // este banco e o do app NO AR — cadastro, acesso e push dos irmaos moram nele.
-      const agora = await tamanhoMB();
-      if (agora >= TETO_MB) {
+      // o banco 1 e o do app NO AR — cadastro, acesso e push dos irmaos moram nele.
+      const agora = await tamanhoMB(c);
+      if (agora >= B.teto) {
         await c.query('rollback');
-        console.log(`\n   🛑 PAREI: o banco chegou a ${agora} MB (teto ${TETO_MB} MB) no trecho ${i} de ${f.id}.`);
+        console.log(`\n   🛑 PAREI: o ${B.nome} chegou a ${agora} MB (teto ${B.teto} MB) no trecho ${i} de ${f.id}.`);
         console.log('      Desfiz a fonte inteira: nada dela ficou no banco. O cache local continua inteiro —');
         console.log('      e so rodar --subir de novo quando houver espaco.');
-        parou = { fonte: f.id, ate: i, mb: agora };
+        parou = { fonte: f.id, ate: i, mb: agora, banco: B.nome };
+        B.cheio = true;
+        estourou = true;
         break;
       }
     }
-    if (parou) break;
+    if (estourou) continue;
     await c.query('commit');
-    console.log(`\r   ✅ ${f.id} no banco (${teto})  ·  banco em ${await tamanhoMB()} MB      `);
+    console.log(`\r   ✅ ${f.id} no ${B.nome} (${teto})  ·  ${B.nome} em ${await tamanhoMB(c)} MB      `);
   }
   // ÍNDICE HNSW: SÓ SE PEDIR (--hnsw). Medido neste acervo, ele pesa 58 MB para
   // 22 mil trechos — quase 60% do tamanho da tabela — e a biblioteca inteira passa
@@ -800,17 +819,19 @@ async function subir(quais) {
   // com 76 mil trechos de 1024 dimensões isso é trabalho de milissegundos em C, e
   // ainda tem uma vantagem — varredura dá o vizinho EXATO, enquanto o HNSW é
   // aproximado. Se um dia o acervo virar meio milhão de trechos, aí sim vale ligar.
-  if (process.argv.includes('--hnsw')) {
-    try {
-      await c.query('create index if not exists biblioteca_trechos_emb on biblioteca_trechos using hnsw (emb halfvec_cosine_ops)');
-      console.log('   índice HNSW criado');
-    } catch (e) { console.log('   (índice HNSW não criado: ' + e.message.slice(0, 80) + ')'); }
+  for (const B of BANCOS) {
+    if (process.argv.includes('--hnsw')) {
+      try {
+        await B.c.query('create index if not exists biblioteca_trechos_emb on biblioteca_trechos using hnsw (emb halfvec_cosine_ops)');
+        console.log(`   índice HNSW criado no ${B.nome}`);
+      } catch (e) { console.log('   (índice HNSW não criado: ' + e.message.slice(0, 80) + ')'); }
+    }
+    const fim = await tamanhoMB(B.c);
+    console.log(`\n   ${B.nome}: ${B.inicio} MB -> ${fim} MB  (a biblioteca custou ${fim - B.inicio} MB)`);
+    const q = await B.c.query('select count(*)::int n from biblioteca_trechos');
+    console.log(`   biblioteca_trechos no ${B.nome}: ${q.rows[0].n} trechos`);
+    await B.c.end();
   }
-  const fim = await tamanhoMB();
-  console.log(`\n   banco: ${inicio} MB -> ${fim} MB  (a biblioteca custou ${fim - inicio} MB)`);
-  const q = await c.query('select count(*)::int n from biblioteca_trechos');
-  console.log(`   biblioteca_trechos: ${q.rows[0].n} trechos`);
-  await c.end();
   if (parou) { console.log('\n⚠️  A carga ficou PELA METADE — ver o aviso acima.'); return false; }
   return true;
 }

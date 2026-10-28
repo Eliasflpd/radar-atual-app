@@ -131,6 +131,25 @@ function termosDaPergunta(q) {
   return { strongs: [...new Set(strongs)], termos: [...new Set([...latinas, ...gregas])].slice(0, 8) };
 }
 
+// 28/10/2026: A BIBLIOTECA MORA EM DOIS BANCOS. O banco 1 (RADAR_DB, o do app) chegou a 427 de 512 MB; as obras
+// NOVAS vão para o banco 2 (Neon "radar-biblioteca-2", RADAR_DB2_*, só biblioteca). Toda consulta roda nos dois ao
+// mesmo tempo e junta pela mesma pontuação. O banco 1 é obrigatório (se ele cair, a busca falha como sempre falhou);
+// o banco 2 é acréscimo: se não estiver configurado ou cair, a busca segue só com o banco 1, sem quebrar nada.
+function bancosDaBiblioteca() {
+  const cs1 = process.env.RADAR_DB_DATABASE_URL || process.env.RADAR_DB;
+  const cs2 = process.env.RADAR_DB2_DATABASE_URL || process.env.RADAR_DB2;
+  return cs1 ? [cs1, cs2].filter(Boolean) : [];
+}
+async function emCadaBanco(bancos, fn) {
+  const res = await Promise.allSettled(bancos.map(async (cs, i) => {
+    const c = new Client({ connectionString: cs, ssl: { rejectUnauthorized: false } });
+    try { await c.connect(); return await fn(c, i); }
+    finally { try { await c.end(); } catch (_) { /* já fechou */ } }
+  }));
+  if (res[0].status === 'rejected') throw res[0].reason;
+  return res.map((x) => (x.status === 'fulfilled' ? x.value : null));
+}
+
 module.exports = async (req, res) => {
   // Sem CORS de propósito: NINGUÉM deve chamar isto do navegador. Quem chama é o
   // /api/voz, servidor-pra-servidor. Deixar CORS aberto seria convidar o download.
@@ -151,20 +170,20 @@ module.exports = async (req, res) => {
   // É daqui que o globo de voz sabe, de verdade e sempre atualizado, quais obras e autores
   // estão indexados (ferramenta meu_conhecimento). Sem isto ele só repetia uma lista escrita à mão.
   if (b.catalogo || q.catalogo) {
-    const csCat = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
-    if (!csCat) { res.status(200).json({ ok: false, off: true, err: 'db não configurado' }); return; }
-    const cCat = new Client({ connectionString: csCat, ssl: { rejectUnauthorized: false } });
+    const bancosCat = bancosDaBiblioteca();
+    if (!bancosCat.length) { res.status(200).json({ ok: false, off: true, err: 'db não configurado' }); return; }
     try {
-      await cCat.connect();
-      const rc = await cCat.query(
+      const partes = await emCadaBanco(bancosCat, async (c) => (await c.query(
         `select autor, obra, tipo, peso, aprovado, count(*)::int as trechos
            from biblioteca_trechos
           group by autor, obra, tipo, peso, aprovado
-          order by peso, autor, obra`);
-      res.status(200).json({ ok: true, total: rc.rows.reduce((s, x) => s + x.trechos, 0), obras: rc.rows });
+          order by peso, autor, obra`)).rows);
+      const obras = partes.filter(Boolean).flat()
+        .sort((x, y) => x.peso - y.peso || x.autor.localeCompare(y.autor) || x.obra.localeCompare(y.obra));
+      res.status(200).json({ ok: true, total: obras.reduce((s, x) => s + x.trechos, 0), obras });
     } catch (_) {
       res.status(200).json({ ok: false, err: 'catálogo indisponível agora' });
-    } finally { try { await cCat.end(); } catch (_) { /* já fechou */ } }
+    }
     return;
   }
 
@@ -174,8 +193,8 @@ module.exports = async (req, res) => {
   // 21/10/2026: busca SÓ num autor (a voz abre "as aulas do Dr. Wagner" sem misturar comentarista).
   const soAutor = String(b.autor || '').trim().slice(0, 80);
 
-  const cs = (process.env.RADAR_DB_DATABASE_URL||process.env.RADAR_DB);
-  if (!cs) { res.status(200).json({ ok: false, off: true, err: 'db não configurado' }); return; }
+  const bancos = bancosDaBiblioteca();
+  if (!bancos.length) { res.status(200).json({ ok: false, off: true, err: 'db não configurado' }); return; }
 
   // 25/10/2026: sem o vetor da pergunta (a cota grátis diária da Cloudflare acabou, ou ela caiu), a busca NÃO
   // morre: cai na BUSCA POR TERMO, direto no banco, sem acento e sem serviço de fora. É mais pobre que a busca por
@@ -185,9 +204,7 @@ module.exports = async (req, res) => {
   const termosBusca = termosDaPergunta(pergunta).termos.filter((t) => /^[a-z]{4,}$/.test(t)).slice(0, 8);
   if (!vec && !termosBusca.length) { res.status(200).json({ ok: false, err: 'não consegui transformar a pergunta em busca' }); return; }
 
-  const c = new Client({ connectionString: cs, ssl: { rejectUnauthorized: false } });
   try {
-    await c.connect();
     if (!vec) {
       const DE = 'áàâãäéèêëíìîïóòôõöúùûüçāēīōūḗṓǵ', PARA = 'aaaaaeeeeiiiiooooouuuucaeioueog';
       // nome de autor na pergunta ("o que o Kittel diz") não é assunto: vira preferência por aquele autor
@@ -198,8 +215,9 @@ module.exports = async (req, res) => {
       // Rápido o bastante para a voz (medido em 25/10/2026: a 1ª versão varria 55 mil textos e levava 50–70 s):
       // o texto sem acento é calculado UMA vez por trecho (não uma vez por palavra); com autor na pergunta, só os
       // trechos daquele autor entram; e a consulta tem teto de 9 s (estourou, a busca diz que falhou — não trava a voz).
-      await c.query('set statement_timeout = 9000');
-      const rt = await c.query(
+      const partesT = await emCadaBanco(bancos, async (c) => {
+        await c.query('set statement_timeout = 9000');
+        return (await c.query(
         `with base as materialized (
            select autor, obra, livro, secao, tipo, texto, peso, aprovado,
                   translate(lower(texto), $3, $4) as t, translate(lower(coalesce(secao, '')), $3, $4) as s
@@ -218,9 +236,11 @@ module.exports = async (req, res) => {
                   + case when cardinality($5::text[]) > 0 then 3 else 0 end as hits
              from base
          ) select autor, obra, livro, secao, tipo, texto, peso, aprovado, hits from c where hits > 0 order by hits desc, peso limit 60`,
-        [usar, soAutor, DE, PARA, autoresPedidos]);
+        [usar, soAutor, DE, PARA, autoresPedidos])).rows;
+      });
+      const linhasT = partesT.filter(Boolean).flat().sort((x, y) => y.hits - x.hits || x.peso - y.peso).slice(0, 60);
       const vistosT = new Set(), melhores = [], resto = [];
-      for (const x of rt.rows) { (vistosT.has(x.autor) ? resto : melhores).push(x); vistosT.add(x.autor); }
+      for (const x of linhasT) { (vistosT.has(x.autor) ? resto : melhores).push(x); vistosT.add(x.autor); }
       const maxHits = usar.length * 3 + 3;
       const itensT = [...melhores, ...resto].slice(0, quantos).map((x) => ({ autor: x.autor, obra: x.obra, livro: rotuloLimpo(x.livro),
         secao: secaoLimpa(x.secao, x.livro), tipo: x.tipo, texto: x.texto, peso: x.peso, aprovado: x.aprovado !== false,
@@ -238,6 +258,8 @@ module.exports = async (req, res) => {
     // autoridade — sem CENSURAR o resto, porque às vezes o Champlin é justamente
     // quem tem o dado de crítica textual que ninguém mais tem. Quem decide o que
     // fazer com isso é a instrução de sistema, não o SQL.
+    const lex = termosDaPergunta(pergunta);
+    const partes = await emCadaBanco(bancos, async (c) => {
     const r = await c.query(
       `with perto as (
          select autor, obra, livro, secao, tipo, texto, peso, aprovado,
@@ -263,7 +285,6 @@ module.exports = async (req, res) => {
     // no topo. É um complemento: se não casar nada, o resultado é o de sempre.
     let achados = [], erroLex = null;
     try {
-      const lex = termosDaPergunta(pergunta);
       if (!soAutor && (lex.strongs.length || lex.termos.length)) {
         // 25/10/2026: um verbete por DICIONÁRIO (distinct on autor). Antes as 3 vagas iam para 3 pedaços do mesmo
         // verbete do Thayer e o Kittel, que voltou ao banco nesse dia, ficava fora do topo.
@@ -280,13 +301,30 @@ module.exports = async (req, res) => {
       }
     } catch (e) { achados = []; erroLex = String((e && e.message) || e).slice(0, 160); }
 
+    let dbn = null;
+    if (b.diag) {
+      try {
+        dbn = (await c.query(`select current_database() db,
+            (select count(*)::int from biblioteca_trechos) total,
+            (select count(*)::int from biblioteca_trechos where tipo = 'verbete' and secao like '% · %') verbetes_com_translit,
+            (select secao from biblioteca_trechos where livro = 'G0026' order by id limit 1) g26`)).rows[0];
+      } catch (e) { dbn = { erro: String((e && e.message) || e).slice(0, 160) }; }
+    }
+    return { linhas: r.rows, achados, erroLex, dbn };
+    });
+
+    // Junta os dois bancos pela MESMA pontuação (posto = parecença + empurrão do peso), como se fosse um banco só.
+    const deCada = partes.filter(Boolean);
+    const linhas = deCada.flatMap((p) => p.linhas).sort((x, y) => y.posto - x.posto);
+    const achados = deCada.flatMap((p) => p.achados).sort((x, y) => x.peso - y.peso).slice(0, 3);
+
     // Sem deduplicar, o union all devolve o mesmo trecho duas vezes.
     // 19/10/2026: autor COM FILTRO (aprovado=false: Champlin, Witness Lee, Kaung…) entra no máximo UM por
     // pesquisa. Com os comentários de Provérbios as notas ficam coladas (0,73 x 0,71) e, sem este teto, os
     // de filtro ocupavam metade das vagas e Waltke/Kidner nem chegavam ao redator.
     const vistos = new Set(), itens = [];
     let comFiltro = 0, historicos = 0;
-    for (const x of [...achados, ...r.rows]) {
+    for (const x of [...achados, ...linhas]) {
       const k = x.autor + '|' + x.texto.slice(0, 60);
       if (vistos.has(k)) continue;
       // 27/10/2026: o jornal (tipo 'historico') tem o próprio teto, 2: não disputa a vaga do Champlin nem enche a resposta.
@@ -303,19 +341,14 @@ module.exports = async (req, res) => {
     // produção enxerga com o que o teste local enxerga (banco, vetor da pergunta, busca por palavra).
     let diag;
     if (b.diag) {
-      try {
-        const lex = termosDaPergunta(pergunta);
-        const dbn = await c.query(`select current_database() db,
-            (select count(*)::int from biblioteca_trechos) total,
-            (select count(*)::int from biblioteca_trechos where tipo = 'verbete' and secao like '% · %') verbetes_com_translit,
-            (select secao from biblioteca_trechos where livro = 'G0026' order by id limit 1) g26`);
-        const norma = Math.sqrt(v.reduce((s, x) => s + x * x, 0));
-        diag = { versao: 'diag-2026-10-18', db: dbn.rows[0], lex: { termos: lex.termos, strongs: lex.strongs, achados: achados.length, erro: erroLex },
-          emb: { dims: v.length, norma: Math.round(norma * 1000) / 1000, primeiros: v.slice(0, 4).map((x) => Math.round(x * 10000) / 10000) } };
-      } catch (e) { diag = { erro: String((e && e.message) || e).slice(0, 160) }; }
+      const norma = Math.sqrt(v.reduce((s, x) => s + x * x, 0));
+      diag = { versao: 'diag-2026-10-28', db: partes[0].dbn,
+        banco2: bancos.length < 2 ? 'sem RADAR_DB2' : partes[1] ? partes[1].dbn : 'banco 2 não respondeu',
+        lex: { termos: lex.termos, strongs: lex.strongs, achados: achados.length, erro: partes[0].erroLex },
+        emb: { dims: v.length, norma: Math.round(norma * 1000) / 1000, primeiros: v.slice(0, 4).map((x) => Math.round(x * 10000) / 10000) } };
     }
     res.status(200).json({ ok: true, total: itens.length, itens, diag });
   } catch (e) {
     res.status(200).json({ ok: false, err: String((e && e.message) || e).slice(0, 160) });
-  } finally { try { await c.end(); } catch (_) {} }
+  }
 };

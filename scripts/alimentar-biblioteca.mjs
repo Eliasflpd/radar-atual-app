@@ -127,7 +127,9 @@ if (SECO || !fontes.length) {
     const sb = spawnSync(process.execPath, [path.join(RAIZ, 'scripts', 'indexar-biblioteca.mjs'), '--subir', ...mudaram],
       { env, encoding: 'utf8', maxBuffer: 1 << 26 });
     const saida = String(sb.stdout || '') + String(sb.stderr || '');
-    for (const l of saida.split('\n')) if (/banco em|PAREI|✅|✖|erro/i.test(l)) diz('    ' + l.trim());
+    // 28/10/2026: são dois bancos (fonte que já está no banco 1 fica nele; fonte nova vai para o banco 2) — o
+    // indexador diz "banco 1 em … MB", "banco 2: … -> … MB" e "⏭" quando um deles bateu no freio.
+    for (const l of saida.split('\n')) if (/banco \d? ?em|banco \d:|PAREI|⏭|✅|✖|erro/i.test(l)) diz('    ' + l.trim());
     diz(`  ⬆ subiu: ${mudaram.join(', ')}`);
   }
 }
