@@ -27,6 +27,20 @@ const CACHE = process.env.BIBLIOTECA_CACHE || 'D:\\RADAR-BIBLIOTECA';
 const SECO = process.argv.includes('--seco');
 const TETO_MB = process.env.PARAR_EM_MB || '440';   // o Neon grátis tem 512 MB e é o banco do app NO AR
 
+// 28/10/2026: UM DE CADA VEZ. A noite, o transcritor do canal do Dr. Wagner e a troca dos trechos com loop chamam
+// este mesmo script; dois rodando juntos subiriam o mesmo texto duas vezes. Quem chega depois espera o outro acabar.
+const TRAVA = path.join(CACHE, '_alimentar.pid');
+const vivo = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } };
+for (let i = 0; ; i++) {
+  const outro = +(fs.existsSync(TRAVA) && fs.readFileSync(TRAVA, 'utf8')) || 0;
+  if (!outro || outro === process.pid || !vivo(outro)) break;
+  if (i % 10 === 0) console.log(`(outra alimentação rodando, pid ${outro} — esperando)`);
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30000);
+}
+fs.mkdirSync(CACHE, { recursive: true });
+fs.writeFileSync(TRAVA, String(process.pid));
+process.on('exit', () => { try { if (+fs.readFileSync(TRAVA, 'utf8') === process.pid) fs.unlinkSync(TRAVA); } catch (_) { /* já saiu */ } });
+
 const log = [];
 const diz = (s) => { console.log(s); log.push(s); };
 fs.mkdirSync(PASTA, { recursive: true });
