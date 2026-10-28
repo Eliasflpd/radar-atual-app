@@ -46,7 +46,10 @@
    + '.lt-copybottom{display:block;width:100%;margin:22px 0 4px;background:linear-gradient(135deg,#0f6d78,#0f3d5c);color:#fff;border:none;'
    + 'border-radius:13px;padding:14px;font-size:1.03rem;font-weight:800;font-family:inherit;cursor:pointer}'
    + '.lt-copybottom.ok{background:#14804a}'
-   + '@media print{.lt-prog,.lt-bar,.lt-copybottom,.lm-fab,.lm-back,.lm-panel{display:none !important}}';
+   + '.lt-share{width:32px;height:32px;font-size:1rem;color:#fff !important;background:linear-gradient(135deg,#1f9d55,#14804a) !important;display:flex;align-items:center;justify-content:center}'
+   + '.lt-sharebottom{display:block;width:100%;margin:10px 0 4px;background:linear-gradient(135deg,#1f9d55,#14804a);color:#fff;border:none;'
+   + 'border-radius:13px;padding:14px;font-size:1.03rem;font-weight:800;font-family:inherit;cursor:pointer}'
+   + '@media print{.lt-prog,.lt-bar,.lt-copybottom,.lt-sharebottom,.lm-fab,.lm-back,.lm-panel{display:none !important}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   // ---------- barra de progresso ----------
@@ -93,17 +96,37 @@
     setTimeout(function(){ btn.classList.remove('ok'); btn.innerHTML = label || o; }, 1600);
   }
 
-  // ---------- barra flutuante (A- A+ Copiar) ----------
+  // ---------- compartilhar (pedido do Elias em 28/10/2026: "em cada mensagem quero o botão compartilhar") ----------
+  // Celular: abre a folha do sistema (WhatsApp, Instagram, Telegram…). Sem ela (PC antigo): abre o WhatsApp
+  // com o título e o link prontos. Vai o LINK da mensagem, não o texto inteiro — quem recebe abre no RADAR.
+  function compartilhar(btn, label){
+    var h1 = document.querySelector('h1'), ref = document.querySelector('.ref');
+    var titulo = (h1 ? h1.textContent : document.title).trim();
+    var url = location.origin + location.pathname;
+    var texto = '📖 ' + titulo + (ref ? ' — ' + ref.textContent.trim() : '') + '\nMensagem no RADAR:';
+    if (navigator.share){
+      navigator.share({ title: titulo, text: texto, url: url }).catch(function(){});
+      return;
+    }
+    var w = window.open('https://wa.me/?text=' + encodeURIComponent(texto + '\n' + url), '_blank');
+    if (!w) copiar(texto + '\n' + url, function(){ btn.classList.add('ok'); btn.innerHTML = '✅ Link copiado';
+      setTimeout(function(){ btn.classList.remove('ok'); btn.innerHTML = label; }, 1600); });
+  }
+
+  // ---------- barra flutuante (A- A+ Copiar Compartilhar) ----------
   var bar = document.createElement('div'); bar.className = 'lt-bar';
   bar.innerHTML =
       '<button class="lt-a" id="lt-menos" aria-label="Diminuir letra">A<span class="s">−</span></button>'
     + '<button class="lt-a" id="lt-mais" aria-label="Aumentar letra">A<span class="s">+</span></button>'
-    + '<button class="lt-copy" id="lt-copy">📋 Copiar</button>';
+    + '<button class="lt-copy" id="lt-copy">📋 Copiar</button>'
+    + '<button class="lt-share" id="lt-share" aria-label="Compartilhar mensagem" title="Compartilhar">📤</button>';
   document.body.appendChild(bar);
   document.getElementById('lt-menos').onclick = function(){ bumpFont(-1); };
   document.getElementById('lt-mais').onclick = function(){ bumpFont(1); };
   var btnTopo = document.getElementById('lt-copy');
   btnTopo.onclick = function(){ copiar(textoDaMensagem(), function(){ flashOk(btnTopo, '📋 Copiar'); }); };
+  var btnShare = document.getElementById('lt-share');
+  btnShare.onclick = function(){ compartilhar(btnShare, '📤'); };
 
   // ---------- tempo de leitura + botão Copiar no fim ----------
   function palavras(s){ var m = (s||'').trim().match(/\S+/g); return m ? m.length : 0; }
@@ -128,6 +151,14 @@
       b.onclick = function(){ copiar(textoDaMensagem(), function(){ flashOk(b, '📋 Copiar a mensagem inteira'); }); };
       var scripts = document.body.querySelector('script[src]');
       if (scripts) document.body.insertBefore(b, scripts); else document.body.appendChild(b);
+    }
+    // botão Compartilhar grande logo abaixo do Copiar
+    if (!document.querySelector('.lt-sharebottom')){
+      var sb = document.createElement('button'); sb.className = 'lt-sharebottom';
+      sb.innerHTML = '📤 Compartilhar esta mensagem';
+      sb.onclick = function(){ compartilhar(sb, '📤 Compartilhar esta mensagem'); };
+      var cb = document.querySelector('.lt-copybottom');
+      if (cb && cb.nextSibling) cb.parentNode.insertBefore(sb, cb.nextSibling); else document.body.appendChild(sb);
     }
     onScroll();
   }
