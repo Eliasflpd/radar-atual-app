@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="color-scheme" content="only light">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Meu Estudo — RADAR</title>
+<title>Estudos do Concílio — RADAR</title>
 <style>
   :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--linha:#e4e7ec}
   *{box-sizing:border-box;-webkit-text-size-adjust:100%}
@@ -18,7 +18,7 @@
   .sub{text-align:center;color:#6b7280;font-size:.98rem;margin-bottom:18px}
   /* ── Estudos do Concílio (públicos, vindos do banco) — ficam ANTES do cadeado,
         porque não são os livros privados do Elias; são as peças que ele mesmo publicou ── */
-  #pubEstudos{display:none;margin:0 0 16px}
+  #pubEstudos{display:block;margin:0 0 16px}
   #pubEstudos .cab{display:flex;align-items:baseline;gap:8px;margin:0 0 9px;padding-bottom:7px;border-bottom:2px solid #ecd9ad}
   #pubEstudos .cab b{font-family:Georgia,serif;color:var(--navy);font-size:1.12rem}
   #pubEstudos .cab span{color:#9aa1ad;font-size:.82rem;font-weight:700}
@@ -113,15 +113,16 @@
 </head>
 <body>
   <button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
-  <div class="selo">✦ Privado · só você ✦</div>
-  <h1>Meu Estudo</h1>
-  <div class="sub">Seus comentários, trancados com a sua senha</div>
+  <div class="selo">✦ Concílio dos Expositores ✦</div>
+  <h1>Estudos do Concílio</h1>
+  <div class="sub">Estudos publicados a partir do Concílio</div>
 
   <!-- ESTUDOS DO CONCÍLIO (públicos) — só aparece quando existe algum -->
-  <div id="pubEstudos"></div>
+  <div id="pubEstudos"><p style="text-align:center;color:#6b7280;margin:28px 12px">Nenhum estudo publicado ainda.</p></div>
 
   <!-- CADEADO -->
-  <div class="cad" id="cad">
+  <!-- 29/10/2026: o "Meu Estudo" (livros cifrados) saiu a pedido do Elias; o cadeado fica escondido. -->
+  <div class="cad" id="cad" style="display:none">
     <div class="lock">🔒</div>
     <p>Estes livros ficam <b>criptografados</b> — sem a sua senha, ninguém lê. Digite pra abrir:</p>
     <input id="senha" type="password" placeholder="sua senha" autocomplete="off" enterkeyhint="go">
@@ -187,7 +188,7 @@ const $=id=>document.getElementById(id);
 
 document.addEventListener('DOMContentLoaded',()=>{
   const salva=localStorage.getItem('estudo_pass');
-  if(salva){ $('senha').value=salva; abrir(); }
+  // 29/10/2026: não abre mais os livros cifrados (Meu Estudo removido)
   $('senha').addEventListener('keydown',e=>{ if(e.key==='Enter') abrir(); });
 });
 

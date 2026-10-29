@@ -311,7 +311,7 @@ function mostrarBloqueio(){
    '<div style="max-width:480px;margin:0 auto;padding:34px 22px 40px;text-align:center">'
    +'<div style="font-size:52px">🔒</div>'
    +'<h1 style="font-family:Georgia,serif;font-size:1.7rem;margin:8px 0 6px">Seu período gratuito terminou</h1>'
-   +'<p style="color:#cfe0e8;font-size:1.05rem;margin:0 0 18px">'+(nome?nome+', obrigado':'Obrigado')+' por usar o RADAR nesses 30 dias! 🙏 Continue com tudo — Bíblias de estudo, EBD, Meu Estudo e a Lupa.</p>'
+   +'<p style="color:#cfe0e8;font-size:1.05rem;margin:0 0 18px">'+(nome?nome+', obrigado':'Obrigado')+' por usar o RADAR nesses 30 dias! 🙏 Continue com tudo — Bíblias de estudo, EBD, Livros e a Lupa.</p>'
    +'<div style="background:#fff;color:#1c2230;border-radius:16px;padding:20px 18px;text-align:left">'
      +'<div style="text-align:center;color:#0f6d78;font-weight:800;font-size:1.5rem">R$ 9,90 <span style="font-size:.95rem;color:#6b7280;font-weight:600">/mês</span></div>'
      +'<div style="text-align:center;color:#6b7280;font-size:.85rem;margin-top:2px">PIX · liberação automática</div>'
@@ -3488,7 +3488,7 @@ function renderManuais(){
   // Dicas de IA (15/10/2026): garimpadas de vídeos e conferidas. Selo NOVO por 14 dias.
   itens.push({onclick:"location.href='/biblioteca/dicas-ia/'", titulo:'Dicas de IA', autor:'Ferramentas e truques', img:IMG+'dicas-de-ia.jpg', novo:(Date.now()-new Date('2026-10-15T12:00:00').getTime())<14*864e5});
   itens.push({onclick:"location.href='/biblioteca/livros/'", titulo:'Livros', autor:'Biblioteca do obreiro', img:IMG+'livros.jpg', novo:(Date.now()-new Date('2026-10-17T12:00:00').getTime())<14*864e5});
-  itens.push({onclick:"location.href='/biblioteca/estudo/'", titulo:'Meu Estudo', autor:'Seu estudo particular', img:IMG+'meu-estudo.jpg', senha:true});
+  // Meu Estudo saiu em 29/10/2026 (pedido do Elias): os livros cifrados moravam no Supabase que sumiu em 13/10.
   // Pérolas Descoberta (09/10/2026): os 15 PDFs da pasta MARIA do Elias (Parábolas, Jesus no AT,
   // 70 Semanas, Salmos Explicados, Curiosidades, 12 Apóstolos) — cifrados com a mesma senha
   // do Meu Estudo, porque é material comprado e o repositório é público.
