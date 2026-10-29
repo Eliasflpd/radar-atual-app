@@ -28,6 +28,10 @@ function liberados() {
 }
 const tokenDe = (cfg) => crypto.createHmac('sha256', cfg.segredo).update('livros-particulares').digest('hex');
 const igual = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+// 29/10/2026, NORMA do Elias: Kittel, Animais da Bíblia (Wood) e Plantas da Bíblia (Moldenke) são SÓ fonte de
+// pesquisa escondida (motor invisível, biblioteca_trechos) — não aparecem na estante "Só para você" nem abrem para
+// leitura. O texto continua guardado na tabela (protegida pela trava); só não é mostrado.
+const SO_PESQUISA = new Set(['kittel', 'wood', 'moldenke']);
 // A capa também fica só no banco (livros_particulares_capas, subida com `livro-particular-subir.mjs <id> --capa`).
 async function capasDe(c) {
   const r = await c.query('select livro, capa from livros_particulares_capas').catch(() => ({ rows: [] }));
@@ -72,11 +76,12 @@ module.exports = async (req, res) => {
     if (!peloCracha && !peloToken) { res.status(403).json({ ok: false, motivo: 'particular' }); return; }
 
     const livro = String(b.livro || '');
+    if (SO_PESQUISA.has(livro)) { res.json({ ok: false, err: 'livro não encontrado' }); return; }
     if (!livro) {
       const r = await c.query(`select livro, max(livro_titulo) titulo, max(autor) autor, count(*)::int caps
                                  from livros_particulares group by livro order by 2`);
       const capas = await capasDe(c);
-      res.json({ ok: true, livros: r.rows.map((l) => ({ ...l, capa: capas[l.livro] || '' })) });
+      res.json({ ok: true, livros: r.rows.filter((l) => !SO_PESQUISA.has(l.livro)).map((l) => ({ ...l, capa: capas[l.livro] || '' })) });
       return;
     }
     if (b.cap === undefined || b.cap === null || b.cap === '') {
