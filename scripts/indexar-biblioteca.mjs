@@ -685,7 +685,7 @@ async function subir(quais) {
   // Cada banco tem o seu freio de mão e é medido sozinho.
   const BANCOS = [
     { nome: 'banco 1', cs, teto: parseInt(process.env.PARAR_EM_MB || '440', 10) },   // 27/10/2026: era 1100, acima do limite real do Neon grátis (512 MB)
-    ...(process.env.RADAR_DB2 ? [{ nome: 'banco 2', cs: process.env.RADAR_DB2, teto: parseInt(process.env.PARAR_EM_MB2 || '900', 10) }] : []),  // plano grátis da Neon pela Vercel (free_v3): 1 GB por projeto
+    ...(process.env.RADAR_DB2 ? [{ nome: 'banco 2', cs: process.env.RADAR_DB2, teto: parseInt(process.env.PARAR_EM_MB2 || '440', 10) }] : []),  // Neon grátis: 0,5 GB por projeto (o mesmo freio do banco 1)
   ];
   const tamanhoMB = async (c) => {
     const r = await c.query('select pg_database_size(current_database()) b');
