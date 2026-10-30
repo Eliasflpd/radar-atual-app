@@ -123,7 +123,9 @@
   function achou(titulo) {
     para(true);
     document.body.classList.add('achou');
-    estado.innerHTML = '✓ Achei: ' + esc(titulo) + '<small>A letra já está no WorshipOS. Toque no botão para ouvir outro louvor.</small>';
+    // a busca LIMPA: some o que foi cantado, fica só o aviso e o nome do louvor
+    linhas = []; agora = ''; fila = [];
+    estado.innerHTML = '✓ Já achou o louvor<small>Já está no WorshipOS. Toque no botão para ouvir outro louvor.</small>';
     caixa.innerHTML = '<span class="agora">' + esc(titulo) + '</span>';
     bt.setAttribute('aria-label', 'Ouvir outro louvor');
   }
