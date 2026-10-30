@@ -4,7 +4,7 @@
 // Um celular abre /ouvir?s=<SALA>, ouve a pessoa cantar junto com o vocal e manda o
 // TEXTO reconhecido; o WorshipOS daquela igreja lê a sala e descobre o louvor.
 // É só um corredor: guarda frases por poucas horas e apaga. Nada de áudio, nada de nome.
-//   POST /api/ws-ouvir  { sala, texto, tipo? }   -> grava 1 frase (tipo: fala|ligou|parou)
+//   POST /api/ws-ouvir  { sala, texto, tipo? }   -> grava 1 frase (tipo: fala|ligou|parou|achou)
 //   GET  /api/ws-ouvir?sala=XXXX&desde=N         -> frases com id > N
 // Cada WorshipOS cria a SUA sala (código aleatório) — igrejas nunca se misturam.
 // ═══════════════════════════════════════════════════════════
@@ -12,7 +12,7 @@ const { Client } = require('pg');
 
 const SALA_OK = /^[A-Z0-9]{6,16}$/;
 const TEXTO_MAX = 600;
-const POR_MINUTO = 120;      // trava contra abuso (fala normal manda bem menos)
+const POR_MINUTO = 300;      // trava contra abuso (o celular junta as palavras e manda a cada ~1,2 s)
 
 async function ensure(c){
   await c.query(`create table if not exists ws_ouvir(
@@ -50,7 +50,8 @@ module.exports = async (req, res) => {
     if(Math.random() < 0.05) await c.query(`delete from ws_ouvir where criado < now() - interval '3 hours'`);
 
     if(req.method === 'POST'){
-      const tipo = ['fala','ligou','parou'].includes(b.tipo) ? b.tipo : 'fala';
+      // 'achou' = o WorshipOS achou o louvor e avisa o celular (ele para de gravar)
+      const tipo = ['fala','ligou','parou','achou'].includes(b.tipo) ? b.tipo : 'fala';
       const texto = String(b.texto || '').replace(/\s+/g,' ').trim().slice(0, TEXTO_MAX);
       if(tipo === 'fala' && !texto){ res.status(200).json({ ok:true, vazio:true }); return; }
       const r = await c.query(`select count(*)::int n from ws_ouvir where sala=$1 and criado > now() - interval '1 minute'`, [sala]);

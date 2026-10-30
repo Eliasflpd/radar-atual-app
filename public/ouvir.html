@@ -26,6 +26,8 @@
   .ouvindo .botao::before { animation: onda 2s ease-out infinite; }
   .ouvindo .botao::after { animation: onda 2s ease-out 1s infinite; }
   @keyframes onda { from { transform: scale(1); opacity: .7; } to { transform: scale(1.9); opacity: 0; } }
+  .achou .botao { background: radial-gradient(circle at 35% 30%, #86efac, #22c55e 60%, #15803d); box-shadow: 0 20px 60px rgba(34,197,94,.45); }
+  .achou .estado { color: #86efac; }
   .ouvindo .botao { background: radial-gradient(circle at 35% 30%, #fca5a5, #ef4444 60%, #b91c1c); box-shadow: 0 20px 60px rgba(239,68,68,.45); }
   .estado { font-size: 17px; font-weight: 700; text-align: center; min-height: 24px; }
   .estado small { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; color: var(--cinza); }
@@ -61,15 +63,25 @@
   if (!/^[A-Z0-9]{6,16}$/.test(sala)) { erro('Este link está incompleto. Escaneie de novo o QR Code que aparece no WorshipOS.'); return; }
   if (!Reconhece) { erro('Este navegador não reconhece voz. Abra o link no <b>Google Chrome</b> (Android) ou no <b>Safari</b> (iPhone).'); return; }
 
-  var ligado = false, rec = null, linhas = [], agora = '', ultimoEnvioParcial = 0, ultimoParcial = '', trava = null;
-  function envia(texto, tipo) {
+  var ligado = false, rec = null, linhas = [], agora = '', trava = null;
+  var fila = [], ultimoParcial = '', timerEnvio = null, timerAchou = null, desdeId = 0;
+  function esc(t) { return String(t || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function envia(texto, tipo, depois) {
     fetch('/api/ws-ouvir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sala: sala, texto: texto || '', tipo: tipo || 'fala' }), keepalive: true })
-      .then(function (r) { return r.json(); }).then(function (j) { if (j && j.ok) document.getElementById('rodape').innerHTML = '<span class="ok">● Ligado ao WorshipOS da igreja</span><br>Só o texto do que você cantou é enviado — nenhum áudio é gravado.'; })
+      .then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.ok) { document.getElementById('rodape').innerHTML = '<span class="ok">● Ligado ao WorshipOS da igreja</span><br>Só o texto do que você cantou é enviado — nenhum áudio é gravado.'; if (depois) depois(j); }
+      })
       .catch(function () {});
   }
+  // junta o que foi cantado e manda a cada ~1,2 s (não uma mensagem por palavra)
+  function despacha() {
+    var t = fila.join(' ').trim(); fila = [];
+    if (t) { envia(t, 'fala'); ultimoParcial = ''; return; }
+    if (agora.length >= 14 && agora !== ultimoParcial) { envia(agora, 'fala'); ultimoParcial = agora; }
+  }
   function desenha() {
-    var h = linhas.slice(-4).map(function (l) { return '<span>' + l + '</span>'; }).join('');
-    if (agora) h += '<span class="agora">' + agora + '</span>';
+    var h = linhas.slice(-4).map(function (l) { return '<span>' + esc(l) + '</span>'; }).join('');
+    if (agora) h += '<span class="agora">' + esc(agora) + '</span>';
     caixa.innerHTML = h || '<span class="vazio">O que você cantar aparece aqui.</span>';
   }
   function novo() {
@@ -80,12 +92,9 @@
       for (var i = e.resultIndex; i < e.results.length; i++) {
         var t = e.results[i][0].transcript.trim();
         if (!t) continue;
-        if (e.results[i].isFinal) { linhas.push(t); envia(t, 'fala'); ultimoParcial = ''; }
+        if (e.results[i].isFinal) { linhas.push(t); fila.push(t); }
         else agora += (agora ? ' ' : '') + t;
       }
-      // o que ainda está sendo falado também vai, de tempos em tempos (o louvor aparece mais rápido)
-      var n = Date.now();
-      if (agora.length >= 14 && agora !== ultimoParcial && n - ultimoEnvioParcial > 2500) { envia(agora, 'fala'); ultimoParcial = agora; ultimoEnvioParcial = n; }
       desenha();
     };
     r.onerror = function (e) {
@@ -94,23 +103,48 @@
     r.onend = function () { if (ligado) { try { r.start(); } catch (_) { setTimeout(function () { if (ligado) { rec = novo(); try { rec.start(); } catch (__) {} } }, 400); } } };
     return r;
   }
+  // o WorshipOS ACHOU o louvor? (ele avisa pela sala) → para de gravar e mostra qual é
+  function vigia() {
+    fetch('/api/ws-ouvir?sala=' + sala + '&desde=' + desdeId, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      var fs = (j && j.frases) || [];
+      for (var i = 0; i < fs.length; i++) {
+        if (fs[i].id > desdeId) desdeId = fs[i].id;
+        if (fs[i].tipo === 'achou' && ligado) { achou(fs[i].texto); return; }
+      }
+    }).catch(function () {});
+  }
+  function achou(titulo) {
+    para(true);
+    document.body.classList.add('achou');
+    estado.innerHTML = '✓ Achei: ' + esc(titulo) + '<small>A letra já está no WorshipOS. Toque no botão para ouvir outro louvor.</small>';
+    caixa.innerHTML = '<span class="agora">' + esc(titulo) + '</span>';
+    bt.setAttribute('aria-label', 'Ouvir outro louvor');
+  }
   function liga() {
-    ligado = true; document.body.classList.add('ouvindo');
+    // cada gravação é um LOUVOR NOVO: a tela começa limpa
+    ligado = true; linhas = []; agora = ''; fila = []; ultimoParcial = ''; desenha();
+    document.body.classList.remove('achou'); document.body.classList.add('ouvindo');
     estado.innerHTML = 'Ouvindo…<small>Cante junto com o vocal. Toque de novo para parar.</small>';
     bt.setAttribute('aria-label', 'Parar de ouvir');
     rec = novo(); try { rec.start(); } catch (_) {}
-    envia('', 'ligou');
+    envia('', 'ligou', function (j) { desdeId = Math.max(desdeId, Number(j.id) || 0); });
+    timerEnvio = setInterval(despacha, 1200);
+    timerAchou = setInterval(vigia, 2000);
     if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { trava = w; }).catch(function () {});
   }
-  function para() {
+  function para(silencioso) {
+    despacha();
     ligado = false; document.body.classList.remove('ouvindo');
-    estado.innerHTML = 'Pausado<small>Toque no botão para ouvir de novo.</small>';
-    bt.setAttribute('aria-label', 'Começar a ouvir');
+    clearInterval(timerEnvio); clearInterval(timerAchou);
+    if (!silencioso) {
+      estado.innerHTML = 'Pausado<small>Toque no botão para ouvir de novo.</small>';
+      bt.setAttribute('aria-label', 'Começar a ouvir');
+    }
     try { rec && rec.stop(); } catch (_) {}
     envia('', 'parou');
     if (trava) { try { trava.release(); } catch (_) {} trava = null; }
   }
-  bt.addEventListener('click', function () { if (ligado) para(); else liga(); });
+  bt.addEventListener('click', function () { if (ligado) para(false); else liga(); });
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && ligado && navigator.wakeLock && !trava) navigator.wakeLock.request('screen').then(function (w) { trava = w; }).catch(function () {}); });
 })();
 </script>
