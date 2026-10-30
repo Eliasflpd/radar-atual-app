@@ -1,4 +1,4 @@
-const V='radar-v311';               // cache do SHELL — troca a cada versão do app
+const V='radar-v312';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
 // ⚠️ 27/09/2026 — POR QUE ESTE CACHE EXISTE (bug real: "clico na mensagem e não abre"):
 // o `activate` apagava o cache da versão anterior a CADA subida de versão. Como as
@@ -205,6 +205,10 @@ self.addEventListener('fetch',e=>{
   // direto) recebia "offline"/erro, e guardar 100–300 MB de vídeo na memória do SW era uma das causas do
   // celular travar depois de um tempo assistindo. Sem isto o vídeo vai para o navegador, que faz o resto.
   if(req.destination==='video' || req.destination==='audio' || req.headers.has('range') || /(^|\.)drive\.usercontent\.google\.com$/.test(url.hostname)) return;
+
+  // /ouvir ("Qual é esse louvor?" do WorshipOS) NUNCA passa pelo cache: quem abriu o link uma vez
+  // ficava preso na página velha (30/10/2026 — o celular não parava de gravar ao achar o louvor)
+  if(mesmaOrigem && /^\/ouvir(\.html)?$/.test(url.pathname)) return;
 
   // /api/ = servidor. REDE PRIMEIRO (nunca serve resposta de ontem quando há
   // sinal) e, se a rede cair, a última resposta boa que estiver guardada.

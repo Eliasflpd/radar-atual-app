@@ -92,7 +92,14 @@
       for (var i = e.resultIndex; i < e.results.length; i++) {
         var t = e.results[i][0].transcript.trim();
         if (!t) continue;
-        if (e.results[i].isFinal) { linhas.push(t); fila.push(t); }
+        if (e.results[i].isFinal) {
+          // o Chrome do Android repete a frase inteira a cada palavra ("porque", "porque ele"...):
+          // se a nova começa igual à última, ela SUBSTITUI (na tela e no que vai pro WorshipOS)
+          var ult = linhas[linhas.length - 1], tn = t.toLowerCase(), un = (ult || '').toLowerCase();
+          if (ult && (tn.indexOf(un) === 0 || un.indexOf(tn) === 0)) {
+            if (tn.length >= un.length) { linhas[linhas.length - 1] = t; if (fila.length) fila[fila.length - 1] = t; else fila.push(t); }
+          } else { linhas.push(t); fila.push(t); }
+        }
         else agora += (agora ? ' ' : '') + t;
       }
       desenha();
