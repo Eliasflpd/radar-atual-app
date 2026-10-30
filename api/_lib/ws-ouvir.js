@@ -6,6 +6,7 @@
 // É só um corredor: guarda frases por poucas horas e apaga. Nada de áudio, nada de nome.
 //   POST /api/ws-ouvir  { sala, texto, tipo? }   -> grava 1 frase (tipo: fala|ligou|parou|achou)
 //   GET  /api/ws-ouvir?sala=XXXX&desde=N         -> frases com id > N
+//   GET  /api/ws-ouvir?sala=XXXX&ultimo=1        -> { ultimo: id mais novo }
 // Cada WorshipOS cria a SUA sala (código aleatório) — igrejas nunca se misturam.
 // ═══════════════════════════════════════════════════════════
 const { Client } = require('pg');
@@ -58,6 +59,12 @@ module.exports = async (req, res) => {
       if((r.rows[0] && r.rows[0].n) >= POR_MINUTO){ res.status(200).json({ ok:false, err:'devagar' }); return; }
       const ins = await c.query(`insert into ws_ouvir(sala,tipo,texto) values($1,$2,$3) returning id`, [sala, tipo, texto]);
       res.status(200).json({ ok:true, id: ins.rows[0].id });
+      return;
+    }
+    // ?ultimo=1 -> só o id mais novo da sala (o WorshipOS começa a ouvir DAQUI, sem reler o histórico)
+    if(q.ultimo){
+      const u = await c.query(`select coalesce(max(id),0) as id from ws_ouvir where sala=$1`, [sala]);
+      res.status(200).json({ ok:true, ultimo: Number(u.rows[0].id) });
       return;
     }
     const desde = Math.max(0, parseInt(q.desde, 10) || 0);
