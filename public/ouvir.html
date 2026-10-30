@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1017">
+<title>Qual é esse louvor? · WorshipOS</title>
+<!-- "QUAL É ESSE LOUVOR?" do WorshipOS (30/10/2026). Página avulsa: não é do RADAR,
+     não usa nada dele. A pessoa canta junto com o vocal perto do celular; o texto
+     reconhecido vai para a sala do WorshipOS da igreja, que descobre o louvor. -->
+<style>
+  :root { --fundo:#0d1017; --painel:#161b24; --txt:#f2f4f8; --cinza:#98a2b3; --roxo:#8b5cf6; --roxo2:#a78bfa; --verde:#22c55e; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--fundo); color: var(--txt); font-family: "Segoe UI", Roboto, system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; padding: max(20px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); overflow: hidden; }
+  .luz { position: fixed; inset: -30%; background: radial-gradient(40% 35% at 50% 40%, rgba(139,92,246,.28), transparent 70%); animation: deriva 14s ease-in-out infinite alternate; pointer-events: none; }
+  @keyframes deriva { from { transform: translate(-6%, -4%) scale(1); } to { transform: translate(6%, 5%) scale(1.15); } }
+  header { position: relative; text-align: center; margin-top: 8px; }
+  .marca { font-size: 13px; font-weight: 700; color: var(--roxo2); letter-spacing: .02em; }
+  h1 { margin: 6px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+  .sub { margin: 8px auto 0; max-width: 320px; font-size: 15px; line-height: 1.45; color: var(--cinza); }
+  main { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 26px; }
+  .botao { position: relative; width: 196px; height: 196px; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #a78bfa, #7c3aed 60%, #5b21b6); color: #fff; cursor: pointer; display: grid; place-items: center; box-shadow: 0 20px 60px rgba(124,58,237,.45); -webkit-tap-highlight-color: transparent; }
+  .botao svg { width: 76px; height: 76px; }
+  .botao::before, .botao::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: rgba(167,139,250,.35); opacity: 0; }
+  .ouvindo .botao::before { animation: onda 2s ease-out infinite; }
+  .ouvindo .botao::after { animation: onda 2s ease-out 1s infinite; }
+  @keyframes onda { from { transform: scale(1); opacity: .7; } to { transform: scale(1.9); opacity: 0; } }
+  .ouvindo .botao { background: radial-gradient(circle at 35% 30%, #fca5a5, #ef4444 60%, #b91c1c); box-shadow: 0 20px 60px rgba(239,68,68,.45); }
+  .estado { font-size: 17px; font-weight: 700; text-align: center; min-height: 24px; }
+  .estado small { display: block; margin-top: 4px; font-size: 13px; font-weight: 500; color: var(--cinza); }
+  .texto { width: 100%; max-width: 420px; min-height: 92px; max-height: 30vh; overflow: hidden; padding: 16px 18px; border-radius: 18px; background: rgba(22,27,36,.82); font-size: 17px; line-height: 1.5; color: #dfe3ea; text-align: center; -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%); mask-image: linear-gradient(180deg, transparent, #000 30%); display: flex; flex-direction: column; justify-content: flex-end; }
+  .texto .agora { color: #fff; font-weight: 600; }
+  .texto .vazio { color: var(--cinza); font-size: 15px; }
+  footer { position: relative; font-size: 12.5px; color: var(--cinza); text-align: center; line-height: 1.45; max-width: 340px; }
+  .ok { color: var(--verde); }
+  .erro { max-width: 340px; text-align: center; color: #fca5a5; font-size: 15px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="luz"></div>
+<header>
+  <div class="marca">WorshipOS</div>
+  <h1>Qual é esse louvor?</h1>
+  <p class="sub">Toque no botão e cante junto com o vocal, com o celular perto da boca.</p>
+</header>
+<main id="main">
+  <button class="botao" id="bt" aria-label="Começar a ouvir">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3.5"/></svg>
+  </button>
+  <div class="estado" id="estado">Pronto para ouvir</div>
+  <div class="texto" id="texto"><span class="vazio">O que você cantar aparece aqui.</span></div>
+</main>
+<footer id="rodape">O WorshipOS da igreja recebe só o texto do que você cantou — nenhum áudio é gravado.</footer>
+<script>
+(function () {
+  var sala = (new URLSearchParams(location.search).get('s') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  var bt = document.getElementById('bt'), estado = document.getElementById('estado'), caixa = document.getElementById('texto');
+  var Reconhece = window.SpeechRecognition || window.webkitSpeechRecognition;
+  function erro(msg) { document.getElementById('main').innerHTML = '<p class="erro">' + msg + '</p>'; }
+  if (!/^[A-Z0-9]{6,16}$/.test(sala)) { erro('Este link está incompleto. Escaneie de novo o QR Code que aparece no WorshipOS.'); return; }
+  if (!Reconhece) { erro('Este navegador não reconhece voz. Abra o link no <b>Google Chrome</b> (Android) ou no <b>Safari</b> (iPhone).'); return; }
+
+  var ligado = false, rec = null, linhas = [], agora = '', ultimoEnvioParcial = 0, ultimoParcial = '', trava = null;
+  function envia(texto, tipo) {
+    fetch('/api/ws-ouvir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sala: sala, texto: texto || '', tipo: tipo || 'fala' }), keepalive: true })
+      .then(function (r) { return r.json(); }).then(function (j) { if (j && j.ok) document.getElementById('rodape').innerHTML = '<span class="ok">● Ligado ao WorshipOS da igreja</span><br>Só o texto do que você cantou é enviado — nenhum áudio é gravado.'; })
+      .catch(function () {});
+  }
+  function desenha() {
+    var h = linhas.slice(-4).map(function (l) { return '<span>' + l + '</span>'; }).join('');
+    if (agora) h += '<span class="agora">' + agora + '</span>';
+    caixa.innerHTML = h || '<span class="vazio">O que você cantar aparece aqui.</span>';
+  }
+  function novo() {
+    var r = new Reconhece();
+    r.lang = 'pt-BR'; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+    r.onresult = function (e) {
+      agora = '';
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        var t = e.results[i][0].transcript.trim();
+        if (!t) continue;
+        if (e.results[i].isFinal) { linhas.push(t); envia(t, 'fala'); ultimoParcial = ''; }
+        else agora += (agora ? ' ' : '') + t;
+      }
+      // o que ainda está sendo falado também vai, de tempos em tempos (o louvor aparece mais rápido)
+      var n = Date.now();
+      if (agora.length >= 14 && agora !== ultimoParcial && n - ultimoEnvioParcial > 2500) { envia(agora, 'fala'); ultimoParcial = agora; ultimoEnvioParcial = n; }
+      desenha();
+    };
+    r.onerror = function (e) {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { para(); estado.innerHTML = 'Microfone bloqueado<small>Libere o microfone para este site nas permissões do navegador.</small>'; }
+    };
+    r.onend = function () { if (ligado) { try { r.start(); } catch (_) { setTimeout(function () { if (ligado) { rec = novo(); try { rec.start(); } catch (__) {} } }, 400); } } };
+    return r;
+  }
+  function liga() {
+    ligado = true; document.body.classList.add('ouvindo');
+    estado.innerHTML = 'Ouvindo…<small>Cante junto com o vocal. Toque de novo para parar.</small>';
+    bt.setAttribute('aria-label', 'Parar de ouvir');
+    rec = novo(); try { rec.start(); } catch (_) {}
+    envia('', 'ligou');
+    if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { trava = w; }).catch(function () {});
+  }
+  function para() {
+    ligado = false; document.body.classList.remove('ouvindo');
+    estado.innerHTML = 'Pausado<small>Toque no botão para ouvir de novo.</small>';
+    bt.setAttribute('aria-label', 'Começar a ouvir');
+    try { rec && rec.stop(); } catch (_) {}
+    envia('', 'parou');
+    if (trava) { try { trava.release(); } catch (_) {} trava = null; }
+  }
+  bt.addEventListener('click', function () { if (ligado) para(); else liga(); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && ligado && navigator.wakeLock && !trava) navigator.wakeLock.request('screen').then(function (w) { trava = w; }).catch(function () {}); });
+})();
+</script>
+</body>
+</html>

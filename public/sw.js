@@ -1,4 +1,4 @@
-const V='radar-v310';               // cache do SHELL — troca a cada versão do app
+const V='radar-v311';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
 // ⚠️ 27/09/2026 — POR QUE ESTE CACHE EXISTE (bug real: "clico na mensagem e não abre"):
 // o `activate` apagava o cache da versão anterior a CADA subida de versão. Como as
@@ -159,7 +159,7 @@ function documento(req){
 // `voz` entra aqui porque devolve TOKEN EFÊMERO da conversa ao vivo: um token de
 // ontem servido do cache não conecta em nada e deixa o pastor com a tela morta
 // no meio da estrada. Token é sempre da rede ou não é.
-const API_NUNCA_GUARDA=/^\/api\/(acesso|verify-otp|send-otp|assinar|cadastros|pix|asaas|voz)/;
+const API_NUNCA_GUARDA=/^\/api\/(ws-ouvir|acesso|verify-otp|send-otp|assinar|cadastros|pix|asaas|voz)/;
 
 function api(req,url){
   // MÚSICAS (27/10): a biblioteca da pessoa (fn=musicas) e a busca/link do player (fn=disco)

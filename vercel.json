@@ -21,7 +21,9 @@
     { "source": "/api/voz",      "destination": "/api/edge?fn=voz" },
     { "source": "/api/ebd-plano", "destination": "/api/edge?fn=ebd-plano" },
     { "source": "/api/curso-video", "destination": "/api/edge?fn=curso-video" },
-    { "source": "/api/disco",    "destination": "/api/edge?fn=disco" }
+    { "source": "/api/disco",    "destination": "/api/edge?fn=disco" },
+    { "source": "/api/ws-ouvir", "destination": "/api/dados?fn=ws-ouvir" },
+    { "source": "/ouvir",        "destination": "/ouvir.html" }
   ],
   "headers": [
     {

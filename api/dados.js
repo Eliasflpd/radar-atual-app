@@ -610,7 +610,9 @@ const HANDLERS = {
   painel:       painel,
   uso:          uso,
   pregado:      pregado,
-  musicas:      musicas,   // MÚSICAS: curtidas/playlists/pastas/seguidos de cada pessoa
+  musicas:      musicas,
+  // "QUAL É ESSE LOUVOR?" do WorshipOS (não é do RADAR; só mora aqui por enquanto)
+  'ws-ouvir':   require('./_lib/ws-ouvir.js'),   // MÚSICAS: curtidas/playlists/pastas/seguidos de cada pessoa
   // livro comprado que só o dono lê (texto no Postgres, nunca no repo). Ver api/_lib/livro-particular.js.
   'livro-particular': require('./_lib/livro-particular.js')
 };
