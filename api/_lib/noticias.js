@@ -58,7 +58,7 @@ function lerFeed(xml, fonte) {
 
 async function buscar(fonte) {
   try {
-    const r = await fetch(fonte.url, { headers: { 'User-Agent': 'Mozilla/5.0 (RADAR; leitor de manchetes)', Accept: 'application/rss+xml, application/xml, text/xml, */*' },
+    const r = await fetch(fonte.url, { headers: NAVEGADOR,
       redirect: 'follow', signal: AbortSignal.timeout(7000) });
     if (!r.ok) return { fonte: fonte.nome, itens: [], erro: 'HTTP ' + r.status };
     return { fonte: fonte.nome, itens: lerFeed(await r.text(), fonte) };
