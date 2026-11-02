@@ -614,7 +614,9 @@ const HANDLERS = {
   // "QUAL É ESSE LOUVOR?" do WorshipOS (não é do RADAR; só mora aqui por enquanto)
   'ws-ouvir':   require('./_lib/ws-ouvir.js'),   // MÚSICAS: curtidas/playlists/pastas/seguidos de cada pessoa
   // livro comprado que só o dono lê (texto no Postgres, nunca no repo). Ver api/_lib/livro-particular.js.
-  'livro-particular': require('./_lib/livro-particular.js')
+  'livro-particular': require('./_lib/livro-particular.js'),
+  // NOTÍCIAS FIÉIS: manchetes do dia dos feeds públicos de fontes sérias (02/11/2026). Ver api/_lib/noticias.js.
+  noticias:     require('./_lib/noticias.js')
 };
 
 module.exports = async (req, res) => {

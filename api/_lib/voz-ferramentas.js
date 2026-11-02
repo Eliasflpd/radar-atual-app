@@ -1422,9 +1422,33 @@ eu quero ver isso direito na sua mensagem".`;
 // já estão na Vercel (TAVILY_API_KEYS / EXA_API_KEYS). Conversa de graça, busca
 // de graça. Só pra FATO ATUAL — notícia, cotação, quem ganhou, que dia cai algo.
 // Conhecimento geral o próprio motor já sabe e responde sem gastar isto.
+// 02/11/2026 — NOTÍCIA FIEL (pedido do Elias: "notícias fiéis e verdadeiras… nunca algo raso"). Pergunta de notícia
+// procura PRIMEIRO só nos veículos sérios abaixo; se não achar, abre a busca, mas os sérios vão na frente e os portais
+// de fofoca/sensacionalistas e partidários ficam de fora sempre. Cada fato sai com o NOME do veículo.
+const VEICULOS = {
+  'cpadnews.com.br': 'CPAD News', 'ultimato.com.br': 'Ultimato', 'christianitytoday.com': 'Christianity Today', 'wng.org': 'WORLD',
+  'portasabertas.org.br': 'Portas Abertas', 'opendoors.org': 'Portas Abertas (Open Doors)', 'opendoorsus.org': 'Portas Abertas (Open Doors)',
+  'morningstarnews.org': 'Morning Star News', 'vozdosmartires.com.br': 'A Voz dos Mártires', 'persecution.com': 'A Voz dos Mártires (VOM)',
+  'reuters.com': 'Reuters', 'apnews.com': 'AP', 'agenciabrasil.ebc.com.br': 'Agência Brasil', 'bbc.com': 'BBC', 'bbc.co.uk': 'BBC',
+  'timesofisrael.com': 'Times of Israel',
+};
+const FORA = ['gospelmais.com.br', 'fuxicogospel.com.br', 'pleno.news'];
+const ehNoticia = (q) => /not[ií]cia|aconteceu|acontecendo|manchete|[uú]ltim[ao]s?\s|persegui|crist[ãa]o|igreja|israel|gaza|hamas|guerra|ataque|atentado|conflito|elei[çc]|governo|presidente|papa\b|pastor|mission[aá]ri|terremoto|enchente|trag[eé]dia|morreu|preso|lei\b|stf|congresso/i.test(q)
+  && !/previs[ãa]o do tempo|chuva|temperatura|cota[çc][ãa]o|d[óo]lar|euro\b|bitcoin|placar|resultado do jogo|campeonato|pre[çc]o d/i.test(q);
+const dominioDe = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch (_) { return ''; } };
+const veiculoDe = (url) => { const d = dominioDe(url); const k = Object.keys(VEICULOS).find((v) => d === v || d.endsWith('.' + v)); return k ? VEICULOS[k] : ''; };
+const dominioFora = (url) => { const d = dominioDe(url); return FORA.some((f) => d === f || d.endsWith('.' + f)); };
+function arrumarFontes(results) {
+  return (results || []).filter((x) => x && x.url && !dominioFora(x.url))
+    .map((x) => ({ ...x, veiculo: veiculoDe(x.url) || dominioDe(x.url) }))
+    .sort((a, b) => (veiculoDe(b.url) ? 1 : 0) - (veiculoDe(a.url) ? 1 : 0));
+}
+
 async function saberAgora(pergunta, origem) {
   const q = String(pergunta || '').trim().slice(0, 300);
   if (!q) return { achou: false, ordem: 'Pergunta vazia. Peça pro pastor repetir o que ele quer saber.' };
+  const noticia = ehNoticia(q);
+  const ORDEM_FONTE = ' SEMPRE diga de qual veículo veio cada fato (ex.: "segundo a Reuters…", "a CPAD News informa…"); nunca dê notícia sem dizer a fonte.';
   const umaChave = (lista) => {
     const ks = String(lista || '').split(/[,\s]+/).filter(Boolean);
     return ks.length ? ks[Math.floor(Math.random() * ks.length)] : '';
@@ -1432,25 +1456,32 @@ async function saberAgora(pergunta, origem) {
   // 1) Tavily — resposta pronta + fontes
   const tv = umaChave(process.env.TAVILY_API_KEYS || process.env.TAVILY_API_KEY);
   if (tv) {
-    try {
-      const r = await fetch('https://api.tavily.com/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tv },
-        body: JSON.stringify({ query: q, max_results: 4, search_depth: 'basic', include_answer: true }),
-      });
-      if (r.ok) {
+    // notícia: 1ª tentativa só nos veículos sérios; se vier vazio, busca aberta (sem os de fora). Resto: busca aberta.
+    const tentativas = noticia
+      ? [{ topic: 'news', include_domains: Object.keys(VEICULOS) }, { topic: 'news', exclude_domains: FORA }]
+      : [{ exclude_domains: FORA }];
+    for (const extra of tentativas) {
+      try {
+        const r = await fetch('https://api.tavily.com/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tv },
+          body: JSON.stringify({ query: q, max_results: 6, search_depth: 'basic', include_answer: true, ...extra }),
+        });
+        if (!r.ok) continue;
         const j = await r.json();
-        const fontes = (j.results || []).slice(0, 4).map((x) => ({ titulo: x.title, url: x.url }));
-        const texto = (j.answer || '') + (fontes.length
-          ? '\n\nDo que a busca trouxe:\n' + (j.results || []).slice(0, 3)
-              .map((x) => '• ' + (x.title || '') + ': ' + String(x.content || '').slice(0, 220)).join('\n')
+        const rs = arrumarFontes(j.results);
+        if (!rs.length && !(j.answer || '').trim()) continue;
+        const fontes = rs.slice(0, 4).map((x) => ({ titulo: x.title, url: x.url, veiculo: x.veiculo }));
+        const texto = (j.answer || '') + (rs.length
+          ? '\n\nDo que a busca trouxe:\n' + rs.slice(0, 3)
+              .map((x) => '• [' + x.veiculo + '] ' + (x.title || '') + ': ' + String(x.content || '').slice(0, 220)).join('\n')
           : '');
         if (texto.trim()) return {
           achou: true, material: texto, fontes,
-          ordem: 'Isto veio da internet AGORA. Responda em cima disto, com as suas palavras, e diga que é o que a internet mostra. Se for opinião ou incerto, diga que é.',
+          ordem: 'Isto veio da internet AGORA. Responda em cima disto, com as suas palavras, e diga que é o que a internet mostra. Se for opinião ou incerto, diga que é.' + ORDEM_FONTE,
         };
-      }
-    } catch (_) {}
+      } catch (_) {}
+    }
   }
   // 2) Exa — reserva, busca por sentido
   const ex = umaChave(process.env.EXA_API_KEYS || process.env.EXA_API_KEY);
@@ -1459,16 +1490,17 @@ async function saberAgora(pergunta, origem) {
       const r = await fetch('https://api.exa.ai/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': ex },
-        body: JSON.stringify({ query: q, numResults: 4, contents: { text: { maxCharacters: 500 } } }),
+        body: JSON.stringify({ query: q, numResults: 6, contents: { text: { maxCharacters: 500 } },
+          ...(noticia ? { includeDomains: Object.keys(VEICULOS) } : { excludeDomains: FORA }) }),
       });
       if (r.ok) {
         const j = await r.json();
-        const rs = j.results || [];
-        const texto = rs.slice(0, 3).map((x) => '• ' + (x.title || '') + ': ' + String((x.text || '')).slice(0, 220)).join('\n');
+        const rs = arrumarFontes(j.results);
+        const texto = rs.slice(0, 3).map((x) => '• [' + x.veiculo + '] ' + (x.title || '') + ': ' + String((x.text || '')).slice(0, 220)).join('\n');
         if (texto.trim()) return {
           achou: true, material: texto,
-          fontes: rs.slice(0, 4).map((x) => ({ titulo: x.title, url: x.url })),
-          ordem: 'Isto veio da internet AGORA (busca por sentido). Responda em cima disto, com as suas palavras, e diga que é o que a internet mostra.',
+          fontes: rs.slice(0, 4).map((x) => ({ titulo: x.title, url: x.url, veiculo: x.veiculo })),
+          ordem: 'Isto veio da internet AGORA (busca por sentido). Responda em cima disto, com as suas palavras, e diga que é o que a internet mostra.' + ORDEM_FONTE,
         };
       }
     } catch (_) {}

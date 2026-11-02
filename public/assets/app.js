@@ -3487,6 +3487,8 @@ function renderManuais(){
   itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', img:IMG+'escola-de-pregacao.jpg'});
   // Dicas de IA (15/10/2026): garimpadas de vídeos e conferidas. Selo NOVO por 14 dias.
   itens.push({onclick:"location.href='/biblioteca/dicas-ia/'", titulo:'Dicas de IA', autor:'Ferramentas e truques', img:IMG+'dicas-de-ia.jpg', novo:(Date.now()-new Date('2026-10-15T12:00:00').getTime())<14*864e5});
+  // Notícias (02/11/2026): manchetes do dia só de fontes sérias (Igreja no mundo, Igreja perseguida, Mundo e Israel).
+  itens.push({onclick:"location.href='/biblioteca/noticias/'", titulo:'Notícias', autor:'Fiéis e verdadeiras', img:IMG+'noticias.jpg', novo:(Date.now()-new Date('2026-11-02T12:00:00').getTime())<14*864e5});
   itens.push({onclick:"location.href='/biblioteca/livros/'", titulo:'Livros', autor:'Biblioteca do obreiro', img:IMG+'livros.jpg', novo:(Date.now()-new Date('2026-10-17T12:00:00').getTime())<14*864e5});
   // Meu Estudo saiu em 29/10/2026 (pedido do Elias): os livros cifrados moravam no Supabase que sumiu em 13/10.
   // Pérolas Descoberta (09/10/2026): os 15 PDFs da pasta MARIA do Elias (Parábolas, Jesus no AT,
