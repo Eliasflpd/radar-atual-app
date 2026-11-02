@@ -3485,6 +3485,8 @@ function renderManuais(){
   itens.push({onclick:"location.href='/biblioteca/mensagens/'", titulo:'Mensagens', autor:'Sermões em prosa', img:IMG+'mensagens.jpg'});
   itens.push({onclick:"location.href='/biblioteca/concilio/'", titulo:'Concílio', autor:'42 expositores + Lupa', img:IMG+'concilio.jpg'});
   itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', img:IMG+'escola-de-pregacao.jpg'});
+  // Bereia (02/11/2026): o ajudante de pregação — examina a Escritura e a Biblioteca (com a Joeira) e monta a pregação.
+  itens.push({onclick:"location.href='/biblioteca/bereia/'", titulo:'Bereia', autor:'Ajudante de pregação', img:IMG+'bereia.jpg', senha:true, novo:(Date.now()-new Date('2026-11-02T12:00:00').getTime())<14*864e5});
   // Dicas de IA (15/10/2026): garimpadas de vídeos e conferidas. Selo NOVO por 14 dias.
   itens.push({onclick:"location.href='/biblioteca/dicas-ia/'", titulo:'Dicas de IA', autor:'Ferramentas e truques', img:IMG+'dicas-de-ia.jpg', novo:(Date.now()-new Date('2026-10-15T12:00:00').getTime())<14*864e5});
   // Notícias (02/11/2026): manchetes do dia só de fontes sérias (Igreja no mundo, Igreja perseguida, Mundo e Israel).

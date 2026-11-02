@@ -192,7 +192,7 @@ export function conferirFontes(texto, inventados) {
 
 // ── Os 66 livros: sigla do biblia.json, nome pra tela e o testamento ──────────
 // ⚠️ 'jo' é João e 'jó' é Jó — é assim no biblia.json. O desempate é o acento.
-const LIVRO_NOME = {
+export const LIVRO_NOME = {
   gn: 'Gênesis', ex: 'Êxodo', lv: 'Levítico', nm: 'Números', dt: 'Deuteronômio', js: 'Josué',
   jz: 'Juízes', rt: 'Rute', '1sm': '1 Samuel', '2sm': '2 Samuel', '1rs': '1 Reis', '2rs': '2 Reis',
   '1cr': '1 Crônicas', '2cr': '2 Crônicas', ed: 'Esdras', ne: 'Neemias', et: 'Ester', 'jó': 'Jó',
@@ -257,7 +257,7 @@ const PREFIXO = '(?:([123])\\s*[ªº°]?\\s*|(I{1,3})\\s*\\.?\\s+)?';
 const RE_REF = new RegExp('(?:^|[^\\wÀ-ÿ])' + PREFIXO + '([A-Za-zÀ-ÿ]{2,16})\\.?\\s*(\\d{1,3})\\s*[:.]\\s*(\\d{1,3})(?:\\s*(?:' + TRACO + '|a)\\s*(\\d{1,3}))?', 'g');
 
 /** Toda referência bíblica resolvível dentro de um texto. */
-function acharReferencias(texto) {
+export function acharReferencias(texto) {
   const out = [];
   const t = String(texto || '');
   RE_REF.lastIndex = 0;
@@ -440,7 +440,7 @@ export function carregarBiblia(origem) {
 }
 
 /** O texto real de uma referência. null quando a referência NÃO EXISTE. */
-function textoDoVersiculo(biblia, r) {
+export function textoDoVersiculo(biblia, r) {
   const caps = biblia && biblia[r.abbrev];
   if (!caps || !caps[r.cap - 1]) return null;
   const vs = caps[r.cap - 1];

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bereia — RADAR</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--linha:#e4e7ec;--verde:#14804a;--fundo:#f6f4ee}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;
+    line-height:1.6;padding:14px 16px calc(56px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+  .voltar{background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-top:12px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:2rem;font-weight:800;margin:2px 0 2px}
+  .sub{text-align:center;color:#6b7280;font-size:.98rem;margin:0 0 6px}
+  .verso{text-align:center;color:#8a6a1e;font-style:italic;font-size:.9rem;margin:0 0 18px}
+  .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 18px}
+  .cx{background:var(--fundo);border:1px solid #ece4d0;border-radius:16px;padding:16px}
+  label{display:block;font-weight:700;color:var(--navy);font-size:.92rem;margin:10px 0 4px}
+  input,textarea,select{width:100%;font:inherit;font-size:1rem;padding:11px 12px;border:1.5px solid var(--linha);border-radius:12px;background:#fff;color:var(--texto)}
+  textarea{min-height:76px;resize:vertical}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--dourado)}
+  .dica{color:#6b7280;font-size:.82rem;margin-top:3px}
+  .criar{display:block;width:100%;margin-top:16px;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;border:none;border-radius:14px;
+    padding:15px;font-size:1.06rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .criar:disabled{opacity:.6}
+  .etapas{margin:18px 0 0;padding:0;list-style:none}
+  .etapas li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed #e7dfca;color:#6b7280;font-size:.95rem}
+  .etapas li.ativa{color:var(--navy);font-weight:700}
+  .etapas li.ok{color:var(--verde)}
+  .etapas li .ic{width:24px;text-align:center;flex-shrink:0}
+  .joeira{margin:10px 0 0;background:#fffaf0;border:1px solid #ecd9ad;border-radius:14px;padding:12px 14px}
+  .joeira b{color:#7a5a14}
+  .joeira ul{margin:6px 0 0;padding-left:18px;font-size:.9rem}
+  .joeira li{margin:2px 0}
+  .avisos{margin:16px 0 0;background:#fff4f2;border:1px solid #f1c9c2;border-radius:14px;padding:12px 14px;font-size:.92rem}
+  .avisos b{color:#a3341f}
+  #saida{margin-top:22px}
+  #saida h1.t{font-size:1.7rem;text-align:left;margin:0 0 4px}
+  #saida h2{font-family:Georgia,serif;color:var(--navy);font-size:1.22rem;margin:26px 0 6px}
+  #saida p{margin:0 0 12px}
+  #saida blockquote{margin:14px 0;padding:10px 14px;border-left:4px solid var(--dourado);background:#fbf7ec;font-family:Georgia,serif;font-size:1.06rem}
+  #saida ul{padding-left:20px}
+  #saida .refs{color:#8a6a1e;font-style:italic;margin-bottom:10px}
+  .acoes{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 0}
+  .acoes button{flex:1 1 140px;border:none;border-radius:12px;padding:12px;font:700 .95rem inherit;font-family:inherit;cursor:pointer;color:#fff;background:var(--navy)}
+  .acoes button.d{background:var(--dourado)} .acoes button.t{background:var(--teal)}
+  .salvas{margin-top:26px}
+  .salvas h3{font-family:Georgia,serif;color:var(--navy);margin:0 0 8px;font-size:1.1rem}
+  .salvas a{display:block;padding:10px 12px;border:1px solid var(--linha);border-radius:12px;margin-bottom:8px;color:var(--texto);text-decoration:none}
+  .salvas a small{color:#6b7280}
+  .pin{background:#fff;border:1px solid var(--linha);border-radius:16px;padding:26px 20px;text-align:center;max-width:360px;margin:26px auto}
+  .pin input{font-size:1.7rem;letter-spacing:.5em;text-align:center;margin:10px 0 12px}
+  .pin button{width:100%;background:var(--dourado);color:#1d1606;border:none;border-radius:12px;padding:13px;font-weight:800;font-size:1rem;cursor:pointer}
+  .toast{position:fixed;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f3d5c;color:#fff;padding:10px 16px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+<button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
+<div class="selo">✦ Ajudante de pregação ✦</div>
+<h1>Bereia</h1>
+<div class="sub">Examina as Escrituras e a Biblioteca, e monta a pregação com você</div>
+<div class="verso">“…examinando cada dia nas Escrituras se estas coisas eram assim.” (Atos 17:11)</div>
+<div class="divisor"></div>
+
+<div id="wrap">
+  <div class="cx" id="form">
+    <label for="texto">Texto bíblico</label>
+    <input id="texto" placeholder="Ex.: Gênesis 40:14-23">
+    <label for="tema">Tema</label>
+    <input id="tema" placeholder="Ex.: o homem esqueceu, Deus não">
+    <label for="ideia">Sua ideia, ângulo ou ilustração (opcional)</label>
+    <textarea id="ideia" placeholder="Ex.: José pediu ao copeiro que se lembrasse dele; mostrar que a demora foi calendário de Deus, não castigo."></textarea>
+    <label for="tipo">Ocasião</label>
+    <select id="tipo">
+      <option>Culto de pregação</option><option>Culto de doutrina / ensino</option><option>Escola Dominical</option>
+      <option>Culto de jovens</option><option>Culto de oração / avivamento</option><option>Culto fúnebre</option>
+      <option>Santa Ceia</option><option>Culto de família</option>
+    </select>
+    <div class="dica">Preencha o texto, o tema ou os dois. Quanto mais clara a ideia, mais certeira a pregação.</div>
+    <button class="criar" id="criar">📖 Examinar e montar a pregação</button>
+  </div>
+
+  <ul class="etapas" id="etapas" hidden>
+    <li id="e-plano"><span class="ic">🧭</span><span>Planejar a pesquisa</span></li>
+    <li id="e-biblioteca"><span class="ic">📚</span><span>Bereia: examinar a Biblioteca · 🌾 Joeira: separar o trigo da palha</span></li>
+    <li id="e-escrita"><span class="ic">✍️</span><span>Escrever a pregação</span></li>
+  </ul>
+  <div class="joeira" id="joeira" hidden></div>
+  <div id="saida"></div>
+  <div class="avisos" id="avisos" hidden></div>
+  <div class="acoes" id="acoes" hidden>
+    <button onclick="copiar()">📋 Copiar</button>
+    <button class="t" onclick="compartilhar()">📤 Compartilhar</button>
+    <button class="d" onclick="salvar()">💾 Salvar no aparelho</button>
+  </div>
+  <div class="salvas" id="salvas"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// BEREIA (01/11/2026). O servidor (api/_lib/bereia.js) manda uma linha JSON por evento: etapa, plano, joeira,
+// noticias, txt (pedaços da pregação), fim (avisos da conferência) e erro. Os textos dos livros comprados NUNCA
+// chegam aqui: a tela recebe só os nomes das fontes que a Joeira escolheu e a pregação já escrita.
+var $=function(id){return document.getElementById(id);};
+function ler(k){ try{ return localStorage.getItem(k)||''; }catch(_){ return ''; } }
+function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(t){ var e=$('toast'); e.textContent=t; e.classList.add('on'); setTimeout(function(){ e.classList.remove('on'); },2200); }
+var MD='', TITULO='';
+
+function inline(s){
+  return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<i>$2</i>');
+}
+function render(md){
+  var out=[], lista=false;
+  md.split('\n').forEach(function(l){
+    var t=l.trim();
+    if(/^[-•]\s+/.test(t)){ if(!lista){ out.push('<ul>'); lista=true; } out.push('<li>'+inline(t.replace(/^[-•]\s+/,''))+'</li>'); return; }
+    if(lista){ out.push('</ul>'); lista=false; }
+    if(!t) return;
+    if(/^#\s/.test(t)){ out.push('<h1 class="t">'+inline(t.slice(2))+'</h1>'); return; }
+    if(/^##\s/.test(t)){ out.push('<h2>'+inline(t.slice(3))+'</h2>'); return; }
+    if(/^>\s?/.test(t)){ out.push('<blockquote>'+inline(t.replace(/^>\s?/,''))+'</blockquote>'); return; }
+    if(/^\*[^*].*\*$/.test(t) && out.length<=2){ out.push('<div class="refs">'+inline(t.replace(/^\*|\*$/g,''))+'</div>'); return; }
+    out.push('<p>'+inline(t)+'</p>');
+  });
+  if(lista) out.push('</ul>');
+  return out.join('');
+}
+function etapa(id, estado){
+  ['plano','biblioteca','escrita'].forEach(function(k){
+    var li=$('e-'+k); if(k===id){ li.className=estado||'ativa'; }
+  });
+}
+function pedirPin(depois,msg){
+  $('form').insertAdjacentHTML('beforebegin','<div class="pin" id="pinbox"><div style="font-size:2.2rem">🔒</div><p>'+esc(msg||'O Bereia usa a Biblioteca particular. Digite a sua senha para abrir.')+'</p>'
+    +'<input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"><button id="entrar">Abrir</button></div>');
+  var campo=$('pin'); campo.focus();
+  function entrar(){
+    var v=campo.value.trim(); if(!v) return;
+    $('entrar').disabled=true; $('entrar').textContent='Conferindo…';
+    fetch('/api/livro-particular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:v}),cache:'no-store'})
+      .then(function(r){ return r.json(); }).then(function(d){
+        $('pinbox').remove();
+        if(d.ok&&d.token){ try{ localStorage.setItem('lp_token',d.token); }catch(_){} depois(); return; }
+        pedirPin(depois, d.motivo==='travado'?'Muitas tentativas erradas. Espere uma hora.':'Senha errada. Tente de novo.');
+      }).catch(function(){ $('pinbox').remove(); pedirPin(depois,'Não consegui conferir agora. Confira a internet.'); });
+  }
+  $('entrar').onclick=entrar; campo.onkeydown=function(e){ if(e.key==='Enter') entrar(); };
+}
+
+function criar(){
+  var corpo={ texto:$('texto').value.trim(), tema:$('tema').value.trim(), ideia:$('ideia').value.trim(), tipo:$('tipo').value,
+    cracha:ler('radar_chave'), token:ler('lp_token') };
+  if(!corpo.texto && !corpo.tema){ toast('Escreva o texto bíblico ou o tema'); return; }
+  MD=''; TITULO='';
+  $('saida').innerHTML=''; $('avisos').hidden=true; $('acoes').hidden=true; $('joeira').hidden=true;
+  $('etapas').hidden=false; ['plano','biblioteca','escrita'].forEach(function(k){ $('e-'+k).className=''; });
+  $('criar').disabled=true; $('criar').textContent='Examinando…';
+  fetch('/api/bereia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo),cache:'no-store'})
+    .then(function(r){
+      if(r.status===403){ fim(); pedirPin(criar); return; }
+      if(!r.ok||!r.body){ return r.json().then(function(d){ throw new Error(d.err||('servidor '+r.status)); }); }
+      var leitor=r.body.getReader(), dec=new TextDecoder(), buf='', ultimo=0;
+      function passo(){
+        return leitor.read().then(function(x){
+          if(x.done){ if(buf.trim()) evento(buf); fim(); return; }
+          buf+=dec.decode(x.value,{stream:true});
+          var i; while((i=buf.indexOf('\n'))>=0){ var l=buf.slice(0,i); buf=buf.slice(i+1); if(l.trim()) evento(l); }
+          var agora=Date.now(); if(agora-ultimo>250){ ultimo=agora; $('saida').innerHTML=render(MD); }
+          return passo();
+        });
+      }
+      return passo();
+    })
+    .catch(function(e){ fim(); $('avisos').hidden=false; $('avisos').innerHTML='<b>Não deu certo:</b> '+esc(e.message||e); });
+}
+function evento(linha){
+  var o; try{ o=JSON.parse(linha); }catch(_){ return; }
+  if(o.t==='etapa'){
+    if(o.id==='biblioteca') etapa('plano','ok');
+    if(o.id==='escrita') etapa('biblioteca','ok');
+    etapa(o.id,'ativa');
+  } else if(o.t==='joeira'){
+    var j=$('joeira'); j.hidden=false;
+    j.innerHTML=o.fontes.length
+      ? '<b>🌾 A Joeira escolheu '+o.fontes.length+' fonte'+(o.fontes.length>1?'s':'')+' na Biblioteca:</b><ul>'
+        +o.fontes.map(function(f){ return '<li>'+esc(f.autor)+(f.onde?' — '+esc(f.onde):'')+'</li>'; }).join('')+'</ul>'
+      : '<b>🌾 A Joeira não achou fonte forte na Biblioteca para este tema.</b> A pregação sai só da Escritura.';
+  } else if(o.t==='noticias' && o.itens && o.itens.length){
+    $('joeira').insertAdjacentHTML('beforeend','<div style="margin-top:8px"><b>📰 Notícias de fontes fiéis consideradas:</b><ul>'
+      +o.itens.map(function(n){ return '<li>'+esc(n.titulo)+' <small>('+esc(n.fonte)+')</small></li>'; }).join('')+'</ul></div>');
+  } else if(o.t==='txt'){
+    MD+=o.d;
+  } else if(o.t==='fim'){
+    etapa('escrita','ok');
+    $('saida').innerHTML=render(MD);
+    var m=MD.match(/^#\s+(.+)$/m); TITULO=m?m[1].trim():'Pregação';
+    $('acoes').hidden=false;
+    if(o.avisos && o.avisos.length){ $('avisos').hidden=false; $('avisos').innerHTML='<b>⚠️ Conferir antes de pregar:</b><ul>'+o.avisos.map(function(a){ return '<li>'+esc(a)+'</li>'; }).join('')+'</ul>'; }
+  } else if(o.t==='erro'){
+    $('avisos').hidden=false; $('avisos').innerHTML='<b>Não deu certo:</b> '+esc(o.msg);
+  }
+}
+function fim(){ $('criar').disabled=false; $('criar').textContent='📖 Examinar e montar a pregação'; }
+function textoPuro(){ return MD.replace(/\*\*/g,'').replace(/^#+\s*/gm,'').replace(/^>\s?/gm,''); }
+function copiar(){ navigator.clipboard.writeText(textoPuro()).then(function(){ toast('Copiado'); },function(){ toast('Não consegui copiar'); }); }
+function compartilhar(){
+  var t=textoPuro();
+  if(navigator.share){ navigator.share({title:TITULO,text:t}).catch(function(){}); return; }
+  window.open('https://wa.me/?text='+encodeURIComponent(t.slice(0,6000)),'_blank');
+}
+function lista(){ try{ return JSON.parse(ler('bereia_pregacoes')||'[]'); }catch(_){ return []; } }
+function salvar(){
+  var l=lista(); l.unshift({titulo:TITULO, data:new Date().toISOString(), md:MD});
+  try{ localStorage.setItem('bereia_pregacoes',JSON.stringify(l.slice(0,40))); toast('Salva neste aparelho'); }catch(_){ toast('Sem espaço para salvar'); }
+  mostrarSalvas();
+}
+function abrirSalva(i){
+  var p=lista()[i]; if(!p) return;
+  MD=p.md; TITULO=p.titulo; $('saida').innerHTML=render(MD); $('acoes').hidden=false; $('avisos').hidden=true; $('joeira').hidden=true; $('etapas').hidden=true;
+  $('saida').scrollIntoView({behavior:'smooth'});
+}
+function mostrarSalvas(){
+  var l=lista();
+  $('salvas').innerHTML=l.length?'<h3>💾 Pregações salvas neste aparelho</h3>'+l.map(function(p,i){
+    var d=''; try{ d=new Date(p.data).toLocaleDateString('pt-BR'); }catch(_){}
+    return '<a href="#" onclick="abrirSalva('+i+');return false">'+esc(p.titulo)+' <small>· '+esc(d)+'</small></a>';
+  }).join(''):'';
+}
+$('criar').onclick=criar;
+mostrarSalvas();
+</script>
+</body>
+</html>

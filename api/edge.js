@@ -14,8 +14,9 @@ import voz from './_lib/voz.js';
 import ebdPlano from './_lib/ebd-plano.js';
 import cursoVideo from './_lib/curso-video.js';
 import disco from './_lib/disco.js';   // MÚSICAS (27/10): Deezer + achar a faixa no YouTube
+import bereia from './_lib/bereia.js'; // BEREIA (01/11): o ajudante de pregação
 
-const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor, voz, 'ebd-plano': ebdPlano, 'curso-video': cursoVideo, disco };
+const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor, voz, 'ebd-plano': ebdPlano, 'curso-video': cursoVideo, disco, bereia };
 
 // ⚠️ O SEGUNDO ARGUMENTO NÃO É ENFEITE — MEDIDO EM PRODUÇÃO (22/09/2026).
 // A Vercel entrega um `context` com `waitUntil`: é ele que deixa a resposta sair
