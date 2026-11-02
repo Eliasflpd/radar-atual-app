@@ -57,12 +57,12 @@ async function embutirPergunta(pergunta) {
   return null;
 }
 
-// 01/11/2026: O REORDENADOR (pedido do Elias). A busca por sentido acha os candidatos comparando números; o
+// 01/11/2026: O REORDENADOR — a JOEIRA (nome dado pelo Elias em 02/11, Mt 3:12) — pedido do Elias. A busca por sentido acha os candidatos comparando números; o
 // reordenador (@cf/baai/bge-reranker-base) LÊ cada candidato ao lado da pergunta e dá nota de 0 a 1 — é ele que
 // põe o trecho certeiro na frente do "mais ou menos parecido". Medido em 01/11: ~0,7 s e uma fração de neuron.
 // O peso do autor continua valendo como desempate. Se a Cloudflare falhar ou demorar, fica a ordem de antes.
 const REORDENADOR = '@cf/baai/bge-reranker-base';
-const AUTORES_NA_PERGUNTA = /^(kittel|thayer|keil|delitzsch|edersheim|champlin|waltke|kidner|spurgeon|henry|moldenke|wood|duewel|foster|wiersbe|macdonald|hartley|mesquita|merkh|gill|wagner|cordeiro|mouser|broadman|moody|beacon|eetad|josefo|rashi|cambridge|trench|kaung|pink)$/;
+const AUTORES_NA_PERGUNTA = /^(kittel|thayer|keil|delitzsch|edersheim|champlin|waltke|kidner|spurgeon|henry|moldenke|wood|duewel|foster|wiersbe|macdonald|hartley|mesquita|merkh|gill|wagner|cordeiro|mouser|broadman|moody|beacon|eetad|josefo|rashi|midrash|rabbah|cambridge|trench|kaung|pink)$/;
 async function reordenar(pergunta, linhas) {
   const conta = process.env.CF_ACCOUNT_ID, token = process.env.CF_AI_TOKEN;
   const vistos = new Set(), cand = [];
