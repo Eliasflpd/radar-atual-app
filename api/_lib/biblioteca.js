@@ -57,6 +57,45 @@ async function embutirPergunta(pergunta) {
   return null;
 }
 
+// 01/11/2026: O REORDENADOR (pedido do Elias). A busca por sentido acha os candidatos comparando números; o
+// reordenador (@cf/baai/bge-reranker-base) LÊ cada candidato ao lado da pergunta e dá nota de 0 a 1 — é ele que
+// põe o trecho certeiro na frente do "mais ou menos parecido". Medido em 01/11: ~0,7 s e uma fração de neuron.
+// O peso do autor continua valendo como desempate. Se a Cloudflare falhar ou demorar, fica a ordem de antes.
+const REORDENADOR = '@cf/baai/bge-reranker-base';
+const AUTORES_NA_PERGUNTA = /^(kittel|thayer|keil|delitzsch|edersheim|champlin|waltke|kidner|spurgeon|henry|moldenke|wood|duewel|foster|wiersbe|macdonald|hartley|mesquita|merkh|gill|wagner|cordeiro|mouser|broadman|moody|beacon|eetad|josefo|rashi|cambridge|trench|kaung|pink)$/;
+async function reordenar(pergunta, linhas) {
+  const conta = process.env.CF_ACCOUNT_ID, token = process.env.CF_AI_TOKEN;
+  const vistos = new Set(), cand = [];
+  for (const x of linhas) {
+    const k = x.autor + '|' + x.texto.slice(0, 60);
+    if (vistos.has(k)) continue;
+    vistos.add(k); cand.push(x);
+    if (cand.length >= 30) break;
+  }
+  if (!conta || !token || cand.length < 2 || process.env.SEM_REORDENADOR) return { linhas, ok: false };
+  try {
+    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${conta}/ai/run/${REORDENADOR}`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: String(pergunta).slice(0, 500),
+        contexts: cand.map((x) => ({ text: ((x.secao ? x.secao + ' — ' : '') + x.texto).slice(0, 1500) })) }),
+      signal: AbortSignal.timeout(3500),
+    });
+    if (!r.ok) return { linhas, ok: false };
+    const notas = (((await r.json()).result || {}).response || []);
+    if (notas.length !== cand.length) return { linhas, ok: false };
+    // Autor citado na pergunta ("o que Josefo conta…") passa na frente: o reordenador lê o assunto, não quem falou.
+    // Medido em 01/11: sem isto, "o que Josefo conta sobre a morte de Herodes" trazia Cambridge citando Josefo.
+    const semAcento = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const pedidos = (semAcento(pergunta).match(/[a-z]{3,}/g) || []).filter((t) => AUTORES_NA_PERGUNTA.test(t));
+    const doAutor = (x) => pedidos.some((t) => semAcento(x.autor).includes(t));
+    const bonus = (x) => (x.peso === 2 ? 0.04 : x.peso === 3 ? 0.02 : x.peso === 4 ? -0.03 : 0) + (doAutor(x) ? 1 : 0);
+    for (const n of notas) if (cand[n.id]) cand[n.id].nota = n.score;
+    cand.sort((x, y) => (y.nota + bonus(y)) - (x.nota + bonus(x)));
+    return { linhas: cand, ok: true };
+  } catch (_) { return { linhas, ok: false }; }
+}
+
 // ─── o rótulo que o globo vai FALAR em voz alta ──────────────────────────────
 // O nome do arquivo veio do Logos e é feio: "GÊNESIS- BRUCE.K. WALTKE - CULTURA
 // CRISTÃ". Ninguém diz isso no meio de uma frase. Aqui fica só o livro.
@@ -276,7 +315,7 @@ module.exports = async (req, res) => {
          select * from porautor
          union all
          select * from perto
-       ) t order by posto desc limit $2`, [vec, quantos + 8, soAutor]);
+       ) t order by posto desc limit $2`, [vec, Math.max(quantos + 8, 20), soAutor]);
 
     // BUSCA POR PALAVRA, além da busca por sentido. Só por sentido, "ágape" trazia o verbete de Ágabo e a
     // palavra grega certa nem aparecia (medido em 18/10/2026): o léxico guarda a palavra em letras gregas e quem
@@ -315,8 +354,14 @@ module.exports = async (req, res) => {
 
     // Junta os dois bancos pela MESMA pontuação (posto = parecença + empurrão do peso), como se fosse um banco só.
     const deCada = partes.filter(Boolean);
-    const linhas = deCada.flatMap((p) => p.linhas).sort((x, y) => y.posto - x.posto);
-    const achados = deCada.flatMap((p) => p.achados).sort((x, y) => x.peso - y.peso).slice(0, 3);
+    const juntas = deCada.flatMap((p) => p.linhas).sort((x, y) => y.posto - x.posto);
+    const achados0 = deCada.flatMap((p) => p.achados).sort((x, y) => x.peso - y.peso).slice(0, 3);
+    // Os verbetes achados por palavra também passam pelo reordenador: "conta" na pergunta trazia o verbete
+    // "ellogéō — pôr na conta" do Kittel para o topo de uma pergunta sobre Herodes. Verbete com nota quase zero sai.
+    achados0.forEach((x) => { x.achado = true; });
+    const rr = await reordenar(pergunta, [...achados0, ...juntas]);
+    const linhas = rr.linhas.filter((x) => !x.achado);
+    const achados = rr.ok ? achados0.filter((x) => (x.nota || 0) >= 0.02) : achados0;
 
     // Sem deduplicar, o union all devolve o mesmo trecho duas vezes.
     // 19/10/2026: autor COM FILTRO (aprovado=false: Champlin, Witness Lee, Kaung…) entra no máximo UM por
@@ -342,7 +387,7 @@ module.exports = async (req, res) => {
     let diag;
     if (b.diag) {
       const norma = Math.sqrt(v.reduce((s, x) => s + x * x, 0));
-      diag = { versao: 'diag-2026-10-28', db: partes[0].dbn,
+      diag = { versao: 'diag-2026-11-01', reordenador: rr.ok, db: partes[0].dbn,
         banco2: bancos.length < 2 ? 'sem RADAR_DB2' : partes[1] ? partes[1].dbn : 'banco 2 não respondeu',
         lex: { termos: lex.termos, strongs: lex.strongs, achados: achados.length, erro: partes[0].erroLex },
         emb: { dims: v.length, norma: Math.round(norma * 1000) / 1000, primeiros: v.slice(0, 4).map((x) => Math.round(x * 10000) / 10000) } };
