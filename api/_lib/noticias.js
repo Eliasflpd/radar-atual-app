@@ -1,6 +1,6 @@
 // NOTÍCIAS FIÉIS — manchetes do dia, só de fontes sérias (pedido do Elias, 02/11/2026: "notícias de última hora,
 // fiéis e verdadeiras… esse app é para cristãos com fome e sede da Palavra; nunca algo raso").
-// URL pública: /api/noticias (rewrite -> /api/dados?fn=noticias). Mora no dados.js porque o plano Hobby não comporta
+// URL pública: /api/noticias-fieis (rewrite -> /api/dados?fn=noticias-fieis; /api/noticias é a função das Notícias de Israel). Mora no dados.js porque o plano Hobby não comporta
 // função nova.
 //
 // Lê os feeds RSS PÚBLICOS de cada veículo (conferidos um a um em 02/11/2026), junta e ordena por data. Devolve só

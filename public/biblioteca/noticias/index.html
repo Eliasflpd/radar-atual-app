@@ -76,7 +76,7 @@
       b.onclick=function(){ ATUAL=b.getAttribute('data-id'); botoes(); desenhar(); window.scrollTo(0,0); };
     });
   }
-  fetch('/api/noticias').then(function(r){return r.json();}).then(function(d){
+  fetch('/api/noticias-fieis').then(function(r){return r.json();}).then(function(d){
     if(!d||!d.ok||!d.secoes){ lista.innerHTML='<div class="vazio">As notícias não responderam agora. Tente de novo daqui a pouco.</div>'; return; }
     DADOS=d; botoes(); desenhar();
     if(d.atualizado) document.getElementById('rodape').insertAdjacentHTML('afterbegin','Atualizado '+esc(quando(d.atualizado))+'<br>');

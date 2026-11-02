@@ -23,7 +23,7 @@
     { "source": "/api/curso-video", "destination": "/api/edge?fn=curso-video" },
     { "source": "/api/disco",    "destination": "/api/edge?fn=disco" },
     { "source": "/api/ws-ouvir", "destination": "/api/dados?fn=ws-ouvir" },
-    { "source": "/api/noticias", "destination": "/api/dados?fn=noticias" },
+    { "source": "/api/noticias-fieis", "destination": "/api/dados?fn=noticias-fieis" },
     { "source": "/ouvir",        "destination": "/ouvir.html" }
   ],
   "headers": [
