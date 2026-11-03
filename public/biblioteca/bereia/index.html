@@ -35,6 +35,10 @@
   .joeira b{color:#7a5a14}
   .joeira ul{margin:6px 0 0;padding-left:18px;font-size:.9rem}
   .joeira li{margin:2px 0}
+  .camadas{margin:12px 0 0;background:#f2f8f8;border:1px solid #bfdcdc;border-radius:14px;padding:4px 14px 10px}
+  .camadas h2{font-family:Georgia,serif;color:var(--teal);font-size:1.12rem;margin:10px 0 4px}
+  .camadas h3,#saida h3{font-family:Georgia,serif;color:var(--navy);font-size:1rem;margin:12px 0 4px}
+  .camadas ul{margin:0;padding-left:18px;font-size:.95rem} .camadas li{margin:0 0 8px}
   .avisos{margin:16px 0 0;background:#fff4f2;border:1px solid #f1c9c2;border-radius:14px;padding:12px 14px;font-size:.92rem}
   .avisos b{color:#a3341f}
   #saida{margin-top:22px}
@@ -87,9 +91,11 @@
   <ul class="etapas" id="etapas" hidden>
     <li id="e-plano"><span class="ic">🧭</span><span>Planejar a pesquisa</span></li>
     <li id="e-biblioteca"><span class="ic">📚</span><span>Bereia: examinar a Biblioteca · 🌾 Joeira: separar o trigo da palha</span></li>
+    <li id="e-camadas"><span class="ic">🔎</span><span>Cavar as 4 camadas: o original, os ecos do AT, a estrutura do livro, o contexto</span></li>
     <li id="e-escrita"><span class="ic">✍️</span><span>Escrever a pregação</span></li>
   </ul>
   <div class="joeira" id="joeira" hidden></div>
+  <div class="camadas" id="camadas" hidden></div>
   <div id="saida"></div>
   <div class="avisos" id="avisos" hidden></div>
   <div class="acoes" id="acoes" hidden>
@@ -109,7 +115,9 @@ var $=function(id){return document.getElementById(id);};
 function ler(k){ try{ return localStorage.getItem(k)||''; }catch(_){ return ''; } }
 function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function toast(t){ var e=$('toast'); e.textContent=t; e.classList.add('on'); setTimeout(function(){ e.classList.remove('on'); },2200); }
-var MD='', TITULO='';
+var MD='', TITULO='', CAM='';   // CAM = as descobertas das 4 camadas (vão junto ao copiar e salvar)
+var ETAPAS=['plano','biblioteca','camadas','escrita'];
+function completo(){ return MD+(CAM&&MD.indexOf('Descobertas — as 4 camadas')<0?'\n\n'+CAM:''); }
 
 function inline(s){
   return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<i>$2</i>');
@@ -122,6 +130,7 @@ function render(md){
     if(lista){ out.push('</ul>'); lista=false; }
     if(!t) return;
     if(/^#\s/.test(t)){ out.push('<h1 class="t">'+inline(t.slice(2))+'</h1>'); return; }
+    if(/^###\s/.test(t)){ out.push('<h3>'+inline(t.slice(4))+'</h3>'); return; }
     if(/^##\s/.test(t)){ out.push('<h2>'+inline(t.slice(3))+'</h2>'); return; }
     if(/^>\s?/.test(t)){ out.push('<blockquote>'+inline(t.replace(/^>\s?/,''))+'</blockquote>'); return; }
     if(/^\*[^*].*\*$/.test(t) && out.length<=2){ out.push('<div class="refs">'+inline(t.replace(/^\*|\*$/g,''))+'</div>'); return; }
@@ -131,7 +140,7 @@ function render(md){
   return out.join('');
 }
 function etapa(id, estado){
-  ['plano','biblioteca','escrita'].forEach(function(k){
+  ETAPAS.forEach(function(k){
     var li=$('e-'+k); if(k===id){ li.className=estado||'ativa'; }
   });
 }
@@ -156,9 +165,9 @@ function criar(){
   var corpo={ texto:$('texto').value.trim(), tema:$('tema').value.trim(), ideia:$('ideia').value.trim(), tipo:$('tipo').value,
     cracha:ler('radar_chave'), token:ler('lp_token') };
   if(!corpo.texto && !corpo.tema){ toast('Escreva o texto bíblico ou o tema'); return; }
-  MD=''; TITULO='';
-  $('saida').innerHTML=''; $('avisos').hidden=true; $('acoes').hidden=true; $('joeira').hidden=true;
-  $('etapas').hidden=false; ['plano','biblioteca','escrita'].forEach(function(k){ $('e-'+k).className=''; });
+  MD=''; TITULO=''; CAM='';
+  $('saida').innerHTML=''; $('avisos').hidden=true; $('acoes').hidden=true; $('joeira').hidden=true; $('camadas').hidden=true;
+  $('etapas').hidden=false; ETAPAS.forEach(function(k){ $('e-'+k).className=''; });
   $('criar').disabled=true; $('criar').textContent='Examinando…';
   fetch('/api/bereia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo),cache:'no-store'})
     .then(function(r){
@@ -182,8 +191,13 @@ function evento(linha){
   var o; try{ o=JSON.parse(linha); }catch(_){ return; }
   if(o.t==='etapa'){
     if(o.id==='biblioteca') etapa('plano','ok');
-    if(o.id==='escrita') etapa('biblioteca','ok');
+    if(o.id==='camadas') etapa('biblioteca','ok');
+    if(o.id==='escrita'){ etapa('biblioteca','ok'); etapa('camadas','ok'); }
     etapa(o.id,'ativa');
+  } else if(o.t==='camadas'){
+    CAM=o.md||'';
+    var c=$('camadas'); c.hidden=false;
+    c.innerHTML=CAM ? render(CAM) : '<h2>🔎 As 4 camadas</h2><p>Não achei descoberta sólida que passasse na conferência. A pregação sai da Escritura e da Biblioteca.</p>';
   } else if(o.t==='joeira'){
     var j=$('joeira'); j.hidden=false;
     j.innerHTML=o.fontes.length
@@ -206,7 +220,7 @@ function evento(linha){
   }
 }
 function fim(){ $('criar').disabled=false; $('criar').textContent='📖 Examinar e montar a pregação'; }
-function textoPuro(){ return MD.replace(/\*\*/g,'').replace(/^#+\s*/gm,'').replace(/^>\s?/gm,''); }
+function textoPuro(){ return completo().replace(/\*\*/g,'').replace(/^#+\s*/gm,'').replace(/^>\s?/gm,''); }
 function copiar(){ navigator.clipboard.writeText(textoPuro()).then(function(){ toast('Copiado'); },function(){ toast('Não consegui copiar'); }); }
 function compartilhar(){
   var t=textoPuro();
@@ -215,13 +229,13 @@ function compartilhar(){
 }
 function lista(){ try{ return JSON.parse(ler('bereia_pregacoes')||'[]'); }catch(_){ return []; } }
 function salvar(){
-  var l=lista(); l.unshift({titulo:TITULO, data:new Date().toISOString(), md:MD});
+  var l=lista(); l.unshift({titulo:TITULO, data:new Date().toISOString(), md:completo()});
   try{ localStorage.setItem('bereia_pregacoes',JSON.stringify(l.slice(0,40))); toast('Salva neste aparelho'); }catch(_){ toast('Sem espaço para salvar'); }
   mostrarSalvas();
 }
 function abrirSalva(i){
   var p=lista()[i]; if(!p) return;
-  MD=p.md; TITULO=p.titulo; $('saida').innerHTML=render(MD); $('acoes').hidden=false; $('avisos').hidden=true; $('joeira').hidden=true; $('etapas').hidden=true;
+  MD=p.md; CAM=''; TITULO=p.titulo; $('saida').innerHTML=render(MD); $('acoes').hidden=false; $('avisos').hidden=true; $('joeira').hidden=true; $('camadas').hidden=true; $('etapas').hidden=true;
   $('saida').scrollIntoView({behavior:'smooth'});
 }
 function mostrarSalvas(){

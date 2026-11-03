@@ -33,14 +33,17 @@ async function liberado(origem, cracha, token) {
 // ── 1. O PLANO ───────────────────────────────────────────────────────────────
 const SYS_PLANO = `Você planeja a pesquisa de uma pregação evangélica pentecostal (Assembleia de Deus).
 Devolva SÓ um JSON, sem nada antes ou depois:
-{"titulo":"título forte, curto, sem clichê","refs":["Gn 40:14","Sl 105:17-19"],"buscas":["...","...","..."],"noticia":"palavras-chave curtas ou vazio"}
+{"titulo":"título forte, curto, sem clichê","refs":["Gn 40:14","Sl 105:17-19"],"buscas":["...","...","..."],"camadas":{"original":"...","ecos":"...","estrutura":"...","contexto":"..."},"noticia":"palavras-chave curtas ou vazio"}
 - refs: 4 a 10 referências bíblicas REAIS e certeiras para o tema (formato "Livro cap:vers" ou "Livro cap:v1-v2", siglas como Gn, Ex, 1Sm, Sl, Pv, Is, Mt, Jo, Rm, Hb, Ap).
 - buscas: 3 ou 4 perguntas em português natural para uma biblioteca de comentários, dicionários, história e aulas. Cada uma sobre um ângulo diferente: o texto em si, palavra no original, contexto histórico, aplicação. NÃO ponha nome de autor nem de livro de comentário na pergunta (só o assunto e a referência bíblica).
+- camadas: uma pergunta para cada camada de descoberta do texto principal, no mesmo estilo das buscas (sem nome de autor):
+  original = a palavra-chave grega ou hebraica do texto e o seu sentido; ecos = onde o Antigo Testamento já falou disso (profecia, tipo, alusão);
+  estrutura = como o texto se liga ao começo, ao meio e ao fim do próprio livro; contexto = costume, lei, lugar ou história da época que o leitor de hoje não sabe.
 - noticia: palavras-chave de um assunto atual que poderia ilustrar o tema, em português E em inglês (ex.: "perseguição cristãos persecution christians", "Israel Jerusalém Jerusalem"), ou "" se não couber.`;
 
 function planoReserva(pedido) {
   const refs = acharReferencias(pedido).slice(0, 8).map((r) => r.bruto);
-  return { titulo: '', refs, buscas: [pedido.slice(0, 300)], noticia: '' };
+  return { titulo: '', refs, buscas: [pedido.slice(0, 300)], noticia: '', camadas: {} };
 }
 async function planejar(pedido) {
   try {
@@ -51,6 +54,7 @@ async function planejar(pedido) {
       refs: (Array.isArray(j.refs) ? j.refs : []).map(String).slice(0, 12),
       buscas: (Array.isArray(j.buscas) ? j.buscas : []).map(String).filter(Boolean).slice(0, 4),
       noticia: String(j.noticia || '').slice(0, 80),
+      camadas: Object.fromEntries(CAMADAS.map((c) => [c.id, String((j.camadas && j.camadas[c.id]) || '').slice(0, 300)]).filter((x) => x[1])),
     };
     if (!p.buscas.length) p.buscas = [pedido.slice(0, 300)];
     return p;
@@ -58,12 +62,12 @@ async function planejar(pedido) {
 }
 
 // ── 2. A BIBLIOTECA (com a Joeira lá dentro) ─────────────────────────────────
-async function pesquisar(origem, q) {
+async function pesquisar(origem, q, n = 5) {
   const tk = process.env.RADAR_ADMIN_TOKEN || '';
   if (!tk) return [];
   try {
     const r = await fetch(origem + '/api/dados?fn=biblioteca', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q: String(q).slice(0, 400), n: 5, token: tk }), signal: AbortSignal.timeout(15000) });
+      body: JSON.stringify({ q: String(q).slice(0, 400), n, token: tk }), signal: AbortSignal.timeout(15000) });
     const d = await r.json();
     return ((d && d.ok && d.itens) || []).filter((x) => x && x.texto);
   } catch (_) { return []; }
@@ -100,6 +104,90 @@ async function noticias(origem, assunto) {
   } catch (_) { return []; }
 }
 
+// ── 3b. AS 4 CAMADAS (03/11/2026, pedido do Elias: "faz as camadas na Bereia") ──────────────────────────────
+// O "nossa, isso eu não sabia" nasce de 4 perguntas ao texto: o que a tradução esconde, onde o AT já falou disso,
+// como o autor amarrou o livro e o que o leitor da época sabia. Cada camada ganha a sua pesquisa na Biblioteca;
+// a IA cava as descobertas e o SERVIDOR confere: referência que não existe na Almeida cai, e fonte que não veio da
+// Biblioteca fica marcada "conferir" — descoberta inventada é pior que nenhuma.
+const CAMADAS = [
+  { id: 'original', nome: 'O que a tradução esconde (grego e hebraico)' },
+  { id: 'ecos', nome: 'Ecos do Antigo Testamento' },
+  { id: 'estrutura', nome: 'Como o autor amarrou o livro' },
+  { id: 'contexto', nome: 'O que o leitor da época sabia' },
+];
+async function bibliotecaDasCamadas(origem, camadas, jaTem) {
+  const listas = await Promise.all(CAMADAS.map((c) => camadas[c.id] ? pesquisar(origem, camadas[c.id], 4) : []));
+  const vistos = new Set(jaTem.map((x) => x.autor + '|' + x.texto.slice(0, 60))), out = [];
+  listas.forEach((l, i) => l.slice(0, 3).forEach((x) => {
+    const k = x.autor + '|' + x.texto.slice(0, 60);
+    if (!vistos.has(k)) { vistos.add(k); out.push({ ...x, camada: CAMADAS[i].id }); }
+  }));
+  return out;
+}
+const SYS_CAMADAS = `Você é exegeta evangélico (linha pentecostal clássica, Assembleia de Deus) e cava DESCOBERTAS num texto bíblico
+para um pastor que prega a cristãos com fome da Palavra. Descoberta é o que um leitor comum da Bíblia NÃO percebe sozinho
+e que, quando ouve, pensa "nossa, isso eu não sabia". Resumo, aplicação genérica ou óbvio NÃO é descoberta.
+
+Devolva SÓ um JSON, sem nada antes ou depois:
+{"original":[ACHADO],"ecos":[ACHADO],"estrutura":[ACHADO],"contexto":[ACHADO]}
+ACHADO = {"titulo":"a descoberta numa frase curta e forte","explica":"2 a 4 frases: o que é, a prova e por que importa para a pregação","refs":["Mt 28:19","Dn 7:14"],"fonte":"..."}
+
+AS CAMADAS:
+- original: a palavra grega ou hebraica do PRÓPRIO texto (transliterada, com o sentido) e o que a tradução não mostra: tempo verbal, repetição, jogo de palavras, termo técnico.
+- ecos: onde o Antigo Testamento já falou disso — profecia, tipo, mesma expressão, mesma cena. Dê as duas pontas (o texto e o eco).
+- estrutura: como o texto se liga ao começo, ao meio e ao fim do próprio livro (moldura, repetição, contraste, palavra que volta).
+- contexto: costume, lei, lugar, data ou fato histórico da época que muda o sentido para quem ouve hoje.
+
+REGRAS DE HONESTIDADE (obrigatórias):
+1. De 1 a 3 achados por camada, só os fortes. Se uma camada não tiver nada sólido, devolva [] — vazio é melhor que raso.
+2. "fonte": o NOME do autor das FONTES DA BIBLIOTECA de onde tirou (ex.: "Kittel (TDNT)", "Alfred Edersheim", "Flávio Josefo"); ou "texto bíblico" quando a descoberta sai da comparação dos próprios versículos; ou "conhecimento geral" quando não veio de nenhum dos dois.
+3. Só cite palavra grega/hebraica se tiver CERTEZA de que ela está naquele versículo. Nunca invente referência.
+4. PROIBIDAS as falácias de púlpito: "dynamis = dinamite"; ágape × philéo como regra rígida (Jo 21); "ekklēsia = os chamados para fora" como sentido decisivo; etimologia de raiz como se fosse o sentido; "o 'ide' de Mt 28:19 não é ordem" (o particípio poreuthentes acompanha o imperativo e leva a força dele); número com "significado oculto" sem base no texto.
+5. Tradição judaica (Midrash, Rashi, Talmude) é dita como tradição, nunca como Bíblia.
+6. Português do Brasil, frases claras, sem academiquês.`;
+
+function refsConferidas(biblia, refs) {
+  const boas = [], ruins = [];
+  for (const bruto of (Array.isArray(refs) ? refs : []).map(String).slice(0, 4)) {
+    const r = acharReferencias(' ' + bruto)[0];
+    if (r && biblia && textoDoVersiculo(biblia, r)) boas.push(`${r.abbrev ? (LIVRO_NOME[r.abbrev] || r.abbrev) : bruto} ${r.cap}:${r.v1}${r.v2 && r.v2 !== r.v1 ? '-' + r.v2 : ''}`);
+    else ruins.push(bruto.trim());
+  }
+  return { boas, ruins };
+}
+async function descobrir(pedido, versos, fontes, biblia) {
+  const p = [`PEDIDO DO PASTOR:\n${pedido}`];
+  if (versos.length) p.push('TEXTOS (Almeida):\n' + versos.map((v) => `${v.ref}: ${v.texto}`).join('\n'));
+  if (fontes.length) p.push('FONTES DA BIBLIOTECA (cite pelo nome do autor):\n'
+    + fontes.map((x) => `■ ${x.autor}${x.secao ? ' (' + x.secao + ')' : ''} [${selo(x)}]\n${String(x.texto).slice(0, 900)}`).join('\n\n'));
+  let j;
+  try {
+    const r = await iaTexto({ sys: SYS_CAMADAS, user: p.join('\n\n'), temperature: 0.4, max_tokens: 9000, tag: 'bereia-camadas',
+      premium: true, prazoPremium: 70000 });
+    j = JSON.parse(String(r.texto || '').replace(/^[\s\S]*?(\{[\s\S]*\})[\s\S]*$/, '$1'));
+  } catch (_) { return { achados: [], md: '' }; }
+  const autores = fontes.map((x) => String(x.autor || '').toLowerCase()).filter(Boolean);
+  const achados = [];
+  for (const c of CAMADAS) {
+    for (const a of (Array.isArray(j[c.id]) ? j[c.id] : []).slice(0, 3)) {
+      const titulo = String((a && a.titulo) || '').trim().slice(0, 200), explica = String((a && a.explica) || '').trim().slice(0, 900);
+      if (!titulo || !explica) continue;
+      const { boas, ruins } = refsConferidas(biblia, a.refs);
+      if (ruins.length && !boas.length) continue;                       // só referência inventada: descarta
+      if ((c.id === 'ecos' || c.id === 'estrutura') && boas.length < 2) continue;   // eco/moldura precisa das duas pontas
+      let fonte = String(a.fonte || '').trim().slice(0, 80);
+      const daBiblioteca = fonte && autores.some((au) => au.includes(fonte.toLowerCase()) || fonte.toLowerCase().includes(au.split(' (')[0]));
+      if (!daBiblioteca && !/^texto b[ií]blico$/i.test(fonte)) fonte = 'conferir';
+      achados.push({ camada: c.id, titulo, explica, refs: boas, fonte });
+    }
+  }
+  const md = achados.length ? ['## 🔎 Descobertas — as 4 camadas', ...CAMADAS.flatMap((c) => {
+    const l = achados.filter((a) => a.camada === c.id);
+    return l.length ? ['', `### ${c.nome}`, ...l.map((a) => `- **${a.titulo}** ${a.explica}${a.refs.length ? ' (' + a.refs.join('; ') + ')' : ''} · *${a.fonte === 'conferir' ? '⚠️ conferir antes de pregar' : 'fonte: ' + a.fonte}*`)] : [];
+  })].join('\n') : '';
+  return { achados, md };
+}
+
 // ── 4. A PREGAÇÃO ─────────────────────────────────────────────────────────────
 const SYS_PREGACAO = `Você é o BEREIA, o ajudante de pregação do pastor Elias (Assembleia de Deus, Cong. Monte Carmelo).
 Escreve uma pregação COMPLETA, em prosa que prende, para cristãos com fome e sede da Palavra — nada raso, nada vazio, nada de autoajuda.
@@ -111,6 +199,7 @@ REGRAS DO PASTOR (obrigatórias):
 4. PROIBIDO pergunta binária batida ("em qual das duas você está?", "você é X ou Y?"). Afirme em vez de perguntar.
 5. Nunca use um versículo que puxe contra a tese.
 6. Doutrina pentecostal clássica, sem teologia da prosperidade.
+7. Se vierem DESCOBERTAS DAS 4 CAMADAS, as 3 a 5 mais fortes entram no CORPO da pregação (não só nas notas), cada uma dita de onde vem ("no grego…", "isso ecoa Daniel 7…", "Edersheim lembra que…"). Descoberta marcada "conferir" só entra se você tiver certeza, e vai para "Fatos para conferir".
 
 A BÍBLIA: você NUNCA digita o texto de um versículo. Escreva a referência entre chaves duplas — {{Gn 40:14}} ou {{Sl 105:17-19}} — e o servidor põe o texto da Almeida. Use as referências do PLANO e outras que conheça com certeza. Pode citar sem chaves só a referência entre parênteses, ex.: (Gn 37:2).
 
@@ -132,8 +221,10 @@ parágrafo de apelo (salvação, quebrantamento, compromisso)
 - **Fatos para conferir:** cada fato que não é Bíblia nem biblioteca
 - **Tempo:** estimativa`;
 
-function montarPedido(pedido, plano, fontes, notas, versos) {
+function montarPedido(pedido, plano, fontes, notas, versos, achados = []) {
   const p = [`PEDIDO DO PASTOR:\n${pedido}`];
+  if (achados.length) p.push('DESCOBERTAS DAS 4 CAMADAS (já conferidas pelo servidor; use as mais fortes no corpo):\n'
+    + achados.map((a) => `- [${a.camada}] ${a.titulo} — ${a.explica} (${a.refs.join('; ')}) · fonte: ${a.fonte}`).join('\n'));
   if (plano.titulo) p.push(`TÍTULO SUGERIDO: ${plano.titulo}`);
   if (versos.length) p.push('VERSÍCULOS DO PLANO (texto da Almeida, só para você entender; no texto use {{ref}}):\n'
     + versos.map((v) => `${v.ref}: ${v.texto}`).join('\n'));
@@ -197,11 +288,17 @@ export default async function handler(req) {
 
       await manda({ t: 'etapa', id: 'biblioteca', msg: 'Bereia examinando a Biblioteca · Joeira separando o trigo da palha…' });
       const [fontes, notas] = await Promise.all([bibliotecaToda(origem, plano.buscas), noticias(origem, plano.noticia)]);
-      await manda({ t: 'joeira', fontes: fontes.map((x) => ({ autor: x.autor, onde: x.secao || x.livro || '', obra: x.obra || '' })) });
+      const fontesCam = await bibliotecaDasCamadas(origem, plano.camadas || {}, fontes);
+      const todas = fontes.concat(fontesCam);
+      await manda({ t: 'joeira', fontes: todas.map((x) => ({ autor: x.autor, onde: x.secao || x.livro || '', obra: x.obra || '' })) });
       if (plano.noticia) await manda({ t: 'noticias', itens: notas.map((n) => ({ titulo: n.titulo, fonte: n.fonte || n.veiculo || '', data: n.data || '', link: n.link || '' })) });
 
+      await manda({ t: 'etapa', id: 'camadas', msg: 'Cavando as 4 camadas: original, ecos do AT, estrutura, contexto…' });
+      const cav = await descobrir(pedido, versos, todas, biblia);
+      await manda({ t: 'camadas', md: cav.md, n: cav.achados.length, conferir: cav.achados.filter((a) => a.fonte === 'conferir').length });
+
       await manda({ t: 'etapa', id: 'escrita', msg: 'Escrevendo a pregação…' });
-      const r = await iaStreamTexto({ sys: SYS_PREGACAO, user: montarPedido(pedido, plano, fontes, notas, versos),
+      const r = await iaStreamTexto({ sys: SYS_PREGACAO, user: montarPedido(pedido, plano, todas, notas, versos, cav.achados),
         temperature: 0.8, max_tokens: 14000, tag: 'bereia', premium: true });
       await manda({ t: 'ia', modelo: r.modelo || '', provedor: r.provedorNome || r.provedor || '' });
       const reader = r.stream.getReader(), dec = new TextDecoder();
