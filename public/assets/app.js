@@ -3490,6 +3490,8 @@ function renderManuais(){
   // Oficina (03/11/2026): o versículo com o texto, as referências cruzadas (OpenBible, CC-BY) e o que os seus autores dizem.
   // A imagem é provisória (a da Biblioteca do obreiro); a capa própria fica pendente.
   itens.push({onclick:"location.href='/biblioteca/oficina/'", titulo:'Oficina', autor:'Versículo, cruzadas e autores', img:IMG+'livros.jpg', senha:true, novo:(Date.now()-new Date('2026-11-03T12:00:00').getTime())<14*864e5});
+  // Fontes de pesquisa (03/11/2026): o catálogo das obras escondidas que alimentam a pesquisa, com as capas.
+  itens.push({onclick:"location.href='/biblioteca/fontes/'", titulo:'Fontes de pesquisa', autor:'As obras por trás da pesquisa', img:IMG+'livros.jpg', senha:true, novo:(Date.now()-new Date('2026-11-03T12:00:00').getTime())<14*864e5});
   // Dicas de IA (15/10/2026): garimpadas de vídeos e conferidas. Selo NOVO por 14 dias.
   itens.push({onclick:"location.href='/biblioteca/dicas-ia/'", titulo:'Dicas de IA', autor:'Ferramentas e truques', img:IMG+'dicas-de-ia.jpg', novo:(Date.now()-new Date('2026-10-15T12:00:00').getTime())<14*864e5});
   // Notícias (02/11/2026): manchetes do dia só de fontes sérias (Igreja no mundo, Igreja perseguida, Mundo e Israel).

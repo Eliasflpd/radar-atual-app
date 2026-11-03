@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fontes de pesquisa — RADAR</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--linha:#e4e7ec;--fundo:#f6f4ee}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:960px;background:var(--branco);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;
+    line-height:1.5;padding:14px 16px calc(56px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+  .voltar{background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-top:12px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:2rem;font-weight:800;margin:2px 0 2px}
+  .sub{text-align:center;color:#6b7280;font-size:.98rem;margin:0 0 14px}
+  .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 14px}
+  .resumo{text-align:center;color:#4b5563;font-size:.9rem;margin:0 0 12px}
+  .filtros{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 0 10px}
+  .filtros button{font:inherit;font-size:.85rem;font-weight:700;border:1.5px solid var(--linha);background:#fff;color:var(--navy);border-radius:999px;padding:5px 12px;cursor:pointer}
+  .filtros button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .procura{width:100%;font:inherit;font-size:1rem;padding:10px 12px;border:1.5px solid var(--linha);border-radius:12px;margin:0 0 14px}
+  .procura:focus{outline:none;border-color:var(--dourado)}
+  .grupo{font-family:Georgia,serif;color:var(--navy);font-size:1.15rem;font-weight:800;margin:18px 0 10px;border-bottom:2px solid #ece4d0;padding-bottom:4px}
+  .grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .card{background:var(--fundo);border:1px solid #ece4d0;border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+  .capa{aspect-ratio:2/3;background:#e9e3d3;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .capa img{width:100%;height:100%;object-fit:cover;display:block}
+  .capa .falta{color:#8a7a55;font-size:.78rem;text-align:center;padding:10px;line-height:1.35}
+  .capa .falta b{display:block;font-size:2rem;margin-bottom:4px}
+  .capa .mais{position:absolute;right:6px;bottom:6px;background:rgba(15,61,92,.85);color:#fff;font-size:.72rem;font-weight:800;border-radius:999px;padding:1px 8px}
+  .info{padding:8px 10px 10px}
+  .info .t{font-weight:800;color:var(--navy);font-size:.88rem;line-height:1.3}
+  .info .a{color:#4b5563;font-size:.8rem;margin-top:2px}
+  .info .n{color:#8a6a1e;font-size:.76rem;margin-top:4px;font-weight:700}
+  .tag{display:inline-block;font-size:.7rem;font-weight:800;border-radius:999px;padding:1px 8px;margin-top:5px}
+  .tag.chegando{background:#fff4dc;color:#8a5a00}
+  .tag.antiga{background:#eef0f3;color:#4b5563}
+  .tag.tradicao{background:#fff4f2;color:#a3341f}
+  .fundo-modal{position:fixed;inset:0;background:rgba(15,23,42,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+  .fundo-modal.on{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:16px}
+  .modal .capas{display:flex;gap:10px;overflow-x:auto;clear:both;padding-top:6px}
+  .modal .capas img{height:300px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+  .modal h2{font-family:Georgia,serif;color:var(--navy);font-size:1.25rem;margin:12px 0 2px}
+  .modal .a{color:#4b5563}
+  .modal .linha{font-size:.92rem;margin-top:8px}
+  .modal .fechar{float:right;background:none;border:none;font-size:1.6rem;cursor:pointer;color:#6b7280;line-height:1}
+  .pin{background:#fff;border:1px solid var(--linha);border-radius:16px;padding:22px 18px;text-align:center;max-width:360px;margin:14px auto}
+  .pin input{width:100%;font-size:1.6rem;letter-spacing:.5em;text-align:center;padding:10px;border:1.5px solid var(--linha);border-radius:12px;margin:8px 0 10px}
+  .pin button{width:100%;background:var(--dourado);color:#1d1606;border:none;border-radius:12px;padding:13px;font-weight:800;font-size:1rem;cursor:pointer}
+  .aviso{margin:14px 0 0;background:#fff4f2;border:1px solid #f1c9c2;border-radius:14px;padding:12px 14px;font-size:.92rem}
+  .vazio{color:#6b7280;font-size:.95rem;text-align:center}
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f3d5c;color:#fff;padding:10px 16px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+<button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
+<div class="selo">✦ Biblioteca escondida ✦</div>
+<h1>Fontes de pesquisa</h1>
+<div class="sub">As obras que a Bereia, a Oficina e a busca consultam por trás — com a capa de cada uma</div>
+<div class="divisor"></div>
+<div id="saida"><div class="vazio">Abrindo o catálogo…</div></div>
+<div class="fundo-modal" id="fundo" onclick="if(event.target===this)fechar()"><div class="modal" id="modal"></div></div>
+
+<script>
+// FONTES DE PESQUISA (03/11/2026). O servidor (/api/fontes, api/_lib/fontes.js) só responde com a porta dos livros
+// particulares (crachá do aparelho ou senha). Vem a ficha de cada obra e, uma a uma, as capas (guardadas no banco,
+// nunca no repositório). Nenhum texto de livro passa por aqui.
+var $=function(id){return document.getElementById(id);};
+function ler(k){ try{ return localStorage.getItem(k)||''; }catch(_){ return ''; } }
+function gravar(k,v){ try{ localStorage.setItem(k,v); }catch(_){} }
+function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(t){ var e=$('toast'); e.textContent=t; e.classList.add('on'); setTimeout(function(){ e.classList.remove('on'); },2200); }
+function porta(){ return { cracha:ler('radar_chave'), token:ler('lp_token') }; }
+function pedir(corpo){
+  var b=porta(); for(var k in corpo) b[k]=corpo[k];
+  return fetch('/api/fontes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b),cache:'no-store'})
+    .then(function(x){ return x.json(); });
+}
+var FONTES=[], FILTRO='todas', CAPAS={};
+var ROTULO={chegando:'a caminho', antiga:'versão antiga', tradicao:'tradição judaica'};
+
+function abrir(){
+  pedir({acao:'lista'}).then(function(d){
+    if(!d.ok && d.motivo==='particular'){ pedirPin(); return; }
+    if(!d.ok){ $('saida').innerHTML='<div class="aviso"><b>Não deu certo:</b> '+esc(d.err||'tente de novo')+'</div>'; return; }
+    FONTES=d.fontes||[]; desenhar();
+  }).catch(function(){ $('saida').innerHTML='<div class="aviso"><b>Sem conexão.</b> Confira a internet e tente de novo.</div>'; });
+}
+function pedirPin(){
+  $('saida').innerHTML='<div class="vazio">Esta página é da sua biblioteca particular. Digite a sua senha para abrir.</div>'
+    +'<div class="pin"><div style="font-size:2rem">🔒</div><input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"><button id="entrar" onclick="entrarPin()">Abrir</button></div>';
+}
+function entrarPin(){
+  var v=($('pin')||{value:''}).value.trim(); if(!v) return;
+  $('entrar').disabled=true; $('entrar').textContent='Conferindo…';
+  fetch('/api/livro-particular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:v}),cache:'no-store'})
+    .then(function(r){ return r.json(); }).then(function(d){
+      if(d.ok&&d.token){ gravar('lp_token',d.token); abrir(); return; }
+      $('entrar').disabled=false; $('entrar').textContent='Abrir';
+      toast(d.motivo==='travado'?'Muitas tentativas. Espere uma hora.':'Senha errada. Tente de novo.');
+    }).catch(function(){ $('entrar').disabled=false; $('entrar').textContent='Abrir'; toast('Não consegui conferir agora.'); });
+}
+function num(n){ return Number(n||0).toLocaleString('pt-BR'); }
+function desenhar(){
+  var total=FONTES.length, comCapa=FONTES.filter(function(f){return f.capas>0;}).length;
+  var trechos=FONTES.reduce(function(s,f){ return s+(f.trechos||0); },0);
+  var grupos=[]; FONTES.forEach(function(f){ if(grupos.indexOf(f.grupo)<0) grupos.push(f.grupo); });
+  var h='<div class="resumo">'+total+' obras · '+num(trechos)+' trechos na pesquisa · '+comCapa+' com capa</div>';
+  h+='<div class="filtros">'+[['todas','Todas'],['sem','Sem capa'],['com','Com capa']].map(function(x){
+    return '<button class="'+(FILTRO===x[0]?'on':'')+'" onclick="FILTRO=\''+x[0]+'\';desenhar()">'+x[1]+'</button>'; }).join('')+'</div>';
+  h+='<input class="procura" id="procura" placeholder="Procurar por autor ou obra…" oninput="desenharGrade()" autocomplete="off">';
+  h+='<div id="grade"></div>';
+  var q=($('procura')||{value:''}).value;
+  $('saida').innerHTML=h; $('procura').value=q; desenharGrade();
+}
+function desenharGrade(){
+  var q=$('procura').value.trim().toLowerCase();
+  var lista=FONTES.filter(function(f){
+    if(FILTRO==='sem' && f.capas>0) return false;
+    if(FILTRO==='com' && !f.capas) return false;
+    return !q || (f.titulo+' '+f.autor).toLowerCase().indexOf(q)>=0;
+  });
+  if(!lista.length){ $('grade').innerHTML='<div class="vazio">Nada encontrado.</div>'; return; }
+  var grupos=[]; lista.forEach(function(f){ if(grupos.indexOf(f.grupo)<0) grupos.push(f.grupo); });
+  $('grade').innerHTML=grupos.map(function(g){
+    return '<div class="grupo">'+esc(g)+'</div><div class="grade">'+lista.filter(function(f){return f.grupo===g;}).map(cartao).join('')+'</div>';
+  }).join('');
+  lista.forEach(function(f){ if(f.capas) carregarCapa(f.fonte,1); });
+}
+function cartao(f){
+  var capa=f.capas
+    ? '<img data-capa="'+esc(f.fonte)+'-1" alt="">'+(f.capas>1?'<span class="mais">+'+(f.capas-1)+'</span>':'')
+    : '<div class="falta"><b>📕</b>sem capa ainda</div>';
+  return '<div class="card" onclick="detalhe(\''+esc(f.fonte)+'\')"><div class="capa">'+capa+'</div>'
+    +'<div class="info"><div class="t">'+esc(f.titulo)+'</div><div class="a">'+esc(f.autor)+'</div>'
+    +(f.trechos?'<div class="n">'+num(f.trechos)+' trechos</div>':'')
+    +(f.situacao&&ROTULO[f.situacao]?'<span class="tag '+f.situacao+'">'+ROTULO[f.situacao]+'</span>':'')
+    +'</div></div>';
+}
+function carregarCapa(fonte,n){
+  var chave=fonte+'-'+n;
+  var por=function(src){ document.querySelectorAll('img[data-capa="'+chave+'"]').forEach(function(i){ i.src=src; }); };
+  if(CAPAS[chave]){ if(CAPAS[chave]!=='…') por(CAPAS[chave]); return; }
+  CAPAS[chave]='…';
+  pedir({acao:'capa',fonte:fonte,n:n}).then(function(d){
+    if(!d.ok){ delete CAPAS[chave]; return; }
+    CAPAS[chave]='data:image/jpeg;base64,'+d.jpg; por(CAPAS[chave]);
+  }).catch(function(){ delete CAPAS[chave]; });
+}
+function detalhe(fonte){
+  var f=FONTES.filter(function(x){return x.fonte===fonte;})[0]; if(!f) return;
+  var imgs=''; for(var i=1;i<=f.capas;i++) imgs+='<img data-capa="'+esc(f.fonte)+'-'+i+'" alt="">';
+  $('modal').innerHTML='<button class="fechar" onclick="fechar()">×</button>'
+    +(f.capas?'<div class="capas">'+imgs+'</div>':'<div class="vazio" style="padding:20px 0">📕 Ainda sem capa original. Mande uma foto do livro físico ou um print da capa.</div>')
+    +'<h2>'+esc(f.titulo)+'</h2><div class="a">'+esc(f.autor)+'</div>'
+    +(f.trechos?'<div class="linha"><b>'+num(f.trechos)+'</b> trechos na pesquisa (banco '+esc(f.banco)+')</div>':'<div class="linha">Ainda não está na pesquisa.</div>')
+    +(f.situacao&&ROTULO[f.situacao]?'<div class="linha"><span class="tag '+f.situacao+'">'+ROTULO[f.situacao]+'</span></div>':'')
+    +(f.nota?'<div class="linha">'+esc(f.nota)+'</div>':'');
+  $('fundo').classList.add('on');
+  for(var j=1;j<=f.capas;j++) carregarCapa(f.fonte,j);
+}
+function fechar(){ $('fundo').classList.remove('on'); }
+abrir();
+</script>
+<div class="toast" id="toast"></div>
+</body>
+</html>

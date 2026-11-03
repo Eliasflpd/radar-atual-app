@@ -26,6 +26,7 @@
     { "source": "/api/ws-ouvir", "destination": "/api/dados?fn=ws-ouvir" },
     { "source": "/api/noticias-fieis", "destination": "/api/dados?fn=noticias-fieis" },
     { "source": "/api/oficina", "destination": "/api/dados?fn=oficina" },
+    { "source": "/api/fontes", "destination": "/api/dados?fn=fontes" },
     { "source": "/ouvir",        "destination": "/ouvir.html" }
   ],
   "headers": [

@@ -619,7 +619,10 @@ const HANDLERS = {
   'noticias-fieis': require('./_lib/noticias.js'),
   // OFICINA (03/11/2026): o versículo com a Almeida, as referências cruzadas (OpenBible, CC-BY) e o que os
   // autores dizem (porta dos livros particulares). Ver api/_lib/oficina.js.
-  oficina: require('./_lib/oficina.js')
+  oficina: require('./_lib/oficina.js'),
+  // FONTES DE PESQUISA (03/11/2026): o catálogo das obras escondidas, com as capas (porta dos livros particulares).
+  // Ver api/_lib/fontes.js.
+  fontes: require('./_lib/fontes.js')
 };
 
 module.exports = async (req, res) => {
