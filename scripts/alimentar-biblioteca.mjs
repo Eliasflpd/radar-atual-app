@@ -143,7 +143,8 @@ if (SECO || !fontes.length) {
     const saida = String(sb.stdout || '') + String(sb.stderr || '');
     // 28/10/2026: são dois bancos (fonte que já está no banco 1 fica nele; fonte nova vai para o banco 2) — o
     // indexador diz "banco 1 em … MB", "banco 2: … -> … MB" e "⏭" quando um deles bateu no freio.
-    for (const l of saida.split('\n')) if (/banco \d? ?em|banco \d:|PAREI|⏭|✅|✖|erro/i.test(l)) diz('    ' + l.trim());
+    // 03/11/2026: as linhas da OFICINA (índice por versículo refeito a cada fonte que sobe) também vão para o registro.
+    for (const l of saida.split('\n')) if (/banco \d? ?em|banco \d:|PAREI|⏭|✅|✖|erro|oficina/i.test(l)) diz('    ' + l.trim());
     diz(`  ⬆ subiu: ${mudaram.join(', ')}`);
   }
 }

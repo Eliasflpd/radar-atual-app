@@ -101,3 +101,19 @@ module.exports = async (req, res) => {
     res.status(200).json({ ok: false, err: String(e && e.message || e).slice(0, 140) });
   } finally { try { await c.end(); } catch (_) {} }
 };
+
+// PORTA REUSADA PELA OFICINA (api/_lib/oficina.js). Mesma conferência da rota acima, sem resposta HTTP:
+// crachá de aparelho dos DONOS, ou token que o PIN já devolveu. true = pode ver o que é de livro particular.
+module.exports.liberado = async function liberado(cracha, token) {
+  const cs = (process.env.RADAR_DB_DATABASE_URL || process.env.RADAR_DB);
+  const cr = String(cracha || ''), tk = String(token || '');
+  const peloCracha = !!cr && liberados().includes(sha(cr));
+  if (peloCracha) return true;
+  if (!cs || !/^[0-9a-f]{64}$/.test(tk)) return false;
+  const c = new Client({ connectionString: cs, ssl: { rejectUnauthorized: false } });
+  try {
+    await c.connect();
+    const cfg = (await c.query('select * from livros_particulares_cfg where id=1').catch(() => ({ rows: [] }))).rows[0];
+    return !!(cfg && igual(tk, tokenDe(cfg)));
+  } catch (_) { return false; } finally { try { await c.end(); } catch (_) {} }
+};

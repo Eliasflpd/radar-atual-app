@@ -146,6 +146,23 @@ REGRAS DE HONESTIDADE (obrigatórias):
 5. Tradição judaica (Midrash, Rashi, Talmude) é dita como tradição, nunca como Bíblia.
 6. Português do Brasil, frases claras, sem academiquês.`;
 
+// ── 2b. A OFICINA (03/11/2026) ───────────────────────────────────────────────
+// Este módulo é Edge e não fala com o banco 2 (o driver pg não roda aqui). Então pede à rota Node
+// /api/dados?fn=oficina, servidor-a-servidor, com o RADAR_ADMIN_TOKEN (a mesma porta da Biblioteca).
+// Se a rota não responder, a pregação segue como antes, sem a Oficina.
+const NT_ABREV = new Set(['mt', 'mc', 'lc', 'jo', 'atos', 'rm', '1co', '2co', 'gl', 'ef', 'fp', 'cl', '1ts', '2ts', '1tm', '2tm',
+  'tt', 'fm', 'hb', 'tg', '1pe', '2pe', '1jo', '2jo', '3jo', 'jd', 'ap']);
+async function oficinaDe(origem, ref) {
+  const tk = process.env.RADAR_ADMIN_TOKEN || '';
+  if (!tk || !ref) return null;
+  try {
+    const r = await fetch(origem + '/api/dados?fn=oficina', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: String(ref).slice(0, 80), token: tk }), signal: AbortSignal.timeout(8000) });
+    const d = await r.json();
+    return d && d.ok ? d : null;
+  } catch (_) { return null; }
+}
+
 function refsConferidas(biblia, refs) {
   const boas = [], ruins = [];
   for (const bruto of (Array.isArray(refs) ? refs : []).map(String).slice(0, 4)) {
@@ -155,9 +172,19 @@ function refsConferidas(biblia, refs) {
   }
   return { boas, ruins };
 }
-async function descobrir(pedido, versos, fontes, biblia) {
+function montarMd(achados) {
+  return achados.length ? ['## 🔎 Descobertas — as 4 camadas', ...CAMADAS.flatMap((c) => {
+    const l = achados.filter((a) => a.camada === c.id);
+    return l.length ? ['', `### ${c.nome}`, ...l.map((a) => `- **${a.titulo}** ${a.explica}${a.refs.length ? ' (' + a.refs.join('; ') + ')' : ''} · *${a.oficina ? 'cavado na Oficina · fonte: ' + a.fonte : a.fonte === 'conferir' ? '⚠️ conferir antes de pregar' : 'fonte: ' + a.fonte}*`)] : [];
+  })].join('\n') : '';
+}
+async function descobrir(pedido, versos, fontes, biblia, ecos = [], doOficina = []) {
+  // 03/11/2026: as descobertas JÁ GUARDADAS na Oficina entram primeiro. Com 4 ou mais, a IA nem é chamada.
+  if (doOficina.length >= 4) return { achados: doOficina, md: montarMd(doOficina) };
   const p = [`PEDIDO DO PASTOR:\n${pedido}`];
   if (versos.length) p.push('TEXTOS (Almeida):\n' + versos.map((v) => `${v.ref}: ${v.texto}`).join('\n'));
+  if (ecos.length) p.push('ECOS (referências cruzadas, texto da Almeida; use se ajudarem o eco do AT):\n'
+    + ecos.map((e) => `${e.rotulo}: ${e.texto}`).join('\n'));
   if (fontes.length) p.push('FONTES DA BIBLIOTECA (cite pelo nome do autor):\n'
     + fontes.map((x) => `■ ${x.autor}${x.secao ? ' (' + x.secao + ')' : ''} [${selo(x)}]\n${String(x.texto).slice(0, 900)}`).join('\n\n'));
   let j;
@@ -165,7 +192,7 @@ async function descobrir(pedido, versos, fontes, biblia) {
     const r = await iaTexto({ sys: SYS_CAMADAS, user: p.join('\n\n'), temperature: 0.4, max_tokens: 9000, tag: 'bereia-camadas',
       premium: true, prazoPremium: 70000 });
     j = JSON.parse(String(r.texto || '').replace(/^[\s\S]*?(\{[\s\S]*\})[\s\S]*$/, '$1'));
-  } catch (_) { return { achados: [], md: '' }; }
+  } catch (_) { return { achados: doOficina, md: montarMd(doOficina) }; }
   const autores = fontes.map((x) => String(x.autor || '').toLowerCase()).filter(Boolean);
   const achados = [];
   for (const c of CAMADAS) {
@@ -181,11 +208,8 @@ async function descobrir(pedido, versos, fontes, biblia) {
       achados.push({ camada: c.id, titulo, explica, refs: boas, fonte });
     }
   }
-  const md = achados.length ? ['## 🔎 Descobertas — as 4 camadas', ...CAMADAS.flatMap((c) => {
-    const l = achados.filter((a) => a.camada === c.id);
-    return l.length ? ['', `### ${c.nome}`, ...l.map((a) => `- **${a.titulo}** ${a.explica}${a.refs.length ? ' (' + a.refs.join('; ') + ')' : ''} · *${a.fonte === 'conferir' ? '⚠️ conferir antes de pregar' : 'fonte: ' + a.fonte}*`)] : [];
-  })].join('\n') : '';
-  return { achados, md };
+  const todos = doOficina.concat(achados.filter((a) => !doOficina.some((o) => o.titulo === a.titulo)));
+  return { achados: todos, md: montarMd(todos) };
 }
 
 // ── 4. A PREGAÇÃO ─────────────────────────────────────────────────────────────
@@ -286,15 +310,53 @@ export default async function handler(req) {
       }
       await manda({ t: 'plano', titulo: plano.titulo, refs: versos.map((v) => v.ref), buscas: plano.buscas });
 
+      // A OFICINA (03/11/2026): o pedido (ou as 2 primeiras refs do plano) vai ao índice por versículo. Os trechos que
+      // COMENTAM o texto entram primeiro nas fontes; as referências cruzadas viram ECOS; as descobertas guardadas entram
+      // como achados. Se a Oficina não responder, a pregação segue como antes.
+      const principais = [];
+      for (const c of [b.texto, ...plano.refs]) {
+        if (principais.length >= 2) break;
+        if (c && acharReferencias(' ' + c)[0]) principais.push(String(c).trim());
+      }
+      const ofic = (await Promise.all(principais.map((r) => oficinaDe(origem, r)))).filter(Boolean);
+      const ofFontes = ofic.flatMap((d) => (d.autores || []).map((a) => ({ autor: a.autor, obra: a.obra, secao: a.secao, tipo: a.tipo,
+        peso: a.peso, aprovado: a.aprovado, livro: '', texto: a.trecho })));
+      const ecos = [];
+      for (const d of ofic) {
+        const nt = NT_ABREV.has(d.ref && d.ref.livro);
+        for (const x of (d.cruzadas || [])) {
+          if (nt && x.b > 39) continue;                       // texto do NT: eco vem do AT
+          if (!ecos.some((e) => e.rotulo === x.rotulo)) ecos.push({ rotulo: x.rotulo, texto: x.texto });
+        }
+      }
+      ecos.splice(6);
+      if (ecos.length && plano.camadas && plano.camadas.ecos) {
+        plano.camadas.ecos = (plano.camadas.ecos + ' (cf. ' + ecos.slice(0, 3).map((e) => e.rotulo).join('; ') + ')').slice(0, 300);
+      }
+      const doOficina = [];
+      for (const d of ofic) for (const x of (d.descobertas || [])) {
+        const { boas, ruins } = refsConferidas(biblia, x.refs);
+        if (ruins.length && !boas.length) continue;
+        if ((x.camada === 'ecos' || x.camada === 'estrutura') && boas.length < 2) continue;
+        if (doOficina.some((o) => o.titulo === x.titulo)) continue;
+        doOficina.push({ camada: x.camada, titulo: String(x.titulo).slice(0, 200), explica: String(x.explica).slice(0, 900),
+          refs: boas, fonte: x.fonte || 'Oficina', oficina: true });
+      }
+
       await manda({ t: 'etapa', id: 'biblioteca', msg: 'Bereia examinando a Biblioteca · Joeira separando o trigo da palha…' });
       const [fontes, notas] = await Promise.all([bibliotecaToda(origem, plano.buscas), noticias(origem, plano.noticia)]);
       const fontesCam = await bibliotecaDasCamadas(origem, plano.camadas || {}, fontes);
-      const todas = fontes.concat(fontesCam);
+      const vistosT = new Set();
+      const todas = [...ofFontes, ...fontes, ...fontesCam].filter((x) => {
+        const k = x.autor + '|' + String(x.texto).slice(0, 60);
+        if (vistosT.has(k)) return false;
+        vistosT.add(k); return true;
+      }).slice(0, 16);
       await manda({ t: 'joeira', fontes: todas.map((x) => ({ autor: x.autor, onde: x.secao || x.livro || '', obra: x.obra || '' })) });
       if (plano.noticia) await manda({ t: 'noticias', itens: notas.map((n) => ({ titulo: n.titulo, fonte: n.fonte || n.veiculo || '', data: n.data || '', link: n.link || '' })) });
 
       await manda({ t: 'etapa', id: 'camadas', msg: 'Cavando as 4 camadas: original, ecos do AT, estrutura, contexto…' });
-      const cav = await descobrir(pedido, versos, todas, biblia);
+      const cav = await descobrir(pedido, versos, todas, biblia, ecos, doOficina);
       await manda({ t: 'camadas', md: cav.md, n: cav.achados.length, conferir: cav.achados.filter((a) => a.fonte === 'conferir').length });
 
       await manda({ t: 'etapa', id: 'escrita', msg: 'Escrevendo a pregação…' });

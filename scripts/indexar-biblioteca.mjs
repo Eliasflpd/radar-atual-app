@@ -812,6 +812,12 @@ async function subir(quais) {
     if (estourou) continue;
     await c.query('commit');
     console.log(`\r   ✅ ${f.id} no ${B.nome} (${teto})  ·  ${B.nome} em ${await tamanhoMB(c)} MB      `);
+    // OFICINA (03/11/2026): a fonte acabou de subir e os ids dos trechos mudaram. O índice por versículo dela é refeito
+    // (é derivado; o texto não é tocado). Nunca derruba o subir: se falhar, avisa e segue.
+    try {
+      const { reindexarFonte } = await import('./oficina-indice.mjs');
+      await reindexarFonte(f.id, { porCapitulo: !!f.capitulos });
+    } catch (e) { console.log(`   ⚠ oficina de ${f.id} não refeita agora: ${String((e && e.message) || e).slice(0, 80)}`); }
   }
   // ÍNDICE HNSW: SÓ SE PEDIR (--hnsw). Medido neste acervo, ele pesa 58 MB para
   // 22 mil trechos — quase 60% do tamanho da tabela — e a biblioteca inteira passa

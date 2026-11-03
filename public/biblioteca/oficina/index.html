@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oficina — RADAR</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--linha:#e4e7ec;--fundo:#f6f4ee}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;
+    line-height:1.6;padding:14px 16px calc(56px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+  .voltar{background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer}
+  .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-top:12px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:2rem;font-weight:800;margin:2px 0 2px}
+  .sub{text-align:center;color:#6b7280;font-size:.98rem;margin:0 0 14px}
+  .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 18px}
+  .busca{display:flex;gap:8px}
+  .busca input{flex:1;font:inherit;font-size:1.02rem;padding:11px 12px;border:1.5px solid var(--linha);border-radius:12px;background:#fff;color:var(--texto);min-width:0}
+  .busca input:focus{outline:none;border-color:var(--dourado)}
+  .busca button{background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;border:none;border-radius:12px;padding:0 18px;font-weight:800;font-family:inherit;font-size:1rem;cursor:pointer}
+  .busca button:disabled{opacity:.6}
+  .dica{color:#6b7280;font-size:.82rem;margin-top:6px}
+  .aviso{margin:14px 0 0;background:#fff4f2;border:1px solid #f1c9c2;border-radius:14px;padding:12px 14px;font-size:.92rem}
+  .bloco{margin:18px 0 0;background:var(--fundo);border:1px solid #ece4d0;border-radius:16px;padding:14px 16px}
+  .bloco h2{font-family:Georgia,serif;color:var(--navy);font-size:1.15rem;margin:0 0 8px}
+  .rotulo{font-family:Georgia,serif;font-size:1.25rem;color:var(--navy);font-weight:700;margin:14px 0 6px}
+  .texto-b{font-family:Georgia,serif;font-size:1.08rem;line-height:1.7}
+  .cruz{margin:0;padding:0;list-style:none}
+  .cruz li{padding:9px 0;border-bottom:1px dashed #e7dfca}
+  .cruz li:last-child{border-bottom:none}
+  .cruz b{color:var(--navy)}
+  .votos{color:#8a6a1e;font-size:.82rem;margin-left:6px}
+  .cred{color:#6b7280;font-size:.8rem;margin-top:8px}
+  .autor{padding:10px 0;border-bottom:1px dashed #e7dfca}
+  .autor:last-child{border-bottom:none}
+  .autor .nome{font-weight:800;color:var(--navy)}
+  .autor .onde{color:#6b7280;font-size:.88rem}
+  .autor .modo{display:inline-block;font-size:.76rem;font-weight:700;color:var(--teal);background:#e8f4f4;border-radius:999px;padding:1px 9px;margin-left:4px}
+  .autor .selo-f{display:inline-block;font-size:.76rem;color:#a3341f;background:#fff4f2;border-radius:999px;padding:1px 9px;margin-left:4px}
+  .autor blockquote{margin:6px 0 0;padding:8px 12px;border-left:4px solid var(--dourado);background:#fbf7ec;font-family:Georgia,serif;font-size:.98rem}
+  .camada{margin-top:12px}
+  .camada h3{font-family:Georgia,serif;color:var(--teal);font-size:1rem;margin:0 0 4px}
+  .camada p{margin:0 0 6px;font-size:.95rem}
+  .camada .refs{color:#8a6a1e;font-size:.88rem;font-style:italic}
+  .pin{background:#fff;border:1px solid var(--linha);border-radius:16px;padding:22px 18px;text-align:center;max-width:360px;margin:14px auto}
+  .pin input{width:100%;font-size:1.6rem;letter-spacing:.5em;text-align:center;padding:10px;border:1.5px solid var(--linha);border-radius:12px;margin:8px 0 10px}
+  .pin button{width:100%;background:var(--dourado);color:#1d1606;border:none;border-radius:12px;padding:13px;font-weight:800;font-size:1rem;cursor:pointer}
+  .vazio{color:#6b7280;font-size:.95rem}
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f3d5c;color:#fff;padding:10px 16px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+<button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
+<div class="selo">✦ Oficina ✦</div>
+<h1>Oficina</h1>
+<div class="sub">Um versículo, o texto, o que as outras passagens dizem sobre ele e o que os seus autores dizem</div>
+<div class="divisor"></div>
+
+<form class="busca" id="form" onsubmit="return buscar();">
+  <input id="ref" placeholder="Ex.: Mateus 28:19 ou Dn 9.27" autocomplete="off" enterkeyhint="search">
+  <button type="submit" id="ir">Abrir</button>
+</form>
+<div class="dica">Aceita o nome do livro por extenso ou a sigla, com dois-pontos ou ponto (Mt 28:19, Dn 9.27, 1 Co 13.4).</div>
+
+<div id="saida"></div>
+
+<script>
+// OFICINA (03/11/2026). O servidor (/api/oficina, api/_lib/oficina.js) devolve: o texto da Almeida e as referências
+// cruzadas (abertos); e, só para quem tem a porta dos livros particulares (crachá do aparelho ou senha), os trechos
+// dos autores e as descobertas das 4 camadas. Os trechos vêm CURTOS: a tela nunca recebe o livro inteiro.
+var $=function(id){return document.getElementById(id);};
+function ler(k){ try{ return localStorage.getItem(k)||''; }catch(_){ return ''; } }
+function gravar(k,v){ try{ localStorage.setItem(k,v); }catch(_){} }
+function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(t){ var e=$('toast'); e.textContent=t; e.classList.add('on'); setTimeout(function(){ e.classList.remove('on'); },2200); }
+var CAMADAS={original:'O que a tradução esconde (grego e hebraico)',ecos:'Ecos do Antigo Testamento',estrutura:'Como o autor amarrou o livro',contexto:'O que o leitor da época sabia'};
+var ULTIMA='';
+
+function buscar(){
+  var r=$('ref').value.trim();
+  if(!r){ toast('Digite uma referência'); return false; }
+  ULTIMA=r; consultar(r, false);
+  return false;
+}
+function consultar(r, comPorta){
+  $('ir').disabled=true; $('ir').textContent='…';
+  var corpo={ ref:r, cracha:ler('radar_chave'), token:ler('lp_token') };
+  fetch('/api/oficina',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo),cache:'no-store'})
+    .then(function(x){ return x.json().catch(function(){ return {ok:false,err:'resposta inválida'}; }); })
+    .then(function(d){
+      $('ir').disabled=false; $('ir').textContent='Abrir';
+      if(!d.ok){ $('saida').innerHTML='<div class="aviso"><b>Não deu certo:</b> '+esc(d.err||'tente de novo')+'</div>'; return; }
+      mostrar(d);
+    })
+    .catch(function(){ $('ir').disabled=false; $('ir').textContent='Abrir'; $('saida').innerHTML='<div class="aviso"><b>Sem conexão.</b> Confira a internet e tente de novo.</div>'; });
+}
+function mostrar(d){
+  var h='';
+  h+='<div class="rotulo">'+esc(d.ref.rotulo)+'</div>';
+  h+='<div class="bloco"><h2>📖 O texto (Almeida)</h2><div class="texto-b">'+esc(d.texto||'Texto não encontrado.')+'</div></div>';
+
+  h+='<div class="bloco"><h2>🔗 Referências cruzadas</h2>';
+  if(d.cruzadas && d.cruzadas.length){
+    h+='<ul class="cruz">'+d.cruzadas.map(function(x){
+      return '<li><b>'+esc(x.rotulo)+'</b><span class="votos">'+x.votos+' votos</span><div class="texto-b" style="font-size:.98rem">'+esc(x.texto)+'</div></li>';
+    }).join('')+'</ul>';
+  } else { h+='<div class="vazio">Sem referências cruzadas para este versículo.</div>'; }
+  h+='<div class="cred">'+esc(d.credito||'OpenBible.info, CC-BY')+'</div></div>';
+
+  h+='<div class="bloco"><h2>🧭 O que os seus autores dizem</h2>';
+  if(d.acesso==='bloqueado'){
+    h+='<div class="vazio">Esta parte é da sua biblioteca particular. Digite a sua senha para abrir.</div>'
+      +'<div class="pin"><div style="font-size:2rem">🔒</div><input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"><button id="entrar" onclick="entrarPin()">Abrir</button></div>';
+  } else {
+    if(d.autores && d.autores.length){
+      h+=d.autores.map(function(a){
+        return '<div class="autor"><span class="nome">'+esc(a.autor)+'</span>'
+          +(a.modo?'<span class="modo">'+esc(a.modo)+'</span>':'')
+          +(a.selo?'<span class="selo-f">'+esc(a.selo)+'</span>':'')
+          +'<div class="onde">'+esc(a.obra||'')+(a.secao?' · '+esc(a.secao):'')+'</div>'
+          +'<blockquote>'+esc(a.trecho)+'</blockquote></div>';
+      }).join('');
+    } else { h+='<div class="vazio">Nenhum dos seus livros comenta ou cita este versículo ainda.</div>'; }
+    if(d.descobertas && d.descobertas.length){
+      h+='<div style="margin-top:14px;font-weight:800;color:var(--navy)">Descobertas guardadas para este versículo</div>';
+      ['original','ecos','estrutura','contexto'].forEach(function(c){
+        var l=d.descobertas.filter(function(x){ return x.camada===c; });
+        if(!l.length) return;
+        h+='<div class="camada"><h3>'+esc(CAMADAS[c])+'</h3>'+l.map(function(x){
+          return '<p><b>'+esc(x.titulo)+'</b> '+esc(x.explica)+(x.refs&&x.refs.length?' <span class="refs">('+esc(x.refs.join('; '))+')</span>':'')+(x.fonte?' <span class="refs">· fonte: '+esc(x.fonte)+'</span>':'')+'</p>';
+        }).join('')+'</div>';
+      });
+    }
+  }
+  h+='</div>';
+  $('saida').innerHTML=h;
+}
+function entrarPin(){
+  var v=($('pin')||{value:''}).value.trim(); if(!v) return;
+  $('entrar').disabled=true; $('entrar').textContent='Conferindo…';
+  fetch('/api/livro-particular',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:v}),cache:'no-store'})
+    .then(function(r){ return r.json(); }).then(function(d){
+      if(d.ok&&d.token){ gravar('lp_token',d.token); consultar(ULTIMA,true); return; }
+      $('entrar').disabled=false; $('entrar').textContent='Abrir';
+      toast(d.motivo==='travado'?'Muitas tentativas. Espere uma hora.':'Senha errada. Tente de novo.');
+    }).catch(function(){ $('entrar').disabled=false; $('entrar').textContent='Abrir'; toast('Não consegui conferir agora.'); });
+}
+</script>
+<div class="toast" id="toast"></div>
+</body>
+</html>
