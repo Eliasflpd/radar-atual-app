@@ -115,6 +115,17 @@ create table if not exists public.tentativas_burla (
   criado_em       timestamptz not null default now()
 );
 
+-- ---------- Fotos dos trabalhos (portfólio do prestador) ----------
+create table if not exists public.fotos_trabalhos (
+  id         bigserial primary key,
+  user_id    uuid not null references public.profiles(id) on delete cascade,
+  url        text not null,
+  caminho    text not null,             -- caminho no Storage (para apagar o arquivo)
+  legenda    text not null default '' check (length(legenda) <= 140),
+  criado_em  timestamptz not null default now()
+);
+create index if not exists fotos_user_idx on public.fotos_trabalhos (user_id, criado_em desc);
+
 -- =====================================================================
 -- Funções auxiliares
 -- =====================================================================
@@ -267,6 +278,20 @@ end $$;
 drop trigger if exists media_avaliacao on public.avaliacoes;
 create trigger media_avaliacao after insert on public.avaliacoes
   for each row execute function public.atualizar_media();
+
+-- Legenda das fotos também não pode ter contato
+create or replace function public.filtrar_foto() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if public.tem_contato(new.legenda) then
+    raise exception 'Não é permitido colocar contato na legenda da foto.';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists filtro_foto on public.fotos_trabalhos;
+create trigger filtro_foto before insert or update on public.fotos_trabalhos
+  for each row execute function public.filtrar_foto();
 
 -- =====================================================================
 -- Ações (RPC) — mudanças de status passam só por aqui
@@ -426,6 +451,34 @@ create policy aval_criar on public.avaliacoes for insert with check (
 -- tentativas de burla: só admin
 drop policy if exists burla_ler on public.tentativas_burla;
 create policy burla_ler on public.tentativas_burla for select using (public.is_admin());
+
+-- fotos dos trabalhos: públicas; cada um envia (até 12) e apaga as suas; admin apaga qualquer uma
+alter table public.fotos_trabalhos enable row level security;
+drop policy if exists fotos_ler on public.fotos_trabalhos;
+create policy fotos_ler on public.fotos_trabalhos for select using (true);
+drop policy if exists fotos_criar on public.fotos_trabalhos;
+create policy fotos_criar on public.fotos_trabalhos for insert with check (
+  user_id = auth.uid()
+  and not (select suspenso from public.profiles where id = auth.uid())
+  and (select count(*) from public.fotos_trabalhos f where f.user_id = auth.uid()) < 12
+  and caminho like auth.uid()::text || '/%'
+);
+drop policy if exists fotos_apagar on public.fotos_trabalhos;
+create policy fotos_apagar on public.fotos_trabalhos for delete using (user_id = auth.uid() or public.is_admin());
+revoke update on public.fotos_trabalhos from anon, authenticated;
+
+-- Arquivos no Supabase Storage: pasta pública "fotos", cada usuário só mexe na própria pasta (fotos/<id>/...)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('fotos', 'fotos', true, 5242880, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do nothing;
+drop policy if exists fotos_storage_ler on storage.objects;
+create policy fotos_storage_ler on storage.objects for select using (bucket_id = 'fotos');
+drop policy if exists fotos_storage_enviar on storage.objects;
+create policy fotos_storage_enviar on storage.objects for insert to authenticated
+  with check (bucket_id = 'fotos' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists fotos_storage_apagar on storage.objects;
+create policy fotos_storage_apagar on storage.objects for delete to authenticated
+  using (bucket_id = 'fotos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
 
 -- funções internas não podem ser chamadas direto pelo app
 revoke execute on function public.registrar_burla(uuid, uuid, text, text) from public, anon, authenticated;

@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v1';
+const CHAVE = 'contrata-demo-v2';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -14,6 +14,18 @@ const CATEGORIAS = [
   ['Designer', '✏️'], ['Programador', '👨‍💻'], ['Fotógrafo', '📷'], ['Professor particular', '📚'], ['Cabeleireiro / Beleza', '💇'],
   ['Cozinheiro / Buffet', '🍳'], ['Motorista / Frete', '🚚'], ['Contador', '📊'], ['Advogado', '⚖️'], ['Cuidador / Babá', '🤝'], ['Outros', '🛠️'],
 ].map(([nome, icone], i) => ({ id: i + 1, nome, icone }));
+
+// Fotos de exemplo desenhadas em SVG (a demonstração não pode carregar imagens de fora)
+function fotoExemplo(titulo, c1, c2, simbolo) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>
+    <rect width="600" height="600" fill="url(#g)"/>
+    <g fill="#fff" fill-opacity=".10">${Array.from({ length: 8 }, (_, i) => `<rect x="0" y="${i * 75}" width="600" height="3"/>`).join('')}</g>
+    <text x="300" y="300" font-size="180" text-anchor="middle" dominant-baseline="middle">${simbolo}</text>
+    <rect x="0" y="480" width="600" height="120" fill="#000" fill-opacity=".35"/>
+    <text x="300" y="545" font-family="sans-serif" font-size="40" font-weight="700" fill="#fff" text-anchor="middle">${titulo}</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
 
 export const PERFIS_DEMO = {
   cliente: 'u-cliente', prestador: 'u-pedro', admin: 'u-admin',
@@ -78,10 +90,23 @@ function semente() {
     { id: 1, user_id: 'u-pedro', conversa_id: 'c-1', onde: 'chat', texto_original: 'me chama no zap que a gente combina melhor', criado_em: agora(160) },
   ];
   profiles.find((p) => p.id === 'u-pedro').avisos = 1;
+  let fid = 1;
+  const F = (user, legenda, c1, c2, simbolo, diasAtras) => ({
+    id: fid++, user_id: user, url: fotoExemplo(legenda, c1, c2, simbolo), caminho: `${user}/exemplo-${fid}.svg`, legenda, criado_em: agora(60 * 24 * diasAtras),
+  });
+  const fotos_trabalhos = [
+    F('u-pedro', 'Reboco de fachada', '#a8a29e', '#57534e', '🧱', 40), F('u-pedro', 'Porcelanato 60x60', '#d6d3d1', '#78716c', '◼️', 25),
+    F('u-pedro', 'Contrapiso nivelado', '#9ca3af', '#4b5563', '📐', 12), F('u-pedro', 'Muro de bloco', '#b45309', '#78350f', '🏗️', 5),
+    F('u-ana', 'Limpeza pós-obra', '#7dd3fc', '#0369a1', '✨', 20), F('u-ana', 'Cozinha impecável', '#a7f3d0', '#047857', '🧽', 8),
+    F('u-lucas', 'Logo para padaria', '#fde68a', '#d97706', '🥐', 30), F('u-lucas', 'Cardápio', '#fecaca', '#b91c1c', '📋', 15),
+    F('u-lucas', 'Posts Instagram', '#ddd6fe', '#6d28d9', '📱', 3),
+    F('u-carla', 'Textura grafiato', '#fbcfe8', '#be185d', '🎨', 18), F('u-carla', 'Sala pintada', '#bfdbfe', '#1d4ed8', '🖌️', 6),
+    F('u-rafa', 'Troca de registro', '#99f6e4', '#0f766e', '🚰', 9), F('u-joao', 'Quadro de distribuição', '#fef08a', '#a16207', '💡', 11),
+  ];
   return {
     users: profiles.map((p) => ({ id: p.id, email: contatos_privados.find((c) => c.user_id === p.id).email, senha: 'demo123' })),
-    categorias: CATEGORIAS, profiles, contatos_privados, conversas, mensagens, contratacoes, avaliacoes, tentativas_burla,
-    seq: { mensagens: mid, tentativas_burla: 2 }, sessao: 'u-cliente',
+    categorias: CATEGORIAS, profiles, contatos_privados, conversas, mensagens, contratacoes, avaliacoes, tentativas_burla, fotos_trabalhos,
+    seq: { mensagens: mid, tentativas_burla: 2, fotos_trabalhos: fid }, sessao: 'u-cliente',
   };
 }
 
@@ -91,7 +116,15 @@ function carregar() {
   return semente();
 }
 let db = carregar();
-const salvar = () => { try { localStorage.setItem(CHAVE, JSON.stringify(db)); } catch { /* sem storage */ } };
+let semStorage = false;
+const salvar = () => {
+  try { localStorage.setItem(CHAVE, JSON.stringify(db)); return true; } catch (e) {
+    // sem storage (janela privada): segue só na memória; espaço cheio: avisa
+    if (e?.name === 'QuotaExceededError' || /quota/i.test(e?.message || '')) return false;
+    semStorage = true; return true;
+  }
+};
+void semStorage;
 
 // ------------------------------------------------------------------ regras (como no banco)
 const uid = () => db.sessao;
@@ -180,6 +213,7 @@ class Consulta {
   single() { this.um = 'um'; return this; }
   insert(d) { this.op = 'insert'; this.dados = d; return this; }
   update(d) { this.op = 'update'; this.dados = d; return this; }
+  delete() { this.op = 'delete'; return this; }
   then(ok, falhou) { return Promise.resolve().then(() => this.executar()).then(ok, falhou); }
 
   filtrar() {
@@ -200,6 +234,7 @@ class Consulta {
     if (!uid() && this.op !== 'select') return erro('Faça login.');
     if (this.op === 'select') return this.responder(this.filtrar());
     if (this.op === 'update') return this.atualizar();
+    if (this.op === 'delete') return this.apagar();
     return this.inserir();
   }
   atualizar() {
@@ -213,6 +248,13 @@ class Consulta {
       return erro('Não é permitido colocar contato (telefone, WhatsApp, e-mail, redes) no perfil público.');
     }
     for (const r of alvo) Object.assign(db[this.t].find((x) => x[chave] === r[chave]), this.dados);
+    salvar();
+    return { data: null, error: null };
+  }
+  apagar() {
+    if (this.t !== 'fotos_trabalhos') return erro(`permission denied for table ${this.t}`);
+    const alvo = new Set(this.filtrar().filter((r) => r.user_id === uid() || isAdmin()).map((r) => r.id));
+    db.fotos_trabalhos = db.fotos_trabalhos.filter((r) => !alvo.has(r.id));
     salvar();
     return { data: null, error: null };
   }
@@ -253,6 +295,17 @@ class Consulta {
       p.avaliacao_qtd = baseQtd + 1;
       p.avaliacao_media = r2((baseMedia * baseQtd + d.nota) / p.avaliacao_qtd);
       void notas;
+    } else if (this.t === 'fotos_trabalhos') {
+      if (d.user_id !== uid() || me.suspenso) return erro('new row violates row-level security policy for table "fotos_trabalhos"');
+      if (db.fotos_trabalhos.filter((f) => f.user_id === uid()).length >= 12) return erro('Limite de 12 fotos atingido. Apague alguma para enviar outra.');
+      if (temContato(d.legenda)) return erro('Não é permitido colocar contato na legenda da foto.');
+      Object.assign(d, { id: db.seq.fotos_trabalhos++, legenda: d.legenda || '', criado_em: agora() });
+      db.fotos_trabalhos.push(d);
+      if (!salvar()) {
+        db.fotos_trabalhos.pop();
+        return erro('O espaço da demonstração neste navegador acabou. Apague algumas fotos ou toque em Recomeçar.');
+      }
+      return this.responder([d]);
     } else {
       return erro(`permission denied for table ${this.t}`);
     }
@@ -315,6 +368,9 @@ const RPC = {
   },
 };
 
+// Arquivos enviados ficam só na memória até virarem a URL (data:) salva na foto
+const arquivos = {};
+
 // ------------------------------------------------------------------ cliente falso
 export function criarDemo() {
   let aoMudar = () => {};
@@ -353,6 +409,21 @@ export function criarDemo() {
     channel() {
       const ch = { regs: [], on(_tipo, opts, cb) { ch.regs.push({ ...opts, cb }); return ch; }, subscribe() { ouvintes.push(...ch.regs); return ch; } };
       return ch;
+    },
+    storage: {
+      from() {
+        return {
+          async upload(caminho, blob) {
+            if (!uid()) return erro('Faça login.');
+            if (!caminho.startsWith(uid() + '/')) return erro('new row violates row-level security policy');
+            if (blob.size > 5 * 1024 * 1024) return erro('Foto muito grande (máximo 5 MB).');
+            arquivos[caminho] = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(blob); });
+            return { data: { path: caminho }, error: null };
+          },
+          getPublicUrl(caminho) { return { data: { publicUrl: arquivos[caminho] || '' } }; },
+          async remove(caminhos) { caminhos.forEach((c) => delete arquivos[c]); return { data: null, error: null }; },
+        };
+      },
     },
     removeChannel(ch) { ouvintes = ouvintes.filter((o) => !ch.regs.includes(o)); },
     demo: {

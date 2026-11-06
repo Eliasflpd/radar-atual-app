@@ -14,6 +14,7 @@ Busca → Chat interno → Proposta do prestador → Cliente paga no app (Mercad
 - **O contato fica oculto até o pagamento.** O WhatsApp e o e-mail ficam numa tabela separada e só são entregues depois que existe uma contratação paga entre as duas pessoas. Essa regra é garantida no banco de dados.
 - **Filtro anti-burla.** Telefone (inclusive escrito por extenso ou com espaços), e-mail, links, "zap", "insta", "me liga" e "por fora" são bloqueados no chat, no perfil e nas propostas. Cada tentativa gera um aviso, e no 3º a conta é **suspensa automaticamente**.
 - **Avaliações** só valem para serviços pagos e concluídos pelo app.
+- **Fotos dos trabalhos:** o prestador envia até 12 fotos, reduzidas no celular antes do envio, que aparecem na busca e no perfil (Supabase Storage). Também dá para colocar foto de perfil.
 - **Painel do admin:** comissão acumulada, repasses pendentes com a chave Pix do prestador, tentativas de burla, verificação e suspensão de usuários.
 
 ## Colocar no ar (cerca de 20 minutos)
@@ -39,6 +40,7 @@ No celular, abra o site e toque em **"Adicionar à tela inicial"** para instalar
 | Pasta | O que é |
 |---|---|
 | `public/` | App (HTML, CSS, JS, PWA) |
+| `public/demo.html` | Demonstração sem servidor (dados de exemplo) |
 | `public/js/filtro.js` | Detecção de contato (aviso antes de enviar) |
 | `api/` | Funções do servidor: config, pagamento, webhook do Mercado Pago |
 | `supabase/schema.sql` | Tabelas, regras de segurança, filtro no banco, comissão |
@@ -46,7 +48,6 @@ No celular, abra o site e toque em **"Adicionar à tela inicial"** para instalar
 
 ## Próximos passos sugeridos
 
-- Upload de fotos de perfil e de trabalhos (Supabase Storage)
 - Verificação de documento com selfie
 - Leitura de texto em imagens (OCR) para bloquear números escritos em fotos
 - Repasse automático com split (Mercado Pago Marketplace ou Asaas)

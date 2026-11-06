@@ -70,6 +70,7 @@ legend { font-weight: 600; font-size: 15px; padding: 0 4px; }
 .grade .card { margin: 0; }
 .prestador, .linha { display: flex; gap: 14px; align-items: center; }
 .prestador h3 { font-size: 17px; margin: 0; }
+.prestador > div { min-width: 0; }
 .cat { font-weight: 600; color: var(--pri); font-size: 15px; }
 .avatar { flex: none; width: 56px; height: 56px; border-radius: 50%; background: var(--pri-claro); color: var(--pri); display: grid; place-items: center;
   font-weight: 800; object-fit: cover; }
@@ -140,3 +141,30 @@ code { display: block; margin-top: 6px; padding: 8px; background: var(--bg); bor
 body.demo main { padding-bottom: 120px; }
 body.demo .enviar { bottom: 52px; }
 .toast { bottom: 70px; }
+
+.miniaturas { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+.miniaturas img { width: 54px; height: 54px; object-fit: cover; border-radius: 8px; }
+.miniaturas span { font-size: 13px; color: var(--suave); font-weight: 600; }
+.tit-galeria { text-align: left; margin-top: 20px; }
+.galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; margin: 8px 0 12px; text-align: left; }
+.galeria figure { position: relative; margin: 0; min-width: 0; }
+.galeria .foto { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: 10px; overflow: hidden; }
+.galeria img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; max-width: 100%; }
+.galeria figcaption { font-size: 12px; color: var(--suave); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.galeria .apagar { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border-radius: 50%; border: 0;
+  background: rgba(0,0,0,.6); color: #fff; cursor: pointer; font-size: 14px; }
+.enviar-fotos { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.enviar-fotos input { flex: 1 1 220px; margin: 0; }
+.foto-perfil { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.foto-perfil .avatar.grande { margin: 0; }
+.foto-perfil label { margin: 0; }
+.foto-grande { background: rgba(0,0,0,.9); }
+.foto-grande figure { margin: 0; max-width: 100%; text-align: center; }
+.foto-grande img { max-width: 100%; max-height: 80vh; border-radius: 10px; }
+.foto-grande figcaption { color: #fff; margin-top: 8px; }
+.foto-grande .fechar, .foto-grande .nav-foto { position: fixed; border: 0; background: rgba(255,255,255,.15); color: #fff; border-radius: 50%;
+  width: 44px; height: 44px; font-size: 22px; cursor: pointer; }
+.foto-grande .fechar { top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); }
+.foto-grande .ant { left: calc(10px + env(safe-area-inset-left, 0px)); top: 50%; }
+.foto-grande .prox { right: calc(10px + env(safe-area-inset-right, 0px)); top: 50%; }
+.foto-grande .contador { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; text-align: center; color: #ddd; font-size: 13px; }

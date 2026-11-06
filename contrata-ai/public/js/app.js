@@ -34,6 +34,59 @@ const avatar = (p, cls = '') => p?.foto_url
 const nomeCategoria = (id) => { const c = categorias.find((x) => x.id === id); return c ? `${c.icone} ${esc(c.nome)}` : ''; };
 const form = (el) => Object.fromEntries(new FormData(el));
 
+// ---------------------------------------------------------------- fotos
+const MAX_FOTOS = 12;
+// Reduz a foto no celular antes de enviar (mais rápido e economiza espaço)
+async function reduzirImagem(file, max = DEMO ? 900 : 1280, qualidade = DEMO ? 0.72 : 0.82) {
+  let img;
+  try { img = await createImageBitmap(file); } catch {
+    img = await new Promise((ok, falhou) => { const i = new Image(); i.onload = () => ok(i); i.onerror = falhou; i.src = URL.createObjectURL(file); });
+  }
+  const k = Math.min(1, max / Math.max(img.width, img.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  return new Promise((ok) => c.toBlob(ok, 'image/jpeg', qualidade));
+}
+async function subirFoto(file, prefixo) {
+  if (!file.type.startsWith('image/')) throw new Error(`"${file.name}" não é uma imagem.`);
+  const blob = await reduzirImagem(file);
+  const caminho = `${me.id}/${prefixo}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+  const { error } = await sb.storage.from('fotos').upload(caminho, blob, { contentType: 'image/jpeg', upsert: false });
+  if (error) throw error;
+  return { caminho, url: sb.storage.from('fotos').getPublicUrl(caminho).data.publicUrl };
+}
+const galeriaHTML = (fotos, podeApagar) => fotos.map((f, i) => `<figure>
+  <button class="foto" data-i="${i}" aria-label="Ampliar foto${f.legenda ? ': ' + esc(f.legenda) : ''}"><img src="${esc(f.url)}" alt="${esc(f.legenda)}" loading="lazy"></button>
+  ${f.legenda ? `<figcaption>${esc(f.legenda)}</figcaption>` : ''}
+  ${podeApagar ? `<button class="apagar" data-apagar="${f.id}" aria-label="Apagar foto">✕</button>` : ''}</figure>`).join('');
+function abrirFoto(fotos, i) {
+  const fundo = document.createElement('div');
+  fundo.className = 'modal-fundo foto-grande';
+  const mostrar = () => {
+    const f = fotos[i];
+    fundo.innerHTML = `<figure><img src="${esc(f.url)}" alt="${esc(f.legenda)}">${f.legenda ? `<figcaption>${esc(f.legenda)}</figcaption>` : ''}</figure>
+      ${fotos.length > 1 ? '<button class="nav-foto ant" data-d="-1" aria-label="Anterior">‹</button><button class="nav-foto prox" data-d="1" aria-label="Próxima">›</button>' : ''}
+      <button class="fechar" aria-label="Fechar">✕</button><div class="contador">${i + 1} / ${fotos.length}</div>`;
+  };
+  fundo.addEventListener('click', (e) => {
+    const d = e.target.dataset?.d;
+    if (d) { i = (i + Number(d) + fotos.length) % fotos.length; mostrar(); return; }
+    if (e.target === fundo || e.target.classList.contains('fechar')) fundo.remove();
+  });
+  mostrar();
+  document.body.appendChild(fundo);
+}
+async function apagarFoto(id, fotos) {
+  const f = fotos.find((x) => String(x.id) === String(id));
+  if (!f || !(await confirmar('Apagar esta foto?', 'Apagar'))) return false;
+  const { error } = await sb.from('fotos_trabalhos').delete().eq('id', f.id);
+  if (error) { falha(error); return false; }
+  await sb.storage.from('fotos').remove([f.caminho]);
+  toast('Foto apagada.');
+  return true;
+}
+
 // Confirmação dentro da página (não usa confirm() do navegador)
 function confirmar(msg, ok = 'Confirmar') {
   return new Promise((resolve) => {
@@ -143,15 +196,21 @@ async function telaInicio() {
     if (f.q) { const t = f.q.trim().replace(/[,()%]/g, ' '); q = q.or(`nome.ilike.%${t}%,bio.ilike.%${t}%`); }
     const { data: lista, error } = await q;
     if (error) throw error;
+    const ids = lista.map((p) => p.id);
+    const { data: fts } = ids.length
+      ? await sb.from('fotos_trabalhos').select('user_id,url').in('user_id', ids).order('criado_em', { ascending: false })
+      : { data: [] };
+    const fotosDe = {};
+    (fts || []).forEach((f) => (fotosDe[f.user_id] ||= []).push(f.url));
     document.getElementById('resultados').innerHTML = lista.length
-      ? lista.map(cardPrestador).join('')
+      ? lista.map((p) => cardPrestador(p, fotosDe[p.id] || [])).join('')
       : '<div class="card vazio">Nenhum profissional encontrado com esses filtros.</div>';
   };
   document.getElementById('busca').addEventListener('submit', (e) => { e.preventDefault(); buscar(form(e.target)).catch(falha); });
   await buscar();
 }
 
-function cardPrestador(p) {
+function cardPrestador(p, fotos = []) {
   return `<a class="card prestador" href="#/p/${p.id}">
     ${avatar(p)}
     <div>
@@ -160,6 +219,8 @@ function cardPrestador(p) {
       <div class="meta">📍 ${esc(p.cidade)}${p.uf ? '/' + esc(p.uf) : ''}</div>
       <div class="meta"><span class="estrelas">${estrelas(p.avaliacao_media)}</span> (${p.avaliacao_qtd})
         ${p.preco_base ? ` · a partir de <b>${brl(p.preco_base)}</b>` : ''}</div>
+      ${fotos.length ? `<div class="miniaturas">${fotos.slice(0, 3).map((u) => `<img src="${esc(u)}" alt="" loading="lazy">`).join('')}
+        ${fotos.length > 3 ? `<span>+${fotos.length - 3}</span>` : ''}</div>` : ''}
     </div></a>`;
 }
 
@@ -248,10 +309,12 @@ function telaTermos() {
 
 // ---------------------------------------------------------------- perfil público do prestador
 async function telaPrestador(id) {
-  const [{ data: p }, { data: avs }] = await Promise.all([
+  const [{ data: p }, { data: fotosRes }, { data: avs }] = await Promise.all([
     sb.from('profiles').select('*').eq('id', id).maybeSingle(),
+    sb.from('fotos_trabalhos').select('*').eq('user_id', id).order('criado_em', { ascending: false }),
     sb.from('avaliacoes').select('nota,comentario,criado_em,autor:autor_id(nome)').eq('prestador_id', id).order('criado_em', { ascending: false }).limit(30),
   ]);
+  let fotos = fotosRes || [];
   if (!p || !p.is_prestador) { $app.innerHTML = '<div class="card">Profissional não encontrado.</div>'; return; }
   $app.innerHTML = `<div class="card perfil-publico">
       ${avatar(p, 'grande')}
@@ -261,6 +324,8 @@ async function telaPrestador(id) {
       <div class="meta"><span class="estrelas">${estrelas(p.avaliacao_media)}</span> ${Number(p.avaliacao_media).toFixed(1)} (${p.avaliacao_qtd} avaliações)</div>
       ${p.preco_base ? `<div class="preco">A partir de ${brl(p.preco_base)}</div>` : ''}
       <p class="bio">${esc(p.bio) || '<i>Sem descrição.</i>'}</p>
+      ${fotos.length ? `<h3 class="tit-galeria">📸 Trabalhos realizados (${fotos.length})</h3>
+        <div class="galeria" id="galeria-pub">${galeriaHTML(fotos, me?.is_admin)}</div>` : ''}
       ${p.suspenso ? '<div class="alerta">Este profissional está temporariamente indisponível.</div>'
         : me?.id === p.id ? '<a class="btn sec" href="#/perfil">Editar meu perfil</a>'
         : '<button class="btn" id="conversar">💬 Conversar e pedir orçamento</button>'}
@@ -269,6 +334,12 @@ async function telaPrestador(id) {
     <h3>Avaliações</h3>
     ${(avs || []).map((a) => `<div class="card avaliacao"><span class="estrelas">${estrelas(a.nota)}</span>
       <b>${esc(a.autor?.nome)}</b> · ${data(a.criado_em)}<p>${esc(a.comentario)}</p></div>`).join('') || '<div class="card vazio">Ainda sem avaliações.</div>'}`;
+  document.getElementById('galeria-pub')?.addEventListener('click', async (e) => {
+    const apagar = e.target.closest('[data-apagar]');
+    if (apagar) { if (await apagarFoto(apagar.dataset.apagar, fotos)) rota(); return; }
+    const b = e.target.closest('.foto');
+    if (b) abrirFoto(fotos, Number(b.dataset.i));
+  });
   document.getElementById('conversar')?.addEventListener('click', async () => {
     if (!me) { location.hash = '#/entrar'; return; }
     if (me.suspenso) return toast('Sua conta está suspensa.', 'erro');
@@ -445,11 +516,13 @@ async function telaChat(id, params) {
 
 // ---------------------------------------------------------------- meu perfil
 async function telaPerfil() {
-  const [{ data: priv }, { data: cts }] = await Promise.all([
+  const [{ data: priv }, { data: cts }, { data: fotosRes }] = await Promise.all([
     sb.from('contatos_privados').select('*').eq('user_id', me.id).maybeSingle(),
     sb.from('contratacoes').select('*,contratante:contratante_id(nome),prestador:prestador_id(nome)')
       .or(`contratante_id.eq.${me.id},prestador_id.eq.${me.id}`).neq('status', 'cancelada').order('criado_em', { ascending: false }),
+    sb.from('fotos_trabalhos').select('*').eq('user_id', me.id).order('criado_em', { ascending: false }),
   ]);
+  let fotos = fotosRes || [];
   const opcoes = categorias.map((c) => `<option value="${c.id}" ${c.id === me.categoria_id ? 'selected' : ''}>${c.icone} ${esc(c.nome)}</option>`).join('');
   const ganhos = (cts || []).filter((x) => x.prestador_id === me.id && ['paga', 'concluida'].includes(x.status));
   $app.innerHTML = `
@@ -461,7 +534,8 @@ async function telaPerfil() {
       <label>Nome<input name="nome" value="${esc(me.nome)}" required></label>
       <div class="dupla"><label>Cidade<input name="cidade" value="${esc(me.cidade)}"></label>
         <label>UF<input name="uf" value="${esc(me.uf)}" maxlength="2" style="text-transform:uppercase"></label></div>
-      <label>Foto (link da imagem)<input name="foto_url" value="${esc(me.foto_url)}" placeholder="https://…"></label>
+      <div class="foto-perfil">${avatar(me, 'grande')}
+        <label class="btn sec pequeno">📷 ${me.foto_url ? 'Trocar' : 'Colocar'} foto de perfil<input type="file" id="in-avatar" accept="image/*" hidden></label></div>
       <fieldset><legend>Como você usa o app</legend>
         <label class="check"><input type="checkbox" name="is_contratante" ${me.is_contratante ? 'checked' : ''}> Contrato serviços</label>
         <label class="check"><input type="checkbox" name="is_prestador" ${me.is_prestador ? 'checked' : ''}> Ofereço serviços</label>
@@ -473,6 +547,17 @@ async function telaPerfil() {
       </div>
       <button class="btn">Salvar perfil</button>
     </form>
+    ${me.is_prestador ? `<div class="card" id="card-fotos">
+      <h2>📸 Fotos dos meus trabalhos</h2>
+      <p class="nota">Mostre serviços que você já fez. Perfis com fotos recebem muito mais pedidos. Até ${MAX_FOTOS} fotos.
+        Não coloque telefone ou contato escrito nas fotos.</p>
+      <div class="galeria" id="galeria-minha">${galeriaHTML(fotos, true)}</div>
+      <div class="enviar-fotos" ${fotos.length >= MAX_FOTOS ? 'hidden' : ''}>
+        <input id="legenda" maxlength="140" placeholder="Legenda (opcional) — ex: Reboco de fachada, 2 dias">
+        <label class="btn">➕ Adicionar fotos<input type="file" id="in-fotos" accept="image/*" multiple hidden></label>
+      </div>
+      <div class="meta" id="up-status">${fotos.length} de ${MAX_FOTOS} fotos</div>
+    </div>` : ''}
     <form class="card" id="fpriv">
       <h2>🔒 Dados privados</h2>
       <p class="nota">Só aparecem para a outra parte depois do pagamento. A chave Pix é vista só pela administração, para seu repasse.</p>
@@ -499,7 +584,7 @@ async function telaPerfil() {
     const v = form(fp);
     if (temContato(v.bio) || temContato(v.nome)) return toast(AVISO_CONTATO, 'erro');
     const { error } = await sb.from('profiles').update({
-      nome: v.nome.trim(), cidade: v.cidade.trim(), uf: (v.uf || '').toUpperCase().trim(), foto_url: v.foto_url.trim(),
+      nome: v.nome.trim(), cidade: v.cidade.trim(), uf: (v.uf || '').toUpperCase().trim(),
       is_contratante: !!v.is_contratante, is_prestador: !!v.is_prestador,
       categoria_id: v.categoria_id ? Number(v.categoria_id) : null,
       preco_base: v.preco_base ? Number(v.preco_base) : null, bio: (v.bio || '').trim(),
@@ -509,6 +594,47 @@ async function telaPerfil() {
     renderNav();
     toast('Perfil salvo!');
   });
+  document.getElementById('in-avatar').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      toast('Enviando foto…');
+      const { url } = await subirFoto(file, 'perfil');
+      const { error } = await sb.from('profiles').update({ foto_url: url }).eq('id', me.id);
+      if (error) throw error;
+      await carregarMe((await sb.auth.getSession()).data.session);
+      toast('Foto de perfil atualizada!');
+      rota();
+    } catch (er) { falha(er); }
+  });
+
+  const $gal = document.getElementById('galeria-minha');
+  $gal?.addEventListener('click', async (e) => {
+    const apagar = e.target.closest('[data-apagar]');
+    if (apagar) { if (await apagarFoto(apagar.dataset.apagar, fotos)) rota(); return; }
+    const b = e.target.closest('.foto');
+    if (b) abrirFoto(fotos, Number(b.dataset.i));
+  });
+  document.getElementById('in-fotos')?.addEventListener('change', async (e) => {
+    const legenda = document.getElementById('legenda').value.trim();
+    if (temContato(legenda)) return toast(AVISO_CONTATO, 'erro');
+    const arquivos = [...e.target.files].slice(0, MAX_FOTOS - fotos.length);
+    if (e.target.files.length > arquivos.length) toast(`Limite de ${MAX_FOTOS} fotos: só as primeiras ${arquivos.length} serão enviadas.`);
+    const $st = document.getElementById('up-status');
+    let ok = 0;
+    for (const [n, file] of arquivos.entries()) {
+      $st.textContent = `Enviando ${n + 1} de ${arquivos.length}…`;
+      try {
+        const { url, caminho } = await subirFoto(file, 'trabalho');
+        const { error } = await sb.from('fotos_trabalhos').insert({ user_id: me.id, url, caminho, legenda });
+        if (error) { await sb.storage.from('fotos').remove([caminho]); throw error; }
+        ok++;
+      } catch (er) { falha(er); break; }
+    }
+    if (ok) toast(ok === 1 ? 'Foto adicionada!' : `${ok} fotos adicionadas!`);
+    rota();
+  });
+
   const fv = document.getElementById('fpriv');
   fv.addEventListener('submit', async (e) => {
     e.preventDefault();
