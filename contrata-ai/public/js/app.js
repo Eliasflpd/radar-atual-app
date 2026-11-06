@@ -644,7 +644,7 @@ async function telaInicio() {
       </div>
       <img class="hero-foto" src="img/profissional-hero.webp" alt="" width="270" height="307">
     </section>
-    <form class="busca-hero" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você precisa?" aria-label="Qual serviço você precisa?" autocomplete="off"></form>
+    <form class="busca-hero" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você precisa?" aria-label="Qual serviço você precisa?" autocomplete="off"><button class="btn-buscar" aria-label="Pesquisar">${ic('seta')}</button></form>
     <div class="grupos">
       ${Object.entries(GRUPOS).map(([k, g]) => `<a class="grupo ${g.cor}" href="#/grupo/${k}"><span>${ic(g.icone, g.cheio ? 'cheio' : '')}</span><b>${g.nome}</b></a>`).join('')}
       <a class="grupo marinho" href="#/categorias"><span>${ic('grade')}</span><b>Outros Serviços</b></a>
@@ -710,7 +710,7 @@ function abrirMenu() {
 
 // Todos os serviços (Outros Serviços)
 function telaCategorias() {
-  $app.innerHTML = `<form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você precisa?" aria-label="Qual serviço você precisa?"></form>
+  $app.innerHTML = `<form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você precisa?" aria-label="Qual serviço você precisa?"><button class="btn-buscar" aria-label="Pesquisar">${ic('seta')}</button></form>
     <div class="cat-grade todas">${categoriasOrdenadas().map((c) => tileCategoria(c)).join('')}</div>`;
   document.getElementById('fb').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -740,7 +740,7 @@ async function telaLista({ cat, q, grupo }) {
   if (g) tituloTopo(g.nome);
   $app.innerHTML = `
     ${g ? `<div class="cat-grade grupo-areas">${cats.map((x) => tileCategoria(x)).join('')}</div>` : ''}
-    <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" value="${esc(q || '')}" placeholder="${c ? `Buscar em ${esc(nomeCurto(c.nome))}` : 'Buscar serviço ou profissional'}" aria-label="Buscar"></form>
+    <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" value="${esc(q || '')}" placeholder="${c ? `Buscar em ${esc(nomeCurto(c.nome))}` : 'Buscar serviço ou profissional'}" aria-label="Buscar"><button class="btn-buscar" aria-label="Pesquisar">${ic('seta')}</button></form>
     <div class="barra-filtros" role="group" aria-label="Filtros">
       ${chipCidade()}
       <span class="sep"></span>
@@ -766,7 +766,7 @@ async function telaLista({ cat, q, grupo }) {
     document.getElementById('resultados').innerHTML = esqueleto(2);
     listarPrestadores(filtros()).catch(falha);
   });
-  document.getElementById('fb').addEventListener('submit', (e) => { e.preventDefault(); listarPrestadores(filtros()).catch(falha); });
+  document.getElementById('fb').addEventListener('submit', (e) => { e.preventDefault(); e.target.q.blur(); listarPrestadores(filtros()).catch(falha); });
   await listarPrestadores(filtros());
 }
 

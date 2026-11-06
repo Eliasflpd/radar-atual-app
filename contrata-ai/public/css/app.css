@@ -898,3 +898,14 @@ nav#nav a .ic { stroke-width: 1.9; }
 .cv-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .cv-checks li { display: flex; align-items: center; gap: 8px; }
 .cv-checks .ic { width: 18px; height: 18px; flex: none; color: var(--verde); }
+
+/* botão de pesquisar dentro da caixa de busca (não precisa usar o teclado) */
+.btn-buscar { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin-left: auto; border: 0; border-radius: 50%;
+  background: var(--pri); color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.btn-buscar .ic { width: 22px; height: 22px; stroke-width: 2.6; color: #fff; }
+.btn-buscar:hover { background: var(--pri-forte); }
+.btn-buscar:active { transform: scale(.94); }
+.busca-pilula { padding-right: 5px; }
+.busca-hero { padding-right: 7px; }
+.busca-hero .btn-buscar .ic { width: 22px; height: 22px; color: #fff; }
+@media (max-height: 700px) { .busca-hero .btn-buscar { width: 38px; height: 38px; } }
