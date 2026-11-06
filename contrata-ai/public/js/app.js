@@ -457,16 +457,14 @@ const marcarOlhou = () => { try { sessionStorage.setItem('contrata-olhou', '1');
 function telaBoasVindas() {
   $app.innerHTML = `<section class="boas-vindas">
     <div class="bv-marca">${LOGO}<span>Contrata <em>Aí</em></span></div>
-    <h1>Contrate quem faz.<br>Trabalhe no que você sabe.</h1>
-    <p class="bv-sub">Pedreiro, diarista, eletricista, designer e muito mais, para pessoas e empresas. Você conversa no app, paga com segurança e só então recebe o contato.</p>
-    <div class="bv-opcoes">
-      <a class="opcao-grande" href="#/cadastro?tipo=contratar"><span class="op-ic">${ic('busca')}</span>
-        <span><b>Quero contratar</b><small>Encontre profissionais para o seu serviço</small></span>${ic('seta')}</a>
-      <a class="opcao-grande" href="#/cadastro?tipo=trabalhar"><span class="op-ic">${ic('pedidos')}</span>
-        <span><b>Quero trabalhar</b><small>Ofereça seus serviços e receba pedidos</small></span>${ic('seta')}</a>
+    <h1>O que você quer fazer?</h1>
+    <div class="escolhas">
+      <a class="escolha contratar" href="#/cadastro?tipo=contratar">
+        <span class="escolha-ic">${ic('busca')}</span><b>Quero contratar</b><small>Encontrar um profissional</small></a>
+      <a class="escolha trabalhar" href="#/cadastro?tipo=trabalhar">
+        <span class="escolha-ic">${ic('pedidos')}</span><b>Quero trabalhar</b><small>Oferecer meus serviços</small></a>
     </div>
-    <a class="btn sec largo" href="#/entrar">Já tenho conta</a>
-    <a class="link-simples" href="#/" id="so-olhar">Só quero dar uma olhada</a>
+    <p class="bv-rodape"><a href="#/entrar">Já tenho conta</a><span aria-hidden="true">·</span><a href="#/" id="so-olhar">Só olhar</a></p>
   </section>`;
   document.getElementById('so-olhar').addEventListener('click', marcarOlhou);
 }
