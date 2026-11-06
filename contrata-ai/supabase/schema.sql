@@ -21,7 +21,9 @@ insert into public.categorias (nome, icone) values
   ('Mecânico','🔧'),('Técnico em informática','💻'),('Designer','✏️'),('Programador','👨‍💻'),
   ('Fotógrafo','📷'),('Professor particular','📚'),('Cabeleireiro / Beleza','💇'),
   ('Cozinheiro / Buffet','🍳'),('Motorista / Frete','🚚'),('Contador','📊'),
-  ('Advogado','⚖️'),('Cuidador / Babá','🤝'),('Ajudante geral','💪'),('Outros','🛠️')
+  ('Advogado','⚖️'),('Cuidador / Babá','🤝'),('Ajudante geral','💪'),
+  ('Guia turístico','🧭'),('Passeios 4x4 e quadriciclo','🚙'),('Barqueiro / Passeio de barco','🚤'),('Instrutor de kitesurfe','🪁'),('Garçom / Atendente','🍽️'),('Mototáxi / Entregas','🛵'),('Trabalhador rural','🌱'),('Tratorista / Operador de máquinas','🚜'),('Técnico em refrigeração','❄️'),('Costureira','🧵'),
+  ('Outros','🛠️')
 on conflict (nome) do nothing;
 
 -- ---------- Perfis (dados públicos — NUNCA contato) ----------

@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v3';
+const CHAVE = 'contrata-demo-v4';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -12,7 +12,9 @@ const CATEGORIAS = [
   ['Pedreiro', '🧱'], ['Eletricista', '💡'], ['Encanador', '🚰'], ['Pintor', '🎨'], ['Diarista / Limpeza', '🧹'],
   ['Jardineiro', '🌿'], ['Marceneiro', '🪚'], ['Serralheiro', '⚙️'], ['Mecânico', '🔧'], ['Técnico em informática', '💻'],
   ['Designer', '✏️'], ['Programador', '👨‍💻'], ['Fotógrafo', '📷'], ['Professor particular', '📚'], ['Cabeleireiro / Beleza', '💇'],
-  ['Cozinheiro / Buffet', '🍳'], ['Motorista / Frete', '🚚'], ['Contador', '📊'], ['Advogado', '⚖️'], ['Cuidador / Babá', '🤝'], ['Ajudante geral', '💪'], ['Outros', '🛠️'],
+  ['Cozinheiro / Buffet', '🍳'], ['Motorista / Frete', '🚚'], ['Contador', '📊'], ['Advogado', '⚖️'], ['Cuidador / Babá', '🤝'], ['Ajudante geral', '💪'],
+  ['Guia turístico', '🧭'], ['Passeios 4x4 e quadriciclo', '🚙'], ['Barqueiro / Passeio de barco', '🚤'], ['Instrutor de kitesurfe', '🪁'], ['Garçom / Atendente', '🍽️'], ['Mototáxi / Entregas', '🛵'], ['Trabalhador rural', '🌱'], ['Tratorista / Operador de máquinas', '🚜'], ['Técnico em refrigeração', '❄️'], ['Costureira', '🧵'],
+  ['Outros', '🛠️'],
 ].map(([nome, icone], i) => ({ id: i + 1, nome, icone }));
 
 // Fotos de exemplo desenhadas em SVG (a demonstração não pode carregar imagens de fora)
@@ -100,6 +102,25 @@ function semente() {
     P('u-cida', 'Aparecida Oliveira', 20, 'Campinas', 'SP', 'Cuidadora de idosos com curso técnico. Plantões diurnos e noturnos.', 180, 5.0, 12, true),
     P('u-sergio', 'Sérgio Ramos', 6, 'São Paulo', 'SP', 'Jardineiro: poda, corte de grama, paisagismo e manutenção mensal.', 140, 4.6, 24),
     P('u-andre', 'André Luiz', 10, 'Rio de Janeiro', 'RJ', 'Técnico de informática: formatação, redes, câmeras e manutenção de computadores.', 120, 4.7, 31),
+    // Barreirinhas (MA) — portão dos Lençóis Maranhenses
+    P('u-br1', 'Raimundo Nonato', 22, 'Barreirinhas', 'MA', 'Guia de turismo credenciado. Lagoa Azul, Lagoa Bonita e circuito das lagoas. Conto a história da região e das comunidades. Falo espanhol básico.', 150, 4.9, 64, true),
+    P('u-br2', 'Luana Ferreira', 22, 'Barreirinhas', 'MA', 'Guia bilíngue (português e inglês). Roteiros para estrangeiros, Atins e Caburé, nascer do sol nas dunas.', 220, 5.0, 31, true),
+    P('u-br3', 'Francisco das Chagas', 23, 'Barreirinhas', 'MA', 'Motorista de 4x4 (Toyota) para o Parque Nacional dos Lençóis: travessia de balsa e circuito das lagoas. Grupos de até 10 pessoas.', 200, 4.8, 88, true),
+    P('u-br4', 'Edivaldo Sousa', 24, 'Barreirinhas', 'MA', 'Barqueiro no Rio Preguiças: voadeira para Vassouras, Mandacaru e Caburé. Passeios privativos e transfer para Atins.', 120, 4.7, 52),
+    P('u-br5', 'Thiago Mendes', 25, 'Barreirinhas', 'MA', 'Instrutor de kitesurfe em Atins com certificação. Aulas para iniciantes, aluguel de equipamento e downwind.', 350, 4.9, 27, true),
+    P('u-br6', 'Josiane Carvalho', 26, 'Barreirinhas', 'MA', 'Garçonete e atendente com experiência em restaurante e pousada. Disponível para alta temporada e eventos.', 90, 4.6, 15),
+    P('u-br7', 'Maria do Socorro', 5, 'Barreirinhas', 'MA', 'Camareira e diarista para pousadas e casas de temporada. Troca de enxoval e limpeza entre hóspedes.', 100, 4.8, 40, true),
+    P('u-br8', 'Ronaldo Lima', 27, 'Barreirinhas', 'MA', 'Mototáxi e entregas no centro e na Beira-Rio. Levo encomendas para pousadas e restaurantes.', 10, 4.5, 120),
+    P('u-br9', 'Antônio Cutrim', 30, 'Barreirinhas', 'MA', 'Instalação e manutenção de ar-condicionado split. Atendo pousadas, hotéis e residências.', 180, 4.7, 33),
+    // Tuntum (MA) — comércio, construção e campo
+    P('u-tt1', 'José Wilson', 28, 'Tuntum', 'MA', 'Trabalhador rural: roçado, plantio de milho e mandioca, cerca e diária na fazenda.', 80, 4.6, 22),
+    P('u-tt2', 'Manoel Pereira', 29, 'Tuntum', 'MA', 'Tratorista com experiência em grade, plantio e preparo de solo. Opero retroescavadeira.', 250, 4.8, 18, true),
+    P('u-tt3', 'Gilvan Rodrigues', 1, 'Tuntum', 'MA', 'Pedreiro: casas, muros, reboco e assentamento de bloco. Trabalho com equipe.', 150, 4.7, 36, true),
+    P('u-tt4', 'Cleiton Alves', 2, 'Tuntum', 'MA', 'Eletricista residencial e rural: padrão de energia, instalação de bomba e quadro.', 120, 4.6, 19),
+    P('u-tt5', 'Francisca Lima', 31, 'Tuntum', 'MA', 'Costureira: ajustes, fardamento escolar e uniformes para empresas.', 40, 4.9, 47, true),
+    P('u-tt6', 'Adailton Sousa', 30, 'Tuntum', 'MA', 'Técnico em refrigeração: ar-condicionado, geladeira e freezer comercial.', 150, 4.5, 14),
+    P('u-tt7', 'Erivaldo Costa', 27, 'Tuntum', 'MA', 'Mototáxi e entregas na cidade e povoados próximos.', 8, 4.4, 75),
+    P('u-tt8', 'Luciano Barros', 21, 'Tuntum', 'MA', 'Ajudante de pedreiro e carga/descarga em depósito de material de construção.', 80, 4.5, 12),
     // empresários e empresas que contratam
     perfil('u-emp1', 'Construtora Horizonte', { cidade: 'São Paulo', uf: 'SP', verificado: true }),
     perfil('u-emp2', 'Restaurante Sabor da Terra', { cidade: 'Campinas', uf: 'SP' }),
@@ -109,6 +130,11 @@ function semente() {
     perfil('u-emp6', 'Roberto Lima (Casa do Construtor BH)', { cidade: 'Belo Horizonte', uf: 'MG' }),
     perfil('u-emp7', 'Clínica Bem Viver', { cidade: 'Rio de Janeiro', uf: 'RJ', verificado: true }),
     perfil('u-emp8', 'Eventos Ponto Alto', { cidade: 'São Paulo', uf: 'SP' }),
+    perfil('u-emp9', 'Pousada Dunas do Preguiças', { cidade: 'Barreirinhas', uf: 'MA', verificado: true }),
+    perfil('u-emp10', 'Agência Rota dos Lençóis', { cidade: 'Barreirinhas', uf: 'MA', verificado: true }),
+    perfil('u-emp11', 'Restaurante Beira-Rio', { cidade: 'Barreirinhas', uf: 'MA' }),
+    perfil('u-emp12', 'Fazenda Boa Esperança', { cidade: 'Tuntum', uf: 'MA' }),
+    perfil('u-emp13', 'Depósito Central Materiais de Construção', { cidade: 'Tuntum', uf: 'MA', verificado: true }),
   ];
   const contatos_privados = profiles.map((p, i) => ({
     user_id: p.id, whatsapp: `11 9${String(8000 + ((i * 137) % 1999)).padStart(4, '0')}-${String(1000 + i * 71).slice(0, 4)}`,
@@ -162,6 +188,11 @@ function semente() {
     F('u-aj6', 'Quarto de hotel', '#bae6fd', '#0369a1', '🛏️', 9), F('u-fer', 'Armário planejado', '#d9c2a6', '#7c4a1e', '🚪', 20),
     F('u-fer', 'Mesa de madeira', '#e8d5b7', '#8b5a2b', '🪵', 6), F('u-bia', 'Casamento', '#fce7f3', '#9d174d', '💍', 12),
     F('u-chef', 'Buffet de casamento', '#fef3c7', '#92400e', '🍲', 15), F('u-sergio', 'Paisagismo', '#bbf7d0', '#15803d', '🌳', 8),
+    F('u-br1', 'Lagoa Azul', '#7dd3fc', '#0e7490', '🏝️', 6), F('u-br1', 'Dunas ao pôr do sol', '#fde68a', '#c2410c', '🌅', 12),
+    F('u-br2', 'Grupo em Atins', '#a5f3fc', '#0369a1', '🧭', 9), F('u-br3', 'Travessia da balsa', '#d9f99d', '#3f6212', '🚙', 7),
+    F('u-br4', 'Rio Preguiças', '#99f6e4', '#115e59', '🚤', 5), F('u-br5', 'Aula em Atins', '#bae6fd', '#1d4ed8', '🪁', 4),
+    F('u-tt2', 'Preparo de solo', '#fde68a', '#854d0e', '🚜', 9), F('u-tt3', 'Casa entregue', '#e7e5e4', '#57534e', '🏠', 15),
+    F('u-tt5', 'Fardamento escolar', '#fbcfe8', '#9d174d', '🧵', 6),
   ];
   // verificações de identidade esperando o admin
   const docs = {};
@@ -194,6 +225,14 @@ function semente() {
     PD('pd-10', 'u-emp7', 'Técnico para manutenção de 12 computadores', 10, 'Rio de Janeiro', 'RJ', 1, 1800, 'Limpeza, formatação e rede da recepção e consultórios.', 18),
     PD('pd-11', 'u-emp8', 'Fotógrafo e cozinheiro para evento corporativo', 13, 'São Paulo', 'SP', 2, 5000, 'Evento para 120 pessoas no dia 20. Procuramos fotógrafo e buffet.', 4),
     PD('pd-12', 'u-cliente', 'Diarista quinzenal para apartamento', 5, 'São Paulo', 'SP', 1, 300, 'Apartamento de 2 quartos em Pinheiros. Preferência às sextas.', 3),
+    PD('pd-13', 'u-emp10', 'Guias de turismo para a alta temporada', 22, 'Barreirinhas', 'MA', 4, null, 'Julho a setembro, roteiros Lagoa Azul e Lagoa Bonita. Necessário credenciamento. Inglês é diferencial.', 1),
+    PD('pd-14', 'u-emp10', 'Motoristas de 4x4 com experiência no parque', 23, 'Barreirinhas', 'MA', 3, null, 'Saídas às 8h e 14h. Veículo da agência. Experiência com travessia da balsa.', 5),
+    PD('pd-15', 'u-emp9', 'Camareiras para a temporada de férias', 5, 'Barreirinhas', 'MA', 2, 2600, 'Pousada com 18 quartos, de dezembro a fevereiro. Escala 6x1.', 8),
+    PD('pd-16', 'u-emp9', 'Manutenção de 18 aparelhos de ar-condicionado', 30, 'Barreirinhas', 'MA', 1, 1800, 'Limpeza e revisão antes da temporada. Splits de 9 e 12 mil BTUs.', 20),
+    PD('pd-17', 'u-emp11', 'Garçons para fins de semana', 26, 'Barreirinhas', 'MA', 3, null, 'Sexta a domingo, das 11h às 23h, na Beira-Rio.', 6),
+    PD('pd-18', 'u-emp12', 'Trabalhadores rurais para colheita de milho', 28, 'Tuntum', 'MA', 6, 4800, 'Diária de R$ 80, 10 dias. Transporte saindo da cidade às 6h.', 4),
+    PD('pd-19', 'u-emp12', 'Tratorista para preparo de solo', 29, 'Tuntum', 'MA', 1, 3000, '40 hectares. Trator da fazenda. Início na próxima semana.', 10),
+    PD('pd-20', 'u-emp13', 'Ajudantes para carga e descarga no depósito', 21, 'Tuntum', 'MA', 2, null, 'Segunda a sábado, manhã. Descarga de blocos, cimento e telhas.', 7),
   ];
   return {
     users: profiles.map((p) => ({ id: p.id, email: contatos_privados.find((c) => c.user_id === p.id).email, senha: 'demo123' })),

@@ -58,6 +58,16 @@ const ICONES = {
   balanca: '<path d="M12 4v16M7 20h10M5 7h14M5 7l-3 6a3 3 0 0 0 6 0L5 7ZM19 7l-3 6a3 3 0 0 0 6 0l-3-6Z"/>',
   coracao: '<path d="M12 20s-8-4.5-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15.5 12 20 12 20Z"/>',
   caixa: '<path d="M3 7l9-4 9 4v10l-9 4-9-4V7ZM3 7l9 4 9-4M12 11v10"/>',
+  mapa: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2ZM9 4v14M15 6v14"/>',
+  jipe: '<path d="M3 13l2-5h11l3 5v4H3v-4ZM3 13h16M9 8V5h5"/><circle cx="7" cy="17" r="2"/><circle cx="16" cy="17" r="2"/>',
+  barco: '<path d="M3 15h18l-2 4H5l-2-4ZM12 3v12M12 4l6 8h-6"/>',
+  pipa: '<path d="m12 3 6 6-6 6-6-6 6-6ZM12 15c0 3-2 4-4 5M9 18l-2-1M10 20l-1 2"/>',
+  bandeja: '<path d="M3 17h18M5 17a7 7 0 0 1 14 0M12 10V8M10 7h4"/>',
+  moto: '<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="m6 17 4-6h5l3 6M10 11 8 8H5M15 11l1-3h3"/>',
+  broto: '<path d="M12 21V11M12 11c0-4-3-6-7-6 0 4 3 6 7 6ZM12 14c0-3 2-5 6-5 0 3-2 5-6 5Z"/>',
+  trator: '<circle cx="7" cy="16" r="4"/><circle cx="18" cy="17" r="2.5"/><path d="M7 12V6h6l2 6h4v5M11 6v6"/>',
+  floco: '<path d="M12 2v20M4 7l16 10M20 7 4 17M9 4l3 2 3-2M9 20l3-2 3 2"/>',
+  agulha: '<path d="M4 20 18 6M16 4a2 2 0 1 1 4 4l-2 2-4-4 2-2ZM6 14c-2 2-3 4-2 6 2 1 4 0 6-2"/>',
   grade: '<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>',
 };
 // ícone de cada área
@@ -67,13 +77,18 @@ const ICONE_CAT = {
   'Designer': 'caneta', 'Programador': 'codigo', 'Fotógrafo': 'camera', 'Professor particular': 'livro', 'Cabeleireiro / Beleza': 'tesoura',
   'Cozinheiro / Buffet': 'panela', 'Motorista / Frete': 'caminhao', 'Contador': 'calculadora', 'Advogado': 'balanca',
   'Cuidador / Babá': 'coracao', 'Ajudante geral': 'caixa', 'Outros': 'grade',
+  'Guia turístico': 'mapa', 'Passeios 4x4 e quadriciclo': 'jipe', 'Barqueiro / Passeio de barco': 'barco', 'Instrutor de kitesurfe': 'pipa',
+  'Garçom / Atendente': 'bandeja', 'Mototáxi / Entregas': 'moto', 'Trabalhador rural': 'broto', 'Tratorista / Operador de máquinas': 'trator',
+  'Técnico em refrigeração': 'floco', 'Costureira': 'agulha',
 };
-const ORDEM_CAT = ['Pedreiro', 'Eletricista', 'Diarista / Limpeza', 'Encanador', 'Pintor', 'Ajudante geral', 'Jardineiro', 'Técnico em informática'];
+const ORDEM_CAT = ['Pedreiro', 'Eletricista', 'Diarista / Limpeza', 'Ajudante geral', 'Guia turístico', 'Encanador', 'Técnico em refrigeração', 'Mototáxi / Entregas'];
 const categoriasOrdenadas = () => [...categorias].sort((a, b) => {
   const ia = ORDEM_CAT.indexOf(a.nome), ib = ORDEM_CAT.indexOf(b.nome);
   return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.nome.localeCompare(b.nome);
 });
-const nomeCurto = (n) => n.split(' / ')[0].replace('Técnico em informática', 'Informática').replace('Professor particular', 'Professor');
+const CURTOS = { 'Técnico em informática': 'Informática', 'Professor particular': 'Professor', 'Passeios 4x4 e quadriciclo': 'Passeios 4x4',
+  'Instrutor de kitesurfe': 'Kitesurfe', 'Técnico em refrigeração': 'Ar-condicionado', 'Trabalhador rural': 'Rural' };
+const nomeCurto = (n) => CURTOS[n] || n.split(' / ')[0];
 const tileCategoria = (c, tag = 'a', extra = '') => `<${tag} class="cat-tile" ${tag === 'a' ? `href="#/categoria/${c.id}"` : `type="button" data-cat="${c.id}"`} ${extra}>
   <span class="cat-ic">${ic(ICONE_CAT[c.nome] || 'grade')}</span><span class="cat-nome">${esc(nomeCurto(c.nome))}</span></${tag}>`;
 const ic = (nome, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONES[nome] || ''}</svg>`;
