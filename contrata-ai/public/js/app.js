@@ -64,26 +64,44 @@ const form = (el) => Object.fromEntries(new FormData(el));
 // ---------------------------------------------------------------- fotos
 const MAX_FOTOS = 12;
 // Reduz a foto no celular antes de enviar (mais rápido e economiza espaço)
-async function reduzirImagem(file, max = DEMO ? 900 : 1280, qualidade = DEMO ? 0.72 : 0.82) {
+async function reduzirImagem(file, max = DEMO ? 900 : 1280, qualidade = DEMO ? 0.72 : 0.82, quadrado = false) {
   let img;
   try { img = await createImageBitmap(file); } catch {
     img = await new Promise((ok, falhou) => { const i = new Image(); i.onload = () => ok(i); i.onerror = falhou; i.src = URL.createObjectURL(file); });
   }
-  const k = Math.min(1, max / Math.max(img.width, img.height));
   const c = document.createElement('canvas');
-  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  if (quadrado) {
+    // foto de perfil: corta o centro em quadrado
+    const lado = Math.min(img.width, img.height);
+    c.width = c.height = Math.min(max, lado);
+    c.getContext('2d').drawImage(img, (img.width - lado) / 2, (img.height - lado) / 2, lado, lado, 0, 0, c.width, c.height);
+  } else {
+    const k = Math.min(1, max / Math.max(img.width, img.height));
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  }
   return new Promise((ok) => c.toBlob(ok, 'image/jpeg', qualidade));
 }
 async function subirFoto(file, prefixo, bucket = 'fotos') {
   if (!file.type.startsWith('image/')) throw new Error(`"${file.name}" não é uma imagem.`);
   // documentos precisam de mais resolução para dar para ler
-  const blob = bucket === 'documentos' ? await reduzirImagem(file, DEMO ? 1000 : 1800, 0.85) : await reduzirImagem(file);
+  const blob = bucket === 'documentos' ? await reduzirImagem(file, DEMO ? 1000 : 1800, 0.85)
+    : prefixo === 'perfil' ? await reduzirImagem(file, DEMO ? 480 : 720, 0.82, true) : await reduzirImagem(file);
   const caminho = `${me.id}/${prefixo}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
   const { error } = await sb.storage.from(bucket).upload(caminho, blob, { contentType: 'image/jpeg', upsert: false });
   if (error) throw error;
   return { caminho, url: bucket === 'fotos' ? sb.storage.from('fotos').getPublicUrl(caminho).data.publicUrl : '' };
 }
+// Botões de foto de perfil: selfie (câmera frontal) ou galeria
+const botoesSelfie = (prefixo) => `<div class="botoes-foto">
+  <label class="btn pequeno">${ic('camera')}Tirar selfie<input type="file" id="${prefixo}-selfie" accept="image/*" capture="user" hidden></label>
+  <label class="btn sec pequeno">Escolher da galeria<input type="file" id="${prefixo}-galeria" accept="image/*" hidden></label></div>`;
+function aoEscolherFoto(prefixo, cb) {
+  for (const id of [`${prefixo}-selfie`, `${prefixo}-galeria`]) {
+    document.getElementById(id)?.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) cb(f); e.target.value = ''; });
+  }
+}
+
 // CPF: confere os dígitos verificadores
 function cpfValido(cpf) {
   const c = String(cpf || '').replace(/\D/g, '');
@@ -287,8 +305,9 @@ async function telaInicio() {
 function cardPrestador(p, fotos = []) {
   const cat = nomeCategoria(p.categoria_id);
   return `<a class="prestador" href="#/p/${p.id}">
-    <div class="capa ${fotos.length ? '' : 'sem-foto'}">
+    <div class="capa ${fotos.length || p.foto_url ? '' : 'sem-foto'}">
       ${fotos.length ? `<img src="${esc(fotos[0])}" alt="" loading="lazy">${fotos.length > 1 ? `<span class="qtd-fotos">${ic('camera')}${fotos.length}</span>` : ''}`
+        : p.foto_url ? `<img class="capa-rosto" src="${esc(p.foto_url)}" alt="" loading="lazy">`
         : `<span class="letra">${esc((cat || '?')[0])}</span>`}
     </div>
     <div class="corpo">
@@ -334,18 +353,39 @@ function telaCadastro() {
     <label>Nome completo<input name="nome" required minlength="3"></label>
     <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
     <label>Senha<input name="senha" type="password" required minlength="6" autocomplete="new-password"></label>
+    <div class="cad-foto">
+      <div class="previa-redonda" id="cad-previa">${ic('perfil')}</div>
+      <div><b>Sua foto de perfil</b><small>Rosto bem iluminado, de frente. Perfis com foto passam mais confiança e recebem mais contatos.</small>
+        ${botoesSelfie('cad')}</div>
+    </div>
     <label>WhatsApp<input name="whatsapp" inputmode="tel" placeholder="(11) 99999-9999" required>
       <small>${ic('cadeado')}Fica escondido. Só aparece para a outra pessoa depois que a contratação for paga pelo app.</small></label>
     <fieldset><legend>O que você quer fazer?</legend>
       <label class="check"><input type="checkbox" name="contratar" checked> Quero contratar serviços</label>
-      <label class="check"><input type="checkbox" name="prestar"> Quero oferecer meus serviços</label>
+      <label class="check"><input type="checkbox" name="prestar" id="cad-prestar"> Quero oferecer meus serviços</label>
     </fieldset>
+    <div id="cad-prestador" hidden>
+      <label for="cad-cat">Sua área<select id="cad-cat" name="categoria_id"><option value="">Escolha…</option>${categorias.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select></label>
+      <div class="dupla"><label for="cad-cidade">Cidade<input id="cad-cidade" name="cidade"></label>
+        <label for="cad-uf">UF<input id="cad-uf" name="uf" maxlength="2" style="text-transform:uppercase"></label></div>
+    </div>
     <label class="check"><input type="checkbox" name="maior" required> Tenho 18 anos ou mais</label>
     <label class="check"><input type="checkbox" name="termos" required> Li e aceito os <a href="#/termos" target="_blank">Termos de Uso e Privacidade</a></label>
     <button class="btn">Criar conta</button>
     <p class="nota">Já tem conta? <a href="#/entrar">Entrar</a></p>
   </form>`;
   const f = document.getElementById('f');
+  let fotoCadastro = null;
+  aoEscolherFoto('cad', (file) => {
+    if (!file.type.startsWith('image/')) return toast('Escolha uma imagem.', 'erro');
+    fotoCadastro = file;
+    document.getElementById('cad-previa').innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Sua foto">`;
+  });
+  const $prest = document.getElementById('cad-prestador');
+  document.getElementById('cad-prestar').addEventListener('change', (e) => {
+    $prest.hidden = !e.target.checked;
+    $prest.querySelectorAll('select, input').forEach((el) => { el.required = e.target.checked; });
+  });
   f.addEventListener('submit', async (e) => {
     e.preventDefault();
     const v = form(f);
@@ -362,10 +402,22 @@ function telaCadastro() {
     });
     if (error) return falha(error);
     if (!r.session) {
-      $app.innerHTML = '<div class="card estreito"><h2>Quase lá! </h2><p>Enviamos um link de confirmação para o seu e-mail. Clique nele para ativar a conta.</p></div>';
+      $app.innerHTML = '<div class="card estreito"><h2>Quase lá!</h2><p>Enviamos um link de confirmação para o seu e-mail. Clique nele para ativar a conta. Depois é só entrar e colocar sua foto no Perfil.</p></div>';
       return;
     }
-    toast('Conta criada!');
+    await carregarMe(r.session);
+    try {
+      const extra = {};
+      if (fotoCadastro) extra.foto_url = (await subirFoto(fotoCadastro, 'perfil')).url;
+      if (v.prestar) Object.assign(extra, { categoria_id: Number(v.categoria_id) || null, cidade: (v.cidade || '').trim(), uf: (v.uf || '').toUpperCase().trim() });
+      if (Object.keys(extra).length) {
+        const { error: er } = await sb.from('profiles').update(extra).eq('id', me.id);
+        if (er) throw er;
+        await carregarMe(r.session);
+      }
+    } catch (er) { falha(er); }
+    renderNav();
+    toast(v.prestar ? 'Conta criada! Agora adicione fotos dos seus trabalhos.' : 'Conta criada!');
     location.hash = v.prestar ? '#/perfil' : '#/';
   });
 }
@@ -636,7 +688,7 @@ async function telaPerfil() {
       <div class="dupla"><label>Cidade<input name="cidade" value="${esc(me.cidade)}"></label>
         <label>UF<input name="uf" value="${esc(me.uf)}" maxlength="2" style="text-transform:uppercase"></label></div>
       <div class="foto-perfil">${avatar(me, 'grande')}
-        <label class="btn sec pequeno">${ic('camera')}${me.foto_url ? 'Trocar' : 'Colocar'} foto de perfil<input type="file" id="in-avatar" accept="image/*" hidden></label></div>
+        <div><b>${me.foto_url ? 'Trocar foto de perfil' : 'Coloque sua foto'}</b>${botoesSelfie('perf')}</div></div>
       <fieldset><legend>Como você usa o app</legend>
         <label class="check"><input type="checkbox" name="is_contratante" ${me.is_contratante ? 'checked' : ''}> Contrato serviços</label>
         <label class="check"><input type="checkbox" name="is_prestador" ${me.is_prestador ? 'checked' : ''}> Ofereço serviços</label>
@@ -696,9 +748,7 @@ async function telaPerfil() {
     renderNav();
     toast('Perfil salvo!');
   });
-  document.getElementById('in-avatar').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  aoEscolherFoto('perf', async (file) => {
     try {
       toast('Enviando foto…');
       const { url } = await subirFoto(file, 'perfil');

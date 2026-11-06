@@ -591,12 +591,14 @@ export function criarDemo() {
   return sb;
 }
 
+const SEMENTE_IDS = new Set(semente().users.map((u) => u.id));
+
 function montarBarra(sb) {
   document.body.classList.add('demo');
   const faixa = document.createElement('div');
   faixa.className = 'demo-faixa';
   const papeis = [['cliente', 'Mariana · cliente', '#/'], ['empresa', 'Construtora Horizonte · empresa', '#/pedidos'],
-    ['prestador', 'Pedro · pedreiro', '#/conversas'], ['ajudante', 'Marcos · ajudante', '#/pedidos'], ['admin', 'Você · administrador', '#/admin']];
+    ['prestador', 'Pedro · pedreiro', '#/conversas'], ['ajudante', 'Marcos · ajudante', '#/pedidos'], ['admin', 'Você · administrador', '#/admin'], ['novo', 'Fazer um novo cadastro', '#/cadastro']];
   faixa.innerHTML = `<b>Demonstração</b>
     <label for="demo-papel"><span class="rot">Ver como</span>
       <select id="demo-papel">${papeis.map(([k, rot]) => `<option value="${k}">${rot}</option>`).join('')}</select></label>
@@ -604,13 +606,21 @@ function montarBarra(sb) {
       <select id="demo-estilo"><option value="a">A · Canteiro</option><option value="b">B · Bairro</option><option value="c">C · Executivo</option></select></label>
     <button type="button" id="demo-reset" title="Apaga as mudanças e volta aos dados de exemplo">Recomeçar</button>`;
   const sel = faixa.querySelector('select');
+  // contas criadas no cadastro também aparecem no seletor
+  const desenharOpcoes = () => {
+    const novas = db.users.filter((u) => !SEMENTE_IDS.has(u.id));
+    sel.innerHTML = papeis.map(([k, rot]) => `<option value="${k}">${rot}</option>`).join('')
+      + novas.map((u) => `<option value="u:${u.id}">${db.profiles.find((p) => p.id === u.id)?.nome || u.email} · minha conta</option>`).join('');
+  };
   const sincronizar = () => {
+    desenharOpcoes();
     const k = Object.keys(PERFIS_DEMO).find((x) => PERFIS_DEMO[x] === db.sessao);
-    if (k) sel.value = k;
+    sel.value = k || (db.sessao ? `u:${db.sessao}` : 'novo');
   };
   sel.addEventListener('change', () => {
+    if (sel.value.startsWith('u:')) { sb.demo.entrarComo(sel.value.slice(2)); location.hash = '#/perfil'; return; }
     const [, , destino] = papeis.find(([k]) => k === sel.value);
-    sb.demo.entrarComo(PERFIS_DEMO[sel.value]);
+    sb.demo.entrarComo(sel.value === 'novo' ? null : PERFIS_DEMO[sel.value]);
     location.hash = destino;
   });
   faixa.querySelector('#demo-reset').addEventListener('click', () => sb.demo.resetar());
