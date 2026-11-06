@@ -1,5 +1,6 @@
 import { temContato } from './filtro.js';
 import * as CV from './curriculo.js';
+import { codigoPix, normalizarChave, tipoChave } from './pix.js';
 
 const SUPABASE_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 const DEMO = !!window.CONTRATA_DEMO;
@@ -268,38 +269,55 @@ const chaveLidas = () => `contrata-lidas-${me?.id || 'anon'}`; // separado por p
 const lidas = () => { try { return JSON.parse(localStorage.getItem(chaveLidas()) || '{}'); } catch { return {}; } };
 const marcarLida = (convId) => { try { const l = lidas(); l[convId] = new Date().toISOString(); localStorage.setItem(chaveLidas(), JSON.stringify(l)); } catch { /* sem storage */ } setTimeout(() => atualizarBadge(), 0); };
 
-// ---------------------------------------------------------------- escolher como pagar (Pix ou cartão em até 12x)
-function escolherPagamento(valor, rotulo) {
+// ---------------------------------------------------------------- pagar com Pix (conta 99Pay do dono do app)
+// O cliente paga pelo app do banco (QR code ou copia e cola) e toca em "Já paguei"; o admin confere e confirma.
+// o gerador de QR só é baixado quando alguém vai pagar
+const carregarQr = () => import('./qrcode.js').then((m) => m.default);
+async function configPix() {
+  const { data } = await sb.from('config_pagamento').select('pix_chave,pix_nome,pix_cidade').eq('id', 1).maybeSingle();
+  return data || { pix_chave: '' };
+}
+const txidPix = (ct, tipo) => `CA${String(ct.id).replace(/[^0-9a-z]/gi, '').slice(0, 10).toUpperCase()}${{ total: 'T', entrada: 'E', restante: 'R' }[tipo] || ''}`;
+
+function pagarPix(ct, prox, cfg, rotulo) {
   return new Promise((resolve) => {
+    const codigo = codigoPix({ chave: cfg.pix_chave, nome: cfg.pix_nome, cidade: cfg.pix_cidade, valor: prox.valor, txid: txidPix(ct, prox.tipo) });
     const fundo = document.createElement('div');
     fundo.className = 'modal-fundo';
-    const parcelas = Array.from({ length: 12 }, (_, i) => i + 1);
-    fundo.innerHTML = `<div class="modal pagar" role="dialog" aria-modal="true" aria-label="Pagamento">
+    fundo.innerHTML = `<div class="modal pagar pix" role="dialog" aria-modal="true" aria-label="Pagar com Pix">
       <p class="eyebrow">${esc(rotulo)}</p>
-      <p class="pagar-valor">${brl(valor)}</p>
-      <div class="formas" role="radiogroup" aria-label="Forma de pagamento">
-        <label class="forma"><input type="radio" name="forma" value="pix" checked><span><b>Pix</b><small>Na hora, sem juros</small></span></label>
-        <label class="forma"><input type="radio" name="forma" value="cartao"><span><b>Cartão de crédito</b><small>Em até 12x</small></span></label>
-      </div>
-      <label class="parcelas-campo" hidden>Em quantas vezes?
-        <select name="parcelas">${parcelas.map((n) => `<option value="${n}">${n}x de ${brl(Math.ceil(valor / n * 100) / 100)}${n > 1 ? '*' : ''}</option>`).join('')}</select>
-        <small>* No pagamento de verdade, o Mercado Pago mostra o valor exato das parcelas. Parcelas podem ter juros do cartão.</small></label>
-      ${DEMO ? '<p class="nota">Demonstração: o pagamento é simulado, nenhum valor é cobrado.</p>' : '<p class="nota">Você vai para o Mercado Pago para pagar com segurança.</p>'}
-      <div class="acoes"><button type="button" class="btn sec" data-r="0">Voltar</button><button type="button" class="btn" data-r="1">${DEMO ? 'Simular pagamento' : 'Ir para o pagamento'}</button></div>
+      <p class="pagar-valor">${brl(prox.valor)}</p>
+      <div class="pix-qr" id="pix-qr" aria-label="QR code do Pix"><span class="meta">Carregando QR code…</span></div>
+      <button type="button" class="btn largo" data-copiar>${ic('documento')}Copiar código Pix</button>
+      <ol class="pix-passos">
+        <li>Abra o app do seu banco e escolha <b>Pix</b>.</li>
+        <li>Leia o QR code ou use <b>Pix copia e cola</b> (o código copiado).</li>
+        <li>Confira o valor de <b>${brl(prox.valor)}</b> e pague.</li>
+        <li>Volte aqui e toque em <b>Já paguei</b>.</li>
+      </ol>
+      <p class="pix-chave">Chave Pix (${esc(tipoChave(cfg.pix_chave))}): <b>${esc(normalizarChave(cfg.pix_chave))}</b>${cfg.pix_nome ? `<br>Recebedor: <b>${esc(cfg.pix_nome)}</b>` : ''}</p>
+      ${DEMO ? '<p class="nota">Demonstração: nenhum valor é cobrado. Toque em "Já paguei" e depois confirme como Administrador (botão Demo).</p>' : ''}
+      <div class="acoes"><button type="button" class="btn sec" data-r="0">Voltar</button><button type="button" class="btn" data-r="1">${ic('check')}Já paguei</button></div>
     </div>`;
-    const $parc = fundo.querySelector('.parcelas-campo');
-    fundo.addEventListener('change', () => { $parc.hidden = fundo.querySelector('input[name="forma"]:checked').value !== 'cartao'; });
-    fundo.addEventListener('click', (e) => {
+    fundo.addEventListener('click', async (e) => {
+      if (e.target.closest('[data-copiar]')) {
+        try { await navigator.clipboard.writeText(codigo); toast('Código Pix copiado! Cole no app do seu banco.'); }
+        catch { window.prompt('Copie o código Pix:', codigo); }
+        return;
+      }
       const r = e.target.closest('[data-r]')?.dataset.r;
       if (r === undefined && e.target !== fundo) return;
-      const forma = fundo.querySelector('input[name="forma"]:checked').value;
-      const n = forma === 'cartao' ? Number(fundo.querySelector('select[name="parcelas"]').value) : 1;
       fundo.remove();
-      resolve(r === '1' ? { forma, parcelas: n } : null);
+      resolve(r === '1');
     });
     document.body.appendChild(fundo);
+    carregarQr().then((qr) => {
+      const q = qr(0, 'M'); q.addData(codigo); q.make();
+      document.getElementById('pix-qr').innerHTML = q.createSvgTag({ cellSize: 5, margin: 2, scalable: true });
+    }).catch(() => { const el = document.getElementById('pix-qr'); if (el) el.innerHTML = '<span class="meta">Use o botão "Copiar código Pix" abaixo.</span>'; });
   });
 }
+
 // Situação de pagamento de uma contratação
 function situacaoPagamento(ct) {
   const pago = Number(ct.valor_pago || 0), total = Number(ct.valor), pct = Number(ct.entrada_pct || 100);
@@ -407,6 +425,11 @@ function ouvirMensagens() {
       toast(`Nova mensagem de ${quem.split(' ')[0]}: "${m.bloqueada ? 'mensagem bloqueada' : m.texto.slice(0, 60)}"`);
       atualizarBadge(true);
       if (location.hash.startsWith('#/conversas')) rota();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'avisos_pix' }, (ev) => {
+      if (!me?.is_admin) return;
+      toast(`Novo Pix de ${brl(ev.new.valor)} para conferir no painel do administrador.`);
+      if (location.hash.startsWith('#/admin')) rota();
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'suporte_mensagens' }, (ev) => {
       const m = ev.new;
@@ -1241,8 +1264,6 @@ async function telaChat(id, params) {
   const souPrestador = c.prestador_id === me.id;
   const outro = souPrestador ? c.contratante : c.prestador;
   tituloTopo(outro.nome.split(' ')[0]);
-  if (params.get('pago') === '1') toast('Pagamento enviado! Assim que o Mercado Pago confirmar, o contato é liberado.');
-  if (params.get('pago') === '0') toast('O pagamento não foi concluído.', 'erro');
 
   $app.innerHTML = `<div class="chat">
     <div class="chat-topo">${avatar(outro)}<div><b>${esc(outro.nome)}</b> ${outro.verificado ? `<span class="verif-ic" title="Identidade verificada">${ic('check')}</span>` : ''}${outro.cadastur_status === 'aprovado' ? ` <span class="mini-cadastur">${ic('mapa')}Cadastur</span>` : ''}
@@ -1266,6 +1287,9 @@ async function telaChat(id, params) {
     const { data: cts } = await sb.from('contratacoes').select('*').eq('conversa_id', id).order('criado_em');
     const { data: avs } = await sb.from('avaliacoes').select('contratacao_id').in('contratacao_id', (cts || []).map((x) => x.id));
     const { data: pags } = await sb.from('pagamentos').select('*').in('contratacao_id', (cts || []).map((x) => x.id)).order('criado_em');
+    const { data: avisos } = await sb.from('avisos_pix').select('contratacao_id,status,motivo,valor,criado_em').in('contratacao_id', (cts || []).map((x) => x.id)).order('criado_em');
+    const avisoDe = (cid) => (avisos || []).filter((a) => a.contratacao_id === cid).pop();
+    const emConferencia = (cid) => avisoDe(cid)?.status === 'pendente';
     const avaliadas = new Set((avs || []).map((a) => a.contratacao_id));
     liberado = (cts || []).some((x) => ['paga', 'concluida'].includes(x.status));
     let contato = '';
@@ -1298,12 +1322,14 @@ async function telaChat(id, params) {
       </dl>
       ${souPrestador && ct.repassado_em ? `<p class="nota">${ic('check')}Repasse feito em ${data(ct.repassado_em)}.</p>` : ''}
       ${(pags || []).filter((pg) => pg.contratacao_id === ct.id).map((pg) => `<p class="pag-linha">${ic('check')}${TIPO[pg.tipo]} de ${brl(pg.valor)} paga no ${FORMA[pg.forma]}${pg.parcelas > 1 ? ` em ${pg.parcelas}x` : ''} · ${data(pg.criado_em)}</p>`).join('')}
-      ${!souPrestador && ct.status === 'proposta' ? `<p class="nota">${ic('escudo')}Pague com Pix ou cartão em até 12x. ${situacaoPagamento(ct).aVista ? '' : `Agora você paga só a entrada (${brl(situacaoPagamento(ct).entrada)}); o restante, quando o serviço terminar. `}O WhatsApp é liberado assim que o pagamento for confirmado.</p>` : ''}
+      ${emConferencia(ct.id) ? `<div class="alerta com-ic pix-conferencia">${ic('relogio')}<span><b>Pix de ${brl(avisoDe(ct.id).valor)} em conferência.</b> ${souPrestador ? 'A administração está conferindo o pagamento do cliente.' : 'A administração confere e libera em instantes. Você recebe o aviso aqui.'}</span></div>` : ''}
+      ${!emConferencia(ct.id) && avisoDe(ct.id)?.status === 'recusado' && situacaoPagamento(ct).falta > 0 && !souPrestador ? `<div class="alerta erro-claro com-ic">${ic('alerta')}<span><b>Pagamento não confirmado:</b> ${esc(avisoDe(ct.id).motivo)}. Confira no app do seu banco e tente de novo, ou fale com o administrador.</span></div>` : ''}
+      ${!souPrestador && ct.status === 'proposta' && !emConferencia(ct.id) ? `<p class="nota">${ic('escudo')}Pague com Pix pelo app. ${situacaoPagamento(ct).aVista ? '' : `Agora você paga só a entrada (${brl(situacaoPagamento(ct).entrada)}); o restante, quando o serviço terminar. `}O WhatsApp é liberado assim que o pagamento for confirmado.</p>` : ''}
       ${!souPrestador && ct.status === 'paga' && situacaoPagamento(ct).falta > 0 ? `<p class="nota">${ic('relogio')}Quando o serviço terminar, pague o restante (${brl(situacaoPagamento(ct).falta)}) e confirme que foi feito.</p>` : ''}
       <div class="acoes">
-        ${ct.status === 'proposta' && !souPrestador ? `<button class="btn" data-pagar="${ct.id}">${situacaoPagamento(ct).aVista ? `Aceitar e pagar ${brl(ct.valor)}` : `Aceitar e pagar a entrada ${brl(situacaoPagamento(ct).entrada)}`}</button>` : ''}
-        ${ct.status === 'paga' && !souPrestador && situacaoPagamento(ct).falta > 0 ? `<button class="btn" data-pagar="${ct.id}">Pagar o restante ${brl(situacaoPagamento(ct).falta)}</button>` : ''}
-        ${ct.status === 'proposta' ? `<button class="btn sec" data-cancelar="${ct.id}">${souPrestador ? 'Cancelar proposta' : 'Recusar'}</button>` : ''}
+        ${ct.status === 'proposta' && !souPrestador && !emConferencia(ct.id) ? `<button class="btn" data-pagar="${ct.id}">${situacaoPagamento(ct).aVista ? `Aceitar e pagar ${brl(ct.valor)}` : `Aceitar e pagar a entrada ${brl(situacaoPagamento(ct).entrada)}`}</button>` : ''}
+        ${ct.status === 'paga' && !souPrestador && situacaoPagamento(ct).falta > 0 && !emConferencia(ct.id) ? `<button class="btn" data-pagar="${ct.id}">Pagar o restante ${brl(situacaoPagamento(ct).falta)}</button>` : ''}
+        ${ct.status === 'proposta' && !emConferencia(ct.id) ? `<button class="btn sec" data-cancelar="${ct.id}">${souPrestador ? 'Cancelar proposta' : 'Recusar'}</button>` : ''}
         ${ct.status === 'paga' && !souPrestador && situacaoPagamento(ct).falta <= 0 ? `<button class="btn" data-concluir="${ct.id}">Serviço foi feito</button>` : ''}
         ${ct.status === 'paga' && souPrestador ? '<span class="meta">Quando o cliente confirmar que o serviço foi feito, seu pagamento é liberado.</span>' : ''}
       </div>
@@ -1322,7 +1348,7 @@ async function telaChat(id, params) {
           <option value="50">Entrada de 50% + restante no final</option>
           <option value="20">Entrada de 20% + restante no final</option>
           <option value="40">Entrada de 40% + restante no final</option>
-        </select><small>O cliente pode pagar com Pix ou cartão em até 12x.</small></label>
+        </select><small>O cliente paga com Pix pelo app.</small></label>
         <div class="meta" id="calc">Você paga 10% de comissão sobre o valor contratado. O restante é seu.</div>
         <button class="btn">Enviar proposta</button>
       </form></details>` : '';
@@ -1355,22 +1381,13 @@ async function telaChat(id, params) {
         const sp = situacaoPagamento(ctp);
         if (!sp.proximo) return;
         const rotulo = { total: 'Pagamento do serviço', entrada: `Entrada (${sp.pct}%)`, restante: 'Restante do serviço' }[sp.proximo.tipo];
-        const escolha = await escolherPagamento(sp.proximo.valor, rotulo);
-        if (!escolha) return;
-        if (DEMO) {
-          await sb.demo.pagar(b.dataset.pagar, escolha.forma, escolha.parcelas);
-          toast(sp.proximo.tipo === 'restante' ? 'Pagamento confirmado! Agora confirme que o serviço foi feito.' : 'Pagamento confirmado! O WhatsApp dos dois foi liberado.');
-          return renderContratos();
-        }
-        b.disabled = true; b.textContent = 'Abrindo pagamento…';
-        const { data: { session } } = await sb.auth.getSession();
-        const r = await fetch('/api/pagamento', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-          body: JSON.stringify({ contratacao_id: b.dataset.pagar }),
-        }).then((x) => x.json());
-        if (!r.checkout_url) throw new Error(r.erro || 'Falha no pagamento');
-        location.href = r.checkout_url;
+        const cfg = await configPix();
+        if (!cfg.pix_chave) throw new Error('O pagamento ainda não está disponível. Fale com o administrador.');
+        if (!(await pagarPix(ctp, sp.proximo, cfg, rotulo))) return;
+        const { error: er } = await sb.rpc('avisar_pix', { cid: ctp.id });
+        if (er) throw er;
+        toast('Recebemos seu aviso! A administração confere o Pix e libera em instantes.');
+        renderContratos();
       }
       if (b.dataset.cancelar && await confirmar('Cancelar esta proposta?', 'Cancelar proposta')) {
         const { error: er } = await sb.rpc('cancelar_proposta', { cid: b.dataset.cancelar }); if (er) throw er; renderContratos();
@@ -1416,6 +1433,7 @@ async function telaChat(id, params) {
   canais.push(sb.channel(`chat-${id}`)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `conversa_id=eq.${id}` }, (p) => addMsg(p.new))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'contratacoes', filter: `conversa_id=eq.${id}` }, () => renderContratos())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'avisos_pix' }, () => renderContratos())
     .subscribe());
 }
 
@@ -2179,20 +2197,72 @@ async function telaAdmin() {
       <div><span>${r.pedidos_abertos}</span>pedidos abertos</div>
       <div><span>${r.cadastur_pendentes}</span>Cadastur para conferir</div>
       <a href="#/suporte"><span>${r.suporte_novas || 0}</span>pessoas esperando resposta</a>
+      <div><span>${r.pix_pendentes || 0}</span>Pix para confirmar</div>
     </div>
-    <div class="abas"><button data-aba="verificacoes" class="ativa">Verificações${r.verificacoes_pendentes ? ` (${r.verificacoes_pendentes})` : ''}</button>
+    <div class="abas"><button data-aba="pix" class="ativa">Pix${r.pix_pendentes ? ` (${r.pix_pendentes})` : ''}</button>
+      <button data-aba="verificacoes">Verificações${r.verificacoes_pendentes ? ` (${r.verificacoes_pendentes})` : ''}</button>
       <button data-aba="cadastur">Cadastur${r.cadastur_pendentes ? ` (${r.cadastur_pendentes})` : ''}</button>
       <button data-aba="repasses">Repasses</button><button data-aba="contratacoes">Contratações</button>
       <button data-aba="burla">Tentativas de burla</button><button data-aba="usuarios">Usuários</button></div>
     <div id="aba"></div>`;
-  const abas = { verificacoes: abaVerificacoes, cadastur: abaCadastur, repasses: abaRepasses, contratacoes: abaContratacoes, burla: abaBurla, usuarios: abaUsuarios };
+  const abas = { pix: abaPix, verificacoes: abaVerificacoes, cadastur: abaCadastur, repasses: abaRepasses, contratacoes: abaContratacoes, burla: abaBurla, usuarios: abaUsuarios };
   document.querySelector('.abas').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
     document.querySelectorAll('.abas button').forEach((x) => x.classList.toggle('ativa', x === b));
     abas[b.dataset.aba]().catch(falha);
   });
-  await abaVerificacoes();
+  await abaPix();
+}
+
+// Admin: chave Pix da 99Pay e pagamentos para conferir
+async function abaPix() {
+  const $a = document.getElementById('aba');
+  const [cfg, { data: lista }] = await Promise.all([configPix(), sb.from('avisos_pix').select('*').order('criado_em', { ascending: false }).limit(60)]);
+  const ids = [...new Set((lista || []).map((x) => x.contratacao_id))];
+  const { data: cts } = ids.length ? await sb.from('contratacoes').select('id,descricao,valor,contratante:contratante_id(nome),prestador:prestador_id(nome)').in('id', ids) : { data: [] };
+  const ct = Object.fromEntries((cts || []).map((x) => [x.id, x]));
+  const pend = (lista || []).filter((x) => x.status === 'pendente');
+  const feitos = (lista || []).filter((x) => x.status !== 'pendente').slice(0, 15);
+  const TIPO = { total: 'Pagamento total', entrada: 'Entrada', restante: 'Restante' };
+  const linha = (x, botoes) => `<div class="card pix-aviso">
+      <div class="linha-esp"><b>${brl(x.valor)}</b><span class="meta">${hora(x.criado_em)}</span></div>
+      <p>${TIPO[x.tipo]} de <b>${esc(ct[x.contratacao_id]?.contratante?.nome || 'cliente')}</b> para ${esc(ct[x.contratacao_id]?.prestador?.nome || 'profissional')}</p>
+      <p class="meta">${esc(ct[x.contratacao_id]?.descricao || '')} · Identificador no Pix: <b>${txidPix({ id: x.contratacao_id }, x.tipo)}</b></p>
+      ${botoes ? `<div class="acoes"><button class="btn" data-pix-ok="${x.id}">${ic('check')}Chegou na 99Pay: confirmar</button><button class="btn sec" data-pix-nao="${x.id}">Não chegou</button></div>`
+        : `<p class="${x.status === 'confirmado' ? 'verde' : 'vermelho'}">${x.status === 'confirmado' ? 'Confirmado' : `Recusado: ${esc(x.motivo)}`}${x.analisado_em ? ` · ${hora(x.analisado_em)}` : ''}</p>`}
+    </div>`;
+  $a.innerHTML = `<form class="card" id="fpix">
+      <h3>${ic('dinheiro')}Sua chave Pix da 99Pay</h3>
+      <p class="nota">É para esta chave que os clientes pagam. Confira cada Pix no app da 99Pay antes de confirmar aqui.</p>
+      <label>Chave Pix<input name="chave" value="${esc(cfg.pix_chave)}" placeholder="E-mail, CPF, celular ou chave aleatória" required autocomplete="off"></label>
+      <div class="dupla igual"><label>Seu nome (aparece no Pix)<input name="nome" value="${esc(cfg.pix_nome)}" maxlength="25"></label>
+        <label>Cidade<input name="cidade" value="${esc(cfg.pix_cidade)}" maxlength="15"></label></div>
+      <button class="btn sec largo">${cfg.pix_chave ? 'Salvar chave' : 'Cadastrar chave'}</button>
+    </form>
+    ${cfg.pix_chave ? '' : '<div class="alerta">Cadastre sua chave Pix acima. Sem ela, os clientes não conseguem pagar.</div>'}
+    <h3 class="bloco-tit">Para conferir (${pend.length})</h3>
+    ${pend.length ? pend.map((x) => linha(x, true)).join('') : '<div class="card vazio">Nenhum Pix esperando confirmação.</div>'}
+    ${feitos.length ? `<h3 class="bloco-tit">Últimos conferidos</h3>${feitos.map((x) => linha(x, false)).join('')}` : ''}`;
+  document.getElementById('fpix').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v = form(e.target);
+    const { error } = await sb.rpc('admin_salvar_pix', { p_chave: normalizarChave(v.chave), p_nome: v.nome, p_cidade: v.cidade });
+    if (error) return falha(error);
+    toast(`Chave Pix salva (${tipoChave(v.chave)}).`);
+    abaPix();
+  });
+  $a.onclick = async (e) => {
+    const b = e.target.closest('[data-pix-ok], [data-pix-nao]');
+    if (!b) return;
+    const ok = !!b.dataset.pixOk;
+    if (ok && !(await confirmar('Você conferiu na 99Pay e o Pix chegou com o valor certo? Ao confirmar, o contato dos dois é liberado.', 'Sim, chegou'))) return;
+    if (!ok && !(await confirmar('Avisar o cliente que o Pix não foi encontrado na sua conta?', 'Avisar cliente'))) return;
+    const { error } = await sb.rpc('admin_analisar_pix', { p_id: Number(b.dataset.pixOk || b.dataset.pixNao), aprovar: ok, p_motivo: ok ? '' : 'Pix não encontrado na conta' });
+    if (error) return falha(error);
+    toast(ok ? 'Pagamento confirmado! O contato foi liberado para os dois.' : 'Cliente avisado.');
+    rota();
+  };
 }
 
 async function abaCadastur() {

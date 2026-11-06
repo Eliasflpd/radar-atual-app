@@ -1,5 +1,13 @@
 # Registro de alterações — Contrata Aí
 
+## Pagamento por Pix na 99Pay
+O dono do app trabalha só com a 99Pay, que não tem sistema de cobrança para outros apps. Por isso o pagamento passou a ser Pix direto na conta 99Pay do dono, com confirmação manual.
+- **Cliente:** ao tocar em "Aceitar e pagar", vê o QR code e o Pix copia e cola (padrão do Banco Central, com o valor exato e um identificador da contratação) e toca em "Já paguei". O cartão mostra "Pix em conferência".
+- **Admin:** nova aba **Pix** no painel, com o cadastro da chave Pix da 99Pay e a lista de pagamentos para conferir ("Chegou na 99Pay: confirmar" ou "Não chegou"). Ao confirmar, o contato é liberado na hora; se recusar, o cliente é avisado e pode pagar de novo.
+- **Banco (só acréscimos):** tabelas `config_pagamento` e `avisos_pix`; funções `avisar_pix`, `admin_analisar_pix` e `admin_salvar_pix`; `admin_resumo` ganhou `pix_pendentes`. O pagamento confirmado usa o mesmo `registrar_pagamento` de antes (entrada, restante e repasse continuam iguais).
+- Cartão parcelado saiu por enquanto. As funções do Mercado Pago (`api/`) ficaram guardadas, sem uso, para quando houver uma empresa de cobrança.
+- O gerador de QR code (qrcode-generator, licença MIT) fica dentro do app, sem depender de site externo.
+
 ## Currículo completo e "Fale com o administrador"
 ### Banco de dados (somente acréscimos)
 - Coluna `profiles.curriculo` (jsonb): experiência, serviços, onde já trabalhou, escolaridade, cursos, equipamentos, dias e horários, região, idiomas e diferenciais. O filtro anti-contato confere cada texto do currículo (`curriculo_tem_contato`), inclusive quando o admin preenche.

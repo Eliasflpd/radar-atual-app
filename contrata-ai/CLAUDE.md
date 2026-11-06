@@ -12,11 +12,11 @@ Normas definidas pelo dono do app. Valem para todo trabalho neste projeto.
 
 ## Negócio
 - Comissão de 10%, descontada do profissional.
-- Pagamento: à vista ou entrada (20, 30, 40 ou 50%) + restante no final; Pix ou cartão em até 12x. O WhatsApp é liberado com a entrada; "Serviço foi feito" só depois de pagar tudo; repasse só com tudo pago e concluído.
+- Pagamento: à vista ou entrada (20, 30, 40 ou 50%) + restante no final; pago por **Pix na conta 99Pay do dono** (QR code e copia e cola gerados pelo app; o cliente toca em "Já paguei" e o admin confere na 99Pay e confirma no painel). O dono não usa Mercado Pago. O WhatsApp é liberado com a entrada; "Serviço foi feito" só depois de pagar tudo; repasse só com tudo pago e concluído.
 - WhatsApp e contato só depois do pagamento confirmado. O filtro anti-contato vale no banco, não só na tela.
 - Público com pouca familiaridade com tecnologia: textos simples, botões grandes, poucos passos.
 
 ## Técnica
-- HTML, CSS e JavaScript puro, sem framework. Supabase, Mercado Pago, Vercel e PWA.
+- HTML, CSS e JavaScript puro, sem framework. Supabase, Vercel e PWA. Pagamento por Pix (99Pay) com confirmação manual do admin.
 - Mudanças no banco: só acréscimos, sem apagar dados.
 - Testar no celular (390 px e 360 px) e conferir que a página não fica mais larga que a tela.

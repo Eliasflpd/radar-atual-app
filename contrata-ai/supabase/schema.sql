@@ -205,6 +205,30 @@ create table if not exists public.favoritos (
   primary key (user_id, prestador_id)
 );
 
+-- ---------- Pagamento por Pix na conta 99Pay do dono do app ----------
+-- O cliente paga o Pix (QR code / copia e cola) e avisa "Já paguei"; o admin confere na 99Pay e confirma.
+create table if not exists public.config_pagamento (
+  id             int primary key default 1 check (id = 1),
+  pix_chave      text not null default '',
+  pix_nome       text not null default '',
+  pix_cidade     text not null default '',
+  atualizado_em  timestamptz not null default now()
+);
+insert into public.config_pagamento (id) values (1) on conflict (id) do nothing;
+
+create table if not exists public.avisos_pix (
+  id              bigint generated always as identity primary key,
+  contratacao_id  uuid not null references public.contratacoes(id) on delete cascade,
+  autor_id        uuid not null references public.profiles(id),
+  tipo            text not null check (tipo in ('total', 'entrada', 'restante')),
+  valor           numeric(10,2) not null check (valor > 0),
+  status          text not null default 'pendente' check (status in ('pendente', 'confirmado', 'recusado')),
+  motivo          text not null default '',
+  criado_em       timestamptz not null default now(),
+  analisado_em    timestamptz
+);
+create unique index if not exists avisos_pix_um_pendente on public.avisos_pix (contratacao_id) where status = 'pendente';
+
 -- ---------- Fale com o administrador (atendimento) ----------
 -- Uma conversa por usuário: usuario_id é a pessoa atendida; autor_id é quem escreveu (ela ou o admin)
 create table if not exists public.suporte_mensagens (
@@ -474,6 +498,53 @@ begin
    where id = cid;
 end $$;
 
+-- Cliente avisa que pagou o Pix (fica "em conferência" até o admin confirmar)
+create or replace function public.avisar_pix(cid uuid) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare ct public.contratacoes; prox record; novo bigint;
+begin
+  select * into ct from public.contratacoes where id = cid;
+  if ct.id is null or ct.contratante_id <> auth.uid() then raise exception 'Contratação não encontrada.'; end if;
+  if (select pix_chave from public.config_pagamento where id = 1) = '' then
+    raise exception 'O pagamento ainda não está disponível. Fale com o administrador.';
+  end if;
+  select * into prox from public.proximo_pagamento(cid);
+  if prox.tipo is null then raise exception 'Não há nada a pagar nesta contratação.'; end if;
+  begin
+    insert into public.avisos_pix (contratacao_id, autor_id, tipo, valor) values (cid, auth.uid(), prox.tipo, prox.valor) returning id into novo;
+  exception when unique_violation then
+    raise exception 'Seu pagamento já está em conferência. Aguarde a confirmação.';
+  end;
+  return novo;
+end $$;
+
+-- Admin confere o Pix na 99Pay: confirma (registra o pagamento e libera o contato) ou recusa
+create or replace function public.admin_analisar_pix(p_id bigint, aprovar boolean, p_motivo text default '') returns void
+language plpgsql security definer set search_path = public as $$
+declare av public.avisos_pix;
+begin
+  if not public.is_admin() then raise exception 'Apenas administrador.'; end if;
+  select * into av from public.avisos_pix where id = p_id and status = 'pendente' for update;
+  if av.id is null then raise exception 'Aviso de pagamento não encontrado ou já analisado.'; end if;
+  if aprovar then
+    perform public.registrar_pagamento(av.contratacao_id, 'PIX99-' || av.id, av.valor, 1, 'pix');
+  end if;
+  update public.avisos_pix set status = case when aprovar then 'confirmado' else 'recusado' end,
+         motivo = case when aprovar then '' else coalesce(nullif(btrim(p_motivo), ''), 'Pix não encontrado na conta') end,
+         analisado_em = now()
+   where id = av.id;
+end $$;
+
+-- Admin cadastra a chave Pix da 99Pay que aparece para os clientes
+create or replace function public.admin_salvar_pix(p_chave text, p_nome text, p_cidade text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'Apenas administrador.'; end if;
+  if length(btrim(coalesce(p_chave, ''))) < 5 then raise exception 'Informe a chave Pix.'; end if;
+  update public.config_pagamento set pix_chave = btrim(p_chave), pix_nome = left(btrim(coalesce(p_nome, '')), 25),
+         pix_cidade = left(btrim(coalesce(p_cidade, '')), 15), atualizado_em = now() where id = 1;
+end $$;
+
 -- Contratante confirma que o serviço foi feito (libera o repasse)
 create or replace function public.concluir_servico(cid uuid) returns void
 language plpgsql security definer set search_path = public as $$
@@ -627,7 +698,8 @@ begin
     'verificacoes_pendentes', (select count(*) from public.verificacoes where status = 'pendente'),
     'pedidos_abertos', (select count(*) from public.pedidos where status = 'aberto'),
     'cadastur_pendentes', (select count(*) from public.profiles where cadastur_status = 'pendente'),
-    'suporte_novas', (select count(distinct usuario_id) from public.suporte_mensagens where autor_id = usuario_id and not lida)
+    'suporte_novas', (select count(distinct usuario_id) from public.suporte_mensagens where autor_id = usuario_id and not lida),
+    'pix_pendentes', (select count(*) from public.avisos_pix where status = 'pendente')
   );
 end $$;
 
@@ -805,6 +877,24 @@ revoke update, delete, truncate on public.suporte_mensagens from authenticated;
 revoke execute on function public.admin_salvar_curriculo(uuid, text, jsonb) from anon;
 revoke execute on function public.suporte_marcar_lidas(uuid) from anon;
 
+-- Pix: todos os logados leem a chave (para pagar); só o admin altera (pela função)
+alter table public.config_pagamento enable row level security;
+drop policy if exists config_ler on public.config_pagamento;
+create policy config_ler on public.config_pagamento for select to authenticated using (true);
+revoke all on public.config_pagamento from anon;
+revoke insert, update, delete, truncate on public.config_pagamento from authenticated;
+-- avisos de Pix: os dois lados da contratação e o admin veem; ninguém grava direto (só pelas funções)
+alter table public.avisos_pix enable row level security;
+drop policy if exists aviso_pix_ler on public.avisos_pix;
+create policy aviso_pix_ler on public.avisos_pix for select using (
+  public.is_admin() or exists (select 1 from public.contratacoes ct where ct.id = contratacao_id and auth.uid() in (ct.contratante_id, ct.prestador_id))
+);
+revoke all on public.avisos_pix from anon;
+revoke insert, update, delete, truncate on public.avisos_pix from authenticated;
+revoke execute on function public.avisar_pix(uuid) from anon;
+revoke execute on function public.admin_analisar_pix(bigint, boolean, text) from anon;
+revoke execute on function public.admin_salvar_pix(text, text, text) from anon;
+
 -- pagamentos: os dois lados e o admin veem; ninguém grava pelo app (só o servidor, via registrar_pagamento)
 alter table public.pagamentos enable row level security;
 drop policy if exists pag_ler on public.pagamentos;
@@ -827,6 +917,9 @@ do $$ begin
 exception when others then null; end $$;
 do $$ begin
   alter publication supabase_realtime add table public.suporte_mensagens;
+exception when others then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.avisos_pix;
 exception when others then null; end $$;
 
 -- =====================================================================

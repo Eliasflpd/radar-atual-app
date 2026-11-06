@@ -358,6 +358,10 @@ function carregar() {
   return semente();
 }
 let db = carregar();
+// acréscimos de versões novas sem apagar o que a pessoa já fez na demonstração
+db.config_pagamento ||= [{ id: 1, pix_chave: 'pix@contrataai.exemplo', pix_nome: 'Contrata Ai', pix_cidade: 'Barreirinhas' }];
+db.avisos_pix ||= [];
+db.seq.avisos_pix ||= 1;
 let semStorage = false;
 const salvar = () => {
   try { localStorage.setItem(CHAVE, JSON.stringify(db)); return true; } catch (e) {
@@ -388,6 +392,8 @@ const VISIVEL = {
   pedidos: (r) => r.status === 'aberto' || r.contratante_id === uid() || isAdmin(),
   favoritos: (r) => r.user_id === uid(),
   suporte_mensagens: (r) => r.usuario_id === uid() || isAdmin(),
+  config_pagamento: () => !!uid(),
+  avisos_pix: (r) => isAdmin() || db.contratacoes.some((c) => c.id === r.contratacao_id && [c.contratante_id, c.prestador_id].includes(uid())),
   pagamentos: (r) => isAdmin() || db.contratacoes.some((c) => c.id === r.contratacao_id && [c.contratante_id, c.prestador_id].includes(uid())),
 };
 const EDITAVEL = {
@@ -695,6 +701,31 @@ const RPC = {
       if (p_usuario === uid() ? m.autor_id !== uid() : (isAdmin() && m.autor_id === p_usuario)) m.lida = true;
     }
   },
+  avisar_pix({ cid }) {
+    const k = db.contratacoes.find((x) => x.id === cid);
+    if (!k || k.contratante_id !== uid()) throw new Error('Contratação não encontrada.');
+    if (!db.config_pagamento[0].pix_chave) throw new Error('O pagamento ainda não está disponível. Fale com o administrador.');
+    const prox = proximo(k);
+    if (!prox) throw new Error('Não há nada a pagar nesta contratação.');
+    if (db.avisos_pix.some((a) => a.contratacao_id === cid && a.status === 'pendente')) throw new Error('Seu pagamento já está em conferência. Aguarde a confirmação.');
+    const a = { id: db.seq.avisos_pix++, contratacao_id: cid, autor_id: uid(), tipo: prox.tipo, valor: prox.valor, status: 'pendente', motivo: '', criado_em: agora(), analisado_em: null };
+    db.avisos_pix.push(a);
+    emitir('avisos_pix', 'INSERT', a);
+    return a.id;
+  },
+  admin_analisar_pix({ p_id, aprovar, p_motivo }) {
+    if (!isAdmin()) throw new Error('Apenas administrador.');
+    const a = db.avisos_pix.find((x) => x.id === Number(p_id) && x.status === 'pendente');
+    if (!a) throw new Error('Aviso de pagamento não encontrado ou já analisado.');
+    if (aprovar) registrarPagamento(db.contratacoes.find((x) => x.id === a.contratacao_id), 'pix', 1, 'PIX99-' + a.id);
+    Object.assign(a, { status: aprovar ? 'confirmado' : 'recusado', motivo: aprovar ? '' : (p_motivo || 'Pix não encontrado na conta'), analisado_em: agora() });
+    emitir('avisos_pix', 'UPDATE', a);
+  },
+  admin_salvar_pix({ p_chave, p_nome, p_cidade }) {
+    if (!isAdmin()) throw new Error('Apenas administrador.');
+    if (String(p_chave || '').trim().length < 5) throw new Error('Informe a chave Pix.');
+    Object.assign(db.config_pagamento[0], { pix_chave: p_chave.trim(), pix_nome: String(p_nome || '').trim().slice(0, 25), pix_cidade: String(p_cidade || '').trim().slice(0, 15) });
+  },
   admin_marcar_repasse({ cid }) {
     if (!isAdmin()) throw new Error('Apenas administrador.');
     const k = db.contratacoes.find((x) => x.id === cid && x.status === 'concluida' && !x.repassado_em);
@@ -713,10 +744,26 @@ const RPC = {
       verificacoes_pendentes: db.verificacoes.filter((v) => v.status === 'pendente').length,
       pedidos_abertos: db.pedidos.filter((x) => x.status === 'aberto').length,
       cadastur_pendentes: db.profiles.filter((p) => p.cadastur_status === 'pendente').length,
+      pix_pendentes: db.avisos_pix.filter((a) => a.status === 'pendente').length,
       suporte_novas: new Set((db.suporte_mensagens || []).filter((m) => m.autor_id === m.usuario_id && !m.lida).map((m) => m.usuario_id)).size,
     };
   },
 };
+
+// Próximo pagamento devido (como public.proximo_pagamento) e registro (como public.registrar_pagamento)
+function proximo(k) {
+  if (!k || ['cancelada', 'concluida'].includes(k.status)) return null;
+  const pago = Number(k.valor_pago || 0), total = Number(k.valor), pct = Number(k.entrada_pct || 100);
+  if (pago >= total) return null;
+  return pago === 0 ? { tipo: pct === 100 ? 'total' : 'entrada', valor: r2(total * pct / 100) } : { tipo: 'restante', valor: r2(total - pago) };
+}
+function registrarPagamento(k, forma, parcelas, ref) {
+  const prox = proximo(k);
+  if (!prox) throw new Error('Esta contratação não está aguardando pagamento.');
+  (db.pagamentos ||= []).push({ id: uuid(), contratacao_id: k.id, tipo: prox.tipo, valor: prox.valor, parcelas, forma, mp_payment_id: ref, criado_em: agora() });
+  Object.assign(k, { status: 'paga', valor_pago: r2(Number(k.valor_pago || 0) + prox.valor), mp_payment_id: k.mp_payment_id || ref, pago_em: k.pago_em || agora() });
+  emitir('contratacoes', 'UPDATE', k);
+}
 
 // Arquivos enviados ficam só na memória até virarem a URL (data:) salva na foto
 const arquivos = {};
@@ -787,13 +834,8 @@ export function criarDemo() {
       // simula o webhook do Mercado Pago: entrada, restante ou total, em Pix ou cartão até 12x
       async pagar(cid, forma = 'pix', parcelas = 1) {
         const k = db.contratacoes.find((x) => x.id === cid);
-        if (!k || k.contratante_id !== uid() || !['proposta', 'paga'].includes(k.status)) throw new Error('Esta contratação não está aguardando pagamento.');
-        const pago = Number(k.valor_pago || 0), total = Number(k.valor), pct = Number(k.entrada_pct || 100);
-        if (pago >= total) throw new Error('Esta contratação já está paga.');
-        const tipo = pago === 0 ? (pct === 100 ? 'total' : 'entrada') : 'restante';
-        const valor = tipo === 'restante' ? r2(total - pago) : r2(total * pct / 100);
-        (db.pagamentos ||= []).push({ id: uuid(), contratacao_id: cid, tipo, valor, parcelas, forma, mp_payment_id: 'DEMO-' + Date.now(), criado_em: agora() });
-        Object.assign(k, { status: 'paga', valor_pago: r2(pago + valor), mp_payment_id: k.mp_payment_id || 'DEMO-' + Date.now(), pago_em: k.pago_em || agora() });
+        if (!k || k.contratante_id !== uid()) throw new Error('Esta contratação não está aguardando pagamento.');
+        registrarPagamento(k, forma, parcelas, 'DEMO-' + Date.now());
         salvar();
       },
       entrarComo: (id) => trocar(id),

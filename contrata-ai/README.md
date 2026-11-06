@@ -5,7 +5,7 @@ Marketplace de serviços (PWA) que conecta **prestadores** de qualquer área (pe
 ## Como funciona
 
 ```
-Busca → Chat interno → Proposta do prestador → Cliente paga no app (Mercado Pago)
+Busca → Chat interno → Proposta do prestador → Cliente paga por Pix na 99Pay do dono (QR code no app) → Admin confirma no painel
       → WhatsApp liberado para os dois → Serviço → Cliente confirma → Avaliação
       → Admin repassa 90% ao prestador via Pix
 ```
@@ -26,9 +26,7 @@ Busca → Chat interno → Proposta do prestador → Cliente paga no app (Mercad
    - Crie um projeto, abra **SQL Editor** e rode o arquivo `supabase/schema.sql` inteiro.
    - Em **Authentication > URL Configuration**, coloque a URL do site.
    - Copie a URL e as chaves em **Project Settings > API**.
-2. **Mercado Pago**, em [mercadopago.com.br/developers](https://www.mercadopago.com.br/developers):
-   - Crie uma aplicação e copie o **Access Token** (use o de teste primeiro).
-   - Em **Webhooks**, aponte para `https://SEU-SITE/api/webhook-mp` com o evento **Pagamentos**.
+2. **Pix (99Pay)**: depois de virar administrador (passo 4), abra o painel, aba **Pix**, e cadastre a chave Pix da sua conta 99Pay. Os clientes pagam para essa chave e você confirma cada Pix no painel. (As funções do Mercado Pago em `api/` estão guardadas, sem uso.)
 3. **Vercel**: importe este repositório e cadastre as variáveis do `.env.example`.
 4. Crie sua conta no app e rode no SQL Editor:
    ```sql

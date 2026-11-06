@@ -937,3 +937,17 @@ nav#nav a .ic { stroke-width: 1.9; }
 .toast { pointer-events: none; }
 .demo-folha .menu-demo { width: 100%; margin-bottom: 12px; border: 1.5px solid #ffd23f; border-radius: var(--raio); background: #fffbea; font: inherit; text-align: left; cursor: pointer; }
 .menu-demo .demo-tag { flex: none; }
+
+/* ---------- pagar com Pix (99Pay) ---------- */
+.modal.pix { max-height: calc(100dvh - 24px); overflow-y: auto; }
+.pix-qr { display: grid; place-items: center; width: min(220px, 70vw); aspect-ratio: 1; margin: 6px auto 12px; padding: 8px; border: 1.5px solid var(--linha); border-radius: var(--raio-p); background: #fff; }
+.pix-qr svg { width: 100%; height: 100%; display: block; }
+.pix-passos { margin: 14px 0 10px; padding-left: 22px; display: grid; gap: 4px; font-size: 15px; }
+.pix-chave { font-size: 14px; color: var(--suave); overflow-wrap: anywhere; margin: 0 0 10px; }
+.pix-chave b { color: var(--tinta); }
+.alerta.com-ic { display: flex; gap: 10px; align-items: flex-start; }
+.alerta.com-ic .ic { flex: none; margin-top: 2px; }
+.pix-aviso p { margin: 6px 0 0; overflow-wrap: anywhere; }
+.pix-aviso .acoes { margin-top: 12px; }
+.verde { color: var(--verde); font-weight: 700; }
+.modal .pagar-valor { font: 900 32px var(--f-titulo); margin: 2px 0 10px; }
