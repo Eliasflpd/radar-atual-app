@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v9';
+const CHAVE = 'contrata-demo-v10';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -234,12 +234,12 @@ function semente() {
   ];
   const ct = (id, conv, contratante, prestador, descricao, valor, status, extra = {}) => ({
     id, conversa_id: conv, contratante_id: contratante, prestador_id: prestador, descricao, valor, taxa_comissao: 0.1,
-    status, mp_payment_id: null, pago_em: null, concluido_em: null, repassado_em: null, criado_em: agora(150), ...extra,
+    status, mp_payment_id: null, pago_em: null, concluido_em: null, repassado_em: null, criado_em: agora(150), entrada_pct: 100, valor_pago: 0, ...extra,
   });
   const contratacoes = [
-    ct('k-1', 'c-1', 'u-cliente', 'u-pedro', 'Reboco de parede de 20m² (material por conta da cliente). 2 dias de serviço.', 1500, 'proposta'),
+    ct('k-1', 'c-1', 'u-cliente', 'u-pedro', 'Reboco de parede de 20m² (material por conta da cliente). 2 dias de serviço.', 1500, 'proposta', { entrada_pct: 30 }),
     ct('k-2', 'c-2', 'u-empresa', 'u-pedro', 'Contrapiso em 3 salas comerciais (60m²).', 4200, 'concluida',
-      { pago_em: agora(60 * 24 * 9), concluido_em: agora(60 * 24 * 2), criado_em: agora(60 * 24 * 10) }),
+      { pago_em: agora(60 * 24 * 9), concluido_em: agora(60 * 24 * 2), criado_em: agora(60 * 24 * 10), valor_pago: 4200 }),
   ];
   const avaliacoes = [
     { contratacao_id: 'k-2', prestador_id: 'u-pedro', autor_id: 'u-empresa', nota: 5, comentario: 'Serviço caprichado e entregue no prazo.', criado_em: agora(60 * 24 * 2) },
@@ -321,7 +321,7 @@ function semente() {
   return {
     users: profiles.map((p) => ({ id: p.id, email: contatos_privados.find((c) => c.user_id === p.id).email, senha: 'demo123' })),
     categorias: CATEGORIAS, profiles, contatos_privados, conversas, mensagens, contratacoes, avaliacoes, tentativas_burla, fotos_trabalhos,
-    verificacoes, pedidos, docs, favoritos: [{ user_id: 'u-cliente', prestador_id: 'u-pedro', criado_em: agora(600) }],
+    verificacoes, pedidos, docs, pagamentos: [{ id: 'pg-1', contratacao_id: 'k-2', tipo: 'total', valor: 4200, parcelas: 1, forma: 'pix', criado_em: agora(60 * 24 * 9) }], favoritos: [{ user_id: 'u-cliente', prestador_id: 'u-pedro', criado_em: agora(600) }],
     seq: { mensagens: mid, tentativas_burla: 2, fotos_trabalhos: fid, verificacoes: 4 }, sessao: null,
   };
 }
@@ -368,6 +368,7 @@ const VISIVEL = {
   verificacoes: (r) => r.user_id === uid() || isAdmin(),
   pedidos: (r) => r.status === 'aberto' || r.contratante_id === uid() || isAdmin(),
   favoritos: (r) => r.user_id === uid(),
+  pagamentos: (r) => isAdmin() || db.contratacoes.some((c) => c.id === r.contratacao_id && [c.contratante_id, c.prestador_id].includes(uid())),
 };
 const EDITAVEL = {
   profiles: ['nome', 'cidade', 'uf', 'bio', 'foto_url', 'categoria_id', 'preco_base', 'is_prestador', 'is_contratante'],
@@ -609,19 +610,22 @@ const RPC = {
     Object.assign(v, { status: aprovar ? 'aprovada' : 'rejeitada', motivo: aprovar ? '' : (p_motivo || ''), analisado_em: agora() });
     if (aprovar) db.profiles.find((p) => p.id === v.user_id).verificado = true;
   },
-  enviar_proposta({ conv, p_descricao, p_valor }) {
+  enviar_proposta({ conv, p_descricao, p_valor, p_entrada_pct = 100 }) {
+    if (![20, 30, 40, 50, 100].includes(Number(p_entrada_pct))) throw new Error('Escolha à vista ou entrada de 20%, 30%, 40% ou 50%.');
     const c = conversa(conv);
     if (c?.prestador_id !== uid()) throw new Error('Só o prestador pode enviar proposta.');
     if (eu().suspenso) throw new Error('Conta suspensa.');
     if (temContato(p_descricao)) throw new Error('Não é permitido colocar contato na proposta.');
     if (!(p_valor >= 10)) throw new Error('O valor mínimo é R$ 10,00.');
     const k = { id: uuid(), conversa_id: conv, contratante_id: c.contratante_id, prestador_id: c.prestador_id, descricao: p_descricao,
-      valor: r2(p_valor), taxa_comissao: 0.1, status: 'proposta', mp_payment_id: null, pago_em: null, concluido_em: null, repassado_em: null, criado_em: agora() };
+      valor: r2(p_valor), taxa_comissao: 0.1, status: 'proposta', entrada_pct: Number(p_entrada_pct), valor_pago: 0, mp_payment_id: null, pago_em: null, concluido_em: null, repassado_em: null, criado_em: agora() };
     db.contratacoes.push(k);
     emitir('contratacoes', 'INSERT', k);
     return k.id;
   },
   concluir_servico({ cid }) {
+    const pend = db.contratacoes.find((x) => x.id === cid && x.contratante_id === uid() && x.status === 'paga' && Number(x.valor_pago) < Number(x.valor));
+    if (pend) throw new Error('Falta pagar o restante. Pague o restante para confirmar que o serviço foi feito.');
     const k = db.contratacoes.find((x) => x.id === cid && x.contratante_id === uid() && x.status === 'paga');
     if (!k) throw new Error('Contratação não encontrada ou ainda não paga.');
     Object.assign(k, { status: 'concluida', concluido_em: agora() });
@@ -730,10 +734,16 @@ export function criarDemo() {
     },
     removeChannel(ch) { ouvintes = ouvintes.filter((o) => !ch.regs.includes(o)); },
     demo: {
-      async pagar(cid) {
+      // simula o webhook do Mercado Pago: entrada, restante ou total, em Pix ou cartão até 12x
+      async pagar(cid, forma = 'pix', parcelas = 1) {
         const k = db.contratacoes.find((x) => x.id === cid);
-        if (!k || k.contratante_id !== uid() || k.status !== 'proposta') throw new Error('Esta proposta não está aguardando pagamento.');
-        Object.assign(k, { status: 'paga', mp_payment_id: 'DEMO-' + Date.now(), pago_em: agora() });
+        if (!k || k.contratante_id !== uid() || !['proposta', 'paga'].includes(k.status)) throw new Error('Esta contratação não está aguardando pagamento.');
+        const pago = Number(k.valor_pago || 0), total = Number(k.valor), pct = Number(k.entrada_pct || 100);
+        if (pago >= total) throw new Error('Esta contratação já está paga.');
+        const tipo = pago === 0 ? (pct === 100 ? 'total' : 'entrada') : 'restante';
+        const valor = tipo === 'restante' ? r2(total - pago) : r2(total * pct / 100);
+        (db.pagamentos ||= []).push({ id: uuid(), contratacao_id: cid, tipo, valor, parcelas, forma, mp_payment_id: 'DEMO-' + Date.now(), criado_em: agora() });
+        Object.assign(k, { status: 'paga', valor_pago: r2(pago + valor), mp_payment_id: k.mp_payment_id || 'DEMO-' + Date.now(), pago_em: k.pago_em || agora() });
         salvar();
       },
       entrarComo: (id) => trocar(id),

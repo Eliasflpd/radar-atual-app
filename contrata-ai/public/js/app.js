@@ -124,7 +124,7 @@ const SELO_CADASTUR = `<span class="selo cadastur" title="Registro no Cadastur (
 const PORTAL_CADASTUR = 'https://cadastur.turismo.gov.br';
 const notaHTML = (media, qtd) => `<span class="nota-chip">${ic('estrela')}<b>${Number(media || 0).toFixed(1)}</b><span>(${qtd || 0})</span></span>`;
 
-const STATUS = { proposta: 'Aguardando pagamento', paga: 'Paga — em andamento', concluida: 'Concluída', cancelada: 'Cancelada' };
+const STATUS = { proposta: 'Aguardando pagamento', paga: 'Em andamento', concluida: 'Concluída', cancelada: 'Cancelada' };
 const AVISO_CONTATO = 'Não é permitido passar telefone, WhatsApp, e-mail ou redes sociais antes da contratação. '
   + 'Depois do pagamento pelo app o contato é liberado automaticamente. (3 tentativas = conta suspensa)';
 
@@ -266,6 +266,50 @@ document.addEventListener('click', async (e) => {
 const chaveLidas = () => `contrata-lidas-${me?.id || 'anon'}`; // separado por pessoa
 const lidas = () => { try { return JSON.parse(localStorage.getItem(chaveLidas()) || '{}'); } catch { return {}; } };
 const marcarLida = (convId) => { try { const l = lidas(); l[convId] = new Date().toISOString(); localStorage.setItem(chaveLidas(), JSON.stringify(l)); } catch { /* sem storage */ } setTimeout(() => atualizarBadge(), 0); };
+
+// ---------------------------------------------------------------- escolher como pagar (Pix ou cartão em até 12x)
+function escolherPagamento(valor, rotulo) {
+  return new Promise((resolve) => {
+    const fundo = document.createElement('div');
+    fundo.className = 'modal-fundo';
+    const parcelas = Array.from({ length: 12 }, (_, i) => i + 1);
+    fundo.innerHTML = `<div class="modal pagar" role="dialog" aria-modal="true" aria-label="Pagamento">
+      <p class="eyebrow">${esc(rotulo)}</p>
+      <p class="pagar-valor">${brl(valor)}</p>
+      <div class="formas" role="radiogroup" aria-label="Forma de pagamento">
+        <label class="forma"><input type="radio" name="forma" value="pix" checked><span><b>Pix</b><small>Na hora, sem juros</small></span></label>
+        <label class="forma"><input type="radio" name="forma" value="cartao"><span><b>Cartão de crédito</b><small>Em até 12x</small></span></label>
+      </div>
+      <label class="parcelas-campo" hidden>Em quantas vezes?
+        <select name="parcelas">${parcelas.map((n) => `<option value="${n}">${n}x de ${brl(Math.ceil(valor / n * 100) / 100)}${n > 1 ? '*' : ''}</option>`).join('')}</select>
+        <small>* No pagamento de verdade, o Mercado Pago mostra o valor exato das parcelas. Parcelas podem ter juros do cartão.</small></label>
+      ${DEMO ? '<p class="nota">Demonstração: o pagamento é simulado, nenhum valor é cobrado.</p>' : '<p class="nota">Você vai para o Mercado Pago para pagar com segurança.</p>'}
+      <div class="acoes"><button type="button" class="btn sec" data-r="0">Voltar</button><button type="button" class="btn" data-r="1">${DEMO ? 'Simular pagamento' : 'Ir para o pagamento'}</button></div>
+    </div>`;
+    const $parc = fundo.querySelector('.parcelas-campo');
+    fundo.addEventListener('change', () => { $parc.hidden = fundo.querySelector('input[name="forma"]:checked').value !== 'cartao'; });
+    fundo.addEventListener('click', (e) => {
+      const r = e.target.closest('[data-r]')?.dataset.r;
+      if (r === undefined && e.target !== fundo) return;
+      const forma = fundo.querySelector('input[name="forma"]:checked').value;
+      const n = forma === 'cartao' ? Number(fundo.querySelector('select[name="parcelas"]').value) : 1;
+      fundo.remove();
+      resolve(r === '1' ? { forma, parcelas: n } : null);
+    });
+    document.body.appendChild(fundo);
+  });
+}
+// Situação de pagamento de uma contratação
+function situacaoPagamento(ct) {
+  const pago = Number(ct.valor_pago || 0), total = Number(ct.valor), pct = Number(ct.entrada_pct || 100);
+  const entrada = Math.round(total * pct) / 100;
+  const falta = Math.round((total - pago) * 100) / 100;
+  let proximo = null;
+  if (!['cancelada', 'concluida'].includes(ct.status) && falta > 0) {
+    proximo = pago === 0 ? { tipo: pct === 100 ? 'total' : 'entrada', valor: pct === 100 ? total : entrada } : { tipo: 'restante', valor: falta };
+  }
+  return { pago, total, pct, entrada, falta, proximo, aVista: pct === 100 };
+}
 
 // Confirmação dentro da página (não usa confirm() do navegador)
 function confirmar(msg, ok = 'Confirmar') {
@@ -1182,6 +1226,7 @@ async function telaChat(id, params) {
   const renderContratos = async () => {
     const { data: cts } = await sb.from('contratacoes').select('*').eq('conversa_id', id).order('criado_em');
     const { data: avs } = await sb.from('avaliacoes').select('contratacao_id').in('contratacao_id', (cts || []).map((x) => x.id));
+    const { data: pags } = await sb.from('pagamentos').select('*').in('contratacao_id', (cts || []).map((x) => x.id)).order('criado_em');
     const avaliadas = new Set((avs || []).map((a) => a.contratacao_id));
     liberado = (cts || []).some((x) => ['paga', 'concluida'].includes(x.status));
     let contato = '';
@@ -1192,24 +1237,35 @@ async function telaChat(id, params) {
         ${z ? `<a class="btn zap" target="_blank" rel="noopener" href="https://wa.me/55${z}">WhatsApp de ${esc(outro.nome.split(' ')[0])}</a>` : ''}
         ${k?.[0]?.email ? `<div class="meta">${esc(k[0].email)}</div>` : ''}</div>`;
     }
-    const etapas = (st) => { const i = { proposta: 0, paga: 1, concluida: 2 }[st] ?? -1;
-      return `<ol class="etapas">${['Proposta', 'Pago', 'Concluído'].map((t, k) => `<li class="${k <= i ? 'feita' : ''}">${t}</li>`).join('')}</ol>`; };
+    const etapas = (ct) => {
+      const sp = situacaoPagamento(ct);
+      const nomes = sp.aVista ? ['Proposta', 'Pago', 'Concluído'] : ['Proposta', 'Entrada paga', 'Pago tudo', 'Concluído'];
+      let i = ct.status === 'concluida' ? nomes.length - 1 : ct.status === 'proposta' ? 0 : (sp.aVista || sp.falta <= 0 ? nomes.length - 2 : 1);
+      return `<ol class="etapas ${sp.aVista ? '' : 'quatro'}">${nomes.map((t, k) => `<li class="${k <= i ? 'feita' : ''}">${t}</li>`).join('')}</ol>`;
+    };
+    const FORMA = { pix: 'Pix', cartao: 'cartão', outro: 'outro' };
+    const TIPO = { total: 'Pagamento', entrada: 'Entrada', restante: 'Restante' };
     const cards = (cts || []).map((ct) => `<div class="card proposta ${ct.status}">
       <div class="prop-cab"><span class="prop-ic">${ic('documento')}</span><div><b>${souPrestador ? 'Proposta enviada' : 'Proposta recebida'}</b><small>${data(ct.criado_em)}</small></div>
         <span class="status s-${ct.status}">${STATUS[ct.status]}</span></div>
-      ${ct.status !== 'cancelada' ? etapas(ct.status) : ''}
+      ${ct.status !== 'cancelada' ? etapas(ct) : ''}
       <p class="prop-desc">${esc(ct.descricao)}</p>
       <dl class="prop-valores">
         <div><dt>Valor total</dt><dd>${brl(ct.valor)}</dd></div>
+        <div><dt>Forma de pagamento</dt><dd class="dd-texto">${situacaoPagamento(ct).aVista ? 'À vista' : `Entrada de ${ct.entrada_pct}% (${brl(situacaoPagamento(ct).entrada)}) + restante no final`}</dd></div>
+        ${Number(ct.valor_pago) > 0 && Number(ct.valor_pago) < Number(ct.valor) ? `<div><dt>Já pago</dt><dd>${brl(ct.valor_pago)}</dd></div><div class="falta"><dt>Falta pagar</dt><dd>${brl(situacaoPagamento(ct).falta)}</dd></div>` : ''}
         ${souPrestador ? `<div><dt>Taxa da plataforma (10%)</dt><dd>− ${brl(ct.comissao)}</dd></div>
         <div class="destaque"><dt>Você recebe</dt><dd>${brl(ct.valor_prestador)}</dd></div>` : ''}
       </dl>
       ${souPrestador && ct.repassado_em ? `<p class="nota">${ic('check')}Repasse feito em ${data(ct.repassado_em)}.</p>` : ''}
-      ${!souPrestador && ct.status === 'proposta' ? `<p class="nota">${ic('escudo')}Seu pagamento fica protegido no app. O WhatsApp é liberado assim que o pagamento for confirmado.</p>` : ''}
+      ${(pags || []).filter((pg) => pg.contratacao_id === ct.id).map((pg) => `<p class="pag-linha">${ic('check')}${TIPO[pg.tipo]} de ${brl(pg.valor)} paga no ${FORMA[pg.forma]}${pg.parcelas > 1 ? ` em ${pg.parcelas}x` : ''} · ${data(pg.criado_em)}</p>`).join('')}
+      ${!souPrestador && ct.status === 'proposta' ? `<p class="nota">${ic('escudo')}Pague com Pix ou cartão em até 12x. ${situacaoPagamento(ct).aVista ? '' : `Agora você paga só a entrada (${brl(situacaoPagamento(ct).entrada)}); o restante, quando o serviço terminar. `}O WhatsApp é liberado assim que o pagamento for confirmado.</p>` : ''}
+      ${!souPrestador && ct.status === 'paga' && situacaoPagamento(ct).falta > 0 ? `<p class="nota">${ic('relogio')}Quando o serviço terminar, pague o restante (${brl(situacaoPagamento(ct).falta)}) e confirme que foi feito.</p>` : ''}
       <div class="acoes">
-        ${ct.status === 'proposta' && !souPrestador ? `<button class="btn" data-pagar="${ct.id}">Aceitar e pagar</button>` : ''}
+        ${ct.status === 'proposta' && !souPrestador ? `<button class="btn" data-pagar="${ct.id}">${situacaoPagamento(ct).aVista ? `Aceitar e pagar ${brl(ct.valor)}` : `Aceitar e pagar a entrada ${brl(situacaoPagamento(ct).entrada)}`}</button>` : ''}
+        ${ct.status === 'paga' && !souPrestador && situacaoPagamento(ct).falta > 0 ? `<button class="btn" data-pagar="${ct.id}">Pagar o restante ${brl(situacaoPagamento(ct).falta)}</button>` : ''}
         ${ct.status === 'proposta' ? `<button class="btn sec" data-cancelar="${ct.id}">${souPrestador ? 'Cancelar proposta' : 'Recusar'}</button>` : ''}
-        ${ct.status === 'paga' && !souPrestador ? `<button class="btn" data-concluir="${ct.id}">Serviço foi feito</button>` : ''}
+        ${ct.status === 'paga' && !souPrestador && situacaoPagamento(ct).falta <= 0 ? `<button class="btn" data-concluir="${ct.id}">Serviço foi feito</button>` : ''}
         ${ct.status === 'paga' && souPrestador ? '<span class="meta">Quando o cliente confirmar que o serviço foi feito, seu pagamento é liberado.</span>' : ''}
       </div>
       ${ct.status === 'concluida' && !souPrestador && !avaliadas.has(ct.id) ? `<form class="avaliar" data-avaliar="${ct.id}">
@@ -1221,20 +1277,30 @@ async function telaChat(id, params) {
       <form id="fprop">
         <label>Descrição do serviço<textarea name="descricao" required maxlength="1000" placeholder="Ex: reboco de 20m² de parede, material por conta do cliente"></textarea></label>
         <label>Valor total (R$)<input name="valor" type="number" min="10" step="0.01" required></label>
+        <label>Como o cliente vai pagar?<select name="entrada">
+          <option value="100">À vista (tudo antes de começar)</option>
+          <option value="30">Entrada de 30% + restante no final</option>
+          <option value="50">Entrada de 50% + restante no final</option>
+          <option value="20">Entrada de 20% + restante no final</option>
+          <option value="40">Entrada de 40% + restante no final</option>
+        </select><small>O cliente pode pagar com Pix ou cartão em até 12x.</small></label>
         <div class="meta" id="calc">Você paga 10% de comissão sobre o valor contratado. O restante é seu.</div>
         <button class="btn">Enviar proposta</button>
       </form></details>` : '';
     document.getElementById('contratos').innerHTML = contato + cards + novo;
     const fprop = document.getElementById('fprop');
-    fprop?.valor.addEventListener('input', () => {
-      const v = Number(fprop.valor.value || 0);
-      document.getElementById('calc').textContent = `Comissão do app (10%): ${brl(v * TAXA)} · Você recebe: ${brl(v - Math.round(v * TAXA * 100) / 100)}`;
-    });
+    const calcular = () => {
+      const v = Number(fprop.valor.value || 0), pct = Number(fprop.entrada.value);
+      document.getElementById('calc').textContent = `Comissão do app (10%): ${brl(v * TAXA)} · Você recebe: ${brl(v - Math.round(v * TAXA * 100) / 100)}`
+        + (pct < 100 ? ` · Entrada: ${brl(v * pct / 100)} · Restante: ${brl(v - v * pct / 100)}` : '');
+    };
+    fprop?.valor.addEventListener('input', calcular);
+    fprop?.entrada.addEventListener('change', calcular);
     fprop?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const v = form(fprop);
       if (temContato(v.descricao)) return toast(AVISO_CONTATO, 'erro');
-      const { error: er } = await sb.rpc('enviar_proposta', { conv: id, p_descricao: v.descricao, p_valor: Number(v.valor) });
+      const { error: er } = await sb.rpc('enviar_proposta', { conv: id, p_descricao: v.descricao, p_valor: Number(v.valor), p_entrada_pct: Number(v.entrada) });
       if (er) return falha(er);
       toast('Pronto! Sua proposta foi enviada.');
       renderContratos();
@@ -1246,10 +1312,15 @@ async function telaChat(id, params) {
     if (!b) return;
     try {
       if (b.dataset.pagar) {
+        const { data: ctp } = await sb.from('contratacoes').select('*').eq('id', b.dataset.pagar).maybeSingle();
+        const sp = situacaoPagamento(ctp);
+        if (!sp.proximo) return;
+        const rotulo = { total: 'Pagamento do serviço', entrada: `Entrada (${sp.pct}%)`, restante: 'Restante do serviço' }[sp.proximo.tipo];
+        const escolha = await escolherPagamento(sp.proximo.valor, rotulo);
+        if (!escolha) return;
         if (DEMO) {
-          if (!(await confirmar('DEMONSTRAÇÃO: aqui abriria o checkout do Mercado Pago (Pix ou cartão). Simular pagamento aprovado?', 'Simular pagamento'))) return;
-          await sb.demo.pagar(b.dataset.pagar);
-          toast('Pagamento confirmado! O WhatsApp dos dois foi liberado.');
+          await sb.demo.pagar(b.dataset.pagar, escolha.forma, escolha.parcelas);
+          toast(sp.proximo.tipo === 'restante' ? 'Pagamento confirmado! Agora confirme que o serviço foi feito.' : 'Pagamento confirmado! O WhatsApp dos dois foi liberado.');
           return renderContratos();
         }
         b.disabled = true; b.textContent = 'Abrindo pagamento…';

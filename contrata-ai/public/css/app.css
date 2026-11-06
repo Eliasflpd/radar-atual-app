@@ -829,3 +829,23 @@ nav#nav a .ic { stroke-width: 1.9; }
   .hero-texto { padding-right: calc(var(--foto-l) * .86); padding-bottom: 28px; }
   .hero-app h1 { font-size: clamp(18px, 5.5vw, 24px); }
 }
+
+/* pagamento: entrada, restante e parcelas */
+.etapas.quatro { grid-template-columns: repeat(4, 1fr); }
+.prop-valores .dd-texto { font: 600 13.5px/1.3 var(--f-texto); text-align: right; max-width: 60%; }
+.prop-valores .falta dd { color: var(--pri-tx); }
+.pag-linha { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: 13.5px; color: var(--verde); font-weight: 600; }
+.pag-linha .ic { width: 16px; height: 16px; flex: none; }
+.modal.pagar { display: grid; gap: 12px; }
+.modal.pagar .eyebrow, .modal.pagar .pagar-valor { margin: 0; }
+.pagar-valor { font: 700 30px var(--f-titulo); color: var(--marinho); }
+.formas { display: grid; gap: 8px; }
+.forma { display: flex; align-items: center; gap: 12px; margin: 0; padding: 12px 14px; border: 1.5px solid var(--linha); border-radius: var(--raio-p); cursor: pointer; font-weight: 400; }
+.forma:has(input:checked) { border-color: var(--pri); background: var(--pri-claro); }
+.forma input { width: 20px; height: 20px; margin: 0; accent-color: var(--pri); flex: none; }
+.forma b { display: block; font-weight: 800; }
+.forma small { margin: 0; }
+.parcelas-campo { margin: 0; }
+.modal.pagar .nota { margin: 0; }
+.modal.pagar .acoes { justify-content: stretch; }
+.modal.pagar .acoes .btn { flex: 1; }

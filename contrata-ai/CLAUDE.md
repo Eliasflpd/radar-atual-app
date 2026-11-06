@@ -12,6 +12,7 @@ Normas definidas pelo dono do app. Valem para todo trabalho neste projeto.
 
 ## Negócio
 - Comissão de 10%, descontada do profissional.
+- Pagamento: à vista ou entrada (20, 30, 40 ou 50%) + restante no final; Pix ou cartão em até 12x. O WhatsApp é liberado com a entrada; "Serviço foi feito" só depois de pagar tudo; repasse só com tudo pago e concluído.
 - WhatsApp e contato só depois do pagamento confirmado. O filtro anti-contato vale no banco, não só na tela.
 - Público com pouca familiaridade com tecnologia: textos simples, botões grandes, poucos passos.
 

@@ -104,6 +104,25 @@ create table if not exists public.contratacoes (
   criado_em         timestamptz not null default now()
 );
 create index if not exists contratacoes_conversa_idx on public.contratacoes (conversa_id);
+-- forma de pagamento: 100 = à vista; menos que 100 = % de entrada e o restante no final
+alter table public.contratacoes add column if not exists entrada_pct int not null default 100;
+alter table public.contratacoes add column if not exists valor_pago numeric(10,2) not null default 0;
+do $$ begin
+  alter table public.contratacoes add constraint entrada_pct_valida check (entrada_pct between 10 and 100);
+exception when duplicate_object then null; end $$;
+
+-- cada pagamento recebido (entrada, restante ou total), com o número de parcelas escolhido
+create table if not exists public.pagamentos (
+  id              uuid primary key default gen_random_uuid(),
+  contratacao_id  uuid not null references public.contratacoes(id) on delete cascade,
+  tipo            text not null check (tipo in ('total', 'entrada', 'restante')),
+  valor           numeric(10,2) not null check (valor > 0),
+  parcelas        int not null default 1 check (parcelas between 1 and 12),
+  forma           text not null default 'cartao' check (forma in ('pix', 'cartao', 'outro')),
+  mp_payment_id   text unique,            -- evita registrar o mesmo pagamento duas vezes
+  criado_em       timestamptz not null default now()
+);
+create index if not exists pagamentos_contratacao_idx on public.pagamentos (contratacao_id);
 
 -- ---------- Avaliações (só de serviço pago e concluído pelo app) ----------
 create table if not exists public.avaliacoes (
@@ -381,25 +400,63 @@ create trigger filtro_pedido before insert on public.pedidos
 -- =====================================================================
 
 -- Prestador envia proposta dentro da conversa
-create or replace function public.enviar_proposta(conv uuid, p_descricao text, p_valor numeric) returns uuid
+drop function if exists public.enviar_proposta(uuid, text, numeric);
+create or replace function public.enviar_proposta(conv uuid, p_descricao text, p_valor numeric, p_entrada_pct int default 100) returns uuid
 language plpgsql security definer set search_path = public as $$
 declare c public.conversas; novo uuid;
 begin
   select * into c from public.conversas where id = conv;
   if c.prestador_id is distinct from auth.uid() then raise exception 'Só o prestador pode enviar proposta.'; end if;
   if (select suspenso from public.profiles where id = auth.uid()) then raise exception 'Conta suspensa.'; end if;
-  insert into public.contratacoes (conversa_id, contratante_id, prestador_id, descricao, valor)
-  values (conv, c.contratante_id, c.prestador_id, p_descricao, p_valor)
+  if p_entrada_pct is null or p_entrada_pct not in (20, 30, 40, 50, 100) then raise exception 'Escolha à vista ou entrada de 20%%, 30%%, 40%% ou 50%%.'; end if;
+  insert into public.contratacoes (conversa_id, contratante_id, prestador_id, descricao, valor, entrada_pct)
+  values (conv, c.contratante_id, c.prestador_id, p_descricao, p_valor, p_entrada_pct)
   returning id into novo;
   return novo;
+end $$;
+
+-- Qual é o próximo pagamento desta contratação (entrada, restante ou total)
+create or replace function public.proximo_pagamento(cid uuid) returns table (tipo text, valor numeric)
+language plpgsql stable security definer set search_path = public as $$
+declare ct public.contratacoes;
+begin
+  select * into ct from public.contratacoes where id = cid;
+  if ct.id is null or ct.status in ('cancelada', 'concluida') or ct.valor_pago >= ct.valor then return; end if;
+  if ct.valor_pago = 0 then
+    return query select case when ct.entrada_pct = 100 then 'total' else 'entrada' end, round(ct.valor * ct.entrada_pct / 100.0, 2);
+  else
+    return query select 'restante'::text, ct.valor - ct.valor_pago;
+  end if;
+end $$;
+
+-- Registra um pagamento aprovado (chamado só pelo servidor, a partir do webhook do Mercado Pago)
+create or replace function public.registrar_pagamento(cid uuid, p_mp_id text, p_valor numeric, p_parcelas int, p_forma text) returns void
+language plpgsql security definer set search_path = public as $$
+declare prox record;
+begin
+  if exists (select 1 from public.pagamentos where mp_payment_id = p_mp_id) then return; end if; -- já registrado
+  select * into prox from public.proximo_pagamento(cid);
+  if prox.tipo is null then raise exception 'Nada a pagar nesta contratação.'; end if;
+  if p_valor + 0.001 < prox.valor then raise exception 'Valor pago menor que o devido.'; end if;
+  insert into public.pagamentos (contratacao_id, tipo, valor, parcelas, forma, mp_payment_id)
+  values (cid, prox.tipo, prox.valor, greatest(1, least(12, coalesce(p_parcelas, 1))), coalesce(p_forma, 'cartao'), p_mp_id);
+  update public.contratacoes
+     set valor_pago = valor_pago + prox.valor,
+         status = case when status = 'proposta' then 'paga' else status end,
+         pago_em = coalesce(pago_em, now()),
+         mp_payment_id = coalesce(mp_payment_id, p_mp_id)
+   where id = cid;
 end $$;
 
 -- Contratante confirma que o serviço foi feito (libera o repasse)
 create or replace function public.concluir_servico(cid uuid) returns void
 language plpgsql security definer set search_path = public as $$
 begin
+  if exists (select 1 from public.contratacoes where id = cid and contratante_id = auth.uid() and status = 'paga' and valor_pago < valor) then
+    raise exception 'Falta pagar o restante. Pague o restante para confirmar que o serviço foi feito.';
+  end if;
   update public.contratacoes set status = 'concluida', concluido_em = now()
-   where id = cid and contratante_id = auth.uid() and status = 'paga';
+   where id = cid and contratante_id = auth.uid() and status = 'paga' and valor_pago >= valor;
   if not found then raise exception 'Contratação não encontrada ou ainda não paga.'; end if;
 end $$;
 
@@ -677,6 +734,15 @@ drop policy if exists fav_criar on public.favoritos;
 create policy fav_criar on public.favoritos for insert with check (user_id = auth.uid());
 drop policy if exists fav_apagar on public.favoritos;
 create policy fav_apagar on public.favoritos for delete using (user_id = auth.uid());
+
+-- pagamentos: os dois lados e o admin veem; ninguém grava pelo app (só o servidor, via registrar_pagamento)
+alter table public.pagamentos enable row level security;
+drop policy if exists pag_ler on public.pagamentos;
+create policy pag_ler on public.pagamentos for select using (
+  public.is_admin() or exists (select 1 from public.contratacoes ct where ct.id = contratacao_id and auth.uid() in (ct.contratante_id, ct.prestador_id))
+);
+revoke insert, update, delete on public.pagamentos from anon, authenticated;
+revoke execute on function public.registrar_pagamento(uuid, text, numeric, int, text) from public, anon, authenticated;
 
 -- funções internas não podem ser chamadas direto pelo app
 revoke execute on function public.registrar_burla(uuid, uuid, text, text) from public, anon, authenticated;

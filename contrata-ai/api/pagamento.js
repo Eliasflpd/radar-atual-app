@@ -15,7 +15,10 @@ export default async function handler(req, res) {
     const [ct] = await sbAdmin(`contratacoes?id=eq.${contratacao_id}&select=*`);
     if (!ct) return res.status(404).json({ erro: 'Contratação não encontrada.' });
     if (ct.contratante_id !== user.id) return res.status(403).json({ erro: 'Só o contratante pode pagar.' });
-    if (ct.status !== 'proposta') return res.status(409).json({ erro: 'Esta proposta não está aguardando pagamento.' });
+    // entrada, restante ou total: quem calcula é o banco (o app não decide o valor)
+    const [prox] = await sbAdmin('rpc/proximo_pagamento', { method: 'POST', body: JSON.stringify({ cid: ct.id }) });
+    if (!prox) return res.status(409).json({ erro: 'Não há nada a pagar nesta contratação.' });
+    const rotulo = { total: 'Pagamento', entrada: `Entrada (${ct.entrada_pct}%)`, restante: 'Restante' }[prox.tipo];
 
     const url = baseUrl(req);
     const pref = await mp('/checkout/preferences', {
@@ -23,11 +26,13 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         items: [{
           id: ct.id,
-          title: `Serviço: ${ct.descricao.slice(0, 200)}`,
+          title: `${rotulo} · ${ct.descricao.slice(0, 180)}`,
           quantity: 1,
           currency_id: 'BRL',
-          unit_price: Number(ct.valor),
+          unit_price: Number(prox.valor),
         }],
+        payment_methods: { installments: 12 },   // cartão em até 12x (Pix também aceito)
+        metadata: { tipo: prox.tipo },
         payer: { email: user.email },
         external_reference: ct.id,
         notification_url: `${url}/api/webhook-mp`,

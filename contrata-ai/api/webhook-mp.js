@@ -25,15 +25,18 @@ export default async function handler(req, res) {
     const pg = await mp(`/v1/payments/${encodeURIComponent(id)}`);
     if (pg.status !== 'approved') return res.status(200).send(`status ${pg.status}`);
 
-    const [ct] = await sbAdmin(`contratacoes?id=eq.${encodeURIComponent(pg.external_reference)}&select=id,valor,status`);
-    if (!ct) return res.status(200).send('sem contratação');
-    if (Number(pg.transaction_amount) + 0.001 < Number(ct.valor)) return res.status(200).send('valor divergente');
-
-    if (ct.status === 'proposta') {
-      await sbAdmin(`contratacoes?id=eq.${ct.id}&status=eq.proposta`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'paga', mp_payment_id: String(pg.id), pago_em: new Date().toISOString() }),
+    // o banco confere o valor devido (entrada/restante/total) e ignora pagamento repetido
+    try {
+      await sbAdmin('rpc/registrar_pagamento', {
+        method: 'POST',
+        body: JSON.stringify({
+          cid: pg.external_reference, p_mp_id: String(pg.id), p_valor: Number(pg.transaction_amount),
+          p_parcelas: Number(pg.installments || 1), p_forma: pg.payment_type_id === 'bank_transfer' || pg.payment_method_id === 'pix' ? 'pix' : 'cartao',
+        }),
       });
+    } catch (e) {
+      console.error('pagamento não registrado', e.message);
+      return res.status(200).send('não registrado');
     }
     res.status(200).send('ok');
   } catch (e) {

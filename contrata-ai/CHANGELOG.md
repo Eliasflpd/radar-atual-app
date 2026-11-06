@@ -33,3 +33,9 @@
 - Tela inicial igual ao modelo: topo com sino e menu ☰, faixa azul com foto do profissional, busca, quadros Construção/Reparos/Limpeza/Outros Serviços, botões Preciso de um serviço / Sou profissional.
 - Barra de baixo com 5 abas: Início, Buscar, Anunciar, Mensagens, Minha Conta. Oportunidades de trabalho e Demonstração ficam no menu ☰.
 - Páginas novas: grupos de serviços (/grupo/...) e Todos os serviços (/categorias).
+
+## Entrada e parcelamento
+- Proposta com forma de pagamento: à vista ou entrada de 20/30/40/50% + restante no final.
+- Cliente escolhe Pix ou cartão em até 12x (no app real, o Mercado Pago mostra as parcelas e eventuais juros).
+- Banco: colunas `contratacoes.entrada_pct` e `valor_pago`, tabela `pagamentos` (com proteção contra pagamento repetido), funções `proximo_pagamento` e `registrar_pagamento` (só o servidor registra).
+- Conclusão do serviço só com tudo pago. Webhook registra entrada, restante ou total.
