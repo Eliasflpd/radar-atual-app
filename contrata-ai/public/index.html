@@ -5,21 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Contrata Aí</title>
   <meta name="description" content="Encontre profissionais de qualquer área ou ofereça seus serviços. Pagamento seguro pelo app.">
-  <meta name="theme-color" content="#15284a">
+  <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
 <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
   <header class="topo">
-    <a class="marca" href="#/"><svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112"/><path d="M136 290l78 78 162-180" fill="none" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/></svg>Contrata <em>Aí</em></a>
-    <nav id="nav"></nav>
-    <div id="topo-acao"></div>
-  </header>
+  <a class="topo-voltar" id="topo-voltar" href="#/" aria-label="Voltar"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></a>
+  <a class="marca" href="#/"><svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="128"/><path d="M136 270l84 84 156-180" fill="none" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Contrata <em>Aí</em></span></a>
+  <span class="topo-titulo" id="topo-titulo"></span>
+  <nav id="nav" aria-label="Navegação principal"></nav>
+</header>
   <main id="app"><div class="carregando">Carregando…</div></main>
   <script type="module" src="/js/app.js"></script>
 </body>

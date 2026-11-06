@@ -292,7 +292,7 @@ const linhas = (t) => (t === 'contratacoes' ? db.contratacoes.map(comCalculados)
 
 class Consulta {
   constructor(tabela) { Object.assign(this, { t: tabela, f: [], op: 'select', sel: '*', ord: [], lim: null, um: null, dados: null }); }
-  select(s = '*') { this.sel = s; return this; }
+  select(s = '*', opcoes = {}) { this.sel = s; this.contar = !!opcoes.count; this.soContar = !!opcoes.head; return this; }
   eq(c, v) { this.f.push((r) => String(r[c]) === String(v)); return this; }
   neq(c, v) { this.f.push((r) => String(r[c]) !== String(v)); return this; }
   is(c, v) { this.f.push((r) => (r[c] ?? null) === v); return this; }
@@ -321,6 +321,7 @@ class Consulta {
     return this.lim ? rs.slice(0, this.lim) : rs;
   }
   responder(rs) {
+    if (this.contar) return { data: this.soContar ? null : rs.map((r) => projetar(r, this.sel)), count: rs.length, error: null };
     const data = rs.map((r) => projetar(r, this.sel));
     if (this.um === 'um') return data.length === 1 ? { data: data[0], error: null } : erro('Registro não encontrado.');
     if (this.um === 'talvez') return { data: data[0] ?? null, error: null };
@@ -593,44 +594,52 @@ export function criarDemo() {
 
 const SEMENTE_IDS = new Set(semente().users.map((u) => u.id));
 
+// Botão "Demo": troca de perfil sem atrapalhar a tela
 function montarBarra(sb) {
   document.body.classList.add('demo');
-  const faixa = document.createElement('div');
-  faixa.className = 'demo-faixa';
-  const papeis = [['cliente', 'Mariana · cliente', '#/'], ['empresa', 'Construtora Horizonte · empresa', '#/pedidos'],
-    ['prestador', 'Pedro · pedreiro', '#/conversas'], ['ajudante', 'Marcos · ajudante', '#/pedidos'], ['admin', 'Você · administrador', '#/admin'], ['novo', 'Fazer um novo cadastro', '#/cadastro']];
-  faixa.innerHTML = `<b>Demonstração</b>
-    <label for="demo-papel"><span class="rot">Ver como</span>
-      <select id="demo-papel">${papeis.map(([k, rot]) => `<option value="${k}">${rot}</option>`).join('')}</select></label>
-    <label for="demo-estilo"><span class="rot">Estilo</span>
-      <select id="demo-estilo"><option value="a">A · Canteiro</option><option value="b">B · Bairro</option><option value="c">C · Executivo</option></select></label>
-    <button type="button" id="demo-reset" title="Apaga as mudanças e volta aos dados de exemplo">Recomeçar</button>`;
-  const sel = faixa.querySelector('select');
-  // contas criadas no cadastro também aparecem no seletor
-  const desenharOpcoes = () => {
+  const botao = document.createElement('button');
+  botao.type = 'button';
+  botao.className = 'demo-botao';
+  botao.setAttribute('aria-haspopup', 'dialog');
+  const papeis = [['cliente', 'Mariana', 'Cliente que contrata', '#/'], ['empresa', 'Construtora Horizonte', 'Empresa que publica pedidos', '#/pedidos'],
+    ['prestador', 'Pedro', 'Pedreiro', '#/conversas'], ['ajudante', 'Marcos', 'Ajudante geral', '#/pedidos'], ['admin', 'Você', 'Administrador do app', '#/admin']];
+  const atualizarBotao = () => {
+    const p = db.profiles.find((x) => x.id === db.sessao);
+    botao.innerHTML = `<span class="demo-tag">Demo</span>${p ? p.nome.split(' ')[0] : 'Sem login'}`;
+  };
+  const abrir = () => {
+    const fundo = document.createElement('div');
+    fundo.className = 'modal-fundo demo-fundo';
     const novas = db.users.filter((u) => !SEMENTE_IDS.has(u.id));
-    sel.innerHTML = papeis.map(([k, rot]) => `<option value="${k}">${rot}</option>`).join('')
-      + novas.map((u) => `<option value="u:${u.id}">${db.profiles.find((p) => p.id === u.id)?.nome || u.email} · minha conta</option>`).join('');
+    const linha = (valor, nome, sub, ativo) => `<button type="button" class="demo-op ${ativo ? 'ativo' : ''}" data-v="${valor}"><b>${nome}</b><small>${sub}</small></button>`;
+    fundo.innerHTML = `<div class="demo-folha" role="dialog" aria-modal="true" aria-label="Demonstração">
+      <div class="demo-cab"><b>Demonstração</b><button type="button" class="demo-fechar" aria-label="Fechar">✕</button></div>
+      <p class="nota">Veja o app como cada tipo de pessoa. Os dados ficam só neste navegador.</p>
+      <div class="demo-lista">
+        ${papeis.map(([k, nome, sub]) => linha(k, nome, sub, PERFIS_DEMO[k] === db.sessao)).join('')}
+        ${novas.map((u) => linha(`u:${u.id}`, db.profiles.find((p) => p.id === u.id)?.nome || u.email, 'Conta que você criou', u.id === db.sessao)).join('')}
+        ${linha('novo', 'Criar uma conta nova', 'Começa pela tela de boas-vindas', !db.sessao)}
+      </div>
+      <button type="button" class="link-simples" data-v="reset">Recomeçar a demonstração do zero</button>
+    </div>`;
+    fundo.addEventListener('click', (e) => {
+      if (e.target === fundo || e.target.closest('.demo-fechar')) { fundo.remove(); return; }
+      const b = e.target.closest('[data-v]');
+      if (!b) return;
+      const v = b.dataset.v;
+      fundo.remove();
+      if (v === 'reset') return sb.demo.resetar();
+      if (v === 'novo') { sb.demo.entrarComo(null); try { sessionStorage.removeItem('contrata-olhou'); } catch { /* */ } location.hash = '#/bemvindo'; return; }
+      if (v.startsWith('u:')) { sb.demo.entrarComo(v.slice(2)); location.hash = '#/conta'; return; }
+      const [, , , destino] = papeis.find(([k]) => k === v);
+      sb.demo.entrarComo(PERFIS_DEMO[v]);
+      location.hash = destino;
+    });
+    document.body.appendChild(fundo);
+    fundo.querySelector('.demo-op')?.focus();
   };
-  const sincronizar = () => {
-    desenharOpcoes();
-    const k = Object.keys(PERFIS_DEMO).find((x) => PERFIS_DEMO[x] === db.sessao);
-    sel.value = k || (db.sessao ? `u:${db.sessao}` : 'novo');
-  };
-  sel.addEventListener('change', () => {
-    if (sel.value.startsWith('u:')) { sb.demo.entrarComo(sel.value.slice(2)); location.hash = '#/perfil'; return; }
-    const [, , destino] = papeis.find(([k]) => k === sel.value);
-    sb.demo.entrarComo(sel.value === 'novo' ? null : PERFIS_DEMO[sel.value]);
-    location.hash = destino;
-  });
-  faixa.querySelector('#demo-reset').addEventListener('click', () => sb.demo.resetar());
-  const est = faixa.querySelector('#demo-estilo');
-  est.value = document.documentElement.dataset.estilo || 'a';
-  est.addEventListener('change', () => {
-    document.documentElement.dataset.estilo = est.value;
-    try { localStorage.setItem('contrata-estilo', est.value); } catch { /* sem storage */ }
-  });
-  sincronizar();
-  window.addEventListener('hashchange', sincronizar);
-  document.body.prepend(faixa);
+  botao.addEventListener('click', abrir);
+  atualizarBotao();
+  window.addEventListener('hashchange', atualizarBotao);
+  document.body.appendChild(botao);
 }
