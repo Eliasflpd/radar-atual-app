@@ -687,6 +687,7 @@ function abrirMenu() {
   const item = (href, icone, texto) => `<a class="menu-item" href="${href}"><span class="mi-ic">${ic(icone)}</span><span class="mi-txt"><b>${texto}</b></span>${ic('seta', 'mi-seta')}</a>`;
   fundo.innerHTML = `<div class="demo-folha" role="dialog" aria-modal="true" aria-label="Menu">
     <div class="demo-cab"><b>Menu</b><button type="button" class="demo-fechar" aria-label="Fechar">✕</button></div>
+    ${window.abrirDemo ? `<button type="button" class="menu-item menu-demo" id="menu-demo"><span class="demo-tag">Demo</span><span class="mi-txt"><b>Trocar quem está usando</b><small>Ver o app como cliente, profissional ou administrador</small></span>${ic('seta', 'mi-seta')}</button>` : ''}
     <nav class="menu-conta">
       ${item('#/busca', 'busca', 'Buscar profissionais')}
       ${item('#/pedidos/novo', 'mais', 'Anunciar um pedido')}
@@ -697,7 +698,6 @@ function abrirMenu() {
       ${item('#/ajuda', 'ajuda', 'Ajuda')}
       ${item('#/termos', 'documento', 'Termos de uso')}
     </nav>
-    ${window.abrirDemo ? '<button type="button" class="btn sec largo" id="menu-demo">Demonstração: ver como outra pessoa</button>' : ''}
     ${me ? '<button type="button" class="link-simples" id="menu-sair">Sair da conta</button>' : ''}
   </div>`;
   fundo.addEventListener('click', async (e) => {

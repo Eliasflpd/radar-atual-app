@@ -703,7 +703,11 @@ button.menu-item { width: 100%; border: 0; background: none; font: inherit; text
   body[data-tela="inicio"]:not(.logado) main { padding-bottom: calc(var(--abas) + 14px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (min-width: 761px) { .app-topo { display: none; } .hero-app { margin-inline: 0; border-radius: 24px; } .hero-texto { padding-left: 32px; } }
-body[data-tela="inicio"] .demo-botao { display: none; }
+/* no início o botão DEMO fica embaixo, no espaço entre os botões e as abas (no computador continua no canto) */
+@media (max-width: 760px) {
+  body[data-tela="inicio"] .demo-botao { top: auto; bottom: calc(var(--abas) + 6px + env(safe-area-inset-bottom, 0px)); padding: 4px; box-shadow: 0 3px 10px rgba(0,0,0,.18); }
+  body[data-tela="inicio"] .demo-tag { padding: 3px 9px; }
+}
 .cat-grade.grupo-areas { margin-bottom: 4px; }
 .cat-grade.todas { margin-top: 14px; }
 
@@ -931,3 +935,5 @@ nav#nav a .ic { stroke-width: 1.9; }
 
 /* o aviso nunca bloqueia o toque nos botões que estão embaixo dele */
 .toast { pointer-events: none; }
+.demo-folha .menu-demo { width: 100%; margin-bottom: 12px; border: 1.5px solid #ffd23f; border-radius: var(--raio); background: #fffbea; font: inherit; text-align: left; cursor: pointer; }
+.menu-demo .demo-tag { flex: none; }
