@@ -615,3 +615,7 @@ button.menu-item { width: 100%; border: 0; background: none; font: inherit; text
 .chamada-prof { margin: 14px 0 0; border-color: var(--pri-claro); }
 .chamada-cadastro { display: grid; gap: 10px; margin: 16px 0 0; padding: 16px; background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); }
 .chamada-cadastro .nota { margin: 2px 0 0; }
+
+.aviso-busca.motivo { margin: 8px 0 16px; font-weight: 700; background: var(--pri-claro); color: var(--pri-tx); }
+.ou { display: flex; align-items: center; gap: 12px; margin: 24px 0 14px; color: var(--suave); font-weight: 700; font-size: 14px; }
+.ou::before, .ou::after { content: ""; flex: 1; height: 1px; background: var(--linha); }

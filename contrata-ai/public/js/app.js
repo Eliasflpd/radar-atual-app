@@ -345,8 +345,8 @@ async function rota() {
   marcarAba();
   topo(tela, chave);
   document.body.dataset.tela = tela;
-  if (['conversas', 'chat', 'conta', 'admin', 'verificar', 'ser-profissional'].includes(tela) && !me) { location.hash = '#/entrar'; return; }
-  if (chave === 'pedidos/novo' && !me) { location.hash = '#/entrar'; return; }
+  if (['conversas', 'chat', 'conta', 'admin', 'verificar', 'ser-profissional'].includes(tela) && !me) { guardarDepois(location.hash); location.hash = '#/entrar'; return; }
+  if (chave === 'pedidos/novo' && !me) { pedirConta('#/pedidos/novo', 'Crie sua conta grátis para publicar seu pedido.'); return; }
   if (tela === 'inicio' && !me && !jaOlhou()) { location.hash = '#/bemvindo'; return; }
   $app.innerHTML = esqueleto(3);
   window.scrollTo(0, 0);
@@ -449,6 +449,33 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('[data-todas-cidades]')) { salvarCidade(null); rota(); }
 });
 
+// ---------------------------------------------------------------- continuar depois do cadastro
+// Ex.: visitante toca em "Solicitar orçamento" → cria a conta → já cai na conversa com o profissional.
+const CHAVE_DEPOIS = 'contrata-depois';
+function guardarDepois(acao) { try { sessionStorage.setItem(CHAVE_DEPOIS, acao); } catch { /* sem storage */ } }
+function tirarDepois() { try { const a = sessionStorage.getItem(CHAVE_DEPOIS); sessionStorage.removeItem(CHAVE_DEPOIS); return a; } catch { return null; } }
+function temDepois() { try { return !!sessionStorage.getItem(CHAVE_DEPOIS); } catch { return false; } }
+function pedirConta(acao, motivo) {
+  guardarDepois(acao);
+  location.hash = `#/cadastro?tipo=contratar&motivo=${encodeURIComponent(motivo)}`;
+}
+async function abrirConversa(prestadorId) {
+  if (me.suspenso) { toast('Sua conta está suspensa.', 'erro'); return; }
+  if (me.id === prestadorId) { location.hash = '#/conta'; return; }
+  let { data: c } = await sb.from('conversas').select('id').eq('contratante_id', me.id).eq('prestador_id', prestadorId).maybeSingle();
+  if (!c) {
+    const r = await sb.from('conversas').insert({ contratante_id: me.id, prestador_id: prestadorId }).select('id').single();
+    if (r.error) return falha(r.error);
+    c = r.data;
+  }
+  location.hash = `#/chat/${c.id}`;
+}
+async function continuarDepois(padrao) {
+  const a = tirarDepois();
+  if (a?.startsWith('conversar:')) return abrirConversa(a.slice(10));
+  location.hash = a?.startsWith('#/') ? a : padrao;
+}
+
 // "Só quero dar uma olhada" — não mostra mais as boas-vindas nesta visita
 const jaOlhou = () => { try { return sessionStorage.getItem('contrata-olhou') === '1'; } catch { return true; } };
 const marcarOlhou = () => { try { sessionStorage.setItem('contrata-olhou', '1'); } catch { /* sem storage */ } };
@@ -459,14 +486,14 @@ function telaBoasVindas() {
     <div class="bv-marca">${LOGO}<span>Contrata <em>Aí</em></span></div>
     <h1>O que você quer fazer?</h1>
     <div class="escolhas">
-      <a class="escolha contratar" href="#/cadastro?tipo=contratar">
-        <span class="escolha-ic">${ic('busca')}</span><b>Quero contratar</b><small>Encontrar um profissional</small></a>
+      <a class="escolha contratar" href="#/" data-so-olhar>
+        <span class="escolha-ic">${ic('busca')}</span><b>Preciso de um serviço</b><small>Encontre pedreiro, diarista, eletricista e mais</small></a>
       <a class="escolha trabalhar" href="#/cadastro?tipo=trabalhar">
-        <span class="escolha-ic">${ic('pedidos')}</span><b>Quero trabalhar</b><small>Oferecer meus serviços</small></a>
+        <span class="escolha-ic">${ic('pedidos')}</span><b>Sou profissional</b><small>Cadastre seus serviços e receba clientes</small></a>
     </div>
     <p class="bv-rodape"><a href="#/entrar">Já tenho conta</a><span aria-hidden="true">·</span><a href="#/" id="so-olhar">Só olhar</a></p>
   </section>`;
-  document.getElementById('so-olhar').addEventListener('click', marcarOlhou);
+  $app.querySelectorAll('#so-olhar, [data-so-olhar]').forEach((a) => a.addEventListener('click', marcarOlhou));
 }
 
 // ---------------------------------------------------------------- início
@@ -481,7 +508,7 @@ async function telaInicio() {
         <div class="home-acoes">
           ${me ? `<a class="icone-btn" href="#/conversas" aria-label="Mensagens${naoLidas ? `, ${naoLidas} não lidas` : ''}">${ic('sino')}${naoLidas ? `<span class="bolinha">${naoLidas}</span>` : ''}</a>
             <a href="#/conta" aria-label="Minha conta">${avatar(me, 'mini')}</a>`
-            : '<a class="btn pequeno" href="#/cadastro">Criar conta</a>'}
+            : '<a class="btn sec pequeno" href="#/entrar">Entrar</a>'}
         </div>
       </div>
       ${chipCidade('grande')}
@@ -490,11 +517,10 @@ async function telaInicio() {
     <form class="busca-pilula grande" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você está procurando?" aria-label="Qual serviço você está procurando?"><button class="btn pequeno">Buscar</button></form>
     <div class="sugestoes">${['Pedreiro de acabamento', 'Diarista', 'Eletricista', 'Guia turístico', 'Tratorista', 'Ar-condicionado'].map((t) => `<a href="#/busca?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>
     ${me && !me.is_prestador ? `<a class="banner claro chamada-prof" href="#/ser-profissional">${ic('pedidos')}<span><b>Você é profissional?</b><small>Ofereça seus serviços e receba clientes pelo app</small></span>${ic('seta')}</a>` : ''}
-    ${!me ? `<div class="chamada-cadastro"><a class="btn largo" href="#/cadastro?tipo=trabalhar">${ic('pedidos')}Quero trabalhar: criar meu perfil</a>
-      <a class="btn sec largo" href="#/cadastro?tipo=contratar">${ic('busca')}Quero contratar: criar conta</a><p class="nota centro">Já tem conta? <a href="#/entrar">Entrar</a></p></div>` : ''}
+    ${!me ? `<a class="banner claro chamada-prof" href="#/cadastro?tipo=trabalhar">${ic('pedidos')}<span><b>É profissional?</b><small>Cadastre seus serviços e receba clientes</small></span>${ic('seta')}</a>` : ''}
     <div class="acoes-home">
       <a class="acao-card" href="#/busca"><span class="op-ic">${ic('busca')}</span><b>Encontrar profissionais</b><small>Veja quem atende ${cid ? `em ${esc(cid.cidade)}` : 'perto de você'}</small></a>
-      <a class="acao-card" href="${me ? '#/pedidos/novo' : '#/cadastro?tipo=contratar'}"><span class="op-ic">${ic('pedidos')}</span><b>Publicar um pedido</b><small>Receba propostas de vários profissionais</small></a>
+      <a class="acao-card" href="#/pedidos/novo"><span class="op-ic">${ic('pedidos')}</span><b>Publicar um pedido</b><small>Receba propostas de vários profissionais</small></a>
     </div>
     <div class="secao-tit"><h2>Categorias</h2><button type="button" class="link" id="ver-todas">Ver todas</button></div>
     <div class="cat-grade" id="cats">${cats.map((c, i) => tileCategoria(c, 'a', i >= 8 ? 'data-extra hidden' : '')).join('')}</div>
@@ -722,20 +748,29 @@ async function htmlCartoes(lista) {
 }
 // ---------------------------------------------------------------- autenticação
 function telaEntrar() {
-  $app.innerHTML = `<form class="card estreito" id="f">
-    <h2>Entrar</h2>
-    <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
-    <label>Senha<input name="senha" type="password" required autocomplete="current-password"></label>
-    <button class="btn">Entrar</button>
-    <p class="nota">Não tem conta? <a href="#/cadastro">Cadastre-se</a> · <a href="#" id="esqueci">Esqueci a senha</a></p>
-  </form>`;
+  $app.innerHTML = `<section class="cadastro">
+    <h1>Entrar</h1>
+    <form id="f" class="form-passo">
+      <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
+      <label>Senha<input name="senha" type="password" required autocomplete="current-password"></label>
+      <button class="btn largo">Entrar</button>
+      <button type="button" class="link-simples" id="esqueci">Esqueci a senha</button>
+    </form>
+    <div class="ou"><span>Ainda não tem conta?</span></div>
+    <div class="bv-opcoes">
+      <a class="opcao-grande" href="#/cadastro?tipo=contratar"><span class="op-ic">${ic('busca')}</span><span><b>Preciso de um serviço</b><small>Criar conta de cliente, grátis</small></span>${ic('seta')}</a>
+      <a class="opcao-grande" href="#/cadastro?tipo=trabalhar"><span class="op-ic">${ic('pedidos')}</span><span><b>Sou profissional</b><small>Cadastrar meus serviços</small></span>${ic('seta')}</a>
+    </div>
+  </section>`;
   const f = document.getElementById('f');
   f.addEventListener('submit', async (e) => {
     e.preventDefault();
     const v = form(f);
     const { error } = await sb.auth.signInWithPassword({ email: v.email, password: v.senha });
     if (error) return toast('E-mail ou senha incorretos.', 'erro');
-    location.hash = '#/';
+    await carregarMe((await sb.auth.getSession()).data.session);
+    renderNav();
+    await continuarDepois('#/');
   });
   document.getElementById('esqueci').addEventListener('click', async (e) => {
     e.preventDefault();
@@ -748,8 +783,8 @@ function telaEntrar() {
 
 function telaCadastro(params) {
   const tipoInicial = params.get('tipo');
-  const est = { passo: tipoInicial ? 1 : 0, tipo: tipoInicial || '', nome: '', email: '', senha: '', whatsapp: '', foto: null, fotoUrl: '', cat: '', cidade: '', uf: '', preco: '' };
-  const passos = () => ['tipo', 'dados', 'foto', ...(est.tipo === 'contratar' ? [] : ['area']), 'fim'];
+  const est = { passo: 0, tipo: tipoInicial || '', nome: '', email: '', senha: '', whatsapp: '', foto: null, fotoUrl: '', cat: '', cidade: '', uf: '', preco: '' };
+  const passos = () => [...(tipoInicial ? [] : ['tipo']), 'dados', 'foto', ...(est.tipo === 'contratar' ? [] : ['area']), 'fim'];
   const voltar = () => { est.passo = Math.max(0, est.passo - 1); desenhar(); };
   const avancar = () => { est.passo += 1; desenhar(); window.scrollTo(0, 0); };
 
@@ -769,7 +804,8 @@ function telaCadastro(params) {
             `<button type="button" class="opcao-grande ${est.tipo === v ? 'marcada' : ''}" data-tipo="${v}"><span class="op-ic">${ic(i)}</span><span><b>${t}</b><small>${d}</small></span>${ic('seta')}</button>`).join('')}
         </div>`;
     } else if (atual === 'dados') {
-      corpo = `<h1>Seus dados</h1><p class="nota">Leva menos de um minuto.</p>
+      corpo = `<h1>${est.tipo === 'contratar' ? 'Crie sua conta grátis' : 'Seus dados'}</h1>
+        ${params.get('motivo') ? `<div class="aviso-busca motivo">${esc(params.get('motivo'))}</div>` : '<p class="nota">Leva menos de um minuto.</p>'}
         <form id="fpasso" class="form-passo">
           <label>Nome completo<input name="nome" value="${esc(est.nome)}" required minlength="3" autocomplete="name"></label>
           <label>E-mail<input name="email" type="email" value="${esc(est.email)}" required autocomplete="email"></label>
@@ -815,8 +851,8 @@ function telaCadastro(params) {
         </form>`;
     }
     $app.innerHTML = `<section class="cadastro">${barra}${corpo}
-      ${est.passo > (tipoInicial ? 1 : 0) ? '<button type="button" class="link-simples" id="passo-voltar">Voltar ao passo anterior</button>' : ''}
-      ${est.passo === 0 || (tipoInicial && est.passo === 1) ? '<p class="nota centro">Já tem conta? <a href="#/entrar">Entrar</a></p>' : ''}</section>`;
+      ${est.passo > 0 ? '<button type="button" class="link-simples" id="passo-voltar">Voltar ao passo anterior</button>' : ''}
+      ${est.passo === 0 ? '<p class="nota centro">Já tem conta? <a href="#/entrar">Entrar</a></p>' : ''}</section>`;
     document.getElementById('passo-voltar')?.addEventListener('click', voltar);
 
     if (atual === 'tipo') {
@@ -896,8 +932,9 @@ function telaCadastro(params) {
           }
         } catch (er) { falha(er); }
         renderNav();
-        toast(prestar ? 'Conta criada! Agora mostre fotos dos seus trabalhos.' : 'Conta criada! Bem-vindo(a).');
-        location.hash = prestar ? '#/conta/fotos' : '#/';
+        toast(prestar ? 'Conta criada! Agora mostre fotos dos seus trabalhos.' : temDepois() ? 'Conta criada! Continue de onde parou.' : 'Conta criada! Bem-vindo(a).');
+        if (prestar) location.hash = '#/conta/fotos';
+        else await continuarDepois('#/');
       });
     }
   }
@@ -972,16 +1009,9 @@ async function telaPrestador(id) {
     const b = e.target.closest('.foto');
     if (b) abrirFoto(fotos, Number(b.dataset.i));
   });
-  $app.querySelectorAll('[data-conversar]').forEach((b) => b.addEventListener('click', async () => {
-    if (!me) { location.hash = '#/entrar'; return; }
-    if (me.suspenso) return toast('Sua conta está suspensa.', 'erro');
-    let { data: c } = await sb.from('conversas').select('id').eq('contratante_id', me.id).eq('prestador_id', p.id).maybeSingle();
-    if (!c) {
-      const r = await sb.from('conversas').insert({ contratante_id: me.id, prestador_id: p.id }).select('id').single();
-      if (r.error) return falha(r.error);
-      c = r.data;
-    }
-    location.hash = `#/chat/${c.id}`;
+  $app.querySelectorAll('[data-conversar]').forEach((b) => b.addEventListener('click', () => {
+    if (!me) return pedirConta(`conversar:${p.id}`, `Crie sua conta grátis para falar com ${p.nome.split(' ')[0]}. Leva menos de um minuto.`);
+    abrirConversa(p.id);
   }));
 }
 
