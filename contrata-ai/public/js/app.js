@@ -1,5 +1,7 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 import { temContato } from './filtro.js';
+
+const SUPABASE_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
+const DEMO = !!window.CONTRATA_DEMO;
 
 // ---------------------------------------------------------------- utilidades
 const $app = document.getElementById('app');
@@ -18,6 +20,7 @@ const AVISO_CONTATO = '🚫 Não é permitido passar telefone, WhatsApp, e-mail 
 let sb, me = null, categorias = [], canais = [];
 
 function toast(msg, tipo = '') {
+  document.querySelectorAll('.toast').forEach((t) => t.remove());
   const el = document.createElement('div');
   el.className = `toast ${tipo}`;
   el.textContent = msg;
@@ -31,14 +34,37 @@ const avatar = (p, cls = '') => p?.foto_url
 const nomeCategoria = (id) => { const c = categorias.find((x) => x.id === id); return c ? `${c.icone} ${esc(c.nome)}` : ''; };
 const form = (el) => Object.fromEntries(new FormData(el));
 
+// Confirmação dentro da página (não usa confirm() do navegador)
+function confirmar(msg, ok = 'Confirmar') {
+  return new Promise((resolve) => {
+    const fundo = document.createElement('div');
+    fundo.className = 'modal-fundo';
+    fundo.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><p>${esc(msg)}</p>
+      <div class="acoes"><button class="btn sec" data-r="0">Voltar</button><button class="btn" data-r="1">${esc(ok)}</button></div></div>`;
+    fundo.addEventListener('click', (e) => {
+      const r = e.target.dataset?.r;
+      if (r === undefined && e.target !== fundo) return;
+      fundo.remove();
+      resolve(r === '1');
+    });
+    document.body.appendChild(fundo);
+    fundo.querySelector('[data-r="1"]').focus();
+  });
+}
+
 // ---------------------------------------------------------------- início
 async function iniciar() {
-  const cfg = await fetch('/api/config').then((r) => r.json()).catch(() => ({}));
-  if (!cfg.supabaseUrl) {
-    $app.innerHTML = '<div class="card">⚙️ Configure <b>SUPABASE_URL</b> e <b>SUPABASE_ANON_KEY</b> nas variáveis de ambiente da Vercel.</div>';
-    return;
+  if (DEMO) {
+    sb = (await import('./demo.js')).criarDemo();
+  } else {
+    const cfg = await fetch('/api/config').then((r) => r.json()).catch(() => ({}));
+    if (!cfg.supabaseUrl) {
+      $app.innerHTML = '<div class="card">⚙️ Configure <b>SUPABASE_URL</b> e <b>SUPABASE_ANON_KEY</b> nas variáveis de ambiente da Vercel.</div>';
+      return;
+    }
+    const { createClient } = await import(SUPABASE_CDN);
+    sb = createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
   }
-  sb = createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
   const { data: { session } } = await sb.auth.getSession();
   await carregarMe(session);
   const cats = await sb.from('categorias').select('*').order('nome');
@@ -49,7 +75,7 @@ async function iniciar() {
   renderNav();
   window.addEventListener('hashchange', rota);
   rota();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  if (!DEMO && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 
 async function carregarMe(session) {
@@ -294,8 +320,7 @@ async function telaChat(id, params) {
   const $msgs = document.getElementById('msgs');
   const addMsg = (m) => {
     if (document.getElementById(`m${m.id}`)) return;
-    $msgs.insertAdjacentHTML('beforeend', `<div id="m${m.id}" class="msg ${m.autor_id === me.id ? 'minha' : ''} ${m.bloqueada ? 'bloqueada' : ''}">
-      ${esc(m.texto)}<span>${hora(m.criado_em)}</span></div>`);
+    $msgs.insertAdjacentHTML('beforeend', `<div id="m${m.id}" class="msg ${m.autor_id === me.id ? 'minha' : ''} ${m.bloqueada ? 'bloqueada' : ''}">${esc(m.texto)}<span>${hora(m.criado_em)}</span></div>`);
     $msgs.scrollTop = $msgs.scrollHeight;
   };
 
@@ -357,6 +382,12 @@ async function telaChat(id, params) {
     if (!b) return;
     try {
       if (b.dataset.pagar) {
+        if (DEMO) {
+          if (!(await confirmar('DEMONSTRAÇÃO: aqui abriria o checkout do Mercado Pago (Pix ou cartão). Simular pagamento aprovado?', 'Simular pagamento'))) return;
+          await sb.demo.pagar(b.dataset.pagar);
+          toast('Pagamento aprovado! O WhatsApp dos dois foi liberado.');
+          return renderContratos();
+        }
         b.disabled = true; b.textContent = 'Abrindo pagamento…';
         const { data: { session } } = await sb.auth.getSession();
         const r = await fetch('/api/pagamento', {
@@ -367,10 +398,10 @@ async function telaChat(id, params) {
         if (!r.checkout_url) throw new Error(r.erro || 'Falha no pagamento');
         location.href = r.checkout_url;
       }
-      if (b.dataset.cancelar && confirm('Cancelar esta proposta?')) {
+      if (b.dataset.cancelar && await confirmar('Cancelar esta proposta?', 'Cancelar proposta')) {
         const { error: er } = await sb.rpc('cancelar_proposta', { cid: b.dataset.cancelar }); if (er) throw er; renderContratos();
       }
-      if (b.dataset.concluir && confirm('Confirma que o serviço foi realizado? Isso libera o pagamento ao profissional.')) {
+      if (b.dataset.concluir && await confirmar('Confirma que o serviço foi realizado? Isso libera o pagamento ao profissional.', 'Sim, foi feito')) {
         const { error: er } = await sb.rpc('concluir_servico', { cid: b.dataset.concluir }); if (er) throw er;
         toast('Obrigado! Agora avalie o profissional.'); renderContratos();
       }
@@ -530,7 +561,7 @@ async function abaRepasses() {
     || '<div class="card vazio">Nenhum repasse pendente. 🎉</div>'}`;
   $a.onclick = async (e) => {
     const id = e.target.dataset?.repasse;
-    if (!id || !confirm('Confirma que já enviou o Pix para o prestador?')) return;
+    if (!id || !(await confirmar('Confirma que já enviou o Pix para o prestador?', 'Já enviei'))) return;
     const { error } = await sb.rpc('admin_marcar_repasse', { cid: id });
     if (error) return falha(error);
     toast('Repasse registrado.');
