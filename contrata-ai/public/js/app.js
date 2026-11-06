@@ -568,7 +568,7 @@ async function telaInicio() {
     <div class="secao-tit"><h2>Categorias</h2><button type="button" class="link" id="ver-todas">Ver todas</button></div>
     <div class="cat-grade" id="cats">${cats.map((c, i) => tileCategoria(c, 'a', i >= 8 ? 'data-extra hidden' : '')).join('')}</div>
     <div class="secao-tit"><h2>Em destaque${cid ? ` em ${esc(cid.cidade)}` : ''}</h2><a href="#/busca">Ver todos</a></div>
-    <div class="carrossel" id="destaques">${esqueleto(2)}</div>
+    <div class="grade" id="destaques">${esqueleto(2)}</div>
     <div class="secao-tit"><h2>Bem avaliados</h2></div>
     <div class="grade" id="resultados">${esqueleto(2)}</div>
     <div class="secao-tit"><h2>Oportunidades${cid ? ` em ${esc(cid.cidade)}` : ' recentes'}</h2><a href="#/pedidos">Ver todas</a></div>
@@ -587,7 +587,7 @@ async function telaInicio() {
   const { lista } = await buscarPrestadores({});
   const daCidade = cid ? lista.filter((p) => normalizar(p.cidade).includes(normalizar(cid.cidade))) : lista;
   const base = daCidade.length ? daCidade : lista;
-  const destaques = base.filter((p) => p.verificado).slice(0, 8);
+  const destaques = base.filter((p) => p.verificado).slice(0, 4);
   const usados = new Set(destaques.map((p) => p.id));
   const bem = [...base].filter((p) => !usados.has(p.id) && p.avaliacao_qtd >= 5).sort(ORDENS.nota).slice(0, 4);
   if (cid && !daCidade.length) {
@@ -1851,9 +1851,12 @@ async function abaContratacoes() {
     .order('criado_em', { ascending: false }).limit(100);
   const $a = document.getElementById('aba');
   $a.onclick = null;
-  $a.innerHTML = `<div class="card tabela"><table><tr><th>Data</th><th>Prestador</th><th>Contratante</th><th>Valor</th><th>Comissão</th><th>Status</th></tr>
-    ${(lista || []).map((x) => `<tr><td>${data(x.criado_em)}</td><td>${esc(x.prestador.nome)}</td><td>${esc(x.contratante.nome)}</td>
-      <td>${brl(x.valor)}</td><td>${brl(x.comissao)}</td><td>${STATUS[x.status]}${x.repassado_em ? ' · repassado' : ''}</td></tr>`).join('')}</table></div>`;
+  // lista em cartões (norma do app: nada rolando para o lado)
+  $a.innerHTML = (lista || []).map((x) => `<div class="card contratacao-adm">
+      <div class="linha-esp"><b>${esc(x.prestador.nome)}</b><span class="status s-${x.status}">${STATUS[x.status]}${x.repassado_em ? ' · repassado' : ''}</span></div>
+      <div class="meta">Cliente: ${esc(x.contratante.nome)} · ${data(x.criado_em)}</div>
+      <dl class="prop-valores"><div><dt>Valor</dt><dd>${brl(x.valor)}</dd></div><div><dt>Comissão (10%)</dt><dd>${brl(x.comissao)}</dd></div></dl>
+    </div>`).join('') || vazio('dinheiro', 'Nenhuma contratação ainda');
 }
 
 async function abaBurla() {
