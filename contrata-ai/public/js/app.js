@@ -13,8 +13,35 @@ const hora = (d) => new Date(d).toLocaleString('pt-BR', { day: '2-digit', month:
 const estrelas = (n) => { const r = Math.round(Number(n) || 0); return '★'.repeat(r) + '☆'.repeat(5 - r); };
 const iniciais = (nome) => esc((nome || '?').split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase());
 const TAXA = 0.10;
+const ICONES = {
+  busca: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  pedidos: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+  chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/>',
+  perfil: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  admin: '<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/>',
+  entrar: '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  cadeado: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  aberto: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2"/>',
+  pessoas: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/>',
+  dinheiro: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5v5M18 9.5v5"/>',
+  estrela: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13.5" r="3.5"/>',
+  mais: '<path d="M12 5v14M5 12h14"/>',
+  enviar: '<path d="M4 12 20 4l-6 16-3-7-7-1Z"/>',
+  voltar: '<path d="m15 5-7 7 7 7"/>',
+  sair: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  documento: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5a3.5 3.5 0 0 1 7 0M15 10h3M15 13.5h3"/>',
+  relogio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  alerta: '<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.2v.3"/>',
+};
+const ic = (nome, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONES[nome] || ''}</svg>`;
+const SELO = `<span class="selo" title="Identidade verificada com documento e selfie">${ic('check')}Verificado</span>`;
+const notaHTML = (media, qtd) => `<span class="nota-chip">${ic('estrela')}<b>${Number(media || 0).toFixed(1)}</b><span>(${qtd || 0})</span></span>`;
+const ATALHOS = ['Pedreiro', 'Eletricista', 'Ajudante geral', 'Diarista / Limpeza', 'Encanador', 'Pintor', 'Designer', 'Técnico em informática'];
 const STATUS = { proposta: 'Aguardando pagamento', paga: 'Paga — em andamento', concluida: 'Concluída', cancelada: 'Cancelada' };
-const AVISO_CONTATO = '🚫 Não é permitido passar telefone, WhatsApp, e-mail ou redes sociais antes da contratação. '
+const AVISO_CONTATO = 'Não é permitido passar telefone, WhatsApp, e-mail ou redes sociais antes da contratação. '
   + 'Depois do pagamento pelo app o contato é liberado automaticamente. (3 tentativas = conta suspensa)';
 
 let sb, me = null, categorias = [], canais = [];
@@ -31,7 +58,7 @@ const falha = (e) => toast(e?.message || String(e), 'erro');
 const avatar = (p, cls = '') => p?.foto_url
   ? `<img class="avatar ${cls}" src="${esc(p.foto_url)}" alt="">`
   : `<div class="avatar ${cls}">${iniciais(p?.nome)}</div>`;
-const nomeCategoria = (id) => { const c = categorias.find((x) => x.id === id); return c ? `${c.icone} ${esc(c.nome)}` : ''; };
+const nomeCategoria = (id) => { const c = categorias.find((x) => x.id === id); return c ? esc(c.nome) : ''; };
 const form = (el) => Object.fromEntries(new FormData(el));
 
 // ---------------------------------------------------------------- fotos
@@ -125,7 +152,7 @@ async function iniciar() {
   } else {
     const cfg = await fetch('/api/config').then((r) => r.json()).catch(() => ({}));
     if (!cfg.supabaseUrl) {
-      $app.innerHTML = '<div class="card">⚙️ Configure <b>SUPABASE_URL</b> e <b>SUPABASE_ANON_KEY</b> nas variáveis de ambiente da Vercel.</div>';
+      $app.innerHTML = '<div class="card">Configure <b>SUPABASE_URL</b> e <b>SUPABASE_ANON_KEY</b> nas variáveis de ambiente da Vercel.</div>';
       return;
     }
     const { createClient } = await import(SUPABASE_CDN);
@@ -151,11 +178,19 @@ async function carregarMe(session) {
 }
 
 function renderNav() {
-  $nav.innerHTML = me
-    ? `<a href="#/">Buscar</a><a href="#/pedidos">Pedidos</a><a href="#/conversas">Conversas</a><a href="#/perfil">Perfil</a>
-       ${me.is_admin ? '<a href="#/admin">Admin</a>' : ''}<button class="link" id="sair">Sair</button>`
-    : '<a href="#/">Buscar</a><a href="#/pedidos">Pedidos</a><a href="#/entrar">Entrar</a><a class="btn pequeno" href="#/cadastro">Cadastrar</a>';
-  document.getElementById('sair')?.addEventListener('click', async () => { await sb.auth.signOut(); location.hash = '#/'; });
+  const aba = (href, icone, rotulo, chave) => `<a href="${href}" data-aba="${chave}">${ic(icone)}<span>${rotulo}</span></a>`;
+  $nav.innerHTML = (me
+    ? aba('#/', 'busca', 'Buscar', '') + aba('#/pedidos', 'pedidos', 'Pedidos', 'pedidos') + aba('#/conversas', 'chat', 'Conversas', 'conversas')
+      + aba('#/perfil', 'perfil', 'Perfil', 'perfil') + (me.is_admin ? aba('#/admin', 'admin', 'Admin', 'admin') : '')
+    : aba('#/', 'busca', 'Buscar', '') + aba('#/pedidos', 'pedidos', 'Pedidos', 'pedidos') + aba('#/entrar', 'entrar', 'Entrar', 'entrar'));
+  const $cta = document.getElementById('topo-acao');
+  if ($cta) $cta.innerHTML = me ? `<a class="topo-eu" href="#/perfil" aria-label="Meu perfil">${avatar(me, 'mini')}</a>` : '<a class="btn pequeno" href="#/cadastro">Criar conta</a>';
+  marcarAba();
+}
+function marcarAba() {
+  const tela = location.hash.slice(2).split(/[/?]/)[0];
+  const atual = { chat: 'conversas', p: '', verificar: 'perfil', cadastro: 'entrar' }[tela] ?? tela;
+  $nav.querySelectorAll('a').forEach((a) => a.classList.toggle('ativa', a.dataset.aba === atual));
 }
 
 async function rota() {
@@ -164,6 +199,8 @@ async function rota() {
   const [caminho, qs] = location.hash.slice(1).split('?');
   const [tela, id] = (caminho || '/').split('/').filter(Boolean);
   const params = new URLSearchParams(qs || '');
+  marcarAba();
+  document.body.dataset.tela = tela || 'inicio';
   if (['conversas', 'chat', 'perfil', 'admin', 'verificar'].includes(tela) && !me) { location.hash = '#/entrar'; return; }
   $app.innerHTML = '<div class="carregando">Carregando…</div>';
   window.scrollTo(0, 0);
@@ -187,20 +224,40 @@ async function rota() {
 
 // ---------------------------------------------------------------- busca
 async function telaInicio() {
-  const opcoes = categorias.map((c) => `<option value="${c.id}">${c.icone} ${esc(c.nome)}</option>`).join('');
+  const opcoes = categorias.map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  const atalhos = ATALHOS.map((n) => categorias.find((c) => c.nome === n)).filter(Boolean);
   $app.innerHTML = `
-    ${me ? '' : `<section class="hero">
-      <h1>Encontre o profissional certo.<br>Ou ofereça seu serviço.</h1>
-      <p>Pedreiros, eletricistas, diaristas, designers, técnicos e muito mais. Pagamento seguro pelo app.</p>
-      <div class="acoes"><a class="btn" href="#/cadastro">Cadastre-se grátis</a><a class="btn sec" href="#/pedidos">Ver pedidos de empresas</a></div>
-    </section>`}
-    <form class="busca card" id="busca">
-      <select name="cat"><option value="">Todas as áreas</option>${opcoes}</select>
-      <input name="cidade" placeholder="Cidade">
-      <input name="q" placeholder="O que você precisa? (ex: reboco, tomada)">
-      <button class="btn">Buscar</button>
-    </form>
+    <section class="hero">
+      <div class="hero-txt">
+        ${me ? `<p class="sobre">Olá, ${esc(me.nome.split(' ')[0])}</p><h1>Quem você precisa hoje?</h1>`
+          : `<p class="sobre">Profissionais de qualquer área</p><h1>Contrate quem faz.<br>Ofereça o que você sabe fazer.</h1>
+             <p class="hero-sub">Do pedreiro ao designer, de pessoas a empresas. Você conversa no app, paga com segurança e só então recebe o contato.</p>`}
+      </div>
+      <form class="busca" id="busca">
+        <label class="campo-busca">${ic('busca')}<input name="q" placeholder="O que você precisa? Ex: reboco, tomada" aria-label="O que você precisa"></label>
+        <div class="busca-linha">
+          <select name="cat" id="busca-cat" aria-label="Área"><option value="">Todas as áreas</option>${opcoes}</select>
+          <label class="campo-busca">${ic('pin')}<input name="cidade" placeholder="Cidade" aria-label="Cidade"></label>
+          <button class="btn">Buscar</button>
+        </div>
+      </form>
+      <div class="fita" aria-hidden="true"></div>
+    </section>
+    <div class="atalhos" id="atalhos">${atalhos.map((c) => `<button type="button" data-cat="${c.id}">${esc(c.nome)}</button>`).join('')}</div>
+    ${me ? '' : `<div class="passos-home">
+      <div><b>1</b><span>Encontre e converse pelo chat</span></div>
+      <div><b>2</b><span>Pague a proposta pelo app</span></div>
+      <div><b>3</b><span>O WhatsApp é liberado para os dois</span></div></div>`}
+    <div class="secao-tit"><h2 id="tit-res">Profissionais em destaque</h2><a href="#/pedidos">Ver pedidos de empresas</a></div>
     <div class="grade" id="resultados"></div>`;
+  document.getElementById('atalhos').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-cat]');
+    if (!b) return;
+    const ativo = b.classList.toggle('ativo');
+    document.querySelectorAll('#atalhos button').forEach((x) => x !== b && x.classList.remove('ativo'));
+    document.getElementById('busca-cat').value = ativo ? b.dataset.cat : '';
+    buscar(form(document.getElementById('busca'))).catch(falha);
+  });
   const buscar = async (f = {}) => {
     let q = sb.from('profiles')
       .select('id,nome,cidade,uf,bio,foto_url,categoria_id,preco_base,verificado,avaliacao_media,avaliacao_qtd')
@@ -217,6 +274,8 @@ async function telaInicio() {
       : { data: [] };
     const fotosDe = {};
     (fts || []).forEach((f) => (fotosDe[f.user_id] ||= []).push(f.url));
+    const cat = categorias.find((c) => String(c.id) === String(f.cat));
+    document.getElementById('tit-res').textContent = cat ? `${cat.nome} · ${lista.length} encontrados` : (f.q || f.cidade ? `${lista.length} encontrados` : 'Profissionais em destaque');
     document.getElementById('resultados').innerHTML = lista.length
       ? lista.map((p) => cardPrestador(p, fotosDe[p.id] || [])).join('')
       : '<div class="card vazio">Nenhum profissional encontrado com esses filtros.</div>';
@@ -226,16 +285,19 @@ async function telaInicio() {
 }
 
 function cardPrestador(p, fotos = []) {
-  return `<a class="card prestador" href="#/p/${p.id}">
-    ${avatar(p)}
-    <div>
-      <h3>${esc(p.nome)} ${p.verificado ? '<span class="selo" title="Documento verificado">✔ Verificado</span>' : ''}</h3>
-      <div class="cat">${nomeCategoria(p.categoria_id)}</div>
-      <div class="meta">📍 ${esc(p.cidade)}${p.uf ? '/' + esc(p.uf) : ''}</div>
-      <div class="meta"><span class="estrelas">${estrelas(p.avaliacao_media)}</span> (${p.avaliacao_qtd})
-        ${p.preco_base ? ` · a partir de <b>${brl(p.preco_base)}</b>` : ''}</div>
-      ${fotos.length ? `<div class="miniaturas">${fotos.slice(0, 3).map((u) => `<img src="${esc(u)}" alt="" loading="lazy">`).join('')}
-        ${fotos.length > 3 ? `<span>+${fotos.length - 3}</span>` : ''}</div>` : ''}
+  const cat = nomeCategoria(p.categoria_id);
+  return `<a class="prestador" href="#/p/${p.id}">
+    <div class="capa ${fotos.length ? '' : 'sem-foto'}">
+      ${fotos.length ? `<img src="${esc(fotos[0])}" alt="" loading="lazy">${fotos.length > 1 ? `<span class="qtd-fotos">${ic('camera')}${fotos.length}</span>` : ''}`
+        : `<span class="letra">${esc((cat || '?')[0])}</span>`}
+    </div>
+    <div class="corpo">
+      ${avatar(p, 'sobre-capa')}
+      <div class="linha-nome"><h3>${esc(p.nome)}</h3>${p.verificado ? `<span class="verif-ic" title="Identidade verificada">${ic('check')}</span>` : ''}</div>
+      <div class="cat">${cat}</div>
+      <div class="meta">${ic('pin')}${esc(p.cidade)}${p.uf ? ' · ' + esc(p.uf) : ''}</div>
+      <div class="rodape-card">${notaHTML(p.avaliacao_media, p.avaliacao_qtd)}
+        ${p.preco_base ? `<span class="preco-card"><small>a partir de</small>${brl(p.preco_base)}</span>` : ''}</div>
     </div></a>`;
 }
 
@@ -273,7 +335,7 @@ function telaCadastro() {
     <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
     <label>Senha<input name="senha" type="password" required minlength="6" autocomplete="new-password"></label>
     <label>WhatsApp<input name="whatsapp" inputmode="tel" placeholder="(11) 99999-9999" required>
-      <small>🔒 Fica escondido. Só aparece para a outra pessoa depois que a contratação for paga pelo app.</small></label>
+      <small>${ic('cadeado')}Fica escondido. Só aparece para a outra pessoa depois que a contratação for paga pelo app.</small></label>
     <fieldset><legend>O que você quer fazer?</legend>
       <label class="check"><input type="checkbox" name="contratar" checked> Quero contratar serviços</label>
       <label class="check"><input type="checkbox" name="prestar"> Quero oferecer meus serviços</label>
@@ -300,7 +362,7 @@ function telaCadastro() {
     });
     if (error) return falha(error);
     if (!r.session) {
-      $app.innerHTML = '<div class="card estreito"><h2>Quase lá! 📧</h2><p>Enviamos um link de confirmação para o seu e-mail. Clique nele para ativar a conta.</p></div>';
+      $app.innerHTML = '<div class="card estreito"><h2>Quase lá! </h2><p>Enviamos um link de confirmação para o seu e-mail. Clique nele para ativar a conta.</p></div>';
       return;
     }
     toast('Conta criada!');
@@ -331,24 +393,36 @@ async function telaPrestador(id) {
   ]);
   let fotos = fotosRes || [];
   if (!p || !p.is_prestador) { $app.innerHTML = '<div class="card">Profissional não encontrado.</div>'; return; }
-  $app.innerHTML = `<div class="card perfil-publico">
-      ${avatar(p, 'grande')}
-      <h2>${esc(p.nome)} ${p.verificado ? '<span class="selo">✔ Verificado</span>' : ''}</h2>
-      <div class="cat">${nomeCategoria(p.categoria_id)}</div>
-      <div class="meta">📍 ${esc(p.cidade)}${p.uf ? '/' + esc(p.uf) : ''} · membro desde ${data(p.criado_em)}</div>
-      <div class="meta"><span class="estrelas">${estrelas(p.avaliacao_media)}</span> ${Number(p.avaliacao_media).toFixed(1)} (${p.avaliacao_qtd} avaliações)</div>
-      ${p.preco_base ? `<div class="preco">A partir de ${brl(p.preco_base)}</div>` : ''}
+  const desde = new Date(p.criado_em).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+  $app.innerHTML = `<a class="voltar" href="#/">${ic('voltar')}Voltar</a>
+    <section class="perfil-publico">
+      <div class="perfil-capa"><div class="fita" aria-hidden="true"></div></div>
+      <div class="perfil-cab">
+        ${avatar(p, 'grande')}
+        <div class="perfil-nome"><h1>${esc(p.nome)}</h1>
+          <div class="cat">${nomeCategoria(p.categoria_id)}</div>
+          <div class="meta">${ic('pin')}${esc(p.cidade)}${p.uf ? ' · ' + esc(p.uf) : ''}</div></div>
+        ${p.verificado ? SELO : ''}
+      </div>
+      <dl class="fatos">
+        <div><dt>Avaliação</dt><dd>${ic('estrela')}${Number(p.avaliacao_media).toFixed(1)}</dd></div>
+        <div><dt>Avaliações</dt><dd>${p.avaliacao_qtd}</dd></div>
+        <div><dt>Desde</dt><dd>${esc(desde)}</dd></div>
+        ${p.preco_base ? `<div><dt>A partir de</dt><dd>${brl(p.preco_base)}</dd></div>` : ''}
+      </dl>
       <p class="bio">${esc(p.bio) || '<i>Sem descrição.</i>'}</p>
-      ${fotos.length ? `<h3 class="tit-galeria">📸 Trabalhos realizados (${fotos.length})</h3>
-        <div class="galeria" id="galeria-pub">${galeriaHTML(fotos, me?.is_admin)}</div>` : ''}
-      ${p.suspenso ? '<div class="alerta">Este profissional está temporariamente indisponível.</div>'
-        : me?.id === p.id ? '<a class="btn sec" href="#/perfil">Editar meu perfil</a>'
-        : '<button class="btn" id="conversar">💬 Conversar e pedir orçamento</button>'}
-      <p class="nota">🔒 O WhatsApp do profissional é liberado depois que você contratar e pagar pelo app.</p>
-    </div>
-    <h3>Avaliações</h3>
-    ${(avs || []).map((a) => `<div class="card avaliacao"><span class="estrelas">${estrelas(a.nota)}</span>
-      <b>${esc(a.autor?.nome)}</b> · ${data(a.criado_em)}<p>${esc(a.comentario)}</p></div>`).join('') || '<div class="card vazio">Ainda sem avaliações.</div>'}`;
+      <div class="cta-perfil">
+        ${p.suspenso ? '<div class="alerta">Este profissional está temporariamente indisponível.</div>'
+          : me?.id === p.id ? '<a class="btn sec" href="#/perfil">Editar meu perfil</a>'
+          : `<button class="btn grande" id="conversar">${ic('chat')}Conversar e pedir orçamento</button>`}
+        <p class="nota">${ic('cadeado')}O WhatsApp é liberado depois que você contratar e pagar pelo app.</p>
+      </div>
+    </section>
+    ${fotos.length ? `<div class="secao-tit"><h2>Trabalhos realizados</h2><span class="meta">${fotos.length} fotos</span></div>
+      <div class="galeria" id="galeria-pub">${galeriaHTML(fotos, me?.is_admin)}</div>` : ''}
+    <div class="secao-tit"><h2>Avaliações</h2></div>
+    ${(avs || []).map((a) => `<div class="card avaliacao"><div class="linha-esp"><b>${esc(a.autor?.nome)}</b><span class="estrelas" aria-label="${a.nota} de 5">${estrelas(a.nota)}</span></div>
+      <div class="meta">${data(a.criado_em)}</div>${a.comentario ? `<p>${esc(a.comentario)}</p>` : ''}</div>`).join('') || '<div class="card vazio">Ainda sem avaliações.</div>'}`;
   document.getElementById('galeria-pub')?.addEventListener('click', async (e) => {
     const apagar = e.target.closest('[data-apagar]');
     if (apagar) { if (await apagarFoto(apagar.dataset.apagar, fotos)) rota(); return; }
@@ -374,7 +448,7 @@ async function telaConversas() {
     .select('id,criado_em,contratante:contratante_id(id,nome,foto_url),prestador:prestador_id(id,nome,foto_url)')
     .order('criado_em', { ascending: false });
   if (error) throw error;
-  $app.innerHTML = `<h2>Conversas</h2>${lista.map((c) => {
+  $app.innerHTML = `<h1 class="tit-pagina">Conversas</h1>${lista.map((c) => {
     const souPrestador = c.prestador.id === me.id;
     const outro = souPrestador ? c.contratante : c.prestador;
     return `<a class="card linha" href="#/chat/${c.id}">${avatar(outro)}<div><b>${esc(outro.nome)}</b>
@@ -394,12 +468,12 @@ async function telaChat(id, params) {
   if (params.get('pago') === '0') toast('O pagamento não foi concluído.', 'erro');
 
   $app.innerHTML = `<div class="chat">
-    <div class="chat-topo">${avatar(outro)}<div><b>${esc(outro.nome)}</b> ${outro.verificado ? '<span class="selo" title="Identidade verificada com documento e selfie">✔ Verificado</span>' : ''}
+    <div class="chat-topo"><a class="voltar-ic" href="#/conversas" aria-label="Voltar">${ic('voltar')}</a>${avatar(outro)}<div><b>${esc(outro.nome)}</b> ${outro.verificado ? `<span class="verif-ic" title="Identidade verificada">${ic('check')}</span>` : ''}
       <div class="meta">${souPrestador ? 'Cliente' : nomeCategoria(c.prestador.categoria_id)}</div></div></div>
     <div id="contratos"></div>
     <div class="mensagens" id="msgs"></div>
     ${me.suspenso ? '<div class="alerta">Sua conta está suspensa por tentativas de passar contato. Fale com o suporte.</div>' : `
-    <form class="enviar" id="fmsg"><input name="t" placeholder="Escreva sua mensagem…" autocomplete="off" maxlength="2000" required><button class="btn">Enviar</button></form>`}
+    <form class="enviar" id="fmsg"><input name="t" placeholder="Escreva sua mensagem…" autocomplete="off" maxlength="2000" required aria-label="Mensagem"><button class="btn redondo" aria-label="Enviar">${ic('enviar')}</button></form>`}
   </div>`;
 
   let liberado = false;
@@ -419,19 +493,19 @@ async function telaChat(id, params) {
     if (liberado) {
       const { data: k } = await sb.rpc('ver_contato', { outro: outro.id });
       const z = (k?.[0]?.whatsapp || '').replace(/\D/g, '');
-      contato = `<div class="card liberado">🔓 <b>Contato liberado</b> — combine endereço e horário:
+      contato = `<div class="card liberado">${ic('aberto')}<b>Contato liberado.</b> Combine endereço e horário:
         ${z ? `<a class="btn zap" target="_blank" rel="noopener" href="https://wa.me/55${z}">WhatsApp de ${esc(outro.nome.split(' ')[0])}</a>` : ''}
-        ${k?.[0]?.email ? `<div class="meta">✉️ ${esc(k[0].email)}</div>` : ''}</div>`;
+        ${k?.[0]?.email ? `<div class="meta">${esc(k[0].email)}</div>` : ''}</div>`;
     }
     const cards = (cts || []).map((ct) => `<div class="card proposta ${ct.status}">
-      <div class="linha-esp"><b>📝 Proposta</b><span class="status">${STATUS[ct.status]}</span></div>
+      <div class="linha-esp"><span class="eyebrow">Proposta</span><span class="status s-${ct.status}">${STATUS[ct.status]}</span></div>
       <p>${esc(ct.descricao)}</p>
       <div class="valor">${brl(ct.valor)}</div>
-      ${souPrestador ? `<div class="meta">Taxa do app (10%): ${brl(ct.comissao)} · <b>Você recebe ${brl(ct.valor_prestador)}</b>${ct.repassado_em ? ` · ✅ repassado em ${data(ct.repassado_em)}` : ''}</div>` : ''}
+      ${souPrestador ? `<div class="meta">Taxa do app (10%): ${brl(ct.comissao)} · <b>Você recebe ${brl(ct.valor_prestador)}</b>${ct.repassado_em ? ` · repassado em ${data(ct.repassado_em)}` : ''}</div>` : ''}
       <div class="acoes">
-        ${ct.status === 'proposta' && !souPrestador ? `<button class="btn" data-pagar="${ct.id}">💳 Pagar e contratar</button>` : ''}
+        ${ct.status === 'proposta' && !souPrestador ? `<button class="btn" data-pagar="${ct.id}">Pagar e contratar</button>` : ''}
         ${ct.status === 'proposta' ? `<button class="btn sec" data-cancelar="${ct.id}">Cancelar</button>` : ''}
-        ${ct.status === 'paga' && !souPrestador ? `<button class="btn" data-concluir="${ct.id}">✅ Serviço foi feito</button>` : ''}
+        ${ct.status === 'paga' && !souPrestador ? `<button class="btn" data-concluir="${ct.id}">Serviço foi feito</button>` : ''}
         ${ct.status === 'paga' && souPrestador ? '<span class="meta">Quando o cliente confirmar a conclusão, seu pagamento é liberado.</span>' : ''}
       </div>
       ${ct.status === 'concluida' && !souPrestador && !avaliadas.has(ct.id) ? `<form class="avaliar" data-avaliar="${ct.id}">
@@ -439,7 +513,7 @@ async function telaChat(id, params) {
         <select name="nota">${[5, 4, 3, 2, 1].map((n) => `<option value="${n}">${estrelas(n)}</option>`).join('')}</select>
         <input name="comentario" placeholder="Comentário (opcional)" maxlength="500"><button class="btn pequeno">Enviar</button></form>` : ''}
     </div>`).join('');
-    const novo = souPrestador && !me.suspenso ? `<details class="card"><summary>➕ Enviar proposta de orçamento</summary>
+    const novo = souPrestador && !me.suspenso ? `<details class="card"><summary>${ic('mais')}Enviar proposta de orçamento</summary>
       <form id="fprop">
         <label>Descrição do serviço<textarea name="descricao" required maxlength="1000" placeholder="Ex: reboco de 20m² de parede, material por conta do cliente"></textarea></label>
         <label>Valor total (R$)<input name="valor" type="number" min="10" step="0.01" required></label>
@@ -543,16 +617,17 @@ async function telaPerfil() {
   const cartaoVerificacao = me.verificado
     ? '<div class="card verif ok"><b>✔ Identidade verificada</b><div class="meta">Seu perfil mostra o selo de verificado na busca e no chat.</div></div>'
     : verif?.status === 'pendente'
-      ? `<div class="card verif pendente"><b>⏳ Verificação em análise</b><div class="meta">Enviada em ${data(verif.criado_em)}. Você recebe o selo assim que for aprovada.</div></div>`
-      : `<div class="card verif"><b>🪪 Verifique sua identidade</b>
+      ? `<div class="card verif pendente"><b>Verificação em análise</b><div class="meta">Enviada em ${data(verif.criado_em)}. Você recebe o selo assim que for aprovada.</div></div>`
+      : `<div class="card verif"><b>Verifique sua identidade</b>
           ${verif?.status === 'rejeitada' ? `<div class="alerta">Sua última verificação não foi aprovada: <b>${esc(verif.motivo || 'sem motivo informado')}</b>. Envie de novo.</div>` : ''}
           <div class="meta">Envie uma foto do documento e uma selfie segurando ele. Perfis verificados ganham o selo ✔ e recebem mais contratações.</div>
           <a class="btn" href="#/verificar">Verificar agora</a></div>`;
   const opcoes = categorias.map((c) => `<option value="${c.id}" ${c.id === me.categoria_id ? 'selected' : ''}>${c.icone} ${esc(c.nome)}</option>`).join('');
   const ganhos = (cts || []).filter((x) => x.prestador_id === me.id && ['paga', 'concluida'].includes(x.status));
   $app.innerHTML = `
-    ${me.suspenso ? '<div class="alerta">⛔ Conta suspensa por tentativas de passar contato fora do app.</div>'
-      : me.avisos ? `<div class="alerta">⚠️ Você tem ${me.avisos} aviso(s) por tentar passar contato. Com 3, a conta é suspensa.</div>` : ''}
+    ${me.suspenso ? '<div class="alerta">Conta suspensa por tentativas de passar contato fora do app.</div>'
+      : me.avisos ? `<div class="alerta">Você tem ${me.avisos} aviso(s) por tentar passar contato. Com 3, a conta é suspensa.</div>` : ''}
+    <div class="linha-esp tit-linha"><h1 class="tit-pagina">Meu perfil</h1><button class="btn sec pequeno" id="sair">${ic('sair')}Sair</button></div>
     ${cartaoVerificacao}
     <form class="card" id="fperfil">
       <h2>Meu perfil público</h2>
@@ -561,7 +636,7 @@ async function telaPerfil() {
       <div class="dupla"><label>Cidade<input name="cidade" value="${esc(me.cidade)}"></label>
         <label>UF<input name="uf" value="${esc(me.uf)}" maxlength="2" style="text-transform:uppercase"></label></div>
       <div class="foto-perfil">${avatar(me, 'grande')}
-        <label class="btn sec pequeno">📷 ${me.foto_url ? 'Trocar' : 'Colocar'} foto de perfil<input type="file" id="in-avatar" accept="image/*" hidden></label></div>
+        <label class="btn sec pequeno">${ic('camera')}${me.foto_url ? 'Trocar' : 'Colocar'} foto de perfil<input type="file" id="in-avatar" accept="image/*" hidden></label></div>
       <fieldset><legend>Como você usa o app</legend>
         <label class="check"><input type="checkbox" name="is_contratante" ${me.is_contratante ? 'checked' : ''}> Contrato serviços</label>
         <label class="check"><input type="checkbox" name="is_prestador" ${me.is_prestador ? 'checked' : ''}> Ofereço serviços</label>
@@ -574,24 +649,24 @@ async function telaPerfil() {
       <button class="btn">Salvar perfil</button>
     </form>
     ${me.is_prestador ? `<div class="card" id="card-fotos">
-      <h2>📸 Fotos dos meus trabalhos</h2>
+      <h2>Fotos dos meus trabalhos</h2>
       <p class="nota">Mostre serviços que você já fez. Perfis com fotos recebem muito mais pedidos. Até ${MAX_FOTOS} fotos.
         Não coloque telefone ou contato escrito nas fotos.</p>
       <div class="galeria" id="galeria-minha">${galeriaHTML(fotos, true)}</div>
       <div class="enviar-fotos" ${fotos.length >= MAX_FOTOS ? 'hidden' : ''}>
         <input id="legenda" maxlength="140" placeholder="Legenda (opcional) — ex: Reboco de fachada, 2 dias">
-        <label class="btn">➕ Adicionar fotos<input type="file" id="in-fotos" accept="image/*" multiple hidden></label>
+        <label class="btn">${ic('mais')}Adicionar fotos<input type="file" id="in-fotos" accept="image/*" multiple hidden></label>
       </div>
       <div class="meta" id="up-status">${fotos.length} de ${MAX_FOTOS} fotos</div>
     </div>` : ''}
     <form class="card" id="fpriv">
-      <h2>🔒 Dados privados</h2>
+      <h2>${ic('cadeado')}Dados privados</h2>
       <p class="nota">Só aparecem para a outra parte depois do pagamento. A chave Pix é vista só pela administração, para seu repasse.</p>
       <label>WhatsApp<input name="whatsapp" value="${esc(priv?.whatsapp)}" inputmode="tel"></label>
       ${me.is_prestador ? `<label>Chave Pix para receber<input name="chave_pix" value="${esc(priv?.chave_pix)}"></label>` : ''}
       <button class="btn">Salvar dados privados</button>
     </form>
-    ${me.is_prestador ? `<div class="card"><h2>💰 Meus ganhos</h2>
+    ${me.is_prestador ? `<div class="card"><h2>Meus ganhos</h2>
       <div class="numeros">
         <div><span>${brl(ganhos.reduce((s, x) => s + Number(x.valor_prestador), 0))}</span>total a receber/recebido</div>
         <div><span>${brl(ganhos.filter((x) => x.repassado_em).reduce((s, x) => s + Number(x.valor_prestador), 0))}</span>já repassado</div>
@@ -599,10 +674,11 @@ async function telaPerfil() {
       </div></div>` : ''}
     <div class="card"><h2>Minhas contratações</h2>
       ${(cts || []).map((x) => `<a class="linha-esp item" href="#/chat/${x.conversa_id}">
-        <span>${x.prestador_id === me.id ? `🛠️ Para ${esc(x.contratante?.nome)}` : `🧾 Com ${esc(x.prestador?.nome)}`} — ${esc(x.descricao.slice(0, 50))}</span>
+        <span>${x.prestador_id === me.id ? `Para ${esc(x.contratante?.nome)}` : `Com ${esc(x.prestador?.nome)}`} — ${esc(x.descricao.slice(0, 50))}</span>
         <span>${brl(x.valor)} · ${STATUS[x.status]}</span></a>`).join('') || '<p class="vazio">Nenhuma ainda.</p>'}
     </div>`;
 
+  document.getElementById('sair').addEventListener('click', async () => { await sb.auth.signOut(); location.hash = '#/'; });
   const fp = document.getElementById('fperfil');
   fp.is_prestador.addEventListener('change', () => { document.getElementById('campos-prestador').hidden = !fp.is_prestador.checked; });
   fp.addEventListener('submit', async (e) => {
@@ -677,13 +753,13 @@ async function telaPerfil() {
 async function telaVerificar() {
   if (me.verificado) { $app.innerHTML = '<div class="card estreito"><h2>✔ Você já é verificado</h2><a href="#/perfil">Voltar ao perfil</a></div>'; return; }
   const { data: pend } = await sb.from('verificacoes').select('id').eq('user_id', me.id).eq('status', 'pendente').limit(1);
-  if (pend?.length) { $app.innerHTML = '<div class="card estreito"><h2>⏳ Em análise</h2><p>Sua verificação já foi enviada e está sendo analisada.</p><a href="#/perfil">Voltar ao perfil</a></div>'; return; }
+  if (pend?.length) { $app.innerHTML = '<div class="card estreito"><h2>Em análise</h2><p>Sua verificação já foi enviada e está sendo analisada.</p><a href="#/perfil">Voltar ao perfil</a></div>'; return; }
   const passo = (nome, titulo, dica, captura, opcional = false) => `<div class="passo" data-passo="${nome}">
-    <div class="previa-box"><img class="previa" id="prev-${nome}" alt="" hidden><span class="vazia">${nome === 'selfie' ? '🤳' : '🪪'}</span></div>
+    <div class="previa-box"><img class="previa" id="prev-${nome}" alt="" hidden><span class="vazia">${ic(nome === 'selfie' ? 'camera' : 'documento')}</span></div>
     <div><b>${titulo}</b>${opcional ? ' <span class="meta">(opcional na CNH)</span>' : ''}<small>${dica}</small>
-      <label class="btn sec pequeno">📷 Tirar ou escolher foto<input type="file" id="in-${nome}" accept="image/*" capture="${captura}" hidden></label></div></div>`;
+      <label class="btn sec pequeno">Tirar ou escolher foto<input type="file" id="in-${nome}" accept="image/*" capture="${captura}" hidden></label></div></div>`;
   $app.innerHTML = `<form class="card estreito" id="fver">
-    <h2>🪪 Verificar identidade</h2>
+    <h2>Verificar identidade</h2>
     <p class="nota">Perfis verificados ganham o selo ✔ e passam mais confiança para quem contrata. Seus documentos ficam guardados em área privada e só a administração vê.</p>
     <label for="cpf">CPF<input id="cpf" name="cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required autocomplete="off"></label>
     <label for="tipo">Documento com foto<select id="tipo" name="tipo"><option value="CNH">CNH (carteira de motorista)</option><option value="RG">RG (identidade)</option><option value="RNE">RNE / CRNM (estrangeiro)</option></select></label>
@@ -738,7 +814,7 @@ async function telaVerificar() {
         if (/uma_pendente|em análise/i.test(error.message)) throw new Error('Você já tem uma verificação em análise.');
         throw error;
       }
-      $app.innerHTML = '<div class="card estreito"><h2>✅ Enviado!</h2><p>Recebemos seus documentos. Assim que a análise for aprovada, o selo ✔ Verificado aparece no seu perfil.</p><a class="btn" href="#/perfil">Voltar ao perfil</a></div>';
+      $app.innerHTML = '<div class="card estreito"><h2>Enviado!</h2><p>Recebemos seus documentos. Assim que a análise for aprovada, o selo ✔ Verificado aparece no seu perfil.</p><a class="btn" href="#/perfil">Voltar ao perfil</a></div>';
     } catch (er) {
       falha(er);
       btn.disabled = false;
@@ -751,7 +827,7 @@ async function telaVerificar() {
 async function telaPedidos() {
   const opcoes = categorias.map((c) => `<option value="${c.id}">${c.icone} ${esc(c.nome)}</option>`).join('');
   $app.innerHTML = `
-    <div class="linha-esp"><h2>Pedidos de serviço</h2>${me && !me.suspenso ? '<button class="btn" id="abrir-novo">➕ Publicar pedido</button>' : ''}</div>
+    <div class="linha-esp"><h2>Pedidos de serviço</h2>${me && !me.suspenso ? '<button class="btn" id="abrir-novo">Publicar pedido</button>' : ''}</div>
     <p class="nota">Empresas e clientes publicam o que precisam. Profissionais tocam em <b>Tenho interesse</b> e conversam pelo chat do app.</p>
     <form class="card" id="fnovo" hidden>
       <h3>Novo pedido</h3>
@@ -762,7 +838,7 @@ async function telaPedidos() {
         <label for="p-uf">UF<input id="p-uf" name="uf" value="${esc(me?.uf)}" maxlength="2" required style="text-transform:uppercase"></label></div>
       <label for="p-orc">Orçamento total (R$, opcional)<input id="p-orc" name="orcamento" type="number" min="0" step="0.01"></label>
       <label for="p-desc">Detalhes<textarea id="p-desc" name="descricao" maxlength="1500" placeholder="Datas, horário, local (bairro), o que está incluso…"></textarea></label>
-      <p class="nota">🔒 Não coloque telefone ou e-mail: os profissionais falam com você pelo chat do app.</p>
+      <p class="nota">${ic('cadeado')}Não coloque telefone ou e-mail: os profissionais falam com você pelo chat do app.</p>
       <div class="acoes"><button class="btn">Publicar</button><button type="button" class="btn sec" id="cancelar-novo">Cancelar</button></div>
     </form>
     <form class="busca tres card" id="filtro">
@@ -800,12 +876,12 @@ async function telaPedidos() {
         <div class="linha-esp"><span class="cat">${nomeCategoria(x.categoria_id)}</span>
           <span class="meta">${x.status === 'fechado' ? '<b>Fechado</b> · ' : ''}${data(x.criado_em)}</span></div>
         <h3>${esc(x.titulo)}</h3>
-        <div class="meta">📍 ${esc(x.cidade)}${x.uf ? '/' + esc(x.uf) : ''} · 👥 ${x.vagas} ${x.vagas > 1 ? 'vagas' : 'vaga'}${x.orcamento ? ` · 💰 até ${brl(x.orcamento)}` : ''}</div>
+        <div class="meta">${ic('pin')}${esc(x.cidade)}${x.uf ? '/' + esc(x.uf) : ''} · ${ic('pessoas')}${x.vagas} ${x.vagas > 1 ? 'vagas' : 'vaga'}${x.orcamento ? ` · até ${brl(x.orcamento)}` : ''}</div>
         ${x.descricao ? `<p>${esc(x.descricao)}</p>` : ''}
         <div class="linha-esp">
-          <div class="quem">${avatar(x.contratante, 'mini')} <span>${esc(x.contratante?.nome)} ${x.contratante?.verificado ? '<span class="selo">✔ Verificado</span>' : ''}</span></div>
+          <div class="quem">${avatar(x.contratante, 'mini')} <span>${esc(x.contratante?.nome)} ${x.contratante?.verificado ? SELO : ''}</span></div>
           ${meu ? (x.status === 'aberto' ? `<button class="btn sec pequeno" data-fechar="${x.id}">Fechar pedido</button>` : '')
-            : `<button class="btn pequeno" data-interesse="${x.id}">🙋 Tenho interesse</button>`}
+            : `<button class="btn pequeno" data-interesse="${x.id}">Tenho interesse</button>`}
         </div></div>`;
     }).join('') || '<div class="card vazio">Nenhum pedido aberto com esses filtros.</div>';
   };
@@ -890,7 +966,7 @@ async function abaVerificacoes() {
           <select aria-label="Motivo da rejeição" data-motivo="${v.id}">${MOTIVOS_REJEICAO.map((m) => `<option>${esc(m)}</option>`).join('')}</select>
           <button class="btn perigo" data-rejeitar="${v.id}">✕ Rejeitar</button>
         </div></div>`;
-    }).join('') || '<div class="card vazio">Nenhuma verificação esperando análise. 🎉</div>'}`;
+    }).join('') || '<div class="card vazio">Nenhuma verificação esperando análise. </div>'}`;
   const fotosDe = Object.fromEntries((lista || []).map((v) => [v.id, [['doc_frente', `${v.tipo_documento} · frente`], ['doc_verso', `${v.tipo_documento} · verso`], ['selfie', 'Selfie com documento']]
     .filter(([c]) => v[c]).map(([c, legenda]) => ({ url: urls[v[c]], legenda }))]));
   $a.onclick = async (e) => {
@@ -919,9 +995,9 @@ async function abaRepasses() {
   $a.innerHTML = `<p class="nota">Serviços concluídos aguardando você enviar o Pix ao prestador (valor já sem os 10%).</p>${(lista || []).map((x) => `
     <div class="card linha-esp"><div><b>${esc(x.prestador.nome)}</b> — ${esc(x.descricao.slice(0, 60))}
       <div class="meta">Concluído em ${data(x.concluido_em)} · Total ${brl(x.valor)} · Sua comissão ${brl(x.comissao)}</div>
-      <div class="meta">Pix: <b>${esc(pixDe[x.prestador_id]?.chave_pix) || '⚠️ não cadastrada'}</b></div></div>
+      <div class="meta">Pix: <b>${esc(pixDe[x.prestador_id]?.chave_pix) || 'não cadastrada'}</b></div></div>
       <div><div class="valor">${brl(x.valor_prestador)}</div><button class="btn pequeno" data-repasse="${x.id}">Marquei como pago</button></div></div>`).join('')
-    || '<div class="card vazio">Nenhum repasse pendente. 🎉</div>'}`;
+    || '<div class="card vazio">Nenhum repasse pendente. </div>'}`;
   $a.onclick = async (e) => {
     const id = e.target.dataset?.repasse;
     if (!id || !(await confirmar('Confirma que já enviou o Pix para o prestador?', 'Já enviei'))) return;

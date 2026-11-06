@@ -593,24 +593,26 @@ export function criarDemo() {
 
 function montarBarra(sb) {
   document.body.classList.add('demo');
-  const barra = document.createElement('div');
-  barra.className = 'demo-barra';
-  const papeis = [['cliente', 'Cliente', '#/conversas', 'Mariana Souza'], ['empresa', 'Empresa', '#/pedidos', 'Construtora Horizonte'],
-    ['prestador', 'Pedreiro', '#/conversas', 'Pedro Almeida'], ['ajudante', 'Ajudante', '#/pedidos', 'Marcos Vinícius'], ['admin', 'Admin', '#/admin', 'Você']];
-  const desenhar = () => {
-    barra.innerHTML = `<b>Demo · entrar como:</b>${papeis.map(([k, rot, , nome]) =>
-      `<button data-p="${k}" title="${nome}" class="${db.sessao === PERFIS_DEMO[k] ? 'ativo' : ''}">${rot}</button>`).join('')}<button data-reset="1" title="Apaga as mudanças e volta aos dados de exemplo">↺ Recomeçar</button>`;
+  const faixa = document.createElement('div');
+  faixa.className = 'demo-faixa';
+  const papeis = [['cliente', 'Mariana · cliente', '#/'], ['empresa', 'Construtora Horizonte · empresa', '#/pedidos'],
+    ['prestador', 'Pedro · pedreiro', '#/conversas'], ['ajudante', 'Marcos · ajudante', '#/pedidos'], ['admin', 'Você · administrador', '#/admin']];
+  faixa.innerHTML = `<b>Demonstração</b>
+    <label for="demo-papel">Ver como
+      <select id="demo-papel">${papeis.map(([k, rot]) => `<option value="${k}">${rot}</option>`).join('')}</select></label>
+    <button type="button" id="demo-reset" title="Apaga as mudanças e volta aos dados de exemplo">Recomeçar</button>`;
+  const sel = faixa.querySelector('select');
+  const sincronizar = () => {
+    const k = Object.keys(PERFIS_DEMO).find((x) => PERFIS_DEMO[x] === db.sessao);
+    if (k) sel.value = k;
   };
-  barra.addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    if (b.dataset.reset) return sb.demo.resetar();
-    const [, , destino] = papeis.find(([k]) => k === b.dataset.p);
-    sb.demo.entrarComo(PERFIS_DEMO[b.dataset.p]);
+  sel.addEventListener('change', () => {
+    const [, , destino] = papeis.find(([k]) => k === sel.value);
+    sb.demo.entrarComo(PERFIS_DEMO[sel.value]);
     location.hash = destino;
-    desenhar();
   });
-  desenhar();
-  window.addEventListener('hashchange', desenhar);
-  document.body.appendChild(barra);
+  faixa.querySelector('#demo-reset').addEventListener('click', () => sb.demo.resetar());
+  sincronizar();
+  window.addEventListener('hashchange', sincronizar);
+  document.body.prepend(faixa);
 }
