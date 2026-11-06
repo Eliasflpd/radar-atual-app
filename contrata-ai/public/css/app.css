@@ -156,19 +156,22 @@ legend { font-weight: 700; font-size: 14px; padding: 0 6px; }
 
 /* ---------- boas-vindas: só as duas escolhas ---------- */
 body[data-tela="bemvindo"] .topo, body[data-tela="bemvindo"] nav#nav { display: none; }
-body[data-tela="bemvindo"] main { padding-bottom: 24px; }
-.boas-vindas { max-width: 460px; margin: 0 auto; min-height: calc(100svh - 48px); display: flex; flex-direction: column; gap: 18px; padding: 8px 0 8px; }
+/* tela travada no tamanho exato da tela: nada rola */
+html:has(body[data-tela="bemvindo"]), body[data-tela="bemvindo"] { overflow: hidden; height: 100%; }
+body[data-tela="bemvindo"] main { position: fixed; inset: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px) 0; max-width: none; overflow: hidden;
+  padding-block: 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.boas-vindas { max-width: 460px; height: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: clamp(10px, 2.2vh, 18px); }
 .bv-marca { display: flex; align-items: center; gap: 10px; font: 900 21px var(--f-titulo); }
 .bv-marca em { font-style: normal; color: var(--pri); }
 .bv-marca .logo { width: 36px; height: 36px; }
-.boas-vindas h1 { font-size: clamp(28px, 8vw, 34px); font-weight: 900; margin-top: 6px; }
-.escolhas { flex: 1; display: grid; grid-template-rows: 1fr 1fr; gap: 14px; min-height: 360px; }
-.escolha { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; border-radius: 24px;
+.boas-vindas h1 { font-size: clamp(24px, min(8vw, 4.6vh), 34px); font-weight: 900; }
+.escolhas { flex: 1; min-height: 0; display: grid; grid-template-rows: 1fr 1fr; gap: clamp(10px, 2vh, 14px); }
+.escolha { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(4px, 1vh, 8px); padding: clamp(12px, 2.5vh, 24px); min-height: 0; overflow: hidden; border-radius: 24px;
   text-decoration: none; text-align: center; box-shadow: var(--sombra); transition: transform .12s; -webkit-tap-highlight-color: transparent; }
 .escolha:active { transform: scale(.98); }
-.escolha b { font: 900 clamp(26px, 7.5vw, 32px)/1.1 var(--f-titulo); }
-.escolha small { margin: 0; font-size: 17px; font-weight: 600; }
-.escolha-ic { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 50%; margin-bottom: 4px; }
+.escolha b { font: 900 clamp(22px, min(7.5vw, 4.2vh), 32px)/1.1 var(--f-titulo); }
+.escolha small { margin: 0; font-size: clamp(14px, 2.2vh, 17px); font-weight: 600; }
+.escolha-ic { display: grid; place-items: center; width: clamp(44px, 9vh, 72px); height: clamp(44px, 9vh, 72px); border-radius: 50%; margin-bottom: 4px; flex: none; }
 .escolha-ic .ic { width: 36px; height: 36px; }
 .escolha.contratar { background: var(--pri); color: #fff; }
 .escolha.contratar small { color: rgba(255,255,255,.9); }
@@ -625,3 +628,5 @@ button.menu-item { width: 100%; border: 0; background: none; font: inherit; text
 
 .grade .esqueleto-lista { grid-column: 1 / -1; }
 .contratacao-adm .prop-valores { margin-top: 10px; }
+
+@media (max-height: 560px) { .escolha small { display: none; } .bv-marca { font-size: 18px; } .bv-marca .logo { width: 30px; height: 30px; } }
