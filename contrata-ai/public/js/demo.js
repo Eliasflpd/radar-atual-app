@@ -598,8 +598,10 @@ function montarBarra(sb) {
   const papeis = [['cliente', 'Mariana · cliente', '#/'], ['empresa', 'Construtora Horizonte · empresa', '#/pedidos'],
     ['prestador', 'Pedro · pedreiro', '#/conversas'], ['ajudante', 'Marcos · ajudante', '#/pedidos'], ['admin', 'Você · administrador', '#/admin']];
   faixa.innerHTML = `<b>Demonstração</b>
-    <label for="demo-papel">Ver como
+    <label for="demo-papel"><span class="rot">Ver como</span>
       <select id="demo-papel">${papeis.map(([k, rot]) => `<option value="${k}">${rot}</option>`).join('')}</select></label>
+    <label for="demo-estilo"><span class="rot">Estilo</span>
+      <select id="demo-estilo"><option value="a">A · Canteiro</option><option value="b">B · Bairro</option><option value="c">C · Executivo</option></select></label>
     <button type="button" id="demo-reset" title="Apaga as mudanças e volta aos dados de exemplo">Recomeçar</button>`;
   const sel = faixa.querySelector('select');
   const sincronizar = () => {
@@ -612,6 +614,12 @@ function montarBarra(sb) {
     location.hash = destino;
   });
   faixa.querySelector('#demo-reset').addEventListener('click', () => sb.demo.resetar());
+  const est = faixa.querySelector('#demo-estilo');
+  est.value = document.documentElement.dataset.estilo || 'a';
+  est.addEventListener('change', () => {
+    document.documentElement.dataset.estilo = est.value;
+    try { localStorage.setItem('contrata-estilo', est.value); } catch { /* sem storage */ }
+  });
   sincronizar();
   window.addEventListener('hashchange', sincronizar);
   document.body.prepend(faixa);
