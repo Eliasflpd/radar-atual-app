@@ -619,3 +619,11 @@ button.menu-item { width: 100%; border: 0; background: none; font: inherit; text
 .aviso-busca.motivo { margin: 8px 0 16px; font-weight: 700; background: var(--pri-claro); color: var(--pri-tx); }
 .ou { display: flex; align-items: center; gap: 12px; margin: 24px 0 14px; color: var(--suave); font-weight: 700; font-size: 14px; }
 .ou::before, .ou::after { content: ""; flex: 1; height: 1px; background: var(--linha); }
+
+/* número de mensagens novas */
+.badge-aba { position: absolute; top: 2px; left: calc(50% + 6px); min-width: 19px; height: 19px; padding: 0 5px; border-radius: 99px; background: var(--vermelho); color: #fff;
+  font: 800 11px/19px var(--f-texto); text-align: center; border: 2px solid var(--papel); }
+@media (min-width: 761px) { .badge-aba { position: static; margin-left: 2px; border: 0; } }
+.badge-aba.pulsa { animation: pulsa .4s ease-out; }
+.conversa .bolinha { min-width: 22px; height: 22px; padding: 0 6px; font-size: 12px; background: var(--vermelho); }
+.resumo-novas { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 12px 14px; border-radius: var(--raio-p); background: var(--pri-claro); color: var(--pri-tx); font-size: 15px; }

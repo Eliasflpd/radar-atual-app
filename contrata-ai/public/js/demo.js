@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v8';
+const CHAVE = 'contrata-demo-v9';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -212,6 +212,8 @@ function semente() {
   const conversas = [
     { id: 'c-1', contratante_id: 'u-cliente', prestador_id: 'u-pedro', criado_em: agora(180) },
     { id: 'c-2', contratante_id: 'u-empresa', prestador_id: 'u-pedro', criado_em: agora(60 * 24 * 10) },
+    { id: 'c-3', contratante_id: 'u-emp1', prestador_id: 'u-pedro', criado_em: agora(90) },
+    { id: 'c-4', contratante_id: 'u-emp3', prestador_id: 'u-pedro', criado_em: agora(40) },
   ];
   let mid = 1;
   const M = (conv, autor, texto, min, bloqueada = false) => ({ id: mid++, conversa_id: conv, autor_id: autor, texto, bloqueada, criado_em: agora(min) });
@@ -223,6 +225,12 @@ function semente() {
     M('c-1', 'u-pedro', 'Desculpe! Posso começar na segunda. Vou te mandar a proposta aqui pelo app.', 158),
     M('c-2', 'u-empresa', 'Pedro, precisamos de contrapiso em 3 salas comerciais.', 60 * 24 * 10),
     M('c-2', 'u-pedro', 'Combinado, segue a proposta.', 60 * 24 * 10 - 5),
+    // clientes chamando o Pedro (aparecem como mensagens novas)
+    M('c-3', 'u-emp1', 'Olá! Vi seu perfil no Contrata Aí e gostaria de um orçamento.', 85),
+    M('c-3', 'u-emp1', 'Temos um muro de 30 metros para levantar em Pinheiros. Consegue começar semana que vem?', 80),
+    M('c-4', 'u-emp3', 'Olá! Vi seu perfil no Contrata Aí e gostaria de um orçamento.', 38),
+    M('c-4', 'u-emp3', 'Precisamos trocar o piso do salão de festas do condomínio, uns 60 m².', 35),
+    M('c-4', 'u-emp3', 'Pode passar aqui para medir?', 33),
   ];
   const ct = (id, conv, contratante, prestador, descricao, valor, status, extra = {}) => ({
     id, conversa_id: conv, contratante_id: contratante, prestador_id: prestador, descricao, valor, taxa_comissao: 0.1,
@@ -321,6 +329,13 @@ function semente() {
 // ------------------------------------------------------------------ armazenamento
 function carregar() {
   try { const s = localStorage.getItem(CHAVE); if (s) return JSON.parse(s); } catch { /* sem storage */ }
+  // demonstração nova: conversas antigas já lidas; ficam novas só as dos clientes que acabaram de chamar o Pedro
+  try {
+    const lida = new Date(Date.now() - 60 * 60000).toISOString();
+    localStorage.setItem('contrata-lidas-u-pedro', JSON.stringify({ 'c-1': new Date().toISOString(), 'c-2': lida }));
+    localStorage.setItem('contrata-lidas-u-cliente', JSON.stringify({ 'c-1': new Date().toISOString() }));
+    localStorage.setItem('contrata-lidas-u-empresa', JSON.stringify({ 'c-2': new Date().toISOString() }));
+  } catch { /* sem storage */ }
   return semente();
 }
 let db = carregar();

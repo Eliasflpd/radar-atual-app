@@ -247,8 +247,9 @@ document.addEventListener('click', async (e) => {
 });
 
 // ---------------------------------------------------------------- mensagens lidas (neste aparelho)
-const lidas = () => { try { return JSON.parse(localStorage.getItem('contrata-lidas') || '{}'); } catch { return {}; } };
-const marcarLida = (convId) => { try { const l = lidas(); l[convId] = new Date().toISOString(); localStorage.setItem('contrata-lidas', JSON.stringify(l)); } catch { /* sem storage */ } };
+const chaveLidas = () => `contrata-lidas-${me?.id || 'anon'}`; // separado por pessoa
+const lidas = () => { try { return JSON.parse(localStorage.getItem(chaveLidas()) || '{}'); } catch { return {}; } };
+const marcarLida = (convId) => { try { const l = lidas(); l[convId] = new Date().toISOString(); localStorage.setItem(chaveLidas(), JSON.stringify(l)); } catch { /* sem storage */ } setTimeout(() => atualizarBadge(), 0); };
 
 // Confirmação dentro da página (não usa confirm() do navegador)
 function confirmar(msg, ok = 'Confirmar') {
@@ -306,7 +307,47 @@ function renderNav() {
   $nav.innerHTML = aba('#/', 'inicio', 'Início', 'inicio') + aba('#/pedidos', 'pedidos', 'Pedidos', 'pedidos')
     + (me ? aba('#/conversas', 'chat', 'Mensagens', 'conversas') + aba('#/conta', 'perfil', 'Conta', 'conta')
       : aba('#/entrar', 'entrar', 'Entrar', 'entrar'));
+  if (me) $nav.querySelector('[data-aba="conversas"]').insertAdjacentHTML('beforeend', '<span class="badge-aba" id="badge-msgs" hidden></span>');
   marcarAba();
+  atualizarBadge();
+  ouvirMensagens();
+}
+
+// Número de mensagens não lidas na aba "Mensagens" (e aviso quando chega uma nova)
+let ultimaContagem = 0;
+async function atualizarBadge(avisar = false) {
+  const $b = document.getElementById('badge-msgs');
+  if (!me || !$b) return;
+  const n = await contarNaoLidas().catch(() => 0);
+  $b.textContent = n > 9 ? '9+' : String(n);
+  $b.hidden = n === 0;
+  $b.setAttribute('aria-label', `${n} ${n === 1 ? 'mensagem nova' : 'mensagens novas'}`);
+  const aba = $nav.querySelector('[data-aba="conversas"]');
+  aba?.setAttribute('aria-label', n ? `Mensagens, ${n} ${n === 1 ? 'nova' : 'novas'}` : 'Mensagens');
+  if (avisar && n > ultimaContagem) { $b.classList.remove('pulsa'); void $b.offsetWidth; $b.classList.add('pulsa'); }
+  ultimaContagem = n;
+}
+// Escuta mensagens novas de qualquer conversa do usuário
+let canalGeral = null, donoCanal = null;
+function ouvirMensagens() {
+  if (donoCanal === me?.id) return;
+  if (canalGeral) { sb.removeChannel(canalGeral); canalGeral = null; }
+  donoCanal = me?.id || null;
+  if (!me) return;
+  canalGeral = sb.channel(`geral-${me.id}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, async (ev) => {
+      const m = ev.new;
+      if (!me || m.autor_id === me.id) return;
+      const abertaAgora = location.hash.startsWith(`#/chat/${m.conversa_id}`);
+      if (abertaAgora) return;
+      const { data: c } = await sb.from('conversas').select('id,contratante:contratante_id(nome),prestador:prestador_id(nome),contratante_id').eq('id', m.conversa_id).maybeSingle();
+      if (!c) return; // não é conversa deste usuário
+      const quem = (c.contratante_id === m.autor_id ? c.contratante?.nome : c.prestador?.nome) || 'alguém';
+      toast(`Nova mensagem de ${quem.split(' ')[0]}: "${m.bloqueada ? 'mensagem bloqueada' : m.texto.slice(0, 60)}"`);
+      atualizarBadge(true);
+      if (location.hash.startsWith('#/conversas')) rota();
+    })
+    .subscribe();
 }
 function marcarAba() {
   const tela = location.hash.slice(2).split(/[/?]/)[0] || 'inicio';
@@ -343,6 +384,7 @@ async function rota() {
   const params = new URLSearchParams(qs || '');
   const chave = id && ['conta', 'pedidos'].includes(tela) ? `${tela}/${id}` : tela;
   marcarAba();
+  atualizarBadge();
   topo(tela, chave);
   document.body.dataset.tela = tela;
   if (['conversas', 'chat', 'conta', 'admin', 'verificar', 'ser-profissional'].includes(tela) && !me) { guardarDepois(location.hash); location.hash = '#/entrar'; return; }
@@ -467,6 +509,7 @@ async function abrirConversa(prestadorId) {
     const r = await sb.from('conversas').insert({ contratante_id: me.id, prestador_id: prestadorId }).select('id').single();
     if (r.error) return falha(r.error);
     c = r.data;
+    await sb.from('mensagens').insert({ conversa_id: c.id, autor_id: me.id, texto: 'Olá! Vi seu perfil no Contrata Aí e gostaria de um orçamento.' });
   }
   location.hash = `#/chat/${c.id}`;
 }
@@ -567,15 +610,10 @@ async function contarNaoLidas() {
   const { data: convs } = await sb.from('conversas').select('id');
   const ids = (convs || []).map((c) => c.id);
   if (!ids.length) return 0;
-  const { data: msgs } = await sb.from('mensagens').select('conversa_id,autor_id,criado_em').in('conversa_id', ids).order('criado_em', { ascending: false });
-  const l = lidas(), vistas = new Set();
-  let n = 0;
-  for (const m of msgs || []) {
-    if (vistas.has(m.conversa_id)) continue;
-    vistas.add(m.conversa_id);
-    if (m.autor_id !== me.id && (!l[m.conversa_id] || m.criado_em > l[m.conversa_id])) n++;
-  }
-  return n;
+  const { data: msgs } = await sb.from('mensagens').select('conversa_id,autor_id,criado_em').in('conversa_id', ids);
+  const l = lidas();
+  // conta cada mensagem recebida depois da última vez que a conversa foi aberta
+  return (msgs || []).filter((m) => m.autor_id !== me.id && (!l[m.conversa_id] || m.criado_em > l[m.conversa_id])).length;
 }
 // Lista de profissionais por área ou por busca
 async function telaLista({ cat, q }) {
@@ -1026,24 +1064,29 @@ async function telaConversas() {
     sb.from('mensagens').select('conversa_id,autor_id,texto,criado_em,bloqueada').in('conversa_id', ids).order('criado_em', { ascending: false }),
     sb.from('contratacoes').select('conversa_id,status,criado_em').in('conversa_id', ids).order('criado_em', { ascending: false }),
   ]) : [{ data: [] }, { data: [] }];
-  const ultima = {}, situacao = {};
-  (msgs || []).forEach((m) => { if (!ultima[m.conversa_id]) ultima[m.conversa_id] = m; });
+  const ultima = {}, situacao = {}, novas = {};
+  const lidasAgora = lidas();
+  (msgs || []).forEach((m) => {
+    if (!ultima[m.conversa_id]) ultima[m.conversa_id] = m;
+    if (m.autor_id !== me.id && (!lidasAgora[m.conversa_id] || m.criado_em > lidasAgora[m.conversa_id])) novas[m.conversa_id] = (novas[m.conversa_id] || 0) + 1;
+  });
   (cts || []).forEach((c) => { if (!situacao[c.conversa_id] && c.status !== 'cancelada') situacao[c.conversa_id] = c.status; });
   const l = lidas();
   const quando = (d) => { const dt = new Date(d), hoje = new Date(); return dt.toDateString() === hoje.toDateString() ? dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }); };
   const ordenadas = [...(lista || [])].sort((a, b) => (ultima[b.id]?.criado_em || b.criado_em).localeCompare(ultima[a.id]?.criado_em || a.criado_em));
   const rotulo = (st, souPrestador) => ({ proposta: souPrestador ? 'Proposta enviada' : 'Proposta recebida', paga: 'Contratado', concluida: 'Concluído' }[st]);
-  $app.innerHTML = ordenadas.length ? `<div class="lista-conversas">${ordenadas.map((c) => {
+  const totalNovas = Object.values(novas).reduce((a, b) => a + b, 0);
+  $app.innerHTML = ordenadas.length ? `${totalNovas ? `<p class="resumo-novas">${ic('chat')}Você tem <b>${totalNovas} ${totalNovas === 1 ? 'mensagem nova' : 'mensagens novas'}</b></p>` : ''}<div class="lista-conversas">${ordenadas.map((c) => {
     const souPrestador = c.prestador_id === me.id;
     const outro = souPrestador ? c.contratante : c.prestador;
     const m = ultima[c.id];
-    const naoLida = m && m.autor_id !== me.id && (!l[c.id] || m.criado_em > l[c.id]);
+    const naoLida = !!novas[c.id];
     const st = situacao[c.id];
     return `<a class="conversa ${naoLida ? 'nao-lida' : ''}" href="#/chat/${c.id}">${avatar(outro)}
       <span class="cv-txt"><span class="cv-linha"><b>${esc(outro.nome)}</b><small>${quando(m?.criado_em || c.criado_em)}</small></span>
-        <span class="cv-servico">${souPrestador ? 'Cliente' : nomeCategoria(c.prestador.categoria_id)}${st ? ` · <span class="status s-${st}">${rotulo(st, souPrestador)}</span>` : ''}</span>
+        <span class="cv-servico">${souPrestador ? 'Quer contratar você' : nomeCategoria(c.prestador.categoria_id)}${st ? ` · <span class="status s-${st}">${rotulo(st, souPrestador)}</span>` : ''}</span>
         <span class="cv-ultima">${m ? `${m.autor_id === me.id ? 'Você: ' : ''}${esc(m.bloqueada ? 'Mensagem bloqueada' : m.texto)}` : 'Comece a conversa'}</span></span>
-      ${naoLida ? '<span class="bolinha" aria-label="Não lida"></span>' : ''}</a>`;
+      ${naoLida ? `<span class="bolinha" aria-label="${novas[c.id]} ${novas[c.id] === 1 ? 'mensagem nova' : 'mensagens novas'}">${novas[c.id]}</span>` : ''}</a>`;
   }).join('')}</div>`
     : vazio('chat', 'Nenhuma conversa ainda', 'Suas conversas aparecerão aqui quando você entrar em contato com um profissional.', '<a class="btn pequeno" href="#/busca">Encontrar profissionais</a>');
 }
@@ -1250,7 +1293,7 @@ async function telaConta() {
     ${bloco('Minha atividade', [
       itemMenu('#/conta/servicos', 'dinheiro', me.is_prestador ? 'Meus serviços e ganhos' : 'Minhas contratações', me.is_prestador ? 'Propostas, contratações e repasses' : 'Histórico e pagamentos'),
       itemMenu('#/pedidos?ver=meus', 'pedidos', 'Meus pedidos publicados'),
-      itemMenu('#/conversas', 'chat', 'Mensagens'),
+      itemMenu('#/conversas', 'chat', 'Mensagens', ultimaContagem ? `${ultimaContagem} ${ultimaContagem === 1 ? 'mensagem nova' : 'mensagens novas'}` : 'Suas conversas'),
     ])}
     ${me.is_prestador ? bloco('Para profissionais', [
       itemMenu(`#/p/${me.id}`, 'perfil', 'Meu perfil profissional', 'Veja como os clientes enxergam você'),
