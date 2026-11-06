@@ -15,6 +15,8 @@ Busca → Chat interno → Proposta do prestador → Cliente paga no app (Mercad
 - **Filtro anti-burla.** Telefone (inclusive escrito por extenso ou com espaços), e-mail, links, "zap", "insta", "me liga" e "por fora" são bloqueados no chat, no perfil e nas propostas. Cada tentativa gera um aviso, e no 3º a conta é **suspensa automaticamente**.
 - **Avaliações** só valem para serviços pagos e concluídos pelo app.
 - **Fotos dos trabalhos:** o prestador envia até 12 fotos, reduzidas no celular antes do envio, que aparecem na busca e no perfil (Supabase Storage). Também dá para colocar foto de perfil.
+- **Verificação de identidade:** CPF (com conferência dos dígitos), foto do documento (CNH, RG ou RNE) e selfie segurando o documento, guardados em área privada. O admin aprova ou rejeita com motivo, e quem é aprovado ganha o selo ✔. Um CPF só pode estar em uma conta.
+- **Pedidos:** empresas e clientes publicam o que precisam (ex.: 3 ajudantes de obra). Profissionais tocam em "Tenho interesse" e a conversa abre no chat.
 - **Painel do admin:** comissão acumulada, repasses pendentes com a chave Pix do prestador, tentativas de burla, verificação e suspensão de usuários.
 
 ## Colocar no ar (cerca de 20 minutos)
@@ -48,7 +50,6 @@ No celular, abra o site e toque em **"Adicionar à tela inicial"** para instalar
 
 ## Próximos passos sugeridos
 
-- Verificação de documento com selfie
 - Leitura de texto em imagens (OCR) para bloquear números escritos em fotos
 - Repasse automático com split (Mercado Pago Marketplace ou Asaas)
 - Notificações push de nova mensagem

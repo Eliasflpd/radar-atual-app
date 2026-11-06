@@ -21,7 +21,7 @@ insert into public.categorias (nome, icone) values
   ('Mecânico','🔧'),('Técnico em informática','💻'),('Designer','✏️'),('Programador','👨‍💻'),
   ('Fotógrafo','📷'),('Professor particular','📚'),('Cabeleireiro / Beleza','💇'),
   ('Cozinheiro / Buffet','🍳'),('Motorista / Frete','🚚'),('Contador','📊'),
-  ('Advogado','⚖️'),('Cuidador / Babá','🤝'),('Outros','🛠️')
+  ('Advogado','⚖️'),('Cuidador / Babá','🤝'),('Ajudante geral','💪'),('Outros','🛠️')
 on conflict (nome) do nothing;
 
 -- ---------- Perfis (dados públicos — NUNCA contato) ----------
@@ -126,6 +126,41 @@ create table if not exists public.fotos_trabalhos (
 );
 create index if not exists fotos_user_idx on public.fotos_trabalhos (user_id, criado_em desc);
 
+-- ---------- Verificação de identidade (documento + selfie) ----------
+-- Arquivos ficam no bucket PRIVADO "documentos"; só o dono e o admin acessam.
+create table if not exists public.verificacoes (
+  id              bigserial primary key,
+  user_id         uuid not null references public.profiles(id) on delete cascade,
+  cpf             text not null,
+  tipo_documento  text not null check (tipo_documento in ('CNH','RG','RNE')),
+  doc_frente      text not null,     -- caminho no Storage
+  doc_verso       text,
+  selfie          text not null,
+  status          text not null default 'pendente' check (status in ('pendente','aprovada','rejeitada')),
+  motivo          text not null default '',
+  criado_em       timestamptz not null default now(),
+  analisado_em    timestamptz
+);
+-- um CPF por conta (evita a mesma pessoa com várias contas) e uma análise pendente por vez
+create unique index if not exists verificacoes_cpf_unico on public.verificacoes (cpf) where status <> 'rejeitada';
+create unique index if not exists verificacoes_uma_pendente on public.verificacoes (user_id) where status = 'pendente';
+
+-- ---------- Pedidos (empresas e clientes publicam o que precisam) ----------
+create table if not exists public.pedidos (
+  id              uuid primary key default gen_random_uuid(),
+  contratante_id  uuid not null references public.profiles(id) on delete cascade,
+  titulo          text not null check (length(titulo) between 5 and 120),
+  descricao       text not null default '' check (length(descricao) <= 1500),
+  categoria_id    int references public.categorias(id),
+  cidade          text not null default '',
+  uf              text not null default '',
+  vagas           int not null default 1 check (vagas between 1 and 50),
+  orcamento       numeric(10,2),
+  status          text not null default 'aberto' check (status in ('aberto','fechado')),
+  criado_em       timestamptz not null default now()
+);
+create index if not exists pedidos_abertos_idx on public.pedidos (status, criado_em desc);
+
 -- =====================================================================
 -- Funções auxiliares
 -- =====================================================================
@@ -144,6 +179,21 @@ language sql stable security definer set search_path = public as $$
       and ((contratante_id = a and prestador_id = b) or (contratante_id = b and prestador_id = a))
   );
 $$;
+
+-- CPF com dígitos verificadores corretos
+create or replace function public.cpf_valido(cpf text) returns boolean
+language plpgsql immutable as $$
+declare c text := regexp_replace(coalesce(cpf,''), '\D', '', 'g'); s int; d int; t int; i int;
+begin
+  if length(c) <> 11 or c ~ '^(\d)\1{10}$' then return false; end if;
+  for t in 9..10 loop
+    s := 0;
+    for i in 1..t loop s := s + substr(c, i, 1)::int * (t + 2 - i); end loop;
+    d := ((s * 10) % 11) % 10;
+    if d <> substr(c, t + 1, 1)::int then return false; end if;
+  end loop;
+  return true;
+end $$;
 
 -- Detecta tentativa de passar contato (telefone, e-mail, link, "zap" etc.)
 -- Mesma lógica de public/js/filtro.js (mantenha as duas iguais).
@@ -293,6 +343,20 @@ drop trigger if exists filtro_foto on public.fotos_trabalhos;
 create trigger filtro_foto before insert or update on public.fotos_trabalhos
   for each row execute function public.filtrar_foto();
 
+-- Pedidos: título e descrição sem contato
+create or replace function public.filtrar_pedido() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if public.tem_contato(new.titulo) or public.tem_contato(new.descricao) then
+    raise exception 'Não é permitido colocar contato no pedido. Os profissionais falam com você pelo chat do app.';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists filtro_pedido on public.pedidos;
+create trigger filtro_pedido before insert on public.pedidos
+  for each row execute function public.filtrar_pedido();
+
 -- =====================================================================
 -- Ações (RPC) — mudanças de status passam só por aqui
 -- =====================================================================
@@ -339,7 +403,43 @@ begin
   return query select cp.whatsapp, cp.email from public.contatos_privados cp where cp.user_id = outro;
 end $$;
 
+-- Profissional responde a um pedido: abre (ou reaproveita) a conversa com quem publicou
+create or replace function public.demonstrar_interesse(pid uuid) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare pd public.pedidos; eu public.profiles; conv uuid;
+begin
+  select * into pd from public.pedidos where id = pid and status = 'aberto';
+  if not found then raise exception 'Pedido não encontrado ou já fechado.'; end if;
+  select * into eu from public.profiles where id = auth.uid();
+  if eu.id is null then raise exception 'Faça login.'; end if;
+  if eu.suspenso then raise exception 'Conta suspensa.'; end if;
+  if not eu.is_prestador then raise exception 'Ative "Ofereço serviços" no seu perfil para responder pedidos.'; end if;
+  if pd.contratante_id = eu.id then raise exception 'Este pedido é seu.'; end if;
+  select id into conv from public.conversas where contratante_id = pd.contratante_id and prestador_id = eu.id;
+  if conv is null then
+    insert into public.conversas (contratante_id, prestador_id) values (pd.contratante_id, eu.id) returning id into conv;
+  end if;
+  insert into public.mensagens (conversa_id, autor_id, texto)
+  values (conv, eu.id, 'Olá! Tenho interesse no seu pedido: "' || pd.titulo || '".');
+  return conv;
+end $$;
+
 -- ---------- Ações do administrador ----------
+create or replace function public.admin_analisar_verificacao(vid bigint, aprovar boolean, p_motivo text) returns void
+language plpgsql security definer set search_path = public as $$
+declare v public.verificacoes;
+begin
+  if not public.is_admin() then raise exception 'Apenas administrador.'; end if;
+  update public.verificacoes
+     set status = case when aprovar then 'aprovada' else 'rejeitada' end,
+         motivo = case when aprovar then '' else coalesce(p_motivo, '') end,
+         analisado_em = now()
+   where id = vid and status = 'pendente'
+  returning * into v;
+  if v.id is null then raise exception 'Verificação não encontrada ou já analisada.'; end if;
+  if aprovar then update public.profiles set verificado = true where id = v.user_id; end if;
+end $$;
+
 create or replace function public.admin_atualizar_usuario(uid uuid, p_verificado boolean, p_suspenso boolean) returns void
 language plpgsql security definer set search_path = public as $$
 begin
@@ -369,7 +469,9 @@ begin
     'faturado',      (select coalesce(sum(valor),0) from public.contratacoes where status in ('paga','concluida')),
     'comissao',      (select coalesce(sum(comissao),0) from public.contratacoes where status in ('paga','concluida')),
     'repasse_pendente', (select coalesce(sum(valor_prestador),0) from public.contratacoes where status = 'concluida' and repassado_em is null),
-    'tentativas',    (select count(*) from public.tentativas_burla)
+    'tentativas',    (select count(*) from public.tentativas_burla),
+    'verificacoes_pendentes', (select count(*) from public.verificacoes where status = 'pendente'),
+    'pedidos_abertos', (select count(*) from public.pedidos where status = 'aberto')
   );
 end $$;
 
@@ -479,6 +581,52 @@ create policy fotos_storage_enviar on storage.objects for insert to authenticate
 drop policy if exists fotos_storage_apagar on storage.objects;
 create policy fotos_storage_apagar on storage.objects for delete to authenticated
   using (bucket_id = 'fotos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+
+-- verificações: dono envia e acompanha; só o admin vê as dos outros e analisa
+alter table public.verificacoes enable row level security;
+drop policy if exists verif_ler on public.verificacoes;
+create policy verif_ler on public.verificacoes for select using (user_id = auth.uid() or public.is_admin());
+drop policy if exists verif_enviar on public.verificacoes;
+create policy verif_enviar on public.verificacoes for insert with check (
+  user_id = auth.uid()
+  and status = 'pendente'
+  and public.cpf_valido(cpf)
+  and not (select verificado from public.profiles where id = auth.uid())
+  and doc_frente like auth.uid()::text || '/%'
+  and selfie like auth.uid()::text || '/%'
+  and (doc_verso is null or doc_verso like auth.uid()::text || '/%')
+);
+revoke update, delete on public.verificacoes from anon, authenticated;
+
+-- arquivos dos documentos: bucket privado
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('documentos', 'documentos', false, 8388608, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do nothing;
+drop policy if exists docs_storage_ler on storage.objects;
+create policy docs_storage_ler on storage.objects for select to authenticated
+  using (bucket_id = 'documentos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+drop policy if exists docs_storage_enviar on storage.objects;
+create policy docs_storage_enviar on storage.objects for insert to authenticated
+  with check (bucket_id = 'documentos' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists docs_storage_apagar on storage.objects;
+create policy docs_storage_apagar on storage.objects for delete to authenticated
+  using (bucket_id = 'documentos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+
+-- pedidos: abertos são públicos; dono publica e fecha
+alter table public.pedidos enable row level security;
+drop policy if exists pedidos_ler on public.pedidos;
+create policy pedidos_ler on public.pedidos for select
+  using (status = 'aberto' or contratante_id = auth.uid() or public.is_admin());
+drop policy if exists pedidos_criar on public.pedidos;
+create policy pedidos_criar on public.pedidos for insert with check (
+  contratante_id = auth.uid() and status = 'aberto'
+  and not (select suspenso from public.profiles where id = auth.uid())
+);
+drop policy if exists pedidos_editar on public.pedidos;
+create policy pedidos_editar on public.pedidos for update
+  using (contratante_id = auth.uid() or public.is_admin()) with check (contratante_id = auth.uid() or public.is_admin());
+revoke update on public.pedidos from anon, authenticated;
+grant update (status) on public.pedidos to authenticated;
 
 -- funções internas não podem ser chamadas direto pelo app
 revoke execute on function public.registrar_burla(uuid, uuid, text, text) from public, anon, authenticated;

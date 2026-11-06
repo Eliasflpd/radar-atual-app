@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v2';
+const CHAVE = 'contrata-demo-v3';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -12,7 +12,7 @@ const CATEGORIAS = [
   ['Pedreiro', '🧱'], ['Eletricista', '💡'], ['Encanador', '🚰'], ['Pintor', '🎨'], ['Diarista / Limpeza', '🧹'],
   ['Jardineiro', '🌿'], ['Marceneiro', '🪚'], ['Serralheiro', '⚙️'], ['Mecânico', '🔧'], ['Técnico em informática', '💻'],
   ['Designer', '✏️'], ['Programador', '👨‍💻'], ['Fotógrafo', '📷'], ['Professor particular', '📚'], ['Cabeleireiro / Beleza', '💇'],
-  ['Cozinheiro / Buffet', '🍳'], ['Motorista / Frete', '🚚'], ['Contador', '📊'], ['Advogado', '⚖️'], ['Cuidador / Babá', '🤝'], ['Outros', '🛠️'],
+  ['Cozinheiro / Buffet', '🍳'], ['Motorista / Frete', '🚚'], ['Contador', '📊'], ['Advogado', '⚖️'], ['Cuidador / Babá', '🤝'], ['Ajudante geral', '💪'], ['Outros', '🛠️'],
 ].map(([nome, icone], i) => ({ id: i + 1, nome, icone }));
 
 // Fotos de exemplo desenhadas em SVG (a demonstração não pode carregar imagens de fora)
@@ -27,8 +27,34 @@ function fotoExemplo(titulo, c1, c2, simbolo) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
+// Documento e selfie de exemplo (para a fila de verificação do admin)
+function docExemplo(tipo, lado, nome, cor) {
+  const svg = lado === 'selfie'
+    ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#cbd5e1"/>
+        <circle cx="150" cy="120" r="55" fill="#e7b98f"/><circle cx="132" cy="110" r="6" fill="#333"/><circle cx="168" cy="110" r="6" fill="#333"/>
+        <path d="M128 140 q22 18 44 0" stroke="#333" stroke-width="5" fill="none"/><rect x="85" y="180" width="130" height="120" rx="40" fill="${cor}"/>
+        <rect x="230" y="120" width="130" height="90" rx="8" fill="#fff" stroke="#64748b" stroke-width="3"/><rect x="242" y="134" width="34" height="42" fill="#94a3b8"/>
+        <rect x="284" y="138" width="64" height="7" fill="#94a3b8"/><rect x="284" y="152" width="50" height="7" fill="#94a3b8"/>
+        <text x="200" y="285" font-family="sans-serif" font-size="16" text-anchor="middle" fill="#334155">SELFIE COM DOCUMENTO (EXEMPLO)</text></svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260"><rect x="5" y="5" width="390" height="250" rx="16" fill="${cor}" stroke="#475569" stroke-width="3"/>
+        <text x="20" y="38" font-family="sans-serif" font-size="18" font-weight="700" fill="#1e293b">${tipo} · ${lado.toUpperCase()} (EXEMPLO)</text>
+        ${lado === 'frente' ? `<rect x="20" y="60" width="90" height="115" fill="#94a3b8"/><circle cx="65" cy="100" r="22" fill="#e7b98f"/>
+        <text x="125" y="80" font-family="sans-serif" font-size="12" fill="#475569">NOME</text>
+        <text x="125" y="100" font-family="sans-serif" font-size="17" font-weight="700" fill="#0f172a">${nome.toUpperCase()}</text>
+        <text x="125" y="130" font-family="sans-serif" font-size="12" fill="#475569">VALIDADE</text><text x="125" y="148" font-family="sans-serif" font-size="15" fill="#0f172a">12/2031</text>`
+        : '<rect x="20" y="70" width="360" height="10" fill="#94a3b8"/><rect x="20" y="95" width="300" height="10" fill="#94a3b8"/><rect x="20" y="120" width="330" height="10" fill="#94a3b8"/>'}
+        <text x="20" y="235" font-family="monospace" font-size="13" fill="#475569">DOCUMENTO FICTÍCIO PARA DEMONSTRAÇÃO</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+// CPF fictício com dígitos verificadores válidos
+function cpfFicticio(base) {
+  const d = String(base).padStart(9, '0').slice(0, 9).split('').map(Number);
+  for (let t = 9; t < 11; t++) { let soma = 0; for (let i = 0; i < t; i++) soma += d[i] * (t + 1 - i); d.push(((soma * 10) % 11) % 10); }
+  return d.join('');
+}
+
 export const PERFIS_DEMO = {
-  cliente: 'u-cliente', prestador: 'u-pedro', admin: 'u-admin',
+  cliente: 'u-cliente', empresa: 'u-emp1', prestador: 'u-pedro', ajudante: 'u-aj1', admin: 'u-admin',
 };
 
 function perfil(id, nome, extra = {}) {
@@ -54,9 +80,38 @@ function semente() {
     P('u-carla', 'Carla Mendes', 4, 'Curitiba', 'PR', 'Pintura residencial e comercial, textura, grafiato e massa corrida.', 200, 4.5, 9),
     P('u-bruno', 'Bruno Santos', 17, 'São Paulo', 'SP', 'Fretes e pequenas mudanças com Fiorino. Ajudante incluso.', 160, 4.4, 30),
     P('u-sofia', 'Sofia Ribeiro', 14, 'Salvador', 'BA', 'Professora de matemática e física. Reforço escolar e preparatório para o ENEM.', 80, 4.9, 15, true),
+    // ajudantes
+    P('u-aj1', 'Marcos Vinícius', 21, 'São Paulo', 'SP', 'Ajudante de pedreiro e serviços gerais. Carrego material, preparo massa, faço limpeza de obra. Disponível de segunda a sábado.', 100, 4.7, 19),
+    P('u-aj2', 'Diego Rocha', 21, 'Curitiba', 'PR', 'Ajudante de mudança, carga e descarga. Experiência em depósito e transportadora.', 90, 4.5, 11, true),
+    P('u-aj3', 'Juliana Prado', 21, 'Campinas', 'SP', 'Ajudante de cozinha e auxiliar de eventos: preparo, montagem de buffet e limpeza.', 110, 4.8, 14, true),
+    P('u-aj4', 'Wellington Souza', 21, 'São Paulo', 'SP', 'Ajudante geral para obra, jardim e pequenos reparos. Pontual e caprichoso.', 95, 4.3, 6),
+    P('u-aj5', 'Thiago Nunes', 21, 'Rio de Janeiro', 'RJ', 'Ajudante de eletricista. Passo fiação, abro canaleta e organizo material.', 100, 4.6, 8),
+    P('u-aj6', 'Kelly Cristina', 21, 'Salvador', 'BA', 'Auxiliar de limpeza e camareira, com experiência em hotel e pousada.', 100, 4.9, 22, true),
+    // outros profissionais
+    P('u-fer', 'Fernando Dias', 7, 'São Paulo', 'SP', 'Marceneiro: móveis planejados, armários, portas e reparos em madeira.', 400, 4.8, 27, true),
+    P('u-paulo', 'Paulo Henrique', 8, 'Recife', 'PE', 'Serralheiro: portões, grades, estruturas metálicas e solda em geral.', 300, 4.6, 13),
+    P('u-renato', 'Renato Gomes', 9, 'Goiânia', 'GO', 'Mecânico automotivo a domicílio: revisão, freios, suspensão e elétrica.', 150, 4.5, 21),
+    P('u-camila', 'Camila Torres', 12, 'Florianópolis', 'SC', 'Programadora: sites, lojas virtuais e sistemas sob medida para pequenas empresas.', 1500, 5.0, 6, true),
+    P('u-bia', 'Beatriz Lopes', 13, 'São Paulo', 'SP', 'Fotógrafa de eventos, produtos e ensaios. Entrego as fotos editadas em 7 dias.', 600, 4.9, 18, true),
+    P('u-pati', 'Patrícia Alves', 15, 'Rio de Janeiro', 'RJ', 'Cabeleireira e maquiadora. Atendo em domicílio para noivas e eventos.', 120, 4.7, 35),
+    P('u-chef', 'Antônio Reis', 16, 'São Paulo', 'SP', 'Cozinheiro e buffet para eventos de 20 a 200 pessoas. Cardápio personalizado.', 900, 4.8, 16, true),
+    P('u-helena', 'Helena Martins', 18, 'Belo Horizonte', 'MG', 'Contadora: abertura de empresa, MEI, imposto de renda e folha de pagamento.', 250, 4.9, 29, true),
+    P('u-ricardo', 'Ricardo Pires', 19, 'Brasília', 'DF', 'Advogado trabalhista e cível. Consultas e acompanhamento de processos.', 300, 4.6, 10),
+    P('u-cida', 'Aparecida Oliveira', 20, 'Campinas', 'SP', 'Cuidadora de idosos com curso técnico. Plantões diurnos e noturnos.', 180, 5.0, 12, true),
+    P('u-sergio', 'Sérgio Ramos', 6, 'São Paulo', 'SP', 'Jardineiro: poda, corte de grama, paisagismo e manutenção mensal.', 140, 4.6, 24),
+    P('u-andre', 'André Luiz', 10, 'Rio de Janeiro', 'RJ', 'Técnico de informática: formatação, redes, câmeras e manutenção de computadores.', 120, 4.7, 31),
+    // empresários e empresas que contratam
+    perfil('u-emp1', 'Construtora Horizonte', { cidade: 'São Paulo', uf: 'SP', verificado: true }),
+    perfil('u-emp2', 'Restaurante Sabor da Terra', { cidade: 'Campinas', uf: 'SP' }),
+    perfil('u-emp3', 'Condomínio Jardim das Flores', { cidade: 'São Paulo', uf: 'SP', verificado: true }),
+    perfil('u-emp4', 'Transportadora Rota Sul', { cidade: 'Curitiba', uf: 'PR', verificado: true }),
+    perfil('u-emp5', 'Hotel Recanto Azul', { cidade: 'Salvador', uf: 'BA' }),
+    perfil('u-emp6', 'Roberto Lima (Casa do Construtor BH)', { cidade: 'Belo Horizonte', uf: 'MG' }),
+    perfil('u-emp7', 'Clínica Bem Viver', { cidade: 'Rio de Janeiro', uf: 'RJ', verificado: true }),
+    perfil('u-emp8', 'Eventos Ponto Alto', { cidade: 'São Paulo', uf: 'SP' }),
   ];
   const contatos_privados = profiles.map((p, i) => ({
-    user_id: p.id, whatsapp: `11 9${String(8000 + i * 137).padStart(4, '0')}-${String(1000 + i * 71).slice(0, 4)}`,
+    user_id: p.id, whatsapp: `11 9${String(8000 + ((i * 137) % 1999)).padStart(4, '0')}-${String(1000 + i * 71).slice(0, 4)}`,
     email: `${p.nome.split(' ')[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}@exemplo.com`, chave_pix: p.is_prestador ? `${p.nome.split(' ')[0].toLowerCase()}@pix.exemplo` : '',
   }));
   const conversas = [
@@ -102,11 +157,49 @@ function semente() {
     F('u-lucas', 'Posts Instagram', '#ddd6fe', '#6d28d9', '📱', 3),
     F('u-carla', 'Textura grafiato', '#fbcfe8', '#be185d', '🎨', 18), F('u-carla', 'Sala pintada', '#bfdbfe', '#1d4ed8', '🖌️', 6),
     F('u-rafa', 'Troca de registro', '#99f6e4', '#0f766e', '🚰', 9), F('u-joao', 'Quadro de distribuição', '#fef08a', '#a16207', '💡', 11),
+    F('u-aj1', 'Preparo de massa', '#d6d3d1', '#57534e', '🪣', 14), F('u-aj1', 'Limpeza de obra', '#e7e5e4', '#78716c', '🧹', 4),
+    F('u-aj2', 'Mudança completa', '#fed7aa', '#c2410c', '📦', 10), F('u-aj3', 'Buffet montado', '#fde68a', '#b45309', '🍽️', 7),
+    F('u-aj6', 'Quarto de hotel', '#bae6fd', '#0369a1', '🛏️', 9), F('u-fer', 'Armário planejado', '#d9c2a6', '#7c4a1e', '🚪', 20),
+    F('u-fer', 'Mesa de madeira', '#e8d5b7', '#8b5a2b', '🪵', 6), F('u-bia', 'Casamento', '#fce7f3', '#9d174d', '💍', 12),
+    F('u-chef', 'Buffet de casamento', '#fef3c7', '#92400e', '🍲', 15), F('u-sergio', 'Paisagismo', '#bbf7d0', '#15803d', '🌳', 8),
+  ];
+  // verificações de identidade esperando o admin
+  const docs = {};
+  const V = (id, user, nome, tipo, cor, base, horasAtras, verso) => {
+    const pasta = `${user}/exemplo-doc`;
+    docs[`${pasta}-frente`] = docExemplo(tipo, 'frente', nome, cor);
+    if (verso) docs[`${pasta}-verso`] = docExemplo(tipo, 'verso', nome, cor);
+    docs[`${pasta}-selfie`] = docExemplo(tipo, 'selfie', nome, cor);
+    return { id, user_id: user, cpf: cpfFicticio(base), tipo_documento: tipo, doc_frente: `${pasta}-frente`, doc_verso: verso ? `${pasta}-verso` : null,
+      selfie: `${pasta}-selfie`, status: 'pendente', motivo: '', criado_em: agora(60 * horasAtras), analisado_em: null };
+  };
+  const verificacoes = [
+    V(1, 'u-aj4', 'Wellington Souza', 'CNH', '#bbf7d0', 123456789, 5, false),
+    V(2, 'u-carla', 'Carla Mendes', 'RG', '#bfdbfe', 987654321, 20, true),
+    V(3, 'u-emp2', 'Restaurante Sabor da Terra', 'CNH', '#fde68a', 456123789, 30, false),
+  ];
+  // pedidos publicados por empresas e clientes
+  const PD = (id, dono, titulo, cat, cidade, uf, vagas, orcamento, descricao, horasAtras) =>
+    ({ id, contratante_id: dono, titulo, descricao, categoria_id: cat, cidade, uf, vagas, orcamento, status: 'aberto', criado_em: agora(60 * horasAtras) });
+  const pedidos = [
+    PD('pd-1', 'u-emp1', '3 ajudantes de obra por 10 dias', 21, 'São Paulo', 'SP', 3, 4500, 'Obra residencial na zona sul. Diária de R$ 150 por ajudante, das 7h às 16h. Almoço incluso.', 2),
+    PD('pd-2', 'u-emp1', 'Pedreiro para acabamento de 4 apartamentos', 1, 'São Paulo', 'SP', 2, 12000, 'Assentamento de porcelanato e rejunte. Material fornecido pela construtora.', 26),
+    PD('pd-3', 'u-emp2', 'Ajudante de cozinha para fins de semana', 21, 'Campinas', 'SP', 2, null, 'Sexta, sábado e domingo, das 17h às 23h. Experiência com preparo e limpeza.', 6),
+    PD('pd-4', 'u-emp3', 'Pintura da fachada do condomínio', 4, 'São Paulo', 'SP', 1, 28000, 'Prédio de 8 andares. Precisa de equipe com balancinho e NR35.', 50),
+    PD('pd-5', 'u-emp3', 'Jardineiro mensal para áreas comuns', 6, 'São Paulo', 'SP', 1, 900, 'Duas visitas por semana: poda, grama e jardim da entrada.', 72),
+    PD('pd-6', 'u-emp4', 'Ajudantes para carga e descarga', 21, 'Curitiba', 'PR', 4, 3200, 'Turno da manhã, segunda a sexta, por 2 semanas. Necessário levantar peso.', 9),
+    PD('pd-7', 'u-emp5', 'Eletricista para revisão do hotel', 2, 'Salvador', 'BA', 1, 3500, 'Revisão do quadro geral e troca de iluminação de 30 quartos.', 30),
+    PD('pd-8', 'u-emp5', 'Camareira para alta temporada', 21, 'Salvador', 'BA', 3, null, 'Dezembro a fevereiro. Experiência em hotelaria.', 12),
+    PD('pd-9', 'u-emp6', 'Designer para identidade visual da loja', 11, 'Belo Horizonte', 'MG', 1, 2500, 'Logotipo, fachada e cartão de visita para loja de materiais de construção.', 40),
+    PD('pd-10', 'u-emp7', 'Técnico para manutenção de 12 computadores', 10, 'Rio de Janeiro', 'RJ', 1, 1800, 'Limpeza, formatação e rede da recepção e consultórios.', 18),
+    PD('pd-11', 'u-emp8', 'Fotógrafo e cozinheiro para evento corporativo', 13, 'São Paulo', 'SP', 2, 5000, 'Evento para 120 pessoas no dia 20. Procuramos fotógrafo e buffet.', 4),
+    PD('pd-12', 'u-cliente', 'Diarista quinzenal para apartamento', 5, 'São Paulo', 'SP', 1, 300, 'Apartamento de 2 quartos em Pinheiros. Preferência às sextas.', 3),
   ];
   return {
     users: profiles.map((p) => ({ id: p.id, email: contatos_privados.find((c) => c.user_id === p.id).email, senha: 'demo123' })),
     categorias: CATEGORIAS, profiles, contatos_privados, conversas, mensagens, contratacoes, avaliacoes, tentativas_burla, fotos_trabalhos,
-    seq: { mensagens: mid, tentativas_burla: 2, fotos_trabalhos: fid }, sessao: 'u-cliente',
+    verificacoes, pedidos, docs,
+    seq: { mensagens: mid, tentativas_burla: 2, fotos_trabalhos: fid, verificacoes: 4 }, sessao: 'u-cliente',
   };
 }
 
@@ -142,10 +235,13 @@ const VISIVEL = {
   mensagens: (r) => participa(r.conversa_id) || isAdmin(),
   contratacoes: (r) => [r.contratante_id, r.prestador_id].includes(uid()) || isAdmin(),
   tentativas_burla: () => isAdmin(),
+  verificacoes: (r) => r.user_id === uid() || isAdmin(),
+  pedidos: (r) => r.status === 'aberto' || r.contratante_id === uid() || isAdmin(),
 };
 const EDITAVEL = {
   profiles: ['nome', 'cidade', 'uf', 'bio', 'foto_url', 'categoria_id', 'preco_base', 'is_prestador', 'is_contratante'],
   contatos_privados: ['whatsapp', 'chave_pix'],
+  pedidos: ['status'],
 };
 
 function registrarBurla(user, conv, onde, texto) {
@@ -242,8 +338,9 @@ class Consulta {
     if (!cols) return erro(`permission denied for table ${this.t}`);
     const proibidas = Object.keys(this.dados).filter((k) => !cols.includes(k));
     if (proibidas.length) return erro(`permission denied for table ${this.t}`);
-    const chave = this.t === 'profiles' ? 'id' : 'user_id';
-    const alvo = this.filtrar().filter((r) => r[chave] === uid());
+    const dono = { profiles: 'id', contatos_privados: 'user_id', pedidos: 'contratante_id' }[this.t];
+    const chave = this.t === 'contatos_privados' ? 'user_id' : 'id';
+    const alvo = this.filtrar().filter((r) => r[dono] === uid() || (this.t === 'pedidos' && isAdmin()));
     if (this.t === 'profiles' && (temContato(this.dados.bio) || temContato(this.dados.nome))) {
       return erro('Não é permitido colocar contato (telefone, WhatsApp, e-mail, redes) no perfil público.');
     }
@@ -295,6 +392,23 @@ class Consulta {
       p.avaliacao_qtd = baseQtd + 1;
       p.avaliacao_media = r2((baseMedia * baseQtd + d.nota) / p.avaliacao_qtd);
       void notas;
+    } else if (this.t === 'verificacoes') {
+      if (d.user_id !== uid()) return erro('new row violates row-level security policy for table "verificacoes"');
+      if (me.verificado) return erro('Sua identidade já está verificada.');
+      if (!cpfOk(d.cpf)) return erro('CPF inválido.');
+      if (db.verificacoes.some((v) => v.user_id === uid() && v.status === 'pendente')) return erro('Você já tem uma verificação em análise.');
+      if (db.verificacoes.some((v) => v.cpf === d.cpf && v.status !== 'rejeitada')) return erro('duplicate key value violates unique constraint "verificacoes_cpf_unico"');
+      if (![d.doc_frente, d.selfie, d.doc_verso].filter(Boolean).every((c) => c.startsWith(uid() + '/'))) return erro('new row violates row-level security policy');
+      Object.assign(d, { id: db.seq.verificacoes++, status: 'pendente', motivo: '', criado_em: agora(), analisado_em: null, doc_verso: d.doc_verso || null });
+      db.verificacoes.push(d);
+      if (!salvar()) { db.verificacoes.pop(); return erro('O espaço da demonstração neste navegador acabou. Toque em Recomeçar.'); }
+      return this.responder([d]);
+    } else if (this.t === 'pedidos') {
+      if (d.contratante_id !== uid() || me.suspenso) return erro('new row violates row-level security policy for table "pedidos"');
+      if (temContato(d.titulo) || temContato(d.descricao)) return erro('Não é permitido colocar contato no pedido. Os profissionais falam com você pelo chat do app.');
+      if (!d.titulo || d.titulo.length < 5) return erro('Descreva o pedido com pelo menos 5 letras.');
+      Object.assign(d, { id: uuid(), status: 'aberto', criado_em: agora(), descricao: d.descricao || '' });
+      db.pedidos.push(d);
     } else if (this.t === 'fotos_trabalhos') {
       if (d.user_id !== uid() || me.suspenso) return erro('new row violates row-level security policy for table "fotos_trabalhos"');
       if (db.fotos_trabalhos.filter((f) => f.user_id === uid()).length >= 12) return erro('Limite de 12 fotos atingido. Apague alguma para enviar outra.');
@@ -315,7 +429,34 @@ class Consulta {
 }
 
 // ------------------------------------------------------------------ funções (RPC)
+function cpfOk(cpf) {
+  const c = String(cpf || '').replace(/\D/g, '');
+  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+  return cpfFicticio(c.slice(0, 9)) === c;
+}
+
 const RPC = {
+  demonstrar_interesse({ pid }) {
+    const pd = db.pedidos.find((x) => x.id === pid && x.status === 'aberto');
+    if (!pd) throw new Error('Pedido não encontrado ou já fechado.');
+    const me = eu();
+    if (me.suspenso) throw new Error('Conta suspensa.');
+    if (!me.is_prestador) throw new Error('Ative "Ofereço serviços" no seu perfil para responder pedidos.');
+    if (pd.contratante_id === me.id) throw new Error('Este pedido é seu.');
+    let c = db.conversas.find((x) => x.contratante_id === pd.contratante_id && x.prestador_id === me.id);
+    if (!c) { c = { id: uuid(), contratante_id: pd.contratante_id, prestador_id: me.id, criado_em: agora() }; db.conversas.push(c); }
+    const m = { id: db.seq.mensagens++, conversa_id: c.id, autor_id: me.id, texto: `Olá! Tenho interesse no seu pedido: "${pd.titulo}".`, bloqueada: false, criado_em: agora() };
+    db.mensagens.push(m);
+    emitir('mensagens', 'INSERT', m);
+    return c.id;
+  },
+  admin_analisar_verificacao({ vid, aprovar, p_motivo }) {
+    if (!isAdmin()) throw new Error('Apenas administrador.');
+    const v = db.verificacoes.find((x) => x.id === vid && x.status === 'pendente');
+    if (!v) throw new Error('Verificação não encontrada ou já analisada.');
+    Object.assign(v, { status: aprovar ? 'aprovada' : 'rejeitada', motivo: aprovar ? '' : (p_motivo || ''), analisado_em: agora() });
+    if (aprovar) db.profiles.find((p) => p.id === v.user_id).verificado = true;
+  },
   enviar_proposta({ conv, p_descricao, p_valor }) {
     const c = conversa(conv);
     if (c?.prestador_id !== uid()) throw new Error('Só o prestador pode enviar proposta.');
@@ -364,6 +505,8 @@ const RPC = {
       faturado: soma(pagas, 'valor'), comissao: soma(pagas, 'comissao'),
       repasse_pendente: soma(pagas.filter((x) => x.status === 'concluida' && !x.repassado_em), 'valor_prestador'),
       tentativas: db.tentativas_burla.length,
+      verificacoes_pendentes: db.verificacoes.filter((v) => v.status === 'pendente').length,
+      pedidos_abertos: db.pedidos.filter((x) => x.status === 'aberto').length,
     };
   },
 };
@@ -411,17 +554,24 @@ export function criarDemo() {
       return ch;
     },
     storage: {
-      from() {
+      from(bucket) {
+        const privado = bucket === 'documentos';
         return {
           async upload(caminho, blob) {
             if (!uid()) return erro('Faça login.');
             if (!caminho.startsWith(uid() + '/')) return erro('new row violates row-level security policy');
-            if (blob.size > 5 * 1024 * 1024) return erro('Foto muito grande (máximo 5 MB).');
-            arquivos[caminho] = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(blob); });
+            if (blob.size > (privado ? 8 : 5) * 1024 * 1024) return erro('Foto muito grande.');
+            const url = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(blob); });
+            // documentos ficam guardados (o admin precisa ver); fotos viram a URL salva na própria foto
+            if (privado) db.docs[caminho] = url; else arquivos[caminho] = url;
             return { data: { path: caminho }, error: null };
           },
-          getPublicUrl(caminho) { return { data: { publicUrl: arquivos[caminho] || '' } }; },
-          async remove(caminhos) { caminhos.forEach((c) => delete arquivos[c]); return { data: null, error: null }; },
+          getPublicUrl(caminho) { return { data: { publicUrl: privado ? '' : arquivos[caminho] || '' } }; },
+          async createSignedUrl(caminho) {
+            if (!(caminho.startsWith(uid() + '/') || isAdmin())) return erro('Sem permissão.');
+            return { data: { signedUrl: db.docs[caminho] || '' }, error: null };
+          },
+          async remove(caminhos) { caminhos.forEach((c) => { delete arquivos[c]; if (privado) delete db.docs[c]; }); salvar(); return { data: null, error: null }; },
         };
       },
     },
@@ -445,10 +595,11 @@ function montarBarra(sb) {
   document.body.classList.add('demo');
   const barra = document.createElement('div');
   barra.className = 'demo-barra';
-  const papeis = [['cliente', 'Mariana (cliente)', '#/conversas'], ['prestador', 'Pedro (pedreiro)', '#/conversas'], ['admin', 'Você (admin)', '#/admin']];
+  const papeis = [['cliente', 'Cliente', '#/conversas', 'Mariana Souza'], ['empresa', 'Empresa', '#/pedidos', 'Construtora Horizonte'],
+    ['prestador', 'Pedreiro', '#/conversas', 'Pedro Almeida'], ['ajudante', 'Ajudante', '#/pedidos', 'Marcos Vinícius'], ['admin', 'Admin', '#/admin', 'Você']];
   const desenhar = () => {
-    barra.innerHTML = `<b>Demonstração · entrar como:</b>${papeis.map(([k, rot]) =>
-      `<button data-p="${k}" class="${db.sessao === PERFIS_DEMO[k] ? 'ativo' : ''}">${rot}</button>`).join('')}<button data-reset="1">Recomeçar</button>`;
+    barra.innerHTML = `<b>Demo · entrar como:</b>${papeis.map(([k, rot, , nome]) =>
+      `<button data-p="${k}" title="${nome}" class="${db.sessao === PERFIS_DEMO[k] ? 'ativo' : ''}">${rot}</button>`).join('')}<button data-reset="1" title="Apaga as mudanças e volta aos dados de exemplo">↺ Recomeçar</button>`;
   };
   barra.addEventListener('click', (e) => {
     const b = e.target.closest('button');

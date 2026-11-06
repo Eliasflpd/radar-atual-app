@@ -48,14 +48,27 @@ async function reduzirImagem(file, max = DEMO ? 900 : 1280, qualidade = DEMO ? 0
   c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   return new Promise((ok) => c.toBlob(ok, 'image/jpeg', qualidade));
 }
-async function subirFoto(file, prefixo) {
+async function subirFoto(file, prefixo, bucket = 'fotos') {
   if (!file.type.startsWith('image/')) throw new Error(`"${file.name}" não é uma imagem.`);
-  const blob = await reduzirImagem(file);
+  // documentos precisam de mais resolução para dar para ler
+  const blob = bucket === 'documentos' ? await reduzirImagem(file, DEMO ? 1000 : 1800, 0.85) : await reduzirImagem(file);
   const caminho = `${me.id}/${prefixo}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-  const { error } = await sb.storage.from('fotos').upload(caminho, blob, { contentType: 'image/jpeg', upsert: false });
+  const { error } = await sb.storage.from(bucket).upload(caminho, blob, { contentType: 'image/jpeg', upsert: false });
   if (error) throw error;
-  return { caminho, url: sb.storage.from('fotos').getPublicUrl(caminho).data.publicUrl };
+  return { caminho, url: bucket === 'fotos' ? sb.storage.from('fotos').getPublicUrl(caminho).data.publicUrl : '' };
 }
+// CPF: confere os dígitos verificadores
+function cpfValido(cpf) {
+  const c = String(cpf || '').replace(/\D/g, '');
+  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+  for (let t = 9; t < 11; t++) {
+    let soma = 0;
+    for (let i = 0; i < t; i++) soma += Number(c[i]) * (t + 1 - i);
+    if (((soma * 10) % 11) % 10 !== Number(c[t])) return false;
+  }
+  return true;
+}
+const formatarCpf = (c) => String(c || '').replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 const galeriaHTML = (fotos, podeApagar) => fotos.map((f, i) => `<figure>
   <button class="foto" data-i="${i}" aria-label="Ampliar foto${f.legenda ? ': ' + esc(f.legenda) : ''}"><img src="${esc(f.url)}" alt="${esc(f.legenda)}" loading="lazy"></button>
   ${f.legenda ? `<figcaption>${esc(f.legenda)}</figcaption>` : ''}
@@ -139,9 +152,9 @@ async function carregarMe(session) {
 
 function renderNav() {
   $nav.innerHTML = me
-    ? `<a href="#/">Buscar</a><a href="#/conversas">Conversas</a><a href="#/perfil">Perfil</a>
+    ? `<a href="#/">Buscar</a><a href="#/pedidos">Pedidos</a><a href="#/conversas">Conversas</a><a href="#/perfil">Perfil</a>
        ${me.is_admin ? '<a href="#/admin">Admin</a>' : ''}<button class="link" id="sair">Sair</button>`
-    : '<a href="#/">Buscar</a><a href="#/entrar">Entrar</a><a class="btn pequeno" href="#/cadastro">Cadastrar</a>';
+    : '<a href="#/">Buscar</a><a href="#/pedidos">Pedidos</a><a href="#/entrar">Entrar</a><a class="btn pequeno" href="#/cadastro">Cadastrar</a>';
   document.getElementById('sair')?.addEventListener('click', async () => { await sb.auth.signOut(); location.hash = '#/'; });
 }
 
@@ -151,7 +164,7 @@ async function rota() {
   const [caminho, qs] = location.hash.slice(1).split('?');
   const [tela, id] = (caminho || '/').split('/').filter(Boolean);
   const params = new URLSearchParams(qs || '');
-  if (['conversas', 'chat', 'perfil', 'admin'].includes(tela) && !me) { location.hash = '#/entrar'; return; }
+  if (['conversas', 'chat', 'perfil', 'admin', 'verificar'].includes(tela) && !me) { location.hash = '#/entrar'; return; }
   $app.innerHTML = '<div class="carregando">Carregando…</div>';
   window.scrollTo(0, 0);
   try {
@@ -164,6 +177,8 @@ async function rota() {
     if (tela === 'perfil') return await telaPerfil();
     if (tela === 'admin') return me.is_admin ? await telaAdmin() : (location.hash = '#/');
     if (tela === 'termos') return telaTermos();
+    if (tela === 'pedidos') return await telaPedidos();
+    if (tela === 'verificar') return await telaVerificar();
     $app.innerHTML = '<div class="card">Página não encontrada.</div>';
   } catch (e) {
     $app.innerHTML = `<div class="card erro">Erro: ${esc(e.message)}</div>`;
@@ -177,7 +192,7 @@ async function telaInicio() {
     ${me ? '' : `<section class="hero">
       <h1>Encontre o profissional certo.<br>Ou ofereça seu serviço.</h1>
       <p>Pedreiros, eletricistas, diaristas, designers, técnicos e muito mais. Pagamento seguro pelo app.</p>
-      <div class="acoes"><a class="btn" href="#/cadastro">Cadastre-se grátis</a><a class="btn sec" href="#/entrar">Já tenho conta</a></div>
+      <div class="acoes"><a class="btn" href="#/cadastro">Cadastre-se grátis</a><a class="btn sec" href="#/pedidos">Ver pedidos de empresas</a></div>
     </section>`}
     <form class="busca card" id="busca">
       <select name="cat"><option value="">Todas as áreas</option>${opcoes}</select>
@@ -369,7 +384,7 @@ async function telaConversas() {
 
 async function telaChat(id, params) {
   const { data: c, error } = await sb.from('conversas')
-    .select('id,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url),prestador:prestador_id(id,nome,foto_url,categoria_id)')
+    .select('id,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url,verificado),prestador:prestador_id(id,nome,foto_url,categoria_id,verificado)')
     .eq('id', id).maybeSingle();
   if (error) throw error;
   if (!c) { $app.innerHTML = '<div class="card">Conversa não encontrada.</div>'; return; }
@@ -379,7 +394,7 @@ async function telaChat(id, params) {
   if (params.get('pago') === '0') toast('O pagamento não foi concluído.', 'erro');
 
   $app.innerHTML = `<div class="chat">
-    <div class="chat-topo">${avatar(outro)}<div><b>${esc(outro.nome)}</b>
+    <div class="chat-topo">${avatar(outro)}<div><b>${esc(outro.nome)}</b> ${outro.verificado ? '<span class="selo" title="Identidade verificada com documento e selfie">✔ Verificado</span>' : ''}
       <div class="meta">${souPrestador ? 'Cliente' : nomeCategoria(c.prestador.categoria_id)}</div></div></div>
     <div id="contratos"></div>
     <div class="mensagens" id="msgs"></div>
@@ -516,18 +531,29 @@ async function telaChat(id, params) {
 
 // ---------------------------------------------------------------- meu perfil
 async function telaPerfil() {
-  const [{ data: priv }, { data: cts }, { data: fotosRes }] = await Promise.all([
+  const [{ data: priv }, { data: cts }, { data: fotosRes }, { data: verifs }] = await Promise.all([
     sb.from('contatos_privados').select('*').eq('user_id', me.id).maybeSingle(),
     sb.from('contratacoes').select('*,contratante:contratante_id(nome),prestador:prestador_id(nome)')
       .or(`contratante_id.eq.${me.id},prestador_id.eq.${me.id}`).neq('status', 'cancelada').order('criado_em', { ascending: false }),
     sb.from('fotos_trabalhos').select('*').eq('user_id', me.id).order('criado_em', { ascending: false }),
+    sb.from('verificacoes').select('status,motivo,criado_em').eq('user_id', me.id).order('criado_em', { ascending: false }).limit(1),
   ]);
   let fotos = fotosRes || [];
+  const verif = (verifs || [])[0];
+  const cartaoVerificacao = me.verificado
+    ? '<div class="card verif ok"><b>✔ Identidade verificada</b><div class="meta">Seu perfil mostra o selo de verificado na busca e no chat.</div></div>'
+    : verif?.status === 'pendente'
+      ? `<div class="card verif pendente"><b>⏳ Verificação em análise</b><div class="meta">Enviada em ${data(verif.criado_em)}. Você recebe o selo assim que for aprovada.</div></div>`
+      : `<div class="card verif"><b>🪪 Verifique sua identidade</b>
+          ${verif?.status === 'rejeitada' ? `<div class="alerta">Sua última verificação não foi aprovada: <b>${esc(verif.motivo || 'sem motivo informado')}</b>. Envie de novo.</div>` : ''}
+          <div class="meta">Envie uma foto do documento e uma selfie segurando ele. Perfis verificados ganham o selo ✔ e recebem mais contratações.</div>
+          <a class="btn" href="#/verificar">Verificar agora</a></div>`;
   const opcoes = categorias.map((c) => `<option value="${c.id}" ${c.id === me.categoria_id ? 'selected' : ''}>${c.icone} ${esc(c.nome)}</option>`).join('');
   const ganhos = (cts || []).filter((x) => x.prestador_id === me.id && ['paga', 'concluida'].includes(x.status));
   $app.innerHTML = `
     ${me.suspenso ? '<div class="alerta">⛔ Conta suspensa por tentativas de passar contato fora do app.</div>'
       : me.avisos ? `<div class="alerta">⚠️ Você tem ${me.avisos} aviso(s) por tentar passar contato. Com 3, a conta é suspensa.</div>` : ''}
+    ${cartaoVerificacao}
     <form class="card" id="fperfil">
       <h2>Meu perfil público</h2>
       <p class="nota">Isto aparece para todos. <b>Não coloque telefone, WhatsApp, e-mail ou redes sociais</b> — o sistema bloqueia.</p>
@@ -647,6 +673,164 @@ async function telaPerfil() {
   });
 }
 
+// ---------------------------------------------------------------- verificação de identidade
+async function telaVerificar() {
+  if (me.verificado) { $app.innerHTML = '<div class="card estreito"><h2>✔ Você já é verificado</h2><a href="#/perfil">Voltar ao perfil</a></div>'; return; }
+  const { data: pend } = await sb.from('verificacoes').select('id').eq('user_id', me.id).eq('status', 'pendente').limit(1);
+  if (pend?.length) { $app.innerHTML = '<div class="card estreito"><h2>⏳ Em análise</h2><p>Sua verificação já foi enviada e está sendo analisada.</p><a href="#/perfil">Voltar ao perfil</a></div>'; return; }
+  const passo = (nome, titulo, dica, captura, opcional = false) => `<div class="passo" data-passo="${nome}">
+    <div class="previa-box"><img class="previa" id="prev-${nome}" alt="" hidden><span class="vazia">${nome === 'selfie' ? '🤳' : '🪪'}</span></div>
+    <div><b>${titulo}</b>${opcional ? ' <span class="meta">(opcional na CNH)</span>' : ''}<small>${dica}</small>
+      <label class="btn sec pequeno">📷 Tirar ou escolher foto<input type="file" id="in-${nome}" accept="image/*" capture="${captura}" hidden></label></div></div>`;
+  $app.innerHTML = `<form class="card estreito" id="fver">
+    <h2>🪪 Verificar identidade</h2>
+    <p class="nota">Perfis verificados ganham o selo ✔ e passam mais confiança para quem contrata. Seus documentos ficam guardados em área privada e só a administração vê.</p>
+    <label for="cpf">CPF<input id="cpf" name="cpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required autocomplete="off"></label>
+    <label for="tipo">Documento com foto<select id="tipo" name="tipo"><option value="CNH">CNH (carteira de motorista)</option><option value="RG">RG (identidade)</option><option value="RNE">RNE / CRNM (estrangeiro)</option></select></label>
+    ${passo('frente', '1. Frente do documento', 'Foto nítida, sem reflexo, mostrando os 4 cantos.', 'environment')}
+    ${passo('verso', '2. Verso do documento', 'Obrigatório para RG e RNE.', 'environment', true)}
+    ${passo('selfie', '3. Selfie segurando o documento', 'Seu rosto e o documento ao lado, bem iluminados, sem óculos escuros ou boné.', 'user')}
+    <label class="check"><input type="checkbox" name="lgpd" required> Autorizo o uso destes dados apenas para confirmar minha identidade, conforme a LGPD.</label>
+    <button class="btn" id="enviar-verif">Enviar para análise</button>
+    <div class="meta" id="verif-status"></div>
+  </form>`;
+  const f = document.getElementById('fver');
+  const arquivos = {};
+  f.cpf.addEventListener('input', () => {
+    const d = f.cpf.value.replace(/\D/g, '').slice(0, 11);
+    f.cpf.value = d.slice(0, 3) + (d.length > 3 ? '.' + d.slice(3, 6) : '') + (d.length > 6 ? '.' + d.slice(6, 9) : '') + (d.length > 9 ? '-' + d.slice(9) : '');
+  });
+  for (const nome of ['frente', 'verso', 'selfie']) {
+    document.getElementById(`in-${nome}`).addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      arquivos[nome] = file;
+      const img = document.getElementById(`prev-${nome}`);
+      img.src = URL.createObjectURL(file);
+      img.hidden = false;
+      img.nextElementSibling.hidden = true;
+    });
+  }
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v = form(f);
+    const cpf = v.cpf.replace(/\D/g, '');
+    if (!cpfValido(cpf)) return toast('CPF inválido. Confira os números.', 'erro');
+    if (!arquivos.frente) return toast('Falta a foto da frente do documento.', 'erro');
+    if (v.tipo !== 'CNH' && !arquivos.verso) return toast('Para RG e RNE, envie também o verso.', 'erro');
+    if (!arquivos.selfie) return toast('Falta a selfie segurando o documento.', 'erro');
+    const btn = document.getElementById('enviar-verif');
+    const $st = document.getElementById('verif-status');
+    btn.disabled = true;
+    const enviados = {};
+    try {
+      for (const nome of ['frente', 'verso', 'selfie']) {
+        if (!arquivos[nome]) continue;
+        $st.textContent = `Enviando ${nome === 'selfie' ? 'selfie' : nome + ' do documento'}…`;
+        enviados[nome] = (await subirFoto(arquivos[nome], `doc-${nome}`, 'documentos')).caminho;
+      }
+      const { error } = await sb.from('verificacoes').insert({
+        user_id: me.id, cpf, tipo_documento: v.tipo, doc_frente: enviados.frente, doc_verso: enviados.verso || null, selfie: enviados.selfie,
+      });
+      if (error) {
+        await sb.storage.from('documentos').remove(Object.values(enviados));
+        if (/cpf_unico|CPF já/i.test(error.message)) throw new Error('Este CPF já está ligado a outra conta. Se for engano, fale com o suporte.');
+        if (/uma_pendente|em análise/i.test(error.message)) throw new Error('Você já tem uma verificação em análise.');
+        throw error;
+      }
+      $app.innerHTML = '<div class="card estreito"><h2>✅ Enviado!</h2><p>Recebemos seus documentos. Assim que a análise for aprovada, o selo ✔ Verificado aparece no seu perfil.</p><a class="btn" href="#/perfil">Voltar ao perfil</a></div>';
+    } catch (er) {
+      falha(er);
+      btn.disabled = false;
+      $st.textContent = '';
+    }
+  });
+}
+
+// ---------------------------------------------------------------- pedidos de empresas e clientes
+async function telaPedidos() {
+  const opcoes = categorias.map((c) => `<option value="${c.id}">${c.icone} ${esc(c.nome)}</option>`).join('');
+  $app.innerHTML = `
+    <div class="linha-esp"><h2>Pedidos de serviço</h2>${me && !me.suspenso ? '<button class="btn" id="abrir-novo">➕ Publicar pedido</button>' : ''}</div>
+    <p class="nota">Empresas e clientes publicam o que precisam. Profissionais tocam em <b>Tenho interesse</b> e conversam pelo chat do app.</p>
+    <form class="card" id="fnovo" hidden>
+      <h3>Novo pedido</h3>
+      <label for="p-titulo">O que você precisa?<input id="p-titulo" name="titulo" required minlength="5" maxlength="120" placeholder="Ex: 3 ajudantes de obra por 10 dias"></label>
+      <div class="dupla2"><label for="p-cat">Área<select id="p-cat" name="categoria_id" required><option value="">Escolha…</option>${opcoes}</select></label>
+        <label for="p-vagas">Vagas<input id="p-vagas" name="vagas" type="number" min="1" max="50" value="1" required></label></div>
+      <div class="dupla"><label for="p-cidade">Cidade<input id="p-cidade" name="cidade" value="${esc(me?.cidade)}" required></label>
+        <label for="p-uf">UF<input id="p-uf" name="uf" value="${esc(me?.uf)}" maxlength="2" required style="text-transform:uppercase"></label></div>
+      <label for="p-orc">Orçamento total (R$, opcional)<input id="p-orc" name="orcamento" type="number" min="0" step="0.01"></label>
+      <label for="p-desc">Detalhes<textarea id="p-desc" name="descricao" maxlength="1500" placeholder="Datas, horário, local (bairro), o que está incluso…"></textarea></label>
+      <p class="nota">🔒 Não coloque telefone ou e-mail: os profissionais falam com você pelo chat do app.</p>
+      <div class="acoes"><button class="btn">Publicar</button><button type="button" class="btn sec" id="cancelar-novo">Cancelar</button></div>
+    </form>
+    <form class="busca tres card" id="filtro">
+      <select name="cat" aria-label="Área"><option value="">Todas as áreas</option>${opcoes}</select>
+      <input name="cidade" placeholder="Cidade" aria-label="Cidade">
+      <button class="btn">Filtrar</button>
+    </form>
+    <div id="lista-pedidos"></div>`;
+  const $novo = document.getElementById('fnovo');
+  document.getElementById('abrir-novo')?.addEventListener('click', () => { $novo.hidden = false; $novo.titulo.focus(); });
+  document.getElementById('cancelar-novo')?.addEventListener('click', () => { $novo.hidden = true; });
+  $novo.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v = form($novo);
+    if (temContato(v.titulo) || temContato(v.descricao)) return toast(AVISO_CONTATO, 'erro');
+    const { error } = await sb.from('pedidos').insert({
+      contratante_id: me.id, titulo: v.titulo.trim(), descricao: (v.descricao || '').trim(), categoria_id: Number(v.categoria_id),
+      cidade: v.cidade.trim(), uf: v.uf.toUpperCase().trim(), vagas: Number(v.vagas), orcamento: v.orcamento ? Number(v.orcamento) : null,
+    });
+    if (error) return falha(error);
+    toast('Pedido publicado! Os profissionais interessados vão aparecer nas suas Conversas.');
+    telaPedidos();
+  });
+  let filtros = {};
+  const carregar = async () => {
+    let q = sb.from('pedidos').select('*,contratante:contratante_id(id,nome,foto_url,verificado)').order('criado_em', { ascending: false }).limit(80);
+    q = me ? q.or(`status.eq.aberto,contratante_id.eq.${me.id}`) : q.eq('status', 'aberto');
+    if (filtros.cat) q = q.eq('categoria_id', filtros.cat);
+    if (filtros.cidade) q = q.ilike('cidade', `%${filtros.cidade.trim()}%`);
+    const { data: lista, error } = await q;
+    if (error) throw error;
+    document.getElementById('lista-pedidos').innerHTML = (lista || []).map((x) => {
+      const meu = me?.id === x.contratante_id;
+      return `<div class="card pedido ${x.status}">
+        <div class="linha-esp"><span class="cat">${nomeCategoria(x.categoria_id)}</span>
+          <span class="meta">${x.status === 'fechado' ? '<b>Fechado</b> · ' : ''}${data(x.criado_em)}</span></div>
+        <h3>${esc(x.titulo)}</h3>
+        <div class="meta">📍 ${esc(x.cidade)}${x.uf ? '/' + esc(x.uf) : ''} · 👥 ${x.vagas} ${x.vagas > 1 ? 'vagas' : 'vaga'}${x.orcamento ? ` · 💰 até ${brl(x.orcamento)}` : ''}</div>
+        ${x.descricao ? `<p>${esc(x.descricao)}</p>` : ''}
+        <div class="linha-esp">
+          <div class="quem">${avatar(x.contratante, 'mini')} <span>${esc(x.contratante?.nome)} ${x.contratante?.verificado ? '<span class="selo">✔ Verificado</span>' : ''}</span></div>
+          ${meu ? (x.status === 'aberto' ? `<button class="btn sec pequeno" data-fechar="${x.id}">Fechar pedido</button>` : '')
+            : `<button class="btn pequeno" data-interesse="${x.id}">🙋 Tenho interesse</button>`}
+        </div></div>`;
+    }).join('') || '<div class="card vazio">Nenhum pedido aberto com esses filtros.</div>';
+  };
+  document.getElementById('filtro').addEventListener('submit', (e) => { e.preventDefault(); filtros = form(e.target); carregar().catch(falha); });
+  document.getElementById('lista-pedidos').addEventListener('click', async (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.interesse) {
+      if (!me) { location.hash = '#/entrar'; return; }
+      if (!me.is_prestador) { toast('Para responder pedidos, marque "Ofereço serviços" no seu Perfil.', 'erro'); return; }
+      const { data: conv, error } = await sb.rpc('demonstrar_interesse', { pid: b.dataset.interesse });
+      if (error) return falha(error);
+      toast('Interesse enviado! Continue a conversa por aqui.');
+      location.hash = `#/chat/${conv}`;
+    }
+    if (b.dataset.fechar && await confirmar('Fechar este pedido? Ele deixa de aparecer para os profissionais.', 'Fechar pedido')) {
+      const { error } = await sb.from('pedidos').update({ status: 'fechado' }).eq('id', b.dataset.fechar);
+      if (error) return falha(error);
+      toast('Pedido fechado.');
+      carregar().catch(falha);
+    }
+  });
+  await carregar();
+}
+
 // ---------------------------------------------------------------- painel do administrador
 async function telaAdmin() {
   const { data: r, error } = await sb.rpc('admin_resumo');
@@ -659,18 +843,71 @@ async function telaAdmin() {
       <div><span>${r.contratacoes}</span>contratações pagas</div>
       <div><span>${r.usuarios}</span>usuários (${r.prestadores} prestadores)</div>
       <div><span>${r.tentativas}</span>tentativas de burla</div>
+      <div><span>${r.verificacoes_pendentes}</span>verificações para analisar</div>
+      <div><span>${r.pedidos_abertos}</span>pedidos abertos</div>
     </div>
-    <div class="abas"><button data-aba="repasses" class="ativa">Repasses</button><button data-aba="contratacoes">Contratações</button>
+    <div class="abas"><button data-aba="verificacoes" class="ativa">Verificações${r.verificacoes_pendentes ? ` (${r.verificacoes_pendentes})` : ''}</button>
+      <button data-aba="repasses">Repasses</button><button data-aba="contratacoes">Contratações</button>
       <button data-aba="burla">Tentativas de burla</button><button data-aba="usuarios">Usuários</button></div>
     <div id="aba"></div>`;
-  const abas = { repasses: abaRepasses, contratacoes: abaContratacoes, burla: abaBurla, usuarios: abaUsuarios };
+  const abas = { verificacoes: abaVerificacoes, repasses: abaRepasses, contratacoes: abaContratacoes, burla: abaBurla, usuarios: abaUsuarios };
   document.querySelector('.abas').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
     document.querySelectorAll('.abas button').forEach((x) => x.classList.toggle('ativa', x === b));
     abas[b.dataset.aba]().catch(falha);
   });
-  await abaRepasses();
+  await abaVerificacoes();
+}
+
+const MOTIVOS_REJEICAO = ['Foto do documento ilegível ou cortada', 'Selfie não confere com o documento', 'Rosto ou documento não aparecem na selfie',
+  'Documento vencido ou inválido', 'Nome diferente do perfil', 'CPF não confere com o documento'];
+
+async function abaVerificacoes() {
+  const $a = document.getElementById('aba');
+  const { data: lista, error } = await sb.from('verificacoes').select('*,user:user_id(id,nome,cidade,uf,criado_em,is_prestador)')
+    .eq('status', 'pendente').order('criado_em');
+  if (error) throw error;
+  // links temporários (10 min) para ver as fotos privadas
+  const urls = {};
+  for (const v of lista || []) {
+    for (const campo of ['doc_frente', 'doc_verso', 'selfie']) {
+      if (!v[campo]) continue;
+      const { data: u } = await sb.storage.from('documentos').createSignedUrl(v[campo], 600);
+      urls[v[campo]] = u?.signedUrl || '';
+    }
+  }
+  $a.innerHTML = `<p class="nota">Confira: o rosto da selfie é o mesmo da foto do documento, o nome bate com o perfil, o documento está legível e dentro da validade.</p>
+    ${(lista || []).map((v) => {
+      const fotos = [['doc_frente', `${v.tipo_documento} · frente`], ['doc_verso', `${v.tipo_documento} · verso`], ['selfie', 'Selfie com documento']]
+        .filter(([c]) => v[c]).map(([c, legenda]) => ({ url: urls[v[c]], legenda }));
+      return `<div class="card verif-item" data-v="${v.id}">
+        <div class="linha-esp"><div><b>${esc(v.user?.nome)}</b> ${v.user?.is_prestador ? '<span class="tag">prestador</span>' : '<span class="tag">contratante</span>'}
+          <div class="meta">CPF ${esc(formatarCpf(v.cpf))} · ${esc(v.tipo_documento)} · ${esc(v.user?.cidade)}${v.user?.uf ? '/' + esc(v.user.uf) : ''} · enviado em ${hora(v.criado_em)}</div></div></div>
+        <div class="galeria docs">${fotos.map((f, i) => `<figure><button class="foto" data-i="${i}"><img src="${esc(f.url)}" alt="${esc(f.legenda)}"></button><figcaption>${esc(f.legenda)}</figcaption></figure>`).join('')}</div>
+        <div class="analisar">
+          <button class="btn" data-aprovar="${v.id}">✔ Aprovar</button>
+          <select aria-label="Motivo da rejeição" data-motivo="${v.id}">${MOTIVOS_REJEICAO.map((m) => `<option>${esc(m)}</option>`).join('')}</select>
+          <button class="btn perigo" data-rejeitar="${v.id}">✕ Rejeitar</button>
+        </div></div>`;
+    }).join('') || '<div class="card vazio">Nenhuma verificação esperando análise. 🎉</div>'}`;
+  const fotosDe = Object.fromEntries((lista || []).map((v) => [v.id, [['doc_frente', `${v.tipo_documento} · frente`], ['doc_verso', `${v.tipo_documento} · verso`], ['selfie', 'Selfie com documento']]
+    .filter(([c]) => v[c]).map(([c, legenda]) => ({ url: urls[v[c]], legenda }))]));
+  $a.onclick = async (e) => {
+    const item = e.target.closest('[data-v]');
+    const foto = e.target.closest('.foto');
+    if (foto && item) return abrirFoto(fotosDe[item.dataset.v], Number(foto.dataset.i));
+    const b = e.target.closest('button');
+    if (!b || !(b.dataset.aprovar || b.dataset.rejeitar)) return;
+    const aprovar = !!b.dataset.aprovar;
+    const vid = Number(b.dataset.aprovar || b.dataset.rejeitar);
+    const motivo = aprovar ? '' : $a.querySelector(`[data-motivo="${vid}"]`).value;
+    if (!(await confirmar(aprovar ? 'Aprovar e dar o selo de verificado?' : `Rejeitar com o motivo: "${motivo}"?`, aprovar ? 'Aprovar' : 'Rejeitar'))) return;
+    const { error: er } = await sb.rpc('admin_analisar_verificacao', { vid, aprovar, p_motivo: motivo });
+    if (er) return falha(er);
+    toast(aprovar ? 'Aprovado! O selo ✔ já aparece no perfil.' : 'Verificação rejeitada. A pessoa verá o motivo no perfil.');
+    abaVerificacoes();
+  };
 }
 
 async function abaRepasses() {
