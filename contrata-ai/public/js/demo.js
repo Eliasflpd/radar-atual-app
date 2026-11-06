@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v5';
+const CHAVE = 'contrata-demo-v6';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -67,6 +67,50 @@ function perfil(id, nome, extra = {}) {
     avaliacao_media: 0, avaliacao_qtd: 0, criado_em: agora(60 * 24 * 90), ...extra,
   };
 }
+
+// ---------- mais profissionais: pelo menos 3 por área, em várias cidades
+const CIDADES_A = [['Barreirinhas', 'MA'], ['Tuntum', 'MA'], ['São Luís', 'MA'], ['Teresina', 'PI'], ['Caxias', 'MA'], ['Imperatriz', 'MA']];
+const CIDADES_B = [['São Paulo', 'SP'], ['Fortaleza', 'CE'], ['Rio de Janeiro', 'RJ'], ['Belo Horizonte', 'MG'], ['Salvador', 'BA'], ['Recife', 'PE']];
+const CIDADES_C = [['São Luís', 'MA'], ['Brasília', 'DF'], ['Goiânia', 'GO'], ['Curitiba', 'PR'], ['Manaus', 'AM'], ['Belém', 'PA'], ['Natal', 'RN'], ['Porto Alegre', 'RS']];
+const PRIMEIROS = ['Antônio', 'Francisca', 'José', 'Maria', 'Raimundo', 'Joana', 'Carlos', 'Luzia', 'Paulo', 'Rita', 'Marcelo', 'Sandra', 'Rogério', 'Vanessa', 'Fábio', 'Tereza',
+  'Wesley', 'Cláudia', 'Gustavo', 'Adriana', 'Rafael', 'Simone', 'Jorge', 'Patrícia', 'Leandro', 'Aline', 'Sebastião', 'Rosângela', 'Diego', 'Camila', 'Valdir', 'Elaine',
+  'Mateus', 'Jéssica', 'Edson', 'Cristiane', 'Igor', 'Daniela', 'Benedito', 'Kátia', 'Hugo', 'Larissa', 'Nilton', 'Bruna', 'Davi', 'Michele', 'Otávio', 'Priscila'];
+const SOBRENOMES = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Lima', 'Pereira', 'Costa', 'Ribeiro', 'Martins', 'Carvalho', 'Araújo', 'Gomes', 'Barbosa', 'Rocha', 'Moraes', 'Nascimento', 'Cardoso', 'Teixeira', 'Freitas', 'Batista'];
+// id da área: [símbolo, cor 1, cor 2, preço base, [3 descrições], [legendas das fotos]]
+const MAIS = {
+  1: ['🧱', '#d6d3d1', '#57534e', 160, ['Pedreiro de acabamento: porcelanato, rejunte, revestimento de banheiro e cozinha. Serviço caprichado.', 'Pedreiro de obra: fundação, alvenaria, laje e reboco. Trabalho com equipe e cumpro prazo.', 'Reformas em geral: troca de piso, contrapiso, reboco e pequenos reparos. Orçamento sem compromisso.'], ['Banheiro em porcelanato', 'Reboco de fachada']],
+  2: ['💡', '#fef08a', '#a16207', 120, ['Eletricista residencial: tomadas, chuveiro, disjuntor e quadro de distribuição.', 'Eletricista predial e comercial com NR10. Padrão de energia e iluminação de lojas.', 'Instalação de ventilador de teto, luminárias e revisão completa da parte elétrica.'], ['Quadro novo', 'Iluminação de loja']],
+  3: ['🚰', '#99f6e4', '#0f766e', 120, ['Encanador: vazamentos, troca de registro, caixa d’água e desentupimento.', 'Instalação hidráulica de banheiro e cozinha, aquecedor e bomba d’água.', 'Caça-vazamento e conserto de cano estourado. Atendo no mesmo dia.'], ['Caixa d’água', 'Banheiro novo']],
+  4: ['🎨', '#bfdbfe', '#1d4ed8', 180, ['Pintor residencial: massa corrida, textura e pintura de paredes e tetos.', 'Pintura de fachada e muros, grafiato e verniz em portas e janelas.', 'Pintura comercial rápida, inclusive à noite e fim de semana.'], ['Sala pintada', 'Fachada nova']],
+  5: ['🧹', '#a7f3d0', '#047857', 130, ['Diarista: limpeza de casa e apartamento, passar e organizar.', 'Faxina pesada e limpeza pós-obra. Levo produtos se precisar.', 'Camareira e limpeza de casas de temporada entre um hóspede e outro.'], ['Cozinha limpa', 'Pós-obra']],
+  6: ['🌿', '#bbf7d0', '#15803d', 120, ['Jardineiro: corte de grama, poda e limpeza de quintal.', 'Paisagismo, plantio de mudas e manutenção mensal de jardins.', 'Limpeza de terreno e roçagem com roçadeira.'], ['Jardim reformado', 'Poda de árvore']],
+  7: ['🪚', '#e8d5b7', '#8b5a2b', 350, ['Marceneiro: móveis planejados, armários e cozinhas sob medida.', 'Conserto de móveis, portas e janelas de madeira.', 'Montagem e desmontagem de móveis para mudança.'], ['Armário planejado', 'Mesa rústica']],
+  8: ['⚙️', '#cbd5e1', '#334155', 280, ['Serralheiro: portões, grades e janelas de ferro e alumínio.', 'Estruturas metálicas, coberturas e solda em geral.', 'Conserto de portão eletrônico e fechaduras.'], ['Portão novo', 'Cobertura metálica']],
+  9: ['🔧', '#fecaca', '#b91c1c', 150, ['Mecânico de carro a domicílio: revisão, freios, suspensão e óleo.', 'Mecânico de moto: revisão, corrente, freio e parte elétrica.', 'Auto elétrica: bateria, alternador, motor de partida e som.'], ['Revisão completa', 'Troca de freio']],
+  10: ['💻', '#c7d2fe', '#3730a3', 100, ['Técnico de informática: formatação, vírus e computador lento.', 'Instalação de rede, Wi-Fi e câmeras de segurança.', 'Conserto de notebook e celular, troca de tela e bateria.'], ['Rede instalada', 'Notebook consertado']],
+  11: ['✏️', '#fde68a', '#d97706', 300, ['Designer: logotipo e identidade visual para pequenos negócios.', 'Artes para redes sociais, cardápios e panfletos.', 'Design de fachada, banner e cartão de visita.'], ['Logo de padaria', 'Cardápio']],
+  12: ['👨‍💻', '#ddd6fe', '#6d28d9', 1200, ['Programador: sites e lojas virtuais com pagamento.', 'Aplicativos e sistemas sob medida para empresas.', 'Manutenção de sites e integração com WhatsApp e redes.'], ['Loja virtual', 'Painel de vendas']],
+  13: ['📷', '#fce7f3', '#9d174d', 500, ['Fotógrafo de casamento, aniversário e eventos.', 'Fotos de produtos e cardápio para redes sociais.', 'Ensaios ao ar livre e fotos de família.'], ['Casamento', 'Ensaio na praia']],
+  14: ['📚', '#e0f2fe', '#0369a1', 60, ['Professora de reforço escolar do 1º ao 9º ano.', 'Aulas de matemática e física para ENEM e vestibular.', 'Aulas de inglês para iniciantes e conversação.'], ['Turma de reforço', 'Material de aula']],
+  15: ['💇', '#fbcfe8', '#be185d', 60, ['Cabeleireira: corte, escova, progressiva e coloração.', 'Barbeiro: corte masculino, barba e pigmentação.', 'Manicure, pedicure e maquiagem para eventos, em domicílio.'], ['Corte e escova', 'Maquiagem de noiva']],
+  16: ['🍳', '#fef3c7', '#92400e', 600, ['Buffet para festas e aniversários, salgados e bolo.', 'Cozinheira para restaurantes e pousadas, comida regional.', 'Marmitas e quentinhas para empresas e obras.'], ['Mesa de festa', 'Comida regional']],
+  17: ['🚚', '#fed7aa', '#c2410c', 150, ['Frete e pequenas mudanças com caminhonete.', 'Carreto de móveis e material de construção.', 'Motorista particular para viagens e transfer de aeroporto.'], ['Mudança completa', 'Carreto de material']],
+  18: ['📊', '#e2e8f0', '#334155', 200, ['Contador: abertura de empresa, MEI e imposto de renda.', 'Folha de pagamento e contabilidade para pequenos negócios.', 'Regularização de CPF e CNPJ e declarações em atraso.'], ['Escritório', 'Abertura de empresa']],
+  19: ['⚖️', '#e5e7eb', '#1f2937', 300, ['Advogada trabalhista e previdenciária: aposentadoria e INSS.', 'Advogado cível: contratos, inventário e família.', 'Direito do consumidor e pequenas causas.'], ['Atendimento', 'Consultoria']],
+  20: ['🤝', '#fecdd3', '#be123c', 160, ['Cuidadora de idosos com curso, plantão diurno e noturno.', 'Babá com experiência e referências, meio período ou integral.', 'Acompanhante hospitalar e de consultas.'], ['Cuidado diário', 'Acompanhamento']],
+  21: ['💪', '#d6d3d1', '#44403c', 90, ['Ajudante de pedreiro: carrego material, preparo massa e limpo a obra.', 'Ajudante de mudança e carga e descarga.', 'Serviços gerais: capina, limpeza de terreno e pequenos reparos.'], ['Preparo de massa', 'Carga e descarga']],
+  22: ['🧭', '#7dd3fc', '#0e7490', 160, ['Guia de turismo: roteiros culturais e históricos da cidade.', 'Guia de natureza e trilhas, com fotos durante o passeio.', 'Guia bilíngue para grupos e estrangeiros.'], ['Grupo no passeio', 'Pôr do sol']],
+  23: ['🚙', '#d9f99d', '#3f6212', 200, ['Passeio de 4x4 pelas dunas e lagoas, saídas de manhã e à tarde.', 'Quadriciclo com guia pelos Pequenos Lençóis e praias.', 'Transfer 4x4 para Atins e Caburé.'], ['Travessia', 'Dunas']],
+  24: ['🚤', '#99f6e4', '#115e59', 120, ['Passeio de voadeira pelo rio, com paradas nas comunidades.', 'Barco para pesca esportiva e passeio ao entardecer.', 'Transfer de barco entre vilas e praias.'], ['No rio', 'Pôr do sol no barco']],
+  25: ['🪁', '#bae6fd', '#1d4ed8', 350, ['Instrutor de kitesurfe certificado, aulas para iniciantes.', 'Aulas de windsurf e stand up paddle.', 'Aluguel de equipamento e downwind guiado.'], ['Aula de kite', 'Downwind']],
+  26: ['🍽️', '#fde68a', '#b45309', 90, ['Garçom para festas, casamentos e eventos.', 'Atendente de restaurante e lanchonete, fins de semana.', 'Bartender e drinks para festas.'], ['Evento', 'Drinks']],
+  27: ['🛵', '#fed7aa', '#ea580c', 10, ['Mototáxi rápido no centro e bairros.', 'Entregas de encomendas, documentos e delivery.', 'Moto-frete para empresas, rotas fixas.'], ['Entrega', 'Moto pronta']],
+  28: ['🌱', '#d9f99d', '#4d7c0f', 80, ['Trabalhador rural: roçado, plantio e colheita.', 'Vaqueiro: manejo de gado, vacina e cerca.', 'Diária na fazenda: cerca, capina e limpeza de pasto.'], ['Roçado', 'Manejo do gado']],
+  29: ['🚜', '#fde68a', '#854d0e', 250, ['Tratorista: grade, plantio e preparo de solo.', 'Operador de retroescavadeira para valas e terraplenagem.', 'Operador de máquinas pesadas com experiência em obra.'], ['Preparo de solo', 'Retroescavadeira']],
+  30: ['❄️', '#e0f2fe', '#0369a1', 150, ['Instalação e limpeza de ar-condicionado split.', 'Conserto de geladeira, freezer e máquina de lavar.', 'Manutenção de câmara fria e refrigeração comercial.'], ['Split instalado', 'Freezer consertado']],
+  31: ['🧵', '#fbcfe8', '#9d174d', 40, ['Costureira: ajustes, barra e consertos de roupa.', 'Uniformes e fardamento para escolas e empresas.', 'Roupas sob medida e vestidos de festa.'], ['Fardamento', 'Vestido de festa']],
+  32: ['🛠️', '#e5e7eb', '#374151', 100, ['Faz-tudo: pequenos reparos, instalação de prateleira e chuveiro.', 'Montador de móveis e instalação de cortinas.', 'Chaveiro e conserto de fechaduras.'], ['Prateleiras', 'Montagem de móvel']],
+};
 
 function semente() {
   const P = (id, nome, cat, cidade, uf, bio, preco, media, qtd, verificado = false) =>
@@ -138,6 +182,29 @@ function semente() {
     perfil('u-emp12', 'Fazenda Boa Esperança', { cidade: 'Tuntum', uf: 'MA' }),
     perfil('u-emp13', 'Depósito Central Materiais de Construção', { cidade: 'Tuntum', uf: 'MA', verificado: true }),
   ];
+  // gera os profissionais extras de cada área
+  const extrasFotos = [];
+  let n = 0;
+  for (const [cat, [simb, c1, c2, preco, bios, legendas]] of Object.entries(MAIS)) {
+    const k = Number(cat);
+    bios.forEach((bio, j) => {
+      const cidade = j === 0 ? CIDADES_A[k % CIDADES_A.length] : j === 1 ? CIDADES_B[k % CIDADES_B.length] : CIDADES_C[k % CIDADES_C.length];
+      const nome = `${PRIMEIROS[n % PRIMEIROS.length]} ${SOBRENOMES[(n * 7 + 3) % SOBRENOMES.length]}`;
+      const id = `g-${k}-${j}`;
+      const media = Math.round((4.3 + ((n * 37) % 8) / 10) * 10) / 10;
+      profiles.push(P(id, nome, k, cidade[0], cidade[1], bio, Math.round(preco * (0.85 + j * 0.15)), Math.min(5, media), 3 + ((n * 13) % 80), n % 2 === 0));
+      if (j < 2) extrasFotos.push([id, legendas[j], c1, c2, simb, 3 + (n % 20)]);
+      n++;
+    });
+    // garante todas as áreas também em Barreirinhas e em Tuntum
+    for (const [cid, uf] of [['Barreirinhas', 'MA'], ['Tuntum', 'MA']]) {
+      if (profiles.some((p) => p.categoria_id === k && p.cidade === cid)) continue;
+      const nome = `${PRIMEIROS[n % PRIMEIROS.length]} ${SOBRENOMES[(n * 7 + 3) % SOBRENOMES.length]}`;
+      const media = Math.round((4.3 + ((n * 37) % 8) / 10) * 10) / 10;
+      profiles.push(P(`g-${k}-${cid[0]}`, nome, k, cid, uf, bios[n % 3], preco, Math.min(5, media), 2 + ((n * 11) % 60), n % 3 === 0));
+      n++;
+    }
+  }
   const contatos_privados = profiles.map((p, i) => ({
     user_id: p.id, whatsapp: `11 9${String(8000 + ((i * 137) % 1999)).padStart(4, '0')}-${String(1000 + i * 71).slice(0, 4)}`,
     email: `${p.nome.split(' ')[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}@exemplo.com`, chave_pix: p.is_prestador ? `${p.nome.split(' ')[0].toLowerCase()}@pix.exemplo` : '',
@@ -201,6 +268,7 @@ function semente() {
     F('u-tt2', 'Preparo de solo', '#fde68a', '#854d0e', '🚜', 9), F('u-tt3', 'Casa entregue', '#e7e5e4', '#57534e', '🏠', 15),
     F('u-tt5', 'Fardamento escolar', '#fbcfe8', '#9d174d', '🧵', 6),
   ];
+  extrasFotos.forEach(([id, leg, c1, c2, simb, dias]) => fotos_trabalhos.push(F(id, leg, c1, c2, simb, dias)));
   // verificações de identidade esperando o admin
   const docs = {};
   const V = (id, user, nome, tipo, cor, base, horasAtras, verso) => {

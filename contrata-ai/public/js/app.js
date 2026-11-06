@@ -435,7 +435,8 @@ async function telaInicio() {
       ${chipCidade('grande')}
     </header>
     <div class="ola">${me ? `<p>Olá, ${esc(me.nome.split(' ')[0])}</p>` : ''}<h1>Do que você precisa hoje?</h1></div>
-    <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Buscar serviço ou profissional" aria-label="Buscar serviço ou profissional"><button class="btn pequeno">Buscar</button></form>
+    <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Ex.: pedreiro de acabamento" aria-label="O que você precisa"><button class="btn pequeno">Buscar</button></form>
+    <div class="sugestoes">${['pedreiro de acabamento', 'diarista', 'eletricista', 'guia nos Lençóis', 'frete e mudança', 'ar-condicionado'].map((t) => `<a href="#/busca?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>
     <div class="secao-tit"><h2>Categorias</h2><button type="button" class="link" id="ver-todas">Ver todas</button></div>
     <div class="cat-grade" id="cats">${cats.map((c, i) => tileCategoria(c, 'a', i >= 8 ? 'data-extra hidden' : '')).join('')}</div>
     ${me?.is_prestador
@@ -472,29 +473,109 @@ async function telaLista({ cat, q }) {
   await listarPrestadores(filtros());
 }
 
-async function listarPrestadores(f = {}, limite = 60) {
+// ---------------------------------------------------------------- busca inteligente
+// Procura palavra por palavra (sem acento), ignora palavras de ligação e entende sinônimos.
+const normalizar = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const PALAVRAS_VAZIAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'para', 'pra', 'com', 'um', 'uma', 'o', 'a', 'os', 'as', 'no', 'na', 'nos', 'nas',
+  'que', 'preciso', 'quero', 'procuro', 'procurando', 'contratar', 'servico', 'servicos', 'profissional', 'profissionais', 'bom', 'boa', 'perto', 'mim', 'aqui', 'urgente']);
+const SINONIMOS = {
+  acabamento: ['porcelanato', 'piso', 'rejunte', 'revestimento', 'gesso', 'massa corrida', 'azulejo', 'ceramica', 'acabamento'],
+  reforma: ['reforma', 'pedreiro', 'pintor', 'reboco', 'piso'], obra: ['obra', 'pedreiro', 'ajudante', 'alvenaria', 'construcao'], construcao: ['obra', 'pedreiro', 'alvenaria'],
+  piso: ['piso', 'porcelanato', 'ceramica', 'contrapiso'], muro: ['muro', 'alvenaria', 'bloco'], telhado: ['telhado', 'telha', 'calha'],
+  faxina: ['diarista', 'limpeza', 'faxina'], limpeza: ['limpeza', 'diarista', 'faxina'], passadeira: ['diarista', 'passar roupa'],
+  luz: ['eletricista', 'eletrica', 'iluminacao'], tomada: ['eletricista', 'tomada'], chuveiro: ['eletricista', 'chuveiro'], energia: ['eletricista', 'energia', 'padrao'],
+  vazamento: ['encanador', 'vazamento'], cano: ['encanador', 'cano', 'tubulacao'], esgoto: ['encanador', 'desentupimento'], caixa: ['encanador', 'caixa d'],
+  ar: ['refrigeracao', 'ar-condicionado', 'split'], condicionado: ['refrigeracao', 'ar-condicionado', 'split'], geladeira: ['refrigeracao', 'geladeira'], freezer: ['refrigeracao', 'freezer'],
+  passeio: ['guia', 'turismo', 'passeio', 'barqueiro', '4x4'], turismo: ['guia', 'turismo', 'passeio'], lencois: ['guia', '4x4', 'barqueiro', 'lencois'], lagoa: ['guia', '4x4', 'lagoa'],
+  dunas: ['guia', '4x4', 'quadriciclo', 'dunas'], quadriciclo: ['quadriciclo', '4x4'], barco: ['barqueiro', 'voadeira', 'barco'], lancha: ['barqueiro', 'voadeira', 'lancha'], kite: ['kitesurfe', 'kite'],
+  mudanca: ['frete', 'mudanca', 'motorista', 'carreto'], frete: ['frete', 'motorista', 'carreto'], carreto: ['frete', 'carreto'], moto: ['mototaxi', 'moto'], entrega: ['mototaxi', 'entrega'],
+  roca: ['rural', 'roca', 'rocado'], colheita: ['rural', 'colheita'], fazenda: ['rural', 'fazenda', 'tratorista', 'vaqueiro'], trator: ['tratorista', 'trator'], gado: ['vaqueiro', 'gado', 'rural'],
+  costura: ['costureira', 'costura'], roupa: ['costureira', 'ajuste', 'roupa'], uniforme: ['costureira', 'uniforme', 'fardamento'],
+  bolo: ['cozinheiro', 'buffet', 'bolo', 'doces'], festa: ['buffet', 'cozinheiro', 'fotografo', 'garcom', 'festa', 'evento'], evento: ['buffet', 'fotografo', 'garcom', 'evento'],
+  site: ['programador', 'site', 'designer'], aplicativo: ['programador', 'aplicativo'], logo: ['designer', 'logo'], arte: ['designer', 'arte'],
+  computador: ['informatica', 'computador', 'notebook'], notebook: ['informatica', 'notebook'], celular: ['informatica', 'celular'], internet: ['informatica', 'rede', 'internet'],
+  carro: ['mecanico', 'carro', 'automotivo'], moto_: [], cabelo: ['cabeleireiro', 'cabelo', 'corte'], unha: ['manicure', 'unha', 'beleza'], maquiagem: ['maquiagem', 'beleza'],
+  idoso: ['cuidador', 'idoso'], crianca: ['baba', 'cuidador', 'crianca'], aula: ['professor', 'aula', 'reforco'], reforco: ['professor', 'reforco'],
+  imposto: ['contador', 'imposto'], mei: ['contador', 'mei'], processo: ['advogado', 'processo'], jardim: ['jardineiro', 'jardim', 'grama'], grama: ['jardineiro', 'grama'],
+  movel: ['marceneiro', 'movel', 'moveis'], moveis: ['marceneiro', 'moveis'], portao: ['serralheiro', 'portao'], grade: ['serralheiro', 'grade'], solda: ['serralheiro', 'solda'],
+  garcom: ['garcom', 'atendente'], garconete: ['garcom', 'garconete', 'atendente'], camareira: ['camareira', 'diarista'], foto: ['fotografo', 'foto'], casamento: ['fotografo', 'buffet', 'casamento'],
+};
+function palavrasDaBusca(q) { return normalizar(q).split(/[^a-z0-9]+/).filter((w) => w.length > 1 && !PALAVRAS_VAZIAS.has(w)); }
+function palavraCasa(texto, w) {
+  const raiz = w.replace(/(oes|aes|s)$/, '');
+  return [w, raiz, ...(SINONIMOS[w] || SINONIMOS[raiz] || [])].some((a) => a && texto.includes(a));
+}
+function filtrarPorBusca(lista, q) {
+  const palavras = palavrasDaBusca(q);
+  if (!palavras.length) return { lista, parecidos: false };
+  const pontuados = lista.map((p) => {
+    const cat = normalizar(categorias.find((c) => c.id === p.categoria_id)?.nome || '');
+    const texto = normalizar(`${p.nome} ${p.bio} ${p.cidade}`);
+    let pts = 0, achou = 0;
+    for (const w of palavras) {
+      if (palavraCasa(cat, w)) { pts += 3; achou++; }        // é da área buscada
+      else if (palavraCasa(texto, w)) { pts += 1; achou++; } // só cita na descrição
+    }
+    return { p, pts, achou };
+  });
+  const ordenar = (a, b) => b.pts - a.pts || b.p.avaliacao_media - a.p.avaliacao_media;
+  const todos = pontuados.filter((x) => x.achou === palavras.length).sort(ordenar).map((x) => x.p);
+  if (todos.length) return { lista: todos, parecidos: false };
+  return { lista: pontuados.filter((x) => x.achou > 0).sort(ordenar).map((x) => x.p), parecidos: true };
+}
+
+async function buscarPrestadores(f) {
   let q = sb.from('profiles')
     .select('id,nome,cidade,uf,bio,foto_url,categoria_id,preco_base,verificado,avaliacao_media,avaliacao_qtd,cadastur_status')
     .eq('is_prestador', true).eq('suspenso', false)
-    .order('verificado', { ascending: false }).order('avaliacao_media', { ascending: false }).limit(limite);
+    .order('verificado', { ascending: false }).order('avaliacao_media', { ascending: false }).limit(1000);
   if (f.cat) q = q.eq('categoria_id', f.cat);
-  if (f.cidade) q = q.ilike('cidade', `%${f.cidade}%`);
   if (f.cadastur) q = q.eq('cadastur_status', 'aprovado');
-  if (f.q) { const t = f.q.replace(/[,()%]/g, ' '); q = q.or(`nome.ilike.%${t}%,bio.ilike.%${t}%`); }
-  const { data: lista, error } = await q;
+  const { data, error } = await q;
   if (error) throw error;
-  const ids = lista.map((p) => p.id);
+  // cidade escrita na busca ("pedreiro em Barreirinhas") vira filtro de cidade
+  let texto = normalizar(f.q || ''), cidadeDaBusca = null;
+  const cidades = [...new Set((data || []).map((p) => p.cidade).filter(Boolean))].sort((a, b) => b.length - a.length);
+  for (const c of cidades) {
+    const nc = normalizar(c);
+    if (nc.length > 2 && new RegExp(`(^|[^a-z])${nc.replace(/[.*+?^${}()|[\]\\]/g, '')}([^a-z]|$)`).test(texto)) { cidadeDaBusca = c; texto = texto.replace(nc, ' '); break; }
+  }
+  return { ...filtrarPorBusca(data || [], cidadeDaBusca ? texto : f.q), cidadeDaBusca };
+}
+
+async function listarPrestadores(f = {}, limite = 60) {
+  const { lista: tudo, parecidos, cidadeDaBusca } = await buscarPrestadores(f);
+  if (cidadeDaBusca) f = { ...f, cidade: cidadeDaBusca };
+  const naCidade = (p) => f.cidade && normalizar(p.cidade).includes(normalizar(f.cidade));
+  let daqui = f.cidade ? tudo.filter(naCidade) : tudo;
+  // com busca ou área escolhida, também mostra de outras cidades (depois dos daqui)
+  let deFora = f.cidade && (f.q || f.cat) ? tudo.filter((p) => !naCidade(p)) : [];
+  daqui = daqui.slice(0, limite);
+  deFora = deFora.slice(0, Math.max(0, limite - daqui.length));
+  const ids = [...daqui, ...deFora].map((p) => p.id);
   const { data: fts } = ids.length
     ? await sb.from('fotos_trabalhos').select('user_id,url').in('user_id', ids).order('criado_em', { ascending: false })
     : { data: [] };
   const fotosDe = {};
   (fts || []).forEach((x) => (fotosDe[x.user_id] ||= []).push(x.url));
+  const card = (p) => cardPrestador(p, fotosDe[p.id] || []);
   const $qtd = document.getElementById('qtd');
-  if ($qtd) $qtd.textContent = lista.length === 1 ? '1 profissional encontrado' : `${lista.length} profissionais encontrados`;
-  document.getElementById('resultados').innerHTML = lista.length
-    ? lista.map((p) => cardPrestador(p, fotosDe[p.id] || [])).join('')
-    : f.cidade ? `<div class="card vazio">Ainda não há profissionais${f.cat ? ' dessa área' : ''} em ${esc(f.cidade)}.<br><button type="button" class="btn sec pequeno" data-todas-cidades style="margin-top:12px">Ver de todas as cidades</button></div>`
-    : '<div class="card vazio">Nenhum profissional encontrado. Tente outra palavra.</div>';
+  if ($qtd) {
+    $qtd.textContent = f.cidade && (f.q || f.cat)
+      ? `${daqui.length} em ${f.cidade} · ${deFora.length} em outras cidades`
+      : (daqui.length === 1 ? '1 profissional encontrado' : `${daqui.length} profissionais encontrados`);
+  }
+  const aviso = parecidos && (daqui.length || deFora.length) ? '<div class="aviso-busca">Não achamos exatamente isso. Veja resultados parecidos.</div>' : '';
+  let html = aviso;
+  if (daqui.length) html += daqui.map(card).join('');
+  else if (f.cidade && deFora.length) html += `<div class="aviso-busca">Ainda não há ninguém em <b>${esc(f.cidade)}</b> para essa busca. Veja em outras cidades:</div>`;
+  if (deFora.length) html += `${daqui.length ? `<h3 class="divisor-cidades">Em outras cidades</h3>` : ''}${deFora.map(card).join('')}`;
+  if (!daqui.length && !deFora.length) {
+    html = f.cidade && !f.q && !f.cat
+      ? `<div class="card vazio">Ainda não há profissionais em ${esc(f.cidade)}.<br><button type="button" class="btn sec pequeno" data-todas-cidades style="margin-top:12px">Ver de todas as cidades</button></div>`
+      : '<div class="card vazio">Nenhum profissional encontrado. Tente outra palavra, como "pedreiro", "diarista" ou "guia".</div>';
+  }
+  document.getElementById('resultados').innerHTML = html;
 }
 
 function cardPrestador(p, fotos = []) {

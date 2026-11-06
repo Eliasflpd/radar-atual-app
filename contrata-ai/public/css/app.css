@@ -224,6 +224,14 @@ body.demo .home-marca { padding-right: 112px; }
 .filtro-cidade input { margin: 0; padding-left: 42px; border-radius: 99px; }
 .qtd { margin: 14px 0 10px; }
 
+/* ---------- busca ---------- */
+.sugestoes { display: flex; gap: 8px; overflow-x: auto; padding: 12px 2px 2px; scrollbar-width: none; }
+.sugestoes::-webkit-scrollbar { display: none; }
+.sugestoes a { flex: none; padding: 7px 13px; border-radius: 99px; background: var(--papel); border: 1.5px solid var(--linha); text-decoration: none; font-size: 13.5px; font-weight: 700; color: var(--suave); }
+.sugestoes a:hover { border-color: var(--pri); color: var(--pri-tx); }
+.divisor-cidades { grid-column: 1 / -1; font-size: 17px; margin: 12px 0 0; padding-top: 14px; border-top: 1px solid var(--linha); color: var(--suave); }
+.aviso-busca { grid-column: 1 / -1; background: var(--aviso-claro); border-radius: var(--raio-p); padding: 10px 14px; font-size: 14px; }
+
 /* ---------- cartões de profissional ---------- */
 .grade { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
 .prestador { display: flex; flex-direction: column; background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); overflow: hidden; text-decoration: none; color: inherit; transition: transform .15s, box-shadow .15s; }
