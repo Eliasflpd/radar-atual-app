@@ -56,6 +56,12 @@ do $$ begin
   alter table public.profiles add constraint cadastur_status_valido check (cadastur_status in ('', 'pendente', 'aprovado', 'rejeitado'));
 exception when duplicate_object then null; end $$;
 
+-- Currículo completo do profissional (experiência, serviços, cursos, disponibilidade…)
+alter table public.profiles add column if not exists curriculo jsonb not null default '{}'::jsonb;
+do $$ begin
+  alter table public.profiles add constraint curriculo_valido check (jsonb_typeof(curriculo) = 'object' and length(curriculo::text) <= 20000);
+exception when duplicate_object then null; end $$;
+
 -- ---------- Contatos privados (separados do perfil) ----------
 create table if not exists public.contatos_privados (
   user_id    uuid primary key references public.profiles(id) on delete cascade,
@@ -199,6 +205,18 @@ create table if not exists public.favoritos (
   primary key (user_id, prestador_id)
 );
 
+-- ---------- Fale com o administrador (atendimento) ----------
+-- Uma conversa por usuário: usuario_id é a pessoa atendida; autor_id é quem escreveu (ela ou o admin)
+create table if not exists public.suporte_mensagens (
+  id          bigint generated always as identity primary key,
+  usuario_id  uuid not null references public.profiles(id) on delete cascade,
+  autor_id    uuid not null references public.profiles(id) on delete cascade,
+  texto       text not null check (length(btrim(texto)) between 1 and 2000),
+  lida        boolean not null default false,
+  criado_em   timestamptz not null default now()
+);
+create index if not exists suporte_usuario_idx on public.suporte_mensagens (usuario_id, criado_em);
+
 -- =====================================================================
 -- Funções auxiliares
 -- =====================================================================
@@ -325,18 +343,26 @@ drop trigger if exists filtro_mensagem on public.mensagens;
 create trigger filtro_mensagem before insert on public.mensagens
   for each row execute function public.filtrar_mensagem();
 
--- Filtro do perfil público e da proposta (bio, nome, descrição)
+-- Algum texto do currículo tem contato? (confere cada campo separado)
+create or replace function public.curriculo_tem_contato(c jsonb) returns boolean
+language sql stable set search_path = public as $$
+  select coalesce(bool_or(public.tem_contato(v #>> '{}')), false)
+    from jsonb_path_query(coalesce(c, '{}'::jsonb), 'strict $.**') as v
+   where jsonb_typeof(v) = 'string';
+$$;
+
+-- Filtro do perfil público e da proposta (bio, nome, currículo, descrição)
 create or replace function public.filtrar_perfil() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  if public.tem_contato(new.bio) or public.tem_contato(new.nome) then
+  if public.tem_contato(new.bio) or public.tem_contato(new.nome) or public.curriculo_tem_contato(new.curriculo) then
     raise exception 'Não é permitido colocar contato (telefone, WhatsApp, e-mail, redes) no perfil público.';
   end if;
   return new;
 end $$;
 
 drop trigger if exists filtro_perfil on public.profiles;
-create trigger filtro_perfil before update of nome, bio on public.profiles
+create trigger filtro_perfil before update of nome, bio, curriculo on public.profiles
   for each row execute function public.filtrar_perfil();
 
 create or replace function public.filtrar_proposta() returns trigger
@@ -546,6 +572,37 @@ begin
    where id = uid;
 end $$;
 
+-- Admin ajuda a pessoa a preencher o currículo (o filtro anti-contato continua valendo)
+create or replace function public.admin_salvar_curriculo(uid uuid, p_bio text, p_curriculo jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'Apenas administrador.'; end if;
+  update public.profiles set bio = coalesce(p_bio, bio), curriculo = coalesce(p_curriculo, curriculo) where id = uid;
+end $$;
+
+-- Marca como lidas as mensagens do atendimento que a outra parte escreveu
+create or replace function public.suporte_marcar_lidas(p_usuario uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_usuario = auth.uid() then
+    update public.suporte_mensagens set lida = true where usuario_id = auth.uid() and autor_id <> auth.uid() and not lida;
+  elsif public.is_admin() then
+    update public.suporte_mensagens set lida = true where usuario_id = p_usuario and autor_id = p_usuario and not lida;
+  end if;
+end $$;
+
+-- Mensagem nova do atendimento sempre entra como não lida e com a hora do servidor
+create or replace function public.suporte_nova() returns trigger
+language plpgsql as $$
+begin
+  new.lida := false;
+  new.criado_em := now();
+  return new;
+end $$;
+drop trigger if exists suporte_nova on public.suporte_mensagens;
+create trigger suporte_nova before insert on public.suporte_mensagens
+  for each row execute function public.suporte_nova();
+
 create or replace function public.admin_marcar_repasse(cid uuid) returns void
 language plpgsql security definer set search_path = public as $$
 begin
@@ -569,7 +626,8 @@ begin
     'tentativas',    (select count(*) from public.tentativas_burla),
     'verificacoes_pendentes', (select count(*) from public.verificacoes where status = 'pendente'),
     'pedidos_abertos', (select count(*) from public.pedidos where status = 'aberto'),
-    'cadastur_pendentes', (select count(*) from public.profiles where cadastur_status = 'pendente')
+    'cadastur_pendentes', (select count(*) from public.profiles where cadastur_status = 'pendente'),
+    'suporte_novas', (select count(distinct usuario_id) from public.suporte_mensagens where autor_id = usuario_id and not lida)
   );
 end $$;
 
@@ -595,7 +653,7 @@ create policy perfil_ler on public.profiles for select using (true);
 drop policy if exists perfil_editar on public.profiles;
 create policy perfil_editar on public.profiles for update using (id = auth.uid()) with check (id = auth.uid());
 revoke update on public.profiles from anon, authenticated;
-grant update (nome, cidade, uf, bio, foto_url, categoria_id, preco_base, is_prestador, is_contratante)
+grant update (nome, cidade, uf, bio, foto_url, categoria_id, preco_base, is_prestador, is_contratante, curriculo)
   on public.profiles to authenticated;
 
 -- contatos: só o dono (os outros usam ver_contato) e o admin
@@ -735,6 +793,18 @@ create policy fav_criar on public.favoritos for insert with check (user_id = aut
 drop policy if exists fav_apagar on public.favoritos;
 create policy fav_apagar on public.favoritos for delete using (user_id = auth.uid());
 
+-- atendimento: a pessoa vê e escreve só na própria conversa; o admin vê e responde todas
+alter table public.suporte_mensagens enable row level security;
+drop policy if exists suporte_ler on public.suporte_mensagens;
+create policy suporte_ler on public.suporte_mensagens for select using (usuario_id = auth.uid() or public.is_admin());
+drop policy if exists suporte_enviar on public.suporte_mensagens;
+create policy suporte_enviar on public.suporte_mensagens for insert
+  with check (autor_id = auth.uid() and (usuario_id = auth.uid() or public.is_admin()));
+revoke all on public.suporte_mensagens from anon;
+revoke update, delete, truncate on public.suporte_mensagens from authenticated;
+revoke execute on function public.admin_salvar_curriculo(uuid, text, jsonb) from anon;
+revoke execute on function public.suporte_marcar_lidas(uuid) from anon;
+
 -- pagamentos: os dois lados e o admin veem; ninguém grava pelo app (só o servidor, via registrar_pagamento)
 alter table public.pagamentos enable row level security;
 drop policy if exists pag_ler on public.pagamentos;
@@ -754,6 +824,9 @@ do $$ begin
 exception when others then null; end $$;
 do $$ begin
   alter publication supabase_realtime add table public.contratacoes;
+exception when others then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.suporte_mensagens;
 exception when others then null; end $$;
 
 -- =====================================================================

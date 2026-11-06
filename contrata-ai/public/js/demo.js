@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v10';
+const CHAVE = 'contrata-demo-v11';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -63,7 +63,7 @@ function perfil(id, nome, extra = {}) {
   return {
     id, nome, cidade: '', uf: '', bio: '', foto_url: '', categoria_id: null, preco_base: null,
     is_prestador: false, is_contratante: true, is_admin: false, verificado: false, suspenso: false, avisos: 0,
-    cadastur_numero: '', cadastur_status: '', cadastur_motivo: '',
+    cadastur_numero: '', cadastur_status: '', cadastur_motivo: '', curriculo: {},
     avaliacao_media: 0, avaliacao_qtd: 0, criado_em: agora(60 * 24 * 90), ...extra,
   };
 }
@@ -205,6 +205,20 @@ function semente() {
       n++;
     }
   }
+  // currículos de exemplo
+  const CURRICULOS = {
+    'u-pedro': { experiencia: 'Mais de 10 anos', servicos: ['Reboco', 'Contrapiso', 'Assentamento de piso', 'Porcelanato', 'Alvenaria (levantar parede)', 'Pequenos reparos', 'Reforma completa'],
+      trabalhos: [{ funcao: 'Pedreiro', local: 'Construtora', tempo: 'Mais de 5 anos' }, { funcao: 'Mestre de obras', local: 'Por conta própria', tempo: 'Ainda trabalho lá' }],
+      escolaridade: 'Médio completo', cursos: [{ nome: 'Assentador de revestimento', onde: 'SENAI', ano: '2014' }, { nome: 'NR-35 Trabalho em altura', onde: 'SENAI', ano: '2021' }],
+      equipamentos: ['Ferramentas próprias', 'Cortador de piso', 'Nível a laser'], dias: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'], turnos: ['Manhã', 'Tarde'],
+      areas: 'Zona sul e centro', idiomas: ['Português'], diferenciais: ['Sou pontual', 'Deixo o local limpo', 'Dou garantia do serviço', 'Orçamento sem compromisso'] },
+    'u-br1': { experiencia: 'Mais de 10 anos', servicos: ['Lagoa Azul', 'Lagoa Bonita', 'Circuito Lagoas', 'Vassouras e Mandacaru', 'Grupos'],
+      trabalhos: [{ funcao: 'Guia de turismo', local: 'Agência de turismo', tempo: 'Mais de 5 anos' }], escolaridade: 'Médio completo',
+      cursos: [{ nome: 'Guia de turismo regional (credenciado)', onde: 'SENAC', ano: '2012' }, { nome: 'Primeiros socorros', onde: 'SENAC', ano: '2022' }],
+      equipamentos: ['Kit de primeiros socorros'], dias: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'], turnos: ['Manhã', 'Tarde', 'Feriados'],
+      areas: 'Barreirinhas, Atins e Caburé', idiomas: ['Português', 'Espanhol'], diferenciais: ['Sou pontual', 'Tenho referências de clientes'] },
+  };
+  for (const p of profiles) if (CURRICULOS[p.id]) p.curriculo = CURRICULOS[p.id];
   const contatos_privados = profiles.map((p, i) => ({
     user_id: p.id, whatsapp: `11 9${String(8000 + ((i * 137) % 1999)).padStart(4, '0')}-${String(1000 + i * 71).slice(0, 4)}`,
     email: `${p.nome.split(' ')[0].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}@exemplo.com`, chave_pix: p.is_prestador ? `${p.nome.split(' ')[0].toLowerCase()}@pix.exemplo` : '',
@@ -322,7 +336,12 @@ function semente() {
     users: profiles.map((p) => ({ id: p.id, email: contatos_privados.find((c) => c.user_id === p.id).email, senha: 'demo123' })),
     categorias: CATEGORIAS, profiles, contatos_privados, conversas, mensagens, contratacoes, avaliacoes, tentativas_burla, fotos_trabalhos,
     verificacoes, pedidos, docs, pagamentos: [{ id: 'pg-1', contratacao_id: 'k-2', tipo: 'total', valor: 4200, parcelas: 1, forma: 'pix', criado_em: agora(60 * 24 * 9) }], favoritos: [{ user_id: 'u-cliente', prestador_id: 'u-pedro', criado_em: agora(600) }],
-    seq: { mensagens: mid, tentativas_burla: 2, fotos_trabalhos: fid, verificacoes: 4 }, sessao: null,
+    suporte_mensagens: [
+      { id: 1, usuario_id: 'u-aj1', autor_id: 'u-aj1', texto: 'Boa tarde! Não sei o que escrever no meu currículo. Pode me ajudar?', lida: false, criado_em: agora(35) },
+      { id: 2, usuario_id: 'u-cliente', autor_id: 'u-cliente', texto: 'Como faço para pagar parcelado no cartão?', lida: true, criado_em: agora(60 * 26) },
+      { id: 3, usuario_id: 'u-cliente', autor_id: 'u-admin', texto: 'Olá, Mariana! Quando o profissional mandar a proposta, toque em Pagar e escolha Cartão. Dá para dividir em até 12x.', lida: true, criado_em: agora(60 * 25) },
+    ],
+    seq: { mensagens: mid, tentativas_burla: 2, fotos_trabalhos: fid, verificacoes: 4, suporte: 4 }, sessao: null,
   };
 }
 
@@ -368,10 +387,11 @@ const VISIVEL = {
   verificacoes: (r) => r.user_id === uid() || isAdmin(),
   pedidos: (r) => r.status === 'aberto' || r.contratante_id === uid() || isAdmin(),
   favoritos: (r) => r.user_id === uid(),
+  suporte_mensagens: (r) => r.usuario_id === uid() || isAdmin(),
   pagamentos: (r) => isAdmin() || db.contratacoes.some((c) => c.id === r.contratacao_id && [c.contratante_id, c.prestador_id].includes(uid())),
 };
 const EDITAVEL = {
-  profiles: ['nome', 'cidade', 'uf', 'bio', 'foto_url', 'categoria_id', 'preco_base', 'is_prestador', 'is_contratante'],
+  profiles: ['nome', 'cidade', 'uf', 'bio', 'foto_url', 'categoria_id', 'preco_base', 'is_prestador', 'is_contratante', 'curriculo'],
   contatos_privados: ['whatsapp', 'chave_pix'],
   pedidos: ['status'],
 };
@@ -384,6 +404,13 @@ function registrarBurla(user, conv, onde, texto) {
 }
 
 const erro = (message) => ({ data: null, error: { message } });
+// Confere cada texto do currículo (como public.curriculo_tem_contato no banco)
+function curriculoTemContato(c) {
+  if (c == null) return false;
+  if (typeof c === 'string') return temContato(c);
+  if (typeof c === 'object') return Object.values(c).some(curriculoTemContato);
+  return false;
+}
 
 // ------------------------------------------------------------------ tempo real (mesmo navegador)
 let ouvintes = [];
@@ -420,7 +447,7 @@ function projetar(row, sel) {
   return out;
 }
 const likeRe = (p) => new RegExp('^' + String(p).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*') + '$', 'i');
-const linhas = (t) => (t === 'contratacoes' ? db.contratacoes.map(comCalculados) : db[t]);
+const linhas = (t) => (t === 'contratacoes' ? db.contratacoes.map(comCalculados) : db[t] || []);
 
 class Consulta {
   constructor(tabela) { Object.assign(this, { t: tabela, f: [], op: 'select', sel: '*', ord: [], lim: null, um: null, dados: null }); }
@@ -474,7 +501,7 @@ class Consulta {
     const dono = { profiles: 'id', contatos_privados: 'user_id', pedidos: 'contratante_id' }[this.t];
     const chave = this.t === 'contatos_privados' ? 'user_id' : 'id';
     const alvo = this.filtrar().filter((r) => r[dono] === uid() || (this.t === 'pedidos' && isAdmin()));
-    if (this.t === 'profiles' && (temContato(this.dados.bio) || temContato(this.dados.nome))) {
+    if (this.t === 'profiles' && (temContato(this.dados.bio) || temContato(this.dados.nome) || curriculoTemContato(this.dados.curriculo))) {
       return erro('Não é permitido colocar contato (telefone, WhatsApp, e-mail, redes) no perfil público.');
     }
     for (const r of alvo) Object.assign(db[this.t].find((x) => x[chave] === r[chave]), this.dados);
@@ -541,6 +568,15 @@ class Consulta {
       Object.assign(d, { id: db.seq.verificacoes++, status: 'pendente', motivo: '', criado_em: agora(), analisado_em: null, doc_verso: d.doc_verso || null });
       db.verificacoes.push(d);
       if (!salvar()) { db.verificacoes.pop(); return erro('O espaço da demonstração neste navegador acabou. Toque em Recomeçar.'); }
+      return this.responder([d]);
+    } else if (this.t === 'suporte_mensagens') {
+      if (d.autor_id !== uid() || !(d.usuario_id === uid() || isAdmin())) return erro('new row violates row-level security policy for table "suporte_mensagens"');
+      const texto = String(d.texto || '').trim();
+      if (!texto || texto.length > 2000) return erro('Escreva uma mensagem de até 2000 letras.');
+      Object.assign(d, { id: db.seq.suporte++, texto, lida: false, criado_em: agora() });
+      (db.suporte_mensagens ||= []).push(d);
+      salvar();
+      emitir('suporte_mensagens', 'INSERT', d);
       return this.responder([d]);
     } else if (this.t === 'favoritos') {
       if (d.user_id !== uid()) return erro('new row violates row-level security policy for table "favoritos"');
@@ -646,6 +682,19 @@ const RPC = {
     if (p.suspenso && !p_suspenso) p.avisos = 0;
     Object.assign(p, { verificado: p_verificado, suspenso: p_suspenso });
   },
+  admin_salvar_curriculo({ uid: alvo, p_bio, p_curriculo }) {
+    if (!isAdmin()) throw new Error('Apenas administrador.');
+    if (temContato(p_bio) || curriculoTemContato(p_curriculo)) throw new Error('Não é permitido colocar contato (telefone, WhatsApp, e-mail, redes) no perfil público.');
+    const p = db.profiles.find((x) => x.id === alvo);
+    if (p_bio != null) p.bio = p_bio;
+    if (p_curriculo != null) p.curriculo = p_curriculo;
+  },
+  suporte_marcar_lidas({ p_usuario }) {
+    for (const m of db.suporte_mensagens || []) {
+      if (m.lida || m.usuario_id !== p_usuario) continue;
+      if (p_usuario === uid() ? m.autor_id !== uid() : (isAdmin() && m.autor_id === p_usuario)) m.lida = true;
+    }
+  },
   admin_marcar_repasse({ cid }) {
     if (!isAdmin()) throw new Error('Apenas administrador.');
     const k = db.contratacoes.find((x) => x.id === cid && x.status === 'concluida' && !x.repassado_em);
@@ -664,6 +713,7 @@ const RPC = {
       verificacoes_pendentes: db.verificacoes.filter((v) => v.status === 'pendente').length,
       pedidos_abertos: db.pedidos.filter((x) => x.status === 'aberto').length,
       cadastur_pendentes: db.profiles.filter((p) => p.cadastur_status === 'pendente').length,
+      suporte_novas: new Set((db.suporte_mensagens || []).filter((m) => m.autor_id === m.usuario_id && !m.lida).map((m) => m.usuario_id)).size,
     };
   },
 };

@@ -849,3 +849,52 @@ nav#nav a .ic { stroke-width: 1.9; }
 .modal.pagar .nota { margin: 0; }
 .modal.pagar .acoes { justify-content: stretch; }
 .modal.pagar .acoes .btn { flex: 1; }
+
+/* ---------- fale com o administrador ---------- */
+.suporte-fixo { background: var(--papel); border: 1.5px solid var(--pri); border-radius: var(--raio); margin-bottom: 14px; }
+.adm-av { background: var(--marinho); padding: 9px; }
+.adm-av .logo { width: 100%; height: 100%; }
+.suporte-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.msg-autor { display: block; font-size: 12px; color: var(--pri-tx); margin-bottom: 2px; }
+.atalhos { margin: 0 0 10px; }
+.atalhos-adm { padding: 12px 14px; }
+.atalhos-adm .chip-sug { text-align: left; white-space: normal; }
+.ajuda-adm { margin-top: 18px; }
+.ajuda-adm .btn { margin-top: 10px; }
+.numeros a { color: var(--suave); font-size: 13px; text-decoration: none; }
+
+/* ---------- currículo: formulário com sugestões ---------- */
+.chips-sug { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.chip-sug { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; padding: 9px 14px; border-radius: 99px; border: 1.5px solid var(--linha);
+  background: var(--papel); color: var(--tinta); font: 700 14px/1.25 var(--f-texto); cursor: pointer; text-align: left; overflow-wrap: anywhere; -webkit-tap-highlight-color: transparent; }
+.chip-sug .ic { width: 15px; height: 15px; flex: none; color: var(--pri-tx); }
+.chip-sug:hover { border-color: var(--suave); }
+.chip-sug[aria-pressed="true"] { background: var(--pri); border-color: var(--pri); color: #fff; }
+.chip-sug[aria-pressed="true"]::before { content: "\2713"; font-weight: 900; }
+.add-outro { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.add-outro input { margin: 0; }
+.cv-topo .barra-pct { margin: 10px 0 6px; }
+.cv-topo .btn { margin-top: 6px; }
+.cv-sec h2 { display: flex; align-items: center; gap: 10px; font-size: 18px; margin-bottom: 4px; }
+.cv-num { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--marinho); color: #fff; font-size: 14px; }
+.cv-sec textarea { margin-top: 12px; }
+.cv-item { border: 1.5px dashed var(--linha); border-radius: var(--raio-p); padding: 4px 12px 8px; margin: 10px 0; }
+.cv-item label { margin-top: 8px; }
+.cv-item .remover { color: var(--vermelho); margin-top: 6px; }
+.curriculo-form > .btn.grande { margin: 4px 0 12px; }
+
+/* ---------- currículo no perfil público ---------- */
+.cv-publico { padding: 8px 20px 4px; }
+.cv-publico > h2 { font-size: 19px; margin: 8px 0 4px; }
+.cv-bloco { padding: 12px 0; border-top: 1px solid var(--linha); }
+.cv-bloco:first-of-type { border-top: 0; }
+.cv-bloco h3 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin-bottom: 8px; }
+.cv-bloco h3 .ic { width: 18px; height: 18px; color: var(--pri); }
+.cv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cv-chips span { padding: 5px 12px; border-radius: 99px; background: var(--pri-claro); color: var(--pri-tx); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.cv-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cv-lista li { overflow-wrap: anywhere; }
+.cv-lista small { display: block; }
+.cv-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cv-checks li { display: flex; align-items: center; gap: 8px; }
+.cv-checks .ic { width: 18px; height: 18px; flex: none; color: var(--verde); }

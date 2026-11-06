@@ -1,4 +1,5 @@
 import { temContato } from './filtro.js';
+import * as CV from './curriculo.js';
 
 const SUPABASE_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 const DEMO = !!window.CONTRATA_DEMO;
@@ -407,11 +408,20 @@ function ouvirMensagens() {
       atualizarBadge(true);
       if (location.hash.startsWith('#/conversas')) rota();
     })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'suporte_mensagens' }, (ev) => {
+      const m = ev.new;
+      if (!me || m.autor_id === me.id) return;
+      if (m.usuario_id !== me.id && !me.is_admin) return;
+      if (location.hash.startsWith('#/suporte')) return;
+      toast(m.usuario_id === me.id ? `Nova mensagem do administrador: "${m.texto.slice(0, 60)}"` : 'Nova mensagem no atendimento');
+      atualizarBadge(true);
+      if (location.hash.startsWith('#/conversas')) rota();
+    })
     .subscribe();
 }
 function marcarAba() {
   const [tela, sub] = location.hash.slice(2).split(/[?]/)[0].split('/');
-  let atual = { chat: 'conversas', verificar: 'conta', admin: 'conta', entrar: 'conta', cadastro: 'conta', 'ser-profissional': 'conta',
+  let atual = { chat: 'conversas', suporte: 'conversas', verificar: 'conta', admin: 'conta', entrar: 'conta', cadastro: 'conta', 'ser-profissional': 'conta',
     categoria: 'busca', grupo: 'busca', categorias: 'busca', p: 'busca' }[tela] ?? (tela || 'inicio');
   if (tela === 'pedidos' && sub === 'novo') atual = 'anunciar';
   $nav.querySelectorAll('a').forEach((a) => a.classList.toggle('ativa', a.dataset.aba === atual));
@@ -422,6 +432,7 @@ const TITULOS = {
   'conta/dados': 'Meus dados', 'conta/foto': 'Foto de perfil', 'conta/fotos': 'Fotos dos trabalhos', 'conta/servicos': 'Serviços e ganhos',
   verificar: 'Verificar identidade', admin: 'Administração', p: 'Profissional', categoria: 'Profissionais', busca: 'Buscar', categorias: 'Todos os serviços', grupo: 'Serviços',
   entrar: 'Entrar', cadastro: 'Criar conta', termos: 'Termos de uso', 'conta/favoritos': 'Favoritos', ajuda: 'Ajuda', 'ser-profissional': 'Perfil profissional',
+  'conta/curriculo': 'Meu currículo', suporte: 'Fale com o administrador',
 };
 const PRINCIPAIS = ['inicio', 'busca', 'conversas', 'conta', 'bemvindo'];
 function topo(tela, chave) {
@@ -448,7 +459,7 @@ async function rota() {
   atualizarBadge();
   topo(tela, chave);
   document.body.dataset.tela = tela;
-  if (['conversas', 'chat', 'conta', 'admin', 'verificar', 'ser-profissional'].includes(tela) && !me) { guardarDepois(location.hash); location.hash = '#/entrar'; return; }
+  if (['conversas', 'chat', 'conta', 'admin', 'verificar', 'ser-profissional', 'suporte'].includes(tela) && !me) { guardarDepois(location.hash); location.hash = '#/entrar'; return; }
   if (chave === 'pedidos/novo' && !me) { pedirConta('#/pedidos/novo', 'Crie sua conta grátis para publicar seu pedido.'); return; }
 
   $app.innerHTML = esqueleto(3);
@@ -470,6 +481,8 @@ async function rota() {
     if (chave === 'conta/foto') return telaContaFoto();
     if (chave === 'conta/fotos') return await telaContaFotos();
     if (chave === 'conta/servicos') return await telaContaServicos();
+    if (chave === 'conta/curriculo') return await telaCurriculo(params);
+    if (tela === 'suporte') return await telaSuporte(id);
     if (tela === 'admin') return me.is_admin ? await telaAdmin() : (location.hash = '#/');
     if (tela === 'termos') return telaTermos();
     if (tela === 'ajuda') return telaAjuda();
@@ -705,13 +718,18 @@ function telaCategorias() {
     if (q) location.hash = `#/busca?q=${encodeURIComponent(q)}`;
   });
 }async function contarNaoLidas() {
-  const { data: convs } = await sb.from('conversas').select('id');
+  const [{ data: convs }, suporte] = await Promise.all([sb.from('conversas').select('id'), contarSuporte().catch(() => 0)]);
   const ids = (convs || []).map((c) => c.id);
-  if (!ids.length) return 0;
+  if (!ids.length) return suporte;
   const { data: msgs } = await sb.from('mensagens').select('conversa_id,autor_id,criado_em').in('conversa_id', ids);
   const l = lidas();
   // conta cada mensagem recebida depois da última vez que a conversa foi aberta
-  return (msgs || []).filter((m) => m.autor_id !== me.id && (!l[m.conversa_id] || m.criado_em > l[m.conversa_id])).length;
+  return suporte + (msgs || []).filter((m) => m.autor_id !== me.id && (!l[m.conversa_id] || m.criado_em > l[m.conversa_id])).length;
+}
+// Mensagens do atendimento ainda não lidas (para o usuário: respostas do admin; para o admin: mensagens das pessoas)
+async function contarSuporte() {
+  const { data } = await sb.from('suporte_mensagens').select('usuario_id,autor_id').eq('lida', false);
+  return (data || []).filter((m) => m.autor_id !== me.id && (m.usuario_id === me.id || (me.is_admin && m.autor_id === m.usuario_id))).length;
 }
 // Lista de profissionais por área ou por busca
 async function telaLista({ cat, q, grupo }) {
@@ -789,7 +807,8 @@ function filtrarPorBusca(lista, q) {
   if (!palavras.length) return { lista, parecidos: false };
   const pontuados = lista.map((p) => {
     const cat = normalizar(categorias.find((c) => c.id === p.categoria_id)?.nome || '');
-    const texto = normalizar(`${p.nome} ${p.bio} ${p.cidade}`);
+    const cv = CV.normalizar(p.curriculo);
+    const texto = normalizar(`${p.nome} ${p.bio} ${p.cidade} ${cv.servicos.join(' ')} ${cv.cursos.map((k) => k.nome).join(' ')}`);
     let pts = 0, achou = 0;
     for (const w of palavras) {
       if (palavraCasa(cat, w)) { pts += 3; achou++; }        // é da área buscada
@@ -805,7 +824,7 @@ function filtrarPorBusca(lista, q) {
 
 async function buscarPrestadores(f) {
   let q = sb.from('profiles')
-    .select('id,nome,cidade,uf,bio,foto_url,categoria_id,preco_base,verificado,avaliacao_media,avaliacao_qtd,cadastur_status')
+    .select('id,nome,cidade,uf,bio,foto_url,categoria_id,preco_base,verificado,avaliacao_media,avaliacao_qtd,cadastur_status,curriculo')
     .eq('is_prestador', true).eq('suspenso', false)
     .order('verificado', { ascending: false }).order('avaliacao_media', { ascending: false }).limit(1000);
   if (f.cat) q = q.eq('categoria_id', f.cat);
@@ -1123,13 +1142,14 @@ async function telaPrestador(id) {
       <dl class="fatos">
         <div><dt>Avaliação</dt><dd>${ic('estrela')}${Number(p.avaliacao_media).toFixed(1)}</dd></div>
         <div><dt>Avaliações</dt><dd>${p.avaliacao_qtd}</dd></div>
-        <div><dt>Desde</dt><dd>${esc(desde)}</dd></div>
+        ${CV.normalizar(p.curriculo).experiencia ? `<div><dt>Experiência</dt><dd>${esc(CV.normalizar(p.curriculo).experiencia)}</dd></div>` : `<div><dt>No app desde</dt><dd>${esc(desde)}</dd></div>`}
         ${p.preco_base ? `<div><dt>A partir de</dt><dd>${brl(p.preco_base)}</dd></div>` : ''}
       </dl>
       <div class="garantias">
         <span>${ic('escudo')}Pagamento protegido no app</span><span>${ic('cadeado')}Contato liberado após pagar</span><span>${ic('estrela')}Avaliações só de clientes reais</span>
       </div>
       <p class="bio">${esc(p.bio) || '<i>Este profissional ainda não escreveu uma descrição.</i>'}</p>
+      ${(() => { const cv = CV.htmlCurriculo(p.curriculo, esc, ic); return cv ? `<div class="cv-publico"><h2>Currículo</h2>${cv}</div>` : ''; })()}
       <div class="cta-perfil">
         ${p.suspenso ? '<div class="alerta">Este profissional está temporariamente indisponível.</div>'
           : me?.id === p.id ? '<a class="btn sec" href="#/conta">Editar meu perfil</a>'
@@ -1179,7 +1199,12 @@ async function telaConversas() {
   const ordenadas = [...(lista || [])].sort((a, b) => (ultima[b.id]?.criado_em || b.criado_em).localeCompare(ultima[a.id]?.criado_em || a.criado_em));
   const rotulo = (st, souPrestador) => ({ proposta: souPrestador ? 'Proposta enviada' : 'Proposta recebida', paga: 'Contratado', concluida: 'Concluído' }[st]);
   const totalNovas = Object.values(novas).reduce((a, b) => a + b, 0);
-  $app.innerHTML = ordenadas.length ? `${totalNovas ? `<p class="resumo-novas">${ic('chat')}Você tem <b>${totalNovas} ${totalNovas === 1 ? 'mensagem nova' : 'mensagens novas'}</b></p>` : ''}<div class="lista-conversas">${ordenadas.map((c) => {
+  const nSuporte = await contarSuporte().catch(() => 0);
+  const fixo = `<a class="conversa suporte-fixo ${nSuporte ? 'nao-lida' : ''}" href="#/suporte"><span class="avatar adm-av">${LOGO}</span>
+      <span class="cv-txt"><span class="cv-linha"><b>${me.is_admin ? 'Atendimento às pessoas' : 'Fale com o administrador'}</b></span>
+        <span class="cv-ultima">${me.is_admin ? 'Responda dúvidas e ajude a preencher currículos' : 'Ajuda com currículo, fotos, pagamento ou problemas'}</span></span>
+      ${nSuporte ? `<span class="bolinha" aria-label="${nSuporte} ${nSuporte === 1 ? 'mensagem nova' : 'mensagens novas'}">${nSuporte}</span>` : ic('seta', 'mi-seta')}</a>`;
+  $app.innerHTML = fixo + (ordenadas.length ? `${totalNovas ? `<p class="resumo-novas">${ic('chat')}Você tem <b>${totalNovas} ${totalNovas === 1 ? 'mensagem nova' : 'mensagens novas'}</b></p>` : ''}<div class="lista-conversas">${ordenadas.map((c) => {
     const souPrestador = c.prestador_id === me.id;
     const outro = souPrestador ? c.contratante : c.prestador;
     const m = ultima[c.id];
@@ -1191,7 +1216,7 @@ async function telaConversas() {
         <span class="cv-ultima">${m ? `${m.autor_id === me.id ? 'Você: ' : ''}${esc(m.bloqueada ? 'Mensagem bloqueada' : m.texto)}` : 'Comece a conversa'}</span></span>
       ${naoLida ? `<span class="bolinha" aria-label="${novas[c.id]} ${novas[c.id] === 1 ? 'mensagem nova' : 'mensagens novas'}">${novas[c.id]}</span>` : ''}</a>`;
   }).join('')}</div>`
-    : vazio('chat', 'Nenhuma conversa ainda', 'Suas conversas aparecerão aqui quando você entrar em contato com um profissional.', '<a class="btn pequeno" href="#/busca">Encontrar profissionais</a>');
+    : vazio('chat', 'Nenhuma conversa ainda', 'Suas conversas aparecerão aqui quando você entrar em contato com um profissional.', '<a class="btn pequeno" href="#/busca">Encontrar profissionais</a>'));
 }
 async function telaChat(id, params) {
   const { data: c, error } = await sb.from('conversas')
@@ -1380,6 +1405,259 @@ async function telaChat(id, params) {
     .subscribe());
 }
 
+// ---------------------------------------------------------------- fale com o administrador
+const BOAS_VINDAS_SUPORTE = 'Olá! Aqui você fala direto com a administração do Contrata Aí. Ajudamos a montar seu currículo, colocar fotos, '
+  + 'tirar dúvidas sobre pagamento ou resolver algum problema. Escreva sua dúvida e respondemos assim que possível.';
+const ATALHOS_USUARIO = ['Quero ajuda para preencher meu currículo', 'Não consigo colocar minha foto', 'Tenho dúvida sobre pagamento', 'Quero relatar um problema'];
+const ATALHOS_ADMIN = ['Olá! Vou te ajudar a montar seu currículo. Há quanto tempo você trabalha nessa área?', 'Quais serviços você sabe fazer?',
+  'Onde você já trabalhou? Pode ser por conta própria também.', 'Você já fez algum curso? Qual e onde?', 'Quais dias e horários você pode trabalhar?',
+  'Em quais bairros, cidades ou povoados você atende?', 'Pronto! Preenchi seu currículo. Confira em Minha Conta > Meu currículo.'];
+
+async function telaSuporte(id) {
+  if (me.is_admin && (!id || id === me.id)) return telaSuporteLista();
+  const alvoId = me.is_admin ? id : me.id;
+  let alvo = me;
+  if (alvoId !== me.id) {
+    const { data: p } = await sb.from('profiles').select('id,nome,foto_url,cidade,uf,is_prestador,categoria_id,curriculo,bio').eq('id', alvoId).maybeSingle();
+    if (!p) { $app.innerHTML = '<div class="card">Pessoa não encontrada.</div>'; return; }
+    alvo = p;
+  }
+  const souAdmin = alvoId !== me.id;
+  tituloTopo(souAdmin ? alvo.nome.split(' ')[0] : 'Fale com o administrador');
+  const { data: msgs, error } = await sb.from('suporte_mensagens').select('*').eq('usuario_id', alvoId).order('criado_em');
+  if (error) throw error;
+  const atalhos = souAdmin ? ATALHOS_ADMIN : ATALHOS_USUARIO;
+  const descricao = souAdmin ? [alvo.is_prestador ? (nomeCategoria(alvo.categoria_id) || 'Profissional') : 'Cliente', alvo.cidade].filter(Boolean).join(' · ') : 'Atendimento feito por pessoas, não por robô';
+  $app.innerHTML = `<div class="chat">
+    <div class="chat-topo">${souAdmin ? avatar(alvo) : `<span class="avatar adm-av">${LOGO}</span>`}
+      <div><b>${souAdmin ? esc(alvo.nome) : 'Administração do Contrata Aí'}</b><div class="meta">${descricao}</div></div></div>
+    ${souAdmin ? `<div class="suporte-acoes">
+      ${alvo.is_prestador ? `<a class="btn pequeno" href="#/conta/curriculo?u=${alvo.id}">${ic('caneta')}Preencher currículo (${CV.pctCurriculo(alvo.curriculo, alvo.bio)}%)</a>
+        <a class="btn pequeno sec" href="#/p/${alvo.id}">${ic('perfil')}Ver perfil</a>` : '<span class="meta">Esta pessoa ainda não oferece serviços.</span>'}</div>` : ''}
+    <div class="mensagens" id="msgs">${souAdmin ? '' : `<div class="msg">${esc(BOAS_VINDAS_SUPORTE)}</div>`}</div>
+    ${souAdmin ? `<details class="card atalhos-adm"><summary>${ic('mais')}Perguntas prontas para montar o currículo</summary>
+        <div class="chips-sug">${atalhos.map((t) => `<button type="button" class="chip-sug" data-atalho="${esc(t)}">${esc(t)}</button>`).join('')}</div></details>`
+      : `<div class="chips-sug atalhos" id="atalhos" ${(msgs || []).length ? 'hidden' : ''}>${atalhos.map((t) => `<button type="button" class="chip-sug" data-atalho="${esc(t)}">${esc(t)}</button>`).join('')}</div>`}
+    <form class="enviar" id="fmsg"><input name="t" placeholder="${souAdmin ? 'Responda aqui…' : 'Escreva sua dúvida…'}" autocomplete="off" maxlength="2000" required aria-label="Mensagem"><button class="btn redondo" aria-label="Enviar">${ic('enviar')}</button></form>
+  </div>`;
+  const $msgs = document.getElementById('msgs');
+  const marcar = () => sb.rpc('suporte_marcar_lidas', { p_usuario: alvoId }).then(() => atualizarBadge());
+  const addMsg = (m) => {
+    if (document.getElementById(`s${m.id}`)) return;
+    const minha = m.autor_id === me.id;
+    const doAdmin = m.autor_id !== m.usuario_id;
+    $msgs.insertAdjacentHTML('beforeend', `<div id="s${m.id}" class="msg ${minha ? 'minha' : ''}">${!minha && doAdmin ? '<b class="msg-autor">Administração</b>' : ''}${esc(m.texto)}<span>${hora(m.criado_em)}</span></div>`);
+    $msgs.scrollTop = $msgs.scrollHeight;
+  };
+  (msgs || []).forEach(addMsg);
+  marcar();
+  const $f = document.getElementById('fmsg');
+  const enviar = async (texto) => {
+    texto = texto.trim();
+    if (!texto) return;
+    const { data: novas, error: er } = await sb.from('suporte_mensagens').insert({ usuario_id: alvoId, autor_id: me.id, texto }).select();
+    if (er) return falha(er);
+    (novas || []).forEach(addMsg);
+    $f.reset();
+    document.getElementById('atalhos')?.setAttribute('hidden', '');
+    if (!souAdmin && !(msgs || []).length) toast('Mensagem enviada! Avisamos aqui mesmo quando a administração responder.');
+  };
+  $f.addEventListener('submit', (e) => { e.preventDefault(); enviar($f.t.value); });
+  $app.querySelectorAll('[data-atalho]').forEach((b) => b.addEventListener('click', () => {
+    if (souAdmin) { $f.t.value = b.dataset.atalho; $f.t.focus(); } else enviar(b.dataset.atalho);
+  }));
+  canais.push(sb.channel(`suporte-${alvoId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'suporte_mensagens', filter: `usuario_id=eq.${alvoId}` }, (ev) => { addMsg(ev.new); marcar(); })
+    .subscribe());
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+// Admin: lista de pessoas que falaram com a administração
+async function telaSuporteLista() {
+  tituloTopo('Atendimento');
+  const { data: msgs, error } = await sb.from('suporte_mensagens')
+    .select('usuario_id,autor_id,texto,lida,criado_em,usuario:usuario_id(id,nome,foto_url,cidade,is_prestador,categoria_id)')
+    .order('criado_em', { ascending: false }).limit(2000);
+  if (error) throw error;
+  const porPessoa = new Map();
+  for (const m of msgs || []) {
+    if (!porPessoa.has(m.usuario_id)) porPessoa.set(m.usuario_id, { ultima: m, novas: 0 });
+    if (m.autor_id === m.usuario_id && !m.lida) porPessoa.get(m.usuario_id).novas++;
+  }
+  const lista = [...porPessoa.values()].filter((x) => x.ultima.usuario && x.ultima.usuario_id !== me.id)
+    .sort((a, b) => (b.novas > 0) - (a.novas > 0) || b.ultima.criado_em.localeCompare(a.ultima.criado_em));
+  const esperando = lista.filter((x) => x.novas).length;
+  $app.innerHTML = `<p class="resumo-novas">${ic('chat')}${esperando ? `<b>${esperando} ${esperando === 1 ? 'pessoa esperando' : 'pessoas esperando'}</b> resposta` : 'Ninguém esperando resposta agora'}</p>
+    ${lista.length ? `<div class="lista-conversas">${lista.map(({ ultima: m, novas }) => `<a class="conversa ${novas ? 'nao-lida' : ''}" href="#/suporte/${m.usuario_id}">${avatar(m.usuario)}
+      <span class="cv-txt"><span class="cv-linha"><b>${esc(m.usuario.nome)}</b><small>${data(m.criado_em)}</small></span>
+        <span class="cv-servico">${m.usuario.is_prestador ? (nomeCategoria(m.usuario.categoria_id) || 'Profissional') : 'Cliente'}${m.usuario.cidade ? ` · ${esc(m.usuario.cidade)}` : ''}</span>
+        <span class="cv-ultima">${m.autor_id !== m.usuario_id ? 'Você: ' : ''}${esc(m.texto)}</span></span>
+      ${novas ? `<span class="bolinha" aria-label="${novas} ${novas === 1 ? 'mensagem nova' : 'mensagens novas'}">${novas}</span>` : ''}</a>`).join('')}</div>`
+      : vazio('chat', 'Nenhuma mensagem ainda', 'Quando alguém tocar em "Fale com o administrador", a conversa aparece aqui.')}
+    <p class="nota centro">Para falar com alguém que ainda não escreveu, abra o painel do administrador, aba Usuários, e toque em "Conversar".</p>`;
+}
+
+// ---------------------------------------------------------------- currículo completo (com sugestões)
+async function telaCurriculo(params) {
+  const u = params.get('u');
+  const deOutro = !!(u && me.is_admin && u !== me.id);
+  let p = me;
+  if (deOutro) {
+    const { data } = await sb.from('profiles').select('*').eq('id', u).maybeSingle();
+    if (!data) { $app.innerHTML = '<div class="card">Pessoa não encontrada.</div>'; return; }
+    p = data;
+  } else if (!me.is_prestador) { location.hash = '#/ser-profissional'; return; }
+  const cat = categorias.find((c) => c.id === p.categoria_id)?.nome || '';
+  const s = CV.sugestoes(cat);
+  const cv = CV.normalizar(p.curriculo);
+  if (!cv.idiomas.length) cv.idiomas = ['Português'];
+  if (deOutro) tituloTopo(`Currículo de ${p.nome.split(' ')[0]}`);
+
+  const grupo = (nome, opcoes, marcados, { unico = false, outro = '' } = {}) => `<div class="chips-sug" data-grupo="${nome}" ${unico ? 'data-unico' : ''}>
+      ${[...new Set([...opcoes, ...marcados])].map((o) => `<button type="button" class="chip-sug" aria-pressed="${marcados.includes(o)}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>
+    ${outro ? `<div class="add-outro"><input data-outro="${nome}" placeholder="${outro}" maxlength="80" aria-label="${outro}"><button type="button" class="btn sec pequeno" data-add="${nome}">${ic('mais')}Pôr</button></div>` : ''}`;
+  const opcoes = (lista, atual) => `<option value="">Escolha…</option>${lista.map((o) => `<option ${o === atual ? 'selected' : ''}>${esc(o)}</option>`).join('')}`;
+  const linhaTrabalho = (t = {}) => `<div class="cv-item" data-item="trabalhos">
+      <label>Função<input name="funcao" value="${esc(t.funcao)}" list="dl-funcoes" maxlength="80" placeholder="Ex.: ${esc(s.funcoes[0])}"></label>
+      <label>Onde<input name="local" value="${esc(t.local)}" list="dl-locais" maxlength="100" placeholder="Ex.: Por conta própria, nome da empresa…"></label>
+      <label>Quanto tempo<select name="tempo">${opcoes(CV.TEMPO_TRABALHO, t.tempo)}</select></label>
+      <button type="button" class="link remover" data-remover>Remover</button></div>`;
+  const linhaCurso = (k = {}) => `<div class="cv-item" data-item="cursos">
+      <label>Curso<input name="nome" value="${esc(k.nome)}" list="dl-cursos" maxlength="100" placeholder="Ex.: ${esc(s.cursos[0])}"></label>
+      <div class="dupla"><label>Onde fez<input name="onde" value="${esc(k.onde)}" list="dl-onde" maxlength="60" placeholder="Ex.: SENAI"></label>
+        <label>Ano<input name="ano" value="${esc(k.ano)}" inputmode="numeric" maxlength="4" placeholder="Ex.: 2020"></label></div>
+      <button type="button" class="link remover" data-remover>Remover</button></div>`;
+  const secao = (n, titulo, dica, corpo) => `<section class="card cv-sec"><h2><span class="cv-num">${n}</span>${titulo}</h2>${dica ? `<p class="nota">${dica}</p>` : ''}${corpo}</section>`;
+  const datalist = (id, l) => `<datalist id="${id}">${l.map((o) => `<option value="${esc(o)}">`).join('')}</datalist>`;
+
+  $app.innerHTML = `<form id="fcv" class="curriculo-form" novalidate>
+    ${deOutro ? `<div class="alerta">${ic('admin')}Você está preenchendo o currículo de <b>${esc(p.nome)}</b>${cat ? ` (${esc(cat)})` : ''}. Ao salvar, já aparece no perfil dele(a).</div>` : ''}
+    <div class="card cv-topo">
+      <div class="linha-esp"><b>Currículo <span id="cv-pct">0</span>% preenchido</b></div>
+      <div class="barra-pct" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span id="cv-barra"></span></div>
+      <p class="nota" id="cv-falta"></p>
+      ${deOutro ? '' : `<p class="nota">${ic('estrela')}Não sabe o que escrever? <b>Toque nas sugestões</b> que combinam com você. Elas ficam laranja quando marcadas.</p>
+        <a class="btn sec pequeno" href="#/suporte">${ic('chat')}Pedir ajuda ao administrador</a>`}
+    </div>
+    ${secao(1, 'Há quanto tempo você trabalha nisso?', '', grupo('experiencia', CV.EXPERIENCIA, cv.experiencia ? [cv.experiencia] : [], { unico: true }))}
+    ${secao(2, 'Quais serviços você faz?', 'Marque tudo o que você sabe fazer. Se faltar algum, escreva embaixo.',
+      grupo('servicos', s.servicos, cv.servicos, { outro: 'Outro serviço' }))}
+    ${secao(3, 'Onde você já trabalhou?', 'Pode ser empresa, casa de família ou por conta própria. Toque numa sugestão para começar.',
+      `<div class="chips-sug">${s.funcoes.map((f) => `<button type="button" class="chip-sug" data-novo-trabalho="${esc(f)}">${ic('mais')}${esc(f)}</button>`).join('')}</div>
+      <div id="lista-trabalhos">${cv.trabalhos.map(linhaTrabalho).join('')}</div>
+      <button type="button" class="btn sec pequeno" data-novo-trabalho="">${ic('mais')}Adicionar trabalho</button>`)}
+    ${secao(4, 'Estudo e cursos', 'Cursos ajudam muito o cliente a confiar em você.',
+      `<label>Até onde você estudou?<select name="escolaridade">${opcoes(CV.ESCOLARIDADE, cv.escolaridade)}</select></label>
+      <p class="rotulo">Cursos que você fez (toque para pôr):</p>
+      <div class="chips-sug">${s.cursos.map((c) => `<button type="button" class="chip-sug" data-novo-curso="${esc(c)}">${ic('mais')}${esc(c)}</button>`).join('')}</div>
+      <div id="lista-cursos">${cv.cursos.map(linhaCurso).join('')}</div>
+      <button type="button" class="btn sec pequeno" data-novo-curso="">${ic('mais')}Adicionar outro curso</button>`)}
+    ${secao(5, 'Equipamentos e ferramentas', 'O que você tem e leva para o serviço?', grupo('equipamentos', s.equipamentos, cv.equipamentos, { outro: 'Outro equipamento' }))}
+    ${secao(6, 'Quando você pode trabalhar?', '', `<p class="rotulo">Dias</p>${grupo('dias', CV.DIAS, cv.dias)}<p class="rotulo">Horários</p>${grupo('turnos', CV.TURNOS, cv.turnos)}`)}
+    ${secao(7, 'Onde você atende?', 'Escreva os bairros, cidades ou povoados. Ou toque numa sugestão.',
+      `<input name="areas" value="${esc(cv.areas)}" maxlength="200" placeholder="Ex.: Centro, Cantinho, Atins e povoados próximos" aria-label="Onde você atende">
+      <div class="chips-sug">${CV.AREAS.map((a) => `<button type="button" class="chip-sug" data-area="${esc(a)}">${ic('mais')}${esc(a)}</button>`).join('')}</div>`)}
+    ${secao(8, 'Que línguas você fala?', '', grupo('idiomas', CV.IDIOMAS, cv.idiomas))}
+    ${secao(9, 'Seus diferenciais', 'O que faz o cliente escolher você?', grupo('diferenciais', CV.DIFERENCIAIS, cv.diferenciais, { outro: 'Outro diferencial' }))}
+    ${secao(10, 'Texto de apresentação', 'É o primeiro texto que o cliente lê. Toque no botão e o app escreve para você com as respostas acima. Depois é só conferir.',
+      `<button type="button" class="btn largo sec" id="montar">${ic('caneta')}Montar o texto para mim</button>
+      <textarea name="bio" maxlength="1500" rows="6" placeholder="Ex.: Trabalho com obras e reformas há 10 anos. Faço reboco, piso e telhado…" aria-label="Texto de apresentação">${esc(p.bio)}</textarea>
+      <small>Não coloque telefone, WhatsApp ou redes sociais. O contato é liberado depois do pagamento.</small>`)}
+    ${datalist('dl-funcoes', s.funcoes)}${datalist('dl-locais', CV.TIPOS_LOCAL)}${datalist('dl-cursos', s.cursos)}${datalist('dl-onde', CV.ONDE_ESTUDOU)}
+    <button class="btn largo grande">${ic('check')}Salvar currículo</button>
+    <div class="barra-cta"><div><small>Currículo</small><b><span id="cv-pct2">0</span>% preenchido</b></div><button class="btn">Salvar</button></div>
+  </form>`;
+
+  const $f = document.getElementById('fcv');
+  const marcados = (g) => [...$f.querySelectorAll(`[data-grupo="${g}"] .chip-sug[aria-pressed="true"]`)].map((b) => b.dataset.v);
+  const itens = (tipo, campos) => [...$f.querySelectorAll(`[data-item="${tipo}"]`)]
+    .map((el) => Object.fromEntries(campos.map((c) => [c, el.querySelector(`[name="${c}"]`).value.trim()])))
+    .filter((x) => campos.some((c) => x[c]));
+  const coletar = () => CV.normalizar({
+    experiencia: marcados('experiencia')[0] || '', servicos: marcados('servicos'), trabalhos: itens('trabalhos', ['funcao', 'local', 'tempo']),
+    escolaridade: $f.escolaridade.value, cursos: itens('cursos', ['nome', 'onde', 'ano']), equipamentos: marcados('equipamentos'),
+    dias: marcados('dias'), turnos: marcados('turnos'), areas: $f.areas.value, idiomas: marcados('idiomas'), diferenciais: marcados('diferenciais'),
+  });
+  const atualizar = () => {
+    const c = coletar();
+    const pct = CV.pctCurriculo(c, $f.bio.value);
+    document.getElementById('cv-pct').textContent = pct;
+    document.getElementById('cv-pct2').textContent = pct;
+    document.getElementById('cv-barra').style.width = `${pct}%`;
+    const falta = CV.itensFaltando(c, $f.bio.value).filter(([ok]) => !ok).map(([, t]) => t);
+    document.getElementById('cv-falta').textContent = falta.length ? `Falta: ${falta.slice(0, 3).join(' · ')}${falta.length > 3 ? '…' : ''}` : 'Tudo preenchido. Muito bem!';
+  };
+  const novaLinha = (lista, html, foco) => {
+    document.getElementById(lista).insertAdjacentHTML('beforeend', html);
+    const el = document.getElementById(lista).lastElementChild;
+    el.querySelector(foco)?.focus();
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    atualizar();
+  };
+  const adicionarChip = (g) => {
+    const $i = $f.querySelector(`[data-outro="${g}"]`);
+    const v = $i.value.trim();
+    if (!v) return $i.focus();
+    if (temContato(v)) return toast(AVISO_CONTATO, 'erro');
+    const $g = $f.querySelector(`[data-grupo="${g}"]`);
+    const existe = [...$g.querySelectorAll('.chip-sug')].find((b) => normalizar(b.dataset.v) === normalizar(v));
+    if (existe) existe.setAttribute('aria-pressed', 'true');
+    else $g.insertAdjacentHTML('beforeend', `<button type="button" class="chip-sug" aria-pressed="true" data-v="${esc(v)}">${esc(v)}</button>`);
+    $i.value = '';
+    atualizar();
+  };
+  $f.addEventListener('click', async (e) => {
+    const b = e.target.closest('button');
+    if (!b || b.type === 'submit' || !b.closest('#fcv')) return;
+    if (b.matches('[data-grupo] .chip-sug')) {
+      const $g = b.closest('[data-grupo]');
+      const ligar = b.getAttribute('aria-pressed') !== 'true';
+      if ($g.hasAttribute('data-unico')) $g.querySelectorAll('.chip-sug').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', String(ligar));
+    } else if (b.dataset.add) adicionarChip(b.dataset.add);
+    else if ('novoTrabalho' in b.dataset) novaLinha('lista-trabalhos', linhaTrabalho({ funcao: b.dataset.novoTrabalho }), b.dataset.novoTrabalho ? '[name="local"]' : '[name="funcao"]');
+    else if ('novoCurso' in b.dataset) novaLinha('lista-cursos', linhaCurso({ nome: b.dataset.novoCurso }), b.dataset.novoCurso ? '[name="onde"]' : '[name="nome"]');
+    else if ('remover' in b.dataset) b.closest('.cv-item').remove();
+    else if (b.dataset.area) {
+      const atual = $f.areas.value.trim();
+      if (!normalizar(atual).includes(normalizar(b.dataset.area))) $f.areas.value = atual ? `${atual}, ${b.dataset.area.toLowerCase()}` : b.dataset.area;
+    } else if (b.id === 'montar') {
+      if ($f.bio.value.trim() && !(await confirmar('Trocar o texto que já está escrito pelo texto montado com suas respostas?', 'Trocar texto'))) return;
+      $f.bio.value = CV.textoSugerido(coletar(), { categoria: cat, cidade: p.cidade });
+      $f.bio.focus();
+      toast('Texto pronto! Leia e mude o que quiser.');
+    }
+    atualizar();
+  });
+  $f.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.dataset.outro) { e.preventDefault(); adicionarChip(e.target.dataset.outro); } });
+  $f.addEventListener('input', atualizar);
+  $f.addEventListener('change', atualizar);
+  $f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const c = coletar();
+    const bio = $f.bio.value.trim();
+    const textos = [bio, c.experiencia, c.escolaridade, c.areas, ...c.servicos, ...c.equipamentos, ...c.diferenciais,
+      ...c.trabalhos.flatMap((t) => Object.values(t)), ...c.cursos.flatMap((k) => Object.values(k))];
+    if (textos.some((t) => temContato(t))) return toast(AVISO_CONTATO, 'erro');
+    const botoes = $f.querySelectorAll('button:not([type="button"])');
+    botoes.forEach((b) => { b.disabled = true; });
+    const { error } = deOutro
+      ? await sb.rpc('admin_salvar_curriculo', { uid: p.id, p_bio: bio, p_curriculo: c })
+      : await sb.from('profiles').update({ curriculo: c, bio }).eq('id', me.id);
+    botoes.forEach((b) => { b.disabled = false; });
+    if (error) return falha(error);
+    if (deOutro) {
+      toast(`Currículo de ${p.nome.split(' ')[0]} salvo!`);
+      location.hash = `#/suporte/${p.id}`;
+    } else {
+      await recarregarMe();
+      toast('Currículo salvo! Veja como os clientes enxergam você.');
+      location.hash = `#/p/${me.id}`;
+    }
+  });
+  atualizar();
+}
+
 // ---------------------------------------------------------------- minha conta (menu)
 const recarregarMe = async () => carregarMe((await sb.auth.getSession()).data.session);
 const itemMenu = (href, icone, titulo, sub = '', extra = '') => `<a class="menu-item" href="${href}" ${extra}><span class="mi-ic">${ic(icone)}</span>
@@ -1396,7 +1674,7 @@ async function telaConta() {
   // perfil profissional completo?
   let completo = '';
   if (me.is_prestador) {
-    const itens = [[!!me.foto_url, 'Coloque uma foto de perfil', '#/conta/foto'], [(me.bio || '').length >= 40, 'Complete sua descrição', '#/conta/dados'],
+    const itens = [[!!me.foto_url, 'Coloque uma foto de perfil', '#/conta/foto'], [CV.pctCurriculo(me.curriculo, me.bio) >= 75, 'Preencha seu currículo', '#/conta/curriculo'],
       [!!me.categoria_id && !!me.cidade, 'Informe sua área e cidade', '#/conta/dados'], [!!me.preco_base, 'Informe um preço inicial', '#/conta/dados'],
       [(nFotos || 0) >= 3, 'Adicione fotos dos seus trabalhos', '#/conta/fotos'], [!!me.verificado, 'Faça a verificação de identidade', '#/verificar']];
     const pct = Math.round(itens.filter(([ok]) => ok).length / itens.length * 100);
@@ -1426,6 +1704,7 @@ async function telaConta() {
       itemMenu('#/conversas', 'chat', 'Mensagens', ultimaContagem ? `${ultimaContagem} ${ultimaContagem === 1 ? 'mensagem nova' : 'mensagens novas'}` : 'Suas conversas'),
     ])}
     ${me.is_prestador ? bloco('Para profissionais', [
+      itemMenu('#/conta/curriculo', 'documento', 'Meu currículo', `${CV.pctCurriculo(me.curriculo, me.bio)}% preenchido · com sugestões para ajudar`),
       itemMenu(`#/p/${me.id}`, 'perfil', 'Meu perfil profissional', 'Veja como os clientes enxergam você'),
       itemMenu('#/conta/fotos', 'galeria', 'Fotos dos trabalhos', `${nFotos || 0} de ${MAX_FOTOS} fotos`),
       itemMenu('#/verificar', 'documento', 'Verificação de identidade', stVerif),
@@ -1433,7 +1712,8 @@ async function telaConta() {
       itemMenu('#/conta/dados', 'cadeado', 'Dados para recebimento', 'Chave Pix para os repasses'),
     ]) : bloco('Quer trabalhar pelo app?', [itemMenu('#/ser-profissional', 'pedidos', 'Oferecer meus serviços', 'Crie seu perfil profissional e receba clientes')])}
     ${me.is_admin ? bloco('Administração', [itemMenu('#/admin', 'admin', 'Painel do administrador', 'Comissões, verificações, repasses e usuários')]) : ''}
-    ${bloco('Ajuda', [itemMenu('#/ajuda', 'ajuda', 'Ajuda e perguntas frequentes'), itemMenu('#/termos', 'documento', 'Termos de uso e privacidade')])}
+    ${bloco('Ajuda', [itemMenu('#/suporte', 'chat', me.is_admin ? 'Atendimento às pessoas' : 'Fale com o administrador', me.is_admin ? 'Dúvidas e currículos para preencher' : 'Tire dúvidas ou peça ajuda com seu currículo'),
+      itemMenu('#/ajuda', 'ajuda', 'Ajuda e perguntas frequentes'), itemMenu('#/termos', 'documento', 'Termos de uso e privacidade')])}
     <button class="btn sec largo" id="sair">${ic('sair')}Sair da conta</button>`;
   document.getElementById('sair').addEventListener('click', async () => { await sb.auth.signOut(); location.hash = '#/'; });
 }
@@ -1494,11 +1774,14 @@ function telaAjuda() {
     ['Como eu contrato um profissional?', 'Busque o serviço, abra o perfil e toque em "Solicitar orçamento". Combine pelo chat, aceite a proposta e pague pelo app.'],
     ['Por que não vejo o WhatsApp do profissional?', 'Para sua segurança, o contato só é liberado depois que o pagamento é confirmado pelo app. Assim o serviço fica registrado e protegido.'],
     ['Quanto custa usar o app?', 'Para quem contrata, nada a mais: você paga o valor combinado. O profissional paga 10% de comissão sobre cada serviço.'],
+    ['Não sei o que escrever no meu currículo. E agora?', 'Em Minha Conta, toque em "Meu currículo". É só marcar as sugestões que combinam com você e tocar em "Montar o texto para mim". Se preferir, fale com o administrador que ele preenche junto com você.'],
     ['Quando o profissional recebe?', 'Depois que você confirma que o serviço foi feito, o valor (já sem a comissão) é repassado ao profissional por Pix.'],
     ['O que é o selo Verificado?', 'Significa que conferimos o documento e uma selfie do profissional. O selo Cadastur mostra que o profissional de turismo tem registro no Ministério do Turismo.'],
     ['Posso publicar um pedido para vários profissionais?', 'Sim. Em Pedidos, toque em "Publicar". Os profissionais da área respondem pelo chat e você escolhe a melhor proposta.'],
   ];
-  $app.innerHTML = `<div class="faq">${perguntas.map(([p, r]) => `<details class="card"><summary>${p}</summary><p>${r}</p></details>`).join('')}</div>`;
+  $app.innerHTML = `<div class="faq">${perguntas.map(([p, r]) => `<details class="card"><summary>${p}</summary><p>${r}</p></details>`).join('')}</div>
+    <div class="card ajuda-adm"><b>Não achou a resposta?</b><p class="nota">Fale direto com a administração. Também ajudamos a preencher seu currículo.</p>
+      <a class="btn largo" href="#/suporte">${ic('chat')}Fale com o administrador</a></div>`;
 }
 async function telaContaDados() {
   const { data: priv } = await sb.from('contatos_privados').select('*').eq('user_id', me.id).maybeSingle();
@@ -1860,6 +2143,7 @@ async function telaAdmin() {
       <div><span>${r.verificacoes_pendentes}</span>verificações para analisar</div>
       <div><span>${r.pedidos_abertos}</span>pedidos abertos</div>
       <div><span>${r.cadastur_pendentes}</span>Cadastur para conferir</div>
+      <a href="#/suporte"><span>${r.suporte_novas || 0}</span>pessoas esperando resposta</a>
     </div>
     <div class="abas"><button data-aba="verificacoes" class="ativa">Verificações${r.verificacoes_pendentes ? ` (${r.verificacoes_pendentes})` : ''}</button>
       <button data-aba="cadastur">Cadastur${r.cadastur_pendentes ? ` (${r.cadastur_pendentes})` : ''}</button>
@@ -2008,7 +2292,8 @@ async function abaUsuarios() {
     document.getElementById('lista-u').innerHTML = (lista || []).map((u) => `<div class="card linha-esp">
       <div><b>${esc(u.nome)}</b> ${u.is_admin ? '<span class="tag">admin</span>' : ''} ${u.is_prestador ? '<span class="tag">prestador</span>' : ''} ${u.is_contratante ? '<span class="tag">contratante</span>' : ''}
         <div class="meta">${esc(u.cidade)} · desde ${data(u.criado_em)} · ${u.avisos} aviso(s) ${u.suspenso ? '· <b class="vermelho">SUSPENSO</b>' : ''}</div></div>
-      <div class="acoes"><button class="btn pequeno sec" data-u="${u.id}" data-v="${!u.verificado}" data-s="${u.suspenso}">${u.verificado ? 'Remover verificação' : '✔ Verificar'}</button>
+      <div class="acoes"><a class="btn pequeno sec" href="#/suporte/${u.id}">${ic('chat')}Conversar</a>${u.is_prestador ? `<a class="btn pequeno sec" href="#/conta/curriculo?u=${u.id}">Currículo</a>` : ''}
+        <button class="btn pequeno sec" data-u="${u.id}" data-v="${!u.verificado}" data-s="${u.suspenso}">${u.verificado ? 'Remover verificação' : '✔ Verificar'}</button>
         <button class="btn pequeno ${u.suspenso ? '' : 'perigo'}" data-u="${u.id}" data-v="${u.verificado}" data-s="${!u.suspenso}">${u.suspenso ? 'Reativar' : 'Suspender'}</button></div></div>`).join('');
   };
   document.getElementById('busca-u').addEventListener('input', (e) => carregar(e.target.value.trim()));

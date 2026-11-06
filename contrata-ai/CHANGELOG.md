@@ -1,5 +1,16 @@
 # Registro de alterações — Contrata Aí
 
+## Currículo completo e "Fale com o administrador"
+### Banco de dados (somente acréscimos)
+- Coluna `profiles.curriculo` (jsonb): experiência, serviços, onde já trabalhou, escolaridade, cursos, equipamentos, dias e horários, região, idiomas e diferenciais. O filtro anti-contato confere cada texto do currículo (`curriculo_tem_contato`), inclusive quando o admin preenche.
+- Tabela `suporte_mensagens` (uma conversa por pessoa com a administração), com RLS: cada um vê só a sua; o admin vê e responde todas. Funções `suporte_marcar_lidas` e `admin_salvar_curriculo`. `admin_resumo` ganhou `suporte_novas`.
+
+### Telas
+- **Meu currículo** (Minha Conta): 10 passos com sugestões por profissão (32 áreas) — é só tocar para marcar. Botão "Montar o texto para mim" escreve a apresentação com as respostas. Barra de "% preenchido" e o que falta.
+- **Perfil do profissional:** mostra o currículo (serviços, onde trabalhou, estudo e cursos, equipamentos, quando e onde atende, idiomas, diferenciais) e o tempo de experiência. A busca também encontra pelos serviços e cursos do currículo.
+- **Fale com o administrador:** fixo no topo de Mensagens, em Minha Conta e na Ajuda. Mensagens prontas para quem não sabe o que escrever; número de mensagens novas na aba.
+- **Admin:** lista "Atendimento" (quem está esperando primeiro), perguntas prontas para montar o currículo e botão "Preencher currículo" da pessoa. Na aba Usuários, botões "Conversar" e "Currículo".
+
 ## Etapa 1 — Experiência e identidade visual
 **Auditoria feita antes das mudanças.** Mantido tudo que já funcionava (cadastro, busca inteligente, chat, propostas, pagamento, verificação, Cadastur, pedidos, admin, filtro anti-burla, demonstração). Banco: só acréscimos, nenhum dado apagado.
 
