@@ -741,17 +741,28 @@ async function telaLista({ cat, q, grupo }) {
   $app.innerHTML = `
     ${g ? `<div class="cat-grade grupo-areas">${cats.map((x) => tileCategoria(x)).join('')}</div>` : ''}
     <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" value="${esc(q || '')}" placeholder="${c ? `Buscar em ${esc(nomeCurto(c.nome))}` : 'Buscar serviço ou profissional'}" aria-label="Buscar"><button class="btn-buscar" aria-label="Pesquisar">${ic('seta')}</button></form>
-    <div class="barra-filtros" role="group" aria-label="Filtros">
-      ${chipCidade()}
-      <span class="sep"></span>
+    <div class="linha-filtros">${chipCidade()}
+      <button type="button" class="chip-filtro btn-ordenar" id="abrir-ordem" aria-expanded="false" aria-controls="painel-ordem">${ic('filtro')}<span id="rotulo-ordem">Ordenar</span>${ic('baixo')}</button></div>
+    <div class="barra-filtros painel-ordem" id="painel-ordem" role="group" aria-label="Ordenar e filtrar" hidden>
       ${[['relevancia', 'Mais relevantes'], ['nota', 'Mais bem avaliados'], ['preco', 'Menor preço'], ['experiencia', 'Mais experiência']].map(([v, t], i) =>
         `<button type="button" class="chip-filtro ${i === 0 ? 'ativo' : ''}" data-ordem="${v}" aria-pressed="${i === 0}">${t}</button>`).join('')}
       <button type="button" class="chip-filtro" data-toggle="verificados" aria-pressed="false">${ic('check')}Verificados</button>
       ${c && ehTurismo(c.id) ? `<button type="button" class="chip-filtro" data-toggle="cadastur" aria-pressed="false">${ic('mapa')}Cadastur</button>` : ''}
     </div>
+    <p class="dica-lista">${ic('perfil')}<span>Escolha um profissional e <b>toque</b> para ver o perfil e pedir orçamento.</span></p>
     <p class="meta qtd" id="qtd"></p>
     <div class="grade" id="resultados"></div>`;
   const est = { ordem: 'relevancia', verificados: false, cadastur: false };
+  const NOMES_ORDEM = { relevancia: 'Mais relevantes', nota: 'Mais bem avaliados', preco: 'Menor preço', experiencia: 'Mais experiência' };
+  const $painel = document.getElementById('painel-ordem'), $abrir = document.getElementById('abrir-ordem');
+  const mostrarPainel = (abrir) => { $painel.hidden = !abrir; $abrir.setAttribute('aria-expanded', String(abrir)); $abrir.classList.toggle('aberto', abrir); };
+  $abrir.addEventListener('click', () => mostrarPainel($painel.hidden));
+  const atualizarRotulo = () => {
+    const extras = [est.verificados && 'Verificados', est.cadastur && 'Cadastur'].filter(Boolean);
+    const mudou = est.ordem !== 'relevancia' || extras.length;
+    document.getElementById('rotulo-ordem').textContent = mudou ? [est.ordem !== 'relevancia' && NOMES_ORDEM[est.ordem], ...extras].filter(Boolean).join(' · ') : 'Ordenar';
+    $abrir.classList.toggle('ativo', !!mudou);
+  };
   const filtros = () => ({ cat: c?.id, cats: cats.map((x) => x.id), q: document.querySelector('#fb input').value.trim(), cidade: cidadeAtual()?.cidade, ...est });
   document.querySelector('.barra-filtros').addEventListener('click', (e) => {
     const b = e.target.closest('.chip-filtro');
@@ -759,10 +770,12 @@ async function telaLista({ cat, q, grupo }) {
     if (b.dataset.ordem) {
       est.ordem = b.dataset.ordem;
       document.querySelectorAll('[data-ordem]').forEach((x) => { x.classList.toggle('ativo', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+      mostrarPainel(false);
     } else {
       est[b.dataset.toggle] = !est[b.dataset.toggle];
       b.classList.toggle('ativo', est[b.dataset.toggle]); b.setAttribute('aria-pressed', String(est[b.dataset.toggle]));
     }
+    atualizarRotulo();
     document.getElementById('resultados').innerHTML = esqueleto(2);
     listarPrestadores(filtros()).catch(falha);
   });
