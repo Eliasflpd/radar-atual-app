@@ -37,6 +37,11 @@ const ICONES = {
   alerta: '<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.2v.3"/>',
   seta: '<path d="m9 5 7 7-7 7"/>',
   baixo: '<path d="m6 9 6 6 6-6"/>',
+  sino: '<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4l2-2ZM10 21h4"/>',
+  ajuda: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.2v.3"/>',
+  filtro: '<path d="M4 6h16M7 12h10M10 18h4"/>',
+  escudo: '<path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/>',
+  relampago: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>',
   inicio: '<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9Z"/>',
   galeria: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
   tijolo: '<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9.7h18M3 14.3h18M9 5v4.7M15 9.7v4.6M9 14.3V19"/>',
@@ -208,6 +213,43 @@ async function apagarFoto(id, fotos) {
   return true;
 }
 
+// ---------------------------------------------------------------- telas vazias e carregamento
+const vazio = (icone, titulo, texto = '', acao = '') => `<div class="vazio-bonito"><span class="vazio-ic">${ic(icone)}</span>
+  <b>${titulo}</b>${texto ? `<p>${texto}</p>` : ''}${acao}</div>`;
+const esqueleto = (n = 3) => `<div class="esqueleto-lista">${Array.from({ length: n }, () => '<div class="esq-card"><div class="esq esq-capa"></div><div class="esq esq-linha"></div><div class="esq esq-linha curta"></div></div>').join('')}</div>`;
+
+// ---------------------------------------------------------------- favoritos
+let favoritosIds = new Set();
+async function carregarFavoritos() {
+  if (!me) { favoritosIds = new Set(); return; }
+  const { data } = await sb.from('favoritos').select('prestador_id').eq('user_id', me.id);
+  favoritosIds = new Set((data || []).map((f) => f.prestador_id));
+}
+const botaoFav = (id, cls = '') => (me?.id === id ? '' : `<button type="button" class="fav ${cls} ${favoritosIds.has(id) ? 'ativo' : ''}" data-fav="${id}"
+  aria-pressed="${favoritosIds.has(id)}" aria-label="${favoritosIds.has(id) ? 'Tirar dos favoritos' : 'Salvar nos favoritos'}">${ic('coracao')}</button>`);
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-fav]');
+  if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  if (!me) { toast('Entre na sua conta para salvar favoritos.'); location.hash = '#/entrar'; return; }
+  const id = b.dataset.fav;
+  const ligar = !favoritosIds.has(id);
+  const { error } = ligar
+    ? await sb.from('favoritos').insert({ user_id: me.id, prestador_id: id })
+    : await sb.from('favoritos').delete().eq('user_id', me.id).eq('prestador_id', id);
+  if (error) return falha(error);
+  if (ligar) favoritosIds.add(id); else favoritosIds.delete(id);
+  document.querySelectorAll(`[data-fav="${id}"]`).forEach((x) => {
+    x.classList.toggle('ativo', ligar); x.setAttribute('aria-pressed', String(ligar));
+    if (ligar) { x.classList.remove('pulsa'); void x.offsetWidth; x.classList.add('pulsa'); }
+  });
+  toast(ligar ? 'Salvo nos seus favoritos.' : 'Removido dos favoritos.');
+});
+
+// ---------------------------------------------------------------- mensagens lidas (neste aparelho)
+const lidas = () => { try { return JSON.parse(localStorage.getItem('contrata-lidas') || '{}'); } catch { return {}; } };
+const marcarLida = (convId) => { try { const l = lidas(); l[convId] = new Date().toISOString(); localStorage.setItem('contrata-lidas', JSON.stringify(l)); } catch { /* sem storage */ } };
+
 // Confirmação dentro da página (não usa confirm() do navegador)
 function confirmar(msg, ok = 'Confirmar') {
   return new Promise((resolve) => {
@@ -256,6 +298,7 @@ async function carregarMe(session) {
   if (!session) { me = null; return; }
   const { data: p } = await sb.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
   me = p ? { ...p, email: session.user.email } : null;
+  await carregarFavoritos();
 }
 
 function renderNav() {
@@ -276,7 +319,7 @@ const TITULOS = {
   pedidos: 'Pedidos', 'pedidos/novo': 'Publicar pedido', conversas: 'Mensagens', chat: 'Conversa', conta: 'Minha conta',
   'conta/dados': 'Meus dados', 'conta/foto': 'Foto de perfil', 'conta/fotos': 'Fotos dos trabalhos', 'conta/servicos': 'Serviços e ganhos',
   verificar: 'Verificar identidade', admin: 'Administração', p: 'Profissional', categoria: 'Profissionais', busca: 'Resultados',
-  entrar: 'Entrar', cadastro: 'Criar conta', termos: 'Termos de uso',
+  entrar: 'Entrar', cadastro: 'Criar conta', termos: 'Termos de uso', 'conta/favoritos': 'Favoritos', ajuda: 'Ajuda',
 };
 const PRINCIPAIS = ['inicio', 'pedidos', 'conversas', 'conta', 'bemvindo'];
 function topo(tela, chave) {
@@ -305,7 +348,7 @@ async function rota() {
   if (['conversas', 'chat', 'conta', 'admin', 'verificar'].includes(tela) && !me) { location.hash = '#/entrar'; return; }
   if (chave === 'pedidos/novo' && !me) { location.hash = '#/entrar'; return; }
   if (tela === 'inicio' && !me && !jaOlhou()) { location.hash = '#/bemvindo'; return; }
-  $app.innerHTML = '<div class="carregando">Carregando…</div>';
+  $app.innerHTML = esqueleto(3);
   window.scrollTo(0, 0);
   try {
     if (tela === 'inicio') return await telaInicio();
@@ -324,6 +367,8 @@ async function rota() {
     if (chave === 'conta/servicos') return await telaContaServicos();
     if (tela === 'admin') return me.is_admin ? await telaAdmin() : (location.hash = '#/');
     if (tela === 'termos') return telaTermos();
+    if (tela === 'ajuda') return telaAjuda();
+    if (chave === 'conta/favoritos') return await telaFavoritos();
     if (chave === 'pedidos/novo') return telaNovoPedido();
     if (tela === 'pedidos') return await telaPedidos(params);
     if (tela === 'verificar') return await telaVerificar();
@@ -429,46 +474,112 @@ function telaBoasVindas() {
 async function telaInicio() {
   const cats = categoriasOrdenadas();
   const cid = cidadeAtual();
+  const naoLidas = me ? await contarNaoLidas() : 0;
   $app.innerHTML = `
     <header class="home-cab">
-      <div class="home-marca">${LOGO}<div><b>Contrata <em>Aí</em></b><small>Profissionais de todas as áreas perto de você</small></div></div>
+      <div class="home-topo">
+        <div class="home-marca">${LOGO}<b>Contrata <em>Aí</em></b></div>
+        <div class="home-acoes">
+          ${me ? `<a class="icone-btn" href="#/conversas" aria-label="Mensagens${naoLidas ? `, ${naoLidas} não lidas` : ''}">${ic('sino')}${naoLidas ? `<span class="bolinha">${naoLidas}</span>` : ''}</a>
+            <a href="#/conta" aria-label="Minha conta">${avatar(me, 'mini')}</a>`
+            : '<a class="btn pequeno" href="#/cadastro">Criar conta</a>'}
+        </div>
+      </div>
       ${chipCidade('grande')}
     </header>
-    <div class="ola">${me ? `<p>Olá, ${esc(me.nome.split(' ')[0])}</p>` : ''}<h1>Do que você precisa hoje?</h1></div>
-    <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Ex.: pedreiro de acabamento" aria-label="O que você precisa"><button class="btn pequeno">Buscar</button></form>
-    <div class="sugestoes">${['pedreiro de acabamento', 'diarista', 'eletricista', 'guia nos Lençóis', 'frete e mudança', 'ar-condicionado'].map((t) => `<a href="#/busca?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>
+    <h1 class="ola">Olá${me ? `, ${esc(me.nome.split(' ')[0])}` : ''}! O que você precisa hoje?</h1>
+    <form class="busca-pilula grande" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você está procurando?" aria-label="Qual serviço você está procurando?"><button class="btn pequeno">Buscar</button></form>
+    <div class="sugestoes">${['Pedreiro de acabamento', 'Diarista', 'Eletricista', 'Guia turístico', 'Tratorista', 'Ar-condicionado'].map((t) => `<a href="#/busca?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>
+    <div class="acoes-home">
+      <a class="acao-card" href="#/busca"><span class="op-ic">${ic('busca')}</span><b>Encontrar profissionais</b><small>Veja quem atende ${cid ? `em ${esc(cid.cidade)}` : 'perto de você'}</small></a>
+      <a class="acao-card" href="${me ? '#/pedidos/novo' : '#/cadastro?tipo=contratar'}"><span class="op-ic">${ic('pedidos')}</span><b>Publicar um pedido</b><small>Receba propostas de vários profissionais</small></a>
+    </div>
     <div class="secao-tit"><h2>Categorias</h2><button type="button" class="link" id="ver-todas">Ver todas</button></div>
     <div class="cat-grade" id="cats">${cats.map((c, i) => tileCategoria(c, 'a', i >= 8 ? 'data-extra hidden' : '')).join('')}</div>
-    ${me?.is_prestador
-      ? `<a class="banner" href="#/pedidos">${ic('pedidos')}<span><b>Pedidos de empresas e clientes</b><small>Veja quem está precisando do seu serviço</small></span>${ic('seta')}</a>`
-      : `<a class="banner" href="#/pedidos/novo">${ic('pedidos')}<span><b>Precisa de vários profissionais?</b><small>Publique um pedido e receba interessados</small></span>${ic('seta')}</a>`}
-    <div class="secao-tit"><h2>Bem avaliados${cid ? ` em ${esc(cid.cidade)}` : ''}</h2></div>
-    <div class="grade" id="resultados"></div>`;
+    <div class="secao-tit"><h2>Em destaque${cid ? ` em ${esc(cid.cidade)}` : ''}</h2><a href="#/busca">Ver todos</a></div>
+    <div class="carrossel" id="destaques">${esqueleto(2)}</div>
+    <div class="secao-tit"><h2>Bem avaliados</h2></div>
+    <div class="grade" id="resultados">${esqueleto(2)}</div>
+    <div class="secao-tit"><h2>Oportunidades${cid ? ` em ${esc(cid.cidade)}` : ' recentes'}</h2><a href="#/pedidos">Ver todas</a></div>
+    <div id="oportunidades"></div>`;
   document.getElementById('fb').addEventListener('submit', (e) => {
     e.preventDefault();
     const q = form(e.target).q.trim();
-    if (q) location.hash = `#/busca?q=${encodeURIComponent(q)}`;
+    location.hash = q ? `#/busca?q=${encodeURIComponent(q)}` : '#/busca';
   });
   document.getElementById('ver-todas').addEventListener('click', (e) => {
     const mostrar = e.target.textContent === 'Ver todas';
     document.querySelectorAll('#cats [data-extra]').forEach((t) => { t.hidden = !mostrar; });
     e.target.textContent = mostrar ? 'Ver menos' : 'Ver todas';
   });
-  await listarPrestadores({ cidade: cid?.cidade }, 6);
+  // destaques: verificados da cidade; bem avaliados: maior nota com mais avaliações
+  const { lista } = await buscarPrestadores({});
+  const daCidade = cid ? lista.filter((p) => normalizar(p.cidade).includes(normalizar(cid.cidade))) : lista;
+  const base = daCidade.length ? daCidade : lista;
+  const destaques = base.filter((p) => p.verificado).slice(0, 8);
+  const usados = new Set(destaques.map((p) => p.id));
+  const bem = [...base].filter((p) => !usados.has(p.id) && p.avaliacao_qtd >= 5).sort(ORDENS.nota).slice(0, 4);
+  if (cid && !daCidade.length) {
+    document.getElementById('destaques').insertAdjacentHTML('beforebegin', `<div class="aviso-busca aviso-cidade">Ainda não há profissionais em <b>${esc(cid.cidade)}</b>. Mostrando de outras cidades.
+      <button type="button" class="link" data-todas-cidades>Ver de todas as cidades</button></div>`);
+  }
+  document.getElementById('destaques').innerHTML = destaques.length ? await htmlCartoes(destaques) : vazio('perfil', 'Ainda não há destaques por aqui');
+  document.getElementById('resultados').innerHTML = bem.length ? await htmlCartoes(bem) : vazio('estrela', 'Ainda sem avaliações por aqui');
+  // oportunidades: pedidos abertos da cidade
+  let q = sb.from('pedidos').select('id,titulo,cidade,uf,vagas,orcamento,prazo,categoria_id,criado_em').eq('status', 'aberto').order('criado_em', { ascending: false }).limit(3);
+  if (cid) q = q.ilike('cidade', `%${cid.cidade}%`);
+  const { data: peds } = await q;
+  document.getElementById('oportunidades').innerHTML = (peds || []).map((x) => {
+    const cat = categorias.find((c) => c.id === x.categoria_id);
+    return `<a class="oportunidade" href="#/pedidos"><span class="cat-ic">${ic(ICONE_CAT[cat?.nome] || 'grade')}</span>
+      <span class="op-txt"><b>${esc(x.titulo)}</b><small>${esc(x.cidade)} · ${x.vagas} ${x.vagas > 1 ? 'vagas' : 'vaga'}${x.prazo ? ` · ${esc(x.prazo)}` : ''}</small></span>${ic('seta')}</a>`;
+  }).join('') || vazio('pedidos', 'Ainda não há oportunidades por aqui', 'Volte em breve para conferir.');
 }
-
+async function contarNaoLidas() {
+  const { data: convs } = await sb.from('conversas').select('id');
+  const ids = (convs || []).map((c) => c.id);
+  if (!ids.length) return 0;
+  const { data: msgs } = await sb.from('mensagens').select('conversa_id,autor_id,criado_em').in('conversa_id', ids).order('criado_em', { ascending: false });
+  const l = lidas(), vistas = new Set();
+  let n = 0;
+  for (const m of msgs || []) {
+    if (vistas.has(m.conversa_id)) continue;
+    vistas.add(m.conversa_id);
+    if (m.autor_id !== me.id && (!l[m.conversa_id] || m.criado_em > l[m.conversa_id])) n++;
+  }
+  return n;
+}
 // Lista de profissionais por área ou por busca
 async function telaLista({ cat, q }) {
   const c = categorias.find((x) => String(x.id) === String(cat));
   if (c) tituloTopo(nomeCurto(c.nome));
   $app.innerHTML = `
     <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" value="${esc(q || '')}" placeholder="${c ? `Buscar em ${esc(nomeCurto(c.nome))}` : 'Buscar serviço ou profissional'}" aria-label="Buscar"></form>
-    <div class="linha-filtros">${chipCidade()}</div>
-    ${c && ehTurismo(c.id) ? `<label class="check chip-check"><input type="checkbox" id="f-cadastur"> Só com Cadastur conferido</label>` : ''}
+    <div class="barra-filtros" role="group" aria-label="Filtros">
+      ${chipCidade()}
+      <span class="sep"></span>
+      ${[['relevancia', 'Mais relevantes'], ['nota', 'Mais bem avaliados'], ['preco', 'Menor preço'], ['experiencia', 'Mais experiência']].map(([v, t], i) =>
+        `<button type="button" class="chip-filtro ${i === 0 ? 'ativo' : ''}" data-ordem="${v}" aria-pressed="${i === 0}">${t}</button>`).join('')}
+      <button type="button" class="chip-filtro" data-toggle="verificados" aria-pressed="false">${ic('check')}Verificados</button>
+      ${c && ehTurismo(c.id) ? `<button type="button" class="chip-filtro" data-toggle="cadastur" aria-pressed="false">${ic('mapa')}Cadastur</button>` : ''}
+    </div>
     <p class="meta qtd" id="qtd"></p>
     <div class="grade" id="resultados"></div>`;
-  const filtros = () => ({ cat: c?.id, q: document.querySelector('#fb input').value.trim(), cidade: cidadeAtual()?.cidade, cadastur: !!document.getElementById('f-cadastur')?.checked });
-  document.getElementById('f-cadastur')?.addEventListener('change', () => listarPrestadores(filtros()).catch(falha));
+  const est = { ordem: 'relevancia', verificados: false, cadastur: false };
+  const filtros = () => ({ cat: c?.id, q: document.querySelector('#fb input').value.trim(), cidade: cidadeAtual()?.cidade, ...est });
+  document.querySelector('.barra-filtros').addEventListener('click', (e) => {
+    const b = e.target.closest('.chip-filtro');
+    if (!b) return;
+    if (b.dataset.ordem) {
+      est.ordem = b.dataset.ordem;
+      document.querySelectorAll('[data-ordem]').forEach((x) => { x.classList.toggle('ativo', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+    } else {
+      est[b.dataset.toggle] = !est[b.dataset.toggle];
+      b.classList.toggle('ativo', est[b.dataset.toggle]); b.setAttribute('aria-pressed', String(est[b.dataset.toggle]));
+    }
+    document.getElementById('resultados').innerHTML = esqueleto(2);
+    listarPrestadores(filtros()).catch(falha);
+  });
   document.getElementById('fb').addEventListener('submit', (e) => { e.preventDefault(); listarPrestadores(filtros()).catch(falha); });
   await listarPrestadores(filtros());
 }
@@ -543,22 +654,25 @@ async function buscarPrestadores(f) {
   return { ...filtrarPorBusca(data || [], cidadeDaBusca ? texto : f.q), cidadeDaBusca };
 }
 
+const ORDENS = {
+  relevancia: null,
+  nota: (a, b) => b.avaliacao_media - a.avaliacao_media || b.avaliacao_qtd - a.avaliacao_qtd,
+  preco: (a, b) => (a.preco_base ?? 1e9) - (b.preco_base ?? 1e9),
+  experiencia: (a, b) => b.avaliacao_qtd - a.avaliacao_qtd,
+};
 async function listarPrestadores(f = {}, limite = 60) {
-  const { lista: tudo, parecidos, cidadeDaBusca } = await buscarPrestadores(f);
+  let { lista: tudo, parecidos, cidadeDaBusca } = await buscarPrestadores(f);
   if (cidadeDaBusca) f = { ...f, cidade: cidadeDaBusca };
+  if (f.verificados) tudo = tudo.filter((p) => p.verificado);
+  if (ORDENS[f.ordem]) tudo = [...tudo].sort(ORDENS[f.ordem]);
   const naCidade = (p) => f.cidade && normalizar(p.cidade).includes(normalizar(f.cidade));
   let daqui = f.cidade ? tudo.filter(naCidade) : tudo;
   // com busca ou área escolhida, também mostra de outras cidades (depois dos daqui)
   let deFora = f.cidade && (f.q || f.cat) ? tudo.filter((p) => !naCidade(p)) : [];
   daqui = daqui.slice(0, limite);
   deFora = deFora.slice(0, Math.max(0, limite - daqui.length));
-  const ids = [...daqui, ...deFora].map((p) => p.id);
-  const { data: fts } = ids.length
-    ? await sb.from('fotos_trabalhos').select('user_id,url').in('user_id', ids).order('criado_em', { ascending: false })
-    : { data: [] };
-  const fotosDe = {};
-  (fts || []).forEach((x) => (fotosDe[x.user_id] ||= []).push(x.url));
-  const card = (p) => cardPrestador(p, fotosDe[p.id] || []);
+  const htmlDaqui = await htmlCartoes(daqui);
+  const htmlFora = await htmlCartoes(deFora);
   const $qtd = document.getElementById('qtd');
   if ($qtd) {
     $qtd.textContent = f.cidade && (f.q || f.cat)
@@ -567,35 +681,43 @@ async function listarPrestadores(f = {}, limite = 60) {
   }
   const aviso = parecidos && (daqui.length || deFora.length) ? '<div class="aviso-busca">Não achamos exatamente isso. Veja resultados parecidos.</div>' : '';
   let html = aviso;
-  if (daqui.length) html += daqui.map(card).join('');
+  if (daqui.length) html += htmlDaqui;
   else if (f.cidade && deFora.length) html += `<div class="aviso-busca">Ainda não há ninguém em <b>${esc(f.cidade)}</b> para essa busca. Veja em outras cidades:</div>`;
-  if (deFora.length) html += `${daqui.length ? `<h3 class="divisor-cidades">Em outras cidades</h3>` : ''}${deFora.map(card).join('')}`;
+  if (deFora.length) html += `${daqui.length ? `<h3 class="divisor-cidades">Em outras cidades</h3>` : ''}${htmlFora}`;
   if (!daqui.length && !deFora.length) {
     html = f.cidade && !f.q && !f.cat
-      ? `<div class="card vazio">Ainda não há profissionais em ${esc(f.cidade)}.<br><button type="button" class="btn sec pequeno" data-todas-cidades style="margin-top:12px">Ver de todas as cidades</button></div>`
-      : '<div class="card vazio">Nenhum profissional encontrado. Tente outra palavra, como "pedreiro", "diarista" ou "guia".</div>';
+      ? vazio('pin', `Ainda não há profissionais em ${esc(f.cidade)}`, 'Que tal ver de outras cidades?', '<button type="button" class="btn sec pequeno" data-todas-cidades>Ver de todas as cidades</button>')
+      : vazio('busca', 'Não encontramos profissionais nessa busca', 'Que tal tentar outra palavra, categoria ou cidade? Ex.: pedreiro, diarista, guia.');
   }
   document.getElementById('resultados').innerHTML = html;
 }
 
 function cardPrestador(p, fotos = []) {
   const cat = nomeCategoria(p.categoria_id);
-  return `<a class="prestador" href="#/p/${p.id}">
+  return `<div class="prestador-box">${botaoFav(p.id, 'no-cartao')}<a class="prestador" href="#/p/${p.id}">
     <div class="capa ${fotos.length || p.foto_url ? '' : 'sem-foto'}">
       ${fotos.length ? `<img src="${esc(fotos[0])}" alt="" loading="lazy">${fotos.length > 1 ? `<span class="qtd-fotos">${ic('camera')}${fotos.length}</span>` : ''}`
         : p.foto_url ? `<img class="capa-rosto" src="${esc(p.foto_url)}" alt="" loading="lazy">`
-        : `<span class="letra">${esc((cat || '?')[0])}</span>`}
+        : `<span class="cat-ic grande">${ic(ICONE_CAT[categorias.find((c) => c.id === p.categoria_id)?.nome] || 'grade')}</span>`}
     </div>
     <div class="corpo">
       ${avatar(p, 'sobre-capa')}
       <div class="linha-nome"><h3>${esc(p.nome)}</h3>${p.verificado ? `<span class="verif-ic" title="Identidade verificada">${ic('check')}</span>` : ''}</div>
-      <div class="cat">${cat}${p.cadastur_status === 'aprovado' ? ` <span class="mini-cadastur" title="Cadastur conferido">${ic('mapa')}Cadastur</span>` : ''}</div>
+      <div class="cat">${cat}${p.cadastur_status === 'aprovado' ? ` <span class="mini-cadastur" title="Cadastur verificado">${ic('mapa')}Cadastur</span>` : ''}</div>
       <div class="meta">${ic('pin')}${esc(p.cidade)}${p.uf ? ' · ' + esc(p.uf) : ''}</div>
-      <div class="rodape-card">${notaHTML(p.avaliacao_media, p.avaliacao_qtd)}
+      <div class="rodape-card">${Number(p.avaliacao_qtd) ? notaHTML(p.avaliacao_media, p.avaliacao_qtd) : '<span class="novo-tag">Novo no app</span>'}
         ${p.preco_base ? `<span class="preco-card"><small>a partir de</small>${brl(p.preco_base)}</span>` : ''}</div>
-    </div></a>`;
+    </div></a></div>`;
 }
-
+async function htmlCartoes(lista) {
+  const ids = lista.map((p) => p.id);
+  const { data: fts } = ids.length
+    ? await sb.from('fotos_trabalhos').select('user_id,url').in('user_id', ids).order('criado_em', { ascending: false })
+    : { data: [] };
+  const fotosDe = {};
+  (fts || []).forEach((x) => (fotosDe[x.user_id] ||= []).push(x.url));
+  return lista.map((p) => cardPrestador(p, fotosDe[p.id] || [])).join('');
+}
 // ---------------------------------------------------------------- autenticação
 function telaEntrar() {
   $app.innerHTML = `<form class="card estreito" id="f">
@@ -814,6 +936,7 @@ async function telaPrestador(id) {
           <div class="cat">${nomeCategoria(p.categoria_id)}</div>
           <div class="meta">${ic('pin')}${esc(p.cidade)}${p.uf ? ' · ' + esc(p.uf) : ''}</div></div>
         <div class="selos">${p.verificado ? SELO : ''}${p.cadastur_status === 'aprovado' ? SELO_CADASTUR : ''}</div>
+        ${botaoFav(p.id, 'no-perfil')}
       </div>
       ${p.cadastur_status === 'aprovado' ? `<p class="cadastur-linha">${ic('mapa')}Cadastur nº <b>${esc(p.cadastur_numero)}</b> ·
         <a href="${PORTAL_CADASTUR}" target="_blank" rel="noopener">conferir no portal oficial</a></p>` : ''}
@@ -823,11 +946,14 @@ async function telaPrestador(id) {
         <div><dt>Desde</dt><dd>${esc(desde)}</dd></div>
         ${p.preco_base ? `<div><dt>A partir de</dt><dd>${brl(p.preco_base)}</dd></div>` : ''}
       </dl>
-      <p class="bio">${esc(p.bio) || '<i>Sem descrição.</i>'}</p>
+      <div class="garantias">
+        <span>${ic('escudo')}Pagamento protegido no app</span><span>${ic('cadeado')}Contato liberado após pagar</span><span>${ic('estrela')}Avaliações só de clientes reais</span>
+      </div>
+      <p class="bio">${esc(p.bio) || '<i>Este profissional ainda não escreveu uma descrição.</i>'}</p>
       <div class="cta-perfil">
         ${p.suspenso ? '<div class="alerta">Este profissional está temporariamente indisponível.</div>'
           : me?.id === p.id ? '<a class="btn sec" href="#/conta">Editar meu perfil</a>'
-          : `<button class="btn grande" data-conversar>${ic('chat')}Conversar e pedir orçamento</button>`}
+          : `<button class="btn grande" data-conversar>${ic('chat')}Solicitar orçamento</button>`}
         <p class="nota">${ic('cadeado')}O WhatsApp é liberado depois que você contratar e pagar pelo app.</p>
       </div>
     </section>
@@ -835,9 +961,9 @@ async function telaPrestador(id) {
       <div class="galeria" id="galeria-pub">${galeriaHTML(fotos, me?.is_admin)}</div>` : ''}
     <div class="secao-tit"><h2>Avaliações</h2></div>
     ${(avs || []).map((a) => `<div class="card avaliacao"><div class="linha-esp"><b>${esc(a.autor?.nome)}</b><span class="estrelas" aria-label="${a.nota} de 5">${estrelas(a.nota)}</span></div>
-      <div class="meta">${data(a.criado_em)}</div>${a.comentario ? `<p>${esc(a.comentario)}</p>` : ''}</div>`).join('') || '<div class="card vazio">Ainda sem avaliações.</div>'}
+      <div class="meta">${data(a.criado_em)}</div>${a.comentario ? `<p>${esc(a.comentario)}</p>` : ''}</div>`).join('') || '<div class="card vazio">Este profissional ainda não recebeu avaliações.</div>'}
     ${podeConversar ? `<div class="barra-cta"><div>${p.preco_base ? `<small>a partir de</small><b>${brl(p.preco_base)}</b>` : `<b>${esc(p.nome.split(' ')[0])}</b><small>${nomeCategoria(p.categoria_id)}</small>`}</div>
-      <button class="btn" data-conversar>${ic('chat')}Pedir orçamento</button></div>` : ''}`;
+      <button class="btn" data-conversar>${ic('chat')}Solicitar orçamento</button></div>` : ''}`;
   document.getElementById('galeria-pub')?.addEventListener('click', async (e) => {
     const apagar = e.target.closest('[data-apagar]');
     if (apagar) { if (await apagarFoto(apagar.dataset.apagar, fotos)) rota(); return; }
@@ -860,17 +986,35 @@ async function telaPrestador(id) {
 // ---------------------------------------------------------------- conversas
 async function telaConversas() {
   const { data: lista, error } = await sb.from('conversas')
-    .select('id,criado_em,contratante:contratante_id(id,nome,foto_url),prestador:prestador_id(id,nome,foto_url)')
+    .select('id,criado_em,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url),prestador:prestador_id(id,nome,foto_url,categoria_id)')
     .order('criado_em', { ascending: false });
   if (error) throw error;
-  $app.innerHTML = `${lista.map((c) => {
-    const souPrestador = c.prestador.id === me.id;
+  const ids = (lista || []).map((c) => c.id);
+  const [{ data: msgs }, { data: cts }] = ids.length ? await Promise.all([
+    sb.from('mensagens').select('conversa_id,autor_id,texto,criado_em,bloqueada').in('conversa_id', ids).order('criado_em', { ascending: false }),
+    sb.from('contratacoes').select('conversa_id,status,criado_em').in('conversa_id', ids).order('criado_em', { ascending: false }),
+  ]) : [{ data: [] }, { data: [] }];
+  const ultima = {}, situacao = {};
+  (msgs || []).forEach((m) => { if (!ultima[m.conversa_id]) ultima[m.conversa_id] = m; });
+  (cts || []).forEach((c) => { if (!situacao[c.conversa_id] && c.status !== 'cancelada') situacao[c.conversa_id] = c.status; });
+  const l = lidas();
+  const quando = (d) => { const dt = new Date(d), hoje = new Date(); return dt.toDateString() === hoje.toDateString() ? dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }); };
+  const ordenadas = [...(lista || [])].sort((a, b) => (ultima[b.id]?.criado_em || b.criado_em).localeCompare(ultima[a.id]?.criado_em || a.criado_em));
+  const rotulo = (st, souPrestador) => ({ proposta: souPrestador ? 'Proposta enviada' : 'Proposta recebida', paga: 'Contratado', concluida: 'Concluído' }[st]);
+  $app.innerHTML = ordenadas.length ? `<div class="lista-conversas">${ordenadas.map((c) => {
+    const souPrestador = c.prestador_id === me.id;
     const outro = souPrestador ? c.contratante : c.prestador;
-    return `<a class="card linha" href="#/chat/${c.id}">${avatar(outro)}<div><b>${esc(outro.nome)}</b>
-      <div class="meta">${souPrestador ? 'Cliente interessado no seu serviço' : 'Profissional'} · ${data(c.criado_em)}</div></div></a>`;
-  }).join('') || '<div class="card vazio">Nenhuma conversa ainda. <a href="#/">Busque um profissional</a>.</div>'}`;
+    const m = ultima[c.id];
+    const naoLida = m && m.autor_id !== me.id && (!l[c.id] || m.criado_em > l[c.id]);
+    const st = situacao[c.id];
+    return `<a class="conversa ${naoLida ? 'nao-lida' : ''}" href="#/chat/${c.id}">${avatar(outro)}
+      <span class="cv-txt"><span class="cv-linha"><b>${esc(outro.nome)}</b><small>${quando(m?.criado_em || c.criado_em)}</small></span>
+        <span class="cv-servico">${souPrestador ? 'Cliente' : nomeCategoria(c.prestador.categoria_id)}${st ? ` · <span class="status s-${st}">${rotulo(st, souPrestador)}</span>` : ''}</span>
+        <span class="cv-ultima">${m ? `${m.autor_id === me.id ? 'Você: ' : ''}${esc(m.bloqueada ? 'Mensagem bloqueada' : m.texto)}` : 'Comece a conversa'}</span></span>
+      ${naoLida ? '<span class="bolinha" aria-label="Não lida"></span>' : ''}</a>`;
+  }).join('')}</div>`
+    : vazio('chat', 'Nenhuma conversa ainda', 'Suas conversas aparecerão aqui quando você entrar em contato com um profissional.', '<a class="btn pequeno" href="#/busca">Encontrar profissionais</a>');
 }
-
 async function telaChat(id, params) {
   const { data: c, error } = await sb.from('conversas')
     .select('id,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url,verificado),prestador:prestador_id(id,nome,foto_url,categoria_id,verificado,cadastur_status)')
@@ -896,6 +1040,7 @@ async function telaChat(id, params) {
   const $msgs = document.getElementById('msgs');
   const addMsg = (m) => {
     if (document.getElementById(`m${m.id}`)) return;
+    marcarLida(id);
     $msgs.insertAdjacentHTML('beforeend', `<div id="m${m.id}" class="msg ${m.autor_id === me.id ? 'minha' : ''} ${m.bloqueada ? 'bloqueada' : ''}">${esc(m.texto)}<span>${hora(m.criado_em)}</span></div>`);
     $msgs.scrollTop = $msgs.scrollHeight;
   };
@@ -913,16 +1058,25 @@ async function telaChat(id, params) {
         ${z ? `<a class="btn zap" target="_blank" rel="noopener" href="https://wa.me/55${z}">WhatsApp de ${esc(outro.nome.split(' ')[0])}</a>` : ''}
         ${k?.[0]?.email ? `<div class="meta">${esc(k[0].email)}</div>` : ''}</div>`;
     }
+    const etapas = (st) => { const i = { proposta: 0, paga: 1, concluida: 2 }[st] ?? -1;
+      return `<ol class="etapas">${['Proposta', 'Pago', 'Concluído'].map((t, k) => `<li class="${k <= i ? 'feita' : ''}">${t}</li>`).join('')}</ol>`; };
     const cards = (cts || []).map((ct) => `<div class="card proposta ${ct.status}">
-      <div class="linha-esp"><span class="eyebrow">Proposta</span><span class="status s-${ct.status}">${STATUS[ct.status]}</span></div>
-      <p>${esc(ct.descricao)}</p>
-      <div class="valor">${brl(ct.valor)}</div>
-      ${souPrestador ? `<div class="meta">Taxa do app (10%): ${brl(ct.comissao)} · <b>Você recebe ${brl(ct.valor_prestador)}</b>${ct.repassado_em ? ` · repassado em ${data(ct.repassado_em)}` : ''}</div>` : ''}
+      <div class="prop-cab"><span class="prop-ic">${ic('documento')}</span><div><b>${souPrestador ? 'Proposta enviada' : 'Proposta recebida'}</b><small>${data(ct.criado_em)}</small></div>
+        <span class="status s-${ct.status}">${STATUS[ct.status]}</span></div>
+      ${ct.status !== 'cancelada' ? etapas(ct.status) : ''}
+      <p class="prop-desc">${esc(ct.descricao)}</p>
+      <dl class="prop-valores">
+        <div><dt>Valor total</dt><dd>${brl(ct.valor)}</dd></div>
+        ${souPrestador ? `<div><dt>Taxa da plataforma (10%)</dt><dd>− ${brl(ct.comissao)}</dd></div>
+        <div class="destaque"><dt>Você recebe</dt><dd>${brl(ct.valor_prestador)}</dd></div>` : ''}
+      </dl>
+      ${souPrestador && ct.repassado_em ? `<p class="nota">${ic('check')}Repasse feito em ${data(ct.repassado_em)}.</p>` : ''}
+      ${!souPrestador && ct.status === 'proposta' ? `<p class="nota">${ic('escudo')}Seu pagamento fica protegido no app. O WhatsApp é liberado assim que o pagamento for confirmado.</p>` : ''}
       <div class="acoes">
-        ${ct.status === 'proposta' && !souPrestador ? `<button class="btn" data-pagar="${ct.id}">Pagar e contratar</button>` : ''}
-        ${ct.status === 'proposta' ? `<button class="btn sec" data-cancelar="${ct.id}">Cancelar</button>` : ''}
+        ${ct.status === 'proposta' && !souPrestador ? `<button class="btn" data-pagar="${ct.id}">Aceitar e pagar</button>` : ''}
+        ${ct.status === 'proposta' ? `<button class="btn sec" data-cancelar="${ct.id}">${souPrestador ? 'Cancelar proposta' : 'Recusar'}</button>` : ''}
         ${ct.status === 'paga' && !souPrestador ? `<button class="btn" data-concluir="${ct.id}">Serviço foi feito</button>` : ''}
-        ${ct.status === 'paga' && souPrestador ? '<span class="meta">Quando o cliente confirmar a conclusão, seu pagamento é liberado.</span>' : ''}
+        ${ct.status === 'paga' && souPrestador ? '<span class="meta">Quando o cliente confirmar que o serviço foi feito, seu pagamento é liberado.</span>' : ''}
       </div>
       ${ct.status === 'concluida' && !souPrestador && !avaliadas.has(ct.id) ? `<form class="avaliar" data-avaliar="${ct.id}">
         <b>Avalie o serviço:</b>
@@ -933,14 +1087,14 @@ async function telaChat(id, params) {
       <form id="fprop">
         <label>Descrição do serviço<textarea name="descricao" required maxlength="1000" placeholder="Ex: reboco de 20m² de parede, material por conta do cliente"></textarea></label>
         <label>Valor total (R$)<input name="valor" type="number" min="10" step="0.01" required></label>
-        <div class="meta" id="calc">Taxa do app: 10% · Você recebe: —</div>
+        <div class="meta" id="calc">Você paga 10% de comissão sobre o valor contratado. O restante é seu.</div>
         <button class="btn">Enviar proposta</button>
       </form></details>` : '';
     document.getElementById('contratos').innerHTML = contato + cards + novo;
     const fprop = document.getElementById('fprop');
     fprop?.valor.addEventListener('input', () => {
       const v = Number(fprop.valor.value || 0);
-      document.getElementById('calc').textContent = `Taxa do app (10%): ${brl(v * TAXA)} · Você recebe: ${brl(v - Math.round(v * TAXA * 100) / 100)}`;
+      document.getElementById('calc').textContent = `Comissão do app (10%): ${brl(v * TAXA)} · Você recebe: ${brl(v - Math.round(v * TAXA * 100) / 100)}`;
     });
     fprop?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -948,7 +1102,7 @@ async function telaChat(id, params) {
       if (temContato(v.descricao)) return toast(AVISO_CONTATO, 'erro');
       const { error: er } = await sb.rpc('enviar_proposta', { conv: id, p_descricao: v.descricao, p_valor: Number(v.valor) });
       if (er) return falha(er);
-      toast('Proposta enviada!');
+      toast('Pronto! Sua proposta foi enviada.');
       renderContratos();
     });
   };
@@ -961,7 +1115,7 @@ async function telaChat(id, params) {
         if (DEMO) {
           if (!(await confirmar('DEMONSTRAÇÃO: aqui abriria o checkout do Mercado Pago (Pix ou cartão). Simular pagamento aprovado?', 'Simular pagamento'))) return;
           await sb.demo.pagar(b.dataset.pagar);
-          toast('Pagamento aprovado! O WhatsApp dos dois foi liberado.');
+          toast('Pagamento confirmado! O WhatsApp dos dois foi liberado.');
           return renderContratos();
         }
         b.disabled = true; b.textContent = 'Abrindo pagamento…';
@@ -998,6 +1152,8 @@ async function telaChat(id, params) {
 
   const { data: msgs } = await sb.from('mensagens').select('*').eq('conversa_id', id).order('criado_em').limit(500);
   (msgs || []).forEach(addMsg);
+  marcarLida(id);
+  if (!(msgs || []).length) $msgs.innerHTML = `<p class="nota centro inicio-chat">Diga o que você precisa. Para sua segurança, o WhatsApp só é liberado depois do pagamento pelo app.</p>`;
   await renderContratos();
 
   const fmsg = document.getElementById('fmsg');
@@ -1030,30 +1186,74 @@ async function telaConta() {
     me.is_prestador ? sb.from('fotos_trabalhos').select('id', { count: 'exact', head: true }).eq('user_id', me.id) : Promise.resolve({ count: 0 }),
   ]);
   const verif = (verifs || [])[0];
-  const stVerif = me.verificado ? 'Verificada' : verif?.status === 'pendente' ? 'Em análise' : verif?.status === 'rejeitada' ? 'Não aprovada — envie de novo' : 'Ganhe o selo de verificado';
+  const stVerif = me.verificado ? 'Identidade verificada' : verif?.status === 'pendente' ? 'Estamos conferindo seus documentos' : verif?.status === 'rejeitada' ? 'Verificação recusada. Envie de novo' : 'Identidade não verificada';
   const papel = [me.is_contratante && 'Contrata serviços', me.is_prestador && (nomeCategoria(me.categoria_id) || 'Oferece serviços')].filter(Boolean).join(' · ');
+  // perfil profissional completo?
+  let completo = '';
+  if (me.is_prestador) {
+    const itens = [[!!me.foto_url, 'Coloque uma foto de perfil', '#/conta/foto'], [(me.bio || '').length >= 40, 'Complete sua descrição', '#/conta/dados'],
+      [!!me.categoria_id && !!me.cidade, 'Informe sua área e cidade', '#/conta/dados'], [!!me.preco_base, 'Informe um preço inicial', '#/conta/dados'],
+      [(nFotos || 0) >= 3, 'Adicione fotos dos seus trabalhos', '#/conta/fotos'], [!!me.verificado, 'Faça a verificação de identidade', '#/verificar']];
+    const pct = Math.round(itens.filter(([ok]) => ok).length / itens.length * 100);
+    const falta = itens.find(([ok]) => !ok);
+    completo = pct < 100 ? `<a class="card perfil-completo" href="${falta[2]}"><div class="linha-esp"><b>Seu perfil está ${pct}% completo</b><span class="meta">${ic('seta')}</span></div>
+      <div class="barra-pct" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${pct}%"></span></div>
+      <small>Próximo passo: ${falta[1]}</small></a>` : '';
+  }
+  const bloco = (titulo, itens) => `<h2 class="bloco-tit">${titulo}</h2><nav class="menu-conta" aria-label="${titulo}">${itens.join('')}</nav>`;
   $app.innerHTML = `
     ${me.suspenso ? '<div class="alerta">Conta suspensa por tentativas de passar contato fora do app.</div>'
       : me.avisos ? `<div class="alerta">Você tem ${me.avisos} aviso(s) por tentar passar contato. Com 3, a conta é suspensa.</div>` : ''}
     <div class="conta-topo">
       <a href="#/conta/foto" class="conta-foto" aria-label="Trocar foto">${avatar(me, 'grande')}<span class="conta-cam">${ic('camera')}</span></a>
-      <div><h1>${esc(me.nome)}</h1><p class="meta">${esc(papel)}</p>${me.verificado ? SELO : ''}</div>
+      <div><h1>${esc(me.nome)}</h1><p class="meta">${esc(papel)}</p><div class="selos">${me.verificado ? SELO : ''}${me.cadastur_status === 'aprovado' ? SELO_CADASTUR : ''}</div></div>
     </div>
-    ${me.is_prestador ? `<a class="banner claro" href="#/p/${me.id}">${ic('perfil')}<span><b>Ver meu perfil público</b><small>Como os clientes veem você</small></span>${ic('seta')}</a>` : ''}
-    <nav class="menu-conta" aria-label="Opções da conta">
-      ${itemMenu('#/conta/dados', 'perfil', 'Meus dados', me.is_prestador ? 'Nome, cidade, área, preço, WhatsApp e Pix' : 'Nome, cidade e WhatsApp')}
-      ${itemMenu('#/conta/foto', 'camera', 'Foto de perfil', me.foto_url ? 'Trocar foto' : 'Tire uma selfie')}
-      ${me.is_prestador ? itemMenu('#/conta/fotos', 'galeria', 'Fotos dos trabalhos', `${nFotos || 0} de ${MAX_FOTOS} fotos`) : ''}
-      ${itemMenu('#/verificar', 'documento', 'Verificar identidade', stVerif)}
-      ${itemMenu('#/conta/servicos', 'dinheiro', me.is_prestador ? 'Serviços e ganhos' : 'Minhas contratações', me.is_prestador ? 'Contratações e repasses' : 'Histórico e pagamentos')}
-      ${itemMenu('#/pedidos?ver=meus', 'pedidos', 'Meus pedidos publicados')}
-    </nav>
-    ${me.is_admin ? `<nav class="menu-conta">${itemMenu('#/admin', 'admin', 'Painel do administrador', 'Comissões, verificações, repasses e usuários')}</nav>` : ''}
-    <nav class="menu-conta">${itemMenu('#/termos', 'documento', 'Termos de uso e privacidade')}</nav>
+    ${completo}
+    ${bloco('Minha conta', [
+      itemMenu('#/conta/dados', 'perfil', 'Meus dados', 'Nome, cidade e WhatsApp'),
+      itemMenu('#/conta/foto', 'camera', 'Foto de perfil', me.foto_url ? 'Trocar foto' : 'Tire uma selfie'),
+      `<button type="button" class="menu-item" data-escolher-cidade><span class="mi-ic">${ic('pin')}</span><span class="mi-txt"><b>Minha cidade</b><small>${esc(nomeCidade(cidadeAtual()))}</small></span>${ic('seta', 'mi-seta')}</button>`,
+      itemMenu('#/conta/favoritos', 'coracao', 'Favoritos', `${favoritosIds.size} ${favoritosIds.size === 1 ? 'profissional salvo' : 'profissionais salvos'}`),
+    ])}
+    ${bloco('Minha atividade', [
+      itemMenu('#/conta/servicos', 'dinheiro', me.is_prestador ? 'Meus serviços e ganhos' : 'Minhas contratações', me.is_prestador ? 'Propostas, contratações e repasses' : 'Histórico e pagamentos'),
+      itemMenu('#/pedidos?ver=meus', 'pedidos', 'Meus pedidos publicados'),
+      itemMenu('#/conversas', 'chat', 'Mensagens'),
+    ])}
+    ${me.is_prestador ? bloco('Para profissionais', [
+      itemMenu(`#/p/${me.id}`, 'perfil', 'Meu perfil profissional', 'Veja como os clientes enxergam você'),
+      itemMenu('#/conta/fotos', 'galeria', 'Fotos dos trabalhos', `${nFotos || 0} de ${MAX_FOTOS} fotos`),
+      itemMenu('#/verificar', 'documento', 'Verificação de identidade', stVerif),
+      ehTurismo(me.categoria_id) ? itemMenu('#/conta/dados', 'mapa', 'Cadastur', me.cadastur_status === 'aprovado' ? 'Cadastur verificado' : me.cadastur_status === 'pendente' ? 'Em conferência' : 'Informe seu número') : '',
+      itemMenu('#/conta/dados', 'cadeado', 'Dados para recebimento', 'Chave Pix para os repasses'),
+    ]) : bloco('Quer trabalhar pelo app?', [itemMenu('#/conta/dados', 'pedidos', 'Oferecer meus serviços', 'Ative seu perfil profissional em Meus dados')])}
+    ${me.is_admin ? bloco('Administração', [itemMenu('#/admin', 'admin', 'Painel do administrador', 'Comissões, verificações, repasses e usuários')]) : ''}
+    ${bloco('Ajuda', [itemMenu('#/ajuda', 'ajuda', 'Ajuda e perguntas frequentes'), itemMenu('#/termos', 'documento', 'Termos de uso e privacidade')])}
     <button class="btn sec largo" id="sair">${ic('sair')}Sair da conta</button>`;
   document.getElementById('sair').addEventListener('click', async () => { await sb.auth.signOut(); location.hash = '#/'; });
 }
 
+async function telaFavoritos() {
+  const ids = [...favoritosIds];
+  if (!ids.length) {
+    $app.innerHTML = vazio('coracao', 'Nenhum favorito ainda', 'Toque no coração de um profissional para salvar e encontrar depois.', '<a class="btn pequeno" href="#/busca">Encontrar profissionais</a>');
+    return;
+  }
+  const { data } = await sb.from('profiles').select('id,nome,cidade,uf,bio,foto_url,categoria_id,preco_base,verificado,avaliacao_media,avaliacao_qtd,cadastur_status').in('id', ids);
+  $app.innerHTML = `<div class="grade">${await htmlCartoes(data || [])}</div>`;
+}
+
+function telaAjuda() {
+  const perguntas = [
+    ['Como eu contrato um profissional?', 'Busque o serviço, abra o perfil e toque em "Solicitar orçamento". Combine pelo chat, aceite a proposta e pague pelo app.'],
+    ['Por que não vejo o WhatsApp do profissional?', 'Para sua segurança, o contato só é liberado depois que o pagamento é confirmado pelo app. Assim o serviço fica registrado e protegido.'],
+    ['Quanto custa usar o app?', 'Para quem contrata, nada a mais: você paga o valor combinado. O profissional paga 10% de comissão sobre cada serviço.'],
+    ['Quando o profissional recebe?', 'Depois que você confirma que o serviço foi feito, o valor (já sem a comissão) é repassado ao profissional por Pix.'],
+    ['O que é o selo Verificado?', 'Significa que conferimos o documento e uma selfie do profissional. O selo Cadastur mostra que o profissional de turismo tem registro no Ministério do Turismo.'],
+    ['Posso publicar um pedido para vários profissionais?', 'Sim. Em Pedidos, toque em "Publicar". Os profissionais da área respondem pelo chat e você escolhe a melhor proposta.'],
+  ];
+  $app.innerHTML = `<div class="faq">${perguntas.map(([p, r]) => `<details class="card"><summary>${p}</summary><p>${r}</p></details>`).join('')}</div>`;
+}
 async function telaContaDados() {
   const { data: priv } = await sb.from('contatos_privados').select('*').eq('user_id', me.id).maybeSingle();
   const opcoes = categoriasOrdenadas().map((c) => `<option value="${c.id}" ${c.id === me.categoria_id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('');
@@ -1288,16 +1488,16 @@ async function telaVerificar() {
 // ---------------------------------------------------------------- pedidos de empresas e clientes
 async function telaPedidos(params) {
   const meus = !!me && params.get('ver') === 'meus';
-  const opcoes = categoriasOrdenadas().map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  const minhaArea = me?.is_prestador && !meus ? me.categoria_id : '';
+  const opcoes = categoriasOrdenadas().map((c) => `<option value="${c.id}" ${String(c.id) === String(minhaArea) ? 'selected' : ''}>${esc(c.nome)}</option>`).join('');
   $app.innerHTML = `
-    ${me ? `<div class="segmentado"><a href="#/pedidos" class="${meus ? '' : 'ativo'}">Pedidos abertos</a><a href="#/pedidos?ver=meus" class="${meus ? 'ativo' : ''}">Meus pedidos</a></div>` : ''}
-    ${meus ? '' : `<p class="nota">Empresas e clientes publicam o que precisam. Toque em <b>Tenho interesse</b> para conversar pelo app.</p>
+    ${abasPedidos(meus ? 'meus' : 'abertos')}
+    ${meus ? '' : `<p class="nota">${me?.is_prestador ? 'Oportunidades da sua área e cidade. Toque em <b>Tenho interesse</b> para conversar e enviar sua proposta.' : 'Empresas e clientes publicam o que precisam. Profissionais respondem pelo chat do app.'}</p>
     <div class="filtros-pedido">
       <select id="f-cat" aria-label="Área"><option value="">Todas as áreas</option>${opcoes}</select>
       ${chipCidade()}
     </div>`}
-    <div id="lista-pedidos"></div>
-    ${me && !me.suspenso ? `<a class="fab" href="#/pedidos/novo">${ic('mais')}Publicar pedido</a>` : ''}`;
+    <div id="lista-pedidos">${esqueleto(2)}</div>`;
   const carregar = async () => {
     let q = sb.from('pedidos').select('*,contratante:contratante_id(id,nome,foto_url,verificado)').order('criado_em', { ascending: false }).limit(80);
     if (meus) q = q.eq('contratante_id', me.id);
@@ -1317,14 +1517,15 @@ async function telaPedidos(params) {
         <div class="pedido-topo"><span class="cat-mini">${ic(ICONE_CAT[cat?.nome] || 'grade')}${esc(cat ? nomeCurto(cat.nome) : '')}</span>
           <span class="meta">${x.status === 'fechado' ? '<b>Fechado</b> · ' : ''}${data(x.criado_em)}</span></div>
         <h3>${esc(x.titulo)}</h3>
-        <div class="meta">${ic('pin')}${esc(x.cidade)}${x.uf ? ' · ' + esc(x.uf) : ''} · ${ic('pessoas')}${x.vagas} ${x.vagas > 1 ? 'vagas' : 'vaga'}${x.orcamento ? ` · até ${brl(x.orcamento)}` : ''}</div>
+        <div class="meta">${ic('pin')}${esc(x.cidade)}${x.uf ? ' · ' + esc(x.uf) : ''} · ${ic('pessoas')}${x.vagas} ${x.vagas > 1 ? 'vagas' : 'vaga'}${x.prazo ? ` · ${ic('relogio')}${esc(x.prazo)}` : ''}${x.orcamento ? ` · até ${brl(x.orcamento)}` : ''}</div>
         ${x.descricao ? `<p>${esc(x.descricao)}</p>` : ''}
         <div class="pedido-rodape">
           <div class="quem">${avatar(x.contratante, 'mini')}<span>${esc(x.contratante?.nome)}</span>${x.contratante?.verificado ? `<span class="verif-ic" title="Verificado">${ic('check')}</span>` : ''}</div>
           ${meu ? (x.status === 'aberto' ? `<button class="btn sec pequeno" data-fechar="${x.id}">Fechar pedido</button>` : '')
             : `<button class="btn pequeno" data-interesse="${x.id}">Tenho interesse</button>`}
         </div></div>`;
-    }).join('') || `<div class="card vazio">${meus ? 'Você ainda não publicou pedidos.' : 'Nenhum pedido aberto com esses filtros.'}</div>`;
+    }).join('') || (meus ? vazio('pedidos', 'Você ainda não publicou pedidos', 'Publique o que precisa e receba propostas de profissionais.', '<a class="btn pequeno" href="#/pedidos/novo">Publicar pedido</a>')
+      : vazio('pedidos', 'Ainda não há oportunidades por aqui', 'Volte em breve para conferir ou escolha outra área ou cidade.'));
   };
   if (!meus) {
     document.getElementById('f-cat').addEventListener('change', () => carregar().catch(falha));
@@ -1337,7 +1538,7 @@ async function telaPedidos(params) {
       if (!me.is_prestador) { toast('Para responder pedidos, marque "Ofereço serviços" em Conta > Meus dados.', 'erro'); return; }
       const { data: conv, error } = await sb.rpc('demonstrar_interesse', { pid: b.dataset.interesse });
       if (error) return falha(error);
-      toast('Interesse enviado! Continue a conversa por aqui.');
+      toast('Pronto! Agora envie sua proposta pelo chat.');
       location.hash = `#/chat/${conv}`;
     }
     if (b.dataset.fechar && await confirmar('Fechar este pedido? Ele deixa de aparecer para os profissionais.', 'Fechar pedido')) {
@@ -1350,20 +1551,27 @@ async function telaPedidos(params) {
   await carregar();
 }
 
+function abasPedidos(atual) {
+  if (!me) return '';
+  return `<div class="segmentado tres">${[['abertos', '#/pedidos', 'Oportunidades'], ['meus', '#/pedidos?ver=meus', 'Meus pedidos'], ['novo', '#/pedidos/novo', 'Publicar']]
+    .map(([k, h, t]) => `<a href="${h}" class="${k === atual ? 'ativo' : ''}">${k === 'novo' ? ic('mais') : ''}${t}</a>`).join('')}</div>`;
+}
+
 function telaNovoPedido() {
   if (me.suspenso) { $app.innerHTML = '<div class="alerta">Conta suspensa.</div>'; return; }
   let cat = '';
-  $app.innerHTML = `<section class="cadastro">
+  $app.innerHTML = `${abasPedidos('novo')}<section class="cadastro">
     <h1>O que você precisa?</h1>
     <p class="nota">Os profissionais da área veem seu pedido e respondem pelo chat do app.</p>
     <form id="fnovo" class="form-passo">
       <label>Título do pedido<input name="titulo" required minlength="5" maxlength="120" placeholder="Ex: 3 ajudantes de obra por 10 dias"></label>
       <p class="rotulo">Área</p>
       <div class="cat-grade escolher compacta" id="novo-cats">${categoriasOrdenadas().map((c) => tileCategoria(c, 'button', 'aria-pressed="false"')).join('')}</div>
-      <div class="dupla"><label>Cidade<input name="cidade" value="${esc(me.cidade)}" required></label>
-        <label>UF<input name="uf" value="${esc(me.uf)}" maxlength="2" required style="text-transform:uppercase"></label></div>
-      <div class="dupla igual"><label>Vagas<input name="vagas" type="number" min="1" max="50" value="1" required></label>
-        <label>Orçamento total (R$)<input name="orcamento" type="number" min="0" step="1" placeholder="Opcional"></label></div>
+      <div class="dupla"><label>Em qual cidade?<input name="cidade" value="${esc(cidadeAtual()?.cidade || me.cidade)}" required></label>
+        <label>UF<input name="uf" value="${esc(cidadeAtual()?.uf || me.uf)}" maxlength="2" required style="text-transform:uppercase"></label></div>
+      <div class="dupla igual"><label>Quantas pessoas?<input name="vagas" type="number" min="1" max="50" value="1" required></label>
+        <label>Para quando?<select name="prazo">${['Urgente', 'Esta semana', 'Próxima semana', 'Este mês', 'Sem pressa'].map((t) => `<option>${t}</option>`).join('')}</select></label></div>
+      <label>Orçamento total estimado (R$)<input name="orcamento" type="number" min="0" step="1" placeholder="Opcional"></label>
       <label>Detalhes<textarea name="descricao" maxlength="1500" placeholder="Datas, horário, bairro, o que está incluso…"></textarea></label>
       <p class="nota">${ic('cadeado')}Não coloque telefone ou e-mail: os profissionais falam com você pelo chat.</p>
       <button class="btn largo">Publicar pedido</button>
@@ -1382,10 +1590,10 @@ function telaNovoPedido() {
     if (temContato(v.titulo) || temContato(v.descricao)) return toast(AVISO_CONTATO, 'erro');
     const { error } = await sb.from('pedidos').insert({
       contratante_id: me.id, titulo: v.titulo.trim(), descricao: (v.descricao || '').trim(), categoria_id: Number(cat),
-      cidade: v.cidade.trim(), uf: v.uf.toUpperCase().trim(), vagas: Number(v.vagas), orcamento: v.orcamento ? Number(v.orcamento) : null,
+      cidade: v.cidade.trim(), uf: v.uf.toUpperCase().trim(), vagas: Number(v.vagas), orcamento: v.orcamento ? Number(v.orcamento) : null, prazo: v.prazo,
     });
     if (error) return falha(error);
-    toast('Pedido publicado! Os interessados vão aparecer em Mensagens.');
+    toast('Pronto! Seu pedido foi publicado. Os interessados vão aparecer em Mensagens.');
     location.hash = '#/pedidos?ver=meus';
   });
 }

@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v6';
+const CHAVE = 'contrata-demo-v7';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -286,7 +286,8 @@ function semente() {
   ];
   // pedidos publicados por empresas e clientes
   const PD = (id, dono, titulo, cat, cidade, uf, vagas, orcamento, descricao, horasAtras) =>
-    ({ id, contratante_id: dono, titulo, descricao, categoria_id: cat, cidade, uf, vagas, orcamento, status: 'aberto', criado_em: agora(60 * horasAtras) });
+    ({ id, contratante_id: dono, titulo, descricao, categoria_id: cat, cidade, uf, vagas, orcamento, status: 'aberto', criado_em: agora(60 * horasAtras),
+      prazo: ['Esta semana', 'Próxima semana', 'Este mês', 'Urgente', 'Sem pressa'][id.length % 5] });
   const pedidos = [
     PD('pd-1', 'u-emp1', '3 ajudantes de obra por 10 dias', 21, 'São Paulo', 'SP', 3, 4500, 'Obra residencial na zona sul. Diária de R$ 150 por ajudante, das 7h às 16h. Almoço incluso.', 2),
     PD('pd-2', 'u-emp1', 'Pedreiro para acabamento de 4 apartamentos', 1, 'São Paulo', 'SP', 2, 12000, 'Assentamento de porcelanato e rejunte. Material fornecido pela construtora.', 26),
@@ -312,7 +313,7 @@ function semente() {
   return {
     users: profiles.map((p) => ({ id: p.id, email: contatos_privados.find((c) => c.user_id === p.id).email, senha: 'demo123' })),
     categorias: CATEGORIAS, profiles, contatos_privados, conversas, mensagens, contratacoes, avaliacoes, tentativas_burla, fotos_trabalhos,
-    verificacoes, pedidos, docs,
+    verificacoes, pedidos, docs, favoritos: [{ user_id: 'u-cliente', prestador_id: 'u-pedro', criado_em: agora(600) }],
     seq: { mensagens: mid, tentativas_burla: 2, fotos_trabalhos: fid, verificacoes: 4 }, sessao: 'u-cliente',
   };
 }
@@ -351,6 +352,7 @@ const VISIVEL = {
   tentativas_burla: () => isAdmin(),
   verificacoes: (r) => r.user_id === uid() || isAdmin(),
   pedidos: (r) => r.status === 'aberto' || r.contratante_id === uid() || isAdmin(),
+  favoritos: (r) => r.user_id === uid(),
 };
 const EDITAVEL = {
   profiles: ['nome', 'cidade', 'uf', 'bio', 'foto_url', 'categoria_id', 'preco_base', 'is_prestador', 'is_contratante'],
@@ -464,6 +466,12 @@ class Consulta {
     return { data: null, error: null };
   }
   apagar() {
+    if (this.t === 'favoritos') {
+      const alvo = new Set(this.filtrar().filter((r) => r.user_id === uid()).map((r) => r.prestador_id));
+      db.favoritos = db.favoritos.filter((r) => !(r.user_id === uid() && alvo.has(r.prestador_id)));
+      salvar();
+      return { data: null, error: null };
+    }
     if (this.t !== 'fotos_trabalhos') return erro(`permission denied for table ${this.t}`);
     const alvo = new Set(this.filtrar().filter((r) => r.user_id === uid() || isAdmin()).map((r) => r.id));
     db.fotos_trabalhos = db.fotos_trabalhos.filter((r) => !alvo.has(r.id));
@@ -518,11 +526,14 @@ class Consulta {
       db.verificacoes.push(d);
       if (!salvar()) { db.verificacoes.pop(); return erro('O espaço da demonstração neste navegador acabou. Toque em Recomeçar.'); }
       return this.responder([d]);
+    } else if (this.t === 'favoritos') {
+      if (d.user_id !== uid()) return erro('new row violates row-level security policy for table "favoritos"');
+      if (!db.favoritos.some((f) => f.user_id === uid() && f.prestador_id === d.prestador_id)) db.favoritos.push({ ...d, criado_em: agora() });
     } else if (this.t === 'pedidos') {
       if (d.contratante_id !== uid() || me.suspenso) return erro('new row violates row-level security policy for table "pedidos"');
       if (temContato(d.titulo) || temContato(d.descricao)) return erro('Não é permitido colocar contato no pedido. Os profissionais falam com você pelo chat do app.');
       if (!d.titulo || d.titulo.length < 5) return erro('Descreva o pedido com pelo menos 5 letras.');
-      Object.assign(d, { id: uuid(), status: 'aberto', criado_em: agora(), descricao: d.descricao || '' });
+      Object.assign(d, { id: uuid(), status: 'aberto', criado_em: agora(), descricao: d.descricao || '', prazo: d.prazo || '' });
       db.pedidos.push(d);
     } else if (this.t === 'fotos_trabalhos') {
       if (d.user_id !== uid() || me.suspenso) return erro('new row violates row-level security policy for table "fotos_trabalhos"');
@@ -731,7 +742,8 @@ function montarBarra(sb) {
     ['prestador', 'Pedro', 'Pedreiro', '#/conversas'], ['ajudante', 'Marcos', 'Ajudante geral', '#/pedidos'], ['admin', 'Você', 'Administrador do app', '#/admin']];
   const atualizarBotao = () => {
     const p = db.profiles.find((x) => x.id === db.sessao);
-    botao.innerHTML = `<span class="demo-tag">Demo</span>${p ? p.nome.split(' ')[0] : 'Sem login'}`;
+    botao.innerHTML = `<span class="demo-tag">Demo</span><span class="demo-nome">${p ? p.nome.split(' ')[0] : 'Sem login'}</span>`;
+    botao.setAttribute('aria-label', `Demonstração: vendo como ${p ? p.nome : 'visitante'}. Toque para trocar.`);
   };
   const abrir = () => {
     const fundo = document.createElement('div');
@@ -740,7 +752,7 @@ function montarBarra(sb) {
     const linha = (valor, nome, sub, ativo) => `<button type="button" class="demo-op ${ativo ? 'ativo' : ''}" data-v="${valor}"><b>${nome}</b><small>${sub}</small></button>`;
     fundo.innerHTML = `<div class="demo-folha" role="dialog" aria-modal="true" aria-label="Demonstração">
       <div class="demo-cab"><b>Demonstração</b><button type="button" class="demo-fechar" aria-label="Fechar">✕</button></div>
-      <p class="nota">Veja o app como cada tipo de pessoa. Os dados ficam só neste navegador.</p>
+      <p class="nota">Veja o app como cada tipo de pessoa. <b>Todos os nomes, pedidos e valores são fictícios</b> e ficam só neste navegador. Nenhum pagamento é real.</p>
       <div class="demo-lista">
         ${papeis.map(([k, nome, sub]) => linha(k, nome, sub, PERFIS_DEMO[k] === db.sessao)).join('')}
         ${novas.map((u) => linha(`u:${u.id}`, db.profiles.find((p) => p.id === u.id)?.nome || u.email, 'Conta que você criou', u.id === db.sessao)).join('')}

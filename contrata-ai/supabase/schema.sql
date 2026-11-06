@@ -170,6 +170,15 @@ create table if not exists public.pedidos (
   criado_em       timestamptz not null default now()
 );
 create index if not exists pedidos_abertos_idx on public.pedidos (status, criado_em desc);
+alter table public.pedidos add column if not exists prazo text not null default '';
+
+-- ---------- Favoritos (profissionais salvos pelo usuário) ----------
+create table if not exists public.favoritos (
+  user_id       uuid not null references public.profiles(id) on delete cascade,
+  prestador_id  uuid not null references public.profiles(id) on delete cascade,
+  criado_em     timestamptz not null default now(),
+  primary key (user_id, prestador_id)
+);
 
 -- =====================================================================
 -- Funções auxiliares
@@ -659,6 +668,15 @@ create policy pedidos_editar on public.pedidos for update
   using (contratante_id = auth.uid() or public.is_admin()) with check (contratante_id = auth.uid() or public.is_admin());
 revoke update on public.pedidos from anon, authenticated;
 grant update (status) on public.pedidos to authenticated;
+
+-- favoritos: cada um vê e mexe só nos seus
+alter table public.favoritos enable row level security;
+drop policy if exists fav_ler on public.favoritos;
+create policy fav_ler on public.favoritos for select using (user_id = auth.uid());
+drop policy if exists fav_criar on public.favoritos;
+create policy fav_criar on public.favoritos for insert with check (user_id = auth.uid());
+drop policy if exists fav_apagar on public.favoritos;
+create policy fav_apagar on public.favoritos for delete using (user_id = auth.uid());
 
 -- funções internas não podem ser chamadas direto pelo app
 revoke execute on function public.registrar_burla(uuid, uuid, text, text) from public, anon, authenticated;
