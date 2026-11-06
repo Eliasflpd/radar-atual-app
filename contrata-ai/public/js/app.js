@@ -36,6 +36,7 @@ const ICONES = {
   relogio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   alerta: '<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.2v.3"/>',
   seta: '<path d="m9 5 7 7-7 7"/>',
+  baixo: '<path d="m6 9 6 6 6-6"/>',
   inicio: '<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9Z"/>',
   galeria: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
   tijolo: '<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9.7h18M3 14.3h18M9 5v4.7M15 9.7v4.6M9 14.3V19"/>',
@@ -87,7 +88,7 @@ const categoriasOrdenadas = () => [...categorias].sort((a, b) => {
   return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.nome.localeCompare(b.nome);
 });
 const CURTOS = { 'Técnico em informática': 'Informática', 'Professor particular': 'Professor', 'Passeios 4x4 e quadriciclo': 'Passeios 4x4',
-  'Instrutor de kitesurfe': 'Kitesurfe', 'Técnico em refrigeração': 'Ar-condicionado', 'Trabalhador rural': 'Rural' };
+  'Instrutor de kitesurfe': 'Kitesurfe', 'Técnico em refrigeração': 'Refrigeração', 'Trabalhador rural': 'Rural' };
 const nomeCurto = (n) => CURTOS[n] || n.split(' / ')[0];
 const tileCategoria = (c, tag = 'a', extra = '') => `<${tag} class="cat-tile" ${tag === 'a' ? `href="#/categoria/${c.id}"` : `type="button" data-cat="${c.id}"`} ${extra}>
   <span class="cat-ic">${ic(ICONE_CAT[c.nome] || 'grade')}</span><span class="cat-nome">${esc(nomeCurto(c.nome))}</span></${tag}>`;
@@ -332,6 +333,76 @@ async function rota() {
   }
 }
 
+// ---------------------------------------------------------------- cidade escolhida
+// Vale para o app todo (início, categorias, busca e pedidos) e fica lembrada neste aparelho.
+const CHAVE_CIDADE = 'contrata-cidade';
+let cidadeEscolhida; // undefined = ainda não escolheu; null = todas as cidades
+function cidadeAtual() {
+  if (cidadeEscolhida !== undefined) return cidadeEscolhida;
+  try {
+    const v = localStorage.getItem(CHAVE_CIDADE);
+    if (v !== null) { cidadeEscolhida = v ? JSON.parse(v) : null; return cidadeEscolhida; }
+  } catch { /* sem storage */ }
+  return me?.cidade ? { cidade: me.cidade, uf: me.uf } : null;
+}
+function salvarCidade(c) {
+  cidadeEscolhida = c;
+  try { localStorage.setItem(CHAVE_CIDADE, c ? JSON.stringify(c) : ''); } catch { /* sem storage */ }
+}
+const nomeCidade = (c) => (c ? `${c.cidade}${c.uf ? ' · ' + c.uf : ''}` : 'Todas as cidades');
+const chipCidade = (extra = '') => `<button type="button" class="cidade-chip ${extra}" data-escolher-cidade aria-label="Escolher cidade">${ic('pin')}<span>${esc(nomeCidade(cidadeAtual()))}</span>${ic('baixo')}</button>`;
+
+async function escolherCidade() {
+  const { data } = await sb.from('profiles').select('cidade,uf').eq('is_prestador', true).eq('suspenso', false).limit(5000);
+  const conta = {};
+  (data || []).forEach((p) => {
+    const cidade = (p.cidade || '').trim();
+    if (!cidade) return;
+    const k = `${cidade.toLowerCase()}|${(p.uf || '').toUpperCase()}`;
+    conta[k] ||= { cidade, uf: (p.uf || '').toUpperCase(), n: 0 };
+    conta[k].n++;
+  });
+  const cidades = Object.values(conta).sort((a, b) => b.n - a.n || a.cidade.localeCompare(b.cidade));
+  const atual = cidadeAtual();
+  const fundo = document.createElement('div');
+  fundo.className = 'modal-fundo demo-fundo';
+  fundo.innerHTML = `<div class="demo-folha cidade-folha" role="dialog" aria-modal="true" aria-label="Escolher cidade">
+    <div class="demo-cab"><b>Onde você está?</b><button type="button" class="demo-fechar" aria-label="Fechar">✕</button></div>
+    <label class="filtro-cidade">${ic('busca')}<input id="busca-cidade" placeholder="Digite o nome da cidade" autocomplete="off"></label>
+    <div class="demo-lista" id="lista-cidades"></div>
+  </div>`;
+  const $lista = fundo.querySelector('#lista-cidades');
+  const semAcento = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const desenhar = (termo = '') => {
+    const t = semAcento(termo.trim());
+    const achadas = cidades.filter((c) => !t || semAcento(c.cidade).includes(t));
+    const ativa = (c) => atual && semAcento(atual.cidade) === semAcento(c.cidade) && (atual.uf || '') === c.uf;
+    $lista.innerHTML = (t ? '' : `<button type="button" class="demo-op ${atual ? '' : 'ativo'}" data-i="todas"><b>Todas as cidades</b><small>Ver profissionais de qualquer lugar</small></button>`)
+      + achadas.map((c) => `<button type="button" class="demo-op ${ativa(c) ? 'ativo' : ''}" data-i="${cidades.indexOf(c)}"><b>${esc(c.cidade)}${c.uf ? ` · ${esc(c.uf)}` : ''}</b><small>${c.n} ${c.n > 1 ? 'profissionais' : 'profissional'}</small></button>`).join('')
+      + (t && !achadas.some((c) => semAcento(c.cidade) === t) ? `<button type="button" class="demo-op" data-i="outra"><b>Usar "${esc(termo.trim())}"</b><small>Ainda sem profissionais cadastrados aqui</small></button>` : '');
+  };
+  desenhar();
+  fundo.querySelector('#busca-cidade').addEventListener('input', (e) => desenhar(e.target.value));
+  fundo.addEventListener('click', (e) => {
+    if (e.target === fundo || e.target.closest('.demo-fechar')) { fundo.remove(); return; }
+    const b = e.target.closest('[data-i]');
+    if (!b) return;
+    const i = b.dataset.i;
+    if (i === 'todas') salvarCidade(null);
+    else if (i === 'outra') salvarCidade({ cidade: fundo.querySelector('#busca-cidade').value.trim(), uf: '' });
+    else salvarCidade({ cidade: cidades[i].cidade, uf: cidades[i].uf });
+    fundo.remove();
+    toast(`Mostrando: ${nomeCidade(cidadeAtual())}`);
+    rota();
+  });
+  document.body.appendChild(fundo);
+  fundo.querySelector('#busca-cidade').focus();
+}
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-escolher-cidade]')) escolherCidade().catch(falha);
+  if (e.target.closest('[data-todas-cidades]')) { salvarCidade(null); rota(); }
+});
+
 // "Só quero dar uma olhada" — não mostra mais as boas-vindas nesta visita
 const jaOlhou = () => { try { return sessionStorage.getItem('contrata-olhou') === '1'; } catch { return true; } };
 const marcarOlhou = () => { try { sessionStorage.setItem('contrata-olhou', '1'); } catch { /* sem storage */ } };
@@ -357,7 +428,12 @@ function telaBoasVindas() {
 // ---------------------------------------------------------------- início
 async function telaInicio() {
   const cats = categoriasOrdenadas();
+  const cid = cidadeAtual();
   $app.innerHTML = `
+    <header class="home-cab">
+      <div class="home-marca">${LOGO}<div><b>Contrata <em>Aí</em></b><small>Profissionais de todas as áreas perto de você</small></div></div>
+      ${chipCidade('grande')}
+    </header>
     <div class="ola">${me ? `<p>Olá, ${esc(me.nome.split(' ')[0])}</p>` : ''}<h1>Do que você precisa hoje?</h1></div>
     <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Buscar serviço ou profissional" aria-label="Buscar serviço ou profissional"><button class="btn pequeno">Buscar</button></form>
     <div class="secao-tit"><h2>Categorias</h2><button type="button" class="link" id="ver-todas">Ver todas</button></div>
@@ -365,7 +441,7 @@ async function telaInicio() {
     ${me?.is_prestador
       ? `<a class="banner" href="#/pedidos">${ic('pedidos')}<span><b>Pedidos de empresas e clientes</b><small>Veja quem está precisando do seu serviço</small></span>${ic('seta')}</a>`
       : `<a class="banner" href="#/pedidos/novo">${ic('pedidos')}<span><b>Precisa de vários profissionais?</b><small>Publique um pedido e receba interessados</small></span>${ic('seta')}</a>`}
-    <div class="secao-tit"><h2>Bem avaliados</h2></div>
+    <div class="secao-tit"><h2>Bem avaliados${cid ? ` em ${esc(cid.cidade)}` : ''}</h2></div>
     <div class="grade" id="resultados"></div>`;
   document.getElementById('fb').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -377,7 +453,7 @@ async function telaInicio() {
     document.querySelectorAll('#cats [data-extra]').forEach((t) => { t.hidden = !mostrar; });
     e.target.textContent = mostrar ? 'Ver menos' : 'Ver todas';
   });
-  await listarPrestadores({}, 6);
+  await listarPrestadores({ cidade: cid?.cidade }, 6);
 }
 
 // Lista de profissionais por área ou por busca
@@ -386,16 +462,14 @@ async function telaLista({ cat, q }) {
   if (c) tituloTopo(nomeCurto(c.nome));
   $app.innerHTML = `
     <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" value="${esc(q || '')}" placeholder="${c ? `Buscar em ${esc(nomeCurto(c.nome))}` : 'Buscar serviço ou profissional'}" aria-label="Buscar"></form>
-    <label class="filtro-cidade">${ic('pin')}<input id="f-cidade" placeholder="Filtrar por cidade" aria-label="Filtrar por cidade"></label>
+    <div class="linha-filtros">${chipCidade()}</div>
     ${c && ehTurismo(c.id) ? `<label class="check chip-check"><input type="checkbox" id="f-cadastur"> Só com Cadastur conferido</label>` : ''}
     <p class="meta qtd" id="qtd"></p>
     <div class="grade" id="resultados"></div>`;
-  const filtros = () => ({ cat: c?.id, q: document.querySelector('#fb input').value.trim(), cidade: document.getElementById('f-cidade').value.trim(), cadastur: !!document.getElementById('f-cadastur')?.checked });
+  const filtros = () => ({ cat: c?.id, q: document.querySelector('#fb input').value.trim(), cidade: cidadeAtual()?.cidade, cadastur: !!document.getElementById('f-cadastur')?.checked });
   document.getElementById('f-cadastur')?.addEventListener('change', () => listarPrestadores(filtros()).catch(falha));
   document.getElementById('fb').addEventListener('submit', (e) => { e.preventDefault(); listarPrestadores(filtros()).catch(falha); });
-  let espera;
-  document.getElementById('f-cidade').addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(() => listarPrestadores(filtros()).catch(falha), 300); });
-  await listarPrestadores({ cat: c?.id, q });
+  await listarPrestadores(filtros());
 }
 
 async function listarPrestadores(f = {}, limite = 60) {
@@ -419,7 +493,8 @@ async function listarPrestadores(f = {}, limite = 60) {
   if ($qtd) $qtd.textContent = lista.length === 1 ? '1 profissional encontrado' : `${lista.length} profissionais encontrados`;
   document.getElementById('resultados').innerHTML = lista.length
     ? lista.map((p) => cardPrestador(p, fotosDe[p.id] || [])).join('')
-    : '<div class="card vazio">Nenhum profissional encontrado. Tente outra cidade ou outra palavra.</div>';
+    : f.cidade ? `<div class="card vazio">Ainda não há profissionais${f.cat ? ' dessa área' : ''} em ${esc(f.cidade)}.<br><button type="button" class="btn sec pequeno" data-todas-cidades style="margin-top:12px">Ver de todas as cidades</button></div>`
+    : '<div class="card vazio">Nenhum profissional encontrado. Tente outra palavra.</div>';
 }
 
 function cardPrestador(p, fotos = []) {
@@ -1138,7 +1213,7 @@ async function telaPedidos(params) {
     ${meus ? '' : `<p class="nota">Empresas e clientes publicam o que precisam. Toque em <b>Tenho interesse</b> para conversar pelo app.</p>
     <div class="filtros-pedido">
       <select id="f-cat" aria-label="Área"><option value="">Todas as áreas</option>${opcoes}</select>
-      <label class="filtro-cidade">${ic('pin')}<input id="f-cidade" placeholder="Cidade" aria-label="Cidade"></label>
+      ${chipCidade()}
     </div>`}
     <div id="lista-pedidos"></div>
     ${me && !me.suspenso ? `<a class="fab" href="#/pedidos/novo">${ic('mais')}Publicar pedido</a>` : ''}`;
@@ -1148,7 +1223,7 @@ async function telaPedidos(params) {
     else {
       q = q.eq('status', 'aberto');
       const cat = document.getElementById('f-cat').value;
-      const cidade = document.getElementById('f-cidade').value.trim();
+      const cidade = cidadeAtual()?.cidade;
       if (cat) q = q.eq('categoria_id', cat);
       if (cidade) q = q.ilike('cidade', `%${cidade}%`);
     }
@@ -1172,8 +1247,6 @@ async function telaPedidos(params) {
   };
   if (!meus) {
     document.getElementById('f-cat').addEventListener('change', () => carregar().catch(falha));
-    let espera;
-    document.getElementById('f-cidade').addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(() => carregar().catch(falha), 300); });
   }
   document.getElementById('lista-pedidos').addEventListener('click', async (e) => {
     const b = e.target.closest('button');
