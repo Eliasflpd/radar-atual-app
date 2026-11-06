@@ -792,6 +792,7 @@ function montarBarra(sb) {
     fundo.querySelector('.demo-op')?.focus();
   };
   botao.addEventListener('click', abrir);
+  window.abrirDemo = abrir;
   atualizarBotao();
   window.addEventListener('hashchange', atualizarBotao);
   document.body.appendChild(botao);

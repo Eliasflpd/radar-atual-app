@@ -37,6 +37,10 @@ const ICONES = {
   alerta: '<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.2v.3"/>',
   seta: '<path d="m9 5 7 7-7 7"/>',
   baixo: '<path d="m6 9 6 6 6-6"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  anunciar: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  capacete: '<path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5M14 6a6 6 0 0 1 6 6v3M4 15v-3a6 6 0 0 1 6-6"/><rect x="2" y="15" width="20" height="4" rx="1"/>',
+  ferramentas: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
   sino: '<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4l2-2ZM10 21h4"/>',
   ajuda: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.2v.3"/>',
   filtro: '<path d="M4 6h16M7 12h10M10 18h4"/>',
@@ -87,6 +91,12 @@ const ICONE_CAT = {
   'Garçom / Atendente': 'bandeja', 'Mototáxi / Entregas': 'moto', 'Trabalhador rural': 'broto', 'Tratorista / Operador de máquinas': 'trator',
   'Técnico em refrigeração': 'floco', 'Costureira': 'agulha',
 };
+// Quadros da tela inicial: cada um junta várias áreas
+const GRUPOS = {
+  construcao: { nome: 'Construção', icone: 'tijolo', cor: 'laranja', areas: ['Pedreiro', 'Ajudante geral', 'Pintor', 'Serralheiro', 'Marceneiro', 'Tratorista / Operador de máquinas'] },
+  reparos: { nome: 'Reparos', icone: 'ferramentas', cor: 'marinho', areas: ['Eletricista', 'Encanador', 'Técnico em refrigeração', 'Técnico em informática', 'Mecânico', 'Outros'] },
+  limpeza: { nome: 'Limpeza', icone: 'vassoura', cor: 'laranja', areas: ['Diarista / Limpeza', 'Jardineiro'] },
+};
 const ORDEM_CAT = ['Pedreiro', 'Eletricista', 'Diarista / Limpeza', 'Ajudante geral', 'Guia turístico', 'Encanador', 'Técnico em refrigeração', 'Mototáxi / Entregas'];
 const categoriasOrdenadas = () => [...categorias].sort((a, b) => {
   const ia = ORDEM_CAT.indexOf(a.nome), ib = ORDEM_CAT.indexOf(b.nome);
@@ -98,7 +108,7 @@ const nomeCurto = (n) => CURTOS[n] || n.split(' / ')[0];
 const tileCategoria = (c, tag = 'a', extra = '') => `<${tag} class="cat-tile" ${tag === 'a' ? `href="#/categoria/${c.id}"` : `type="button" data-cat="${c.id}"`} ${extra}>
   <span class="cat-ic">${ic(ICONE_CAT[c.nome] || 'grade')}</span><span class="cat-nome">${esc(nomeCurto(c.nome))}</span></${tag}>`;
 const ic = (nome, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONES[nome] || ''}</svg>`;
-const LOGO = '<svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="128"/><path d="M136 270l84 84 156-180" fill="none" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const LOGO = '<svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path class="logo-capacete" d="M13 31a19 19 0 0 1 38 0Z"/><rect class="logo-capacete" x="8" y="29" width="48" height="6" rx="3"/><rect class="logo-crista" x="28.5" y="11" width="7" height="13" rx="3.5"/><path class="logo-check" d="M17 42l11 11 21-24" fill="none" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const SELO = `<span class="selo" title="Identidade verificada com documento e selfie">${ic('check')}Verificado</span>`;
 // Cadastur: registro oficial do Ministério do Turismo (obrigatório para guia de turismo — Lei 8.623/1993)
 const AREAS_TURISMO = ['Guia turístico', 'Passeios 4x4 e quadriciclo', 'Barqueiro / Passeio de barco', 'Instrutor de kitesurfe'];
@@ -304,15 +314,15 @@ async function carregarMe(session) {
 
 function renderNav() {
   const aba = (href, icone, rotulo, chave) => `<a href="${href}" data-aba="${chave}">${ic(icone)}<span>${rotulo}</span></a>`;
-  $nav.innerHTML = aba('#/', 'inicio', 'Início', 'inicio') + aba('#/pedidos', 'pedidos', 'Pedidos', 'pedidos')
-    + (me ? aba('#/conversas', 'chat', 'Mensagens', 'conversas') + aba('#/conta', 'perfil', 'Conta', 'conta')
-      : aba('#/entrar', 'entrar', 'Entrar', 'entrar'));
+  $nav.innerHTML = aba('#/', 'inicio', 'Início', 'inicio') + aba('#/busca', 'busca', 'Buscar', 'busca')
+    + aba('#/pedidos/novo', 'anunciar', 'Anunciar', 'anunciar') + aba('#/conversas', 'chat', 'Mensagens', 'conversas')
+    + aba(me ? '#/conta' : '#/entrar', 'perfil', 'Minha Conta', 'conta');
+  document.body.classList.toggle('logado', !!me);
   if (me) $nav.querySelector('[data-aba="conversas"]').insertAdjacentHTML('beforeend', '<span class="badge-aba" id="badge-msgs" hidden></span>');
   marcarAba();
   atualizarBadge();
   ouvirMensagens();
 }
-
 // Número de mensagens não lidas na aba "Mensagens" (e aviso quando chega uma nova)
 let ultimaContagem = 0;
 async function atualizarBadge(avisar = false) {
@@ -350,19 +360,20 @@ function ouvirMensagens() {
     .subscribe();
 }
 function marcarAba() {
-  const tela = location.hash.slice(2).split(/[/?]/)[0] || 'inicio';
-  const atual = { chat: 'conversas', verificar: 'conta', admin: 'conta', cadastro: 'entrar', categoria: 'inicio', busca: 'inicio', p: 'inicio' }[tela] ?? tela;
+  const [tela, sub] = location.hash.slice(2).split(/[?]/)[0].split('/');
+  let atual = { chat: 'conversas', verificar: 'conta', admin: 'conta', entrar: 'conta', cadastro: 'conta', 'ser-profissional': 'conta',
+    categoria: 'busca', grupo: 'busca', categorias: 'busca', p: 'busca' }[tela] ?? (tela || 'inicio');
+  if (tela === 'pedidos' && sub === 'novo') atual = 'anunciar';
   $nav.querySelectorAll('a').forEach((a) => a.classList.toggle('ativa', a.dataset.aba === atual));
 }
-
 // Topo: nas telas internas mostra seta de voltar + título
 const TITULOS = {
   pedidos: 'Pedidos', 'pedidos/novo': 'Publicar pedido', conversas: 'Mensagens', chat: 'Conversa', conta: 'Minha conta',
   'conta/dados': 'Meus dados', 'conta/foto': 'Foto de perfil', 'conta/fotos': 'Fotos dos trabalhos', 'conta/servicos': 'Serviços e ganhos',
-  verificar: 'Verificar identidade', admin: 'Administração', p: 'Profissional', categoria: 'Profissionais', busca: 'Resultados',
+  verificar: 'Verificar identidade', admin: 'Administração', p: 'Profissional', categoria: 'Profissionais', busca: 'Buscar', categorias: 'Todos os serviços', grupo: 'Serviços',
   entrar: 'Entrar', cadastro: 'Criar conta', termos: 'Termos de uso', 'conta/favoritos': 'Favoritos', ajuda: 'Ajuda', 'ser-profissional': 'Perfil profissional',
 };
-const PRINCIPAIS = ['inicio', 'pedidos', 'conversas', 'conta', 'bemvindo'];
+const PRINCIPAIS = ['inicio', 'busca', 'conversas', 'conta', 'bemvindo'];
 function topo(tela, chave) {
   const interna = !PRINCIPAIS.includes(chave);
   document.body.classList.toggle('interna', interna);
@@ -389,12 +400,14 @@ async function rota() {
   document.body.dataset.tela = tela;
   if (['conversas', 'chat', 'conta', 'admin', 'verificar', 'ser-profissional'].includes(tela) && !me) { guardarDepois(location.hash); location.hash = '#/entrar'; return; }
   if (chave === 'pedidos/novo' && !me) { pedirConta('#/pedidos/novo', 'Crie sua conta grátis para publicar seu pedido.'); return; }
-  if (tela === 'inicio' && !me && !jaOlhou()) { location.hash = '#/bemvindo'; return; }
+
   $app.innerHTML = esqueleto(3);
   window.scrollTo(0, 0);
   try {
     if (tela === 'inicio') return await telaInicio();
-    if (tela === 'bemvindo') return telaBoasVindas();
+    if (tela === 'bemvindo') { location.hash = '#/'; return; }
+    if (tela === 'grupo') return await telaLista({ grupo: id });
+    if (tela === 'categorias') return telaCategorias();
     if (tela === 'categoria') return await telaLista({ cat: id });
     if (tela === 'busca') return await telaLista({ q: params.get('q') || '' });
     if (tela === 'entrar') return telaEntrar();
@@ -541,62 +554,51 @@ function telaBoasVindas() {
 
 // ---------------------------------------------------------------- início
 async function telaInicio() {
-  const cats = categoriasOrdenadas();
   const cid = cidadeAtual();
   const naoLidas = me ? await contarNaoLidas() : 0;
+  const profissional = me?.is_prestador;
+  const destinoProf = !me ? '#/cadastro?tipo=trabalhar' : profissional ? '#/conta' : '#/ser-profissional';
   $app.innerHTML = `
-    <header class="home-cab">
-      <div class="home-topo">
-        <div class="home-marca">${LOGO}<b>Contrata <em>Aí</em></b></div>
-        <div class="home-acoes">
-          ${me ? `<a class="icone-btn" href="#/conversas" aria-label="Mensagens${naoLidas ? `, ${naoLidas} não lidas` : ''}">${ic('sino')}${naoLidas ? `<span class="bolinha">${naoLidas}</span>` : ''}</a>
-            <a href="#/conta" aria-label="Minha conta">${avatar(me, 'mini')}</a>`
-            : '<a class="btn sec pequeno" href="#/entrar">Entrar</a>'}
-        </div>
+    <header class="app-topo">
+      <a class="marca-app" href="#/" aria-label="Contrata Aí, início">${LOGO}<span>Contrata <em>Aí</em></span></a>
+      <div class="topo-icones">
+        <a class="icone-btn sem-borda" href="#/conversas" aria-label="Avisos${naoLidas ? `: ${naoLidas} mensagens novas` : ''}">${ic('sino')}${naoLidas ? '<span class="ponto"></span>' : ''}</a>
+        <button type="button" class="icone-btn sem-borda" id="abrir-menu" aria-label="Abrir menu">${ic('menu')}</button>
       </div>
-      ${chipCidade('grande')}
     </header>
-    <h1 class="ola">Olá${me ? `, ${esc(me.nome.split(' ')[0])}` : ''}! O que você precisa hoje?</h1>
-    <form class="busca-pilula grande" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você está procurando?" aria-label="Qual serviço você está procurando?"><button class="btn pequeno">Buscar</button></form>
-    <div class="sugestoes">${['Pedreiro de acabamento', 'Diarista', 'Eletricista', 'Guia turístico', 'Tratorista', 'Ar-condicionado'].map((t) => `<a href="#/busca?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>
-    ${me && !me.is_prestador ? `<a class="banner claro chamada-prof" href="#/ser-profissional">${ic('pedidos')}<span><b>Você é profissional?</b><small>Ofereça seus serviços e receba clientes pelo app</small></span>${ic('seta')}</a>` : ''}
-    ${!me ? `<a class="banner claro chamada-prof" href="#/cadastro?tipo=trabalhar">${ic('pedidos')}<span><b>É profissional?</b><small>Cadastre seus serviços e receba clientes</small></span>${ic('seta')}</a>` : ''}
-    <div class="acoes-home">
-      <a class="acao-card" href="#/busca"><span class="op-ic">${ic('busca')}</span><b>Encontrar profissionais</b><small>Veja quem atende ${cid ? `em ${esc(cid.cidade)}` : 'perto de você'}</small></a>
-      <a class="acao-card" href="#/pedidos/novo"><span class="op-ic">${ic('pedidos')}</span><b>Publicar um pedido</b><small>Receba propostas de vários profissionais</small></a>
+    <section class="hero-app">
+      <div class="hero-texto">
+        <h1>O profissional certo, perto de você!</h1>
+        <svg class="traco" viewBox="0 0 200 18" aria-hidden="true"><path d="M5 13C55 4 135 2 195 7"/></svg>
+        <button type="button" class="hero-cidade" data-escolher-cidade>${ic('pin')}<span>${esc(nomeCidade(cid))}</span>${ic('baixo')}</button>
+      </div>
+      <img class="hero-foto" src="img/profissional-hero.jpg" alt="" width="270" height="275">
+    </section>
+    <form class="busca-hero" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você precisa?" aria-label="Qual serviço você precisa?" autocomplete="off"></form>
+    <div class="grupos">
+      ${Object.entries(GRUPOS).map(([k, g]) => `<a class="grupo ${g.cor}" href="#/grupo/${k}"><span>${ic(g.icone)}</span><b>${g.nome}</b></a>`).join('')}
+      <a class="grupo marinho" href="#/categorias"><span>${ic('grade')}</span><b>Outros Serviços</b></a>
     </div>
-    <div class="secao-tit"><h2>Categorias</h2><button type="button" class="link" id="ver-todas">Ver todas</button></div>
-    <div class="cat-grade" id="cats">${cats.map((c, i) => tileCategoria(c, 'a', i >= 8 ? 'data-extra hidden' : '')).join('')}</div>
-    <div class="secao-tit"><h2>Em destaque${cid ? ` em ${esc(cid.cidade)}` : ''}</h2><a href="#/busca">Ver todos</a></div>
+    <div class="botoes-home">
+      <a class="botao-home laranja" href="#/busca">${ic('pessoas')}<span><b>Preciso de um serviço</b><small>Encontre profissionais qualificados</small></span>${ic('seta')}</a>
+      <a class="botao-home marinho" href="${destinoProf}">${ic('capacete')}<span><b>Sou profissional</b><small>${profissional ? 'Veja seu perfil e seus clientes' : 'Cadastre-se e receba clientes'}</small></span>${ic('seta')}</a>
+    </div>
+    ${me ? `<div class="secao-tit"><h2>Em destaque${cid ? ` em ${esc(cid.cidade)}` : ''}</h2><a href="#/busca">Ver todos</a></div>
     <div class="grade" id="destaques">${esqueleto(2)}</div>
-    <div class="secao-tit"><h2>Bem avaliados</h2></div>
-    <div class="grade" id="resultados">${esqueleto(2)}</div>
     <div class="secao-tit"><h2>Oportunidades${cid ? ` em ${esc(cid.cidade)}` : ' recentes'}</h2><a href="#/pedidos">Ver todas</a></div>
-    <div id="oportunidades"></div>`;
+    <div id="oportunidades"></div>` : ''}`;
   document.getElementById('fb').addEventListener('submit', (e) => {
     e.preventDefault();
     const q = form(e.target).q.trim();
     location.hash = q ? `#/busca?q=${encodeURIComponent(q)}` : '#/busca';
   });
-  document.getElementById('ver-todas').addEventListener('click', (e) => {
-    const mostrar = e.target.textContent === 'Ver todas';
-    document.querySelectorAll('#cats [data-extra]').forEach((t) => { t.hidden = !mostrar; });
-    e.target.textContent = mostrar ? 'Ver menos' : 'Ver todas';
-  });
-  // destaques: verificados da cidade; bem avaliados: maior nota com mais avaliações
+  document.getElementById('abrir-menu').addEventListener('click', abrirMenu);
+  if (!me) return;
   const { lista } = await buscarPrestadores({});
   const daCidade = cid ? lista.filter((p) => normalizar(p.cidade).includes(normalizar(cid.cidade))) : lista;
   const base = daCidade.length ? daCidade : lista;
   const destaques = base.filter((p) => p.verificado).slice(0, 4);
-  const usados = new Set(destaques.map((p) => p.id));
-  const bem = [...base].filter((p) => !usados.has(p.id) && p.avaliacao_qtd >= 5).sort(ORDENS.nota).slice(0, 4);
-  if (cid && !daCidade.length) {
-    document.getElementById('destaques').insertAdjacentHTML('beforebegin', `<div class="aviso-busca aviso-cidade">Ainda não há profissionais em <b>${esc(cid.cidade)}</b>. Mostrando de outras cidades.
-      <button type="button" class="link" data-todas-cidades>Ver de todas as cidades</button></div>`);
-  }
   document.getElementById('destaques').innerHTML = destaques.length ? await htmlCartoes(destaques) : vazio('perfil', 'Ainda não há destaques por aqui');
-  document.getElementById('resultados').innerHTML = bem.length ? await htmlCartoes(bem) : vazio('estrela', 'Ainda sem avaliações por aqui');
-  // oportunidades: pedidos abertos da cidade
   let q = sb.from('pedidos').select('id,titulo,cidade,uf,vagas,orcamento,prazo,categoria_id,criado_em').eq('status', 'aberto').order('criado_em', { ascending: false }).limit(3);
   if (cid) q = q.ilike('cidade', `%${cid.cidade}%`);
   const { data: peds } = await q;
@@ -606,7 +608,45 @@ async function telaInicio() {
       <span class="op-txt"><b>${esc(x.titulo)}</b><small>${esc(x.cidade)} · ${x.vagas} ${x.vagas > 1 ? 'vagas' : 'vaga'}${x.prazo ? ` · ${esc(x.prazo)}` : ''}</small></span>${ic('seta')}</a>`;
   }).join('') || vazio('pedidos', 'Ainda não há oportunidades por aqui', 'Volte em breve para conferir.');
 }
-async function contarNaoLidas() {
+
+// Menu ☰ da tela inicial
+function abrirMenu() {
+  const fundo = document.createElement('div');
+  fundo.className = 'modal-fundo demo-fundo';
+  const item = (href, icone, texto) => `<a class="menu-item" href="${href}"><span class="mi-ic">${ic(icone)}</span><span class="mi-txt"><b>${texto}</b></span>${ic('seta', 'mi-seta')}</a>`;
+  fundo.innerHTML = `<div class="demo-folha" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="demo-cab"><b>Menu</b><button type="button" class="demo-fechar" aria-label="Fechar">✕</button></div>
+    <nav class="menu-conta">
+      ${item('#/busca', 'busca', 'Buscar profissionais')}
+      ${item('#/pedidos/novo', 'mais', 'Anunciar um pedido')}
+      ${item('#/pedidos', 'pedidos', 'Oportunidades de trabalho')}
+      ${item('#/conversas', 'chat', 'Mensagens')}
+      ${item(me ? '#/conta' : '#/entrar', 'perfil', me ? 'Minha conta' : 'Entrar')}
+      <button type="button" class="menu-item" data-escolher-cidade><span class="mi-ic">${ic('pin')}</span><span class="mi-txt"><b>Minha cidade</b><small>${esc(nomeCidade(cidadeAtual()))}</small></span>${ic('seta', 'mi-seta')}</button>
+      ${item('#/ajuda', 'ajuda', 'Ajuda')}
+      ${item('#/termos', 'documento', 'Termos de uso')}
+    </nav>
+    ${window.abrirDemo ? '<button type="button" class="btn sec largo" id="menu-demo">Demonstração: ver como outra pessoa</button>' : ''}
+    ${me ? '<button type="button" class="link-simples" id="menu-sair">Sair da conta</button>' : ''}
+  </div>`;
+  fundo.addEventListener('click', async (e) => {
+    if (e.target === fundo || e.target.closest('.demo-fechar, a, [data-escolher-cidade]')) fundo.remove();
+    if (e.target.closest('#menu-demo')) { fundo.remove(); window.abrirDemo(); }
+    if (e.target.closest('#menu-sair')) { fundo.remove(); await sb.auth.signOut(); location.hash = '#/'; }
+  });
+  document.body.appendChild(fundo);
+}
+
+// Todos os serviços (Outros Serviços)
+function telaCategorias() {
+  $app.innerHTML = `<form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você precisa?" aria-label="Qual serviço você precisa?"></form>
+    <div class="cat-grade todas">${categoriasOrdenadas().map((c) => tileCategoria(c)).join('')}</div>`;
+  document.getElementById('fb').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = form(e.target).q.trim();
+    if (q) location.hash = `#/busca?q=${encodeURIComponent(q)}`;
+  });
+}async function contarNaoLidas() {
   const { data: convs } = await sb.from('conversas').select('id');
   const ids = (convs || []).map((c) => c.id);
   if (!ids.length) return 0;
@@ -616,10 +656,14 @@ async function contarNaoLidas() {
   return (msgs || []).filter((m) => m.autor_id !== me.id && (!l[m.conversa_id] || m.criado_em > l[m.conversa_id])).length;
 }
 // Lista de profissionais por área ou por busca
-async function telaLista({ cat, q }) {
+async function telaLista({ cat, q, grupo }) {
   const c = categorias.find((x) => String(x.id) === String(cat));
+  const g = GRUPOS[grupo];
+  const cats = g ? categorias.filter((x) => g.areas.includes(x.nome)) : [];
   if (c) tituloTopo(nomeCurto(c.nome));
+  if (g) tituloTopo(g.nome);
   $app.innerHTML = `
+    ${g ? `<div class="cat-grade grupo-areas">${cats.map((x) => tileCategoria(x)).join('')}</div>` : ''}
     <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" value="${esc(q || '')}" placeholder="${c ? `Buscar em ${esc(nomeCurto(c.nome))}` : 'Buscar serviço ou profissional'}" aria-label="Buscar"></form>
     <div class="barra-filtros" role="group" aria-label="Filtros">
       ${chipCidade()}
@@ -632,7 +676,7 @@ async function telaLista({ cat, q }) {
     <p class="meta qtd" id="qtd"></p>
     <div class="grade" id="resultados"></div>`;
   const est = { ordem: 'relevancia', verificados: false, cadastur: false };
-  const filtros = () => ({ cat: c?.id, q: document.querySelector('#fb input').value.trim(), cidade: cidadeAtual()?.cidade, ...est });
+  const filtros = () => ({ cat: c?.id, cats: cats.map((x) => x.id), q: document.querySelector('#fb input').value.trim(), cidade: cidadeAtual()?.cidade, ...est });
   document.querySelector('.barra-filtros').addEventListener('click', (e) => {
     const b = e.target.closest('.chip-filtro');
     if (!b) return;
@@ -707,6 +751,7 @@ async function buscarPrestadores(f) {
     .eq('is_prestador', true).eq('suspenso', false)
     .order('verificado', { ascending: false }).order('avaliacao_media', { ascending: false }).limit(1000);
   if (f.cat) q = q.eq('categoria_id', f.cat);
+  if (f.cats?.length) q = q.in('categoria_id', f.cats);
   if (f.cadastur) q = q.eq('cadastur_status', 'aprovado');
   const { data, error } = await q;
   if (error) throw error;

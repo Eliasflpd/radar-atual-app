@@ -3,16 +3,16 @@
 :root {
   --fundo: #f7f8fa;
   --papel: #ffffff;
-  --tinta: #20242b;
+  --tinta: #13284a;
   --suave: #727985;
   --linha: #e9edf1;
-  --pri: #f45b2a;
-  --pri-forte: #de4a1b;
-  --pri-claro: #fff1ea;
-  --pri-tx: #c8431a;
-  --pri-2: #ff784b;
+  --pri: #f57c1f;
+  --pri-forte: #e2680e;
+  --pri-claro: #fff1e3;
+  --pri-tx: #c25a0a;
+  --pri-2: #ff9a3d;
   --sobre-pri: #ffffff;
-  --escuro: #1d1d22;
+  --escuro: #13284a;
   --verde: #198754;
   --verde-claro: #e2f4ec;
   --vermelho: #d94343;
@@ -24,7 +24,9 @@
   --raio-p: 12px;
   --abas: 64px;
   --topo: 58px;
-  --f-titulo: "Nunito", "Trebuchet MS", system-ui, sans-serif;
+  --f-titulo: "Poppins", "Nunito", system-ui, sans-serif;
+  --marinho: #13284a;
+  --marinho-2: #0b1f3d;
   --f-texto: "Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: light; /* visual sempre claro, mesmo com o celular no modo escuro */
 }
@@ -214,7 +216,13 @@ body[data-tela="bemvindo"] main { position: fixed; inset: env(safe-area-inset-to
 .cidade-chip:hover { border-color: var(--pri); }
 .cidade-chip.grande { justify-self: start; padding: 9px 14px 9px 12px; font-size: 15px; background: var(--pri-claro); border-color: transparent; color: var(--pri-tx); }
 .cidade-folha .filtro-cidade { margin: 12px 0; }
-@media (max-width: 760px) { body[data-tela="inicio"] .topo { display: none; } body.demo .home-topo { padding-right: 84px; } .demo-nome { display: none; } .demo-botao { padding: 6px; } }
+@media (max-width: 760px) {
+  /* no início o topo some, mas a barra de abas (que fica dentro dele) continua */
+  body[data-tela="inicio"] .topo { position: static; height: 0; min-height: 0; padding: 0; border: 0; }
+  body[data-tela="inicio"] .topo > :not(nav) { display: none; }
+  body[data-tela="inicio"]::before { display: none; }
+  .demo-nome { display: none; } .demo-botao { padding: 6px; }
+}
 @media (min-width: 761px) { .home-topo { display: none; } }
 
 /* ---------- início ---------- */
@@ -630,3 +638,104 @@ button.menu-item { width: 100%; border: 0; background: none; font: inherit; text
 .contratacao-adm .prop-valores { margin-top: 10px; }
 
 @media (max-height: 560px) { .escolha small { display: none; } .bv-marca { font-size: 18px; } .bv-marca .logo { width: 30px; height: 30px; } }
+
+/* ======================= NOVA TELA INICIAL (modelo do dono do app) ======================= */
+.logo .logo-capacete { fill: var(--pri); }
+.logo .logo-crista { fill: var(--pri-forte); }
+.logo .logo-check { stroke: var(--marinho); }
+.logo rect:not([class]), .logo path:not([class]) { fill: initial; stroke: initial; }
+.marca, .marca-app { color: var(--marinho); }
+.marca span, .marca-app span { font-family: var(--f-titulo); font-weight: 700; letter-spacing: -.01em; }
+.marca em, .marca-app em { font-style: normal; color: var(--pri); }
+
+.app-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 60px; margin: 0 0 0; }
+.marca-app { display: flex; align-items: center; gap: 8px; text-decoration: none; min-width: 0; }
+.marca-app .logo { width: 44px; height: 44px; }
+.marca-app span { font-size: 25px; white-space: nowrap; }
+.topo-icones { display: flex; align-items: center; gap: 2px; }
+.icone-btn.sem-borda { border: 0; background: none; width: 44px; height: 44px; color: var(--marinho); cursor: pointer; }
+.icone-btn.sem-borda .ic { width: 26px; height: 26px; stroke-width: 2.2; }
+.icone-btn .ponto { position: absolute; top: 8px; right: 9px; width: 10px; height: 10px; border-radius: 50%; background: #e53935; border: 2px solid var(--fundo); }
+
+.hero-app { position: relative; display: grid; grid-template-columns: 1fr minmax(120px, 44%); align-items: stretch; overflow: hidden;
+  height: clamp(190px, 33vh, 300px); margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  background: radial-gradient(circle at 18% 10%, #0d3a6e 0%, transparent 55%), linear-gradient(160deg, #0a2242 0%, #10294b 100%); }
+.hero-texto { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 0 0 24px max(18px, env(safe-area-inset-left, 0px)); min-width: 0; }
+.hero-app h1 { color: #fff; font: 700 clamp(22px, min(7vw, 4.3vh), 34px)/1.15 var(--f-titulo); letter-spacing: -.01em; }
+.traco { width: min(70%, 170px); height: 16px; }
+.traco path { fill: none; stroke: var(--pri); stroke-width: 6; stroke-linecap: round; }
+.hero-cidade { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 6px 10px; border-radius: 99px;
+  border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.08); color: #fff; font: 700 13px var(--f-texto); cursor: pointer; max-width: 100%; }
+.hero-cidade .ic { width: 15px; height: 15px; }
+.hero-cidade .ic:first-child { color: var(--pri-2); }
+.hero-cidade span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hero-foto { width: 100%; height: 100%; object-fit: cover; object-position: left top; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 22%); mask-image: linear-gradient(to right, transparent 0, #000 22%); }
+
+.busca-hero { position: relative; z-index: 2; display: flex; align-items: center; gap: 12px; margin: -30px 6px 0; padding: 0 20px; height: 58px; border-radius: 99px;
+  background: #fff; box-shadow: 0 8px 24px rgba(19, 40, 74, .18); }
+.busca-hero .ic { width: 24px; height: 24px; color: var(--marinho); stroke-width: 2.4; flex: none; }
+.busca-hero input { border: 0; margin: 0; padding: 0; height: 100%; background: transparent; font-size: 16px; box-shadow: none !important; color: var(--tinta); }
+.busca-hero input::placeholder { color: #5b6574; }
+
+.grupos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: clamp(12px, 2.2vh, 20px) 0 0; }
+.grupo { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: clamp(84px, 13vh, 118px); padding: 10px 4px;
+  border-radius: 18px; background: #fff; box-shadow: 0 2px 10px rgba(19, 40, 74, .08); text-decoration: none; color: var(--marinho); text-align: center; transition: transform .12s; }
+.grupo:active { transform: scale(.97); }
+.grupo > span .ic { width: clamp(32px, 5vh, 44px); height: clamp(32px, 5vh, 44px); stroke-width: 2; }
+.grupo.laranja > span { color: var(--pri); }
+.grupo.marinho > span { color: var(--marinho); }
+.grupo b { font: 700 clamp(12px, 1.8vh, 14px)/1.2 var(--f-titulo); }
+
+.botoes-home { display: grid; gap: clamp(10px, 1.8vh, 14px); margin: clamp(12px, 2.2vh, 20px) 0 0; }
+.botao-home { display: flex; align-items: center; gap: 14px; min-height: clamp(62px, 9.5vh, 80px); padding: 10px 18px; border-radius: 18px; text-decoration: none; color: #fff; transition: transform .12s; }
+.botao-home:active { transform: scale(.98); }
+.botao-home > .ic:first-child { width: 34px; height: 34px; flex: none; }
+.botao-home > span { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.botao-home b { font: 700 clamp(18px, 2.6vh, 21px)/1.15 var(--f-titulo); }
+.botao-home small { margin: 0; color: rgba(255,255,255,.88); font-size: clamp(12.5px, 1.8vh, 14px); }
+.botao-home > .ic:last-child { width: 24px; height: 24px; flex: none; }
+.botao-home.laranja { background: linear-gradient(90deg, var(--pri) 0%, #f9932e 100%); box-shadow: 0 6px 16px rgba(245, 124, 31, .3); }
+.botao-home.marinho { background: var(--marinho); box-shadow: 0 6px 16px rgba(19, 40, 74, .25); }
+
+/* tela inicial: começa colada no topo; sem login cabe inteira na tela */
+@media (max-width: 760px) {
+  body[data-tela="inicio"] main { padding-top: 0; }
+  body[data-tela="inicio"]:not(.logado) main { padding-bottom: calc(var(--abas) + 14px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 761px) { .app-topo { display: none; } .hero-app { margin-inline: 0; border-radius: 24px; } .hero-texto { padding-left: 32px; } }
+body[data-tela="inicio"] .demo-botao { display: none; }
+.cat-grade.grupo-areas { margin-bottom: 4px; }
+.cat-grade.todas { margin-top: 14px; }
+
+/* barra de baixo com 5 abas */
+@media (max-width: 760px) {
+  nav#nav a { font-size: 11px; padding: 6px 0; }
+  nav#nav a.ativa { color: var(--pri); }
+  nav#nav a { color: var(--marinho); }
+  nav#nav a span { white-space: nowrap; }
+}
+.logo .logo-capacete, .logo .logo-crista { stroke: none; }
+
+/* celulares baixos: tudo cabe sem rolar */
+@media (max-width: 760px) and (max-height: 700px) {
+  .app-topo { height: 52px; }
+  .marca-app .logo { width: 36px; height: 36px; }
+  .marca-app span { font-size: 21px; }
+  .hero-app { height: clamp(160px, 29vh, 220px); }
+  .busca-hero { height: 50px; margin-top: -25px; }
+  .grupos { margin-top: 10px; gap: 8px; }
+  .grupo { min-height: 72px; padding: 8px 2px; gap: 4px; }
+  .grupo > span .ic { width: 28px; height: 28px; }
+  .botoes-home { margin-top: 10px; gap: 8px; }
+  .botao-home { min-height: 58px; padding: 8px 14px; }
+  .botao-home > .ic:first-child { width: 28px; height: 28px; }
+  .hero-cidade { margin-top: 2px; padding: 4px 9px; }
+}
+
+/* celulares altos: a tela inicial ocupa a altura toda, sem sobrar vazio */
+@media (max-width: 760px) and (min-height: 780px) {
+  .hero-app { height: clamp(260px, 37vh, 340px); }
+  .grupo { min-height: clamp(104px, 14vh, 128px); }
+  .botao-home { min-height: clamp(78px, 10.5vh, 92px); }
+  .grupos, .botoes-home { margin-top: 20px; }
+}

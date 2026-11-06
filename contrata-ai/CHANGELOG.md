@@ -27,3 +27,9 @@
 - Etapa 2: revisão de RLS, webhook com idempotência, estados financeiros completos, logs administrativos, contestação de bloqueios.
 - Etapa 3: agenda, comparação de propostas, destaque pago, plano empresarial, push, OCR, split.
 - "Mais próximos" e "Disponíveis" dependem de localização e agenda (ainda não existem).
+
+## Nova identidade (modelo do dono do app)
+- Logo novo: capacete laranja + check azul-marinho. Cores laranja #F57C1F e azul-marinho #13284A; títulos em Poppins.
+- Tela inicial igual ao modelo: topo com sino e menu ☰, faixa azul com foto do profissional, busca, quadros Construção/Reparos/Limpeza/Outros Serviços, botões Preciso de um serviço / Sou profissional.
+- Barra de baixo com 5 abas: Início, Buscar, Anunciar, Mensagens, Minha Conta. Oportunidades de trabalho e Demonstração ficam no menu ☰.
+- Páginas novas: grupos de serviços (/grupo/...) e Todos os serviços (/categorias).
