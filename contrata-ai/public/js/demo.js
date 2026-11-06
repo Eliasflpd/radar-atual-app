@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v7';
+const CHAVE = 'contrata-demo-v8';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -314,7 +314,7 @@ function semente() {
     users: profiles.map((p) => ({ id: p.id, email: contatos_privados.find((c) => c.user_id === p.id).email, senha: 'demo123' })),
     categorias: CATEGORIAS, profiles, contatos_privados, conversas, mensagens, contratacoes, avaliacoes, tentativas_burla, fotos_trabalhos,
     verificacoes, pedidos, docs, favoritos: [{ user_id: 'u-cliente', prestador_id: 'u-pedro', criado_em: agora(600) }],
-    seq: { mensagens: mid, tentativas_burla: 2, fotos_trabalhos: fid, verificacoes: 4 }, sessao: 'u-cliente',
+    seq: { mensagens: mid, tentativas_burla: 2, fotos_trabalhos: fid, verificacoes: 4 }, sessao: null,
   };
 }
 
@@ -675,7 +675,7 @@ export function criarDemo() {
         trocar(u.id); return { data: { session: sessao() }, error: null };
       },
       async signUp({ email, options }) {
-        if (db.users.some((x) => x.email.toLowerCase() === email.toLowerCase())) return erro('Este e-mail já está cadastrado.');
+        if (db.users.some((x) => x.email.toLowerCase() === email.toLowerCase())) return erro('Este e-mail já tem conta. Toque em "Entrar" para acessar.');
         const m = options?.data || {};
         const id = uuid();
         db.users.push({ id, email, senha: '' });

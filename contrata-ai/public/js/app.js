@@ -319,7 +319,7 @@ const TITULOS = {
   pedidos: 'Pedidos', 'pedidos/novo': 'Publicar pedido', conversas: 'Mensagens', chat: 'Conversa', conta: 'Minha conta',
   'conta/dados': 'Meus dados', 'conta/foto': 'Foto de perfil', 'conta/fotos': 'Fotos dos trabalhos', 'conta/servicos': 'Serviços e ganhos',
   verificar: 'Verificar identidade', admin: 'Administração', p: 'Profissional', categoria: 'Profissionais', busca: 'Resultados',
-  entrar: 'Entrar', cadastro: 'Criar conta', termos: 'Termos de uso', 'conta/favoritos': 'Favoritos', ajuda: 'Ajuda',
+  entrar: 'Entrar', cadastro: 'Criar conta', termos: 'Termos de uso', 'conta/favoritos': 'Favoritos', ajuda: 'Ajuda', 'ser-profissional': 'Perfil profissional',
 };
 const PRINCIPAIS = ['inicio', 'pedidos', 'conversas', 'conta', 'bemvindo'];
 function topo(tela, chave) {
@@ -345,7 +345,7 @@ async function rota() {
   marcarAba();
   topo(tela, chave);
   document.body.dataset.tela = tela;
-  if (['conversas', 'chat', 'conta', 'admin', 'verificar'].includes(tela) && !me) { location.hash = '#/entrar'; return; }
+  if (['conversas', 'chat', 'conta', 'admin', 'verificar', 'ser-profissional'].includes(tela) && !me) { location.hash = '#/entrar'; return; }
   if (chave === 'pedidos/novo' && !me) { location.hash = '#/entrar'; return; }
   if (tela === 'inicio' && !me && !jaOlhou()) { location.hash = '#/bemvindo'; return; }
   $app.innerHTML = esqueleto(3);
@@ -369,6 +369,7 @@ async function rota() {
     if (tela === 'termos') return telaTermos();
     if (tela === 'ajuda') return telaAjuda();
     if (chave === 'conta/favoritos') return await telaFavoritos();
+    if (tela === 'ser-profissional') return telaSerProfissional();
     if (chave === 'pedidos/novo') return telaNovoPedido();
     if (tela === 'pedidos') return await telaPedidos(params);
     if (tela === 'verificar') return await telaVerificar();
@@ -490,6 +491,9 @@ async function telaInicio() {
     <h1 class="ola">Olá${me ? `, ${esc(me.nome.split(' ')[0])}` : ''}! O que você precisa hoje?</h1>
     <form class="busca-pilula grande" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você está procurando?" aria-label="Qual serviço você está procurando?"><button class="btn pequeno">Buscar</button></form>
     <div class="sugestoes">${['Pedreiro de acabamento', 'Diarista', 'Eletricista', 'Guia turístico', 'Tratorista', 'Ar-condicionado'].map((t) => `<a href="#/busca?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>
+    ${me && !me.is_prestador ? `<a class="banner claro chamada-prof" href="#/ser-profissional">${ic('pedidos')}<span><b>Você é profissional?</b><small>Ofereça seus serviços e receba clientes pelo app</small></span>${ic('seta')}</a>` : ''}
+    ${!me ? `<div class="chamada-cadastro"><a class="btn largo" href="#/cadastro?tipo=trabalhar">${ic('pedidos')}Quero trabalhar: criar meu perfil</a>
+      <a class="btn sec largo" href="#/cadastro?tipo=contratar">${ic('busca')}Quero contratar: criar conta</a><p class="nota centro">Já tem conta? <a href="#/entrar">Entrar</a></p></div>` : ''}
     <div class="acoes-home">
       <a class="acao-card" href="#/busca"><span class="op-ic">${ic('busca')}</span><b>Encontrar profissionais</b><small>Veja quem atende ${cid ? `em ${esc(cid.cidade)}` : 'perto de você'}</small></a>
       <a class="acao-card" href="${me ? '#/pedidos/novo' : '#/cadastro?tipo=contratar'}"><span class="op-ic">${ic('pedidos')}</span><b>Publicar um pedido</b><small>Receba propostas de vários profissionais</small></a>
@@ -1226,11 +1230,52 @@ async function telaConta() {
       itemMenu('#/verificar', 'documento', 'Verificação de identidade', stVerif),
       ehTurismo(me.categoria_id) ? itemMenu('#/conta/dados', 'mapa', 'Cadastur', me.cadastur_status === 'aprovado' ? 'Cadastur verificado' : me.cadastur_status === 'pendente' ? 'Em conferência' : 'Informe seu número') : '',
       itemMenu('#/conta/dados', 'cadeado', 'Dados para recebimento', 'Chave Pix para os repasses'),
-    ]) : bloco('Quer trabalhar pelo app?', [itemMenu('#/conta/dados', 'pedidos', 'Oferecer meus serviços', 'Ative seu perfil profissional em Meus dados')])}
+    ]) : bloco('Quer trabalhar pelo app?', [itemMenu('#/ser-profissional', 'pedidos', 'Oferecer meus serviços', 'Crie seu perfil profissional e receba clientes')])}
     ${me.is_admin ? bloco('Administração', [itemMenu('#/admin', 'admin', 'Painel do administrador', 'Comissões, verificações, repasses e usuários')]) : ''}
     ${bloco('Ajuda', [itemMenu('#/ajuda', 'ajuda', 'Ajuda e perguntas frequentes'), itemMenu('#/termos', 'documento', 'Termos de uso e privacidade')])}
     <button class="btn sec largo" id="sair">${ic('sair')}Sair da conta</button>`;
   document.getElementById('sair').addEventListener('click', async () => { await sb.auth.signOut(); location.hash = '#/'; });
+}
+
+// Quem já tem conta ativa o perfil profissional em um formulário curto
+function telaSerProfissional() {
+  if (me.is_prestador) { location.hash = '#/conta'; return; }
+  let cat = '';
+  const cid = cidadeAtual();
+  $app.innerHTML = `<section class="cadastro">
+    <h1>Ofereça seus serviços</h1>
+    <p class="nota">Leva 1 minuto. Depois disso você aparece nas buscas da sua cidade e pode responder pedidos.</p>
+    <form id="fprof" class="form-passo">
+      <p class="rotulo">Qual é o seu trabalho?</p>
+      <div class="cat-grade escolher compacta" id="sp-cats">${categoriasOrdenadas().map((c) => tileCategoria(c, 'button', 'aria-pressed="false"')).join('')}</div>
+      <div class="dupla"><label>Cidade onde atende<input name="cidade" value="${esc(me.cidade || cid?.cidade || '')}" required></label>
+        <label>UF<input name="uf" value="${esc(me.uf || cid?.uf || '')}" maxlength="2" required style="text-transform:uppercase"></label></div>
+      <label>Preço a partir de (R$)<input name="preco" type="number" min="0" step="1" placeholder="Ex.: valor da diária"></label>
+      <label>Conte sobre o seu trabalho<textarea name="bio" maxlength="1500" placeholder="Ex.: Pedreiro há 10 anos. Faço reboco, piso e pequenas reformas. Atendo o centro e bairros próximos."></textarea>
+        <small>Não coloque telefone, WhatsApp ou redes sociais. O contato é liberado depois do pagamento.</small></label>
+      <button class="btn largo">Ativar meu perfil profissional</button>
+    </form></section>`;
+  document.getElementById('sp-cats').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-cat]');
+    if (!b) return;
+    cat = b.dataset.cat;
+    document.querySelectorAll('#sp-cats [data-cat]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  });
+  document.getElementById('fprof').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!cat) return toast('Escolha o seu trabalho tocando em um dos quadros.', 'erro');
+    const v = form(e.target);
+    if (temContato(v.bio)) return toast(AVISO_CONTATO, 'erro');
+    const { error } = await sb.from('profiles').update({
+      is_prestador: true, categoria_id: Number(cat), cidade: v.cidade.trim(), uf: v.uf.toUpperCase().trim(),
+      preco_base: v.preco ? Number(v.preco) : null, bio: (v.bio || '').trim(),
+    }).eq('id', me.id);
+    if (error) return falha(error);
+    await recarregarMe();
+    renderNav();
+    toast(me.foto_url ? 'Pronto! Agora mostre fotos dos seus trabalhos.' : 'Pronto! Agora coloque sua foto de perfil.');
+    location.hash = me.foto_url ? '#/conta/fotos' : '#/conta/foto';
+  });
 }
 
 async function telaFavoritos() {
@@ -1346,6 +1391,7 @@ function telaContaFoto() {
       await recarregarMe();
       $st.textContent = '';
       toast('Foto de perfil atualizada!');
+      if (me.is_prestador) setTimeout(() => { location.hash = '#/conta/fotos'; }, 900);
     } catch (er) { $st.textContent = ''; falha(er); }
   });
 }
