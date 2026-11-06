@@ -843,8 +843,9 @@ async function buscarPrestadores(f) {
   if (f.cat) q = q.eq('categoria_id', f.cat);
   if (f.cats?.length) q = q.in('categoria_id', f.cats);
   if (f.cadastur) q = q.eq('cadastur_status', 'aprovado');
-  const { data, error } = await q;
+  const { data: brutos, error } = await q;
   if (error) throw error;
+  const data = (brutos || []).filter((p) => !CV.aguardandoMinimo(p.curriculo));
   // cidade escrita na busca ("pedreiro em Barreirinhas") vira filtro de cidade
   let texto = normalizar(f.q || ''), cidadeDaBusca = null;
   const cidades = [...new Set((data || []).map((p) => p.cidade).filter(Boolean))].sort((a, b) => b.length - a.length);
@@ -1093,7 +1094,7 @@ function telaCadastro(params) {
         try {
           const extra = {};
           if (est.foto) extra.foto_url = (await subirFoto(est.foto, 'perfil')).url;
-          if (prestar) Object.assign(extra, { categoria_id: Number(est.cat) || null, cidade: est.cidade, uf: est.uf, preco_base: est.preco ? Number(est.preco) : null });
+          if (prestar) Object.assign(extra, { categoria_id: Number(est.cat) || null, cidade: est.cidade, uf: est.uf, preco_base: est.preco ? Number(est.preco) : null, curriculo: { novo: true } });
           if (Object.keys(extra).length) {
             const { error: er } = await sb.from('profiles').update(extra).eq('id', me.id);
             if (er) throw er;
@@ -1105,8 +1106,8 @@ function telaCadastro(params) {
           }
         } catch (er) { falha(er); }
         renderNav();
-        toast(prestar ? 'Conta criada! Agora mostre fotos dos seus trabalhos.' : temDepois() ? 'Conta criada! Continue de onde parou.' : 'Conta criada! Bem-vindo(a).');
-        if (prestar) location.hash = '#/conta/fotos';
+        toast(prestar ? 'Conta criada! Agora vamos montar seu currículo.' : temDepois() ? 'Conta criada! Continue de onde parou.' : 'Conta criada! Bem-vindo(a).');
+        if (prestar) location.hash = '#/conta/curriculo?inicio=1';
         else await continuarDepois('#/');
       });
     }
@@ -1524,6 +1525,8 @@ async function telaCurriculo(params) {
   const s = CV.sugestoes(cat);
   const cv = CV.normalizar(p.curriculo);
   if (!cv.idiomas.length) cv.idiomas = ['Português'];
+  const inicio = !deOutro && params.get('inicio') === '1';
+  if (inicio) tituloTopo('Seu currículo');
   if (deOutro) tituloTopo(`Currículo de ${p.nome.split(' ')[0]}`);
 
   const grupo = (nome, opcoes, marcados, { unico = false, outro = '' } = {}) => `<div class="chips-sug" data-grupo="${nome}" ${unico ? 'data-unico' : ''}>
@@ -1549,6 +1552,8 @@ async function telaCurriculo(params) {
       <div class="linha-esp"><b>Currículo <span id="cv-pct">0</span>% preenchido</b></div>
       <div class="barra-pct" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span id="cv-barra"></span></div>
       <p class="nota" id="cv-falta"></p>
+      ${inicio ? `<div class="cv-boasvindas"><b>Último passo do cadastro!</b> O cliente escolhe quem mostra mais sobre o trabalho.
+        <span>Para aparecer na busca, marque pelo menos o <b>tempo de experiência</b> e <b>3 serviços</b>.</span></div>` : ''}
       ${deOutro ? '' : `<p class="nota">${ic('estrela')}Não sabe o que escrever? <b>Toque nas sugestões</b> que combinam com você. Elas ficam laranja quando marcadas.</p>
         <a class="btn sec pequeno" href="#/suporte">${ic('chat')}Pedir ajuda ao administrador</a>`}
     </div>
@@ -1578,6 +1583,7 @@ async function telaCurriculo(params) {
       <small>Não coloque telefone, WhatsApp ou redes sociais. O contato é liberado depois do pagamento.</small>`)}
     ${datalist('dl-funcoes', s.funcoes)}${datalist('dl-locais', CV.TIPOS_LOCAL)}${datalist('dl-cursos', s.cursos)}${datalist('dl-onde', CV.ONDE_ESTUDOU)}
     <button class="btn largo grande">${ic('check')}Salvar currículo</button>
+    ${inicio ? '<button type="button" class="link-simples" id="cv-depois">Fazer depois</button>' : ''}
     <div class="barra-cta"><div><small>Currículo</small><b><span id="cv-pct2">0</span>% preenchido</b></div><button class="btn">Salvar</button></div>
   </form>`;
 
@@ -1587,6 +1593,7 @@ async function telaCurriculo(params) {
     .map((el) => Object.fromEntries(campos.map((c) => [c, el.querySelector(`[name="${c}"]`).value.trim()])))
     .filter((x) => campos.some((c) => x[c]));
   const coletar = () => CV.normalizar({
+    novo: cv.novo === true,
     experiencia: marcados('experiencia')[0] || '', servicos: marcados('servicos'), trabalhos: itens('trabalhos', ['funcao', 'local', 'tempo']),
     escolaridade: $f.escolaridade.value, cursos: itens('cursos', ['nome', 'onde', 'ano']), equipamentos: marcados('equipamentos'),
     dias: marcados('dias'), turnos: marcados('turnos'), areas: $f.areas.value, idiomas: marcados('idiomas'), diferenciais: marcados('diferenciais'),
@@ -1598,6 +1605,11 @@ async function telaCurriculo(params) {
     document.getElementById('cv-pct2').textContent = pct;
     document.getElementById('cv-barra').style.width = `${pct}%`;
     const falta = CV.itensFaltando(c, $f.bio.value).filter(([ok]) => !ok).map(([, t]) => t);
+    if (CV.aguardandoMinimo(c)) {
+      const n = 3 - c.servicos.length;
+      const precisa = [!c.experiencia && 'tempo de experiência', n > 0 && (n === 1 ? 'mais 1 serviço' : `mais ${n} serviços`)].filter(Boolean).join(' e ');
+      falta.splice(0, falta.length, `Para aparecer na busca, marque ${precisa}`, ...falta.filter((t) => !/^(Tempo de experiência|Serviços que)/.test(t)));
+    }
     document.getElementById('cv-falta').textContent = falta.length ? `Falta: ${falta.slice(0, 3).join(' · ')}${falta.length > 3 ? '…' : ''}` : 'Tudo preenchido. Muito bem!';
   };
   const novaLinha = (lista, html, foco) => {
@@ -1631,6 +1643,11 @@ async function telaCurriculo(params) {
     else if ('novoTrabalho' in b.dataset) novaLinha('lista-trabalhos', linhaTrabalho({ funcao: b.dataset.novoTrabalho }), b.dataset.novoTrabalho ? '[name="local"]' : '[name="funcao"]');
     else if ('novoCurso' in b.dataset) novaLinha('lista-cursos', linhaCurso({ nome: b.dataset.novoCurso }), b.dataset.novoCurso ? '[name="onde"]' : '[name="nome"]');
     else if ('remover' in b.dataset) b.closest('.cv-item').remove();
+    else if (b.id === 'cv-depois') {
+      toast('Tudo bem! Você aparece na busca quando completar o currículo em Minha Conta.');
+      location.hash = '#/conta/fotos';
+      return;
+    }
     else if (b.dataset.area) {
       const atual = $f.areas.value.trim();
       if (!normalizar(atual).includes(normalizar(b.dataset.area))) $f.areas.value = atual ? `${atual}, ${b.dataset.area.toLowerCase()}` : b.dataset.area;
@@ -1648,6 +1665,7 @@ async function telaCurriculo(params) {
   $f.addEventListener('submit', async (e) => {
     e.preventDefault();
     const c = coletar();
+    if (c.novo && CV.temMinimo(c)) delete c.novo; // completou o mínimo: passa a aparecer na busca
     const bio = $f.bio.value.trim();
     const textos = [bio, c.experiencia, c.escolaridade, c.areas, ...c.servicos, ...c.equipamentos, ...c.diferenciais,
       ...c.trabalhos.flatMap((t) => Object.values(t)), ...c.cursos.flatMap((k) => Object.values(k))];
@@ -1664,8 +1682,10 @@ async function telaCurriculo(params) {
       location.hash = `#/suporte/${p.id}`;
     } else {
       await recarregarMe();
-      toast('Currículo salvo! Veja como os clientes enxergam você.');
-      location.hash = `#/p/${me.id}`;
+      if (c.novo) toast('Currículo salvo! Para aparecer na busca, marque o tempo de experiência e pelo menos 3 serviços.', 'erro');
+      else if (inicio) toast('Currículo pronto! Você já aparece na busca. Agora mostre fotos dos seus trabalhos.');
+      else toast('Currículo salvo! Veja como os clientes enxergam você.');
+      location.hash = c.novo ? '#/conta/curriculo' : inicio ? '#/conta/fotos' : `#/p/${me.id}`;
     }
   });
   atualizar();
@@ -1704,6 +1724,8 @@ async function telaConta() {
       <a href="#/conta/foto" class="conta-foto" aria-label="Trocar foto">${avatar(me, 'grande')}<span class="conta-cam">${ic('camera')}</span></a>
       <div><h1>${esc(me.nome)}</h1><p class="meta">${esc(papel)}</p><div class="selos">${me.verificado ? SELO : ''}${me.cadastur_status === 'aprovado' ? SELO_CADASTUR : ''}</div></div>
     </div>
+    ${me.is_prestador && CV.aguardandoMinimo(me.curriculo) ? `<a class="alerta aviso-cv" href="#/conta/curriculo">${ic('alerta')}<span><b>Seu perfil ainda não aparece na busca.</b>
+      Marque seu tempo de experiência e pelo menos 3 serviços no currículo. Leva 1 minuto. <u>Completar agora</u></span></a>` : ''}
     ${completo}
     ${bloco('Minha conta', [
       itemMenu('#/conta/dados', 'perfil', 'Meus dados', 'Nome, cidade e WhatsApp'),
@@ -1762,13 +1784,13 @@ function telaSerProfissional() {
     if (temContato(v.bio)) return toast(AVISO_CONTATO, 'erro');
     const { error } = await sb.from('profiles').update({
       is_prestador: true, categoria_id: Number(cat), cidade: v.cidade.trim(), uf: v.uf.toUpperCase().trim(),
-      preco_base: v.preco ? Number(v.preco) : null, bio: (v.bio || '').trim(),
+      preco_base: v.preco ? Number(v.preco) : null, bio: (v.bio || '').trim(), curriculo: { ...CV.normalizar(me.curriculo), novo: true },
     }).eq('id', me.id);
     if (error) return falha(error);
     await recarregarMe();
     renderNav();
-    toast(me.foto_url ? 'Pronto! Agora mostre fotos dos seus trabalhos.' : 'Pronto! Agora coloque sua foto de perfil.');
-    location.hash = me.foto_url ? '#/conta/fotos' : '#/conta/foto';
+    toast('Pronto! Agora vamos montar seu currículo.');
+    location.hash = '#/conta/curriculo?inicio=1';
   });
 }
 

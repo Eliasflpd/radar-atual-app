@@ -278,8 +278,12 @@ export function normalizar(c) {
     areas: typeof o.areas === 'string' ? o.areas.trim() : '',
     idiomas: lista(o.idiomas),
     diferenciais: lista(o.diferenciais),
+    // profissional novo: só aparece na busca depois do mínimo (experiência + 3 serviços)
+    ...(o.novo === true ? { novo: true } : {}),
   };
 }
+export const temMinimo = (c) => { const x = normalizar(c); return !!x.experiencia && x.servicos.length >= 3; };
+export const aguardandoMinimo = (c) => !!(c && c.novo === true && !temMinimo(c));
 
 // Quanto do currículo está preenchido (0 a 100)
 export function itensFaltando(c, bio = '') {

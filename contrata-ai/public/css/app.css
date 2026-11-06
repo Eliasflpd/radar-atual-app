@@ -922,3 +922,12 @@ nav#nav a .ic { stroke-width: 1.9; }
 .dica-lista { display: flex; align-items: center; gap: 10px; margin: 14px 0 4px; padding: 10px 14px; border-radius: var(--raio-p);
   background: var(--pri-claro); color: var(--tinta); font-size: 15px; line-height: 1.35; }
 .dica-lista .ic { flex: none; width: 22px; height: 22px; color: var(--pri-tx); }
+
+/* cadastro do profissional: currículo logo depois de criar a conta */
+.cv-boasvindas { margin: 10px 0 4px; padding: 12px 14px; border-radius: var(--raio-p); background: var(--pri-claro); font-size: 15px; line-height: 1.4; }
+.cv-boasvindas span { display: block; margin-top: 4px; }
+.aviso-cv { display: flex; gap: 10px; align-items: flex-start; text-decoration: none; }
+.aviso-cv .ic { flex: none; color: var(--pri-tx); margin-top: 2px; }
+
+/* o aviso nunca bloqueia o toque nos botões que estão embaixo dele */
+.toast { pointer-events: none; }
