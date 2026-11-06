@@ -739,3 +739,93 @@ body[data-tela="inicio"] .demo-botao { display: none; }
   .botao-home { min-height: clamp(78px, 10.5vh, 92px); }
   .grupos, .botoes-home { margin-top: 20px; }
 }
+
+/* ======================= ajustes finos do modelo ======================= */
+.ic.cheio { fill: currentColor; stroke: none; }
+.logo .logo-check-int { stroke: var(--pri); }
+.logo .logo-check, .logo .logo-check-int { fill: none; }
+.marca-app .logo { width: 52px; height: 52px; }
+.topo .logo { width: 34px; height: 34px; }
+
+/* foto: o capacete sai da faixa azul para cima */
+.app-topo { position: relative; z-index: 3; background: #fff; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding-inline: max(16px, env(safe-area-inset-left, 0px)); height: 66px; }
+.hero-app { overflow: visible; }
+.hero-app::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.hero-foto { position: absolute; z-index: 4; right: 0; bottom: 0; width: auto; height: 110.4%; max-width: 50%; object-fit: contain; object-position: right bottom;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 18%); mask-image: linear-gradient(to right, transparent 0, #000 18%); }
+.hero-texto { padding-right: 46%; }
+.hero-app { grid-template-columns: 1fr; }
+.busca-hero { z-index: 5; }
+
+/* ícones dos quadros e dos botões como no modelo */
+.grupo.marinho > span .ic { stroke-width: 1.8; }
+.botao-home.laranja > .ic:first-child { width: 40px; height: 40px; }
+nav#nav a[data-aba="inicio"].ativa .ic { fill: currentColor; }
+nav#nav a .ic { stroke-width: 1.9; }
+
+/* computador: lado esquerdo com logo, frase e Rápido / Seguro / Confiável */
+.home-lado { display: none; }
+@media (min-width: 1000px) {
+  .home-grid { display: grid; grid-template-columns: 1fr minmax(380px, 440px); gap: 56px; align-items: center; min-height: calc(100vh - 120px); }
+  .home-lado { display: grid; justify-items: start; gap: 14px; }
+  .lado-logo .logo { width: 150px; height: 150px; }
+  .lado-nome { font: 700 64px/1 var(--f-titulo); color: var(--marinho); letter-spacing: -.02em; }
+  .lado-nome em { font-style: normal; color: var(--pri); }
+  .lado-frase { font-size: 26px; line-height: 1.35; color: var(--marinho); max-width: 18ch; }
+  .lado-lista { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 16px; }
+  .lado-lista li { display: flex; align-items: center; gap: 14px; font: 700 28px var(--f-titulo); color: var(--marinho); }
+  .lado-lista .ic { width: 46px; height: 46px; padding: 9px; border-radius: 50%; background: var(--pri); color: #fff; stroke-width: 3.2; }
+  .home-app { background: #fff; border-radius: 28px; padding: 0 18px 18px; box-shadow: 0 20px 50px rgba(19, 40, 74, .15); overflow: hidden; }
+  .home-app .app-topo { display: flex; margin-inline: -18px; padding-inline: 18px; }
+  .home-app .hero-app { margin-inline: -18px; border-radius: 0; }
+  body[data-tela="inicio"] .topo .marca { visibility: hidden; }
+}
+
+/* faixa na mesma proporção da foto: o capacete sai da faixa como no modelo
+   foto: altura = 1,15 × largura; 9,4% dela fica acima da faixa → faixa = 1,04 × largura da foto */
+.hero-app { --foto-l: min(52vw, 300px); height: calc(var(--foto-l) * 1.04); min-height: 0; }
+.hero-foto { width: var(--foto-l); height: auto; max-width: none; right: 0; bottom: 0; top: auto;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16%); mask-image: linear-gradient(to right, transparent 0, #000 16%); }
+.hero-texto { padding-right: calc(var(--foto-l) - 18px); padding-bottom: 30px; }
+.hero-app h1 { font-size: clamp(21px, 6.4vw, 30px); }
+.botao-home b { font-size: clamp(17px, 4.9vw, 21px); white-space: nowrap; }
+.botao-home.laranja > .ic:first-child { width: 36px; height: 36px; }
+@media (max-width: 760px) and (max-height: 700px) { .hero-app { --foto-l: min(46vw, 300px); } .hero-app h1 { font-size: clamp(19px, 5.8vw, 26px); } }
+@media (min-width: 1000px) { .hero-app { --foto-l: 220px; } .hero-app h1 { font-size: 25px; } }
+/* celulares altos: quadros e botões maiores para ocupar a tela */
+@media (max-width: 760px) and (min-height: 780px) {
+  .grupo { min-height: clamp(110px, 14.5vh, 132px); }
+  .botao-home { min-height: clamp(82px, 11vh, 96px); }
+  .grupos, .botoes-home { margin-top: clamp(18px, 2.6vh, 26px); }
+}
+
+/* sem login: a tela inicial preenche a altura toda, sem sobrar vazio e sem rolar */
+@media (max-width: 760px) and (min-height: 780px) { .hero-app { --foto-l: min(58vw, 300px); } }
+@media (max-width: 760px) {
+  body[data-tela="inicio"]:not(.logado) .home-app { display: flex; flex-direction: column;
+    min-height: calc(100svh - var(--abas) - 14px - 2 * env(safe-area-inset-bottom, 0px) - env(safe-area-inset-top, 0px)); }
+  body[data-tela="inicio"]:not(.logado) .grupos { margin-top: auto; padding-top: 14px; }
+  body[data-tela="inicio"]:not(.logado) .botoes-home { margin-top: auto; margin-bottom: auto; padding-top: 14px; }
+}
+
+/* o texto pode passar por cima da parte azul da foto, como no modelo */
+.hero-texto { position: relative; z-index: 5; padding-right: calc(var(--foto-l) * .66); }
+.hero-app h1 { font-size: clamp(19px, 6vw, 28px); text-shadow: 0 2px 10px rgba(5, 20, 45, .55); }
+/* celulares muito pequenos (ex.: 320 × 568) */
+@media (max-width: 760px) and (max-height: 600px) {
+  .app-topo { height: 50px; }
+  .marca-app .logo { width: 34px; height: 34px; }
+  .hero-app { --foto-l: min(42vw, 300px); }
+  .hero-cidade { font-size: 12px; padding: 3px 8px; }
+  .busca-hero { height: 46px; margin-top: -23px; }
+  .grupo { min-height: 62px; padding: 6px 2px; }
+  .grupo > span .ic { width: 24px; height: 24px; }
+  .grupo b { font-size: 11px; }
+  .botao-home { min-height: 52px; padding: 6px 12px; }
+  .botao-home small { display: none; }
+  body[data-tela="inicio"]:not(.logado) .grupos, body[data-tela="inicio"]:not(.logado) .botoes-home { padding-top: 8px; }
+}
+@media (max-width: 760px) and (max-height: 779px) {
+  .hero-texto { padding-right: calc(var(--foto-l) * .86); padding-bottom: 28px; }
+  .hero-app h1 { font-size: clamp(18px, 5.5vw, 24px); }
+}

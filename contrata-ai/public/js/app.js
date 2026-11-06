@@ -37,6 +37,12 @@ const ICONES = {
   alerta: '<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.2v.3"/>',
   seta: '<path d="m9 5 7 7-7 7"/>',
   baixo: '<path d="m6 9 6 6 6-6"/>',
+  tijolos: '<rect x="2" y="4" width="9.2" height="4.6" rx="1"/><rect x="12.8" y="4" width="9.2" height="4.6" rx="1"/><rect x="2" y="10.2" width="4" height="4.6" rx="1"/><rect x="7.6" y="10.2" width="8.8" height="4.6" rx="1"/><rect x="18" y="10.2" width="4" height="4.6" rx="1"/><rect x="2" y="16.4" width="9.2" height="4.6" rx="1"/><rect x="12.8" y="16.4" width="9.2" height="4.6" rx="1"/>',
+  ferramentas2: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a5.5 5.5 0 0 1-7.4 7.2L7 19.8a2 2 0 0 1-2.8-2.8l6.7-6.7a5.5 5.5 0 0 1 7.2-7.4l-3.4 3.4Z"/><path d="M4 4.5 12.5 13"/><path d="M14 14.5l5 5" stroke-width="3.6"/><path d="M2.8 5.8l3-3"/>',
+  vassoura2: '<path d="M15.2 2.4a1 1 0 0 1 1.7 1l-4.1 7.2-1.7-1Z"/><path d="M8.6 9.5l6.6 3.8-2.6 4.5c-.9 1.5-2.6 2.4-4.4 2.2l-5.3-.5 1.6-1.6-2.2-.4 2.2-1.5-1.7-.8Z"/>',
+  pessoas2: '<circle cx="12" cy="7" r="3.4"/><circle cx="5.2" cy="8.8" r="2.5"/><circle cx="18.8" cy="8.8" r="2.5"/><path d="M6.2 20.5a5.8 5.8 0 0 1 11.6 0Z"/><path d="M.8 19.8a4.6 4.6 0 0 1 6.6-4.2 7.2 7.2 0 0 0-2 4.2Z"/><path d="M23.2 19.8a4.6 4.6 0 0 0-6.6-4.2 7.2 7.2 0 0 1 2 4.2Z"/>',
+  casa: '<path d="M3 11.2 12 3.5l9 7.7V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/>',
+  mensagens: '<path d="M4 4.5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4v-15a1 1 0 0 1 1-1Z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01" stroke-width="2.6"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   anunciar: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
   capacete: '<path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5M14 6a6 6 0 0 1 6 6v3M4 15v-3a6 6 0 0 1 6-6"/><rect x="2" y="15" width="20" height="4" rx="1"/>',
@@ -93,9 +99,9 @@ const ICONE_CAT = {
 };
 // Quadros da tela inicial: cada um junta várias áreas
 const GRUPOS = {
-  construcao: { nome: 'Construção', icone: 'tijolo', cor: 'laranja', areas: ['Pedreiro', 'Ajudante geral', 'Pintor', 'Serralheiro', 'Marceneiro', 'Tratorista / Operador de máquinas'] },
-  reparos: { nome: 'Reparos', icone: 'ferramentas', cor: 'marinho', areas: ['Eletricista', 'Encanador', 'Técnico em refrigeração', 'Técnico em informática', 'Mecânico', 'Outros'] },
-  limpeza: { nome: 'Limpeza', icone: 'vassoura', cor: 'laranja', areas: ['Diarista / Limpeza', 'Jardineiro'] },
+  construcao: { nome: 'Construção', icone: 'tijolos', cheio: true, cor: 'laranja', areas: ['Pedreiro', 'Ajudante geral', 'Pintor', 'Serralheiro', 'Marceneiro', 'Tratorista / Operador de máquinas'] },
+  reparos: { nome: 'Reparos', icone: 'ferramentas2', cor: 'marinho', areas: ['Eletricista', 'Encanador', 'Técnico em refrigeração', 'Técnico em informática', 'Mecânico', 'Outros'] },
+  limpeza: { nome: 'Limpeza', icone: 'vassoura2', cheio: true, cor: 'laranja', areas: ['Diarista / Limpeza', 'Jardineiro'] },
 };
 const ORDEM_CAT = ['Pedreiro', 'Eletricista', 'Diarista / Limpeza', 'Ajudante geral', 'Guia turístico', 'Encanador', 'Técnico em refrigeração', 'Mototáxi / Entregas'];
 const categoriasOrdenadas = () => [...categorias].sort((a, b) => {
@@ -108,7 +114,7 @@ const nomeCurto = (n) => CURTOS[n] || n.split(' / ')[0];
 const tileCategoria = (c, tag = 'a', extra = '') => `<${tag} class="cat-tile" ${tag === 'a' ? `href="#/categoria/${c.id}"` : `type="button" data-cat="${c.id}"`} ${extra}>
   <span class="cat-ic">${ic(ICONE_CAT[c.nome] || 'grade')}</span><span class="cat-nome">${esc(nomeCurto(c.nome))}</span></${tag}>`;
 const ic = (nome, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONES[nome] || ''}</svg>`;
-const LOGO = '<svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path class="logo-capacete" d="M13 31a19 19 0 0 1 38 0Z"/><rect class="logo-capacete" x="8" y="29" width="48" height="6" rx="3"/><rect class="logo-crista" x="28.5" y="11" width="7" height="13" rx="3.5"/><path class="logo-check" d="M17 42l11 11 21-24" fill="none" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const LOGO = '<svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path class="logo-capacete" d="M13 27a18 18 0 0 1 36 0Z"/><rect class="logo-capacete" x="8" y="25" width="46" height="6" rx="3"/><rect class="logo-crista" x="27.5" y="6" width="7" height="12" rx="3.5"/><path class="logo-check" d="M11 37c3 7 7 13 12 19 9-14 19-27 35-41" fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path class="logo-check-int" d="M19 40l5 5 8-9" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const SELO = `<span class="selo" title="Identidade verificada com documento e selfie">${ic('check')}Verificado</span>`;
 // Cadastur: registro oficial do Ministério do Turismo (obrigatório para guia de turismo — Lei 8.623/1993)
 const AREAS_TURISMO = ['Guia turístico', 'Passeios 4x4 e quadriciclo', 'Barqueiro / Passeio de barco', 'Instrutor de kitesurfe'];
@@ -314,8 +320,8 @@ async function carregarMe(session) {
 
 function renderNav() {
   const aba = (href, icone, rotulo, chave) => `<a href="${href}" data-aba="${chave}">${ic(icone)}<span>${rotulo}</span></a>`;
-  $nav.innerHTML = aba('#/', 'inicio', 'Início', 'inicio') + aba('#/busca', 'busca', 'Buscar', 'busca')
-    + aba('#/pedidos/novo', 'anunciar', 'Anunciar', 'anunciar') + aba('#/conversas', 'chat', 'Mensagens', 'conversas')
+  $nav.innerHTML = aba('#/', 'casa', 'Início', 'inicio') + aba('#/busca', 'busca', 'Buscar', 'busca')
+    + aba('#/pedidos/novo', 'anunciar', 'Anunciar', 'anunciar') + aba('#/conversas', 'mensagens', 'Mensagens', 'conversas')
     + aba(me ? '#/conta' : '#/entrar', 'perfil', 'Minha Conta', 'conta');
   document.body.classList.toggle('logado', !!me);
   if (me) $nav.querySelector('[data-aba="conversas"]').insertAdjacentHTML('beforeend', '<span class="badge-aba" id="badge-msgs" hidden></span>');
@@ -558,7 +564,14 @@ async function telaInicio() {
   const naoLidas = me ? await contarNaoLidas() : 0;
   const profissional = me?.is_prestador;
   const destinoProf = !me ? '#/cadastro?tipo=trabalhar' : profissional ? '#/conta' : '#/ser-profissional';
-  $app.innerHTML = `
+  $app.innerHTML = `<div class="home-grid">
+    <aside class="home-lado" aria-hidden="true">
+      <div class="lado-logo">${LOGO}</div>
+      <p class="lado-nome">Contrata <em>Aí</em></p>
+      <p class="lado-frase">Conectando você aos melhores profissionais da sua cidade</p>
+      <ul class="lado-lista"><li>${ic('check')}Rápido</li><li>${ic('check')}Seguro</li><li>${ic('check')}Confiável</li></ul>
+    </aside>
+    <div class="home-app">
     <header class="app-topo">
       <a class="marca-app" href="#/" aria-label="Contrata Aí, início">${LOGO}<span>Contrata <em>Aí</em></span></a>
       <div class="topo-icones">
@@ -572,21 +585,22 @@ async function telaInicio() {
         <svg class="traco" viewBox="0 0 200 18" aria-hidden="true"><path d="M5 13C55 4 135 2 195 7"/></svg>
         <button type="button" class="hero-cidade" data-escolher-cidade>${ic('pin')}<span>${esc(nomeCidade(cid))}</span>${ic('baixo')}</button>
       </div>
-      <img class="hero-foto" src="img/profissional-hero.jpg" alt="" width="270" height="275">
+      <img class="hero-foto" src="img/profissional-hero.webp" alt="" width="270" height="307">
     </section>
     <form class="busca-hero" id="fb" role="search">${ic('busca')}<input name="q" placeholder="Qual serviço você precisa?" aria-label="Qual serviço você precisa?" autocomplete="off"></form>
     <div class="grupos">
-      ${Object.entries(GRUPOS).map(([k, g]) => `<a class="grupo ${g.cor}" href="#/grupo/${k}"><span>${ic(g.icone)}</span><b>${g.nome}</b></a>`).join('')}
+      ${Object.entries(GRUPOS).map(([k, g]) => `<a class="grupo ${g.cor}" href="#/grupo/${k}"><span>${ic(g.icone, g.cheio ? 'cheio' : '')}</span><b>${g.nome}</b></a>`).join('')}
       <a class="grupo marinho" href="#/categorias"><span>${ic('grade')}</span><b>Outros Serviços</b></a>
     </div>
     <div class="botoes-home">
-      <a class="botao-home laranja" href="#/busca">${ic('pessoas')}<span><b>Preciso de um serviço</b><small>Encontre profissionais qualificados</small></span>${ic('seta')}</a>
+      <a class="botao-home laranja" href="#/busca">${ic('pessoas2', 'cheio')}<span><b>Preciso de um serviço</b><small>Encontre profissionais qualificados</small></span>${ic('seta')}</a>
       <a class="botao-home marinho" href="${destinoProf}">${ic('capacete')}<span><b>Sou profissional</b><small>${profissional ? 'Veja seu perfil e seus clientes' : 'Cadastre-se e receba clientes'}</small></span>${ic('seta')}</a>
     </div>
     ${me ? `<div class="secao-tit"><h2>Em destaque${cid ? ` em ${esc(cid.cidade)}` : ''}</h2><a href="#/busca">Ver todos</a></div>
     <div class="grade" id="destaques">${esqueleto(2)}</div>
     <div class="secao-tit"><h2>Oportunidades${cid ? ` em ${esc(cid.cidade)}` : ' recentes'}</h2><a href="#/pedidos">Ver todas</a></div>
-    <div id="oportunidades"></div>` : ''}`;
+    <div id="oportunidades"></div>` : ''}
+    </div></div>`;
   document.getElementById('fb').addEventListener('submit', (e) => {
     e.preventDefault();
     const q = form(e.target).q.trim();

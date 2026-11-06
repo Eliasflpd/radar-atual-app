@@ -1,6 +1,6 @@
 // Service worker: deixa o app instalável e abre rápido (cache dos arquivos do app).
-const VERSAO = 'contrata-v2';
-const ARQUIVOS = ['/', '/index.html', '/css/app.css', '/js/app.js', '/js/filtro.js', '/icons/icon.svg', '/manifest.webmanifest', '/img/profissional-hero.jpg'];
+const VERSAO = 'contrata-v3';
+const ARQUIVOS = ['/', '/index.html', '/css/app.css', '/js/app.js', '/js/filtro.js', '/icons/icon.svg', '/manifest.webmanifest', '/img/profissional-hero.webp'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSAO).then((c) => c.addAll(ARQUIVOS)));
