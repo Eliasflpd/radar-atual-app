@@ -155,6 +155,20 @@ legend { font-weight: 700; font-size: 14px; padding: 0 6px; }
 .nota-chip .ic { color: var(--estrela); fill: var(--estrela); width: 16px; height: 16px; }
 .nota-chip span { color: var(--suave); }
 
+/* ---------- Cadastur ---------- */
+.selo.cadastur { color: #1d5fbf; background: #e6f0fd; }
+.mini-cadastur { display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px; font-weight: 800; color: #1d5fbf; background: #e6f0fd; padding: 1px 7px; border-radius: 99px; vertical-align: 1px; }
+.mini-cadastur .ic { width: 12px; height: 12px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .selo.cadastur, :root:not([data-theme="light"]) .mini-cadastur { color: #8ab8ff; background: #172a45; } }
+:root[data-theme="dark"] .selo.cadastur, :root[data-theme="dark"] .mini-cadastur { color: #8ab8ff; background: #172a45; }
+.selos { display: flex; gap: 6px; flex-wrap: wrap; }
+.cadastur-linha { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 14px; color: var(--suave); padding: 10px 20px 0; }
+.card .cadastur-linha { padding: 8px 0 4px; }
+.cadastur-linha a { color: var(--pri-tx); font-weight: 700; }
+.alerta.ok { background: var(--verde-claro); }
+.alerta.erro-claro { background: var(--vermelho-claro); }
+.chip-check { display: inline-flex; margin: 12px 0 0; padding: 8px 14px; border: 1.5px solid var(--linha); border-radius: 99px; background: var(--papel); font-size: 14px; }
+
 /* ---------- boas-vindas ---------- */
 .boas-vindas { max-width: 480px; margin: 0 auto; padding: 12px 0 24px; }
 .bv-marca { display: flex; align-items: center; gap: 10px; font: 900 22px var(--f-titulo); margin-bottom: 26px; }
@@ -234,8 +248,8 @@ legend { font-weight: 700; font-size: 14px; padding: 0 6px; }
 .perfil-cab .avatar.grande { border: 4px solid var(--papel); margin-top: -48px; }
 .perfil-nome { flex: 1 1 180px; min-width: 0; padding-top: 12px; }
 .perfil-nome h1 { font-size: clamp(24px, 5vw, 30px); margin-bottom: 2px; }
-.perfil-cab .selo { margin-top: 16px; }
-@media (max-width: 560px) { .perfil-cab .avatar.grande { width: 88px; height: 88px; margin-top: -44px; } .perfil-nome { flex-basis: 100%; padding-top: 0; } .perfil-cab .selo { margin-top: 0; } }
+.perfil-cab .selos { margin-top: 16px; }
+@media (max-width: 560px) { .perfil-cab .avatar.grande { width: 88px; height: 88px; margin-top: -44px; } .perfil-nome { flex-basis: 100%; padding-top: 0; } .perfil-cab .selos { margin-top: 0; } }
 .fatos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--linha); margin: 18px 0 0; border-block: 1px solid var(--linha); }
 .fatos div { background: var(--papel); padding: 12px 20px; min-width: 0; }
 .fatos div:last-child:nth-child(odd) { grid-column: span 2; }

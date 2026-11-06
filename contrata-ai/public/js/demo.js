@@ -3,7 +3,7 @@
 // o pagamento, filtro anti-contato, 3 avisos = suspensão, comissão de 10%.
 import { temContato } from './filtro.js';
 
-const CHAVE = 'contrata-demo-v4';
+const CHAVE = 'contrata-demo-v5';
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now());
 const agora = (minAtras = 0) => new Date(Date.now() - minAtras * 60000).toISOString();
 const r2 = (n) => Math.round(n * 100) / 100;
@@ -63,6 +63,7 @@ function perfil(id, nome, extra = {}) {
   return {
     id, nome, cidade: '', uf: '', bio: '', foto_url: '', categoria_id: null, preco_base: null,
     is_prestador: false, is_contratante: true, is_admin: false, verificado: false, suspenso: false, avisos: 0,
+    cadastur_numero: '', cadastur_status: '', cadastur_motivo: '',
     avaliacao_media: 0, avaliacao_qtd: 0, criado_em: agora(60 * 24 * 90), ...extra,
   };
 }
@@ -111,6 +112,7 @@ function semente() {
     P('u-br6', 'Josiane Carvalho', 26, 'Barreirinhas', 'MA', 'Garçonete e atendente com experiência em restaurante e pousada. Disponível para alta temporada e eventos.', 90, 4.6, 15),
     P('u-br7', 'Maria do Socorro', 5, 'Barreirinhas', 'MA', 'Camareira e diarista para pousadas e casas de temporada. Troca de enxoval e limpeza entre hóspedes.', 100, 4.8, 40, true),
     P('u-br8', 'Ronaldo Lima', 27, 'Barreirinhas', 'MA', 'Mototáxi e entregas no centro e na Beira-Rio. Levo encomendas para pousadas e restaurantes.', 10, 4.5, 120),
+    P('u-br10', 'Cícero Araújo', 22, 'Barreirinhas', 'MA', 'Guia de turismo nascido em Barreirinhas. Circuito Lagoa Azul, Canto do Atins e comunidades de Mandacaru.', 140, 4.6, 9),
     P('u-br9', 'Antônio Cutrim', 30, 'Barreirinhas', 'MA', 'Instalação e manutenção de ar-condicionado split. Atendo pousadas, hotéis e residências.', 180, 4.7, 33),
     // Tuntum (MA) — comércio, construção e campo
     P('u-tt1', 'José Wilson', 28, 'Tuntum', 'MA', 'Trabalhador rural: roçado, plantio de milho e mandioca, cerca e diária na fazenda.', 80, 4.6, 22),
@@ -171,6 +173,11 @@ function semente() {
     { id: 1, user_id: 'u-pedro', conversa_id: 'c-1', onde: 'chat', texto_original: 'me chama no zap que a gente combina melhor', criado_em: agora(160) },
   ];
   profiles.find((p) => p.id === 'u-pedro').avisos = 1;
+  // Cadastur: dois guias e o 4x4 já conferidos; um guia esperando o admin
+  for (const [id, num, st] of [['u-br1', '21.003418.10.0001-7', 'aprovado'], ['u-br2', '21.004752.10.0002-3', 'aprovado'],
+    ['u-br3', '21.002199.30.0001-5', 'aprovado'], ['u-br10', '21.006031.10.0001-2', 'pendente']]) {
+    Object.assign(profiles.find((p) => p.id === id), { cadastur_numero: num, cadastur_status: st });
+  }
   let fid = 1;
   const F = (user, legenda, c1, c2, simbolo, diasAtras) => ({
     id: fid++, user_id: user, url: fotoExemplo(legenda, c1, c2, simbolo), caminho: `${user}/exemplo-${fid}.svg`, legenda, criado_em: agora(60 * 24 * diasAtras),
@@ -490,6 +497,17 @@ const RPC = {
     emitir('mensagens', 'INSERT', m);
     return c.id;
   },
+  enviar_cadastur({ numero }) {
+    const n = String(numero || '').trim().toUpperCase();
+    if (!/^[0-9A-Z./ -]{6,30}$/.test(n) || !/[0-9]{4,}/.test(n)) throw new Error('Número do Cadastur inválido. Copie exatamente como aparece no seu certificado.');
+    Object.assign(eu(), { cadastur_numero: n, cadastur_status: 'pendente', cadastur_motivo: '' });
+  },
+  admin_analisar_cadastur({ uid: alvo, aprovar, p_motivo }) {
+    if (!isAdmin()) throw new Error('Apenas administrador.');
+    const p = db.profiles.find((x) => x.id === alvo && x.cadastur_status === 'pendente');
+    if (!p) throw new Error('Cadastur não encontrado ou já analisado.');
+    Object.assign(p, { cadastur_status: aprovar ? 'aprovado' : 'rejeitado', cadastur_motivo: aprovar ? '' : (p_motivo || '') });
+  },
   admin_analisar_verificacao({ vid, aprovar, p_motivo }) {
     if (!isAdmin()) throw new Error('Apenas administrador.');
     const v = db.verificacoes.find((x) => x.id === vid && x.status === 'pendente');
@@ -547,6 +565,7 @@ const RPC = {
       tentativas: db.tentativas_burla.length,
       verificacoes_pendentes: db.verificacoes.filter((v) => v.status === 'pendente').length,
       pedidos_abertos: db.pedidos.filter((x) => x.status === 'aberto').length,
+      cadastur_pendentes: db.profiles.filter((p) => p.cadastur_status === 'pendente').length,
     };
   },
 };

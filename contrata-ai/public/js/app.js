@@ -94,6 +94,12 @@ const tileCategoria = (c, tag = 'a', extra = '') => `<${tag} class="cat-tile" ${
 const ic = (nome, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONES[nome] || ''}</svg>`;
 const LOGO = '<svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="128"/><path d="M136 270l84 84 156-180" fill="none" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const SELO = `<span class="selo" title="Identidade verificada com documento e selfie">${ic('check')}Verificado</span>`;
+// Cadastur: registro oficial do Ministério do Turismo (obrigatório para guia de turismo — Lei 8.623/1993)
+const AREAS_TURISMO = ['Guia turístico', 'Passeios 4x4 e quadriciclo', 'Barqueiro / Passeio de barco', 'Instrutor de kitesurfe'];
+const ehTurismo = (catId) => AREAS_TURISMO.includes(categorias.find((c) => String(c.id) === String(catId))?.nome);
+const ehGuia = (catId) => categorias.find((c) => String(c.id) === String(catId))?.nome === 'Guia turístico';
+const SELO_CADASTUR = `<span class="selo cadastur" title="Registro no Cadastur (Ministério do Turismo) conferido pela administração">${ic('mapa')}Cadastur</span>`;
+const PORTAL_CADASTUR = 'https://cadastur.turismo.gov.br';
 const notaHTML = (media, qtd) => `<span class="nota-chip">${ic('estrela')}<b>${Number(media || 0).toFixed(1)}</b><span>(${qtd || 0})</span></span>`;
 
 const STATUS = { proposta: 'Aguardando pagamento', paga: 'Paga — em andamento', concluida: 'Concluída', cancelada: 'Cancelada' };
@@ -379,11 +385,13 @@ async function telaLista({ cat, q }) {
   const c = categorias.find((x) => String(x.id) === String(cat));
   if (c) tituloTopo(nomeCurto(c.nome));
   $app.innerHTML = `
-    <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" value="${esc(q || '')}" placeholder="${c ? `Buscar entre ${esc(nomeCurto(c.nome).toLowerCase())}s` : 'Buscar serviço ou profissional'}" aria-label="Buscar"></form>
+    <form class="busca-pilula" id="fb" role="search">${ic('busca')}<input name="q" value="${esc(q || '')}" placeholder="${c ? `Buscar em ${esc(nomeCurto(c.nome))}` : 'Buscar serviço ou profissional'}" aria-label="Buscar"></form>
     <label class="filtro-cidade">${ic('pin')}<input id="f-cidade" placeholder="Filtrar por cidade" aria-label="Filtrar por cidade"></label>
+    ${c && ehTurismo(c.id) ? `<label class="check chip-check"><input type="checkbox" id="f-cadastur"> Só com Cadastur conferido</label>` : ''}
     <p class="meta qtd" id="qtd"></p>
     <div class="grade" id="resultados"></div>`;
-  const filtros = () => ({ cat: c?.id, q: document.querySelector('#fb input').value.trim(), cidade: document.getElementById('f-cidade').value.trim() });
+  const filtros = () => ({ cat: c?.id, q: document.querySelector('#fb input').value.trim(), cidade: document.getElementById('f-cidade').value.trim(), cadastur: !!document.getElementById('f-cadastur')?.checked });
+  document.getElementById('f-cadastur')?.addEventListener('change', () => listarPrestadores(filtros()).catch(falha));
   document.getElementById('fb').addEventListener('submit', (e) => { e.preventDefault(); listarPrestadores(filtros()).catch(falha); });
   let espera;
   document.getElementById('f-cidade').addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(() => listarPrestadores(filtros()).catch(falha), 300); });
@@ -392,11 +400,12 @@ async function telaLista({ cat, q }) {
 
 async function listarPrestadores(f = {}, limite = 60) {
   let q = sb.from('profiles')
-    .select('id,nome,cidade,uf,bio,foto_url,categoria_id,preco_base,verificado,avaliacao_media,avaliacao_qtd')
+    .select('id,nome,cidade,uf,bio,foto_url,categoria_id,preco_base,verificado,avaliacao_media,avaliacao_qtd,cadastur_status')
     .eq('is_prestador', true).eq('suspenso', false)
     .order('verificado', { ascending: false }).order('avaliacao_media', { ascending: false }).limit(limite);
   if (f.cat) q = q.eq('categoria_id', f.cat);
   if (f.cidade) q = q.ilike('cidade', `%${f.cidade}%`);
+  if (f.cadastur) q = q.eq('cadastur_status', 'aprovado');
   if (f.q) { const t = f.q.replace(/[,()%]/g, ' '); q = q.or(`nome.ilike.%${t}%,bio.ilike.%${t}%`); }
   const { data: lista, error } = await q;
   if (error) throw error;
@@ -424,7 +433,7 @@ function cardPrestador(p, fotos = []) {
     <div class="corpo">
       ${avatar(p, 'sobre-capa')}
       <div class="linha-nome"><h3>${esc(p.nome)}</h3>${p.verificado ? `<span class="verif-ic" title="Identidade verificada">${ic('check')}</span>` : ''}</div>
-      <div class="cat">${cat}</div>
+      <div class="cat">${cat}${p.cadastur_status === 'aprovado' ? ` <span class="mini-cadastur" title="Cadastur conferido">${ic('mapa')}Cadastur</span>` : ''}</div>
       <div class="meta">${ic('pin')}${esc(p.cidade)}${p.uf ? ' · ' + esc(p.uf) : ''}</div>
       <div class="rodape-card">${notaHTML(p.avaliacao_media, p.avaliacao_qtd)}
         ${p.preco_base ? `<span class="preco-card"><small>a partir de</small>${brl(p.preco_base)}</span>` : ''}</div>
@@ -504,6 +513,11 @@ function telaCadastro(params) {
           <div class="dupla"><label>Cidade onde atende<input name="cidade" value="${esc(est.cidade)}" required></label>
             <label>UF<input name="uf" value="${esc(est.uf)}" maxlength="2" required style="text-transform:uppercase"></label></div>
           <label>Preço a partir de (R$, opcional)<input name="preco" type="number" min="0" step="1" value="${esc(est.preco)}"><small>Ex.: valor da diária ou de uma visita.</small></label>
+          <div id="cad-cadastur" ${ehTurismo(est.cat) ? '' : 'hidden'}>
+            <label>Número do Cadastur <span id="cad-cadastur-obrig">${ehGuia(est.cat) ? '(obrigatório para guia)' : '(se tiver)'}</span>
+              <input name="cadastur" value="${esc(est.cadastur || '')}" placeholder="Como aparece no seu certificado" autocomplete="off">
+              <small>Registro do Ministério do Turismo. Depois de conferido, seu perfil ganha o selo Cadastur. Pode enviar depois, em Conta.</small></label>
+          </div>
           <button class="btn largo">Continuar</button>
         </form>`;
     } else {
@@ -557,12 +571,14 @@ function telaCadastro(params) {
         if (!b) return;
         est.cat = b.dataset.cat;
         document.querySelectorAll('#cad-cats [data-cat]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        document.getElementById('cad-cadastur').hidden = !ehTurismo(est.cat);
+        document.getElementById('cad-cadastur-obrig').textContent = ehGuia(est.cat) ? '(obrigatório para guia)' : '(se tiver)';
       });
       document.getElementById('fpasso').addEventListener('submit', (e) => {
         e.preventDefault();
         if (!est.cat) return toast('Escolha a sua área tocando em um dos quadros.', 'erro');
         const v = form(e.target);
-        Object.assign(est, { cidade: v.cidade.trim(), uf: v.uf.toUpperCase().trim(), preco: v.preco });
+        Object.assign(est, { cidade: v.cidade.trim(), uf: v.uf.toUpperCase().trim(), preco: v.preco, cadastur: ehTurismo(est.cat) ? (v.cadastur || '').trim() : '' });
         avancar();
       });
     }
@@ -593,6 +609,10 @@ function telaCadastro(params) {
             const { error: er } = await sb.from('profiles').update(extra).eq('id', me.id);
             if (er) throw er;
             await carregarMe(r.session);
+          }
+          if (est.cadastur) {
+            const { error: ec } = await sb.rpc('enviar_cadastur', { numero: est.cadastur });
+            if (ec) toast(`Conta criada, mas o Cadastur não foi enviado: ${ec.message} Envie de novo em Conta > Meus dados.`, 'erro');
           }
         } catch (er) { falha(er); }
         renderNav();
@@ -637,8 +657,10 @@ async function telaPrestador(id) {
         <div class="perfil-nome"><h1>${esc(p.nome)}</h1>
           <div class="cat">${nomeCategoria(p.categoria_id)}</div>
           <div class="meta">${ic('pin')}${esc(p.cidade)}${p.uf ? ' · ' + esc(p.uf) : ''}</div></div>
-        ${p.verificado ? SELO : ''}
+        <div class="selos">${p.verificado ? SELO : ''}${p.cadastur_status === 'aprovado' ? SELO_CADASTUR : ''}</div>
       </div>
+      ${p.cadastur_status === 'aprovado' ? `<p class="cadastur-linha">${ic('mapa')}Cadastur nº <b>${esc(p.cadastur_numero)}</b> ·
+        <a href="${PORTAL_CADASTUR}" target="_blank" rel="noopener">conferir no portal oficial</a></p>` : ''}
       <dl class="fatos">
         <div><dt>Avaliação</dt><dd>${ic('estrela')}${Number(p.avaliacao_media).toFixed(1)}</dd></div>
         <div><dt>Avaliações</dt><dd>${p.avaliacao_qtd}</dd></div>
@@ -695,7 +717,7 @@ async function telaConversas() {
 
 async function telaChat(id, params) {
   const { data: c, error } = await sb.from('conversas')
-    .select('id,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url,verificado),prestador:prestador_id(id,nome,foto_url,categoria_id,verificado)')
+    .select('id,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url,verificado),prestador:prestador_id(id,nome,foto_url,categoria_id,verificado,cadastur_status)')
     .eq('id', id).maybeSingle();
   if (error) throw error;
   if (!c) { $app.innerHTML = '<div class="card">Conversa não encontrada.</div>'; return; }
@@ -706,7 +728,7 @@ async function telaChat(id, params) {
   if (params.get('pago') === '0') toast('O pagamento não foi concluído.', 'erro');
 
   $app.innerHTML = `<div class="chat">
-    <div class="chat-topo">${avatar(outro)}<div><b>${esc(outro.nome)}</b> ${outro.verificado ? `<span class="verif-ic" title="Identidade verificada">${ic('check')}</span>` : ''}
+    <div class="chat-topo">${avatar(outro)}<div><b>${esc(outro.nome)}</b> ${outro.verificado ? `<span class="verif-ic" title="Identidade verificada">${ic('check')}</span>` : ''}${outro.cadastur_status === 'aprovado' ? ` <span class="mini-cadastur">${ic('mapa')}Cadastur</span>` : ''}
       <div class="meta">${souPrestador ? 'Cliente' : nomeCategoria(c.prestador.categoria_id)}</div></div></div>
     <div id="contratos"></div>
     <div class="mensagens" id="msgs"></div>
@@ -897,6 +919,16 @@ async function telaContaDados() {
       </div>
       <button class="btn largo">Salvar perfil</button>
     </form>
+    ${me.is_prestador && ehTurismo(me.categoria_id) ? `<form class="card" id="fcadastur">
+      <h2>${ic('mapa')}Cadastur</h2>
+      <p class="nota">Registro oficial do Ministério do Turismo${ehGuia(me.categoria_id) ? '. Para guia de turismo é <b>obrigatório por lei</b> (Lei 8.623/1993)' : ''}. Depois que a administração confere, seu perfil ganha o selo <b>Cadastur</b>.
+        Não tem? Faça grátis no <a href="${PORTAL_CADASTUR}" target="_blank" rel="noopener">portal do Cadastur</a>.</p>
+      ${me.cadastur_status === 'aprovado' ? `<div class="alerta ok">${ic('check')}Conferido. Cadastur nº <b>${esc(me.cadastur_numero)}</b></div>`
+        : me.cadastur_status === 'pendente' ? `<div class="alerta">Nº <b>${esc(me.cadastur_numero)}</b> em conferência pela administração.</div>`
+        : me.cadastur_status === 'rejeitado' ? `<div class="alerta erro-claro">Não foi aprovado: <b>${esc(me.cadastur_motivo || 'sem motivo informado')}</b>. Confira o número e envie de novo.</div>` : ''}
+      <label>Número do Cadastur<input name="numero" value="${esc(me.cadastur_numero)}" placeholder="Como aparece no seu certificado" autocomplete="off" required></label>
+      <button class="btn sec largo">${me.cadastur_status ? 'Enviar de novo para conferência' : 'Enviar para conferência'}</button>
+    </form>` : ''}
     <form class="card" id="fpriv">
       <h2>${ic('cadeado')}Dados privados</h2>
       <p class="nota">O WhatsApp só aparece para a outra parte depois do pagamento. A chave Pix é vista só pela administração, para o seu repasse.</p>
@@ -919,6 +951,14 @@ async function telaContaDados() {
     if (error) return falha(error);
     await recarregarMe();
     toast('Perfil salvo!');
+  });
+  document.getElementById('fcadastur')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { error } = await sb.rpc('enviar_cadastur', { numero: form(e.target).numero });
+    if (error) return falha(error);
+    await recarregarMe();
+    toast('Cadastur enviado! Você recebe o selo assim que for conferido.');
+    rota();
   });
   const fv = document.getElementById('fpriv');
   fv.addEventListener('submit', async (e) => {
@@ -1210,12 +1250,14 @@ async function telaAdmin() {
       <div><span>${r.tentativas}</span>tentativas de burla</div>
       <div><span>${r.verificacoes_pendentes}</span>verificações para analisar</div>
       <div><span>${r.pedidos_abertos}</span>pedidos abertos</div>
+      <div><span>${r.cadastur_pendentes}</span>Cadastur para conferir</div>
     </div>
     <div class="abas"><button data-aba="verificacoes" class="ativa">Verificações${r.verificacoes_pendentes ? ` (${r.verificacoes_pendentes})` : ''}</button>
+      <button data-aba="cadastur">Cadastur${r.cadastur_pendentes ? ` (${r.cadastur_pendentes})` : ''}</button>
       <button data-aba="repasses">Repasses</button><button data-aba="contratacoes">Contratações</button>
       <button data-aba="burla">Tentativas de burla</button><button data-aba="usuarios">Usuários</button></div>
     <div id="aba"></div>`;
-  const abas = { verificacoes: abaVerificacoes, repasses: abaRepasses, contratacoes: abaContratacoes, burla: abaBurla, usuarios: abaUsuarios };
+  const abas = { verificacoes: abaVerificacoes, cadastur: abaCadastur, repasses: abaRepasses, contratacoes: abaContratacoes, burla: abaBurla, usuarios: abaUsuarios };
   document.querySelector('.abas').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -1223,6 +1265,34 @@ async function telaAdmin() {
     abas[b.dataset.aba]().catch(falha);
   });
   await abaVerificacoes();
+}
+
+async function abaCadastur() {
+  const $a = document.getElementById('aba');
+  const { data: lista, error } = await sb.from('profiles').select('id,nome,cidade,uf,categoria_id,cadastur_numero,verificado').eq('cadastur_status', 'pendente').order('nome');
+  if (error) throw error;
+  $a.innerHTML = `<p class="nota">Abra o <a href="${PORTAL_CADASTUR}" target="_blank" rel="noopener">portal do Cadastur</a>, pesquise o número ou o nome e confira se o registro está ativo e se o nome bate com o perfil.</p>
+    ${(lista || []).map((u) => `<div class="card">
+      <div class="linha-esp"><div><b>${esc(u.nome)}</b> ${u.verificado ? `<span class="verif-ic" title="Identidade verificada">${ic('check')}</span>` : ''}
+        <div class="meta">${nomeCategoria(u.categoria_id)} · ${esc(u.cidade)}${u.uf ? '/' + esc(u.uf) : ''}</div></div></div>
+      <p class="cadastur-linha">${ic('mapa')}Cadastur nº <b>${esc(u.cadastur_numero)}</b></p>
+      <div class="analisar">
+        <button class="btn" data-ok="${u.id}">Conferido, dar selo</button>
+        <select aria-label="Motivo" data-motivo="${u.id}"><option>Número não encontrado no Cadastur</option><option>Registro vencido ou inativo</option><option>Nome diferente do perfil</option><option>Categoria não é de turismo</option></select>
+        <button class="btn perigo" data-nao="${u.id}">Recusar</button>
+      </div></div>`).join('') || '<div class="card vazio">Nenhum Cadastur esperando conferência.</div>'}`;
+  $a.onclick = async (e) => {
+    const b = e.target.closest('button[data-ok], button[data-nao]');
+    if (!b) return;
+    const aprovar = !!b.dataset.ok;
+    const uid = b.dataset.ok || b.dataset.nao;
+    const motivo = aprovar ? '' : $a.querySelector(`[data-motivo="${uid}"]`).value;
+    if (!(await confirmar(aprovar ? 'Confirmar que o Cadastur está ativo e dar o selo?' : `Recusar com o motivo: "${motivo}"?`, aprovar ? 'Dar selo' : 'Recusar'))) return;
+    const { error: er } = await sb.rpc('admin_analisar_cadastur', { uid, aprovar, p_motivo: motivo });
+    if (er) return falha(er);
+    toast(aprovar ? 'Selo Cadastur liberado.' : 'Cadastur recusado. A pessoa verá o motivo.');
+    abaCadastur();
+  };
 }
 
 const MOTIVOS_REJEICAO = ['Foto do documento ilegível ou cortada', 'Selfie não confere com o documento', 'Rosto ou documento não aparecem na selfie',

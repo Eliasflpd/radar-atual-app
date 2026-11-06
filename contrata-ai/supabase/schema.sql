@@ -48,6 +48,14 @@ create table if not exists public.profiles (
   criado_em        timestamptz not null default now()
 );
 
+-- Cadastur (registro oficial de prestadores de turismo — Ministério do Turismo)
+alter table public.profiles add column if not exists cadastur_numero text not null default '';
+alter table public.profiles add column if not exists cadastur_status text not null default '';
+alter table public.profiles add column if not exists cadastur_motivo text not null default '';
+do $$ begin
+  alter table public.profiles add constraint cadastur_status_valido check (cadastur_status in ('', 'pendente', 'aprovado', 'rejeitado'));
+exception when duplicate_object then null; end $$;
+
 -- ---------- Contatos privados (separados do perfil) ----------
 create table if not exists public.contatos_privados (
   user_id    uuid primary key references public.profiles(id) on delete cascade,
@@ -426,7 +434,28 @@ begin
   return conv;
 end $$;
 
+-- Prestador de turismo informa o número do Cadastur (vai para conferência do admin)
+create or replace function public.enviar_cadastur(numero text) returns void
+language plpgsql security definer set search_path = public as $$
+declare n text := upper(trim(coalesce(numero, '')));
+begin
+  if auth.uid() is null then raise exception 'Faça login.'; end if;
+  if n !~ '^[0-9A-Z./ -]{6,30}$' or n !~ '[0-9]{4,}' then raise exception 'Número do Cadastur inválido. Copie exatamente como aparece no seu certificado.'; end if;
+  update public.profiles set cadastur_numero = n, cadastur_status = 'pendente', cadastur_motivo = '' where id = auth.uid();
+end $$;
+
 -- ---------- Ações do administrador ----------
+create or replace function public.admin_analisar_cadastur(uid uuid, aprovar boolean, p_motivo text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'Apenas administrador.'; end if;
+  update public.profiles
+     set cadastur_status = case when aprovar then 'aprovado' else 'rejeitado' end,
+         cadastur_motivo = case when aprovar then '' else coalesce(p_motivo, '') end
+   where id = uid and cadastur_status = 'pendente';
+  if not found then raise exception 'Cadastur não encontrado ou já analisado.'; end if;
+end $$;
+
 create or replace function public.admin_analisar_verificacao(vid bigint, aprovar boolean, p_motivo text) returns void
 language plpgsql security definer set search_path = public as $$
 declare v public.verificacoes;
@@ -473,7 +502,8 @@ begin
     'repasse_pendente', (select coalesce(sum(valor_prestador),0) from public.contratacoes where status = 'concluida' and repassado_em is null),
     'tentativas',    (select count(*) from public.tentativas_burla),
     'verificacoes_pendentes', (select count(*) from public.verificacoes where status = 'pendente'),
-    'pedidos_abertos', (select count(*) from public.pedidos where status = 'aberto')
+    'pedidos_abertos', (select count(*) from public.pedidos where status = 'aberto'),
+    'cadastur_pendentes', (select count(*) from public.profiles where cadastur_status = 'pendente')
   );
 end $$;
 

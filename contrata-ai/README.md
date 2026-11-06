@@ -16,6 +16,7 @@ Busca → Chat interno → Proposta do prestador → Cliente paga no app (Mercad
 - **Avaliações** só valem para serviços pagos e concluídos pelo app.
 - **Fotos dos trabalhos:** o prestador envia até 12 fotos, reduzidas no celular antes do envio, que aparecem na busca e no perfil (Supabase Storage). Também dá para colocar foto de perfil.
 - **Verificação de identidade:** CPF (com conferência dos dígitos), foto do documento (CNH, RG ou RNE) e selfie segurando o documento, guardados em área privada. O admin aprova ou rejeita com motivo, e quem é aprovado ganha o selo ✔. Um CPF só pode estar em uma conta.
+- **Cadastur:** profissionais de turismo (guia, 4x4, barqueiro, kitesurfe) informam o número do registro no Ministério do Turismo; o admin confere no portal oficial e libera o selo **Cadastur**. Para guia de turismo é obrigatório (Lei 8.623/1993).
 - **Pedidos:** empresas e clientes publicam o que precisam (ex.: 3 ajudantes de obra). Profissionais tocam em "Tenho interesse" e a conversa abre no chat.
 - **Painel do admin:** comissão acumulada, repasses pendentes com a chave Pix do prestador, tentativas de burla, verificação e suspensão de usuários.
 
