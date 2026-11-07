@@ -197,7 +197,8 @@ async function subirFoto(file, prefixo, bucket = 'fotos') {
 // Botões de foto de perfil: selfie (câmera frontal) ou galeria
 const botoesSelfie = (prefixo) => `<div class="botoes-foto">
   <label class="btn pequeno">${ic('camera')}Tirar selfie<input type="file" id="${prefixo}-selfie" accept="image/*" capture="user" hidden></label>
-  <label class="btn sec pequeno">Escolher da galeria<input type="file" id="${prefixo}-galeria" accept="image/*" hidden></label></div>`;
+  <label class="btn sec pequeno">Escolher da galeria<input type="file" id="${prefixo}-galeria" accept="image/*" hidden></label></div>
+  ${DEMO && window.top !== window ? '<p class="nota centro">Aqui na demonstração dentro do Claude a câmera e a galeria não abrem. No app de verdade, no Chrome, funcionam.</p>' : ''}`;
 function aoEscolherFoto(prefixo, cb) {
   for (const id of [`${prefixo}-selfie`, `${prefixo}-galeria`]) {
     document.getElementById(id)?.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) cb(f); e.target.value = ''; });
@@ -655,6 +656,24 @@ function telaBoasVindas() {
   $app.querySelectorAll('#so-olhar, [data-so-olhar]').forEach((a) => a.addEventListener('click', marcarOlhou));
 }
 
+// A tela inicial sem login não pode rolar. Se não couber (letra do aparelho aumentada, barra do
+// navegador, tela baixa), vai encolhendo em 4 níveis até caber.
+function encaixarInicio() {
+  if (me || document.body.dataset.tela !== 'inicio') return;
+  const niveis = ['', 'compacto-1', 'compacto-2', 'compacto-3', 'compacto-4'];
+  const cabe = () => document.documentElement.scrollHeight <= window.innerHeight + 1;
+  document.body.classList.remove(...niveis.filter(Boolean));
+  for (const n of niveis) {
+    if (n) document.body.classList.add(n);
+    if (cabe()) break;
+    if (n) document.body.classList.remove(n);
+  }
+  // nenhum nível coube: fica no mais compacto
+  if (!cabe()) document.body.classList.add('compacto-4');
+}
+let encaixeTimer;
+window.addEventListener('resize', () => { clearTimeout(encaixeTimer); encaixeTimer = setTimeout(encaixarInicio, 120); });
+
 // ---------------------------------------------------------------- início
 async function telaInicio() {
   const cid = cidadeAtual();
@@ -704,6 +723,7 @@ async function telaInicio() {
     location.hash = q ? `#/busca?q=${encodeURIComponent(q)}` : '#/busca';
   });
   document.getElementById('abrir-menu').addEventListener('click', abrirMenu);
+  encaixarInicio();
   if (!me) return;
   const { lista } = await buscarPrestadores({});
   const daCidade = cid ? lista.filter((p) => normalizar(p.cidade).includes(normalizar(cid.cidade))) : lista;

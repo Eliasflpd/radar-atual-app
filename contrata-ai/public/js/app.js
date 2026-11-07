@@ -656,6 +656,24 @@ function telaBoasVindas() {
   $app.querySelectorAll('#so-olhar, [data-so-olhar]').forEach((a) => a.addEventListener('click', marcarOlhou));
 }
 
+// A tela inicial sem login não pode rolar. Se não couber (letra do aparelho aumentada, barra do
+// navegador, tela baixa), vai encolhendo em 4 níveis até caber.
+function encaixarInicio() {
+  if (me || document.body.dataset.tela !== 'inicio') return;
+  const niveis = ['', 'compacto-1', 'compacto-2', 'compacto-3', 'compacto-4'];
+  const cabe = () => document.documentElement.scrollHeight <= window.innerHeight + 1;
+  document.body.classList.remove(...niveis.filter(Boolean));
+  for (const n of niveis) {
+    if (n) document.body.classList.add(n);
+    if (cabe()) break;
+    if (n) document.body.classList.remove(n);
+  }
+  // nenhum nível coube: fica no mais compacto
+  if (!cabe()) document.body.classList.add('compacto-4');
+}
+let encaixeTimer;
+window.addEventListener('resize', () => { clearTimeout(encaixeTimer); encaixeTimer = setTimeout(encaixarInicio, 120); });
+
 // ---------------------------------------------------------------- início
 async function telaInicio() {
   const cid = cidadeAtual();
@@ -705,6 +723,7 @@ async function telaInicio() {
     location.hash = q ? `#/busca?q=${encodeURIComponent(q)}` : '#/busca';
   });
   document.getElementById('abrir-menu').addEventListener('click', abrirMenu);
+  encaixarInicio();
   if (!me) return;
   const { lista } = await buscarPrestadores({});
   const daCidade = cid ? lista.filter((p) => normalizar(p.cidade).includes(normalizar(cid.cidade))) : lista;
