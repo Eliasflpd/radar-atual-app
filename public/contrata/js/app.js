@@ -1096,11 +1096,8 @@ function telaCadastro(params) {
       document.getElementById('foto-pular').addEventListener('click', avancar);
     }
     if (atual === 'area') {
-      document.getElementById('cad-cats').addEventListener('click', (e) => {
-        const b = e.target.closest('[data-cat]');
-        if (!b) return;
-        est.cat = b.dataset.cat;
-        document.querySelectorAll('#cad-cats [data-cat]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      gradeEscolher('cad-cats', (c) => {
+        est.cat = c;
         document.getElementById('cad-cadastur').hidden = !ehTurismo(est.cat);
         document.getElementById('cad-cadastur-obrig').textContent = ehGuia(est.cat) ? '(obrigatório para guia)' : '(se tiver)';
       });
@@ -1790,6 +1787,34 @@ async function telaConta() {
   document.getElementById('sair').addEventListener('click', async () => { await sb.auth.signOut(); location.hash = '#/'; });
 }
 
+// Grade de profissões que "fecha" ao escolher: fica só a escolhida e um botão Trocar; a ficha aparece logo abaixo.
+function gradeEscolher(idGrade, aoEscolher) {
+  const $g = document.getElementById(idGrade);
+  const ficha = $g.nextElementSibling;
+  const fechar = (b) => {
+    $g.querySelectorAll('[data-cat]').forEach((x) => { x.setAttribute('aria-pressed', String(x === b)); x.hidden = x !== b; });
+    $g.classList.add('fechada');
+    if (!$g.querySelector('.trocar-cat')) $g.insertAdjacentHTML('beforeend', `<button type="button" class="btn sec pequeno trocar-cat">${ic('grade')}Trocar profissão</button>`);
+    if (ficha) { ficha.hidden = false; ficha.querySelector('input, select, textarea')?.focus({ preventScroll: true }); ficha.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  };
+  const abrir = () => {
+    $g.querySelectorAll('[data-cat]').forEach((x) => { x.hidden = false; });
+    $g.classList.remove('fechada');
+    $g.querySelector('.trocar-cat')?.remove();
+    if (ficha) ficha.hidden = true;
+    $g.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  };
+  $g.addEventListener('click', (e) => {
+    if (e.target.closest('.trocar-cat')) return abrir();
+    const b = e.target.closest('[data-cat]');
+    if (!b) return;
+    aoEscolher(b.dataset.cat);
+    fechar(b);
+  });
+  const ja = $g.querySelector('[data-cat][aria-pressed="true"]');
+  if (ja) fechar(ja); else if (ficha) ficha.hidden = true;
+}
+
 // Quem já tem conta ativa o perfil profissional em um formulário curto
 function telaSerProfissional() {
   if (me.is_prestador) { location.hash = '#/conta'; return; }
@@ -1799,21 +1824,18 @@ function telaSerProfissional() {
     <h1>Ofereça seus serviços</h1>
     <p class="nota">Leva 1 minuto. Depois disso você aparece nas buscas da sua cidade e pode responder pedidos.</p>
     <form id="fprof" class="form-passo">
-      <p class="rotulo">Qual é o seu trabalho?</p>
+      <p class="rotulo">Qual é o seu trabalho? <small>Toque na sua profissão. Depois aparece a ficha.</small></p>
       <div class="cat-grade escolher compacta" id="sp-cats">${categoriasOrdenadas().map((c) => tileCategoria(c, 'button', 'aria-pressed="false"')).join('')}</div>
+      <div class="ficha-prof" hidden>
       <div class="dupla"><label>Cidade onde atende<input name="cidade" value="${esc(me.cidade || cid?.cidade || '')}" required></label>
         <label>UF<input name="uf" value="${esc(me.uf || cid?.uf || '')}" maxlength="2" required style="text-transform:uppercase"></label></div>
       <label>Preço a partir de (R$)<input name="preco" type="number" min="0" step="1" placeholder="Ex.: valor da diária"></label>
       <label>Conte sobre o seu trabalho<textarea name="bio" maxlength="1500" placeholder="Ex.: Pedreiro há 10 anos. Faço reboco, piso e pequenas reformas. Atendo o centro e bairros próximos."></textarea>
         <small>Não coloque telefone, WhatsApp ou redes sociais. O contato é liberado depois do pagamento.</small></label>
       <button class="btn largo">Ativar meu perfil profissional</button>
+      </div>
     </form></section>`;
-  document.getElementById('sp-cats').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-cat]');
-    if (!b) return;
-    cat = b.dataset.cat;
-    document.querySelectorAll('#sp-cats [data-cat]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-  });
+  gradeEscolher('sp-cats', (c) => { cat = c; });
   document.getElementById('fprof').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!cat) return toast('Escolha o seu trabalho tocando em um dos quadros.', 'erro');

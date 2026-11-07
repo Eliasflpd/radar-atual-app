@@ -951,3 +951,8 @@ nav#nav a .ic { stroke-width: 1.9; }
 .pix-aviso .acoes { margin-top: 12px; }
 .verde { color: var(--verde); font-weight: 700; }
 .modal .pagar-valor { font: 900 32px var(--f-titulo); margin: 2px 0 10px; }
+
+/* escolha de profissão: ao tocar, a grade fecha e fica só a escolhida + "Trocar profissão" */
+.cat-grade.escolher.fechada { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cat-grade.escolher.fechada .cat-tile { flex: 0 0 auto; min-width: 120px; }
+.cat-grade.escolher.fechada .trocar-cat { flex: 1 1 auto; }
