@@ -956,3 +956,62 @@ nav#nav a .ic { stroke-width: 1.9; }
 .cat-grade.escolher.fechada { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .cat-grade.escolher.fechada .cat-tile { flex: 0 0 auto; min-width: 120px; }
 .cat-grade.escolher.fechada .trocar-cat { flex: 1 1 auto; }
+
+/* ---------- tela inicial encolhendo até caber (níveis aplicados por encaixarInicio) ---------- */
+@media (max-width: 760px) {
+  body.compacto-1 .hero-app { --foto-l: min(44vw, 240px); }
+  body.compacto-1 .hero-app h1 { font-size: clamp(17px, 5.4vw, 24px); }
+  body.compacto-1 .grupo { min-height: 64px; padding: 6px 2px; gap: 3px; }
+  body.compacto-1 .grupo > span .ic { width: 28px; height: 28px; }
+  body.compacto-1 .grupo b { font-size: 11.5px; }
+  body.compacto-1 .botao-home { min-height: 54px; padding: 6px 14px; }
+  body.compacto-1 .grupos, body.compacto-1 .botoes-home { margin-top: 10px; }
+  body.compacto-1 .botoes-home { gap: 8px; }
+  body.compacto-1 .app-topo { height: 50px; }
+  body.compacto-1 .marca-app .logo { width: 36px; height: 36px; }
+  body.compacto-1 .marca-app span { font-size: 21px; }
+
+  body.compacto-2 .hero-app { --foto-l: min(38vw, 200px); }
+  body.compacto-2 .hero-app h1 { font-size: clamp(16px, 5vw, 22px); }
+  body.compacto-2 .busca-hero { height: 46px; margin-top: -23px; }
+  body.compacto-2 .busca-hero .btn-buscar { width: 36px; height: 36px; }
+  body.compacto-2 .grupo { min-height: 56px; }
+  body.compacto-2 .grupo > span .ic { width: 24px; height: 24px; }
+  body.compacto-2 .grupo b { font-size: 11px; }
+  body.compacto-2 .botao-home { min-height: 50px; }
+  body.compacto-2 .botao-home small { display: none; }
+  body.compacto-2 .botao-home b { font-size: 16px; }
+  body.compacto-2 .grupos, body.compacto-2 .botoes-home { margin-top: 8px; }
+
+  body.compacto-3 .hero-app { --foto-l: min(32vw, 160px); }
+  body.compacto-3 .hero-cidade { display: none; }
+  body.compacto-3 .hero-app h1 { font-size: clamp(15px, 4.6vw, 20px); }
+  body.compacto-3 .grupo { min-height: 48px; gap: 2px; }
+  body.compacto-3 .grupo > span .ic { width: 20px; height: 20px; }
+  body.compacto-3 .grupo b { font-size: 10.5px; }
+  body.compacto-3 .botao-home { min-height: 44px; }
+  body.compacto-3 .botao-home > .ic { display: none; }
+  body.compacto-3 .app-topo { height: 42px; }
+  body.compacto-3 .marca-app .logo { width: 30px; height: 30px; }
+  body.compacto-3 .marca-app span { font-size: 18px; }
+  body.compacto-3 .grupos, body.compacto-3 .botoes-home { margin-top: 6px; }
+
+  body.compacto-4 .hero-foto { display: none; }
+  body.compacto-4 .hero-app { --foto-l: 100px; height: 96px; }
+  body.compacto-4 .hero-texto { padding-right: 16px; }
+  body.compacto-4 .grupo { min-height: 42px; }
+  body.compacto-4 .grupo b { font-size: 10px; }
+  body.compacto-4 .botao-home { min-height: 40px; padding: 4px 12px; }
+  body.compacto-4 .botao-home b { font-size: 15px; }
+  body.compacto-4 .grupos, body.compacto-4 .botoes-home { margin-top: 4px; }
+  body.compacto-4 .botoes-home { gap: 6px; }
+}
+
+/* letra do aparelho aumentada: os quadros e a marca encolhem em vez de estourar a tela */
+.grupos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grupo { min-width: 0; }
+.grupo b { overflow-wrap: anywhere; hyphens: auto; }
+.app-topo { min-width: 0; overflow: hidden; }
+.marca-app span { font-size: min(25px, 7vw); overflow: hidden; text-overflow: ellipsis; }
+.hero-cidade { max-width: 100%; }
+html, body { overflow-x: hidden; }
