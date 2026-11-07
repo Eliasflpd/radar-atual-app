@@ -197,7 +197,8 @@ async function subirFoto(file, prefixo, bucket = 'fotos') {
 // Botões de foto de perfil: selfie (câmera frontal) ou galeria
 const botoesSelfie = (prefixo) => `<div class="botoes-foto">
   <label class="btn pequeno">${ic('camera')}Tirar selfie<input type="file" id="${prefixo}-selfie" accept="image/*" capture="user" hidden></label>
-  <label class="btn sec pequeno">Escolher da galeria<input type="file" id="${prefixo}-galeria" accept="image/*" hidden></label></div>`;
+  <label class="btn sec pequeno">Escolher da galeria<input type="file" id="${prefixo}-galeria" accept="image/*" hidden></label></div>
+  ${DEMO && window.top !== window ? '<p class="nota centro">Aqui na demonstração dentro do Claude a câmera e a galeria não abrem. No app de verdade, no Chrome, funcionam.</p>' : ''}`;
 function aoEscolherFoto(prefixo, cb) {
   for (const id of [`${prefixo}-selfie`, `${prefixo}-galeria`]) {
     document.getElementById(id)?.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) cb(f); e.target.value = ''; });
