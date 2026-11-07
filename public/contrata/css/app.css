@@ -1056,3 +1056,7 @@ html, body { overflow-x: hidden; }
   .opcao-grande b { font-size: 16px; }
   .bv-opcoes { gap: 8px; margin-bottom: 8px; }
 }
+.cat-tile.outra-prof { border-style: dashed; }
+.cat-tile.outra-prof .cat-ic { background: var(--fundo); color: var(--tinta); }
+.outra-form { grid-column: 1 / -1; }
+.outra-form .add-outro { margin-bottom: 6px; }

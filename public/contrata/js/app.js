@@ -161,6 +161,8 @@ const avatar = (p, cls = '') => p?.foto_url
   ? `<img class="avatar ${cls}" src="${esc(p.foto_url)}" alt="">`
   : `<div class="avatar ${cls}">${iniciais(p?.nome)}</div>`;
 const nomeCategoria = (id) => { const c = categorias.find((x) => x.id === id); return c ? esc(c.nome) : ''; };
+// Profissão mostrada ao público: a escrita pela pessoa ("Outra profissão") ou o nome da área
+const profissaoDe = (p) => (p?.curriculo?.profissao ? esc(p.curriculo.profissao) : nomeCategoria(p?.categoria_id));
 const form = (el) => Object.fromEntries(new FormData(el));
 
 // ---------------------------------------------------------------- fotos
@@ -881,7 +883,7 @@ function filtrarPorBusca(lista, q) {
   const pontuados = lista.map((p) => {
     const cat = normalizar(categorias.find((c) => c.id === p.categoria_id)?.nome || '');
     const cv = CV.normalizar(p.curriculo);
-    const texto = normalizar(`${p.nome} ${p.bio} ${p.cidade} ${cv.servicos.join(' ')} ${cv.cursos.map((k) => k.nome).join(' ')}`);
+    const texto = normalizar(`${p.nome} ${p.bio} ${p.cidade} ${cv.profissao || ''} ${cv.servicos.join(' ')} ${cv.cursos.map((k) => k.nome).join(' ')}`);
     let pts = 0, achou = 0;
     for (const w of palavras) {
       if (palavraCasa(cat, w)) { pts += 3; achou++; }        // é da área buscada
@@ -955,7 +957,7 @@ async function listarPrestadores(f = {}, limite = 60) {
 }
 
 function cardPrestador(p, fotos = []) {
-  const cat = nomeCategoria(p.categoria_id);
+  const cat = profissaoDe(p);
   return `<div class="prestador-box">${botaoFav(p.id, 'no-cartao')}<a class="prestador" href="#/p/${p.id}">
     <div class="capa ${fotos.length || p.foto_url ? '' : 'sem-foto'}">
       ${fotos.length ? `<img src="${esc(fotos[0])}" alt="" loading="lazy">${fotos.length > 1 ? `<span class="qtd-fotos">${ic('camera')}${fotos.length}</span>` : ''}`
@@ -1058,7 +1060,7 @@ function telaCadastro(params) {
         <button class="link-simples" id="foto-pular" ${est.foto ? 'hidden' : ''}>Pular por agora</button>`;
     } else if (atual === 'area') {
       corpo = `<h1>Qual é o seu trabalho?</h1><p class="nota">Toque no grupo e depois na sua profissão.</p>
-        <div class="cat-grade escolher grupos-prof" id="cad-cats">${est.cat ? tileCategoria(categorias.find((c) => String(c.id) === String(est.cat)) || { id: est.cat, nome: '' }, 'button', 'aria-pressed="true"') : ''}</div>
+        <div class="cat-grade escolher grupos-prof" id="cad-cats" data-profissao="${esc(est.profissao || '')}">${est.cat ? tileCategoria(categorias.find((c) => String(c.id) === String(est.cat)) || { id: est.cat, nome: '' }, 'button', 'aria-pressed="true"') : ''}</div>
         <form id="fpasso" class="form-passo">
           <div class="dupla"><label>Cidade onde atende<input name="cidade" value="${esc(est.cidade)}" required></label>
             <label>UF<input name="uf" value="${esc(est.uf)}" maxlength="2" required style="text-transform:uppercase"></label></div>
@@ -1116,8 +1118,8 @@ function telaCadastro(params) {
       document.getElementById('foto-pular').addEventListener('click', avancar);
     }
     if (atual === 'area') {
-      gradeEscolher('cad-cats', (c) => {
-        est.cat = c;
+      gradeEscolher('cad-cats', (c, profissao) => {
+        est.cat = c; est.profissao = profissao || '';
         document.getElementById('cad-cadastur').hidden = !ehTurismo(est.cat);
         document.getElementById('cad-cadastur-obrig').textContent = ehGuia(est.cat) ? '(obrigatório para guia)' : '(se tiver)';
       });
@@ -1151,7 +1153,7 @@ function telaCadastro(params) {
         try {
           const extra = {};
           if (est.foto) extra.foto_url = (await subirFoto(est.foto, 'perfil')).url;
-          if (prestar) Object.assign(extra, { categoria_id: Number(est.cat) || null, cidade: est.cidade, uf: est.uf, preco_base: est.preco ? Number(est.preco) : null, curriculo: { novo: true } });
+          if (prestar) Object.assign(extra, { categoria_id: Number(est.cat) || null, cidade: est.cidade, uf: est.uf, preco_base: est.preco ? Number(est.preco) : null, curriculo: { novo: true, ...(est.profissao ? { profissao: est.profissao } : {}) } });
           if (Object.keys(extra).length) {
             const { error: er } = await sb.from('profiles').update(extra).eq('id', me.id);
             if (er) throw er;
@@ -1203,7 +1205,7 @@ async function telaPrestador(id) {
       <div class="perfil-cab">
         ${avatar(p, 'grande')}
         <div class="perfil-nome"><h1>${esc(p.nome)}</h1>
-          <div class="cat">${nomeCategoria(p.categoria_id)}</div>
+          <div class="cat">${profissaoDe(p)}</div>
           <div class="meta">${ic('pin')}${esc(p.cidade)}${p.uf ? ' · ' + esc(p.uf) : ''}</div></div>
         <div class="selos">${p.verificado ? SELO : ''}${p.cadastur_status === 'aprovado' ? SELO_CADASTUR : ''}</div>
         ${botaoFav(p.id, 'no-perfil')}
@@ -1250,7 +1252,7 @@ async function telaPrestador(id) {
 // ---------------------------------------------------------------- conversas
 async function telaConversas() {
   const { data: lista, error } = await sb.from('conversas')
-    .select('id,criado_em,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url),prestador:prestador_id(id,nome,foto_url,categoria_id)')
+    .select('id,criado_em,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url),prestador:prestador_id(id,nome,foto_url,categoria_id,curriculo)')
     .order('criado_em', { ascending: false });
   if (error) throw error;
   const ids = (lista || []).map((c) => c.id);
@@ -1283,7 +1285,7 @@ async function telaConversas() {
     const st = situacao[c.id];
     return `<a class="conversa ${naoLida ? 'nao-lida' : ''}" href="#/chat/${c.id}">${avatar(outro)}
       <span class="cv-txt"><span class="cv-linha"><b>${esc(outro.nome)}</b><small>${quando(m?.criado_em || c.criado_em)}</small></span>
-        <span class="cv-servico">${souPrestador ? 'Quer contratar você' : nomeCategoria(c.prestador.categoria_id)}${st ? ` · <span class="status s-${st}">${rotulo(st, souPrestador)}</span>` : ''}</span>
+        <span class="cv-servico">${souPrestador ? 'Quer contratar você' : profissaoDe(c.prestador)}${st ? ` · <span class="status s-${st}">${rotulo(st, souPrestador)}</span>` : ''}</span>
         <span class="cv-ultima">${m ? `${m.autor_id === me.id ? 'Você: ' : ''}${esc(m.bloqueada ? 'Mensagem bloqueada' : m.texto)}` : 'Comece a conversa'}</span></span>
       ${naoLida ? `<span class="bolinha" aria-label="${novas[c.id]} ${novas[c.id] === 1 ? 'mensagem nova' : 'mensagens novas'}">${novas[c.id]}</span>` : ''}</a>`;
   }).join('')}</div>`
@@ -1291,7 +1293,7 @@ async function telaConversas() {
 }
 async function telaChat(id, params) {
   const { data: c, error } = await sb.from('conversas')
-    .select('id,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url,verificado),prestador:prestador_id(id,nome,foto_url,categoria_id,verificado,cadastur_status)')
+    .select('id,contratante_id,prestador_id,contratante:contratante_id(id,nome,foto_url,verificado),prestador:prestador_id(id,nome,foto_url,categoria_id,verificado,cadastur_status,curriculo)')
     .eq('id', id).maybeSingle();
   if (error) throw error;
   if (!c) { $app.innerHTML = '<div class="card">Conversa não encontrada.</div>'; return; }
@@ -1301,7 +1303,7 @@ async function telaChat(id, params) {
 
   $app.innerHTML = `<div class="chat">
     <div class="chat-topo">${avatar(outro)}<div><b>${esc(outro.nome)}</b> ${outro.verificado ? `<span class="verif-ic" title="Identidade verificada">${ic('check')}</span>` : ''}${outro.cadastur_status === 'aprovado' ? ` <span class="mini-cadastur">${ic('mapa')}Cadastur</span>` : ''}
-      <div class="meta">${souPrestador ? 'Cliente' : nomeCategoria(c.prestador.categoria_id)}</div></div></div>
+      <div class="meta">${souPrestador ? 'Cliente' : profissaoDe(c.prestador)}</div></div></div>
     <div id="contratos"></div>
     <div class="mensagens" id="msgs"></div>
     ${me.suspenso ? '<div class="alerta">Sua conta está suspensa por tentativas de passar contato. Fale com o suporte.</div>' : `
@@ -1495,7 +1497,7 @@ async function telaSuporte(id) {
   const { data: msgs, error } = await sb.from('suporte_mensagens').select('*').eq('usuario_id', alvoId).order('criado_em');
   if (error) throw error;
   const atalhos = souAdmin ? ATALHOS_ADMIN : ATALHOS_USUARIO;
-  const descricao = souAdmin ? [alvo.is_prestador ? (nomeCategoria(alvo.categoria_id) || 'Profissional') : 'Cliente', alvo.cidade].filter(Boolean).join(' · ') : 'Atendimento feito por pessoas, não por robô';
+  const descricao = souAdmin ? [alvo.is_prestador ? (profissaoDe(alvo) || 'Profissional') : 'Cliente', alvo.cidade].filter(Boolean).join(' · ') : 'Atendimento feito por pessoas, não por robô';
   $app.innerHTML = `<div class="chat">
     <div class="chat-topo">${souAdmin ? avatar(alvo) : `<span class="avatar adm-av">${LOGO}</span>`}
       <div><b>${souAdmin ? esc(alvo.nome) : 'Administração do Contrata Aí'}</b><div class="meta">${descricao}</div></div></div>
@@ -1544,7 +1546,7 @@ async function telaSuporte(id) {
 async function telaSuporteLista() {
   tituloTopo('Atendimento');
   const { data: msgs, error } = await sb.from('suporte_mensagens')
-    .select('usuario_id,autor_id,texto,lida,criado_em,usuario:usuario_id(id,nome,foto_url,cidade,is_prestador,categoria_id)')
+    .select('usuario_id,autor_id,texto,lida,criado_em,usuario:usuario_id(id,nome,foto_url,cidade,is_prestador,categoria_id,curriculo)')
     .order('criado_em', { ascending: false }).limit(2000);
   if (error) throw error;
   const porPessoa = new Map();
@@ -1558,7 +1560,7 @@ async function telaSuporteLista() {
   $app.innerHTML = `<p class="resumo-novas">${ic('chat')}${esperando ? `<b>${esperando} ${esperando === 1 ? 'pessoa esperando' : 'pessoas esperando'}</b> resposta` : 'Ninguém esperando resposta agora'}</p>
     ${lista.length ? `<div class="lista-conversas">${lista.map(({ ultima: m, novas }) => `<a class="conversa ${novas ? 'nao-lida' : ''}" href="#/suporte/${m.usuario_id}">${avatar(m.usuario)}
       <span class="cv-txt"><span class="cv-linha"><b>${esc(m.usuario.nome)}</b><small>${data(m.criado_em)}</small></span>
-        <span class="cv-servico">${m.usuario.is_prestador ? (nomeCategoria(m.usuario.categoria_id) || 'Profissional') : 'Cliente'}${m.usuario.cidade ? ` · ${esc(m.usuario.cidade)}` : ''}</span>
+        <span class="cv-servico">${m.usuario.is_prestador ? (profissaoDe(m.usuario) || 'Profissional') : 'Cliente'}${m.usuario.cidade ? ` · ${esc(m.usuario.cidade)}` : ''}</span>
         <span class="cv-ultima">${m.autor_id !== m.usuario_id ? 'Você: ' : ''}${esc(m.texto)}</span></span>
       ${novas ? `<span class="bolinha" aria-label="${novas} ${novas === 1 ? 'mensagem nova' : 'mensagens novas'}">${novas}</span>` : ''}</a>`).join('')}</div>`
       : vazio('chat', 'Nenhuma mensagem ainda', 'Quando alguém tocar em "Fale com o administrador", a conversa aparece aqui.')}
@@ -1647,7 +1649,7 @@ async function telaCurriculo(params) {
     .map((el) => Object.fromEntries(campos.map((c) => [c, el.querySelector(`[name="${c}"]`).value.trim()])))
     .filter((x) => campos.some((c) => x[c]));
   const coletar = () => CV.normalizar({
-    novo: cv.novo === true,
+    novo: cv.novo === true, profissao: cv.profissao || '',
     experiencia: marcados('experiencia')[0] || '', servicos: marcados('servicos'), trabalhos: itens('trabalhos', ['funcao', 'local', 'tempo']),
     escolaridade: $f.escolaridade.value, cursos: itens('cursos', ['nome', 'onde', 'ano']), equipamentos: marcados('equipamentos'),
     dias: marcados('dias'), turnos: marcados('turnos'), areas: $f.areas.value, idiomas: marcados('idiomas'), diferenciais: marcados('diferenciais'),
@@ -1707,7 +1709,7 @@ async function telaCurriculo(params) {
       if (!normalizar(atual).includes(normalizar(b.dataset.area))) $f.areas.value = atual ? `${atual}, ${b.dataset.area.toLowerCase()}` : b.dataset.area;
     } else if (b.id === 'montar') {
       if ($f.bio.value.trim() && !(await confirmar('Trocar o texto que já está escrito pelo texto montado com suas respostas?', 'Trocar texto'))) return;
-      $f.bio.value = CV.textoSugerido(coletar(), { categoria: cat, cidade: p.cidade });
+      $f.bio.value = CV.textoSugerido(coletar(), { categoria: cat, cidade: p.cidade, profissao: cv.profissao });
       $f.bio.focus();
       toast('Texto pronto! Leia e mude o que quiser.');
     }
@@ -1757,7 +1759,7 @@ async function telaConta() {
   ]);
   const verif = (verifs || [])[0];
   const stVerif = me.verificado ? 'Identidade verificada' : verif?.status === 'pendente' ? 'Estamos conferindo seus documentos' : verif?.status === 'rejeitada' ? 'Verificação recusada. Envie de novo' : 'Identidade não verificada';
-  const papel = [me.is_contratante && 'Contrata serviços', me.is_prestador && (nomeCategoria(me.categoria_id) || 'Oferece serviços')].filter(Boolean).join(' · ');
+  const papel = [me.is_contratante && 'Contrata serviços', me.is_prestador && (profissaoDe(me) || 'Oferece serviços')].filter(Boolean).join(' · ');
   // perfil profissional completo?
   let completo = '';
   if (me.is_prestador) {
@@ -1810,19 +1812,25 @@ async function telaConta() {
 // Grupos para escolher a profissão em 2 toques (grupo → profissão), sem rolar a tela
 const GRUPOS_PROFISSAO = [
   ['Construção', 'tijolos', ['Pedreiro', 'Ajudante geral', 'Pintor', 'Serralheiro', 'Marceneiro', 'Tratorista / Operador de máquinas']],
-  ['Reparos', 'ferramentas2', ['Eletricista', 'Encanador', 'Técnico em refrigeração', 'Técnico em informática', 'Mecânico', 'Outros']],
+  ['Reparos', 'ferramentas2', ['Eletricista', 'Encanador', 'Técnico em refrigeração', 'Técnico em informática', 'Mecânico']],
   ['Casa e cuidados', 'vassoura2', ['Diarista / Limpeza', 'Jardineiro', 'Costureira', 'Cuidador / Babá', 'Cabeleireiro / Beleza']],
   ['Turismo e eventos', 'mapa', ['Guia turístico', 'Passeios 4x4 e quadriciclo', 'Barqueiro / Passeio de barco', 'Instrutor de kitesurfe', 'Garçom / Atendente', 'Cozinheiro / Buffet', 'Fotógrafo']],
   ['Transporte e campo', 'caminhao', ['Mototáxi / Entregas', 'Motorista / Frete', 'Trabalhador rural']],
   ['Escritório e aulas', 'livro', ['Designer', 'Programador', 'Contador', 'Advogado', 'Professor particular']],
 ];
-const tilesGrupos = () => GRUPOS_PROFISSAO.map(([nome, icone], i) => `<button type="button" class="cat-tile" data-grupo="${i}"><span class="cat-ic">${ic(icone)}</span><span class="cat-nome">${nome}</span></button>`).join('');
+const TILE_OUTRA = `<button type="button" class="cat-tile outra-prof" data-outra><span class="cat-ic">${ic('mais')}</span><span class="cat-nome">Outra profissão</span></button>`;
+const tilesGrupos = () => GRUPOS_PROFISSAO.map(([nome, icone], i) => `<button type="button" class="cat-tile" data-grupo="${i}"><span class="cat-ic">${ic(icone)}</span><span class="cat-nome">${nome}</span></button>`).join('') + TILE_OUTRA;
+const formOutra = (valor = '') => `<div class="outra-form"><p class="rotulo">Qual é a sua profissão?</p>
+  <div class="add-outro"><input data-outra-nome value="${esc(valor)}" maxlength="60" placeholder="Ex.: Vidraceiro, Manicure, Piscineiro…" autocomplete="off" aria-label="Sua profissão"><button type="button" class="btn pequeno" data-outra-ok>${ic('check')}Usar</button></div>
+  <button type="button" class="link" data-outro-grupo>${ic('voltar')}Voltar aos grupos</button></div>`;
 const tilesDoGrupo = (i, catAtual) => {
   const [nome, , areas] = GRUPOS_PROFISSAO[i];
   const lista = categorias.filter((c) => areas.includes(c.nome)).sort((a, b) => areas.indexOf(a.nome) - areas.indexOf(b.nome));
   return `<div class="grupo-cab"><b>${nome}</b><button type="button" class="link" data-outro-grupo>${ic('voltar')}Outro grupo</button></div>
-    ${lista.map((c) => tileCategoria(c, 'button', String(c.id) === String(catAtual) ? 'aria-pressed="true"' : 'aria-pressed="false"')).join('')}`;
+    ${lista.map((c) => tileCategoria(c, 'button', String(c.id) === String(catAtual) ? 'aria-pressed="true"' : 'aria-pressed="false"')).join('')}
+    <button type="button" class="cat-tile outra-prof" data-outra><span class="cat-ic">${ic('mais')}</span><span class="cat-nome">Não achei a minha</span></button>`;
 };
+const idOutros = () => categorias.find((c) => c.nome === 'Outros')?.id;
 
 // Grade de profissões: primeiro o grupo, depois a profissão; ao escolher, "fecha" (fica só a escolhida e
 // um botão Trocar) e a ficha aparece logo abaixo. Nada disso precisa rolar a tela.
@@ -1832,12 +1840,14 @@ function gradeEscolher(idGrade, aoEscolher) {
   let catAtual = $g.querySelector('[data-cat][aria-pressed="true"]')?.dataset.cat || '';
   const mostrarGrupos = () => { $g.classList.remove('fechada', 'em-grupo'); $g.innerHTML = tilesGrupos(); };
   const mostrarGrupo = (i) => { $g.classList.remove('fechada'); $g.classList.add('em-grupo'); $g.innerHTML = tilesDoGrupo(i, catAtual); };
-  const fechar = (catId) => {
+  let profAtual = $g.dataset.profissao || '';
+  const fechar = (catId, profissao = '') => {
     const c = categorias.find((x) => String(x.id) === String(catId));
     if (!c) return;
-    catAtual = String(c.id);
+    catAtual = String(c.id); profAtual = profissao;
     $g.classList.remove('em-grupo'); $g.classList.add('fechada');
-    $g.innerHTML = tileCategoria(c, 'button', 'aria-pressed="true"') + `<button type="button" class="btn sec pequeno trocar-cat">${ic('grade')}Trocar profissão</button>`;
+    const mostrado = profissao ? { ...c, nome: profissao } : c;
+    $g.innerHTML = tileCategoria(mostrado, 'button', 'aria-pressed="true"') + `<button type="button" class="btn sec pequeno trocar-cat">${ic('grade')}Trocar profissão</button>`;
     if (ficha) { ficha.hidden = false; ficha.querySelector('input, select, textarea')?.focus({ preventScroll: true }); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1845,14 +1855,25 @@ function gradeEscolher(idGrade, aoEscolher) {
   $g.addEventListener('click', (e) => {
     if (e.target.closest('.trocar-cat')) return abrir();
     if (e.target.closest('[data-outro-grupo]')) return mostrarGrupos();
+    if (e.target.closest('[data-outra]')) { $g.classList.remove('em-grupo'); $g.innerHTML = formOutra(profAtual); $g.querySelector('[data-outra-nome]').focus(); return; }
+    if (e.target.closest('[data-outra-ok]')) {
+      const nome = $g.querySelector('[data-outra-nome]').value.trim();
+      if (nome.length < 3) return toast('Escreva o nome da sua profissão.', 'erro');
+      if (temContato(nome)) return toast(AVISO_CONTATO, 'erro');
+      const id = idOutros();
+      if (!id) return toast('Não foi possível salvar. Tente de novo.', 'erro');
+      aoEscolher(String(id), nome[0].toUpperCase() + nome.slice(1));
+      return fechar(id, nome[0].toUpperCase() + nome.slice(1));
+    }
     const g = e.target.closest('[data-grupo]');
     if (g) return mostrarGrupo(Number(g.dataset.grupo));
     const b = e.target.closest('[data-cat]');
     if (!b) return;
-    aoEscolher(b.dataset.cat);
+    aoEscolher(b.dataset.cat, '');
     fechar(b.dataset.cat);
   });
-  if (catAtual) fechar(catAtual); else { mostrarGrupos(); if (ficha) ficha.hidden = true; }
+  $g.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('[data-outra-nome]')) { e.preventDefault(); $g.querySelector('[data-outra-ok]').click(); } });
+  if (catAtual) fechar(catAtual, profAtual); else { mostrarGrupos(); if (ficha) ficha.hidden = true; }
 }
 
 // Quem já tem conta ativa o perfil profissional em um formulário curto
@@ -1875,7 +1896,8 @@ function telaSerProfissional() {
       <button class="btn largo">Ativar meu perfil profissional</button>
       </div>
     </form></section>`;
-  gradeEscolher('sp-cats', (c) => { cat = c; });
+  let profissao = '';
+  gradeEscolher('sp-cats', (c, p) => { cat = c; profissao = p || ''; });
   document.getElementById('fprof').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!cat) return toast('Escolha o seu trabalho tocando em um dos quadros.', 'erro');
@@ -1883,7 +1905,7 @@ function telaSerProfissional() {
     if (temContato(v.bio)) return toast(AVISO_CONTATO, 'erro');
     const { error } = await sb.from('profiles').update({
       is_prestador: true, categoria_id: Number(cat), cidade: v.cidade.trim(), uf: v.uf.toUpperCase().trim(),
-      preco_base: v.preco ? Number(v.preco) : null, bio: (v.bio || '').trim(), curriculo: { ...CV.normalizar(me.curriculo), novo: true },
+      preco_base: v.preco ? Number(v.preco) : null, bio: (v.bio || '').trim(), curriculo: { ...CV.normalizar(me.curriculo), novo: true, ...(profissao ? { profissao } : {}) },
     }).eq('id', me.id);
     if (error) return falha(error);
     await recarregarMe();
@@ -1933,6 +1955,7 @@ async function telaContaDados() {
       </fieldset>
       <div id="campos-prestador" ${me.is_prestador ? '' : 'hidden'}>
         <label>Minha área<select name="categoria_id"><option value="">Escolha…</option>${opcoes}</select></label>
+        <label>Nome da sua profissão <small>Como aparece para os clientes. Deixe em branco para usar o nome da área.</small><input name="profissao" value="${esc(me.curriculo?.profissao || '')}" maxlength="60" placeholder="Ex.: Pedreiro de acabamento, Vidraceiro…"></label>
         <label>Preço a partir de (R$)<input name="preco_base" type="number" min="0" step="0.01" value="${me.preco_base ?? ''}"></label>
         <label>Sobre meu trabalho<textarea name="bio" maxlength="1500" placeholder="Experiência, serviços que faz, região que atende…">${esc(me.bio)}</textarea></label>
       </div>
@@ -1960,10 +1983,12 @@ async function telaContaDados() {
   fp.addEventListener('submit', async (e) => {
     e.preventDefault();
     const v = form(fp);
-    if (temContato(v.bio) || temContato(v.nome)) return toast(AVISO_CONTATO, 'erro');
+    if (temContato(v.bio) || temContato(v.nome) || temContato(v.profissao)) return toast(AVISO_CONTATO, 'erro');
+    const cvAtual = CV.normalizar(me.curriculo);
+    if ((v.profissao || '').trim()) cvAtual.profissao = v.profissao.trim(); else delete cvAtual.profissao;
     const { error } = await sb.from('profiles').update({
       nome: v.nome.trim(), cidade: v.cidade.trim(), uf: (v.uf || '').toUpperCase().trim(),
-      is_contratante: !!v.is_contratante, is_prestador: !!v.is_prestador,
+      is_contratante: !!v.is_contratante, is_prestador: !!v.is_prestador, curriculo: cvAtual,
       categoria_id: v.categoria_id ? Number(v.categoria_id) : null,
       preco_base: v.preco_base ? Number(v.preco_base) : null, bio: (v.bio || '').trim(),
     }).eq('id', me.id);

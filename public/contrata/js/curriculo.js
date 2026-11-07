@@ -278,6 +278,8 @@ export function normalizar(c) {
     areas: typeof o.areas === 'string' ? o.areas.trim() : '',
     idiomas: lista(o.idiomas),
     diferenciais: lista(o.diferenciais),
+    // nome da profissão escrito pela pessoa (quando não está na lista)
+    ...(typeof o.profissao === 'string' && o.profissao.trim() ? { profissao: o.profissao.trim().slice(0, 60) } : {}),
     // profissional novo: só aparece na busca depois do mínimo (experiência + 3 serviços)
     ...(o.novo === true ? { novo: true } : {}),
   };
@@ -321,11 +323,12 @@ function diasTexto(dias) {
 }
 
 // Texto de apresentação montado com as respostas (para quem não sabe o que escrever)
-export function textoSugerido(c, { categoria, cidade }) {
+export function textoSugerido(c, { categoria, cidade, profissao }) {
   const x = normalizar(c);
   const s = sugestoes(categoria);
   const frases = [];
-  let f1 = `Trabalho com ${s.area}`;
+  const prof = (profissao || x.profissao || '').trim();
+  let f1 = prof ? `Sou ${prof.toLowerCase()}` : `Trabalho com ${s.area}`;
   if (cidade) f1 += ` em ${cidade}`;
   if (x.experiencia) f1 += x.experiencia === 'Menos de 1 ano' ? ', começando agora e com muita vontade de trabalhar' : ` há ${x.experiencia.toLowerCase()}`;
   frases.push(f1 + '.');
