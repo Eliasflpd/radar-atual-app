@@ -1057,8 +1057,8 @@ function telaCadastro(params) {
         <button class="btn largo" id="foto-ok" ${est.foto ? '' : 'hidden'}>Continuar</button>
         <button class="link-simples" id="foto-pular" ${est.foto ? 'hidden' : ''}>Pular por agora</button>`;
     } else if (atual === 'area') {
-      corpo = `<h1>Qual é o seu trabalho?</h1><p class="nota">Escolha a área principal. Você aparece nas buscas dessa área.</p>
-        <div class="cat-grade escolher" id="cad-cats">${categoriasOrdenadas().map((c) => tileCategoria(c, 'button', String(c.id) === String(est.cat) ? 'aria-pressed="true"' : 'aria-pressed="false"')).join('')}</div>
+      corpo = `<h1>Qual é o seu trabalho?</h1><p class="nota">Toque no grupo e depois na sua profissão.</p>
+        <div class="cat-grade escolher grupos-prof" id="cad-cats">${est.cat ? tileCategoria(categorias.find((c) => String(c.id) === String(est.cat)) || { id: est.cat, nome: '' }, 'button', 'aria-pressed="true"') : ''}</div>
         <form id="fpasso" class="form-passo">
           <div class="dupla"><label>Cidade onde atende<input name="cidade" value="${esc(est.cidade)}" required></label>
             <label>UF<input name="uf" value="${esc(est.uf)}" maxlength="2" required style="text-transform:uppercase"></label></div>
@@ -1807,32 +1807,52 @@ async function telaConta() {
   document.getElementById('sair').addEventListener('click', async () => { await sb.auth.signOut(); location.hash = '#/'; });
 }
 
-// Grade de profissões que "fecha" ao escolher: fica só a escolhida e um botão Trocar; a ficha aparece logo abaixo.
+// Grupos para escolher a profissão em 2 toques (grupo → profissão), sem rolar a tela
+const GRUPOS_PROFISSAO = [
+  ['Construção', 'tijolos', ['Pedreiro', 'Ajudante geral', 'Pintor', 'Serralheiro', 'Marceneiro', 'Tratorista / Operador de máquinas']],
+  ['Reparos', 'ferramentas2', ['Eletricista', 'Encanador', 'Técnico em refrigeração', 'Técnico em informática', 'Mecânico', 'Outros']],
+  ['Casa e cuidados', 'vassoura2', ['Diarista / Limpeza', 'Jardineiro', 'Costureira', 'Cuidador / Babá', 'Cabeleireiro / Beleza']],
+  ['Turismo e eventos', 'mapa', ['Guia turístico', 'Passeios 4x4 e quadriciclo', 'Barqueiro / Passeio de barco', 'Instrutor de kitesurfe', 'Garçom / Atendente', 'Cozinheiro / Buffet', 'Fotógrafo']],
+  ['Transporte e campo', 'caminhao', ['Mototáxi / Entregas', 'Motorista / Frete', 'Trabalhador rural']],
+  ['Escritório e aulas', 'livro', ['Designer', 'Programador', 'Contador', 'Advogado', 'Professor particular']],
+];
+const tilesGrupos = () => GRUPOS_PROFISSAO.map(([nome, icone], i) => `<button type="button" class="cat-tile" data-grupo="${i}"><span class="cat-ic">${ic(icone)}</span><span class="cat-nome">${nome}</span></button>`).join('');
+const tilesDoGrupo = (i, catAtual) => {
+  const [nome, , areas] = GRUPOS_PROFISSAO[i];
+  const lista = categorias.filter((c) => areas.includes(c.nome)).sort((a, b) => areas.indexOf(a.nome) - areas.indexOf(b.nome));
+  return `<div class="grupo-cab"><b>${nome}</b><button type="button" class="link" data-outro-grupo>${ic('voltar')}Outro grupo</button></div>
+    ${lista.map((c) => tileCategoria(c, 'button', String(c.id) === String(catAtual) ? 'aria-pressed="true"' : 'aria-pressed="false"')).join('')}`;
+};
+
+// Grade de profissões: primeiro o grupo, depois a profissão; ao escolher, "fecha" (fica só a escolhida e
+// um botão Trocar) e a ficha aparece logo abaixo. Nada disso precisa rolar a tela.
 function gradeEscolher(idGrade, aoEscolher) {
   const $g = document.getElementById(idGrade);
   const ficha = $g.nextElementSibling;
-  const fechar = (b) => {
-    $g.querySelectorAll('[data-cat]').forEach((x) => { x.setAttribute('aria-pressed', String(x === b)); x.hidden = x !== b; });
-    $g.classList.add('fechada');
-    if (!$g.querySelector('.trocar-cat')) $g.insertAdjacentHTML('beforeend', `<button type="button" class="btn sec pequeno trocar-cat">${ic('grade')}Trocar profissão</button>`);
-    if (ficha) { ficha.hidden = false; ficha.querySelector('input, select, textarea')?.focus({ preventScroll: true }); ficha.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  let catAtual = $g.querySelector('[data-cat][aria-pressed="true"]')?.dataset.cat || '';
+  const mostrarGrupos = () => { $g.classList.remove('fechada', 'em-grupo'); $g.innerHTML = tilesGrupos(); };
+  const mostrarGrupo = (i) => { $g.classList.remove('fechada'); $g.classList.add('em-grupo'); $g.innerHTML = tilesDoGrupo(i, catAtual); };
+  const fechar = (catId) => {
+    const c = categorias.find((x) => String(x.id) === String(catId));
+    if (!c) return;
+    catAtual = String(c.id);
+    $g.classList.remove('em-grupo'); $g.classList.add('fechada');
+    $g.innerHTML = tileCategoria(c, 'button', 'aria-pressed="true"') + `<button type="button" class="btn sec pequeno trocar-cat">${ic('grade')}Trocar profissão</button>`;
+    if (ficha) { ficha.hidden = false; ficha.querySelector('input, select, textarea')?.focus({ preventScroll: true }); }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  const abrir = () => {
-    $g.querySelectorAll('[data-cat]').forEach((x) => { x.hidden = false; });
-    $g.classList.remove('fechada');
-    $g.querySelector('.trocar-cat')?.remove();
-    if (ficha) ficha.hidden = true;
-    $g.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
+  const abrir = () => { mostrarGrupos(); if (ficha) ficha.hidden = true; window.scrollTo({ top: 0, behavior: 'smooth' }); };
   $g.addEventListener('click', (e) => {
     if (e.target.closest('.trocar-cat')) return abrir();
+    if (e.target.closest('[data-outro-grupo]')) return mostrarGrupos();
+    const g = e.target.closest('[data-grupo]');
+    if (g) return mostrarGrupo(Number(g.dataset.grupo));
     const b = e.target.closest('[data-cat]');
     if (!b) return;
     aoEscolher(b.dataset.cat);
-    fechar(b);
+    fechar(b.dataset.cat);
   });
-  const ja = $g.querySelector('[data-cat][aria-pressed="true"]');
-  if (ja) fechar(ja); else if (ficha) ficha.hidden = true;
+  if (catAtual) fechar(catAtual); else { mostrarGrupos(); if (ficha) ficha.hidden = true; }
 }
 
 // Quem já tem conta ativa o perfil profissional em um formulário curto
@@ -1844,8 +1864,8 @@ function telaSerProfissional() {
     <h1>Ofereça seus serviços</h1>
     <p class="nota">Leva 1 minuto. Depois disso você aparece nas buscas da sua cidade e pode responder pedidos.</p>
     <form id="fprof" class="form-passo">
-      <p class="rotulo">Qual é o seu trabalho? <small>Toque na sua profissão. Depois aparece a ficha.</small></p>
-      <div class="cat-grade escolher compacta" id="sp-cats">${categoriasOrdenadas().map((c) => tileCategoria(c, 'button', 'aria-pressed="false"')).join('')}</div>
+      <p class="rotulo">Qual é o seu trabalho? <small>Toque no grupo e depois na sua profissão.</small></p>
+      <div class="cat-grade escolher grupos-prof" id="sp-cats"></div>
       <div class="ficha-prof" hidden>
       <div class="dupla"><label>Cidade onde atende<input name="cidade" value="${esc(me.cidade || cid?.cidade || '')}" required></label>
         <label>UF<input name="uf" value="${esc(me.uf || cid?.uf || '')}" maxlength="2" required style="text-transform:uppercase"></label></div>
