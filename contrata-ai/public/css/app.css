@@ -79,7 +79,11 @@ nav#nav a.ativa { color: var(--pri-tx); background: var(--pri-claro); }
 
 main { max-width: 1040px; margin: 0 auto; padding-block: 18px 40px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-@media (max-width: 760px) { main { padding-bottom: calc(var(--abas) + 96px + env(safe-area-inset-bottom, 0px)); } }
+@media (max-width: 760px) {
+  main { padding-bottom: calc(var(--abas) + 16px + env(safe-area-inset-bottom, 0px)); }
+  /* só as telas com barra fixa embaixo (perfil, currículo) precisam de espaço extra */
+  main:has(.barra-cta) { padding-bottom: calc(var(--abas) + 96px + env(safe-area-inset-bottom, 0px)); }
+}
 
 /* ---------- base ---------- */
 .card { display: block; background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio); padding: 18px; margin-bottom: 14px; color: inherit; text-decoration: none; }
@@ -1015,3 +1019,40 @@ nav#nav a .ic { stroke-width: 1.9; }
 .marca-app span { font-size: min(25px, 7vw); overflow: hidden; text-overflow: ellipsis; }
 .hero-cidade { max-width: 100%; }
 html, body { overflow-x: hidden; }
+
+/* escolha da profissão em 2 toques: 6 grupos (3 por linha) e depois as profissões do grupo */
+.cat-grade.grupos-prof { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cat-grade.grupos-prof.em-grupo { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cat-grade.grupos-prof .grupo-cab { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0; }
+.cat-grade.grupos-prof .grupo-cab b { font: 800 16px var(--f-titulo); }
+.cat-grade.grupos-prof .grupo-cab .link { display: inline-flex; align-items: center; gap: 4px; }
+.cat-grade.grupos-prof .grupo-cab .link .ic { width: 16px; height: 16px; }
+.cat-grade.grupos-prof:not(.em-grupo):not(.fechada) .cat-tile { min-height: 96px; }
+.cat-grade.grupos-prof .cat-nome { overflow-wrap: anywhere; }
+
+/* telas de passos (entrar, cadastro): mais justas para caber sem rolar em celulares pequenos */
+@media (max-width: 760px) {
+  main { padding-top: 12px; }
+  .cadastro h1 { font-size: clamp(22px, 6vw, 28px); }
+  .passo-num { margin-bottom: 10px; }
+  .form-passo label { margin-bottom: 8px; }
+  .form-passo input, .form-passo select { padding: 11px 14px; margin-top: 4px; }
+  .form-passo small { margin-top: 1px; }
+  .ou { margin: 16px 0 10px; }
+  .opcao-grande { padding: 13px 16px; }
+}
+/* celulares bem baixos: entrar e cadastro ainda mais justos */
+@media (max-width: 760px) and (max-height: 700px) {
+  main { padding-top: 8px; }
+  .cadastro h1 { font-size: 21px; }
+  .cadastro .nota { font-size: 13px; }
+  .passo-num { margin-bottom: 6px; }
+  .form-passo label { margin-bottom: 6px; font-size: 13px; }
+  .form-passo input, .form-passo select { padding: 9px 12px; margin-top: 3px; }
+  .form-passo .btn.largo { min-height: 44px; padding: 10px 18px; }
+  .link-simples { margin-top: 6px; padding: 6px; }
+  .ou { margin: 10px 0 8px; }
+  .opcao-grande { padding: 10px 14px; }
+  .opcao-grande b { font-size: 16px; }
+  .bv-opcoes { gap: 8px; margin-bottom: 8px; }
+}
