@@ -2,8 +2,24 @@ import { temContato } from './filtro.js';
 import * as CV from './curriculo.js';
 import { codigoPix, normalizarChave, tipoChave } from './pix.js';
 
-const SUPABASE_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
+// Biblioteca do Supabase guardada no próprio app (supabase-js 2.45.4, MIT), sem depender de site externo
+function carregarSupabase() {
+  if (window.supabase?.createClient) return Promise.resolve(window.supabase);
+  return new Promise((ok, erro) => {
+    const s = document.createElement('script');
+    s.src = '/js/vendor/supabase.js';
+    s.onload = () => ok(window.supabase);
+    s.onerror = () => erro(new Error('Não foi possível carregar o app. Confira sua internet e tente de novo.'));
+    document.head.appendChild(s);
+  });
+}
 const DEMO = !!window.CONTRATA_DEMO;
+// Endereço e chave PÚBLICA do banco (a chave pública pode ficar no app: quem protege os dados são as regras do banco).
+// Variáveis SUPABASE_URL / SUPABASE_ANON_KEY na Vercel, se existirem, têm prioridade.
+const SUPABASE_PUBLICO = {
+  supabaseUrl: 'https://jiuewxeiipvtmpagtywv.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppdWV3eGVpaXB2dG1wYWd0eXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwMDM5MjcsImV4cCI6MjEwOTU3OTkyN30.zBgjtMO6ly9UwKswrGik-TiVNI_6ceFw4zf6QFiNz-Q',
+};
 
 // ---------------------------------------------------------------- utilidades
 const $app = document.getElementById('app');
@@ -354,11 +370,12 @@ async function iniciar() {
     sb = (await import('./demo.js')).criarDemo();
   } else {
     const cfg = await fetch('/api/config').then((r) => r.json()).catch(() => ({}));
+    if (!cfg.supabaseUrl) Object.assign(cfg, SUPABASE_PUBLICO);
     if (!cfg.supabaseUrl) {
       $app.innerHTML = '<div class="card">Configure <b>SUPABASE_URL</b> e <b>SUPABASE_ANON_KEY</b> nas variáveis de ambiente da Vercel.</div>';
       return;
     }
-    const { createClient } = await import(SUPABASE_CDN);
+    const { createClient } = await carregarSupabase();
     sb = createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
   }
   const { data: { session } } = await sb.auth.getSession();
@@ -1411,12 +1428,6 @@ async function telaChat(id, params) {
     renderContratos();
   });
 
-  const { data: msgs } = await sb.from('mensagens').select('*').eq('conversa_id', id).order('criado_em').limit(500);
-  (msgs || []).forEach(addMsg);
-  marcarLida(id);
-  if (!(msgs || []).length) $msgs.innerHTML = `<p class="nota centro inicio-chat">Diga o que você precisa. Para sua segurança, o WhatsApp só é liberado depois do pagamento pelo app.</p>`;
-  await renderContratos();
-
   const fmsg = document.getElementById('fmsg');
   fmsg?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1429,6 +1440,14 @@ async function telaChat(id, params) {
     addMsg(m);
     if (m.bloqueada) { toast(AVISO_CONTATO, 'erro'); await carregarMe((await sb.auth.getSession()).data.session); }
   });
+
+  const { data: msgs } = await sb.from('mensagens').select('*').eq('conversa_id', id).order('criado_em').limit(500);
+  (msgs || []).forEach(addMsg);
+  marcarLida(id);
+  if (!(msgs || []).length) $msgs.innerHTML = `<p class="nota centro inicio-chat">Diga o que você precisa. Para sua segurança, o WhatsApp só é liberado depois do pagamento pelo app.</p>`;
+  // a proposta carrega à parte: se demorar ou falhar, o chat continua funcionando
+  renderContratos().catch(falha);
+
 
   canais.push(sb.channel(`chat-${id}`)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', filter: `conversa_id=eq.${id}` }, (p) => addMsg(p.new))
