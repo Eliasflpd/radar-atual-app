@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0a1522">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mensagens para Pregar — Escavador de Pérolas Bíblicas</title>
+<style>
+  :root{
+    --navy:#0a1522; --navy2:#0e1f33; --navy3:#12263f;
+    --creme:#f3ead6; --creme-dim:#cdc3ad;
+    --ouro:#c9a44c; --ouro-claro:#e6c879; --teal:#5fb8c4;
+    --vinho:#8a1c1c;
+  }
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px;background:#06101d}
+  body{
+    margin:0 auto;max-width:760px;min-height:100vh;color:var(--creme);
+    background:
+      radial-gradient(1100px 620px at 50% -140px, #16304e 0%, rgba(22,48,78,0) 60%),
+      linear-gradient(180deg,#0b1a2c 0%, var(--navy) 46%, #081222 100%);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;
+    padding:0 15px calc(40px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased;
+  }
+
+  /* ───── Topo: RADAR + casa ───── */
+  .topo{display:flex;align-items:center;justify-content:space-between;
+    padding:18px 2px 10px;position:sticky;top:0;z-index:40;
+    background:linear-gradient(180deg,#0b1a2c 72%, rgba(11,26,44,0));}
+  .marca{display:flex;align-items:center;gap:11px}
+  .marca .logo{flex-shrink:0;display:block;filter:drop-shadow(0 0 6px rgba(201,164,76,.35))}
+  .marca .nome{font-size:.98rem;font-weight:700;letter-spacing:.42em;color:var(--creme);
+    text-transform:uppercase;padding-left:.1em}
+  .casa{display:flex;align-items:center;justify-content:center;width:42px;height:42px;
+    border-radius:50%;background:rgba(243,234,214,.06);border:1px solid rgba(243,234,214,.14);
+    cursor:pointer;color:var(--creme);transition:background .15s}
+  .casa:active{background:rgba(243,234,214,.16)}
+
+  .migalha{display:inline-flex;align-items:center;gap:5px;margin:2px 0 14px;
+    background:none;border:none;color:var(--creme-dim);font-family:inherit;
+    font-size:.9rem;font-weight:600;cursor:pointer;padding:4px 2px;letter-spacing:.01em}
+  .migalha:active{color:var(--creme)}
+
+  h1{font-family:Georgia,'Times New Roman',serif;color:var(--creme);
+    font-size:2.15rem;font-weight:700;line-height:1.1;margin:2px 0 2px;letter-spacing:.005em;
+    text-shadow:0 2px 18px rgba(0,0,0,.45)}
+  .sub{color:var(--creme-dim);font-size:.92rem;margin:0 0 18px;font-style:italic;
+    font-family:Georgia,serif;letter-spacing:.02em}
+
+  /* ───── Abas / pílulas ───── */
+  .mtabs{display:flex;align-items:center;gap:9px;margin:0 0 20px;flex-wrap:wrap}
+  .mtab{padding:10px 20px;border-radius:999px;font-family:inherit;font-size:.92rem;
+    font-weight:700;cursor:pointer;border:1px solid transparent;transition:all .15s;letter-spacing:.01em}
+  .mtab[data-p="lista"]{background:rgba(243,234,214,.07);color:var(--creme-dim);
+    border-color:rgba(243,234,214,.12)}
+  .mtab.on{background:linear-gradient(135deg,var(--ouro-claro),var(--ouro));
+    color:#201603;border-color:transparent;box-shadow:0 6px 18px rgba(201,164,76,.28);
+    text-shadow:none}
+  #rp-atalho{padding:10px 18px;border-radius:999px;font-family:inherit;font-size:.9rem;
+    font-weight:700;cursor:pointer;background:rgba(243,234,214,.07);color:var(--creme-dim);
+    border:1px solid rgba(243,234,214,.12);transition:all .15s;letter-spacing:.01em}
+  #rp-atalho:active{background:rgba(243,234,214,.16);color:var(--creme)}
+  .mais{width:44px;height:44px;border-radius:50%;flex-shrink:0;
+    background:rgba(201,164,76,.08);border:1.5px solid var(--ouro);color:var(--ouro-claro);
+    font-size:1.5rem;line-height:1;font-weight:400;cursor:pointer;display:flex;
+    align-items:center;justify-content:center;padding-bottom:3px;margin-left:auto;transition:all .15s}
+  .mais:active{background:rgba(201,164,76,.22)}
+
+  #mtab-dica{color:var(--creme-dim)}
+
+  /* ───── CARDS cinematográficos ───── */
+  .card{
+    position:relative;display:block;overflow:hidden;text-decoration:none;color:inherit;
+    min-height:184px;border-radius:22px;margin-bottom:17px;
+    background:linear-gradient(135deg,#17304c 0%, var(--navy2) 55%, #0a1727 100%);
+    border:1px solid rgba(201,164,76,.22);
+    box-shadow:0 14px 34px rgba(0,0,0,.5), inset 0 0 0 1px rgba(243,234,214,.03);
+    -webkit-tap-highlight-color:transparent;cursor:pointer;isolation:isolate}
+  .card .c-emoji{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+    font-size:5.4rem;opacity:.26;z-index:0;filter:saturate(1.1)}
+  .card .c-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    object-position:center;z-index:1;display:block;filter:brightness(1.08) saturate(1.06)}
+  .card .c-grad{position:absolute;inset:0;z-index:2;background:
+    linear-gradient(90deg, rgba(8,18,31,.93) 0%, rgba(8,18,31,.68) 30%, rgba(8,18,31,.20) 56%, rgba(8,18,31,0) 82%),
+    linear-gradient(0deg, rgba(8,18,31,.78) 0%, rgba(8,18,31,.12) 40%, rgba(8,18,31,0) 60%)}
+  /* o texto fica em fluxo (não absoluto): título comprido faz o cartão crescer em vez de sair cortado por cima */
+  .card{display:flex;flex-direction:column;justify-content:flex-end}
+  .card .c-body{position:relative;z-index:3;
+    padding:54px 54px 17px 20px}
+  .card .c-tit{font-family:Georgia,'Times New Roman',serif;color:var(--creme);
+    font-size:1.42rem;font-weight:700;line-height:1.16;text-shadow:0 2px 14px rgba(0,0,0,.6)}
+  .card .c-ref{color:var(--ouro-claro);font-weight:700;font-size:.82rem;margin-top:6px;
+    letter-spacing:.015em;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .card .c-fonte{color:var(--teal);font-weight:700;font-size:.76rem;margin-top:3px;
+    text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .card .c-chev{position:absolute;right:16px;bottom:14px;z-index:3;color:var(--ouro-claro);
+    font-size:1.9rem;line-height:1;font-family:Georgia,serif;opacity:.92;
+    text-shadow:0 2px 10px rgba(0,0,0,.7)}
+  /* selo do _pregado.js — vence o estilo injetado por ter mais especificidade */
+  .card .rp-selo{position:absolute;top:13px;left:13px;z-index:6;margin:0;
+    display:inline-block;background:linear-gradient(135deg,#0f8f9e,#0f6d78);color:#fff;
+    border:1px solid rgba(230,200,121,.55);border-radius:999px;padding:4px 12px;
+    font-size:.72rem;font-weight:800;letter-spacing:.01em;
+    box-shadow:0 5px 14px rgba(0,0,0,.45)}
+
+  /* selo NOVO — peça publicada há até 14 dias */
+  .card .novo-tag{position:absolute;top:13px;right:13px;z-index:6;background:linear-gradient(135deg,#27c46f,#1a8a4a);color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:999px;padding:4px 12px;font-size:.72rem;font-weight:900;letter-spacing:.08em;box-shadow:0 5px 14px rgba(0,0,0,.45)}
+  .vazio{text-align:center;color:var(--creme-dim);padding:34px 0;font-size:.95rem}
+
+  /* ───── rodapé: Forjar ───── */
+  #forjar-foot{display:block;width:100%;margin:6px 0 4px;padding:15px;border-radius:16px;
+    background:rgba(201,164,76,.08);border:1.5px solid var(--ouro);color:var(--ouro-claro);
+    font-family:inherit;font-size:1.04rem;font-weight:800;cursor:pointer;letter-spacing:.015em;
+    transition:all .15s}
+  #forjar-foot:active{background:rgba(201,164,76,.2)}
+</style>
+</head>
+<body>
+
+  <header class="topo">
+    <div class="marca">
+      <svg class="logo" width="30" height="30" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="24" cy="24" r="21" fill="none" stroke="#c9a44c" stroke-width="1.6" opacity=".45"/>
+        <circle cx="24" cy="24" r="13.5" fill="none" stroke="#e6c879" stroke-width="1.8" opacity=".8"/>
+        <circle cx="24" cy="24" r="6" fill="none" stroke="#e6c879" stroke-width="1.8"/>
+        <circle cx="24" cy="24" r="2.2" fill="#e6c879"/>
+        <path d="M24 2.5V9 M24 39v6.5 M2.5 24H9 M39 24h6.5" stroke="#c9a44c" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>
+      </svg>
+      <span class="nome">RADAR</span>
+    </div>
+    <button class="casa" onclick="location.href='/'" aria-label="Início" title="Início">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/>
+      </svg>
+    </button>
+  </header>
+
+  <button class="migalha" onclick="location.href='/?mod=manuais'">‹ Biblioteca</button>
+
+  <h1>Mensagens<br>para Pregar</h1>
+  <div class="sub">Sermões densos em prosa, garimpados do original</div>
+
+  <div class="mtabs">
+    <button class="mtab on" data-p="lista" onclick="mtab('lista')">Mensagens</button>
+    <button id="rp-atalho" type="button" onclick="(window.RadarPregado&&RadarPregado.painel())">📜 Já preguei</button>
+    <button class="mais" type="button" onclick="mtab('forjar')" aria-label="Forjar mensagem" title="Forjar mensagem">+</button>
+  </div>
+
+  <div id="mtab-dica" style="display:none;text-align:center;font-size:.86rem;margin:16px 0 8px;line-height:1.5">👆 Toque em <b style="color:var(--ouro-claro)">Mensagens</b> para ler,<br>ou no <b style="color:var(--ouro-claro)">+</b> para forjar uma nova.</div>
+  <div id="lista"></div>
+
+  <button id="forjar-foot" type="button" onclick="mtab('forjar')">✦ Forjar mensagem</button>
+
+<script>
+  // ── CRM de Mensagens — pra postar uma nova, é só adicionar aqui em cima ──
+  var MENSAGENS = [
+    {arquivo:"o-silencio-da-cruz.html", data:"2026-11-03", titulo:"O Silêncio da Cruz", ref:"Isaías 53:7 · Mateus 27:12-14, 45-46 · Hebreus 12:24 · Atos 4:20", emoji:"✝️", fonte:"Mensagem da cruz", desc:"O Verbo ficou calado diante de Caifás, Pilatos e Herodes. Calou para não ser absolvido, calou no lugar do culpado — e o seu sangue fala melhor do que o de Abel. O silêncio da cruz virou o barulho do Pentecostes."},
+    {arquivo:"deus-nao-recebe-sobras.html", data:"2026-10-28", titulo:"Deus Não Recebe Sobras", ref:"2 Samuel 24:24 · Malaquias 1:6-8 · Eclesiastes 12:1 · Romanos 12:1", emoji:"🔥", fonte:"Malaquias 1 · 2 Samuel 24 · a oferta que custa", desc:"O terreno do templo de Jerusalém foi comprado por um rei que recusou ganhar de presente o que ia oferecer a Deus: “não oferecerei ao Senhor holocaustos que não me custem nada”. No mesmo monte, Abraão levou Isaque. Malaquias e o animal cego no altar, a força da mocidade, ninguém serve a dois senhores — e o Pai que nunca nos deu sobras."},
+    {arquivo:"nomes-hebreus-numa-casa-egipcia.html", data:"2026-10-28", titulo:"Nomes Hebreus numa Casa Egípcia", ref:"Gênesis 41:45-52 · Gênesis 48:5 · Daniel 1:8 · Hebreus 11:21", emoji:"🏺", fonte:"Gênesis 41 e 48 · José, Asenate e os filhos nascidos no Egito", desc:"O sogro de José era sacerdote do deus Sol em Om, a Heliópolis dos gregos. Faraó deu a José nome egípcio, mulher egípcia e roupa egípcia. Mas quando nasceram os filhos, José deu a eles nomes que confessavam o Deus de Abraão. O Egito deu nome a José; quem deu nome aos filhos dele foi a fé."},
+    {arquivo:"o-homem-esqueceu-deus-nao.html", data:"2026-10-28", titulo:"O Homem Esqueceu, Deus Não", ref:"Gênesis 40–41 · Salmo 105:17-19 · Isaías 49:15-16 · Lucas 23:42-43", emoji:"⛓️", fonte:"Gênesis 40 e 41 · o copeiro que se esqueceu de José", desc:"A Bíblia registra duas festas de aniversário de reis, e nas duas um homem morreu por causa da festa. Na primeira, um copeiro voltou ao palácio e se esqueceu de José por dois anos inteiros. O texto não diz que isso foi castigo: o homem se esquece de você assim que a sua vida melhora; Deus se lembra de você no dia certo."},
+    {arquivo:"abel-mizraim-o-pranto-do-egito.html", data:"2026-10-28", titulo:"Abel-Mizraim: o Pranto do Egito", ref:"Gênesis 50 · Êxodo 13:19 · Hebreus 11:22 · 1 Tessalonicenses 4:13-14", emoji:"⚱️", fonte:"Inspirada no vídeo “José morreu… e deixou uma ordem estranha no Egito” (canal Chama Ardente)", desc:"Setenta dias o império mais poderoso da terra parou para chorar um velho pastor de ovelhas. Os cananeus viram e deram nome ao lugar: Abel-Mizraim, o pranto do Egito. O Egito pode te dar um enterro de faraó; só Deus te dá endereço. E o caixão de José ficou 400 anos pregando no Egito: “nós vamos sair”."},
+    {arquivo:"escolha-o-ceu.html", data:"2026-10-28", titulo:"Escolha o Céu", ref:"Lucas 5:5 · Mateus 26:40 · Lucas 10:20 · Daniel 12:3", emoji:"⭐", fonte:"Inspirada em uma publicação do Pr. Américo Fábio · com a fama e a imortalidade que o homem busca", desc:"O Rei do Pop morreu e o povo foi chorar na estrela errada. Na Calçada da Fama tem rei de tudo — e todos morreram. Tudo o que o homem grava no chão o tempo pisa; só o que Deus escreve no céu permanece. E o mesmo Pedro que varou a noite pela pesca dormiu em uma hora com Jesus."},
+    {arquivo:"o-perfeito-conhecimento-de-deus.html", data:"2026-10-28", titulo:"O Perfeito Conhecimento de Deus", ref:"Romanos 8:26-28 · Romanos 8:29 · João 17:3", emoji:"👁️", fonte:"Inspirada em uma pregação vista no Facebook (tema e texto do vídeo: Romanos 8:1-28)", desc:"Três “saberes” em três versículos: nós não sabemos o que pedir; Deus sabe perfeitamente; e por isso nós sabemos que todas as coisas cooperam para o bem. Quando acabam as suas palavras, começam os gemidos do Espírito."},
+    {arquivo:"as-7-maravilhas-que-nao-caem.html", data:"2026-10-24", titulo:"As 7 Maravilhas que Não Caem", ref:"Salmo 118:23 · Hebreus 12:26-28 · Daniel 2:44", emoji:"🏛️", fonte:"Mensagem temática · as maravilhas do mundo antigo diante das maravilhas de Deus", desc:"Sete obras que o homem fez para durar para sempre — e seis caíram. A estátua muda, o jardim do orgulho, o túmulo de luxo, a pirâmide vazia, o templo de Diana, o farol e o colosso: diante de cada uma, uma maravilha de Deus que nenhum terremoto derruba."},
+    {arquivo:"abadom-e-apoliom-o-rei-do-abismo.html", data:"2026-10-24", titulo:"Abadom e Apoliom: o Rei do Abismo", ref:"Apocalipse 9:1-12 · Jó 26:6 · Lucas 10:17-20 · Efésios 1:13", emoji:"🦂", fonte:"Mensagem escatológica", desc:"“Os gafanhotos não têm rei” — mas os do abismo têm. Abadom e Apoliom: o lugar que ganhou coroa, a chave emprestada, o Destruidor que Jesus veio desfazer. E a igreja selada que pisa escorpiões e serpentes."},
+    {arquivo:"e-entao-vira-o-fim.html", data:"2026-10-24", titulo:"E Então Virá o Fim", ref:"Mateus 24:14 · Atos 1:6-8 · Atos 2:1-11 · Romanos 11:25 · Apocalipse 5:9", emoji:"🌍", fonte:"Mensagem escatológica e missionária", desc:"Guerra, fome e peste Jesus chamou de “ainda não”. O único sinal com “então” é o evangelho em todas as nações — faltam 535 línguas. O último sinal antes do fim não é uma catástrofe, é um missionário."},
+    {arquivo:"primeiro-os-pes-depois-o-egito.html", data:"2026-10-24", titulo:"Primeiro os Pés, Depois o Egito", ref:"Êxodo 3:1-10 · Josué 5:13-15 · Rute 4:7 · João 13:5-8", emoji:"👣", fonte:"Inspirada em uma publicação do perfil Mate o Pecado", desc:"Havia uma nação para libertar, e a primeira coisa que Deus disse a Moisés foi sobre os pés dele. A sandália de dono, Josué diante de Jericó, os pés que Jesus lavou — antes do “vai”, vem o “tira”."},
+    {arquivo:"ide-a-jose-o-sonho-duplicado-de-farao.html", data:"2026-10-23", titulo:"Ide a José: o Sonho Duplicado de Faraó", ref:"Gênesis 41 · Daniel 9:24-27 · Apocalipse 3:10", emoji:"🌾", fonte:"Mensagem escatológica", desc:"Sete vacas, sete espigas e um sonho repetido: Deus avisou antes da fome. José exaltado no trono, a esposa dada antes da fome e os irmãos que só o reconhecem na angústia — o relógio do fim."},
+    {arquivo:"o-pacto-com-os-olhos.html", data:"2026-10-17", titulo:"O Pacto com os Olhos", ref:"Jó 31:1 · 2 Samuel 11:1-4 · Gênesis 39:7-12 · 1 Coríntios 6:18", emoji:"👁️", fonte:"Inspirada em um trecho de pregação do JK Ministério", desc:"Quem carrega propósito atrai luta — e a isca mais barata do inimigo se anuncia como “de graça”. Jó fez pacto, Davi perdeu a guerra na janela de casa, José correu. E Jesus venceu por nós."},
+    {arquivo:"tem-coisa-que-e-chamado.html", data:"2026-10-17", titulo:"Tem Coisa que é Chamado, Não Esforço", ref:"Mateus 4:18-20 · 1 Coríntios 12:29-30 · Isaías 58:6 · 1 Reis 19:5-8", emoji:"🎯", fonte:"Inspirada em um trecho de pregação do JK Ministério", desc:"Nem tudo na vida com Deus se compra com suor. Jejum é bíblico, mas não é moeda; os quarenta dias são de poucos; o corpo faz parte da obediência — e há coisas que só vêm por chamado."},
+    {arquivo:"o-cordeiro-que-ninguem-pode-trocar.html", data:"2026-10-15", titulo:"O Cordeiro que Ninguém Pode Trocar", ref:"Êxodo 12 · Gênesis 22:8 · João 1:29 · 1 Coríntios 5:7", emoji:"🐑", fonte:"Inspirada em uma fala do Dr. Alex Alves", desc:"Um cordeiro para um homem, para uma casa, para uma nação, para o mundo. A escala do Cordeiro — e o perigo de trocar o centro da Páscoa."},
+    {arquivo:"quem-voce-chama-de-santo.html", data:"2026-10-15", titulo:"Quem Você Chama de Santo?", ref:"Romanos 1:7 · 1 Timóteo 2:5 · Apocalipse 5:8 · Atos 10:25-26", emoji:"🕊️", fonte:"Inspirada em uma fala do Dr. Alex Alves", desc:"No Novo Testamento, “santo” é o nome de quem está vivo e crê — e a única vez que alguém tenta ser adorado, a resposta é “levanta-te”. A Bíblia fala de santos, de testemunhas e de um só Mediador."},
+    {arquivo:"e-tempo-de-casas-forradas.html", data:"2026-10-15", titulo:"É Tempo de Casas Forradas?", ref:"Ageu 1:2-9 · Lucas 12:16-21 · Salmo 127:1", emoji:"🏠", fonte:"Inspirada em uma fala de Du Cristian", desc:"Dezesseis anos depois do retorno, o povo dizia “ainda não é tempo”. Ageu pergunta: é tempo das suas casas forradas, enquanto a casa de Deus está em ruínas?"},
+    {arquivo:"a-resposta-que-saiu-no-primeiro-dia.html", data:"2026-10-15", titulo:"A Resposta que Saiu no Primeiro Dia", ref:"Daniel 10:1-14 · Efésios 6:12 · Colossenses 2:15", emoji:"🛡️", fonte:"Inspirada em uma pregação do Pr. Miquéias Oliveira", desc:"Vinte e um dias de silêncio. O anjo revela: a ordem saiu no primeiro dia. O que Daniel não via, e por que a oração dele foi ouvida antes de ser respondida."},
+    {arquivo:"quanto-mais-perto-mais-voce-sabe.html", data:"2026-10-15", titulo:"Quanto Mais Perto, Mais Você Sabe", ref:"João 13:21-30 · João 1:18 · Salmo 25:14", emoji:"💞", fonte:"Inspirada em uma pregação de Yossef Akiva Avraham", desc:"Quinhentos, setenta, doze, três e um. A palavra grega que une o peito de João ao peito do Pai — e o único dos doze que ficou ao pé da cruz."},
+    {arquivo:"eu-te-vi-debaixo-da-figueira.html", data:"2026-10-15", titulo:"Eu Te Vi Debaixo da Figueira", ref:"João 1:43-51 · Gênesis 27-28 · Salmo 139", emoji:"🌳", fonte:"Inspirada em uma pregação de Shimshon Temmo", desc:"Quando Jesus chamou Natanael de “sem dolo”, usou a palavra que a Bíblia grega usa para o pecado de Jacó. E a escada de Betel apareceu de novo."},
+    {arquivo:"a-porta-que-o-filho-abre.html", data:"2026-10-15", titulo:"A Porta que o Filho Abre", ref:"Hebreus 4:14-16 · Efésios 2:18 · 1 Pedro 3:18", emoji:"🙏", fonte:"Inspirada em uma pregação de David Lindell", desc:"A palavra grega para “acesso” era a de quem apresentava alguém ao rei. E a de “confiança” era a voz livre de um cidadão. A oração é a porta aberta pelo Filho."},
+    {arquivo:"os-tres-sinais-que-jesus-deu.html", data:"2026-10-15", titulo:"Os Três Sinais que Jesus Deu", ref:"Mateus 24:32-34 · Isaías 66:8 · Daniel 12:4 · Apocalipse 11:1-2", emoji:"⏳", fonte:"Inspirada em uma pregação de Yossef Akiva Avraham", desc:"A figueira, o livro selado e o templo que ainda não existe. Por que Jesus disse “verão” — e o detalhe de que o Apocalipse é um livro que não foi selado."},
+    {arquivo:"uma-estrela-difere-de-outra-em-gloria.html", data:"2026-10-15", titulo:"Uma Estrela Difere de Outra em Glória", ref:"1 Coríntios 15:40-44 · Daniel 12:3 · Isaías 53:11", emoji:"🌟", fonte:"Inspirada em uma pregação", desc:"Em Daniel 12:3 aparecem o mesmo verbo e as mesmas palavras de Isaías 53:11. O segredo do brilho no céu — e a estrela que Jesus segura na mão."},
+    {arquivo:"faz-dois-dias-que-ele-subiu.html", data:"2026-10-15", titulo:"Faz Dois Dias que Ele Subiu", ref:"2 Pedro 3:8-10 · Salmo 90:4 · Hebreus 10:11-13", emoji:"🕰️", fonte:"Inspirada em uma pregação", desc:"O Salmo 90 mede mil anos de duas maneiras no mesmo versículo. Os sacerdotes nunca se sentavam no templo — Jesus sentou, mas se levantou uma vez para receber Estêvão."},
+    {arquivo:"a-dracma-na-testa-da-noiva.html", data:'2026-09-27', titulo:"A Dracma na Testa da Noiva", ref:"Lucas 15:8-10 · Gênesis 1:27", emoji:"🪙", desc:"As dez moedas não eram troco: eram o enfeite de casamento que o noivo dava à esposa, presas na testa como a nossa aliança. A que caiu no pó da própria casa ainda trazia o rosto do Rei — e o céu não fecha a conta com uma faltando."},
+    {arquivo:"pao-para-o-irmao-pedra-para-o-gigante.html", data:'2026-09-26', titulo:"Pão para o Irmão, Pedra para o Gigante", ref:"1 Samuel 17 · Mateus 7:9", emoji:"🍞", desc:"Davi desceu ao vale com pão nos braços, não pedra. O primeiro a feri-lo não foi Golias — foi o irmão. Ao irmão, ele se esquivou; a pedra guardou para o gigante. A igreja inverteu as mãos."},
+    {arquivo:"da-palavra-a-sombra.html", data:'2026-09-26', titulo:"Da Palavra à Sombra", ref:"Atos 3-5 · Atos 19 · 2 Coríntios 5:20", emoji:"👤", desc:"O bebê espiritual precisa gritar o nome de Jesus. Mas a sombra de Pedro curava sem citar o nome, e o avental de Paulo expulsava demônios longe dele. Do nome na boca à Pessoa no corpo: o embaixador de Cristo."},
+    {arquivo:"as-dez-virgens.html", data:'2026-09-22', titulo:"As Dez Virgens", ref:"Mateus 25:1-13", emoji:"🕯️", desc:"As dez eram virgens. As dez tinham lâmpada. As dez dormiram. A diferença entre elas era invisível — até a meia-noite."},
+    {arquivo:"o-bode-que-foi-solto.html", data:'2026-09-22', titulo:"O Bode que Foi Solto", ref:"Levítico 16 · Salmo 103:12", emoji:"🐐", desc:"Dois bodes, uma só oferta. Um morreu e resolveu a culpa; o outro foi solto e levou a memória embora. Você precisava dos dois."},
+    {arquivo:"o-resgatador-de-rute.html", data:'2026-09-22', titulo:"O Resgatador de Rute", ref:"Rute 3-4 · Efésios 1:14", emoji:"🌾", desc:"Ela pediu que ele estendesse a capa sobre ela — usando a mesma palavra que ele tinha usado para as asas de Deus. Pediu que ele fosse a resposta da própria oração dele."},
+    {arquivo:"a-vara-que-floresceu.html", data:'2026-09-22', titulo:"A Vara que Floresceu", ref:"Números 17 · Hebreus 9:4", emoji:"🌸", desc:"Doze varas entraram mortas. Uma saiu com flor e amêndoa madura na mesma noite. Deus não venceu a rebelião discutindo — venceu produzindo vida em pau seco."},
+    {arquivo:"os-dois-passaros-do-leproso.html", data:'2026-09-22', titulo:"Os Dois Pássaros do Leproso", ref:"Levítico 14:1-7 · Mateus 8:3", emoji:"🕊️", desc:"Um morreu dentro do vaso de barro, sobre águas vivas. O outro foi solto molhado no sangue do primeiro — e voou marcado, para o resto da vida."},
+    {arquivo:"a-sarca-que-nao-se-consumia.html", data:'2026-09-22', titulo:"A Sarça que Não se Consumia", ref:"Êxodo 3 · João 8:58", emoji:"🔥", desc:"Deus tinha o cedro do Líbano e o carvalho de Basã à disposição. Escolheu o espinheiro rasteiro do deserto — a planta que a própria maldição produziu."},
+    {arquivo:"o-cordao-de-escarlate.html", data:'2026-09-22', titulo:"O Cordão de Escarlate", ref:"Josué 2 · Hebreus 11:31", emoji:"🧵", desc:"A palavra hebraica para aquele cordão vermelho na janela é a mesma que a Bíblia traduz por “esperança”. Raabe pendurou, literalmente, uma esperança na parede."},
+    {arquivo:"sete-vezes-no-jordao.html", data:'2026-09-22', titulo:"Sete Vezes no Jordão", ref:"2 Reis 5 · Lucas 4:27", emoji:"🌊", desc:"Ele trouxe ouro, prata, cartas do rei e uma expectativa pronta. Deus pediu a única coisa que ele não tinha trazido: humilhação em água suja."},
+    {arquivo:"o-cacho-de-escol.html", data:'2026-09-22', titulo:"O Cacho de Escol", ref:"Números 13-14 · Josué 14", emoji:"🍇", desc:"Doze homens carregaram nos ombros a prova de que a terra era boa — e dez usaram a boca para dizer que ela era impossível. O fruto estava no ombro deles."},
+    {arquivo:"o-manto-que-caiu.html", data:'2026-09-22', titulo:"O Manto que Caiu", ref:"2 Reis 2 · Deuteronômio 21:17", emoji:"🎽", desc:"Cinquenta profetas sabiam o dia exato em que Elias subiria. Cinquenta ficaram de longe. Um só atravessou o Jordão — e foi o único que pegou o manto."},
+    {arquivo:"o-ano-do-jubileu.html", data:'2026-09-22', titulo:"O Ano do Jubileu", ref:"Levítico 25 · Lucas 4:18-21", emoji:"📯", desc:"A trombeta da liberdade só podia tocar depois que o sangue entrasse no véu. Perdão primeiro, liberdade depois — Deus nunca inverteu essa ordem."},
+    {arquivo:"o-grao-de-trigo.html", data:'2026-09-22', titulo:"O Grão de Trigo", ref:"João 12:20-33 · 1 Coríntios 15:36", emoji:"🌱", desc:"Uns gregos pediram para ver Jesus. Ele respondeu falando de um grão que apodrece na terra — porque o jeito de Ele ser visto pelo mundo passava por um sepulcro."},
+    {arquivo:"o-primeiro-ungido-da-biblia.html", data:'2026-09-18', titulo:"O Primeiro Ungido da Bíblia", ref:"Gênesis 28 · João 1:51", emoji:"🪨", desc:"Todos falam da escada — e a escada vai embora no fim do sonho. Quem fica é a pedra: a primeira coisa ungida com azeite em toda a Bíblia."},
+    {arquivo:"entre-dois-sois.html", data:'2026-09-18', titulo:"Entre Dois Sóis", ref:"Gênesis 28 · Gênesis 32", emoji:"🌇", desc:"Jacó não escolheu Betel: quem escolheu foi o cansaço. Ele saiu com o sol se pondo e voltou, vinte anos depois, com o sol nascendo — e mancando."},
+    {arquivo:"o-ultimo-adao.html", data:'2026-09-18', titulo:"O Último Adão", ref:"1 Coríntios 15 · Romanos 5", emoji:"🌿", desc:"Paulo não escreveu “segundo Adão”. Escreveu último — e a palavra grega fecha a fila: depois desse não vem outro homem para tentar de novo."},
+    {arquivo:"a-tampa-que-virou-pessoa.html", titulo:"A Tampa que Virou Pessoa", ref:"Êxodo 25 · Romanos 3:25", emoji:"🩸", desc:"A tampa da arca tinha um nome em grego. Paulo usou exatamente esse nome para falar de Jesus — e o lugar do encontro deixou de ser um móvel para ser uma Pessoa."},
+    {arquivo:"a-escada-de-jaco.html", titulo:"A Escada que Ninguém Subiu", ref:"Gênesis 28 · João 1:51", emoji:"🪜", desc:"Um fugitivo com pedra por travesseiro, e o céu se abrindo em cima dele. Repare na ordem: os anjos sobem primeiro. Eles já estavam aqui."},
+    {arquivo:"a-cidade-de-refugio.html", titulo:"Corre pra Cidade", ref:"Números 35 · Hebreus 6:18", emoji:"🏃", desc:"Dentro da cidade ele vivia; fora, morria. E só saía livre no dia em que o sumo sacerdote morresse."},
+    {arquivo:"o-monte-que-deus-escolheu.html", titulo:"O Monte que Deus Escolheu", ref:"Gênesis 22 · Romanos 8:32", emoji:"⛰️", desc:"O filho amado subindo o monte com a lenha do próprio sacrifício nas costas. Ali Deus poupou Isaque. No Calvário, Ele não poupou o próprio Filho."},
+    {arquivo:"o-cordeiro-sem-osso-quebrado.html", titulo:"O Cordeiro sem Osso Quebrado", ref:"Êxodo 12 · João 19:36", emoji:"🐑", desc:"João para a narrativa da cruz só para dizer que nenhum osso foi quebrado. Quem conhece a lei da Páscoa entende o peso daquela frase."},
+    {arquivo:"a-rocha-ferida-uma-vez.html", titulo:"A Rocha Ferida uma Vez", ref:"Êxodo 17 · 1 Coríntios 10:4", emoji:"🪨", desc:"Da primeira vez Deus mandou ferir. Da segunda, mandou só falar — e Moisés feriu de novo, e perdeu Canaã. Entenda por quê."},
+    {arquivo:"o-pao-que-desceu.html", titulo:"O Pão que Desceu", ref:"Êxodo 16 · João 6", emoji:"🍞", desc:"Vinha de madrugada, tinha que ser colhido todo dia e apodrecia se guardado. Jesus pegou esse pão e virou contra a multidão."},
+    {arquivo:"o-irmao-vendido.html", titulo:"O Irmão Vendido", ref:"Gênesis 37-50 · Atos 7", emoji:"👑", desc:"Despido da túnica, vendido por prata, preso sendo inocente, exaltado ao lado do trono — e salvando justamente os que o venderam."},
+    {arquivo:"o-sacerdote-sem-genealogia.html", titulo:"O Sacerdote sem Genealogia", ref:"Gênesis 14 · Hebreus 7", emoji:"🍷", desc:"Aparece do nada com pão e vinho, sem pai, sem mãe, sem registro — e Abraão lhe entrega o dízimo. Hebreus constrói um capítulo inteiro em cima disso."},
+    {arquivo:"o-sinal-de-jonas.html", titulo:"O Sinal de Jonas", ref:"Jonas 1-2 · Mateus 12", emoji:"🐟", desc:"Um homem lançado ao mar para que a tempestade parasse sobre os outros. Jesus chamou isso de o único sinal que aquela geração receberia."},
+    {
+      arquivo:'de-sobre-para-dentro.html', data:'2026-09-10',
+      titulo:'De Sobre para Dentro',
+      ref:'João 16 · Gênesis 6',
+      emoji:'🕊️',
+      desc:'Por 4 mil anos, de Gênesis a Malaquias, o Espírito veio SOBRE o homem — nunca DENTRO. Davi temia perdê-lo, Eliseu o pegava emprestado, os 70 profetizaram "uma vez e nunca mais". Até Cristo dizer "convém que eu vá" — e o que era sobre virar dentro, para nunca mais sair.'
+    },
+    {
+      arquivo:'ouro-prata-e-cobre.html', data:'2026-09-10',
+      titulo:'Ouro, Prata e Cobre',
+      ref:'Êxodo 25',
+      emoji:'⛺',
+      desc:'Os três metais que abrem a lista da oferta e revelam o que Deus exige de quem vai ser Sua casa: ouro (glória), prata (almas resgatadas) e cobre — o metal que aguenta o fogo. E os pés de bronze de Jesus, que pisam a fornalha e não se contaminam.'
+    },
+    {
+      arquivo:'a-luz-do-primeiro-dia.html', data:'2026-09-10',
+      titulo:'A Luz do Primeiro Dia',
+      ref:'Gênesis 1 · João 1',
+      emoji:'🌅',
+      desc:'Se o sol só veio no quarto dia, de onde vinha a luz do primeiro? Era Cristo — Luz forte demais para o homem suportar. Por isso Deus filtrou a glória com luminares, e depois o próprio Verbo abaixou o nível e coube numa manjedoura, para você olhar pra Deus e viver.'
+    },
+    {
+      arquivo:'voce-nao-e-levita.html', data:'2026-09-10',
+      titulo:'Você Não é Levita',
+      ref:'Êxodo 19 · 1 Pedro 2',
+      emoji:'👑',
+      desc:'O plano de Deus era a nação inteira de sacerdotes. Mas o povo teve medo — "vai tu por nós" — e Deus desceu o nível a uma só tribo. Até Cristo, Rei e Sacerdote, rasgar o véu e restaurar o que o medo rebaixou: você não é levita, é sacerdócio real.'
+    },
+    {
+      arquivo:'o-trono-que-ele-nunca-alcancou.html', data:'2026-09-10',
+      titulo:'O Trono que Ele Nunca Alcançou',
+      ref:'Ezequiel 28 · Hebreus 10',
+      emoji:'⚔️',
+      desc:'O querubim ungido cobria a glória por fora, mas nunca entrou no Santíssimo. Sua fúria contra você é inveja: em Cristo, você atravessa com ousadia o véu que ele nunca cruzou. Toda a estratégia dele é uma só — te expulsar do lugar onde ele jamais entrou.'
+    },
+    {
+      arquivo:'a-genealogia-de-jesus.html', data:'2026-08-30',
+      titulo:'A Genealogia de Jesus',
+      ref:'Mateus 1:1-17',
+      emoji:'📜',
+      desc:'Uma lista de nomes que é o Evangelho em miniatura. Quatro mulheres improváveis, o 3×14 que assina DAVI, uma preposição grega que prega o nascimento virginal — e uma vaga com o teu nome.'
+    },
+    {
+      arquivo:'a-mulher-do-fluxo-de-sangue.html', data:'2026-08-30',
+      titulo:'A Mulher do Fluxo de Sangue',
+      ref:'Marcos 5:25-34',
+      emoji:'🩸',
+      desc:'Doze anos sangrando, impura, sem um abraço. Ela agarra a orla — o kraspedon, as franjas da aliança — e o poder que devia contaminá-Lo a purifica. De excluída a FILHA.'
+    },
+    {
+      arquivo:'o-ultimo-prego.html', data:'2026-08-30',
+      titulo:'O Último Prego',
+      ref:'Gênesis 6',
+      emoji:'🔩',
+      desc:'Enquanto o mundo apodrecia, um homem serrava cedro. A engenharia da misericórdia: kôfer, Matusalém e a porta que Deus mesmo fechou.'
+    },
+    {
+      arquivo:'olha-e-vive.html', data:'2026-08-30',
+      titulo:'Olha e Vive',
+      ref:'Números 21 · João 3',
+      emoji:'🐍',
+      desc:'O veneno erguido no poste, no metal do juízo. Do deserto ao Calvário: todo aquele que olha — vive.'
+    }
+  ];
+
+  // ── A LISTA: os arquivos acima + as mensagens que nasceram no Concílio (banco) ──
+  // Uma lista só, da mais nova pra mais velha. As antigas continuam intactas: se o
+  // banco estiver fora do ar, a página mostra exatamente o que sempre mostrou.
+  var box=document.getElementById('lista');
+
+  // GARANTIA de abertura no TOQUE (celular): às vezes o tap no <a class="card">
+  // não disparava a navegação (re-render da lista / interferência). A delegação
+  // no container ESTÁVEL força a abertura em qualquer caso — toque ou clique.
+  box.addEventListener('click', function(e){
+    var a = e.target && e.target.closest ? e.target.closest('a.card[href]') : null;
+    if(a){ var h=a.getAttribute('href'); if(h){ location.href = h; } }
+  });
+
+  function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function dia(v){ var d=new Date(v); return isNaN(d)?'':d.toISOString().slice(0,10); }
+  // slug da capa: só para arquivos .html locais (…/mensagens/<slug>.html → capas/<slug>.jpg).
+  // Mensagens da nuvem (arquivo começa com '/') não têm imagem pronta → fallback dourado-navy.
+  function slugCapa(arquivo){
+    var a=String(arquivo||'');
+    if(!a || a.charAt(0)==='/') return '';
+    if(!/\.html$/i.test(a)) return '';
+    return a.replace(/\.html$/i,'');
+  }
+  function cartao(s){
+    var alvo=(String(s.arquivo||'').charAt(0)==='/')?s.arquivo:'/biblioteca/mensagens/'+s.arquivo;
+    var slug=slugCapa(s.arquivo);
+    var img = slug ? '<img class="c-img" src="capas/'+esc(slug)+'.jpg" alt="" loading="lazy" onerror="this.remove()">' : '';
+    var novo = s.data && (Date.now()-new Date(s.data+'T12:00:00').getTime()) < 14*864e5;
+    return '<a class="card" href="'+esc(alvo)+'">'
+      +(novo?'<span class="novo-tag">NOVO</span>':'')
+      +'<div class="c-emoji">'+esc(s.emoji||'🔥')+'</div>'
+      +img
+      +'<div class="c-grad"></div>'
+      +'<div class="c-body">'
+      +'<div class="c-tit">'+esc(s.titulo)+'</div>'
+      +(s.ref?'<div class="c-ref">'+esc(s.ref)+'</div>':'')
+      +(s.fonte?'<div class="c-fonte">✍️ '+esc(s.fonte)+'</div>':'')
+      +'</div>'
+      +'<div class="c-chev">›</div>'
+      +'</a>';
+  }
+  function pintar(daNuvem){
+    var todas=MENSAGENS.concat(daNuvem||[]);
+    // ordena por data (mais nova em cima); empate mantém a ordem curada do array
+    todas=todas.map(function(x,i){return {x:x,i:i}})
+      .sort(function(a,b){
+        var da=(a.x.data||''), db=(b.x.data||'');
+        if(da===db) return a.i-b.i;
+        return da<db?1:-1;
+      }).map(function(o){return o.x});
+    if(!todas.length){ box.innerHTML='<div class="vazio">Nenhuma mensagem postada ainda.</div>'; return; }
+    box.innerHTML=todas.map(cartao).join('');
+  }
+  pintar([]);
+
+  fetch('/api/publicacoes?tipo=mensagem')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !d.ok || !d.itens || !d.itens.length) return;
+      pintar(d.itens.map(function(p){
+        return {
+          arquivo:'/biblioteca/publicacao.html?s='+encodeURIComponent(p.slug),
+          titulo:p.titulo, ref:p.referencia||'', emoji:p.emoji||'🔥',
+          desc:p.resumo||'', data:dia(p.criado_em),
+          fonte:p.expositor_nome?('forjada com '+p.expositor_nome):'forjada no Concílio'
+        };
+      }));
+    })
+    .catch(function(){ /* sem nuvem: a lista dos arquivos continua de pé */ });
+</script>
+
+<!-- ══════════ CRIADOR DE MENSAGENS (skill Mensagens para Pregar) ══════════ -->
+<style>
+  .criador{margin:6px 0 0}
+  .cr-selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase}
+  .cr-tit{font-family:Georgia,serif;text-align:left;color:var(--creme);font-size:1.6rem;margin:4px 0 6px}
+  .cr-dica{color:var(--creme-dim);font-size:.95rem;margin:0 0 14px;line-height:1.55}
+  .cr-dica b{color:var(--creme)}
+  #cr-tema{width:100%;border:1.5px solid rgba(243,234,214,.16);border-radius:14px;padding:13px 14px;
+    font-size:1.02rem;font-family:inherit;color:var(--creme);resize:vertical;
+    background:rgba(8,18,31,.6)}
+  #cr-tema::placeholder{color:rgba(205,195,173,.55)}
+  #cr-tema:focus{outline:none;border-color:var(--ouro)}
+  #cr-btn{display:block;width:100%;margin-top:11px;background:linear-gradient(135deg,var(--ouro-claro),var(--ouro));
+    color:#201603;border:none;border-radius:14px;padding:15px;font-size:1.05rem;font-weight:800;
+    font-family:inherit;cursor:pointer;box-shadow:0 8px 22px rgba(201,164,76,.28)}
+  #cr-btn:disabled{opacity:.55;cursor:default;box-shadow:none}
+  #cr-quem{text-align:center;color:var(--ouro-claro);font-weight:700;margin:14px 0 0;font-size:.95rem}
+  #cr-saida{margin-top:14px;color:var(--creme)}
+  #cr-saida h1{font-family:Georgia,serif;text-align:left;color:var(--creme);font-size:1.7rem;line-height:1.2;margin:6px 0 4px}
+  #cr-saida .cr-ref{text-align:left;color:var(--ouro-claro);font-weight:800;margin-bottom:12px}
+  #cr-saida h2{font-family:Georgia,serif;color:var(--ouro-claro);font-size:1.2rem;margin:22px 0 8px;padding-top:12px;border-top:1px solid rgba(243,234,214,.12)}
+  #cr-saida p{font-size:1.07rem;margin:0 0 13px;text-align:justify;line-height:1.7;color:var(--creme)}
+  #cr-saida .cr-li{padding-left:6px;margin:0 0 9px;font-size:1.05rem;color:var(--creme)}
+  #cr-saida strong{color:var(--ouro-claro);font-weight:800}
+  #cr-saida em{color:var(--teal);font-style:italic}
+  #cr-acoes{display:flex;gap:9px;margin-top:16px}
+  .cr-sec{flex:1;background:rgba(243,234,214,.07);border:1px solid rgba(243,234,214,.16);color:var(--creme);
+    border-radius:13px;padding:12px;font-size:.98rem;font-weight:800;font-family:inherit;cursor:pointer}
+  .cr-sec:active{background:rgba(243,234,214,.16)}
+</style>
+<div class="criador">
+  <div class="cr-tit">🔥 Forjar mensagem</div>
+  <p class="cr-dica">Digite o tema, <b>cole um texto inteiro</b> ou a <b>transcrição de um vídeo/áudio</b> — a mensagem vem em <b>prosa densa</b>, ORIGINAL, com garimpo do original e final que queima.</p>
+  <textarea id="cr-tema" rows="4" placeholder="Ex.: A mulher com o fluxo de sangue • Mateus 1 • o filho pródigo&#10;— ou cole aqui o texto/transcrição de um vídeo que te tocou —"></textarea>
+  <button id="cr-btn">🔥 Forjar mensagem</button>
+  <div id="cr-quem"></div>
+  <div id="cr-saida"></div>
+  <div id="cr-acoes" style="display:none">
+    <button id="cr-copiar" class="cr-sec">📋 Copiar</button>
+    <button id="cr-outro" class="cr-sec">🔁 Fazer outra</button>
+  </div>
+</div>
+<script>
+(function(){
+  var ACAO='mensagem', LABEL='🔥 Forjar mensagem', PENSANDO='Escavando a Palavra… a revelação está vindo.';
+  var $=function(id){return document.getElementById(id);};
+  var tema=$('cr-tema'), btn=$('cr-btn'), saida=$('cr-saida'), quem=$('cr-quem'), acoes=$('cr-acoes');
+  var raw='', ocupado=false;
+  // duas abas: 📖 Mensagens (padrão) e 🔥 Forjar — nada fica escondido pra baixo
+  var _cri=document.querySelector('.criador'), _list=document.getElementById('lista');
+  var _dica=document.getElementById('mtab-dica'), _foot=document.getElementById('forjar-foot');
+  if(_cri&&_list&&_list.parentNode){ _list.parentNode.insertBefore(_cri, _list.nextSibling); _cri.style.display='none'; }
+  window.mtab=function(p){
+    if(_dica) _dica.style.display='none';      // escolheu uma aba: a dica sai
+    if(_list) _list.style.display = p==='lista'?'block':'none';
+    if(_foot) _foot.style.display = p==='lista'?'block':'none';   // rodapé Forjar só na lista
+    if(_cri) _cri.style.display = p==='forjar'?'block':'none';
+    document.querySelectorAll('.mtab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-p')===p); });
+    window.scrollTo(0,0);
+  };
+  mtab('lista');   // abre a lista de cara — nada de tela vazia
+  function escH(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function inl(s){return escH(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');}
+  function render(txt){
+    var lines=txt.split(/\r?\n/), h='', para=[];
+    function flush(){ if(para.length){ h+='<p>'+inl(para.join(' '))+'</p>'; para=[]; } }
+    for(var i=0;i<lines.length;i++){
+      var L=lines[i].trim();
+      if(!L){ flush(); continue; }
+      var mT=L.match(/^T[IÍ]TULO:\s*(.*)$/i); if(mT){ flush(); h+='<h1 style="white-space:normal">'+inl(mT[1])+'</h1>'; continue; }
+      var mR=L.match(/^REFER[EÊ]NCIA:\s*(.*)$/i); if(mR){ flush(); h+='<div class="cr-ref">'+escH(mR[1])+'</div>'; continue; }
+      var mI=L.match(/^INTRO:\s*(.*)$/i); if(mI){ flush(); para.push(mI[1]); continue; }
+      var mH=L.match(/^\*\*(.+?)\*\*:?\s*$/); if(mH){ flush(); h+='<h2>'+inl(mH[1])+'</h2>'; continue; }
+      if(/^[•\-]\s+/.test(L)){ flush(); h+='<div class="cr-li">◆ '+inl(L.replace(/^[•\-]\s+/,''))+'</div>'; continue; }
+      para.push(L);
+    }
+    flush();
+    saida.innerHTML=h;
+  }
+  function forjar(){
+    var t=tema.value.trim(); if(!t||ocupado) return;
+    ocupado=true; btn.disabled=true; btn.textContent='🔥 Forjando…'; raw=''; saida.innerHTML=''; acoes.style.display='none';
+    quem.textContent=PENSANDO;
+    fetch('/api/concilio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({acao:ACAO,tema:t})})
+    .then(function(r){
+      if(!r.body||!r.body.getReader) return r.text().then(function(x){ raw=x; render(raw); });
+      var reader=r.body.getReader(), dec=new TextDecoder();
+      return (function pump(){ return reader.read().then(function(x){ if(x.done) return; raw+=dec.decode(x.value,{stream:true}); render(raw); return pump(); }); })();
+    })
+    .then(function(){ quem.textContent=''; if(raw.trim()) acoes.style.display='flex'; })
+    .catch(function(e){ quem.textContent=''; saida.innerHTML='<p style="color:#f0a0a0">Não deu certo agora: '+escH(e.message||'falha')+'. Tente de novo.</p>'; })
+    .then(function(){ ocupado=false; btn.disabled=false; btn.textContent=LABEL; });
+  }
+  btn.addEventListener('click',forjar);
+  tema.addEventListener('keydown',function(e){ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) forjar(); });
+  $('cr-outro').addEventListener('click',function(){ saida.innerHTML=''; acoes.style.display='none'; tema.value=''; tema.focus(); });
+  $('cr-copiar').addEventListener('click',function(){
+    var t=saida.innerText||saida.textContent||'';
+    function fb(){ var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.focus();a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a); }
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).catch(fb); } else fb();
+    var b=$('cr-copiar'), o=b.textContent; b.textContent='✅ Copiado'; setTimeout(function(){b.textContent=o;},1500);
+  });
+})();
+</script>
+<script src="/_pregado.js?v=2" defer></script>
+</body>
+</html>
