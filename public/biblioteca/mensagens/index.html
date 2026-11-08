@@ -155,6 +155,7 @@
 <script>
   // ── CRM de Mensagens — pra postar uma nova, é só adicionar aqui em cima ──
   var MENSAGENS = [
+    {arquivo:"o-trono-que-ele-nunca-alcancou-premium.html", data:"2026-11-08", topo:true, titulo:"O Trono que Ele Nunca Alcançou", ref:"Ezequiel 28 · Isaías 14 · Hebreus 4 e 10", emoji:"👑", fonte:"Edição ilustrada", desc:"A mensagem integral em edição ilustrada, com imagens."},
     {arquivo:"o-silencio-da-cruz.html", data:"2026-11-03", titulo:"O Silêncio da Cruz", ref:"Isaías 53:7 · Mateus 27:12-14, 45-46 · Hebreus 12:24 · Atos 4:20", emoji:"✝️", fonte:"Mensagem da cruz", desc:"O Verbo ficou calado diante de Caifás, Pilatos e Herodes. Calou para não ser absolvido, calou no lugar do culpado — e o seu sangue fala melhor do que o de Abel. O silêncio da cruz virou o barulho do Pentecostes."},
     {arquivo:"deus-nao-recebe-sobras.html", data:"2026-10-28", titulo:"Deus Não Recebe Sobras", ref:"2 Samuel 24:24 · Malaquias 1:6-8 · Eclesiastes 12:1 · Romanos 12:1", emoji:"🔥", fonte:"Malaquias 1 · 2 Samuel 24 · a oferta que custa", desc:"O terreno do templo de Jerusalém foi comprado por um rei que recusou ganhar de presente o que ia oferecer a Deus: “não oferecerei ao Senhor holocaustos que não me custem nada”. No mesmo monte, Abraão levou Isaque. Malaquias e o animal cego no altar, a força da mocidade, ninguém serve a dois senhores — e o Pai que nunca nos deu sobras."},
     {arquivo:"nomes-hebreus-numa-casa-egipcia.html", data:"2026-10-28", titulo:"Nomes Hebreus numa Casa Egípcia", ref:"Gênesis 41:45-52 · Gênesis 48:5 · Daniel 1:8 · Hebreus 11:21", emoji:"🏺", fonte:"Gênesis 41 e 48 · José, Asenate e os filhos nascidos no Egito", desc:"O sogro de José era sacerdote do deus Sol em Om, a Heliópolis dos gregos. Faraó deu a José nome egípcio, mulher egípcia e roupa egípcia. Mas quando nasceram os filhos, José deu a eles nomes que confessavam o Deus de Abraão. O Egito deu nome a José; quem deu nome aos filhos dele foi a fé."},
@@ -318,6 +319,7 @@
     // ordena por data (mais nova em cima); empate mantém a ordem curada do array
     todas=todas.map(function(x,i){return {x:x,i:i}})
       .sort(function(a,b){
+        if(!!a.x.topo!==!!b.x.topo) return a.x.topo?-1:1; // fixada no topo
         var da=(a.x.data||''), db=(b.x.data||'');
         if(da===db) return a.i-b.i;
         return da<db?1:-1;
