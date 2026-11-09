@@ -51,7 +51,8 @@
   function enterApp() { $('#splash').classList.add('hide'); st.splashSeen = true; save(); }
   $('#start').addEventListener('click', enterApp);
   $('#skip').addEventListener('click', enterApp);
-  if (st.splashSeen || location.hash.length > 1) $('#splash').classList.add('hide');
+  // O app sempre abre pela capa (só pula se vier de um link direto para uma tela)
+  if (location.hash.length > 1 && location.hash !== '#inicio') $('#splash').classList.add('hide');
 
   /* ---------- Rotas ---------- */
   const PAGES = ['inicio', 'aulas', 'aula', 'atividade', 'alfabeto', 'praticar', 'videos', 'perfil'];
