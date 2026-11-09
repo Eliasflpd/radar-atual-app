@@ -3,13 +3,16 @@
   'use strict';
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
   /* ---------- Armazenamento seguro ---------- */
   const KEY = 'conectaLibras.v1';
-  const defaults = { seen: [], favs: [], lessonDone: false, best: 0, games: 0, prefs: { big: false, contrast: false, motion: false }, lastLetter: 0, splashSeen: false };
+  const defaults = { seen: [], favs: [], lessonDone: false, storyDone: false, best: 0, bestWords: 0, games: 0, signsSeen: [], prefs: { big: false, contrast: false, motion: false }, lastLetter: 0, splashSeen: false };
   let st;
   try { st = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { st = Object.assign({}, defaults); }
   st.prefs = Object.assign({}, defaults.prefs, st.prefs);
+  if (!Array.isArray(st.signsSeen)) st.signsSeen = [];
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
 
   /* ---------- Dados ---------- */
@@ -17,21 +20,115 @@
   const file = (l) => (l === 'Ç' ? 'C-cedilha' : l);
   const src = (l) => './alfabeto/' + file(l) + '.mp4';
   const poster = (l) => './alfabeto/' + file(l) + '.jpg';
-
-  const LESSON = [
-    { title: 'Libras é uma língua', emoji: '🤟', visual: 'Uma língua visual-espacial', desc: 'A comunicação acontece visualmente e utiliza mãos, corpo, expressões e espaço.', text: 'A Língua Brasileira de Sinais é uma língua visual-espacial, com estrutura e gramática próprias. Ela é utilizada por comunidades surdas no Brasil e é reconhecida por lei (Lei nº 10.436/2002).', key: 'Lembre-se: Libras não é português representado por gestos. É uma língua, com organização linguística própria.' },
-    { title: 'A comunicação vai além das mãos', emoji: '👀', visual: 'Mãos, corpo e expressões', desc: 'Os elementos visuais precisam ser observados em conjunto.', text: 'Na Libras, a configuração e o movimento das mãos, a orientação, a localização no espaço e as expressões não manuais (rosto e corpo) contribuem para construir significados.', key: 'Observe a pessoa sinalizante por inteiro: expressões faciais e corporais também têm função linguística.' },
-    { title: 'Aprender com respeito', emoji: '🤝', visual: 'Língua, identidade e respeito', desc: 'Aprender Libras também envolve reconhecer a comunidade surda.', text: 'As pessoas surdas têm experiências e identidades diversas. Aprender Libras é valorizar a comunicação acessível, a cultura surda e o direito de participação de todas as pessoas.', key: 'Evite generalizações. Valorize pessoas surdas e profissionais qualificados como referências na aprendizagem.' }
-  ];
+  const toLetters = (txt) => [...txt.toUpperCase().replace(/Ç/g, '\u0001').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\u0001/g, 'Ç')]
+    .filter((c) => LETTERS.includes(c) || c === ' ').join('').replace(/\s+/g, ' ').trim().split('');
 
   const CONCEPTS = [
-    { q: 'Qual alternativa descreve corretamente a Libras?', a: ['É português traduzido palavra por palavra com as mãos.', 'É uma língua visual-espacial com gramática própria.', 'É um conjunto de gestos improvisados.'], ok: 1, why: 'Libras tem estrutura e gramática próprias.' },
-    { q: 'Ao conversar em Libras, para onde devo olhar?', a: ['Só para as mãos.', 'Para a pessoa por inteiro: mãos, rosto e corpo.', 'Para baixo, por respeito.'], ok: 1, why: 'Expressões faciais e corporais fazem parte da língua.' },
-    { q: 'Qual é uma boa forma de aprender um sinal?', a: ['Confiar em qualquer imagem da internet.', 'Inventar quando não souber.', 'Aprender com demonstrações contextualizadas e pessoas fluentes.'], ok: 2, why: 'Sinais precisam de contexto e validação.' },
-    { q: 'Para que serve o alfabeto manual (datilologia)?', a: ['Soletrar nomes próprios e palavras sem sinal conhecido.', 'Substituir todos os sinais da Libras.', 'Nada, ele não é usado.'], ok: 0, why: 'A datilologia complementa os sinais, não os substitui.' }
+    { q: 'O que é a Libras?', a: ['🗣️ Português feito com as mãos', '🤟 Uma língua com gramática própria', '🙌 Gestos improvisados'], ok: 1, why: 'Libras é uma língua completa, com gramática própria.' },
+    { q: 'Ao conversar em Libras, para onde olhar?', a: ['✋ Só para as mãos', '🧑 Para a pessoa inteira: mãos, rosto e corpo', '⬇️ Para baixo'], ok: 1, why: 'Rosto e corpo também fazem parte da língua.' },
+    { q: 'Para que serve o alfabeto manual?', a: ['🔤 Soletrar nomes e palavras', '🚫 Substituir todos os sinais', '❓ Não serve para nada'], ok: 0, why: 'A datilologia soletra nomes e palavras sem sinal conhecido.' },
+    { q: 'Como se faz uma pergunta em Libras?', a: ['🤨 Com o sinal e a expressão do rosto', '🔊 Falando mais alto', '✍️ Só escrevendo'], ok: 0, why: 'A expressão facial marca a pergunta.' }
   ];
 
+  const SIGNS = [
+    ['Oi', '👋'], ['Tudo bem?', '😊'], ['Obrigado', '🙏'], ['Por favor', '🤲'], ['Desculpa', '😔'], ['Bom dia', '🌅'],
+    ['Boa tarde', '🌤️'], ['Boa noite', '🌙'], ['Prazer em conhecer', '🤝'], ['Sim', '👍'], ['Não', '👎'], ['Amigo', '🧑‍🤝‍🧑'],
+    ['Família', '👨‍👩‍👧'], ['Casa', '🏠'], ['Escola', '🏫'], ['Água', '💧'], ['Comer', '🍽️'], ['Eu te amo', '❤️']
+  ];
+
+  const WORDS = ['SOL', 'LUA', 'MAR', 'PAZ', 'MEL', 'RUA', 'LUZ', 'CEU', 'CASA', 'AMOR', 'BOLA', 'GATO', 'FLOR', 'VIDA', 'MALA', 'PATO', 'SAPO', 'DADO'];
+
   const DRIVE = ['1Iqk4nNmxHRDflsAnIaJQY-ALz90Js-gZ', '1oJCLIpv1bOmp2cpSwBpiYErzHx1M8YE7', '1HVlERFqRVTkPzZwuOr_xpEdu0l1yM7hj', '1AeDV65-j3rItJSgLrRIellnAztHpUBbW', '13Qq86YY08yBuU8VVWpN9kwoeuXDDv8qB', '1jW5Yl3U-3QiW_nSectnOgzIYnHq1Hcyk', '1r50y8r7n_F5uiN3LqyAyADpSN2-hKnxa', '1D8dI32c2FROtnPhW6tioEuXwCW0dkSyQ', '1nUYHVpMz9ICF8ydZs4OU-HAdUq4TVq2Q', '1bw-GloAj2vCvHsqOCTLyI4N7grTeug9z', '1UhkAwxwYJdyFz7Yt1Q2PqzfqcGNf2AHU', '1ZaqWPEfp6L4OMQNANj_fKvQoYaamKgZy', '18zqgX95lrgV9lDftdZ8Av66ObgcH4lDR', '1XQMdmdm9qLJPkINkqTLIwp0opIq7x_Mo', '1d1DKKTYbLdU3-hBl8H1crA5ZFEQ1UCEo', '1UFSkdV8cTVlA-6vThPQN67yPpMaRvTC5', '1KdrVSq7QHpCJDDBeBW5pFdpbhI8B2q4_', '1oa9pXr_x0soIWVeQoe3Wm5M45d8KtoWO', '1kJd4s9F3k1v-t7cu6bhgoCefhMyfypCe', '1x43npTj7w3DDB9xBvbfL8bef7pjL1LXI', '1zThzOi4VT2SY7AwXydLp2P47dzFoGDIV', '1KjaIQ8-G_JHCQRkJoXZymDmaewEmrwKO', '1BWJ2qKRhgVq-HSyM0eCBQG8EgfFJOhDE'];
+
+  /* ---------- Avisos rápidos e confete ---------- */
+  let toastT;
+  function toast(msg, ms) {
+    const t = $('#toast');
+    clearTimeout(toastT);
+    if (!msg) { t.hidden = true; return; }
+    t.textContent = msg; t.hidden = false;
+    if (ms !== 0) toastT = setTimeout(() => { t.hidden = true; }, ms || 3200);
+  }
+  function confetti() {
+    if (st.prefs.motion || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const c = $('#confetti'), x = c.getContext('2d');
+    c.width = innerWidth; c.height = innerHeight; c.style.display = 'block';
+    const colors = ['#ffc857', '#25b7a8', '#2878c8', '#e0457b', '#7b4fe0', '#3fd47f'];
+    const ps = Array.from({ length: 140 }, () => ({ x: innerWidth / 2, y: innerHeight * 0.35, vx: (Math.random() - 0.5) * 14, vy: Math.random() * -14 - 4, r: Math.random() * 6 + 4, c: colors[Math.floor(Math.random() * colors.length)], a: Math.random() * 6, s: Math.random() * 0.3 - 0.15 }));
+    const t0 = performance.now();
+    (function loop(t) {
+      x.clearRect(0, 0, c.width, c.height);
+      ps.forEach((p) => { p.vy += 0.35; p.x += p.vx; p.y += p.vy; p.a += p.s; x.save(); x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); x.restore(); });
+      if (t - t0 < 2600) requestAnimationFrame(loop); else { x.clearRect(0, 0, c.width, c.height); c.style.display = 'none'; }
+    })(t0);
+  }
+
+  /* ---------- Avatar VLibras (governo federal) ---------- */
+  const VL_ROOT = 'https://vlibras.gov.br/app';
+  let vlLoad = null;
+  function loadVLibras() {
+    if (vlLoad) return vlLoad;
+    vlLoad = new Promise((resolve, reject) => {
+      if (!document.querySelector('[vw]')) {
+        document.body.insertAdjacentHTML('beforeend', '<div vw class="enabled"><div vw-access-button class="active"></div><div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div></div>');
+      }
+      const s = document.createElement('script');
+      s.src = VL_ROOT + '/vlibras-plugin.js';
+      s.onload = () => {
+        try { new window.VLibras.Widget(VL_ROOT); } catch (e) { reject(e); return; }
+        // versões antigas só iniciam no evento "load" da página
+        setTimeout(() => { if (!window.VLibrasWidget?.open && !document.querySelector('[vw-access-button] img, #vlibras-button')) window.dispatchEvent(new Event('load')); }, 1200);
+        resolve();
+      };
+      s.onerror = () => { vlLoad = null; reject(new Error('rede')); };
+      document.head.appendChild(s);
+      setTimeout(() => reject(new Error('tempo')), 20000);
+    });
+    return vlLoad;
+  }
+  const vlSay = (text) => {
+    const p = window.plugin;
+    if (p && typeof p.translate === 'function' && (!p.player || p.player.isLoaded !== false)) { p.translate(text); return true; }
+    if (p && p.player && typeof p.player.translate === 'function') { p.player.translate(text); return true; }
+    return false;
+  };
+  async function sayLibras(text) {
+    toast('🤟 Abrindo o avatar…', 0);
+    try { await loadVLibras(); } catch (e) { toast('Não deu para abrir o avatar agora. Verifique a internet e tente de novo.', 4500); return false; }
+    if (vlSay(text)) { toast('🤟 O avatar está sinalizando: “' + text + '”'); return true; }
+    if (window.VLibrasWidget && typeof window.VLibrasWidget.open === 'function') window.VLibrasWidget.open();
+    else { const b = document.querySelector('[vw-access-button], #vlibras-button'); if (b) b.click(); }
+    const t0 = Date.now();
+    while (Date.now() - t0 < 40000) {
+      await sleep(500);
+      if (vlSay(text)) { toast('🤟 O avatar está sinalizando: “' + text + '”'); return true; }
+    }
+    toast('O avatar demorou para carregar. Toque de novo em alguns segundos.', 4500);
+    return false;
+  }
+
+  /* ---------- Vídeos em sequência (soletrar) ---------- */
+  function playSequence(video, letters, opts) {
+    opts = opts || {};
+    const job = { stop: false };
+    let i = 0;
+    video.loop = false;
+    video.removeAttribute('poster');
+    const next = () => {
+      if (job.stop) return;
+      if (i >= letters.length) { video.onended = null; video.onerror = null; if (opts.onEnd) opts.onEnd(); return; }
+      const l = letters[i];
+      if (opts.onLetter) opts.onLetter(i, l);
+      if (l === ' ') { i++; setTimeout(next, 450); return; }
+      video.src = src(l);
+      video.playbackRate = opts.rate || 1;
+      video.play().catch(() => { i++; setTimeout(next, 300); });
+    };
+    video.onended = () => { i++; next(); };
+    video.onerror = () => { i++; next(); };
+    next();
+    return job;
+  }
 
   /* ---------- Preferências ---------- */
   function applyPrefs() {
@@ -55,9 +152,9 @@
   if (location.hash.length > 1 && location.hash !== '#inicio') $('#splash').classList.add('hide');
 
   /* ---------- Rotas ---------- */
-  const PAGES = ['inicio', 'aulas', 'aula', 'atividade', 'alfabeto', 'praticar', 'videos', 'perfil', 'biblioteca', 'downloads', 'avisos'];
+  const PAGES = ['inicio', 'aulas', 'aula', 'atividade', 'sinais', 'alfabeto', 'praticar', 'videos', 'perfil', 'biblioteca', 'downloads', 'avisos'];
   const SIDE_OF = { aula: 'aulas', atividade: 'aulas', avisos: 'inicio' };
-  const BOTTOM_OF = { aula: 'aulas', atividade: 'aulas', praticar: 'aulas', alfabeto: 'biblioteca', videos: 'biblioteca', avisos: 'inicio' };
+  const BOTTOM_OF = { aula: 'aulas', atividade: 'aulas', praticar: 'aulas', sinais: 'aulas', alfabeto: 'biblioteca', videos: 'biblioteca', avisos: 'inicio' };
   let scrollToFavs = false;
   function route() {
     let id = (location.hash || '#inicio').slice(1).split('/')[0];
@@ -66,15 +163,17 @@
     document.body.classList.toggle('on-inicio', id === 'inicio');
     $$('.side [data-nav]').forEach((a) => a.classList.toggle('on', a.dataset.nav === (SIDE_OF[id] || id)));
     $$('.bottom [data-nav]').forEach((a) => a.classList.toggle('on', a.dataset.nav === (BOTTOM_OF[id] || id)));
-    if (id === 'avisos') { st.avisosSeen = true; save(); }
-    if (id === 'downloads') checkDownloads();
-    if (id !== 'alfabeto') $('#abVideo').pause();
+    if (id !== 'aula') stopStory();
+    if (id !== 'alfabeto') { stopSpell(); $('#abVideo').pause(); }
     if (id !== 'praticar') stopGame();
     if (id !== 'videos') closeDrive();
+    if (id === 'avisos') { st.avisosSeen = true; save(); }
+    if (id === 'downloads') checkDownloads();
     if (id === 'inicio') renderHome();
     if (id === 'aulas') renderModules();
-    if (id === 'aula') renderLesson();
+    if (id === 'aula') startStory(0);
     if (id === 'atividade') { startConcepts(conceptFrom); conceptFrom = 'aula'; }
+    if (id === 'sinais') renderSigns();
     if (id === 'alfabeto') showLetter(abIndex);
     if (id === 'praticar') renderPracticeMenu();
     if (id === 'perfil') renderProfile();
@@ -86,13 +185,10 @@
 
   /* ---------- Progresso ---------- */
   function percent() {
-    const parts = st.seen.length / LETTERS.length * 0.5 + (st.lessonDone ? 0.3 : 0) + Math.min(st.best, 10) / 10 * 0.2;
+    const parts = st.seen.length / LETTERS.length * 0.3 + (st.lessonDone ? 0.25 : 0) + Math.min(st.signsSeen.length, SIGNS.length) / SIGNS.length * 0.25 + Math.min(st.best, 10) / 10 * 0.1 + Math.min(st.bestWords, 6) / 6 * 0.1;
     return Math.round(parts * 100);
   }
-
-  function renderHome() {
-    $('#bellDot').hidden = !!st.avisosSeen;
-  }
+  function renderHome() { $('#bellDot').hidden = !!st.avisosSeen; }
 
   /* ---------- Central de Downloads ---------- */
   const VIDEO_URLS = LETTERS.map((l) => new URL(src(l), location.href).href);
@@ -115,39 +211,93 @@
       $('#dlStatus').textContent = 'Baixando… ' + (n + fail) + ' de 27';
     }
     if (fail) $('#dlStatus').textContent = n + ' baixados, ' + fail + ' falharam. Verifique a internet e toque de novo.';
+    else confetti();
     checkDownloads();
   });
 
   function renderModules() {
     const mods = [
-      { href: '#aula', icon: '🌱', c: '#25b7a8', t: 'Módulo 01 · Primeiros passos', d: 'O que é Libras, comunicação visual e respeito.', s: st.lessonDone ? 'Concluído' : '3 conteúdos', done: st.lessonDone },
-      { href: '#alfabeto', icon: '✋', c: '#7b4fe0', t: 'Módulo 02 · Alfabeto manual', d: '27 vídeos: A–Z + Ç.', s: st.seen.length + '/27', done: st.seen.length === 27 },
-      { href: '#videos', icon: '▶️', c: '#2878c8', t: 'Aulas da Professora Jocimara', d: '23 gravações em vídeo.', s: '23 vídeos' },
-      { href: '#praticar', icon: '🎯', c: '#1f9d6b', t: 'Praticar', d: 'Reconheça letras e revise conceitos.', s: st.best ? 'Melhor: ' + st.best + '/10' : 'Novo' },
-      { icon: '📚', c: '#e0a100', t: 'Módulo 03 · Vocabulário', d: 'Família, escola, números e sentimentos.', s: 'Em breve', soon: true },
-      { icon: '💬', c: '#e0457b', t: 'Módulo 04 · Frases e diálogos', d: 'Situações do dia a dia.', s: 'Em breve', soon: true }
+      { href: '#aula', icon: '🎬', c: '#25b7a8', t: 'Módulo 01 · Primeiros passos', d: 'Aula animada em 5 cenas + atividade.', s: st.lessonDone ? '✔ Concluído' : '5 cenas', done: st.lessonDone },
+      { href: '#alfabeto', icon: '✋', c: '#7b4fe0', t: 'Módulo 02 · Alfabeto manual', d: '27 vídeos (A–Z + Ç) e soletrar o seu nome.', s: st.seen.length + '/27', done: st.seen.length === 27 },
+      { href: '#sinais', icon: '🤟', c: '#e0457b', t: 'Módulo 03 · Primeiros sinais', d: 'Avatar animado faz ' + SIGNS.length + ' sinais do dia a dia.', s: st.signsSeen.length + '/' + SIGNS.length, done: st.signsSeen.length >= SIGNS.length },
+      { href: '#videos', icon: '▶️', c: '#2878c8', t: 'Módulo 04 · Aulas da Professora Jocimara', d: '23 gravações em vídeo.', s: '23 vídeos' },
+      { href: '#praticar', icon: '🎯', c: '#1f9d6b', t: 'Praticar', d: 'Jogos com vídeo: letras e palavras.', s: st.best ? '🏆 ' + st.best + '/10' : 'Jogar' },
+      { icon: '💬', c: '#e0a100', t: 'Módulo 05 · Frases e diálogos', d: 'Com vídeos da professora.', s: 'Em breve', soon: true }
     ];
     $('#modules').innerHTML = mods.map((m) => (m.soon ? '<div class="module soon" aria-disabled="true">' : '<a class="module" href="' + m.href + '">') +
       '<span class="qi" style="--c:' + m.c + '">' + m.icon + '</span><div><strong>' + m.t + '</strong><small>' + m.d + '</small></div><span class="state' + (m.done ? ' done' : '') + '">' + m.s + '</span>' + (m.soon ? '</div>' : '</a>')).join('');
   }
 
-  /* ---------- Aula 01 ---------- */
-  let ls = 0;
-  function renderLesson() {
-    const d = LESSON[ls];
-    $('#lsTitle').textContent = d.title;
-    $('#lsEmoji').textContent = d.emoji;
-    $('#lsVisual').textContent = d.visual;
-    $('#lsDesc').textContent = d.desc;
-    $('#lsText').textContent = d.text;
-    $('#lsKey').textContent = d.key;
-    $('#lsStep').textContent = 'CONTEÚDO ' + (ls + 1) + ' DE ' + LESSON.length;
-    $('#lsBar').style.width = ((ls + 1) / LESSON.length * 100) + '%';
-    $('#lsPrev').disabled = ls === 0;
-    $('#lsNext').textContent = ls === LESSON.length - 1 ? 'Ir para a atividade →' : 'Próximo →';
+  /* ---------- Módulo 01: aula animada (cenas) ---------- */
+  const SCENES = [
+    { cap: 'Libras é uma língua de verdade, com gramática própria.', libras: 'Libras é uma língua',
+      html: '<div class="sc sc1"><i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i><img class="sc-logo" src="./img/logo-transp.png" alt=""><b class="sc-word">LIBRAS</b><span class="sc-badge">Reconhecida por lei · 2002</span></div>' },
+    { cap: 'Mãos, rosto e corpo falam juntos.', libras: 'Mãos rosto corpo',
+      html: '<div class="sc sc2"><svg viewBox="0 0 200 220" class="body"><circle cx="100" cy="52" r="30" class="sk"/><circle cx="90" cy="48" r="3.5" fill="#173b66"/><circle cx="110" cy="48" r="3.5" fill="#173b66"/><path d="M88 63q12 9 24 0" stroke="#173b66" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M55 210q0-95 45-95t45 95z" class="sh"/><path d="M62 140q-24-20-14-52" class="arm"/><path d="M138 140q24-20 14-52" class="arm"/><circle cx="47" cy="82" r="13" class="sk hand hl"/><circle cx="153" cy="82" r="13" class="sk hand hr"/></svg><span class="tag t1">✋ Mãos</span><span class="tag t2">🙂 Rosto</span><span class="tag t3">🧍 Corpo</span><i class="pulse p1"></i><i class="pulse p2"></i><i class="pulse p3"></i></div>' },
+    { cap: 'O alfabeto manual soletra nomes. Veja: O + I = OI!', libras: 'Oi', video: 'OI',
+      html: '<div class="sc sc3"><div class="sc3-v"><video playsinline muted></video></div><div class="sc3-l"><b>O</b><b>I</b></div></div>' },
+    { cap: 'O rosto muda o sentido: a pergunta também aparece no rosto.', libras: 'Você está bem?',
+      html: '<div class="sc sc4"><div class="face">🙂</div><div class="bubble">?</div><div class="faces"><span>🙂</span><span>🤨</span><span>😮</span><span>😊</span></div></div>' },
+    { cap: 'Aprender Libras é construir pontes com a comunidade surda.', libras: 'Aprender Libras é construir pontes',
+      html: '<div class="sc sc5"><span class="p a">🧏‍♀️</span><svg viewBox="0 0 300 120" class="bridge"><path d="M20 100 Q150 -10 280 100" /></svg><span class="p b">🧑</span><span class="heart h1">💛</span><span class="heart h2">💙</span><span class="heart h3">💚</span></div>' }
+  ];
+  const SCENE_MS = 7000;
+  let sIdx = 0, sT0 = 0, sEl = 0, sPaused = false, sRaf = 0, sJob = null, sEnd = false;
+  $('#stBars').innerHTML = SCENES.map(() => '<i><b></b></i>').join('') + '<i><b></b></i>';
+  function renderScene() {
+    if (sJob) { sJob.stop = true; sJob = null; }
+    const scene = $('#stScene');
+    if (sEnd) {
+      scene.innerHTML = '<div class="sc sc-end"><div class="trophy">🏅</div><b>Você assistiu à aula!</b><a class="btn gold big" href="#atividade">🎯 Fazer a atividade</a><button class="btn pale" type="button" id="stAgain">↻ Ver de novo</button></div>';
+      $('#stCap').textContent = 'Agora mostre o que aprendeu!';
+      $('#stAgain').onclick = () => startStory(0);
+      st.storyDone = true; save(); confetti();
+    } else {
+      const sc = SCENES[sIdx];
+      scene.innerHTML = sc.html;
+      $('#stCap').textContent = sc.cap;
+      if (sc.video) {
+        const v = scene.querySelector('video'), ls = scene.querySelectorAll('.sc3-l b');
+        const run = () => { sJob = playSequence(v, sc.video.split(''), { onLetter: (i) => ls.forEach((b, j) => b.classList.toggle('on', j === i)), onEnd: () => { ls.forEach((b) => b.classList.add('on')); setTimeout(() => { if (sJob && !sJob.stop) run(); }, 900); } }); };
+        run();
+      }
+    }
+    $$('#stBars i').forEach((b, j) => { const done = sEnd || j < sIdx; b.classList.toggle('done', done); b.querySelector('b').style.width = done ? '100%' : '0'; });
+    $('#stFwd').textContent = sEnd ? '🎯 Atividade' : (sIdx === SCENES.length - 1 ? 'Concluir ⏭' : 'Próxima ⏭');
+    $('#stLibras').disabled = sEnd;
   }
-  $('#lsPrev').addEventListener('click', () => { if (ls > 0) { ls--; renderLesson(); } });
-  $('#lsNext').addEventListener('click', () => { if (ls < LESSON.length - 1) { ls++; renderLesson(); } else { ls = 0; location.hash = '#atividade'; } });
+  function tick(t) {
+    if (!sPaused && !sEnd) {
+      sEl += t - sT0;
+      const bar = $$('#stBars i b')[sIdx];
+      if (bar) bar.style.width = Math.min(100, sEl / SCENE_MS * 100) + '%';
+      if (sEl >= SCENE_MS) { goScene(sIdx + 1); }
+    }
+    sT0 = t;
+    sRaf = requestAnimationFrame(tick);
+  }
+  function goScene(i) {
+    if (i < 0) i = 0;
+    sEnd = i >= SCENES.length;
+    sIdx = Math.min(i, SCENES.length - 1);
+    sEl = 0;
+    renderScene();
+  }
+  function startStory(i) {
+    cancelAnimationFrame(sRaf);
+    sPaused = false; $('#stPause').textContent = '⏸ Pausar';
+    goScene(i);
+    sT0 = performance.now();
+    sRaf = requestAnimationFrame(tick);
+  }
+  function stopStory() { cancelAnimationFrame(sRaf); if (sJob) { sJob.stop = true; sJob = null; } }
+  const togglePause = (force) => { sPaused = force !== undefined ? force : !sPaused; $('#stPause').textContent = sPaused ? '▶ Continuar' : '⏸ Pausar'; $('#story').classList.toggle('paused', sPaused); };
+  $('#stPause').addEventListener('click', () => togglePause());
+  $('#stPrev').addEventListener('click', () => goScene(sEnd ? SCENES.length - 1 : sIdx - 1));
+  $('#stBack').addEventListener('click', () => goScene(sEnd ? SCENES.length - 1 : sIdx - 1));
+  $('#stNext').addEventListener('click', () => { if (!sEnd) goScene(sIdx + 1); });
+  $('#stFwd').addEventListener('click', () => { if (sEnd) location.hash = '#atividade'; else goScene(sIdx + 1); });
+  $('#stLibras').addEventListener('click', () => { if (sEnd) return; togglePause(true); sayLibras(SCENES[sIdx].libras); });
 
   /* Atividade de conceitos (usada pela aula e pelo Praticar) */
   let cq = 0, cScore = 0, cFrom = 'aula', conceptFrom = 'aula';
@@ -157,33 +307,45 @@
     if (cq >= CONCEPTS.length) {
       const passed = cScore >= 3;
       if (passed && cFrom === 'aula') { st.lessonDone = true; save(); }
-      box.innerHTML = '<div class="done-box">' + (passed ? '🎉' : '📘') + '</div><h2>' + (passed ? 'Parabéns! Você concluiu a Aula 01.' : 'Quase lá!') + '</h2><p class="muted">Você acertou ' + cScore + ' de ' + CONCEPTS.length + '. ' + (passed ? 'Esta conclusão registra a realização da aula; não é certificado de proficiência.' : 'Revise o conteúdo e tente de novo.') + '</p>' +
-        '<div class="row" style="flex-wrap:wrap;justify-content:center">' + (passed ? '<a class="btn gold" href="#alfabeto">Próximo: Alfabeto manual →</a>' : '<a class="btn" href="#aula">Revisar a aula</a>') + '<button class="btn pale" type="button" id="cAgain">Refazer</button></div>';
+      if (passed) confetti();
+      box.innerHTML = '<div class="done-box bounce">' + (passed ? '🎉' : '📘') + '</div><h2>' + (passed ? 'Parabéns! Você concluiu o Módulo 01.' : 'Quase lá!') + '</h2><p class="muted">Você acertou ' + cScore + ' de ' + CONCEPTS.length + '.' + (passed ? '' : ' Reveja a aula animada e tente de novo.') + '</p>' +
+        '<div class="row" style="flex-wrap:wrap;justify-content:center">' + (passed ? '<a class="btn gold" href="#alfabeto">Próximo: Alfabeto em vídeo →</a>' : '<a class="btn" href="#aula">🎬 Rever a aula</a>') + '<button class="btn pale" type="button" id="cAgain">Refazer</button></div>';
       $('#cAgain').onclick = () => startConcepts(cFrom);
       return;
     }
     const q = CONCEPTS[cq];
-    box.innerHTML = '<span class="pill">Pergunta ' + (cq + 1) + ' de ' + CONCEPTS.length + '</span><h2>' + q.q + '</h2><div class="choices" id="cChoices">' +
-      q.a.map((t, i) => '<button type="button" data-i="' + i + '">' + t + '</button>').join('') + '</div><div class="feedback" id="cFb" aria-live="polite"></div><button class="btn" id="cNext" type="button" hidden>Continuar →</button>';
+    box.innerHTML = '<div class="qdots">' + CONCEPTS.map((_, i) => '<i class="' + (i < cq ? 'd' : i === cq ? 'c' : '') + '"></i>').join('') + '</div><h2 class="pop">' + q.q + '</h2><div class="choices" id="cChoices">' +
+      q.a.map((t, i) => '<button type="button" class="pop" style="animation-delay:' + (i * 90) + 'ms" data-i="' + i + '">' + t + '</button>').join('') + '</div><div class="feedback" id="cFb" aria-live="polite"></div><button class="btn" id="cNext" type="button" hidden>Continuar →</button>';
     $$('#cChoices button').forEach((b) => b.addEventListener('click', () => {
       const i = +b.dataset.i, ok = i === q.ok;
       if (ok) cScore++;
       $$('#cChoices button').forEach((x, j) => { x.disabled = true; if (j === q.ok) x.classList.add('right'); });
-      if (!ok) b.classList.add('wrong');
-      const fb = $('#cFb'); fb.textContent = (ok ? 'Correto! ' : 'Não é essa. ') + q.why; fb.style.color = ok ? 'var(--ok)' : 'var(--bad)';
+      if (!ok) b.classList.add('wrong', 'shake');
+      const fb = $('#cFb'); fb.textContent = (ok ? '✅ Correto! ' : '❌ Não é essa. ') + q.why; fb.style.color = ok ? 'var(--ok)' : 'var(--bad)';
       $('#cNext').hidden = false; $('#cNext').focus();
     }));
     $('#cNext').addEventListener('click', () => { cq++; renderConcept(); });
   }
 
-  /* ---------- Alfabeto ---------- */
+  /* ---------- Módulo 03: primeiros sinais (avatar) ---------- */
+  function renderSigns() {
+    $('#signs').innerHTML = SIGNS.map(([w, e], i) => '<button type="button" class="sign pop' + (st.signsSeen.includes(w) ? ' seen' : '') + '" style="animation-delay:' + (i * 40) + 'ms" data-w="' + w + '"><span class="se">' + e + '</span><b>' + w + '</b><small>🤟 Ver sinal</small></button>').join('');
+    $$('#signs .sign').forEach((b) => b.addEventListener('click', async () => {
+      $$('#signs .sign').forEach((x) => x.classList.toggle('on', x === b));
+      const w = b.dataset.w;
+      const ok = await sayLibras(w);
+      if (ok && !st.signsSeen.includes(w)) { st.signsSeen.push(w); save(); b.classList.add('seen'); if (st.signsSeen.length === SIGNS.length) confetti(); }
+    }));
+  }
+
+  /* ---------- Módulo 02: alfabeto ---------- */
   let abIndex = Math.min(st.lastLetter || 0, LETTERS.length - 1);
   const abVideo = $('#abVideo');
   const grid = $('#letters');
   LETTERS.forEach((l, i) => {
     const b = document.createElement('button');
     b.type = 'button'; b.textContent = l; b.setAttribute('aria-label', 'Letra ' + l);
-    b.addEventListener('click', () => showLetter(i, true));
+    b.addEventListener('click', () => { stopSpell(); showLetter(i); });
     grid.appendChild(b);
   });
   function paintLetters() {
@@ -193,6 +355,7 @@
       b.classList.toggle('isfav', st.favs.includes(LETTERS[i]));
     });
   }
+  let slow = false;
   function showLetter(i) {
     abIndex = i; st.lastLetter = i;
     const l = LETTERS[i];
@@ -203,16 +366,16 @@
     const fav = st.favs.includes(l);
     $('#abFav').textContent = fav ? '♥' : '♡';
     $('#abFav').setAttribute('aria-pressed', fav);
+    abVideo.loop = true;
     if (!abVideo.src.endsWith(src(l).slice(1))) { abVideo.poster = poster(l); abVideo.src = src(l); }
     abVideo.playbackRate = slow ? 0.5 : 1;
-    if (!st.seen.includes(l)) st.seen.push(l);
+    if (!st.seen.includes(l)) { st.seen.push(l); if (st.seen.length === LETTERS.length) confetti(); }
     save(); paintLetters();
     abVideo.play().catch(() => {});
   }
-  let slow = false;
   abVideo.addEventListener('loadeddata', () => { abVideo.playbackRate = slow ? 0.5 : 1; });
-  $('#abPrev').addEventListener('click', () => abIndex > 0 && showLetter(abIndex - 1));
-  $('#abNext').addEventListener('click', () => abIndex < LETTERS.length - 1 && showLetter(abIndex + 1));
+  $('#abPrev').addEventListener('click', () => { stopSpell(); if (abIndex > 0) showLetter(abIndex - 1); });
+  $('#abNext').addEventListener('click', () => { stopSpell(); if (abIndex < LETTERS.length - 1) showLetter(abIndex + 1); });
   $('#abReplay').addEventListener('click', () => { abVideo.currentTime = 0; abVideo.play().catch(() => {}); });
   $('#abSpeed').addEventListener('click', (e) => {
     slow = !slow; abVideo.playbackRate = slow ? 0.5 : 1;
@@ -227,56 +390,96 @@
   });
   document.addEventListener('keydown', (e) => {
     if (!$('#alfabeto').classList.contains('on') || e.target.matches('input,textarea')) return;
-    if (e.key === 'ArrowRight' && abIndex < LETTERS.length - 1) showLetter(abIndex + 1);
-    if (e.key === 'ArrowLeft' && abIndex > 0) showLetter(abIndex - 1);
+    if (e.key === 'ArrowRight' && abIndex < LETTERS.length - 1) { stopSpell(); showLetter(abIndex + 1); }
+    if (e.key === 'ArrowLeft' && abIndex > 0) { stopSpell(); showLetter(abIndex - 1); }
   });
-  /* deslizar no vídeo (celular) */
   let tx = null;
   abVideo.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; }, { passive: true });
   abVideo.addEventListener('touchend', (e) => {
     if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; tx = null;
-    if (dx < -50 && abIndex < LETTERS.length - 1) showLetter(abIndex + 1);
-    if (dx > 50 && abIndex > 0) showLetter(abIndex - 1);
+    if (dx < -50 && abIndex < LETTERS.length - 1) { stopSpell(); showLetter(abIndex + 1); }
+    if (dx > 50 && abIndex > 0) { stopSpell(); showLetter(abIndex - 1); }
   });
 
-  /* ---------- Praticar: Qual é a letra? ---------- */
-  const ROUNDS = 10;
-  let gRound = 0, gScore = 0, gAnswer = null, gPool = [];
+  /* Soletrar */
+  let spellJob = null;
+  function stopSpell() { if (spellJob) { spellJob.stop = true; spellJob = null; abVideo.onended = null; abVideo.onerror = null; abVideo.loop = true; $('#spellBtn').textContent = '▶ Soletrar'; } }
+  function startSpell() {
+    const ls = toLetters($('#spellInput').value || '');
+    if (!ls.length) { toast('Digite um nome ou uma palavra.'); $('#spellInput').focus(); return; }
+    stopSpell();
+    const strip = $('#spellStrip');
+    strip.innerHTML = ls.map((l) => (l === ' ' ? '<i class="gap"></i>' : '<b>' + l + '</b>')).join('');
+    const chips = [...strip.children];
+    $('#spellBtn').textContent = '⏹ Parar';
+    $('#abTitle').textContent = 'Soletrando…';
+    $('#abVideo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    spellJob = playSequence(abVideo, ls, {
+      rate: slow ? 0.6 : 1,
+      onLetter: (i, l) => { chips.forEach((c, j) => { c.classList.toggle('on', j === i); c.classList.toggle('done', j < i); }); if (l !== ' ') { $('#abTitle').textContent = 'Letra ' + l; if (!st.seen.includes(l)) st.seen.push(l); } },
+      onEnd: () => { chips.forEach((c) => { c.classList.remove('on'); c.classList.add('done'); }); $('#abTitle').textContent = '✔ ' + ls.join(''); spellJob = null; abVideo.loop = true; $('#spellBtn').textContent = '↻ Soletrar de novo'; save(); paintLetters(); }
+    });
+  }
+  $('#spellBtn').addEventListener('click', () => { if (spellJob) { stopSpell(); showLetter(abIndex); } else startSpell(); });
+  $('#spellInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); startSpell(); } });
+
+  /* ---------- Praticar: jogos com vídeo ---------- */
+  let mode = 'letras', ROUNDS = 10, gRound = 0, gScore = 0, gAnswer = null, gPool = [], gJob = null;
   const gVideo = $('#gVideo');
-  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   function renderPracticeMenu() {
+    stopGame();
     $('#practiceMenu').hidden = false; $('#game').hidden = true;
-    $('#bestScore').textContent = st.best ? 'Seu melhor: ' + st.best + ' de ' + ROUNDS : '';
+    $('#bestScore').textContent = st.best ? '🏆 Seu melhor: ' + st.best + ' de 10' : '';
+    $('#bestWords').textContent = st.bestWords ? '🏆 Seu melhor: ' + st.bestWords + ' de 6' : '';
   }
   $$('[data-mode]').forEach((b) => b.addEventListener('click', () => {
     if (b.dataset.mode === 'conceitos') { conceptFrom = 'praticar'; location.hash = '#atividade'; return; }
-    startGame();
+    startGame(b.dataset.mode);
   }));
-  function startGame() {
-    gRound = 0; gScore = 0; gPool = shuffle(LETTERS).slice(0, ROUNDS);
+  function startGame(m) {
+    mode = m || mode; ROUNDS = mode === 'palavras' ? 6 : 10;
+    gRound = 0; gScore = 0; gPool = shuffle(mode === 'palavras' ? WORDS : LETTERS).slice(0, ROUNDS);
     $('#practiceMenu').hidden = true; $('#game').hidden = false;
+    $('#gChoices').classList.toggle('word-choice', mode === 'palavras');
     nextRound();
   }
-  function stopGame() { gVideo.pause(); }
+  function stopGame() { if (gJob) { gJob.stop = true; gJob = null; } gVideo.onended = null; gVideo.pause(); }
+  function playWord() {
+    const ls = gAnswer.split('');
+    $('#gReplay').hidden = true;
+    $('#gDots').innerHTML = ls.map(() => '<i></i>').join('');
+    const dots = [...$('#gDots').children];
+    gJob = playSequence(gVideo, ls, { onLetter: (i) => dots.forEach((d, j) => d.classList.toggle('on', j <= i)), onEnd: () => { $('#gReplay').hidden = false; gJob = null; } });
+  }
   function nextRound() {
+    stopGame();
     if (gRound >= ROUNDS) return endGame();
     gAnswer = gPool[gRound];
     $('#gRound').textContent = (gRound + 1) + ' / ' + ROUNDS;
     $('#gScore').textContent = gScore + ' acerto' + (gScore === 1 ? '' : 's');
     $('#gFeedback').textContent = ''; $('#gNext').hidden = true;
     gVideo.removeAttribute('poster');
-    gVideo.src = src(gAnswer); gVideo.play().catch(() => {});
-    const opts = shuffle([gAnswer, ...shuffle(LETTERS.filter((l) => l !== gAnswer)).slice(0, 3)]);
-    $('#gChoices').innerHTML = opts.map((l) => '<button type="button" data-l="' + l + '">' + l + '</button>').join('');
+    let opts;
+    if (mode === 'palavras') {
+      const same = WORDS.filter((w) => w !== gAnswer && w.length === gAnswer.length);
+      opts = shuffle([gAnswer, ...shuffle(same.length >= 3 ? same : WORDS.filter((w) => w !== gAnswer)).slice(0, 3)]);
+      playWord();
+    } else {
+      $('#gDots').innerHTML = ''; $('#gReplay').hidden = true;
+      gVideo.loop = true; gVideo.src = src(gAnswer); gVideo.play().catch(() => {});
+      opts = shuffle([gAnswer, ...shuffle(LETTERS.filter((l) => l !== gAnswer)).slice(0, 3)]);
+    }
+    $('#gChoices').innerHTML = opts.map((l, i) => '<button type="button" class="pop" style="animation-delay:' + (i * 70) + 'ms" data-l="' + l + '">' + l + '</button>').join('');
     $$('#gChoices button').forEach((b) => b.addEventListener('click', () => answer(b)));
   }
+  $('#gReplay').addEventListener('click', playWord);
   function answer(b) {
     const ok = b.dataset.l === gAnswer;
     if (ok) gScore++;
     $$('#gChoices button').forEach((x) => { x.disabled = true; if (x.dataset.l === gAnswer) x.classList.add('right'); });
-    if (!ok) b.classList.add('wrong');
+    if (!ok) b.classList.add('wrong', 'shake');
     const fb = $('#gFeedback');
-    fb.textContent = ok ? 'Muito bem! É a letra ' + gAnswer + '.' : 'Era a letra ' + gAnswer + '. Assista de novo e siga em frente.';
+    fb.textContent = ok ? '✅ Muito bem! É ' + (mode === 'palavras' ? 'a palavra ' : 'a letra ') + gAnswer + '.' : '❌ Era ' + gAnswer + '. Assista de novo e siga em frente.';
     fb.style.color = ok ? 'var(--ok)' : 'var(--bad)';
     $('#gScore').textContent = gScore + ' acerto' + (gScore === 1 ? '' : 's');
     gRound++;
@@ -284,19 +487,23 @@
     $('#gNext').hidden = false; $('#gNext').focus();
   }
   function endGame() {
-    gVideo.pause();
-    st.games++; if (gScore > st.best) st.best = gScore; save();
-    $('#gChoices').innerHTML = '';
+    stopGame();
+    st.games++;
+    if (mode === 'palavras') { if (gScore > st.bestWords) st.bestWords = gScore; } else if (gScore > st.best) st.best = gScore;
+    save();
+    $('#gChoices').innerHTML = ''; $('#gDots').innerHTML = ''; $('#gReplay').hidden = true;
     $('#gRound').textContent = 'Fim';
-    $('#gFeedback').innerHTML = '<span style="font-size:2.4em">' + (gScore >= 8 ? '🏆' : gScore >= 5 ? '👏' : '💪') + '</span><br>Você acertou ' + gScore + ' de ' + ROUNDS + '!';
+    const top = gScore >= ROUNDS * 0.8;
+    $('#gFeedback').innerHTML = '<span class="bounce" style="font-size:2.6em;display:inline-block">' + (top ? '🏆' : gScore >= ROUNDS / 2 ? '👏' : '💪') + '</span><br>Você acertou ' + gScore + ' de ' + ROUNDS + '!';
     $('#gFeedback').style.color = 'var(--navy2)';
+    if (top) confetti();
     $('#gNext').textContent = 'Jogar de novo'; $('#gNext').hidden = false;
     $('#gNext').dataset.again = '1';
   }
   $('#gNext').addEventListener('click', (e) => {
     if (e.currentTarget.dataset.again) { delete e.currentTarget.dataset.again; startGame(); } else nextRound();
   });
-  $('#gExit').addEventListener('click', () => { stopGame(); renderPracticeMenu(); });
+  $('#gExit').addEventListener('click', renderPracticeMenu);
 
   /* ---------- Vídeos da professora ---------- */
   $('#vGrid').innerHTML = DRIVE.map((id, i) => '<button type="button" class="vcard" data-v="' + i + '"><span class="thumb"><img src="https://drive.google.com/thumbnail?id=' + id + '&amp;sz=w480" alt="" loading="lazy" onerror="this.remove()"><span class="play" aria-hidden="true">▶</span></span><strong>Aula ' + String(i + 1).padStart(2, '0') + '</strong><small>Professora Jocimara</small></button>').join('');
@@ -317,8 +524,10 @@
     $('#stats').innerHTML = [
       [percent() + '%', 'progresso geral'],
       [st.seen.length + '/27', 'letras vistas'],
-      [st.lessonDone ? '✔' : '—', 'Aula 01 concluída'],
-      [st.best + '/10', 'melhor no “Qual é a letra?”']
+      [st.signsSeen.length + '/' + SIGNS.length, 'sinais com o avatar'],
+      [st.lessonDone ? '✔' : '—', 'Módulo 01 concluído'],
+      [st.best + '/10', 'melhor no “Qual é a letra?”'],
+      [st.bestWords + '/6', 'melhor no “Que palavra é?”']
     ].map(([b, s]) => '<div class="stat"><b>' + b + '</b><span>' + s + '</span></div>').join('');
     $('#favList').innerHTML = st.favs.length
       ? st.favs.map((l) => '<a href="#alfabeto" data-letter="' + l + '" aria-label="Abrir letra ' + l + '">' + l + '</a>').join('')
@@ -327,7 +536,7 @@
   }
   $('#resetBtn').addEventListener('click', () => {
     if (!confirm('Apagar todo o progresso e favoritos deste aparelho?')) return;
-    const prefs = st.prefs; st = Object.assign({}, defaults, { prefs, splashSeen: true, seen: [], favs: [] }); save(); renderProfile();
+    const prefs = st.prefs; st = Object.assign({}, defaults, { prefs, splashSeen: true, seen: [], favs: [], signsSeen: [] }); save(); renderProfile();
   });
 
   /* ---------- Instalação (PWA) ---------- */
@@ -342,8 +551,9 @@
   });
   window.addEventListener('appinstalled', () => { $('#installBtn').hidden = true; });
 
+  let swDone = false;
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    window.addEventListener('load', () => { if (swDone) return; swDone = true; navigator.serviceWorker.register('./sw.js').catch(() => {}); });
   }
 
   applyPrefs();
