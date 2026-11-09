@@ -1,7 +1,7 @@
 /* Conecta Libras — funciona sem internet depois da primeira visita */
-const CACHE = 'conecta-libras-v8';
+const CACHE = 'conecta-libras-v9';
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat('C-cedilha');
-const SHELL = ['./', './index.html', './app.css?v=8', './app.js?v=8', './manifest.webmanifest',
+const SHELL = ['./', './index.html', './app.css?v=9', './app.js?v=9', './manifest.webmanifest',
   './img/capa.jpg', './img/capa-foto.jpg', './img/banner.jpg', './img/prof.jpg', './img/logo-transp.png', './icons/icon-192.png', './icons/icon-180.png']
   .concat(LETTERS.map((l) => './alfabeto/' + l + '.jpg'));
 const VIDEOS = LETTERS.map((l) => './alfabeto/' + l + '.mp4');
