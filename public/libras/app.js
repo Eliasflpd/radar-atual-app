@@ -8,12 +8,15 @@
 
   /* ---------- Armazenamento seguro ---------- */
   const KEY = 'conectaLibras.v1';
-  const defaults = { seen: [], favs: [], lessonDone: false, storyDone: false, best: 0, bestWords: 0, bestSigns: 0, games: 0, signsSeen: [], vocabSeen: [], prefs: { big: false, contrast: false, motion: false }, lastLetter: 0, splashSeen: false };
+  const defaults = { seen: [], favs: [], lessonDone: false, storyDone: false, best: 0, bestWords: 0, bestSigns: 0, bestFrases: 0, games: 0, signsSeen: [], vocabSeen: [], frasesSeen: [], prefs: { big: false, contrast: false, motion: false }, lastLetter: 0, splashSeen: false };
   let st;
   try { st = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { st = Object.assign({}, defaults); }
   st.prefs = Object.assign({}, defaults.prefs, st.prefs);
   if (!Array.isArray(st.signsSeen)) st.signsSeen = [];
   if (!Array.isArray(st.vocabSeen)) st.vocabSeen = [];
+  if (!Array.isArray(st.frasesSeen)) st.frasesSeen = [];
+  let FRASES = [];
+  const frasesReady = fetch('./sinais/frases.json').then((r) => r.json()).then((d) => { FRASES = d.frases; $('#frAviso').textContent = d.aviso; }).catch(() => {});
 
   /* Vocabulário em vídeo (Signbank da Libras — UFSC) */
   let VOCAB = [];        // temas
@@ -165,9 +168,9 @@
   if (location.hash.length > 1 && location.hash !== '#inicio') $('#splash').classList.add('hide');
 
   /* ---------- Rotas ---------- */
-  const PAGES = ['inicio', 'aulas', 'aula', 'atividade', 'vocab', 'sinais', 'alfabeto', 'praticar', 'videos', 'perfil', 'biblioteca', 'downloads', 'avisos'];
+  const PAGES = ['inicio', 'aulas', 'aula', 'atividade', 'vocab', 'frases', 'dicionario', 'sinais', 'alfabeto', 'praticar', 'videos', 'perfil', 'biblioteca', 'downloads', 'avisos'];
   const SIDE_OF = { aula: 'aulas', atividade: 'aulas', avisos: 'inicio' };
-  const BOTTOM_OF = { aula: 'aulas', atividade: 'aulas', praticar: 'aulas', sinais: 'aulas', vocab: 'aulas', alfabeto: 'biblioteca', videos: 'biblioteca', avisos: 'inicio' };
+  const BOTTOM_OF = { aula: 'aulas', atividade: 'aulas', praticar: 'aulas', sinais: 'aulas', vocab: 'aulas', frases: 'aulas', dicionario: 'biblioteca', alfabeto: 'biblioteca', videos: 'biblioteca', avisos: 'inicio' };
   let scrollToFavs = false;
   function route() {
     let id = (location.hash || '#inicio').slice(1).split('/')[0];
@@ -182,6 +185,9 @@
     if (id !== 'videos') closeDrive();
     if (id !== 'vocab') closeSign();
     if (id === 'vocab') vocabReady.then(renderVocab);
+    if (id !== 'frases') stopFrase();
+    if (id === 'frases') frasesReady.then(renderFrases);
+    if (id === 'dicionario') vocabReady.then(() => renderDic($('#dicSearch').value));
     if (id === 'avisos') { st.avisosSeen = true; save(); }
     if (id === 'downloads') checkDownloads();
     if (id === 'inicio') renderHome();
@@ -239,10 +245,11 @@
       { href: '#aula', icon: '🎬', c: '#25b7a8', t: 'Módulo 01 · Primeiros passos', d: 'Aula animada em 6 cenas + atividade.', s: st.lessonDone ? '✔ Concluído' : '6 cenas', done: st.lessonDone },
       { href: '#alfabeto', icon: '✋', c: '#7b4fe0', t: 'Módulo 02 · Alfabeto manual', d: '27 vídeos (A–Z + Ç) e soletrar o seu nome.', s: st.seen.length + '/27', done: st.seen.length === 27 },
       { href: '#vocab', icon: '🎬', c: '#e0457b', t: 'Módulo 03 · Vocabulário em vídeo', d: (VOCAB_UNIQ || 311) + ' sinais em ' + (VOCAB.length || 23) + ' temas, feitos por pessoas surdas.', s: st.vocabSeen.length + '/' + (VOCAB_UNIQ || 311), done: VOCAB_ALL.length && st.vocabSeen.length >= VOCAB_ALL.length },
-      { href: '#videos', icon: '▶️', c: '#2878c8', t: 'Módulo 04 · Aulas da Professora Jocimara', d: '23 gravações em vídeo.', s: '23 vídeos' },
+      { href: '#videos', icon: '▶️', c: '#2878c8', t: 'Módulo 04 · Aulas da Professora Jocimara', d: '23 gravações (abrem pelo Google Drive da professora).', s: '23 vídeos' },
       { href: '#praticar', icon: '🎯', c: '#1f9d6b', t: 'Praticar', d: '4 jogos com vídeo: sinais, letras e palavras.', s: st.bestSigns ? '🏆 ' + st.bestSigns + '/8' : 'Jogar' },
       { href: '#sinais', icon: '🤟', c: '#7b4fe0', t: 'Extra · Avatar VLibras', d: 'Avatar 3D faz ' + SIGNS.length + ' sinais do dia a dia.', s: st.signsSeen.length + '/' + SIGNS.length },
-      { icon: '💬', c: '#e0a100', t: 'Módulo 05 · Frases e diálogos', d: 'Com vídeos da professora.', s: 'Em breve', soon: true }
+      { href: '#frases', icon: '💬', c: '#e0a100', t: 'Módulo 05 · Frases em Libras', d: '16 frases do dia a dia, sinal por sinal.', s: st.frasesSeen.length + '/16', done: st.frasesSeen.length >= 16 },
+      { href: '#dicionario', icon: '🔎', c: '#2878c8', t: 'Dicionário', d: 'Procure qualquer sinal ou soletre a palavra.', s: 'Buscar' }
     ];
     $('#modules').innerHTML = mods.map((m) => (m.soon ? '<div class="module soon" aria-disabled="true">' : '<a class="module" href="' + m.href + '">') +
       '<span class="qi" style="--c:' + m.c + '">' + m.icon + '</span><div><strong>' + m.t + '</strong><small>' + m.d + '</small></div><span class="state' + (m.done ? ' done' : '') + '">' + m.s + '</span>' + (m.soon ? '</div>' : '</a>')).join('');
@@ -462,6 +469,100 @@
   vcVideo.addEventListener('touchstart', (e) => { vtx = e.touches[0].clientX; }, { passive: true });
   vcVideo.addEventListener('touchend', (e) => { if (vtx === null) return; const dx = e.changedTouches[0].clientX - vtx; vtx = null; if (dx < -50) openSign(vcIdx + 1); if (dx > 50) openSign(vcIdx - 1); });
 
+
+  /* ---------- Módulo 05: frases (sinal por sinal) ---------- */
+  // Toca uma frase: vídeos de sinais, "apontar" (EU/VOCÊ) e nomes soletrados.
+  function playFraseOn(video, pointEl, f, opts) {
+    opts = opts || {};
+    const job = { stop: false };
+    const steps = [];
+    f.itens.forEach((it, k) => {
+      if (it[0] === 's') toLetters(it[1]).forEach((l) => steps.push({ k, kind: 'l', l }));
+      else steps.push({ k, kind: it[0], it });
+    });
+    let i = 0;
+    video.loop = false;
+    const rate = () => (opts.slow ? 0.6 : 1);
+    const next = () => {
+      if (job.stop) return;
+      if (pointEl) pointEl.hidden = true;
+      if (i >= steps.length) { video.onended = null; video.onerror = null; if (opts.onEnd) opts.onEnd(); return; }
+      const st2 = steps[i];
+      if (opts.onItem) opts.onItem(st2.k);
+      if (st2.kind === 'p') {
+        const eu = st2.it[1] === 'eu';
+        if (pointEl) {
+          pointEl.querySelector('.fr-hand').textContent = eu ? '🙋' : '🫵';
+          pointEl.querySelector('b').textContent = eu ? 'EU' : 'VOCÊ';
+          pointEl.querySelector('small').textContent = eu ? 'aponte para o seu peito' : 'aponte para a pessoa';
+          pointEl.classList.toggle('you', !eu); pointEl.hidden = false;
+        }
+        i++; setTimeout(next, opts.slow ? 2000 : 1400); return;
+      }
+      video.src = st2.kind === 'l' ? src(st2.l) : vSrc(st2.it[1]);
+      video.removeAttribute('poster');
+      video.playbackRate = rate();
+      video.play().catch(() => { i++; setTimeout(next, 300); });
+    };
+    video.onended = () => { i++; next(); };
+    video.onerror = () => { i++; next(); };
+    next();
+    return job;
+  }
+  let frIdx = 0, frJob = null, frSlowOn = false;
+  const frVideo = $('#frVideo');
+  function renderFrases() {
+    $('#frList').innerHTML = FRASES.map((f, i) => '<button type="button" class="fr-item pop' + (i === frIdx ? ' on' : '') + (st.frasesSeen.includes(i) ? ' seen' : '') + '" style="animation-delay:' + Math.min(i * 30, 400) + 'ms" data-i="' + i + '"><span class="fr-tag">' + f.tema + '</span><b>' + f.pt + '</b><small>' + f.itens.map((it) => (it[0] === 'p' ? (it[1] === 'eu' ? '🙋EU' : '🫵VOCÊ') : it[0] === 's' ? it[1].split('').join('-') : it[2])).join(' ') + (f.q ? ' ?' : '') + '</small></button>').join('');
+    $$('#frList .fr-item').forEach((b) => b.addEventListener('click', () => { frIdx = +b.dataset.i; showFrase(true); $('.fr-player').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+    showFrase(false);
+  }
+  function showFrase(play) {
+    const f = FRASES[frIdx]; if (!f) return;
+    stopFrase();
+    $('#frPt').textContent = f.pt;
+    $('#frGloss').innerHTML = f.itens.map((it) => '<span>' + (it[0] === 'p' ? (it[1] === 'eu' ? '🙋 EU' : '🫵 VOCÊ') : it[0] === 's' ? '✍️ ' + it[1].split('').join('-') : it[2]) + '</span>').join('') + (f.q ? '<span class="q">🤨 ?</span>' : '');
+    $$('#frList .fr-item').forEach((b) => b.classList.toggle('on', +b.dataset.i === frIdx));
+    const firstV = f.itens.find((it) => it[0] === 'v');
+    if (firstV) frVideo.poster = vPoster(firstV[1]);
+    if (play) playFrase();
+  }
+  function playFrase() {
+    const f = FRASES[frIdx]; if (!f) return;
+    stopFrase();
+    const chips = [...$('#frGloss').children];
+    $('#frPlay').textContent = '⏹ Parar';
+    frJob = playFraseOn(frVideo, $('#frPoint'), f, {
+      slow: frSlowOn,
+      onItem: (k) => chips.forEach((c, j) => { c.classList.toggle('on', j === k); c.classList.toggle('done', j < k); }),
+      onEnd: () => {
+        chips.forEach((c) => { c.classList.remove('on'); c.classList.add('done'); });
+        frJob = null; $('#frPlay').textContent = '↻ Ver de novo';
+        if (!st.frasesSeen.includes(frIdx)) { st.frasesSeen.push(frIdx); save(); const b = $('#frList .fr-item[data-i="' + frIdx + '"]'); if (b) b.classList.add('seen'); if (st.frasesSeen.length === FRASES.length) confetti(); }
+      }
+    });
+  }
+  function stopFrase() { if (frJob) { frJob.stop = true; frJob = null; } frVideo.onended = null; frVideo.pause(); $('#frPoint').hidden = true; $('#frPlay').textContent = '▶ Ver frase'; }
+  $('#frPlay').addEventListener('click', () => { if (frJob) stopFrase(); else playFrase(); });
+  $('#frSlow').addEventListener('click', (e) => { frSlowOn = !frSlowOn; e.currentTarget.setAttribute('aria-pressed', frSlowOn); e.currentTarget.textContent = frSlowOn ? '🐇 Normal' : '🐢 Devagar'; });
+  $('#frAvatar').addEventListener('click', () => { const f = FRASES[frIdx]; if (f) { stopFrase(); sayLibras(f.pt); } });
+
+  /* ---------- Dicionário ---------- */
+  const norm = (t) => (t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  function renderDic(q) {
+    const k = norm(q);
+    const seen = new Set();
+    const uniq = VOCAB_ALL.filter((x) => (seen.has(x.id) ? false : seen.add(x.id)));
+    const res = k ? uniq.filter((x) => norm(x.pt).includes(k) || norm(x.glosa).includes(k)) : uniq.slice().sort((a, b) => a.pt.localeCompare(b.pt, 'pt-BR'));
+    $('#dicGrid').innerHTML = res.slice(0, 120).map((x, i) => '<button type="button" class="vc-card' + (st.vocabSeen.includes(x.id) ? ' seen' : '') + '" data-i="' + i + '"><span class="vc-thumb"><img src="' + vPoster(x.id) + '" alt="" loading="lazy"><i>▶</i></span><b>' + x.pt + '</b></button>').join('');
+    $$('#dicGrid .vc-card').forEach((b) => b.addEventListener('click', () => { vcList = res.slice(0, 120); openSign(+b.dataset.i); }));
+    const none = k && !res.length;
+    $('#dicNone').hidden = !none;
+    if (none) { $('#dicWord').textContent = q.trim(); $('#dicSpell').onclick = () => { $('#spellInput').value = q.trim(); setTimeout(startSpellFromDic, 400); }; }
+  }
+  function startSpellFromDic() { $('#spellBtn').click(); }
+  $('#dicSearch').addEventListener('input', (e) => renderDic(e.target.value));
+  $('#dicAvatar').addEventListener('click', () => sayLibras($('#dicSearch').value.trim()));
+
   /* ---------- Módulo 02: alfabeto ---------- */
   let abIndex = Math.min(st.lastLetter || 0, LETTERS.length - 1);
   const abVideo = $('#abVideo');
@@ -556,16 +657,19 @@
     $('#bestScore').textContent = st.best ? '🏆 Seu melhor: ' + st.best + ' de 10' : '';
     $('#bestWords').textContent = st.bestWords ? '🏆 Seu melhor: ' + st.bestWords + ' de 6' : '';
     $('#bestSigns').textContent = st.bestSigns ? '🏆 Seu melhor: ' + st.bestSigns + ' de 8' : '';
+    $('#bestFrases').textContent = st.bestFrases ? '🏆 Seu melhor: ' + st.bestFrases + ' de 6' : '';
   }
   $$('[data-mode]').forEach((b) => b.addEventListener('click', () => {
     if (b.dataset.mode === 'conceitos') { conceptFrom = 'praticar'; location.hash = '#atividade'; return; }
+    if (b.dataset.mode === 'frases') { frasesReady.then(() => { if (FRASES.length) startGame('frases'); else toast('Não foi possível carregar as frases.'); }); return; }
     if (b.dataset.mode === 'sinais') { vocabReady.then(() => { if (VOCAB_ALL.length) startGame('sinais'); else toast('Não foi possível carregar os vídeos.'); }); return; }
     startGame(b.dataset.mode);
   }));
   function startGame(m) {
-    mode = m || mode; ROUNDS = mode === 'palavras' ? 6 : mode === 'sinais' ? 8 : 10;
-    gRound = 0; gScore = 0; gPool = shuffle(mode === 'palavras' ? WORDS : mode === 'sinais' ? VOCAB_ALL : LETTERS).slice(0, ROUNDS);
-    $('#game').classList.toggle('no-cover', mode === 'sinais');
+    mode = m || mode; ROUNDS = mode === 'palavras' || mode === 'frases' ? 6 : mode === 'sinais' ? 8 : 10;
+    gRound = 0; gScore = 0; gPool = shuffle(mode === 'palavras' ? WORDS : mode === 'sinais' ? VOCAB_ALL : mode === 'frases' ? FRASES : LETTERS).slice(0, ROUNDS);
+    $('#game').classList.toggle('no-cover', mode === 'sinais' || mode === 'frases');
+    $('#game').classList.toggle('frase-mode', mode === 'frases');
     $('#practiceMenu').hidden = true; $('#game').hidden = false;
     $('#gChoices').classList.toggle('word-choice', mode !== 'letras');
     nextRound();
@@ -587,7 +691,14 @@
     $('#gFeedback').textContent = ''; $('#gNext').hidden = true;
     gVideo.removeAttribute('poster');
     let opts;
-    if (mode === 'sinais') {
+    if (mode === 'frases') {
+      const f = gAnswer;
+      $('#gDots').innerHTML = f.itens.map(() => '<i></i>').join('');
+      const play = () => { $('#gReplay').hidden = true; const dots = [...$('#gDots').children]; gJob = playFraseOn(gVideo, $('#gPoint'), f, { onItem: (i) => dots.forEach((d, j) => d.classList.toggle('on', j <= i)), onEnd: () => { $('#gReplay').hidden = false; gJob = null; } }); };
+      $('#gReplay').onclick = play; play();
+      opts = shuffle([f.pt, ...shuffle(FRASES.filter((y) => y.pt !== f.pt)).slice(0, 3).map((y) => y.pt)]);
+      gAnswer = f.pt;
+    } else if (mode === 'sinais') {
       const x = gAnswer;
       $('#gDots').innerHTML = ''; $('#gReplay').hidden = true;
       gVideo.loop = true; gVideo.poster = vPoster(x.id); gVideo.src = vSrc(x.id); gVideo.play().catch(() => {});
@@ -608,14 +719,14 @@
     $('#gChoices').innerHTML = opts.map((l, i) => '<button type="button" class="pop" style="animation-delay:' + (i * 70) + 'ms" data-l="' + l + '">' + l + '</button>').join('');
     $$('#gChoices button').forEach((b) => b.addEventListener('click', () => answer(b)));
   }
-  $('#gReplay').addEventListener('click', playWord);
+  $('#gReplay').addEventListener('click', () => { if (mode === 'palavras') playWord(); });
   function answer(b) {
     const ok = b.dataset.l === gAnswer;
     if (ok) gScore++;
     $$('#gChoices button').forEach((x) => { x.disabled = true; if (x.dataset.l === gAnswer) x.classList.add('right'); });
     if (!ok) b.classList.add('wrong', 'shake');
     const fb = $('#gFeedback');
-    fb.textContent = ok ? '✅ Muito bem! É ' + (mode === 'letras' ? 'a letra ' : mode === 'sinais' ? 'o sinal ' : 'a palavra ') + gAnswer + '.' : '❌ Era ' + gAnswer + '. Assista de novo e siga em frente.';
+    fb.textContent = ok ? '✅ Muito bem! É ' + (mode === 'letras' ? 'a letra ' : mode === 'sinais' ? 'o sinal ' : mode === 'frases' ? 'a frase: ' : 'a palavra ') + gAnswer + '.' : '❌ Era ' + gAnswer + '. Assista de novo e siga em frente.';
     fb.style.color = ok ? 'var(--ok)' : 'var(--bad)';
     $('#gScore').textContent = gScore + ' acerto' + (gScore === 1 ? '' : 's');
     gRound++;
@@ -625,7 +736,7 @@
   function endGame() {
     stopGame();
     st.games++;
-    if (mode === 'palavras') { if (gScore > st.bestWords) st.bestWords = gScore; } else if (mode === 'sinais') { if (gScore > st.bestSigns) st.bestSigns = gScore; } else if (gScore > st.best) st.best = gScore;
+    if (mode === 'frases') { if (gScore > st.bestFrases) st.bestFrases = gScore; } else if (mode === 'palavras') { if (gScore > st.bestWords) st.bestWords = gScore; } else if (mode === 'sinais') { if (gScore > st.bestSigns) st.bestSigns = gScore; } else if (gScore > st.best) st.best = gScore;
     save();
     $('#gChoices').innerHTML = ''; $('#gDots').innerHTML = ''; $('#gReplay').hidden = true;
     $('#gRound').textContent = 'Fim';
@@ -662,6 +773,8 @@
       [st.seen.length + '/27', 'letras vistas'],
       [st.vocabSeen.length + '/' + (VOCAB_UNIQ || 311), 'sinais em vídeo vistos'],
       [st.bestSigns + '/8', 'melhor no “Qual é o sinal?”'],
+      [st.frasesSeen.length + '/16', 'frases vistas'],
+      [st.bestFrases + '/6', 'melhor no “Qual é a frase?”'],
       [st.signsSeen.length + '/' + SIGNS.length, 'sinais com o avatar'],
       [st.lessonDone ? '✔' : '—', 'Módulo 01 concluído'],
       [st.best + '/10', 'melhor no “Qual é a letra?”'],
@@ -674,7 +787,7 @@
   }
   $('#resetBtn').addEventListener('click', () => {
     if (!confirm('Apagar todo o progresso e favoritos deste aparelho?')) return;
-    const prefs = st.prefs; st = Object.assign({}, defaults, { prefs, splashSeen: true, seen: [], favs: [], signsSeen: [], vocabSeen: [] }); save(); renderProfile();
+    const prefs = st.prefs; st = Object.assign({}, defaults, { prefs, splashSeen: true, seen: [], favs: [], signsSeen: [], vocabSeen: [], frasesSeen: [] }); save(); renderProfile();
   });
 
   /* ---------- Instalação (PWA) ---------- */
