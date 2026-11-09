@@ -420,3 +420,34 @@ body.on-inicio .body{min-height:100dvh}
 .vc-controls{grid-template-columns:48px 1fr 1fr 48px}
 body.modal-open{overflow:hidden}
 .game.no-cover .cover{display:none}
+
+/* ===== Soletrar e espelho na janela do sinal ===== */
+.vc-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+.vc-tools button{border:0;border-radius:12px;min-height:46px;font-weight:800;font-size:.85em;color:#fff;background:linear-gradient(180deg,#2b8cff,#1769d6);padding:0 4px}
+.vc-tools button#vcSpellBtn{background:linear-gradient(180deg,#ffd75e,#ffbf1f);color:#0f2445}
+.vc-tools button[aria-pressed=true]{background:linear-gradient(180deg,#3fd47f,#159a4e)}
+.vc-spell{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;min-height:0;margin:6px 0 0}
+.vc-spell b{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#e8f1fb;color:var(--navy2);font-weight:900;transition:.2s}
+.vc-spell b.on{background:var(--yellow);color:#071e3c;transform:scale(1.15)}
+.vc-spell b.done{background:#e3f5f2;color:var(--ok)}
+.vc-spell i.gap{width:10px}
+.vc-cam{position:relative;margin:8px auto 0;width:min(100%,62dvh);aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#0b1626}
+.vc-cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
+.vc-cam span{position:absolute;left:8px;top:8px;background:#071e3ccc;color:#fff;font-weight:800;font-size:.75em;border-radius:99px;padding:3px 10px}
+@media (min-width:860px){
+  .modal-box.with-cam{width:min(96vw,900px);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start}
+  .modal-box.with-cam .vc-stage{grid-column:1;grid-row:1}
+  .modal-box.with-cam .vc-cam{grid-column:2;grid-row:1;margin:0;aspect-ratio:1;width:100%}
+  .modal-box.with-cam > :not(.vc-stage):not(.vc-cam):not(.modal-x){grid-column:1/-1}
+}
+/* cena 6: postura */
+.sc6 .seat{height:88%;max-width:80%}
+.sc6 .sk{fill:#f2c7a5}.sc6 .sh{fill:#2878c8}.sc6 .arm{stroke:#f2c7a5;stroke-width:12;fill:none;stroke-linecap:round}.sc6 .chair{fill:#8fb3de}
+.sc6 .hand{transform-box:fill-box;transform-origin:center}
+.sc6 .hl{animation:wave 1.4s ease-in-out infinite}.sc6 .hr{animation:wave 1.4s .35s ease-in-out infinite}
+.sc6 .zone{fill:#ffc8571a;stroke:#ffc857;stroke-width:3;stroke-dasharray:10 7;animation:dash 1.2s linear infinite,glow 2s ease-in-out infinite}
+@keyframes dash{to{stroke-dashoffset:-34}}
+@keyframes glow{50%{fill:#ffc85740}}
+.sc6 .tag{position:absolute;background:#fff;color:#071e3c;font-weight:900;border-radius:99px;padding:6px 14px;font-size:clamp(13px,1.8vw,18px);opacity:0;animation:pop .5s both}
+.sc6 .z1{left:5%;top:14%;animation-delay:.6s}.sc6 .z2{right:5%;top:30%;animation-delay:2s}.sc6 .z3{left:6%;bottom:12%;animation-delay:3.4s}
+.vc-controls{grid-template-columns:48px 1fr 48px!important}

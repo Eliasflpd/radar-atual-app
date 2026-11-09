@@ -18,11 +18,13 @@
   /* Vocabulário em vídeo (Signbank da Libras — UFSC) */
   let VOCAB = [];        // temas
   let VOCAB_ALL = [];    // todos os sinais
+  let VOCAB_UNIQ = 0;    // vídeos diferentes
   const vSrc = (id) => './sinais/' + id + '.mp4';
   const vPoster = (id) => './sinais/' + id + '.jpg';
   const vocabReady = fetch('./sinais/dados.json').then((r) => r.json()).then((d) => {
     VOCAB = d.temas;
     VOCAB_ALL = VOCAB.flatMap((t) => t.sinais.map((s) => Object.assign({ tema: t.id }, s)));
+    VOCAB_UNIQ = new Set(VOCAB_ALL.map((x) => x.id)).size;
   }).catch(() => {});
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
 
@@ -198,7 +200,7 @@
 
   /* ---------- Progresso ---------- */
   function percent() {
-    const nv = VOCAB_ALL.length || 163;
+    const nv = VOCAB_UNIQ || 311;
     const parts = st.seen.length / LETTERS.length * 0.2 + (st.lessonDone ? 0.2 : 0) + Math.min(st.vocabSeen.length, nv) / nv * 0.35 + Math.min(st.best, 10) / 10 * 0.08 + Math.min(st.bestWords, 6) / 6 * 0.08 + Math.min(st.bestSigns, 8) / 8 * 0.09;
     return Math.round(parts * 100);
   }
@@ -206,7 +208,7 @@
 
   /* ---------- Central de Downloads ---------- */
   let VIDEO_URLS = LETTERS.map((l) => new URL(src(l), location.href).href);
-  vocabReady.then(() => { VIDEO_URLS = VIDEO_URLS.concat(VOCAB_ALL.map((s) => new URL(vSrc(s.id), location.href).href)); });
+  vocabReady.then(() => { VIDEO_URLS = [...new Set(VIDEO_URLS.concat(VOCAB_ALL.map((s) => new URL(vSrc(s.id), location.href).href)))]; });
   async function checkDownloads() {
     await vocabReady;
     const status = $('#dlStatus'), btn = $('#dlBtn');
@@ -234,9 +236,9 @@
 
   function renderModules() {
     const mods = [
-      { href: '#aula', icon: '🎬', c: '#25b7a8', t: 'Módulo 01 · Primeiros passos', d: 'Aula animada em 5 cenas + atividade.', s: st.lessonDone ? '✔ Concluído' : '5 cenas', done: st.lessonDone },
+      { href: '#aula', icon: '🎬', c: '#25b7a8', t: 'Módulo 01 · Primeiros passos', d: 'Aula animada em 6 cenas + atividade.', s: st.lessonDone ? '✔ Concluído' : '6 cenas', done: st.lessonDone },
       { href: '#alfabeto', icon: '✋', c: '#7b4fe0', t: 'Módulo 02 · Alfabeto manual', d: '27 vídeos (A–Z + Ç) e soletrar o seu nome.', s: st.seen.length + '/27', done: st.seen.length === 27 },
-      { href: '#vocab', icon: '🎬', c: '#e0457b', t: 'Módulo 03 · Vocabulário em vídeo', d: (VOCAB_ALL.length || 163) + ' sinais em 12 temas, feitos por pessoas surdas.', s: st.vocabSeen.length + '/' + (VOCAB_ALL.length || 163), done: VOCAB_ALL.length && st.vocabSeen.length >= VOCAB_ALL.length },
+      { href: '#vocab', icon: '🎬', c: '#e0457b', t: 'Módulo 03 · Vocabulário em vídeo', d: (VOCAB_UNIQ || 311) + ' sinais em ' + (VOCAB.length || 23) + ' temas, feitos por pessoas surdas.', s: st.vocabSeen.length + '/' + (VOCAB_UNIQ || 311), done: VOCAB_ALL.length && st.vocabSeen.length >= VOCAB_ALL.length },
       { href: '#videos', icon: '▶️', c: '#2878c8', t: 'Módulo 04 · Aulas da Professora Jocimara', d: '23 gravações em vídeo.', s: '23 vídeos' },
       { href: '#praticar', icon: '🎯', c: '#1f9d6b', t: 'Praticar', d: '4 jogos com vídeo: sinais, letras e palavras.', s: st.bestSigns ? '🏆 ' + st.bestSigns + '/8' : 'Jogar' },
       { href: '#sinais', icon: '🤟', c: '#7b4fe0', t: 'Extra · Avatar VLibras', d: 'Avatar 3D faz ' + SIGNS.length + ' sinais do dia a dia.', s: st.signsSeen.length + '/' + SIGNS.length },
@@ -256,6 +258,8 @@
       html: '<div class="sc sc3"><div class="sc3-v"><video playsinline muted></video></div><div class="sc3-l"><b>O</b><b>I</b></div></div>' },
     { cap: 'O rosto muda o sentido: a pergunta também aparece no rosto.', libras: 'Você está bem?',
       html: '<div class="sc sc4"><div class="face">🙂</div><div class="bubble">?</div><div class="faces"><span>🙂</span><span>🤨</span><span>😮</span><span>😊</span></div></div>' },
+    { cap: 'Sente de frente, mãos livres e olho no olho: os sinais acontecem nesta área.', libras: 'Olhe nos olhos',
+      html: '<div class="sc sc6"><svg viewBox="0 0 220 240" class="seat"><rect x="40" y="170" width="140" height="14" rx="6" class="chair"/><rect x="52" y="184" width="10" height="46" class="chair"/><rect x="158" y="184" width="10" height="46" class="chair"/><circle cx="110" cy="52" r="26" class="sk"/><circle cx="101" cy="49" r="3.2" fill="#173b66"/><circle cx="119" cy="49" r="3.2" fill="#173b66"/><path d="M100 62q10 7 20 0" stroke="#173b66" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M70 175q0-80 40-80t40 80z" class="sh"/><path d="M78 120q-18 10-6 34" class="arm"/><path d="M142 120q18 10 6 34" class="arm"/><circle cx="72" cy="150" r="10" class="sk hand hl"/><circle cx="148" cy="150" r="10" class="sk hand hr"/><rect x="44" y="18" width="132" height="150" rx="14" class="zone"/></svg><span class="tag z1">🔲 Área dos sinais</span><span class="tag z2">👀 Olho no olho</span><span class="tag z3">🪑 De frente</span></div>' },
     { cap: 'Aprender Libras é construir pontes com a comunidade surda.', libras: 'Aprender Libras é construir pontes',
       html: '<div class="sc sc5"><span class="p a">🧏‍♀️</span><svg viewBox="0 0 300 120" class="bridge"><path d="M20 100 Q150 -10 280 100" /></svg><span class="p b">🧑</span><span class="heart h1">💛</span><span class="heart h2">💙</span><span class="heart h3">💚</span></div>' }
   ];
@@ -373,6 +377,7 @@
     $$('#vcGrid .vc-card').forEach((b) => b.addEventListener('click', () => openSign(+b.dataset.i)));
   }
   function openSign(i) {
+    stopVcSpell(); $('#vcSpell').innerHTML = '';
     vcIdx = (i + vcList.length) % vcList.length;
     const x = vcList[vcIdx];
     $('#vcWord').textContent = x.pt;
@@ -390,6 +395,7 @@
   }
   function closeSign() {
     const wasOpen = !$('#vcModal').hidden;
+    stopVcSpell(); toggleCam(false);
     $('#vcModal').hidden = true; document.body.classList.remove('modal-open'); vcVideo.pause();
     if (wasOpen && $('#vocab').classList.contains('on')) renderVocab();
   }
@@ -401,6 +407,51 @@
   $('#vcNext').addEventListener('click', () => openSign(vcIdx + 1));
   $('#vcSlow').addEventListener('click', (e) => { vcSlowOn = !vcSlowOn; vcVideo.playbackRate = vcSlowOn ? 0.5 : 1; e.currentTarget.setAttribute('aria-pressed', vcSlowOn); e.currentTarget.textContent = vcSlowOn ? '🐇 Normal' : '🐢 Devagar'; });
   $('#vcAvatar').addEventListener('click', () => sayLibras(vcList[vcIdx].pt));
+  /* Soletrar a palavra e espelho com a câmera (janela do sinal) */
+  let vcSpellJob = null, camStream = null;
+  function stopVcSpell() {
+    if (vcSpellJob) { vcSpellJob.stop = true; vcSpellJob = null; }
+    vcVideo.onended = null; vcVideo.onerror = null; vcVideo.loop = true;
+    $('#vcSpellBtn').textContent = '✍️ Soletrar';
+  }
+  $('#vcSpellBtn').addEventListener('click', () => {
+    const x = vcList[vcIdx]; if (!x) return;
+    if (vcSpellJob) { stopVcSpell(); vcVideo.src = vSrc(x.id); vcVideo.play().catch(() => {}); return; }
+    const ls = toLetters(x.pt);
+    const box = $('#vcSpell');
+    box.innerHTML = ls.map((l) => (l === ' ' ? '<i class="gap"></i>' : '<b>' + l + '</b>')).join('');
+    const chips = [...box.children];
+    $('#vcSpellBtn').textContent = '⏹ Parar';
+    vcSpellJob = playSequence(vcVideo, ls, {
+      rate: vcSlowOn ? 0.6 : 1,
+      onLetter: (i) => chips.forEach((c, j) => { c.classList.toggle('on', j === i); c.classList.toggle('done', j < i); }),
+      onEnd: () => {
+        chips.forEach((c) => { c.classList.remove('on'); c.classList.add('done'); });
+        vcSpellJob = null; $('#vcSpellBtn').textContent = '↻ Soletrar de novo';
+        setTimeout(() => { if (!vcSpellJob && !$('#vcModal').hidden) { vcVideo.loop = true; vcVideo.poster = vPoster(x.id); vcVideo.src = vSrc(x.id); vcVideo.play().catch(() => {}); } }, 900);
+      }
+    });
+  });
+  async function toggleCam(force) {
+    const on = force !== undefined ? force : !camStream;
+    if (!on) {
+      if (camStream) camStream.getTracks().forEach((t) => t.stop());
+      camStream = null; $('#vcCamBox').hidden = true; $('#vcCam').srcObject = null;
+      $('#vcCamBtn').setAttribute('aria-pressed', 'false'); $('#vcCamBtn').textContent = '📷 Espelho';
+      $('.modal-box').classList.remove('with-cam');
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('Este aparelho não permite usar a câmera aqui.'); return; }
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 } }, audio: false });
+      $('#vcCam').srcObject = camStream; $('#vcCamBox').hidden = false;
+      $('#vcCamBtn').setAttribute('aria-pressed', 'true'); $('#vcCamBtn').textContent = '📷 Fechar espelho';
+      $('.modal-box').classList.add('with-cam');
+      toast('Imite o sinal olhando para você mesmo. Nada é gravado.');
+    } catch (e) { toast('Não foi possível abrir a câmera. Permita o acesso nas configurações do navegador.', 4500); }
+  }
+  $('#vcCamBtn').addEventListener('click', () => toggleCam());
+
   document.addEventListener('keydown', (e) => {
     if ($('#vcModal').hidden) return;
     if (e.key === 'Escape') closeSign();
@@ -609,7 +660,7 @@
     $('#stats').innerHTML = [
       [percent() + '%', 'progresso geral'],
       [st.seen.length + '/27', 'letras vistas'],
-      [st.vocabSeen.length + '/' + (VOCAB_ALL.length || 163), 'sinais em vídeo vistos'],
+      [st.vocabSeen.length + '/' + (VOCAB_UNIQ || 311), 'sinais em vídeo vistos'],
       [st.bestSigns + '/8', 'melhor no “Qual é o sinal?”'],
       [st.signsSeen.length + '/' + SIGNS.length, 'sinais com o avatar'],
       [st.lessonDone ? '✔' : '—', 'Módulo 01 concluído'],
