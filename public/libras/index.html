@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="./icons/icon-180.png">
-<link rel="stylesheet" href="./app.css?v=9">
+<link rel="stylesheet" href="./app.css?v=10">
 </head>
 <body>
 
@@ -86,7 +86,7 @@
         <div class="head"><div><span class="eyebrow">Acervo</span><h1>Biblioteca</h1><p>Todo o material em vídeo do Conecta Libras.</p></div></div>
         <div class="modules">
           <a class="module" href="#alfabeto"><span class="qi" style="--c:#7b4fe0">✋</span><div><strong>Alfabeto manual</strong><small>27 vídeos: A–Z + Ç</small></div><span class="state">27</span></a>
-          <a class="module" href="#vocab"><span class="qi" style="--c:#e0457b">🎬</span><div><strong>Vocabulário em vídeo</strong><small>163 sinais em 12 temas</small></div><span class="state">163</span></a>
+          <a class="module" href="#vocab"><span class="qi" style="--c:#e0457b">🎬</span><div><strong>Vocabulário em vídeo</strong><small>311 sinais em 23 temas</small></div><span class="state">311</span></a>
           <a class="module" href="#sinais"><span class="qi" style="--c:#7b4fe0">🤟</span><div><strong>Avatar VLibras</strong><small>Avatar 3D faz qualquer palavra</small></div><span class="state">Avatar</span></a>
           <a class="module" href="#videos"><span class="qi" style="--c:#2878c8">▶️</span><div><strong>Aulas da Professora Jocimara</strong><small>23 gravações</small></div><span class="state">23</span></a>
           <a class="module" href="#aula"><span class="qi" style="--c:#25b7a8">📖</span><div><strong>Aula 01 · Primeiros passos</strong><small>Texto + atividade</small></div><span class="state">Aula</span></a>
@@ -97,7 +97,7 @@
       <section class="page" id="downloads">
         <div class="head"><div><span class="eyebrow">Central de Downloads</span><h1>Usar sem internet</h1><p>Guarde os vídeos neste aparelho.</p></div></div>
         <div class="panel">
-          <h2>Alfabeto + vocabulário (190 vídeos · cerca de 10 MB)</h2>
+          <h2>Alfabeto + vocabulário (338 vídeos · cerca de 18 MB)</h2>
           <p class="muted" id="dlStatus">Verificando…</p>
           <div class="bar"><span id="dlBar" style="width:0"></span></div>
           <button class="btn gold" id="dlBtn" type="button">⬇ Baixar para usar sem internet</button>
@@ -148,7 +148,7 @@
 
       <!-- VOCABULÁRIO EM VÍDEO (Signbank UFSC) -->
       <section class="page" id="vocab">
-        <div class="head"><div><span class="eyebrow">Módulo 03</span><h1>Vocabulário em vídeo</h1><p>Pessoas surdas sinalizando. Escolha um tema e toque num sinal.</p></div></div>
+        <div class="head"><div><span class="eyebrow">Módulo 03</span><h1>Vocabulário em vídeo</h1><p>311 sinais feitos por pessoas surdas, em 23 temas. Toque num sinal para ver, soletrar e treinar no espelho.</p></div></div>
         <div class="chips" id="vcChips"></div>
         <div class="vc-grid" id="vcGrid"></div>
         <p class="credit">Vídeos: <b>Signbank da Libras</b> (UFSC · Levante Lab) — licença CC BY-NC-SA 4.0. <a href="./creditos.html">Ver créditos de cada sinal</a></p>
@@ -262,16 +262,22 @@
     <div class="vc-stage"><video id="vcVideo" playsinline muted loop preload="auto"></video></div>
     <h2 id="vcWord">Sinal</h2>
     <p class="vc-sub" id="vcSub"></p>
+    <div class="vc-spell" id="vcSpell" aria-live="polite"></div>
+    <div class="vc-cam" id="vcCamBox" hidden><video id="vcCam" playsinline muted autoplay></video><span>Você</span></div>
     <div class="controls vc-controls">
       <button type="button" id="vcPrev" aria-label="Sinal anterior">←</button>
       <button type="button" id="vcSlow" aria-pressed="false">🐢 Devagar</button>
-      <button type="button" id="vcAvatar">🤟 Avatar</button>
       <button type="button" id="vcNext" aria-label="Próximo sinal">→</button>
+    </div>
+    <div class="vc-tools">
+      <button type="button" id="vcSpellBtn">✍️ Soletrar</button>
+      <button type="button" id="vcCamBtn" aria-pressed="false">📷 Espelho</button>
+      <button type="button" id="vcAvatar">🤟 Avatar</button>
     </div>
   </div>
 </div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="./app.js?v=9"></script>
+<script src="./app.js?v=10"></script>
 </body>
 </html>
