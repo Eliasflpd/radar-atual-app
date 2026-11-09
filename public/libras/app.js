@@ -55,14 +55,19 @@
   if (location.hash.length > 1 && location.hash !== '#inicio') $('#splash').classList.add('hide');
 
   /* ---------- Rotas ---------- */
-  const PAGES = ['inicio', 'aulas', 'aula', 'atividade', 'alfabeto', 'praticar', 'videos', 'perfil'];
-  const NAV_OF = { aula: 'aulas', atividade: 'aulas', videos: 'videos' };
+  const PAGES = ['inicio', 'aulas', 'aula', 'atividade', 'alfabeto', 'praticar', 'videos', 'perfil', 'biblioteca', 'downloads', 'avisos'];
+  const SIDE_OF = { aula: 'aulas', atividade: 'aulas', avisos: 'inicio' };
+  const BOTTOM_OF = { aula: 'aulas', atividade: 'aulas', praticar: 'aulas', alfabeto: 'biblioteca', videos: 'biblioteca', avisos: 'inicio' };
+  let scrollToFavs = false;
   function route() {
     let id = (location.hash || '#inicio').slice(1).split('/')[0];
     if (!PAGES.includes(id)) id = 'inicio';
     PAGES.forEach((p) => $('#' + p).classList.toggle('on', p === id));
-    const nav = NAV_OF[id] || id;
-    $$('[data-nav]').forEach((a) => a.classList.toggle('on', a.dataset.nav === (nav === 'videos' && a.closest('.bottom') ? 'aulas' : nav)));
+    document.body.classList.toggle('on-inicio', id === 'inicio');
+    $$('.side [data-nav]').forEach((a) => a.classList.toggle('on', a.dataset.nav === (SIDE_OF[id] || id)));
+    $$('.bottom [data-nav]').forEach((a) => a.classList.toggle('on', a.dataset.nav === (BOTTOM_OF[id] || id)));
+    if (id === 'avisos') { st.avisosSeen = true; save(); }
+    if (id === 'downloads') checkDownloads();
     if (id !== 'alfabeto') $('#abVideo').pause();
     if (id !== 'praticar') stopGame();
     if (id !== 'videos') closeDrive();
@@ -74,7 +79,9 @@
     if (id === 'praticar') renderPracticeMenu();
     if (id === 'perfil') renderProfile();
     window.scrollTo(0, 0);
+    if (id === 'perfil' && scrollToFavs) { scrollToFavs = false; setTimeout(() => $('#favList').scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); }
   }
+  $$('[data-favs]').forEach((a) => a.addEventListener('click', () => { scrollToFavs = true; }));
   window.addEventListener('hashchange', route);
 
   /* ---------- Progresso ---------- */
@@ -84,15 +91,32 @@
   }
 
   function renderHome() {
-    const p = percent();
-    $('#ringFg').style.strokeDasharray = p + ' 100';
-    $('#ringTxt').textContent = p + '%';
-    let html;
-    if (!st.lessonDone) html = '<div><strong>Comece pela Aula 01</strong><p>Três conteúdos curtos e uma atividade.</p></div><a class="btn gold" href="#aula">Começar a aula →</a>';
-    else if (st.seen.length < LETTERS.length) html = '<div><strong>Continue no alfabeto manual</strong><p>' + st.seen.length + ' de 27 letras vistas.</p></div><a class="btn" href="#alfabeto">Continuar →</a>';
-    else html = '<div><strong>Hora de praticar!</strong><p>Melhor resultado: ' + st.best + ' de 10.</p></div><a class="btn" href="#praticar">Praticar →</a>';
-    $('#continueBox').innerHTML = html;
+    $('#bellDot').hidden = !!st.avisosSeen;
   }
+
+  /* ---------- Central de Downloads ---------- */
+  const VIDEO_URLS = LETTERS.map((l) => new URL(src(l), location.href).href);
+  async function checkDownloads() {
+    const status = $('#dlStatus'), btn = $('#dlBtn');
+    if (!('caches' in window)) { status.textContent = 'Este navegador não permite guardar vídeos.'; btn.disabled = true; return; }
+    let n = 0;
+    try { const c = await caches.open('conecta-libras-downloads'); for (const u of VIDEO_URLS) if (await c.match(u)) n++; } catch (e) {}
+    $('#dlBar').style.width = (n / VIDEO_URLS.length * 100) + '%';
+    if (n === VIDEO_URLS.length) { status.textContent = '✔ Todos os 27 vídeos estão guardados neste aparelho.'; btn.textContent = '✔ Baixado'; btn.disabled = true; }
+    else { status.textContent = n ? n + ' de 27 vídeos guardados.' : 'Ainda não baixado.'; btn.disabled = false; btn.textContent = '⬇ Baixar para usar sem internet'; }
+  }
+  $('#dlBtn').addEventListener('click', async () => {
+    const btn = $('#dlBtn'); btn.disabled = true;
+    let n = 0, fail = 0;
+    const c = await caches.open('conecta-libras-downloads');
+    for (const u of VIDEO_URLS) {
+      try { if (!(await c.match(u))) { const r = await fetch(u); if (!r.ok) throw 0; await c.put(u, r); } n++; } catch (e) { fail++; }
+      $('#dlBar').style.width = ((n + fail) / VIDEO_URLS.length * 100) + '%';
+      $('#dlStatus').textContent = 'Baixando… ' + (n + fail) + ' de 27';
+    }
+    if (fail) $('#dlStatus').textContent = n + ' baixados, ' + fail + ' falharam. Verifique a internet e toque de novo.';
+    checkDownloads();
+  });
 
   function renderModules() {
     const mods = [
@@ -275,7 +299,7 @@
   $('#gExit').addEventListener('click', () => { stopGame(); renderPracticeMenu(); });
 
   /* ---------- Vídeos da professora ---------- */
-  $('#vGrid').innerHTML = DRIVE.map((id, i) => '<button type="button" class="vcard" data-v="' + i + '"><span class="thumb">▶</span><strong>Aula ' + String(i + 1).padStart(2, '0') + '</strong><small>Professora Jocimara</small></button>').join('');
+  $('#vGrid').innerHTML = DRIVE.map((id, i) => '<button type="button" class="vcard" data-v="' + i + '"><span class="thumb"><img src="https://drive.google.com/thumbnail?id=' + id + '&amp;sz=w480" alt="" loading="lazy" onerror="this.remove()"><span class="play" aria-hidden="true">▶</span></span><strong>Aula ' + String(i + 1).padStart(2, '0') + '</strong><small>Professora Jocimara</small></button>').join('');
   $$('#vGrid .vcard').forEach((b) => b.addEventListener('click', () => {
     const i = +b.dataset.v, id = DRIVE[i];
     $('#vTitle').textContent = 'Aula ' + String(i + 1).padStart(2, '0');
