@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Conecta Libras</title>
+<meta name="description" content="Aprenda Libras no seu ritmo: alfabeto manual em vídeo, aulas, prática e progresso. Celular, tablet e computador.">
+<meta name="theme-color" content="#071e3c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Conecta Libras">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+<link rel="stylesheet" href="./app.css?v=4">
+</head>
+<body>
+
+<!-- Abertura -->
+<div id="splash" role="dialog" aria-label="Boas-vindas ao Conecta Libras">
+  <div class="splash-frame">
+    <img src="./img/capa.jpg" alt="Conecta Libras — Aprenda, pratique, compartilhe. Professora sinalizando." width="650" height="1024">
+    <button id="start" class="js-start" type="button" aria-label="Começar"></button>
+  </div>
+  <!-- Versão deitada (computador / tablet deitado) -->
+  <div class="splash-wide">
+    <div class="sw-photo"><img src="./img/capa-foto.jpg" alt="Professora sinalizando em Libras" width="650" height="448"></div>
+    <div class="sw-text">
+      <img class="sw-logo" src="./img/logo-transp.png" alt="" width="305" height="165">
+      <h1 class="sw-title">CONECTA<span>LIBRAS</span></h1>
+      <p class="sw-tag">Aprenda • Pratique • Compartilhe</p>
+      <button class="sw-start js-start" type="button">Começar <b aria-hidden="true">›</b></button>
+      <p class="sw-small">Alfabeto manual em vídeo, aulas e prática — no celular, tablet e computador.</p>
+    </div>
+  </div>
+  <button id="skip" type="button">Pular</button>
+</div>
+
+<div id="app">
+  <header class="top">
+    <a class="brand" href="#inicio" aria-label="Conecta Libras — início">
+      <img src="./img/logo-transp.png" alt="" width="54" height="29">
+      <span>CONECTA LIBRAS<small>Aprender é construir pontes</small></span>
+    </a>
+    <button class="install" id="installBtn" type="button" hidden>⬇ Instalar app</button>
+  </header>
+
+  <div class="body">
+    <nav class="side" aria-label="Navegação principal">
+      <a href="#inicio" data-nav="inicio"><b>⌂</b>Início</a>
+      <a href="#aulas" data-nav="aulas"><b>▤</b>Aulas</a>
+      <a href="#alfabeto" data-nav="alfabeto"><b>✋</b>Alfabeto manual</a>
+      <a href="#praticar" data-nav="praticar"><b>✦</b>Praticar</a>
+      <a href="#videos" data-nav="videos"><b>▶</b>Vídeos da professora</a>
+      <a href="#perfil" data-nav="perfil"><b>◉</b>Meu progresso</a>
+      <p class="side-note">Aprender uma língua é construir pontes entre pessoas.</p>
+    </nav>
+
+    <main id="main" tabindex="-1">
+
+      <!-- INÍCIO -->
+      <section class="page" id="inicio">
+        <a class="banner" href="#videos"><img src="./img/banner.jpg" alt="Aulas da Professora Jocimara — 23 vídeos" width="768" height="260"></a>
+        <div class="hello">
+          <div><span class="eyebrow">Sua jornada começa aqui</span><h1>Aprenda Libras no seu ritmo.</h1></div>
+          <div class="ring" id="homeRing" aria-label="Progresso geral"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" class="ring-bg"/><circle cx="18" cy="18" r="15.9" class="ring-fg" id="ringFg"/></svg><span id="ringTxt">0%</span></div>
+        </div>
+        <div class="quick">
+          <a href="#aula"><span class="qi" style="--c:#2878c8">📖</span><strong>Aula 01</strong><small>Primeiros passos</small></a>
+          <a href="#alfabeto"><span class="qi" style="--c:#7b4fe0">✋</span><strong>Alfabeto</strong><small>27 vídeos A–Z + Ç</small></a>
+          <a href="#praticar"><span class="qi" style="--c:#1f9d6b">🎯</span><strong>Praticar</strong><small>Exercícios interativos</small></a>
+          <a href="#perfil"><span class="qi" style="--c:#e0457b">💗</span><strong>Favoritos</strong><small>Letras salvas</small></a>
+        </div>
+        <div class="panel continue" id="continueBox"></div>
+      </section>
+
+      <!-- AULAS -->
+      <section class="page" id="aulas">
+        <div class="head"><div><span class="eyebrow">Trilhas de aprendizagem</span><h1>Aulas</h1><p>Comece pelo módulo 1 e avance etapa por etapa.</p></div></div>
+        <div class="modules" id="modules"></div>
+      </section>
+
+      <!-- AULA 01 -->
+      <section class="page" id="aula">
+        <div class="head"><div><span class="eyebrow">Módulo 01 · Primeiros passos</span><h1 id="lsTitle">Libras é uma língua</h1></div><a class="btn pale" href="#aulas">← Aulas</a></div>
+        <div class="lesson">
+          <div class="lesson-visual"><div class="emoji" id="lsEmoji">🤟</div><h3 id="lsVisual"></h3><p id="lsDesc"></p></div>
+          <div class="panel lesson-copy">
+            <div>
+              <div class="step" id="lsStep">CONTEÚDO 1 DE 3</div>
+              <div class="bar"><span id="lsBar"></span></div>
+              <p id="lsText"></p>
+              <div class="key" id="lsKey"></div>
+            </div>
+            <div class="row">
+              <button class="btn pale" id="lsPrev" type="button">← Voltar</button>
+              <button class="btn" id="lsNext" type="button">Próximo →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ATIVIDADE DA AULA -->
+      <section class="page" id="atividade">
+        <div class="head"><div><span class="eyebrow">Atividade da Aula 01</span><h1>Vamos conferir?</h1></div><a class="btn pale" href="#aula">← Revisar</a></div>
+        <div class="panel quiz" id="conceptQuiz"></div>
+      </section>
+
+      <!-- ALFABETO -->
+      <section class="page" id="alfabeto">
+        <div class="head"><div><span class="eyebrow">Módulo 02</span><h1>Alfabeto manual</h1><p>Toque em uma letra para assistir. A–Z + Ç.</p></div></div>
+        <div class="alpha">
+          <div class="panel player">
+            <div class="player-head"><h2 id="abTitle">Letra A</h2><span class="pill" id="abCount">1 / 27</span><button class="fav" id="abFav" type="button" aria-pressed="false" aria-label="Favoritar letra">♡</button></div>
+            <div class="stage"><video id="abVideo" playsinline muted loop preload="auto"></video></div>
+            <div class="controls">
+              <button type="button" id="abPrev" aria-label="Letra anterior">←</button>
+              <button type="button" id="abReplay">↻ Repetir</button>
+              <button type="button" id="abSpeed" aria-pressed="false">🐢 Devagar</button>
+              <button type="button" id="abNext" aria-label="Próxima letra">→</button>
+            </div>
+          </div>
+          <div class="panel letters-panel">
+            <div class="letters" id="letters"></div>
+            <p class="hint">✔ = letra já vista · ♥ = favorita. No computador, use as setas ← →.</p>
+          </div>
+        </div>
+        <div class="note"><b>Revisão pedagógica:</b> vídeos do material enviado. A correspondência de cada letra deve ser conferida pela professora antes da publicação oficial.</div>
+      </section>
+
+      <!-- PRATICAR -->
+      <section class="page" id="praticar">
+        <div class="head"><div><span class="eyebrow">Aprendizagem ativa</span><h1>Praticar</h1><p>Escolha um exercício.</p></div></div>
+        <div class="practice-menu" id="practiceMenu">
+          <button type="button" class="pcard" data-mode="letras"><span class="qi" style="--c:#7b4fe0">✋</span><strong>Qual é a letra?</strong><small>Assista ao sinal e escolha a letra certa. 10 rodadas.</small><em id="bestScore"></em></button>
+          <button type="button" class="pcard" data-mode="conceitos"><span class="qi" style="--c:#2878c8">💡</span><strong>Conceitos de Libras</strong><small>Perguntas sobre a Aula 01.</small></button>
+        </div>
+        <div class="panel game" id="game" hidden>
+          <div class="game-head"><span class="pill" id="gRound">1 / 10</span><span class="pill ok" id="gScore">0 acertos</span><button class="btn pale small" id="gExit" type="button">Sair</button></div>
+          <div class="stage quizstage"><video id="gVideo" playsinline muted loop preload="auto"></video><div class="cover" aria-hidden="true"></div></div>
+          <div class="choices letters-choice" id="gChoices"></div>
+          <div class="feedback" id="gFeedback" aria-live="polite"></div>
+          <button class="btn" id="gNext" type="button" hidden>Próxima →</button>
+        </div>
+      </section>
+
+      <!-- VÍDEOS -->
+      <section class="page" id="videos">
+        <div class="head"><div><span class="eyebrow">Acervo da professora</span><h1>Aulas da Professora Jocimara</h1><p>23 gravações enviadas para o Conecta Libras.</p></div></div>
+        <div class="panel vplayer" id="vPlayer" hidden>
+          <div class="player-head"><h2 id="vTitle">Aula</h2><button class="btn pale small" id="vClose" type="button">Fechar ✕</button></div>
+          <div class="vframe"><iframe id="vFrame" title="Aula da professora Jocimara" allow="autoplay; fullscreen" allowfullscreen></iframe></div>
+          <a id="vOpen" class="link" target="_blank" rel="noopener">Não carregou? Abrir no Google Drive ↗</a>
+        </div>
+        <div class="vgrid" id="vGrid"></div>
+        <div class="note">Os vídeos ficam no Google Drive da professora e precisam estar compartilhados como “Qualquer pessoa com o link” para tocar aqui.</div>
+      </section>
+
+      <!-- PERFIL -->
+      <section class="page" id="perfil">
+        <div class="head"><div><span class="eyebrow">Sua jornada</span><h1>Meu progresso</h1><p>Fica salvo neste aparelho.</p></div></div>
+        <div class="stats" id="stats"></div>
+        <div class="panel"><h2>Letras favoritas</h2><div class="favs" id="favList"></div></div>
+        <div class="panel">
+          <h2>Acessibilidade</h2>
+          <label class="switch"><input type="checkbox" id="optBig"><span>Texto maior</span></label>
+          <label class="switch"><input type="checkbox" id="optContrast"><span>Alto contraste</span></label>
+          <label class="switch"><input type="checkbox" id="optMotion"><span>Reduzir animações</span></label>
+        </div>
+        <div class="panel">
+          <h2>Instalar no aparelho</h2>
+          <p class="muted" id="installHelp">No Android/computador, toque em “Instalar app”. No iPhone/iPad (Safari): toque em <b>Compartilhar</b> ⬆ e depois em <b>Adicionar à Tela de Início</b>.</p>
+          <button class="btn pale" id="resetBtn" type="button">Reiniciar progresso</button>
+        </div>
+      </section>
+
+      <footer class="foot">Conecta Libras · Conteúdo linguístico sujeito à validação de pessoas surdas fluentes e profissionais qualificados.</footer>
+    </main>
+  </div>
+
+  <nav class="bottom" aria-label="Navegação">
+    <a href="#inicio" data-nav="inicio"><b>⌂</b>Início</a>
+    <a href="#aulas" data-nav="aulas"><b>▤</b>Aulas</a>
+    <a href="#alfabeto" data-nav="alfabeto"><b>✋</b>Alfabeto</a>
+    <a href="#praticar" data-nav="praticar"><b>✦</b>Praticar</a>
+    <a href="#perfil" data-nav="perfil"><b>◉</b>Perfil</a>
+  </nav>
+</div>
+
+<script src="./app.js?v=4"></script>
+</body>
+</html>
