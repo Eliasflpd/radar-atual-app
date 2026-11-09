@@ -1,0 +1,21 @@
+{
+  "aviso": "Frases montadas sinal por sinal para estudo, com vídeos do Signbank da Libras (UFSC). Em Libras, EU e VOCÊ são feitos apontando. Na conversa real a expressão do rosto e o movimento ligam os sinais: confira com a professora.",
+  "frases": [
+    { "pt": "Meu nome é Ana.", "tema": "Apresentação", "itens": [["v", 3201, "MEU"], ["v", 1990, "NOME"], ["s", "ANA"]] },
+    { "pt": "Qual é o seu nome?", "tema": "Apresentação", "q": true, "itens": [["v", 1990, "NOME"], ["p", "voce"], ["v", 2388, "QUAL"]] },
+    { "pt": "Eu sou surdo.", "tema": "Apresentação", "itens": [["p", "eu"], ["v", 2722, "SURDO"]] },
+    { "pt": "Eu sou ouvinte.", "tema": "Apresentação", "itens": [["p", "eu"], ["v", 2078, "OUVINTE"]] },
+    { "pt": "Eu estudo Libras.", "tema": "Estudo", "itens": [["p", "eu"], ["v", 1157, "ESTUDAR"], ["v", 1682, "LIBRAS"]] },
+    { "pt": "Você entende Libras?", "tema": "Estudo", "q": true, "itens": [["p", "voce"], ["v", 1094, "ENTENDER"], ["v", 1682, "LIBRAS"]] },
+    { "pt": "Eu não entendo. Repete devagar, por favor.", "tema": "Estudo", "itens": [["p", "eu"], ["v", 1094, "ENTENDER"], ["v", 1957, "NÃO"], ["v", 831, "DE-NOVO"], ["v", 893, "DEVAGAR"], ["v", 1020, "POR-FAVOR"]] },
+    { "pt": "Onde fica o banheiro?", "tema": "Dia a dia", "q": true, "itens": [["v", 312, "BANHEIRO"], ["v", 2053, "ONDE"]] },
+    { "pt": "Eu quero água.", "tema": "Dia a dia", "itens": [["p", "eu"], ["v", 2403, "QUERER"], ["v", 83, "ÁGUA"]] },
+    { "pt": "Estou com fome.", "tema": "Dia a dia", "itens": [["p", "eu"], ["v", 1275, "FOME"]] },
+    { "pt": "Eu gosto de café.", "tema": "Dia a dia", "itens": [["p", "eu"], ["v", 1403, "GOSTAR"], ["v", 454, "CAFÉ"]] },
+    { "pt": "Eu preciso de ajuda.", "tema": "Dia a dia", "itens": [["p", "eu"], ["v", 2311, "PRECISAR"], ["v", 90, "AJUDAR"]] },
+    { "pt": "Amanhã eu vou à escola.", "tema": "Rotina", "itens": [["v", 123, "AMANHÃ"], ["p", "eu"], ["v", 3173, "IR"], ["v", 1103, "ESCOLA"]] },
+    { "pt": "Hoje estou muito feliz.", "tema": "Sentimentos", "itens": [["v", 1458, "HOJE"], ["p", "eu"], ["v", 1221, "FELIZ"], ["v", 1942, "MUITO"]] },
+    { "pt": "Eu amo minha família.", "tema": "Sentimentos", "itens": [["p", "eu"], ["v", 140, "AMOR"], ["v", 3201, "MEU"], ["v", 1200, "FAMÍLIA"]] },
+    { "pt": "Obrigado, professor!", "tema": "Cumprimentos", "itens": [["v", 80, "OBRIGADO"], ["v", 2351, "PROFESSOR"]] }
+  ]
+}

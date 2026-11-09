@@ -451,3 +451,38 @@ body.modal-open{overflow:hidden}
 .sc6 .tag{position:absolute;background:#fff;color:#071e3c;font-weight:900;border-radius:99px;padding:6px 14px;font-size:clamp(13px,1.8vw,18px);opacity:0;animation:pop .5s both}
 .sc6 .z1{left:5%;top:14%;animation-delay:.6s}.sc6 .z2{right:5%;top:30%;animation-delay:2s}.sc6 .z3{left:6%;bottom:12%;animation-delay:3.4s}
 .vc-controls{grid-template-columns:48px 1fr 48px!important}
+
+/* ===== Módulo 05: frases ===== */
+.fr-player{text-align:center}
+.fr-stage{position:relative;width:min(100%,58dvh,460px);aspect-ratio:1;margin:0 auto;border-radius:18px;overflow:hidden;background:#1f4fa8}
+.fr-stage video{width:100%;height:100%;object-fit:cover;display:block}
+.fr-point{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:radial-gradient(circle,#2b6fd6,#173b66);color:#fff;animation:pop .25s ease}
+.fr-point[hidden]{display:none}
+.fr-hand{font-size:clamp(70px,16vw,120px);animation:pointMe 1s ease-in-out infinite}
+.fr-point.you .fr-hand{animation:pointYou 1s ease-in-out infinite}
+@keyframes pointMe{50%{transform:translateY(-8px) scale(1.06)}}
+@keyframes pointYou{50%{transform:scale(1.15)}}
+.fr-point b{font-size:clamp(28px,6vw,44px);font-weight:900;letter-spacing:.06em}
+.fr-point small{font-size:.9em;color:#cfe0f5;font-weight:700}
+.fr-gloss{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px}
+.fr-gloss span{border-radius:10px;padding:6px 10px;background:#e8f1fb;color:var(--navy2);font-weight:900;font-size:.85em;transition:.2s}
+.fr-gloss span.on{background:var(--yellow);color:#071e3c;transform:scale(1.1)}
+.fr-gloss span.done{background:#e3f5f2;color:var(--ok)}
+.fr-gloss span.q{background:#fde8ef;color:#b0285a}
+.fr-pt{margin:10px 0 6px;font-size:1.35em}
+.fr-ctrl{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.fr-list{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+@media (min-width:600px){.fr-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:960px){.fr-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.fr-item{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:12px 14px;border-radius:16px;border:2px solid transparent;background:var(--card);box-shadow:var(--shadow);cursor:pointer;color:var(--navy2)}
+.fr-item.on{border-color:var(--blue)}
+.fr-item b{font-size:1em}
+.fr-item small{color:var(--muted);font-size:.72em;font-weight:700;letter-spacing:.02em}
+.fr-tag{font-size:.65em;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--teal)}
+.fr-item.seen:after{content:"✔";position:absolute;top:10px;right:12px;color:var(--teal);font-weight:900}
+.game.frase-mode .word-choice{grid-template-columns:1fr!important}
+.game.frase-mode .word-choice button{font-size:1em!important;letter-spacing:0}
+.quizstage .fr-point{border-radius:inherit}
+/* ===== Dicionário ===== */
+#dicSearch{max-width:none;margin-top:12px;font-size:1.05em}
+.dic-none{margin-top:14px}

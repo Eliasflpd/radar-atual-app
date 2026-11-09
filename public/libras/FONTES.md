@@ -333,6 +333,10 @@ Atualizado em 09/11/2026.
 | Fé e comunidade | Paz | PAZ | https://signbank.levantelab.com.br/pt/signs/view/2174 |
 | Fé e comunidade | Batismo | BATISMO | https://signbank.levantelab.com.br/pt/signs/view/3132 |
 
+## Frases (Módulo 05)
+
+- 16 frases montadas sinal por sinal com vídeos do Signbank da Libras (mesma licença CC BY-NC-SA 4.0). EU e VOCÊ aparecem como cartão animado de "apontar". Ordem dos sinais a conferir com a professora.
+
 ## Outros materiais
 
 - **Alfabeto manual (27 vídeos):** material enviado pelo dono do projeto; origem a confirmar. Vídeos cortados para mostrar só a letra certa.
