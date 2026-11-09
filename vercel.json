@@ -1,5 +1,16 @@
 {
   "outputDirectory": "public",
+  "redirects": [
+    { "source": "/libras", "destination": "/libras/", "permanent": false },
+    { "source": "/Libras", "destination": "/libras/", "permanent": false },
+    { "source": "/Libras/", "destination": "/libras/", "permanent": false },
+    { "source": "/LIBRAS", "destination": "/libras/", "permanent": false },
+    { "source": "/LIBRAS/", "destination": "/libras/", "permanent": false },
+    { "source": "/conecta", "destination": "/libras/", "permanent": false },
+    { "source": "/Conecta", "destination": "/libras/", "permanent": false },
+    { "source": "/conectalibras", "destination": "/libras/", "permanent": false },
+    { "source": "/ConectaLibras", "destination": "/libras/", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/api/hit",      "destination": "/api/dados?fn=hit" },
     { "source": "/api/hist",     "destination": "/api/dados?fn=hist" },
