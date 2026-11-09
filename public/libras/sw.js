@@ -1,7 +1,7 @@
 /* Conecta Libras — funciona sem internet depois da primeira visita */
-const CACHE = 'conecta-libras-v5';
+const CACHE = 'conecta-libras-v6';
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat('C-cedilha');
-const SHELL = ['./', './index.html', './app.css?v=5', './app.js?v=5', './manifest.webmanifest',
+const SHELL = ['./', './index.html', './app.css?v=6', './app.js?v=6', './manifest.webmanifest',
   './img/capa.jpg', './img/capa-foto.jpg', './img/banner.jpg', './img/prof.jpg', './img/logo-transp.png', './icons/icon-192.png', './icons/icon-180.png']
   .concat(LETTERS.map((l) => './alfabeto/' + l + '.jpg'));
 const VIDEOS = LETTERS.map((l) => './alfabeto/' + l + '.mp4');
@@ -58,7 +58,10 @@ self.addEventListener('fetch', (e) => {
 
   // Páginas: rede primeiro (para pegar atualizações), cache se estiver sem internet
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then((r) => { caches.open(CACHE).then((c) => c.put('./', r.clone())); return r; })
+    const root = new URL('./', self.location).pathname;
+    const isApp = url.pathname === root || url.pathname === root + 'index.html';
+    if (!isApp) return; // outras páginas (ex.: /libras/teste/) vão direto para a rede
+    e.respondWith(fetch(req).then((r) => { if (r.ok) { const cp = r.clone(); caches.open(CACHE).then((c) => c.put('./', cp)); } return r; })
       .catch(() => caches.match('./')));
     return;
   }
