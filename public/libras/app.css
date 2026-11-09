@@ -25,6 +25,35 @@ p{margin:.4em 0}
 @keyframes pulse{50%{box-shadow:0 0 0 8px #ffc85744}}
 #skip{position:absolute;right:max(14px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));border:1px solid #ffffff80;border-radius:30px;padding:8px 14px;color:#fff;background:#071e3cc0}
 
+/* Capa deitada */
+.splash-wide{display:none}
+@media (min-width:900px) and (min-aspect-ratio:5/4){
+  #splash{padding:0;background:radial-gradient(ellipse at 20% 60%,#1d5fc4 0%,#0a2a63 38%,#06172d 75%)}
+  .splash-frame{display:none}
+  .splash-wide{position:relative;display:grid;grid-template-columns:1.1fr 1fr;align-items:center;width:100%;height:100%;overflow:hidden}
+  .splash-wide:before{content:"";position:absolute;inset:0;pointer-events:none;background:
+    radial-gradient(ellipse 60% 18% at 30% 82%,#ffc85738,transparent 70%),
+    radial-gradient(ellipse 50% 30% at 75% 20%,#25b7a826,transparent 70%),
+    linear-gradient(115deg,transparent 40%,#4aa3ff1c 50%,transparent 60%)}
+  .sw-photo{position:relative;align-self:end;height:100%;display:flex;align-items:flex-end;justify-content:center}
+  .sw-photo img{display:block;width:100%;height:auto;max-height:92vh;object-fit:contain;object-position:bottom;
+    -webkit-mask-image:linear-gradient(to right,#000 70%,transparent),linear-gradient(to bottom,transparent,#000 18%);-webkit-mask-composite:source-in;
+    mask-image:linear-gradient(to right,#000 70%,transparent),linear-gradient(to bottom,transparent,#000 18%);mask-composite:intersect;
+    animation:rise .8s ease-out both}
+  .sw-text{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 6vw 0 2vw;color:#fff;animation:fade .8s .15s ease-out both}
+  .sw-logo{width:clamp(180px,20vw,300px);height:auto;filter:drop-shadow(0 10px 24px #0008)}
+  .sw-title{margin:.15em 0 0;font-size:clamp(48px,6.4vw,104px);font-weight:900;font-style:italic;line-height:.95;letter-spacing:.01em;color:#fff;
+    background:linear-gradient(180deg,#fff 30%,#bcd9f7 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 6px 18px #000a)}
+  .sw-title span{display:block;font-size:1.18em}
+  .sw-tag{margin:.6em 0 1.4em;font-size:clamp(18px,1.8vw,28px);color:#e7f0fb;font-weight:500}
+  .sw-start{display:inline-flex;align-items:center;gap:.6em;border:0;border-radius:999px;padding:.55em 1.8em;font-size:clamp(22px,2vw,32px);font-weight:900;color:#071e3c;
+    background:linear-gradient(180deg,#ffe066,#ffc21a);box-shadow:0 0 0 6px #ffffff14,0 14px 34px #000a;animation:pulse 2.2s ease-in-out infinite}
+  .sw-start b{font-size:1.2em;line-height:1}
+  .sw-start:hover{filter:brightness(1.05);transform:translateY(-2px)}
+  .sw-small{margin-top:1.4em;font-size:clamp(13px,1vw,16px);color:#a9c1dc;max-width:440px}
+}
+@keyframes rise{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+
 /* Estrutura */
 #app{min-height:100dvh}
 .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--navy);color:#fff;padding:calc(8px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left));min-height:60px}

@@ -49,7 +49,7 @@
 
   /* ---------- Abertura ---------- */
   function enterApp() { $('#splash').classList.add('hide'); st.splashSeen = true; save(); }
-  $('#start').addEventListener('click', enterApp);
+  $$('.js-start').forEach((b) => b.addEventListener('click', enterApp));
   $('#skip').addEventListener('click', enterApp);
   // O app sempre abre pela capa (só pula se vier de um link direto para uma tela)
   if (location.hash.length > 1 && location.hash !== '#inicio') $('#splash').classList.add('hide');
