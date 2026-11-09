@@ -1,8 +1,8 @@
 /* Conecta Libras — funciona sem internet depois da primeira visita */
-const CACHE = 'conecta-libras-v4';
+const CACHE = 'conecta-libras-v5';
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat('C-cedilha');
-const SHELL = ['./', './index.html', './app.css?v=4', './app.js?v=4', './manifest.webmanifest',
-  './img/capa.jpg', './img/capa-foto.jpg', './img/banner.jpg', './img/logo-transp.png', './icons/icon-192.png', './icons/icon-180.png']
+const SHELL = ['./', './index.html', './app.css?v=5', './app.js?v=5', './manifest.webmanifest',
+  './img/capa.jpg', './img/capa-foto.jpg', './img/banner.jpg', './img/prof.jpg', './img/logo-transp.png', './icons/icon-192.png', './icons/icon-180.png']
   .concat(LETTERS.map((l) => './alfabeto/' + l + '.jpg'));
 const VIDEOS = LETTERS.map((l) => './alfabeto/' + l + '.mp4');
 
@@ -15,7 +15,7 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('conecta-libras-') && k !== CACHE).map((k) => caches.delete(k))))
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('conecta-libras-') && k !== CACHE && k !== 'conecta-libras-downloads').map((k) => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
@@ -43,7 +43,7 @@ self.addEventListener('fetch', (e) => {
   if (url.pathname.endsWith('.mp4')) {
     e.respondWith((async () => {
       const c = await caches.open(CACHE);
-      let res = await c.match(url.origin + url.pathname);
+      let res = await caches.match(url.origin + url.pathname);
       if (!res) {
         try {
           const full = await fetch(url.href);

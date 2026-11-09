@@ -13,7 +13,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="./icons/icon-180.png">
-<link rel="stylesheet" href="./app.css?v=4">
+<link rel="stylesheet" href="./app.css?v=5">
 </head>
 <body>
 
@@ -53,6 +53,8 @@
       <a href="#alfabeto" data-nav="alfabeto"><b>✋</b>Alfabeto manual</a>
       <a href="#praticar" data-nav="praticar"><b>✦</b>Praticar</a>
       <a href="#videos" data-nav="videos"><b>▶</b>Vídeos da professora</a>
+      <a href="#biblioteca" data-nav="biblioteca"><b>▥</b>Biblioteca</a>
+      <a href="#downloads" data-nav="downloads"><b>⬇</b>Downloads</a>
       <a href="#perfil" data-nav="perfil"><b>◉</b>Meu progresso</a>
       <p class="side-note">Aprender uma língua é construir pontes entre pessoas.</p>
     </nav>
@@ -61,18 +63,52 @@
 
       <!-- INÍCIO -->
       <section class="page" id="inicio">
-        <a class="banner" href="#videos"><img src="./img/banner.jpg" alt="Aulas da Professora Jocimara — 23 vídeos" width="768" height="260"></a>
-        <div class="hello">
-          <div><span class="eyebrow">Sua jornada começa aqui</span><h1>Aprenda Libras no seu ritmo.</h1></div>
-          <div class="ring" id="homeRing" aria-label="Progresso geral"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" class="ring-bg"/><circle cx="18" cy="18" r="15.9" class="ring-fg" id="ringFg"/></svg><span id="ringTxt">0%</span></div>
+        <header class="h-top">
+          <img class="h-logo" src="./img/logo-transp.png" alt="" width="305" height="165">
+          <div class="h-name">CONECTA<br>LIBRAS</div>
+          <a class="h-ib" href="#avisos" aria-label="Avisos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="dot" id="bellDot"></span></a>
+          <a class="h-ib" href="#perfil" aria-label="Perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></a>
+        </header>
+        <a class="h-banner" href="#videos"><img src="./img/banner.jpg" alt="Aulas da Professora Jocimara — 23 vídeos" width="768" height="260"></a>
+        <div class="h-grid">
+          <a class="h-card" href="#aulas"><span class="h-ic b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2z"/><path d="M22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/></svg></span><span class="h-tx"><strong>Aprender</strong><small>Trilhas e conteúdos</small></span></a>
+          <a class="h-card" href="#videos"><span class="h-ic p"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></span><span class="h-tx"><strong>Vídeos</strong><small>Aulas e sinais</small></span></a>
+          <a class="h-card" href="#praticar"><span class="h-ic g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><path d="M15 9l6-6M18 3h3v3"/></svg></span><span class="h-tx"><strong>Praticar</strong><small>Exercícios interativos</small></span></a>
+          <a class="h-card" href="#perfil" data-favs="1"><span class="h-ic k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 20s-7.5-4.5-9.3-9.2C1.4 7.3 3.7 4 7.2 4c2 0 3.6 1.1 4.8 2.8C13.2 5.1 14.8 4 16.8 4c3.5 0 5.8 3.3 4.5 6.8C19.5 15.5 12 20 12 20z"/></svg></span><span class="h-tx"><strong>Favoritos</strong><small>Seus conteúdos salvos</small></span></a>
+          <a class="h-card wide" href="#downloads"><span class="h-ic b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 17v3h16v-3"/></svg></span><span class="h-tx"><strong>Central de Downloads</strong><small>Baixe materiais e vídeos para usar sem internet</small></span><svg class="h-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a>
         </div>
-        <div class="quick">
-          <a href="#aula"><span class="qi" style="--c:#2878c8">📖</span><strong>Aula 01</strong><small>Primeiros passos</small></a>
-          <a href="#alfabeto"><span class="qi" style="--c:#7b4fe0">✋</span><strong>Alfabeto</strong><small>27 vídeos A–Z + Ç</small></a>
-          <a href="#praticar"><span class="qi" style="--c:#1f9d6b">🎯</span><strong>Praticar</strong><small>Exercícios interativos</small></a>
-          <a href="#perfil"><span class="qi" style="--c:#e0457b">💗</span><strong>Favoritos</strong><small>Letras salvas</small></a>
+      </section>
+
+      <!-- BIBLIOTECA -->
+      <section class="page" id="biblioteca">
+        <div class="head"><div><span class="eyebrow">Acervo</span><h1>Biblioteca</h1><p>Todo o material em vídeo do Conecta Libras.</p></div></div>
+        <div class="modules">
+          <a class="module" href="#alfabeto"><span class="qi" style="--c:#7b4fe0">✋</span><div><strong>Alfabeto manual</strong><small>27 vídeos: A–Z + Ç</small></div><span class="state">27</span></a>
+          <a class="module" href="#videos"><span class="qi" style="--c:#2878c8">▶️</span><div><strong>Aulas da Professora Jocimara</strong><small>23 gravações</small></div><span class="state">23</span></a>
+          <a class="module" href="#aula"><span class="qi" style="--c:#25b7a8">📖</span><div><strong>Aula 01 · Primeiros passos</strong><small>Texto + atividade</small></div><span class="state">Aula</span></a>
         </div>
-        <div class="panel continue" id="continueBox"></div>
+      </section>
+
+      <!-- DOWNLOADS -->
+      <section class="page" id="downloads">
+        <div class="head"><div><span class="eyebrow">Central de Downloads</span><h1>Usar sem internet</h1><p>Guarde os vídeos neste aparelho.</p></div></div>
+        <div class="panel">
+          <h2>Alfabeto manual (27 vídeos · cerca de 5 MB)</h2>
+          <p class="muted" id="dlStatus">Verificando…</p>
+          <div class="bar"><span id="dlBar" style="width:0"></span></div>
+          <button class="btn gold" id="dlBtn" type="button">⬇ Baixar para usar sem internet</button>
+        </div>
+        <div class="panel">
+          <h2>Aulas da Professora Jocimara</h2>
+          <p class="muted">Ficam no Google Drive da professora e precisam de internet para tocar. Quando os arquivos forem enviados para o app, eles também poderão ser baixados aqui.</p>
+        </div>
+      </section>
+
+      <!-- AVISOS -->
+      <section class="page" id="avisos">
+        <div class="head"><div><span class="eyebrow">Novidades</span><h1>Avisos</h1></div><a class="btn pale" href="#inicio">← Início</a></div>
+        <div class="panel"><h2>👋 Bem-vindo ao Conecta Libras!</h2><p class="muted">Comece pela Aula 01 e depois conheça o alfabeto manual em vídeo.</p><a class="btn" href="#aula">Começar a Aula 01 →</a></div>
+        <div class="panel"><h2>✋ Alfabeto completo</h2><p class="muted">Os 27 vídeos (A–Z + Ç) já estão disponíveis. Dá para assistir devagar e praticar no “Qual é a letra?”.</p></div>
       </section>
 
       <!-- AULAS -->
@@ -151,7 +187,10 @@
         <div class="panel vplayer" id="vPlayer" hidden>
           <div class="player-head"><h2 id="vTitle">Aula</h2><button class="btn pale small" id="vClose" type="button">Fechar ✕</button></div>
           <div class="vframe"><iframe id="vFrame" title="Aula da professora Jocimara" allow="autoplay; fullscreen" allowfullscreen></iframe></div>
-          <a id="vOpen" class="link" target="_blank" rel="noopener">Não carregou? Abrir no Google Drive ↗</a>
+          <div class="vhelp">
+            <p>Toque no <b>▶</b> dentro do quadro para começar. <b>Tela escura ou “sem permissão”?</b> Abra direto no Drive:</p>
+            <a id="vOpen" class="btn gold" target="_blank" rel="noopener">▶ Assistir no Google Drive</a>
+          </div>
         </div>
         <div class="vgrid" id="vGrid"></div>
         <div class="note">Os vídeos ficam no Google Drive da professora e precisam estar compartilhados como “Qualquer pessoa com o link” para tocar aqui.</div>
@@ -180,14 +219,14 @@
   </div>
 
   <nav class="bottom" aria-label="Navegação">
-    <a href="#inicio" data-nav="inicio"><b>⌂</b>Início</a>
-    <a href="#aulas" data-nav="aulas"><b>▤</b>Aulas</a>
-    <a href="#alfabeto" data-nav="alfabeto"><b>✋</b>Alfabeto</a>
-    <a href="#praticar" data-nav="praticar"><b>✦</b>Praticar</a>
-    <a href="#perfil" data-nav="perfil"><b>◉</b>Perfil</a>
+    <a href="#inicio" data-nav="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</a>
+    <a href="#aulas" data-nav="aulas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></svg>Aulas</a>
+    <a href="#biblioteca" data-nav="biblioteca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="4" height="16" rx="1"/><rect x="9" y="4" width="4" height="16" rx="1"/><path d="M15.5 5.2l3.8-1 3 15.6-3.8 1z"/></svg>Biblioteca</a>
+    <a href="#downloads" data-nav="downloads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 17v3h16v-3"/></svg>Downloads</a>
+    <a href="#perfil" data-nav="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Perfil</a>
   </nav>
 </div>
 
-<script src="./app.js?v=4"></script>
+<script src="./app.js?v=5"></script>
 </body>
 </html>
