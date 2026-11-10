@@ -406,3 +406,6 @@ fieldset.campo legend{font-weight:500;color:var(--marrom-escuro);font-size:18px;
   .barra-data .btn-suave{padding:0 12px;font-size:15px}
   .barra-data .campo-data input{padding:8px 8px;font-size:16px}
 }
+
+.ja-chegou{color:#3e5a20;font-weight:600}
+.servico-cabeca>span{display:inline-flex;gap:6px;flex-wrap:wrap}

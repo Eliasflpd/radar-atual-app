@@ -29,8 +29,9 @@ const crypto = require('crypto');
 
 const OCUPA = ['agendado', 'confirmado', 'chegou', 'em_atendimento', 'concluido'];
 const SIT_AG = { agendado: 'Agendado', confirmado: 'Presença confirmada', chegou: 'Chegou', em_atendimento: 'Em atendimento', concluido: 'Concluído', cancelado: 'Cancelado', falta: 'Faltou' };
-const SIT_ENC = { aguardando: 'Aguardando', chegou: 'Já chegou', chamado: 'Chamado', em_atendimento: 'Em atendimento', concluido: 'Concluído', cancelado: 'Cancelado', desistiu: 'Desistiu' };
-const ENC_ATIVO = ['aguardando', 'chegou', 'chamado'];
+const SIT_ENC = { aguardando: 'Aguardando', chamado: 'Chamado', em_atendimento: 'Em atendimento', concluido: 'Concluído', cancelado: 'Cancelado', desistiu: 'Desistiu' };
+// A chegada real é um DADO do encaixe (chegada_real_min), não uma situação: quem chegou continua Aguardando.
+const ENC_ATIVO = ['aguardando', 'chamado'];
 const DDD_BR = new Set('11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99'.split(' '));
 const FUSOS = ['America/Sao_Paulo', 'America/Bahia', 'America/Fortaleza', 'America/Recife', 'America/Belem', 'America/Manaus', 'America/Cuiaba', 'America/Campo_Grande', 'America/Porto_Velho', 'America/Boa_Vista', 'America/Rio_Branco', 'America/Noronha'];
 
@@ -306,7 +307,7 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
     const pg = Math.min(Math.max(parseInt(q.pagina, 10) || 1, 1), paginas);
     const r = await c.query(`${SEL_AG} where estab=$1 and data=$2${filtro}
       order by inicio_min, case when situacao = any('{cancelado,falta}') then 1 else 0 end, criado_em limit ${limite} offset ${(pg - 1) * limite}`, params);
-    const enc = await c.query(`select count(*)::int n from brow_encaixes where estab=$1 and data=$2 and situacao = any($3)`, [estab, data, ['aguardando', 'chegou']]);
+    const enc = await c.query(`select count(*)::int n from brow_encaixes where estab=$1 and data=$2 and situacao = 'aguardando'`, [estab, data]);
     const dia = lerHorarioDia((cfg.horarios || {})[String(diaDaSemana(data))]);
     res.status(200).json({ ok: true, data, hoje: ha.hoje, agora: minParaHhmm(ha.agora), configurada, total, pagina: pg, paginas, limite,
       aguardando: enc.rows[0].n, dia: dia.aberto ? { aberto: true, inicio: minParaHhmm(dia.inicio), fim: minParaHhmm(dia.fim), pausas: dia.pausas.map(([a, z]) => minParaHhmm(a) + '–' + minParaHhmm(z)) } : { aberto: false },
@@ -515,11 +516,11 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
   if (acao === 'enc_listar') {
     const data = dataValida(q.data) ? q.data : ha.hoje;
     const limite = Math.min(Math.max(parseInt(q.limite, 10) || 8, 1), 50);
-    const tot = await c.query('select count(*)::int n, count(*) filter (where situacao = any($3))::int ag from brow_encaixes where estab=$1 and data=$2', [estab, data, ['aguardando', 'chegou']]);
+    const tot = await c.query(`select count(*)::int n, count(*) filter (where situacao = 'aguardando')::int ag from brow_encaixes where estab=$1 and data=$2`, [estab, data]);
     const total = tot.rows[0].n, paginas = Math.max(1, Math.ceil(total / limite));
     const pg = Math.min(Math.max(parseInt(q.pagina, 10) || 1, 1), paginas);
     const r = await c.query(`${SEL_ENC} where estab=$1 and data=$2
-      order by case when situacao = any('{aguardando,chegou,chamado,em_atendimento}') then 0 else 1 end, ordem limit ${limite} offset ${(pg - 1) * limite}`, [estab, data]);
+      order by case when situacao = any('{aguardando,chamado,em_atendimento}') then 0 else 1 end, ordem limit ${limite} offset ${(pg - 1) * limite}`, [estab, data]);
     res.status(200).json({ ok: true, data, hoje: ha.hoje, total, aguardando: tot.rows[0].ag, pagina: pg, paginas, limite, itens: r.rows.map(linhaEnc) });
     return;
   }
@@ -576,7 +577,7 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
   }
   if (req.method === 'POST' && acao === 'enc_acao') {
     const id = String(b.id || ''); const op = String(b.acao || '');
-    const PODE = { chegou: ['aguardando'], cancelar: ['aguardando', 'chegou', 'chamado'], desistiu: ['aguardando', 'chegou', 'chamado'] };
+    const PODE = { chegou: ['aguardando'], cancelar: ['aguardando', 'chamado'], desistiu: ['aguardando', 'chamado'] };
     if (!PODE[op]) return erro(res, 400, 'acao', 'Ação desconhecida.');
     await c.query('begin');
     try {
@@ -588,7 +589,8 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
       if (op === 'chegou') {
         const h = b.hora ? hhmmParaMin(b.hora) : (e.data === ha.hoje ? ha.agora : e.chegada_prevista_min);
         if (h === null) { await c.query('rollback'); return erro(res, 422, 'validacao', 'Horário inválido.'); }
-        await c.query(`update brow_encaixes set situacao='chegou', chegada_real_min=$3, atualizado_em=now() where estab=$1 and id=$2`, [estab, id, h]);
+        if (e.chegada_real_min != null) { await c.query('rollback'); return erro(res, 409, 'situacao', `A chegada já foi registrada às ${minParaHhmm(e.chegada_real_min)}.`); }
+        await c.query(`update brow_encaixes set chegada_real_min=$3, atualizado_em=now() where estab=$1 and id=$2`, [estab, id, h]);
         det.chegada_real = minParaHhmm(h);
       } else {
         await c.query(`update brow_encaixes set situacao=$3, atualizado_em=now() where estab=$1 and id=$2`, [estab, id, op === 'cancelar' ? 'cancelado' : 'desistiu']);
@@ -638,7 +640,7 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
       if (!r.rows.length) { await c.query('rollback'); return erro(res, 404, 'nao_encontrado', 'Encaixe não encontrado.'); }
       const e = r.rows[0];
       if (e.agendamento_id) { await c.query('rollback'); res.status(200).json({ ok: true, id: e.agendamento_id, repetido: true }); return; }   // efetiva uma vez só
-      if (!['aguardando', 'chegou'].includes(e.situacao)) { await c.query('rollback'); return erro(res, 409, 'situacao', `Esse encaixe está “${SIT_ENC[e.situacao]}” e não pode ser efetivado.`); }
+      if (e.situacao !== 'aguardando') { await c.query('rollback'); return erro(res, 409, 'situacao', `Esse encaixe está “${SIT_ENC[e.situacao]}” e não pode ser efetivado.`); }
       await c.query('commit');
       // reservar() abre a própria transação com o cadeado da profissional/dia
       const rr = await reservar({ chave: `encaixe:${e.id}`, clienteId: e.cliente_id, whatsapp: e.whatsapp, profId: b.profissional_id, servicoId: e.servico_id,
@@ -649,7 +651,7 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
       }
       // ainda dentro da transação da reserva: vincula o encaixe (só se ninguém efetivou antes)
       const v = await c.query(`update brow_encaixes set situacao='chamado', agendamento_id=$3, atualizado_em=now()
-        where estab=$1 and id=$2 and agendamento_id is null and situacao = any('{aguardando,chegou}') returning id`, [estab, e.id, rr.j.id]);
+        where estab=$1 and id=$2 and agendamento_id is null and situacao = 'aguardando' returning id`, [estab, e.id, rr.j.id]);
       if (!v.rowCount) { await c.query('rollback'); return erro(res, 409, 'situacao', 'Esse encaixe já foi efetivado ou mudou de situação.'); }
       await historico(c, estab, 'encaixe', e.id, 'efetivado', { agendamento_id: rr.j.id, inicio: minParaHhmm(b.inicio_min) });
       if (e.chegada_real_min != null) await c.query('update brow_agendamentos set situacao=$3, chegada_min=$4 where estab=$1 and id=$2', [estab, rr.j.id, 'chegou', e.chegada_real_min]);

@@ -14,7 +14,7 @@ import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagin
 
 const BASE = '/brow-studio/agenda/';
 const SIT_AG = { agendado: 'Agendado', confirmado: 'Presença confirmada', chegou: 'Chegou', em_atendimento: 'Em atendimento', concluido: 'Concluído', cancelado: 'Cancelado', falta: 'Faltou' };
-const SIT_ENC = { aguardando: 'Aguardando', chegou: 'Já chegou', chamado: 'Chamado', em_atendimento: 'Em atendimento', concluido: 'Concluído', cancelado: 'Cancelado', desistiu: 'Desistiu' };
+const SIT_ENC = { aguardando: 'Aguardando', chamado: 'Chamado', em_atendimento: 'Em atendimento', concluido: 'Concluído', cancelado: 'Cancelado', desistiu: 'Desistiu' };
 const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const ACOES_HIST = { criado: 'Agendamento criado', criado_por_encaixe: 'Criado a partir de encaixe', confirmar: 'Presença confirmada', chegou: 'Chegada registrada',
@@ -140,12 +140,12 @@ async function telaDia() {
 }
 
 // ═══════════════════════════ ESCOLHER CLIENTE (novo / encaixe) ═════════════
-async function etapaCliente({ chave, titulo, etapa, total, voltar, prox, novoRasc }) {
+async function etapaCliente({ chave, titulo, etapa, total, voltar, prox, novoRasc, sub }) {
   const d = lerRasc(chave) || novoRasc();
   gravarRasc(chave, d);
   const form = pagina({
     titulo, etapa, etapasTotal: total, formulario: true, voltar, voltarTexto: 'Voltar',
-    corpo: `<p class="etapa" style="margin-top:-8px">Cliente e WhatsApp</p>
+    corpo: `<p class="etapa" style="margin-top:-8px">${esc(sub || 'Cliente e WhatsApp')}</p>
       <div id="escolhida"></div>
       <div id="busca-area">
         <div class="campo"><label for="q">Buscar cliente por nome ou telefone</label>
@@ -220,7 +220,7 @@ async function etapaCliente({ chave, titulo, etapa, total, voltar, prox, novoRas
 }
 
 // ═══════════════════════════ ESCOLHER PROFISSIONAL E SERVIÇO ═══════════════
-async function etapaServico({ chave, titulo, etapa, total, voltar, prox, qualquer }) {
+async function etapaServico({ chave, titulo, etapa, total, voltar, prox, qualquer, sub }) {
   const d = lerRasc(chave);
   if (!d || !d.cliente_id) return ir(voltar);
   const cfgR = await api('ag_config_ver');
@@ -229,7 +229,7 @@ async function etapaServico({ chave, titulo, etapa, total, voltar, prox, qualque
   const opcoesProf = Object.fromEntries([...(qualquer ? [['', 'Qualquer profissional']] : []), ...profs.map(p => [p.id, p.nome])]);
   const form = pagina({
     titulo, etapa, etapasTotal: total, formulario: true, voltar, voltarTexto: 'Voltar',
-    corpo: `<p class="etapa" style="margin-top:-8px">Profissional e serviço · ${esc(d.cliente_nome)}</p>
+    corpo: `<p class="etapa" style="margin-top:-8px">${esc(sub || 'Profissional e serviço')} · ${esc(d.cliente_nome)}</p>
       ${profs.length ? grupoOpcoes({ nome: 'profissional_id', legenda: 'Profissional', opcoes: opcoesProf, valor: d.profissional_id == null && qualquer ? '' : d.profissional_id, colunas: 3 })
         : avisoHTML(`Nenhuma profissional ativa. <a href="${BASE}configuracoes/profissionais/">Cadastre em Configurações</a>.`, 'erro')}
       <fieldset class="campo" aria-describedby="servico_id-erro"><legend>Serviço <span class="opcional">(somente ativos)</span></legend>
@@ -376,7 +376,7 @@ async function novoConferencia() {
   const d = lerRasc('ag:novo');
   if (!d || d.inicio_min == null) return ir(N);
   const form = pagina({
-    titulo: 'Conferir agendamento', etapa: 5, etapasTotal: 5, formulario: true, voltar: N + 'horario/', voltarTexto: 'Voltar',
+    titulo: 'Conferir agendamento', etapa: 4, etapasTotal: 4, formulario: true, voltar: N + 'horario/', voltarTexto: 'Voltar',
     corpo: `<div class="resumo">
         ${blocoResumo('Atendimento', [['Cliente', d.cliente_nome], ['WhatsApp', d.whatsapp ? fone(d.whatsapp) + (d.atualizar_cadastro ? ' (atualiza o cadastro)' : (digitos(d.whatsapp) !== digitos(d.telefone_cadastro) ? ' (só neste agendamento)' : '')) : ''],
           ['Serviço', `${d.servico_nome} · ${reais(d.valor_centavos)}`], ['Profissional', d.profissional_nome]], N)}
@@ -625,7 +625,7 @@ async function telaWhatsapp() {
     if (['agendado', 'confirmado', 'chegou'].includes(x.situacao)) tipos = x.remarcado ? ['confirmacao', 'lembrete', 'remarcacao'] : ['confirmacao', 'lembrete'];
     if (x.situacao === 'cancelado') tipos = ['cancelamento'];
   } else {
-    if (['aguardando', 'chegou'].includes(x.situacao)) tipos = ['espera'];
+    if (x.situacao === 'aguardando') tipos = ['espera'];
     if (['cancelado', 'desistiu'].includes(x.situacao)) tipos = ['encaixe_cancelado'];
   }
   const M = modelos(ctx);
@@ -700,7 +700,7 @@ async function telaEncaixes() {
     $('#lista').innerHTML = r.total ? r.itens.map(e => `
       <li class="item item-ag${['cancelado', 'desistiu', 'concluido'].includes(e.situacao) ? ' item-inativo' : ''}">
         <div class="hora-bloco ordem"><strong>${e.ordem}º</strong><span>${e.chegada_prevista}</span></div>
-        <div class="item-info"><div class="item-nome">${esc(e.cliente_nome)}</div><div class="item-extra"><span class="selo-mini sm-${e.situacao}">${esc(SIT_ENC[e.situacao])} · </span>${esc(e.servico_nome)} · ${esc(e.profissional_nome || 'Qualquer profissional')}</div></div>
+        <div class="item-info"><div class="item-nome">${esc(e.cliente_nome)}</div><div class="item-extra"><span class="selo-mini sm-${e.situacao}">${esc(SIT_ENC[e.situacao])} · </span>${e.chegada_real && e.situacao === 'aguardando' ? `<strong class="ja-chegou">Já chegou ${e.chegada_real}</strong> · ` : ''}${esc(e.servico_nome)} · ${esc(e.profissional_nome || 'Qualquer profissional')}</div></div>
         <span class="selo-lado">${seloEnc(e.situacao)}</span>
         <a class="btn btn-linha" href="${E}detalhe/?id=${encodeURIComponent(e.id)}" aria-label="Abrir encaixe ${e.ordem} de ${esc(e.cliente_nome)}, ${esc(SIT_ENC[e.situacao])}">Abrir</a></li>`).join('')
       : `<li class="vazio"><h2>Nenhum encaixe</h2><p>Ninguém aguardando neste dia.</p></li>`;
@@ -720,8 +720,8 @@ async function encChegada() {
   const cfgR = await api('ag_config_ver');
   const hoje = cfgR.ok ? cfgR.hoje : new Date().toISOString().slice(0, 10);
   const form = pagina({
-    titulo: 'Novo encaixe', etapa: 3, etapasTotal: 4, formulario: true, voltar: E + 'novo/servico/', voltarTexto: 'Voltar',
-    corpo: `<p class="etapa" style="margin-top:-8px">Data e chegada prevista · ${esc(d.cliente_nome)}</p>
+    titulo: 'Novo encaixe', etapa: 2, etapasTotal: 3, formulario: true, voltar: E + 'novo/servico/', voltarTexto: 'Voltar',
+    corpo: `<p class="etapa" style="margin-top:-8px">Data e chegada prevista (2ª parte) · ${esc(d.cliente_nome)}</p>
       <div class="duas-colunas">
         ${campoTexto({ id: 'data', rotulo: 'Data', valor: d.data && d.data >= hoje ? d.data : hoje, tipo: 'date', attrs: `min="${hoje}"` })}
         ${campoTexto({ id: 'chegada_prevista', rotulo: 'Chegada prevista', valor: d.chegada_prevista || (cfgR.ok ? cfgR.agora : ''), tipo: 'time' })}
@@ -747,7 +747,7 @@ async function encConferencia() {
   const d = lerRasc('enc:novo');
   if (!d || !d.chegada_prevista) return ir(E + 'novo/');
   pagina({
-    titulo: 'Conferir encaixe', etapa: 4, etapasTotal: 4, voltar: E + 'novo/chegada/', voltarTexto: 'Voltar',
+    titulo: 'Conferir encaixe', etapa: 3, etapasTotal: 3, voltar: E + 'novo/chegada/', voltarTexto: 'Voltar',
     corpo: `<div class="selo-encaixe" role="note"><strong>Encaixe — aguardando disponibilidade</strong><span>O atendimento e o horário não estão garantidos.</span></div>
       <div class="resumo">${blocoResumo('Encaixe', [['Cliente', d.cliente_nome], ['WhatsApp', d.whatsapp ? fone(d.whatsapp) + (d.atualizar_cadastro ? ' (atualiza o cadastro)' : '') : ''],
         ['Serviço', d.servico_nome + ` · ${d.duracao_min} min${d.intervalo_min ? ` + ${d.intervalo_min}` : ''}`], ['Profissional', d.profissional_nome || 'Qualquer profissional'],
@@ -775,24 +775,23 @@ async function telaEncaixe() {
   const msg = recado.tirar();
   const B = (href, txt, cls = 'btn-suave') => `<a class="btn ${cls}" href="${href}">${txt}</a>`;
   const acoes = [];
-  if (s === 'aguardando') acoes.push(`<button type="button" class="btn btn-suave" data-op="chegou">Registrar chegada</button>`);
-  if (['aguardando', 'chegou'].includes(s)) acoes.push(B(`${E}efetivar/?id=${q}`, 'Ver oportunidades', 'btn-cheio'));
+  if (s === 'aguardando' && !e.chegada_real) acoes.push(`<button type="button" class="btn btn-suave" data-op="chegou">Registrar chegada</button>`);
+  if (s === 'aguardando') acoes.push(B(`${E}efetivar/?id=${q}`, 'Ver oportunidades', 'btn-cheio'));
   if (e.agendamento_id) acoes.push(B(`${BASE}atendimento/?id=${encodeURIComponent(e.agendamento_id)}`, 'Abrir atendimento reservado', 'btn-cheio'));
   acoes.push(B(`${BASE}whatsapp/?tipo=encaixe&id=${q}`, 'WhatsApp'));
-  if (['aguardando', 'chegou', 'chamado'].includes(s)) { acoes.push(B(`${E}encerrar/?id=${q}&acao=desistiu`, 'Desistiu')); acoes.push(B(`${E}encerrar/?id=${q}&acao=cancelar`, 'Cancelar', 'btn-perigo')); }
+  if (['aguardando', 'chamado'].includes(s)) { acoes.push(B(`${E}encerrar/?id=${q}&acao=desistiu`, 'Desistiu')); acoes.push(B(`${E}encerrar/?id=${q}&acao=cancelar`, 'Cancelar', 'btn-perigo')); }
   acoes.push(B(`${BASE}historico/?tipo=encaixe&id=${q}`, 'Histórico'));
   pagina({
     titulo: `Encaixe nº ${e.ordem}`, voltar: `${E}?data=${e.data}`, voltarTexto: 'Encaixes',
     corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}
-      ${['aguardando', 'chegou'].includes(s) ? `<div class="selo-encaixe" role="note"><strong>Encaixe — aguardando disponibilidade</strong><span>O atendimento e o horário não estão garantidos.</span></div>` : ''}
+      ${s === 'aguardando' ? `<div class="selo-encaixe" role="note"><strong>Encaixe — aguardando disponibilidade</strong><span>O atendimento e o horário não estão garantidos.</span></div>` : ''}
       <div class="servico-cabeca"><h2>${esc(e.cliente_nome)}</h2>${seloEnc(s)}</div>
       <div class="bloco"><dl class="dados">
         <dt>WhatsApp</dt><dd>${e.whatsapp ? esc(fone(e.whatsapp)) : 'Não informado'}</dd>
         <dt>Serviço</dt><dd>${esc(e.servico_nome)} · ${e.duracao_min} min${e.intervalo_min ? ` + ${e.intervalo_min}` : ''} · ${reais(e.valor_centavos)}</dd>
         <dt>Profissional</dt><dd>${esc(e.profissional_nome || 'Qualquer profissional')}</dd>
         <dt>Data</dt><dd>${esc(dataLonga(e.data))}</dd>
-        <dt>Chegada prevista</dt><dd>${e.chegada_prevista} <small>(não é horário reservado)</small></dd>
-        ${e.chegada_real ? `<dt>Chegou às</dt><dd>${e.chegada_real}</dd>` : ''}
+        <dt>Chegada</dt><dd>prevista ${e.chegada_prevista} <small>(não reserva horário)</small> · ${e.chegada_real ? `<strong class="ja-chegou">chegou ${e.chegada_real}</strong>` : 'ainda não chegou'}</dd>
         ${r.agendamento ? `<dt>Horário reservado</dt><dd>${r.agendamento.inicio}–${r.agendamento.fim} com ${esc(r.agendamento.profissional_nome)} (${esc(SIT_AG[r.agendamento.situacao])})</dd>` : ''}
         ${e.observacoes ? `<dt>Observações</dt><dd>${esc(e.observacoes)}</dd>` : ''}
       </dl></div>
@@ -1075,10 +1074,10 @@ async function telaCfgBloqueioNovo() {
 // ─── roteamento ─────────────────────────────────────────────────────────────
 const TELAS = {
   dia: telaDia,
-  'novo-cliente': () => etapaCliente({ chave: 'ag:novo', titulo: 'Novo agendamento', etapa: 1, total: 5, voltar: BASE, prox: N + 'servico/', novoRasc: novoAg }),
-  'novo-servico': () => etapaServico({ chave: 'ag:novo', titulo: 'Novo agendamento', etapa: 2, total: 5, voltar: N, prox: N + 'data/' }),
-  'novo-data': () => etapaData({ chave: 'ag:novo', titulo: 'Novo agendamento', etapa: 3, total: 5, voltar: N + 'servico/', prox: N + 'horario/' }),
-  'novo-horario': () => etapaHorario({ chave: 'ag:novo', titulo: 'Novo agendamento', etapa: 4, total: 5, voltar: N + 'data/', prox: N + 'conferencia/' }),
+  'novo-cliente': () => etapaCliente({ chave: 'ag:novo', titulo: 'Novo agendamento', etapa: 1, total: 4, voltar: BASE, prox: N + 'servico/', novoRasc: novoAg, sub: 'Cliente e contato (1ª parte)' }),
+  'novo-servico': () => etapaServico({ chave: 'ag:novo', titulo: 'Novo agendamento', etapa: 1, total: 4, voltar: N, prox: N + 'data/', sub: 'Profissional e serviço (2ª parte)' }),
+  'novo-data': () => etapaData({ chave: 'ag:novo', titulo: 'Novo agendamento', etapa: 2, total: 4, voltar: N + 'servico/', prox: N + 'horario/' }),
+  'novo-horario': () => etapaHorario({ chave: 'ag:novo', titulo: 'Novo agendamento', etapa: 3, total: 4, voltar: N + 'data/', prox: N + 'conferencia/' }),
   'novo-conferencia': novoConferencia,
   atendimento: telaAtendimento,
   registrar: telaRegistrar,
@@ -1090,8 +1089,8 @@ const TELAS = {
   historico: telaHistorico,
   whatsapp: telaWhatsapp,
   encaixes: telaEncaixes,
-  'enc-cliente': () => etapaCliente({ chave: 'enc:novo', titulo: 'Novo encaixe', etapa: 1, total: 4, voltar: E, prox: E + 'novo/servico/', novoRasc: novoEnc }),
-  'enc-servico': () => etapaServico({ chave: 'enc:novo', titulo: 'Novo encaixe', etapa: 2, total: 4, voltar: E + 'novo/', prox: E + 'novo/chegada/', qualquer: true }),
+  'enc-cliente': () => etapaCliente({ chave: 'enc:novo', titulo: 'Novo encaixe', etapa: 1, total: 3, voltar: E, prox: E + 'novo/servico/', novoRasc: novoEnc }),
+  'enc-servico': () => etapaServico({ chave: 'enc:novo', titulo: 'Novo encaixe', etapa: 2, total: 3, voltar: E + 'novo/', prox: E + 'novo/chegada/', qualquer: true, sub: 'Serviço e profissional (1ª parte)' }),
   'enc-chegada': encChegada,
   'enc-conferencia': encConferencia,
   encaixe: telaEncaixe,
