@@ -424,3 +424,24 @@ legend.pergunta{font-family:var(--serifa);font-weight:500;font-size:clamp(22px,3
 @media (max-width:420px){.app-corpo>p.etapa:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 @media (max-width:600px){.hist-curto li:nth-child(n+2){display:none}.hist-curto{flex:0}}
 @media (max-height:680px){.hist-curto{display:none}.bloco .ajuda{font-size:13px}}
+
+/* ═══════════════ MÓDULO TERMOS E AUTORIZAÇÕES ═══════════════ */
+.doc-cabeca{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.doc-cabeca h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:clamp(21px,3.2vw,26px);line-height:1.2}
+.doc-texto{flex:1;background:#fffdf9;border:1px solid #ecd8c9;border-radius:18px;padding:18px 20px;font-size:18px;line-height:1.6;color:#3f2618}
+.doc-texto p+p{margin-top:12px}
+.doc-texto:focus-visible{outline:3px solid var(--ouro-1)}
+.assinatura-caixa{position:relative;background:#fff;border:2px dashed #d8bfa9;border-radius:18px;height:clamp(150px,24dvh,240px);touch-action:none}
+.assinatura-caixa canvas{display:block;width:100%;height:100%;border-radius:16px;cursor:crosshair;touch-action:none}
+.assinatura-linha{position:absolute;left:24px;right:24px;bottom:34px;border-top:1.5px solid #cdb4a0;font-size:13px;color:#a68b7a;padding-top:4px;pointer-events:none}
+.assinatura-mini{display:block;max-width:100%;max-height:100px;margin-top:8px;border:1px solid #ecd8c9;border-radius:10px;background:#fff}
+.chave-canal{min-height:54px;align-items:center}
+.img-retirada{color:#8a3324;font-weight:500}
+.campo textarea.texto-longo-campo{min-height:45dvh}
+@media (max-height:760px){.doc-texto{font-size:16px;padding:12px 14px}.assinatura-caixa{height:clamp(130px,22dvh,200px)}.assinatura-linha{bottom:26px}}
+.status-imagem{font-size:15px;font-weight:500}.status-imagem.ok{color:#3e5a20}.status-imagem.nao{color:#8a6a58}
+.linha-acoes{display:flex;gap:10px;flex-wrap:wrap}
+.linha-acoes>.btn{flex:1 1 120px}
+@media (max-height:680px){.assinatura-mini{max-height:64px}}
+@media (max-width:600px){.assinatura-caixa{height:clamp(130px,19dvh,220px)}#area-desenho .linha-acoes .btn{min-height:46px;font-size:16px}}
+@media (max-height:680px){.chave-canal{min-height:46px;padding:6px 12px}.assinatura-caixa{height:clamp(120px,19dvh,200px)}}

@@ -424,6 +424,7 @@ async function telaAtendimento() {
   if (['agendado', 'confirmado', 'chegou'].includes(s)) acoes.push(B(`${BASE}atendimento/cancelar/?id=${q}`, 'Cancelar', 'btn-perigo'));
   acoes.push(B(`${BASE}whatsapp/?tipo=agendamento&id=${q}`, 'WhatsApp e avisos'));
   acoes.push(B(`/brow-studio/anamnese/ficha/?ag=${q}`, 'Ficha de anamnese'));
+  acoes.push(B(`/brow-studio/termos/?agendamento=${q}`, 'Termo e autorização'));
   acoes.push(B(`${BASE}historico/?tipo=agendamento&id=${q}`, 'Histórico'));
   pagina({
     titulo: 'Atendimento', voltar: `${BASE}?data=${a.data}`, voltarTexto: 'Agenda',
