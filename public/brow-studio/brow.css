@@ -30,11 +30,13 @@ a{color:inherit}
   min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;overflow:hidden;
 }
 /* a foto ocupa exatamente o espaço que sobra acima da apresentação */
-.capa-foto{position:relative;flex:1 0 30vh;min-height:30vh;overflow:hidden;background:#3a2418}
-.capa-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block}
-/* curva nude com filete dourado (fica um pouco acima da curva que já vem na foto e a cobre) */
-.capa-curva{position:absolute;left:0;bottom:-1px;width:100%;height:100%;pointer-events:none}
-.capa-curva-v{display:none}
+.capa-foto{position:relative;flex:1 0 30vh;min-height:30vh;overflow:hidden;background:var(--nude)}
+/* Degradê entre a foto e os textos (sem linha separando): a parte de baixo da
+   foto se dissolve no fundo nude acompanhando o arco do rosto. O degradê termina
+   antes da curva que já vem desenhada na foto original, que assim não aparece. */
+.capa-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block;
+  -webkit-mask-image:radial-gradient(ellipse 98% 98% at 50% 0%,#000 0%,#000 79%,rgba(0,0,0,.72) 85%,rgba(0,0,0,.32) 91%,rgba(0,0,0,.08) 95.5%,transparent 98.5%);
+          mask-image:radial-gradient(ellipse 98% 98% at 50% 0%,#000 0%,#000 79%,rgba(0,0,0,.72) 85%,rgba(0,0,0,.32) 91%,rgba(0,0,0,.08) 95.5%,transparent 98.5%)}
 
 .capa-conteudo{
   flex:0 0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;
@@ -75,10 +77,11 @@ a{color:inherit}
 @media (orientation:landscape) and (min-width:640px){
   .capa{flex-direction:row;--r:min(calc(46vw * .82 / 804), calc(100dvh * .9 / 836))}
   .capa-foto{flex:0 0 54%;min-height:100dvh}
-  /* a foto é ampliada só o suficiente para esconder a curva da parte de baixo */
-  .capa-foto img{inset:auto;top:0;left:0;height:calc(100% * 700 / 585);object-position:70% 0}
-  .capa-curva{display:none}
-  .capa-curva-v{display:block;position:absolute;top:0;right:-1px;width:16%;height:100%;pointer-events:none}
+  /* a foto é ampliada só o suficiente para esconder a curva da parte de baixo
+     e se dissolve no nude pela direita (degradê, sem linha) */
+  .capa-foto img{inset:auto;top:0;left:0;height:calc(100% * 700 / 585);object-position:70% 0;
+    -webkit-mask-image:linear-gradient(to right,#000 0%,#000 66%,rgba(0,0,0,.5) 84%,transparent 100%);
+            mask-image:linear-gradient(to right,#000 0%,#000 66%,rgba(0,0,0,.5) 84%,transparent 100%)}
   .capa-conteudo{justify-content:center;padding:calc(40 * var(--r)) 24px}
   .rodape{margin-top:calc(46 * var(--r))}
 }
