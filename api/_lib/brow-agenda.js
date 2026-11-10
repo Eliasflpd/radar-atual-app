@@ -663,3 +663,4 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
   return erro(res, 400, 'acao', 'Ação desconhecida.');
 };
 module.exports._teste = { motivoOcupado, inicios, lerHorarioDia, hojeAgora, hhmmParaMin, minParaHhmm };
+module.exports.garantirTabelas = garantirTabelas;
