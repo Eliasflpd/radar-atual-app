@@ -502,3 +502,61 @@ span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
 @media (max-width:600px){.so-largo-bloco{display:none}.resumo-ct .bloco{padding:10px 14px}.resumo-ct .bloco h2{font-size:18px}.resumo-ct{gap:8px}}
 @media (max-width:420px){.aviso-dup{padding:8px 12px;font-size:15px}}
 @media (max-width:420px) and (max-height:700px){.resumo-ct .bloco{padding:8px 12px}.resumo-ct .bloco h2{font-size:17px}}
+/* ═══════════════ MÓDULO FINANCEIRO ═══════════════ */
+.filtros-chips.chips-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.filtros-chips.chips-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fin-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:6px 0 12px}
+.fin-card{background:#fffaf5;border:1px solid #ead7c6;border-radius:18px;padding:14px 16px}
+.fin-card-largo{grid-column:1/-1;background:linear-gradient(135deg,#fffaf5,#f6e6d9)}
+.fin-card h2{font-family:var(--serifa);font-weight:500;font-size:18px;color:var(--marrom-escuro);margin:0}
+.fin-valor{font-size:28px;font-weight:600;margin:4px 0 2px;color:var(--marrom)}
+.fin-card-largo .fin-valor{font-size:34px}
+.fin-valor.negativo{color:#8f3b2a}
+.fin-pendentes h2{font-family:var(--serifa);font-weight:500;font-size:18px;margin:0}
+.fin-pendentes .dados{margin-top:6px}
+.txt-vencido{color:#a3361f}
+.txt-pendente{color:var(--ouro-1)}
+.nota-fin{margin-top:10px}
+.selo-fin-pendente{background:#f6e6d9;color:var(--marrom)}
+.selo-fin-parcial{background:#f1d48a;color:#5a3d12}
+.selo-fin-quitado{background:#dfe9d6;color:#2f5326}
+.selo-fin-cancelado{background:#e7e0db;color:#6d5f56}
+.selo-fin-vencido{background:#f6d5cc;color:#8f2b16}
+.servico-cabeca>span{display:inline-flex;gap:6px;flex-wrap:wrap}
+.acoes-tres>*{flex:1 1 30%}
+.pessoa-escolha{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:4px 4px 4px 14px;border:1px solid #e3cdb9;border-radius:14px;background:#fffaf5}
+.pessoa-escolha .btn{min-height:44px;flex:0 0 auto}
+.rotulo-campo{display:block;font-weight:500;margin-bottom:6px}
+.etapa.vinculo{margin-top:-8px;color:var(--ouro-1)}
+.linha-filtros{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}
+.linha-filtros p{margin:0;font-size:15px}.linha-filtros small{color:#8a6a58}
+.linha-filtros .btn{flex:0 0 auto;min-height:46px}
+.fin-item.fin-vencido{border-left:4px solid #c0533a}
+.tipo-receita{color:#2f6b2a;font-weight:600}.tipo-despesa{color:#8f3b2a;font-weight:600}
+.fin-valores{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
+.fin-valores>div{background:#fffaf5;border:1px solid #ead7c6;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.fin-valores span{font-size:14px;color:#8a6a58}.fin-valores strong{font-size:20px}
+.linha-livre{display:flex;align-items:flex-end;gap:10px}.linha-livre .campo{flex:1;margin:0}.linha-livre .btn{flex:0 0 auto;min-height:52px}
+.vazio-curto{padding:14px}
+@media (max-width:600px){.filtros-chips.chips-5{grid-template-columns:repeat(5,minmax(0,1fr))}.fin-cards{gap:8px}.fin-card{padding:10px 12px}.fin-card h2{font-size:15px}.fin-valor{font-size:21px}.fin-card-largo .fin-valor{font-size:26px}
+  .fin-valores{gap:6px}.fin-valores>div{padding:8px}.fin-valores span{font-size:12px}.fin-valores strong{font-size:16px}.acoes-tres>*{flex:1 1 40%}}
+@media (max-height:760px){.fin-card-largo .fin-valor{font-size:28px}.fin-valor{font-size:22px}}
+.linha-livre .campo .erro:empty{display:none}
+@media (max-width:420px){
+  .fin-compacto{gap:9px}
+  .fin-compacto .campo input,.fin-compacto .campo select{min-height:46px;padding:8px 12px}
+  .fin-compacto .opcao span{min-height:42px}
+  .fin-compacto .campo label,.fin-compacto fieldset.campo legend,.fin-compacto .rotulo-campo{font-size:15px}
+  .fin-compacto fieldset.campo legend{margin-bottom:4px}
+  .fin-compacto .pessoa-escolha{min-height:46px}.fin-compacto .pessoa-escolha .btn{min-height:40px}
+  .fin-compacto .linha-livre .btn{min-height:46px;font-size:15px;padding:0 12px}
+  .acoes-tres>*{flex:1 1 0;font-size:15px!important;padding:0 6px}
+  .fin-pendentes .dados{margin-top:2px}
+}
+@media (max-width:420px) and (max-height:700px){
+  .fin-card h2{font-size:14px}.fin-qtd{display:none}.fin-card-largo .fin-valor{font-size:22px}.fin-valor{font-size:19px;margin:2px 0}
+  .fin-card-largo .ajuda,.fin-pendentes .ajuda{font-size:13px}.fin-pendentes h2{font-size:16px}.nota-fin{font-size:13px;margin-top:4px}
+  .fin-compacto{gap:7px}.fin-compacto .campo{gap:3px}
+}
+@media (max-width:420px){.app .acoes-tres>.btn{flex:1 1 0;min-width:0;padding:0 6px;font-size:15px}.app .acoes-tres{flex-wrap:nowrap;gap:8px}}
+.txt-curto{display:none}@media (max-width:420px){.txt-largo{display:none}.txt-curto{display:inline}}

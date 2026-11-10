@@ -146,3 +146,4 @@ module.exports = async function contatos(c, estab, req, res, acao, garantirOutra
   return erro(res, 400, 'acao', 'Ação desconhecida.');
 };
 module.exports._teste = { normalizarTelefone };
+module.exports.garantirTabela = garantirTabela;

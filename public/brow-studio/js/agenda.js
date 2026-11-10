@@ -468,6 +468,7 @@ async function telaDocumentos() {
         <a class="btn btn-suave" href="/brow-studio/anamnese/ficha/?ag=${q}">Ficha de anamnese</a>
         <a class="btn btn-suave" href="/brow-studio/termos/?agendamento=${q}">Termo e autorização</a>
         <a class="btn btn-suave" href="/brow-studio/registros/?agendamento=${q}">Registro do atendimento</a>
+        <a class="btn btn-suave" href="/brow-studio/financeiro/novo/?agendamento=${q}&novo=1">Financeiro do atendimento</a>
         <a class="btn btn-suave" href="${BASE}historico/?tipo=agendamento&id=${q}">Histórico de alterações</a>
       </nav>`,
     acoes: `<a class="btn btn-linha" href="${det}">${SETA} Voltar ao atendimento</a>`
