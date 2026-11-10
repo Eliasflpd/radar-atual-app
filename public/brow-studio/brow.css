@@ -560,3 +560,25 @@ span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
 }
 @media (max-width:420px){.app .acoes-tres>.btn{flex:1 1 0;min-width:0;padding:0 6px;font-size:15px}.app .acoes-tres{flex-wrap:nowrap;gap:8px}}
 .txt-curto{display:none}@media (max-width:420px){.txt-largo{display:none}.txt-curto{display:inline}}
+/* ═══════════════ MÓDULO ESTOQUE ═══════════════ */
+.selos{display:inline-flex;flex-wrap:wrap;gap:4px;vertical-align:middle}
+.selos-grandes{display:flex;gap:6px}
+.selo-est{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap}
+.selo-est.alerta{background:#f1d48a;color:#5a3d12}.selo-est.perigo{background:#f6d5cc;color:#8f2b16}.selo-est.neutro{background:#ece3dc;color:#6d5f56}.selo-est.ok{background:#dfe9d6;color:#2f5326}
+.selos-grandes .selo-est{min-height:30px;font-size:14px;padding:0 12px}
+.chips-rotulo{grid-column:1/-1;margin:0}
+.valor-fixo{margin:0;min-height:46px;display:flex;align-items:center;font-weight:600}
+.marcar{display:flex;align-items:center;gap:8px;font-size:15px;min-height:40px;cursor:pointer}
+.marcar input{width:22px;height:22px;min-height:0!important;accent-color:var(--marrom)}
+.campos-lote .campo{gap:4px}
+.lista-lotes{gap:8px}
+.opcao-lote{display:flex}
+.opcao-lote span{flex:1;display:flex;flex-direction:column;align-items:flex-start!important;justify-content:center;text-align:left!important;gap:2px;min-height:58px;padding:8px 14px}
+.opcao-lote small{font-size:13px;font-weight:400}
+.opcao-lote.desativada span{opacity:.6;cursor:not-allowed}
+.item-nome small{font-weight:400;color:#8a6a58}
+@media (max-width:420px){.selo-est{font-size:11px;padding:0 6px}.opcao-lote span{min-height:52px;padding:6px 10px}.campos-lote{grid-template-columns:1fr}}
+.item-extra-quebra{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+@media (max-width:420px){.chips-5 .opcao-chip span{font-size:12px;padding:2px;overflow-wrap:anywhere;hyphens:auto}.filtros-chips.chips-5{gap:4px}}
+@media (max-width:420px) and (max-height:700px){.menu-modulos{margin-top:8px;gap:8px}.menu-modulos .btn{min-height:46px;font-size:15px}}
+.bloco h2,.servico-cabeca h2{overflow-wrap:anywhere}

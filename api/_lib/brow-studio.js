@@ -198,6 +198,16 @@ module.exports = async (req, res) => {
       await require('./brow-contatos.js')(c, estab, req, res, acao, async (cc) => { await require('./brow-agenda.js').garantirTabelas(cc); });
       return;
     }
+    // ESTOQUE E MATERIAIS (módulo 9). Ver api/_lib/brow-estoque.js.
+    if (acao.startsWith('es_')) {
+      req.brow_usuario = porta.usuario || null;
+      await require('./brow-estoque.js')(c, estab, req, res, acao, async (cc) => {
+        await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
+        await require('./brow-contatos.js').garantirTabela(cc); await require('./brow-financeiro.js').garantirTabelas(cc);
+        await require("./brow-registros.js").garantirTabelas(cc);
+      });
+      return;
+    }
     // FINANCEIRO E CAIXA (módulo 8). Ver api/_lib/brow-financeiro.js.
     if (acao.startsWith('fn_')) {
       req.brow_usuario = porta.usuario || null;

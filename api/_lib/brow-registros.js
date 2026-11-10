@@ -230,3 +230,4 @@ module.exports = async function registros(c, estab, req, res, acao, garantirOutr
   return erro(res, 400, 'acao', 'Ação desconhecida.');
 };
 module.exports._teste = { lerProdutos, jpegDe };
+module.exports.garantirTabelas = garantirTabelas;
