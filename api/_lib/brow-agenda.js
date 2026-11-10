@@ -383,6 +383,12 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
     if (!chave) return erro(res, 400, 'chave_envio', 'Pedido incompleto.');
     const r = await reservar({ chave, clienteId: b.cliente_id, whatsapp: b.whatsapp, atualizarCadastro: b.atualizar_cadastro === true,
       profId: b.profissional_id, servicoId: b.servico_id, data: b.data, inicioMin: b.inicio_min, observacoes: b.observacoes });
+    // retorno (módulo 10): vincula a reserva ao acompanhamento NA MESMA transação; recusa 2ª reserva ativa
+    if (r.transacao && b.retorno_id && !r.j.repetido) {
+      const v = await require('./brow-retornos.js').vincular(c, estab, b.retorno_id, { agendamentoId: r.j.id, clienteId: String(b.cliente_id || '') });
+      if (!v.ok) { await c.query('rollback'); return erro(res, 409, 'retorno', v.msg); }
+      r.j.retorno_id = String(b.retorno_id);
+    }
     if (r.transacao) await c.query('commit');
     res.status(r.st).json(r.j); return;
   }
@@ -558,7 +564,11 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
         [id, estab, cl.id, cl.nome, tel || null, s.id, s.nome, s.duracao_min, s.intervalo_min, s.valor_centavos, p ? p.id : null, p ? p.nome : null,
           b.data, chegada, o.rows[0].n, (b.observacoes || '').trim().slice(0, 500) || null, chave]);
       if (b.atualizar_cadastro === true && tel && tel !== cl.telefone) await c.query('update brow_clientes set telefone=$3, atualizado_em=now() where estab=$1 and id=$2', [estab, cl.id, tel]);
-      await historico(c, estab, 'encaixe', id, 'criado', { ordem: o.rows[0].n, chegada_prevista: minParaHhmm(chegada) });
+      if (b.retorno_id) {   // retorno (módulo 10): "Aguardando encaixe", nunca "Agendado"
+        const v = await require('./brow-retornos.js').vincular(c, estab, b.retorno_id, { encaixeId: id, clienteId: cl.id });
+        if (!v.ok) { await c.query('rollback'); return erro(res, 409, 'retorno', v.msg); }
+      }
+      await historico(c, estab, 'encaixe', id, 'criado', { ordem: o.rows[0].n, chegada_prevista: minParaHhmm(chegada), retorno_id: b.retorno_id || null });
       await c.query('commit');
       res.status(201).json({ ok: true, id, ordem: o.rows[0].n }); return;
     } catch (e) { await c.query('rollback'); throw e; }

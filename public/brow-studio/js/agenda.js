@@ -330,9 +330,17 @@ async function etapaHorario({ chave, titulo, etapa, total, voltar, prox, ignorar
     corpo: `<p class="etapa" style="margin-top:-8px">${esc(dataLonga(d.data))} · ${esc(d.servico_nome)} · ${esc(d.profissional_nome)}</p>
       ${r.motivo ? avisoHTML(esc(r.motivo), 'erro') : `<fieldset class="campo" aria-describedby="inicio_min-erro"><legend>Horários livres <span class="opcional">(${r.horarios.length})</span></legend>
         <div class="grade-horarios" id="grade" role="radiogroup"></div><span class="erro" id="inicio_min-erro" aria-live="polite"></span></fieldset>${navPaginas('nav')}`}
-      <div class="aviso-caixa" id="resumo" role="status" ${d.inicio_min != null ? '' : 'hidden'}></div>`,
+      <div class="aviso-caixa" id="resumo" role="status" ${d.inicio_min != null ? '' : 'hidden'}></div>
+      ${d.retorno_id && chave === 'ag:novo' ? `<p class="ajuda">${r.motivo ? 'Sem vaga para o retorno neste dia.' : 'Nenhum horário serve?'} <button type="button" class="link-botao" id="ir-encaixe">Colocar na lista de encaixe</button> (não garante horário).</p>` : ''}`,
     acoes: `<a class="btn btn-linha" href="${voltar}">${SETA} Voltar</a><button type="submit" class="btn btn-cheio" ${r.motivo ? 'disabled' : ''}>Próximo <span aria-hidden="true">→</span></button>`
   });
+  if ($('#ir-encaixe')) $('#ir-encaixe').onclick = () => {
+    const at = lerRasc('ag:novo');
+    gravarRasc('enc:novo', { chave_envio: uuid(), cliente_id: at.cliente_id, cliente_nome: at.cliente_nome, whatsapp: at.whatsapp || '', telefone_cadastro: at.telefone_cadastro, atualizar_cadastro: false,
+      profissional_id: at.profissional_id, profissional_nome: at.profissional_nome, servico_id: at.servico_id, servico_nome: at.servico_nome, duracao_min: r.duracao_min, intervalo_min: r.intervalo_min,
+      data: at.data, chegada_prevista: '', observacoes: at.observacoes || '', retorno_id: at.retorno_id });
+    ir(E + 'novo/chegada/');
+  };
   const resumo = () => {
     const at = lerRasc(chave); const h = r.horarios.find(x => x.inicio_min === at.inicio_min);
     const el = $('#resumo'); if (!h) { el.hidden = true; return; }
@@ -377,7 +385,7 @@ async function novoConferencia() {
   if (!d || d.inicio_min == null) return ir(N);
   const form = pagina({
     titulo: 'Conferir agendamento', etapa: 4, etapasTotal: 4, formulario: true, voltar: N + 'horario/', voltarTexto: 'Voltar',
-    corpo: `<div class="resumo">
+    corpo: `${d.retorno_id ? '<p class="etapa vinculo">Retorno: este horário fica vinculado ao acompanhamento planejado.</p>' : ''}<div class="resumo">
         ${blocoResumo('Atendimento', [['Cliente', d.cliente_nome], ['WhatsApp', d.whatsapp ? fone(d.whatsapp) + (d.atualizar_cadastro ? ' (atualiza o cadastro)' : (digitos(d.whatsapp) !== digitos(d.telefone_cadastro) ? ' (só neste agendamento)' : '')) : ''],
           ['Serviço', `${d.servico_nome} · ${reais(d.valor_centavos)}`], ['Profissional', d.profissional_nome]], N)}
         ${blocoResumo('Data e horário', [['Data', dataLonga(d.data)], ['Horário', `${d.inicio} às ${d.fim} (término previsto)`], ['Intervalo após', `até ${d.reserva_fim}`]], N + 'data/')}
@@ -396,7 +404,8 @@ async function novoConferencia() {
     const b = $('#salvar'); b.disabled = true; b.setAttribute('aria-busy', 'true'); b.textContent = 'Salvando…';
     const at = lerRasc('ag:novo');
     const r = await api('ag_criar', { corpo: { chave_envio: at.chave_envio, cliente_id: at.cliente_id, whatsapp: at.whatsapp || null, atualizar_cadastro: !!at.atualizar_cadastro,
-      profissional_id: at.profissional_id, servico_id: at.servico_id, data: at.data, inicio_min: at.inicio_min, observacoes: at.observacoes || '' } });
+      profissional_id: at.profissional_id, servico_id: at.servico_id, data: at.data, inicio_min: at.inicio_min, observacoes: at.observacoes || '', retorno_id: at.retorno_id || undefined } });
+    if (r.ok && at.retorno_id) { apagarRasc('ag:novo'); recado.pôr('Retorno agendado.'); location.replace(`/brow-studio/retornos/ver/?id=${encodeURIComponent(at.retorno_id)}`); return; }
     if (r.ok) { apagarRasc('ag:novo'); recado.pôr('Agendamento salvo.'); location.replace(`${BASE}atendimento/?id=${encodeURIComponent(r.id)}`); return; }
     enviando = false; b.disabled = false; b.removeAttribute('aria-busy'); b.textContent = 'Tentar novamente';
     const voltarHorario = r.erro === 'indisponivel' ? `<div class="linha-acoes"><a class="btn btn-linha" href="${N}horario/">Escolher outro horário</a></div>` : '';
@@ -470,6 +479,7 @@ async function telaDocumentos() {
         <a class="btn btn-suave" href="/brow-studio/registros/?agendamento=${q}">Registro do atendimento</a>
         <a class="btn btn-suave" href="/brow-studio/financeiro/novo/?agendamento=${q}&novo=1">Financeiro do atendimento</a>
         <a class="btn btn-suave" href="/brow-studio/estoque/atendimento/?ag=${q}">Materiais usados (estoque)</a>
+        <a class="btn btn-suave" href="/brow-studio/retornos/?origem=${q}">Retornos e retoques</a>
         <a class="btn btn-suave" href="${BASE}historico/?tipo=agendamento&id=${q}">Histórico de alterações</a>
       </nav>`,
     acoes: `<a class="btn btn-linha" href="${det}">${SETA} Voltar ao atendimento</a>`
@@ -771,7 +781,7 @@ async function encConferencia() {
   if (!d || !d.chegada_prevista) return ir(E + 'novo/');
   pagina({
     titulo: 'Conferir encaixe', etapa: 3, etapasTotal: 3, voltar: E + 'novo/chegada/', voltarTexto: 'Voltar',
-    corpo: `<div class="selo-encaixe" role="note"><strong>Encaixe — aguardando disponibilidade</strong><span>O atendimento e o horário não estão garantidos.</span></div>
+    corpo: `${d.retorno_id ? '<p class="etapa vinculo">Retorno: fica como “Aguardando encaixe”, sem horário confirmado.</p>' : ''}<div class="selo-encaixe" role="note"><strong>Encaixe — aguardando disponibilidade</strong><span>O atendimento e o horário não estão garantidos.</span></div>
       <div class="resumo">${blocoResumo('Encaixe', [['Cliente', d.cliente_nome], ['WhatsApp', d.whatsapp ? fone(d.whatsapp) + (d.atualizar_cadastro ? ' (atualiza o cadastro)' : '') : ''],
         ['Serviço', d.servico_nome + ` · ${d.duracao_min} min${d.intervalo_min ? ` + ${d.intervalo_min}` : ''}`], ['Profissional', d.profissional_nome || 'Qualquer profissional'],
         ['Data', dataLonga(d.data)], ['Chegada prevista', d.chegada_prevista], ['Observações', d.observacoes]], E + 'novo/')}</div>
@@ -783,7 +793,8 @@ async function encConferencia() {
     if (enviando) return; enviando = true;
     const b = $('#salvar'); b.disabled = true; b.textContent = 'Salvando…';
     const r = await api('enc_criar', { corpo: { chave_envio: d.chave_envio, cliente_id: d.cliente_id, whatsapp: d.whatsapp || null, atualizar_cadastro: !!d.atualizar_cadastro,
-      servico_id: d.servico_id, profissional_id: d.profissional_id || null, data: d.data, chegada_prevista: d.chegada_prevista, observacoes: d.observacoes || '' } });
+      servico_id: d.servico_id, profissional_id: d.profissional_id || null, data: d.data, chegada_prevista: d.chegada_prevista, observacoes: d.observacoes || '', retorno_id: d.retorno_id || undefined } });
+    if (r.ok && d.retorno_id) { apagarRasc('enc:novo'); recado.pôr(`Retorno na lista de encaixe (${r.ordem}º). Horário não garantido.`); location.replace(`/brow-studio/retornos/ver/?id=${encodeURIComponent(d.retorno_id)}`); return; }
     if (r.ok) { apagarRasc('enc:novo'); recado.pôr(`Encaixe registrado (${r.ordem}º na lista).`); location.replace(`${E}detalhe/?id=${encodeURIComponent(r.id)}`); return; }
     enviando = false; b.disabled = false; b.textContent = 'Tentar novamente';
     $('#aviso').innerHTML = avisoHTML(`${esc(r.msg || 'Não foi possível registrar.')}${r.erros ? ' ' + esc(Object.values(r.erros).join(' ')) : ''}`, 'erro');
