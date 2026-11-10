@@ -592,3 +592,12 @@ span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
 @media (max-width:420px){.menu-botoes{gap:8px}.menu-botoes .btn{min-height:48px}}
 @media (max-width:420px) and (max-height:700px){.menu-botoes .btn{min-height:42px;font-size:15px}.menu-botoes{gap:6px}}
 @media (max-width:420px){.acoes-grade .btn{min-height:46px;font-size:15px;padding:4px 8px;line-height:1.15}}
+/* ═══════════════ MÓDULO ORÇAMENTOS / PACOTES ═══════════════ */
+.selo-or-rascunho{background:#ece3dc;color:#6d5f56}.selo-or-emitida{background:#f1d48a;color:#5a3d12}.selo-or-aprovada{background:#dfe9d6;color:#2f5326}
+.selo-or-recusada{background:#f6d5cc;color:#8f2b16}.selo-or-cancelada{background:#e7e0db;color:#6d5f56}
+.acessos-or{display:grid;grid-template-columns:1fr 1fr;gap:10px}.acessos-or .btn{min-height:48px}
+.fin-valores.fin-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.lista-simples{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.campo textarea.msg-proposta{min-height:220px;font-size:15px;line-height:1.35}
+@media (max-width:600px){.fin-valores.fin-4{grid-template-columns:repeat(2,minmax(0,1fr))}.campo textarea.msg-proposta{min-height:150px}}
+@media (max-height:760px){.campo textarea.msg-proposta{min-height:140px}}

@@ -385,7 +385,7 @@ async function novoConferencia() {
   if (!d || d.inicio_min == null) return ir(N);
   const form = pagina({
     titulo: 'Conferir agendamento', etapa: 4, etapasTotal: 4, formulario: true, voltar: N + 'horario/', voltarTexto: 'Voltar',
-    corpo: `${d.retorno_id ? '<p class="etapa vinculo">Retorno: este horário fica vinculado ao acompanhamento planejado.</p>' : ''}<div class="resumo">
+    corpo: `${d.retorno_id ? '<p class="etapa vinculo">Retorno: este horário fica vinculado ao acompanhamento planejado.</p>' : ''}${d.pacote_item_id ? '<p class="etapa vinculo">Sessão de pacote: reserva 1 sessão (só é consumida quando o atendimento for registrado como realizado).</p>' : ''}<div class="resumo">
         ${blocoResumo('Atendimento', [['Cliente', d.cliente_nome], ['WhatsApp', d.whatsapp ? fone(d.whatsapp) + (d.atualizar_cadastro ? ' (atualiza o cadastro)' : (digitos(d.whatsapp) !== digitos(d.telefone_cadastro) ? ' (só neste agendamento)' : '')) : ''],
           ['Serviço', `${d.servico_nome} · ${reais(d.valor_centavos)}`], ['Profissional', d.profissional_nome]], N)}
         ${blocoResumo('Data e horário', [['Data', dataLonga(d.data)], ['Horário', `${d.inicio} às ${d.fim} (término previsto)`], ['Intervalo após', `até ${d.reserva_fim}`]], N + 'data/')}
@@ -404,7 +404,8 @@ async function novoConferencia() {
     const b = $('#salvar'); b.disabled = true; b.setAttribute('aria-busy', 'true'); b.textContent = 'Salvando…';
     const at = lerRasc('ag:novo');
     const r = await api('ag_criar', { corpo: { chave_envio: at.chave_envio, cliente_id: at.cliente_id, whatsapp: at.whatsapp || null, atualizar_cadastro: !!at.atualizar_cadastro,
-      profissional_id: at.profissional_id, servico_id: at.servico_id, data: at.data, inicio_min: at.inicio_min, observacoes: at.observacoes || '', retorno_id: at.retorno_id || undefined } });
+      profissional_id: at.profissional_id, servico_id: at.servico_id, data: at.data, inicio_min: at.inicio_min, observacoes: at.observacoes || '', retorno_id: at.retorno_id || undefined, pacote_item_id: at.pacote_item_id || undefined } });
+    if (r.ok && at.pacote_item_id) { apagarRasc('ag:novo'); recado.pôr('Sessão do pacote agendada (reservada, não consumida).'); location.replace(`/brow-studio/orcamentos/pacote/item/?id=${encodeURIComponent(at.pacote_item_id)}`); return; }
     if (r.ok && at.retorno_id) { apagarRasc('ag:novo'); recado.pôr('Retorno agendado.'); location.replace(`/brow-studio/retornos/ver/?id=${encodeURIComponent(at.retorno_id)}`); return; }
     if (r.ok) { apagarRasc('ag:novo'); recado.pôr('Agendamento salvo.'); location.replace(`${BASE}atendimento/?id=${encodeURIComponent(r.id)}`); return; }
     enviando = false; b.disabled = false; b.removeAttribute('aria-busy'); b.textContent = 'Tentar novamente';

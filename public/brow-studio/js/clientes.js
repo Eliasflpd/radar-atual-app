@@ -519,6 +519,7 @@ async function telaPerfil() {
         <a class="btn btn-suave" href="/brow-studio/termos/?cliente=${q}">Termos e autorizações</a>
         <a class="btn btn-suave" href="/brow-studio/registros/?cliente=${q}">Atendimentos realizados</a>
         <a class="btn btn-suave" href="/brow-studio/retornos/?cliente=${q}">Retornos e retoques</a>
+        <a class="btn btn-suave" href="/brow-studio/orcamentos/?cliente=${q}">Propostas e pacotes</a>
       </nav>`,
     acoes: `<a class="btn btn-linha" href="${BASE}">${SETA} Voltar à lista</a><a class="btn btn-cheio" href="${BASE}editar/?id=${q}">Editar cadastro</a>`
   });
