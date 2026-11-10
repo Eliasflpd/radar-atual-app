@@ -511,12 +511,13 @@ async function telaPerfil() {
     corpo: `${params.get('salvo') ? avisoHTML('Cadastro salvo com sucesso.', 'ok') : ''}
       <div class="perfil-cabeca">${avatarHTML(c.nome, c.foto, true)}
         <h2>${esc(c.nome)}</h2>${c.apelido ? `<p>Prefere ser chamada de “${esc(c.apelido)}”</p>` : ''}<p class="status-imagem" id="status-imagem" aria-live="polite"></p></div>
-      <nav class="menu-botoes" aria-label="Informações da cliente">
+      <nav class="menu-botoes grade-2" aria-label="Informações da cliente">
         <a class="btn btn-suave" href="${BASE}perfil/dados/?id=${q}">Dados pessoais</a>
         <a class="btn btn-suave" href="${BASE}perfil/contato/?id=${q}">Contato</a>
         <a class="btn btn-suave" href="${BASE}perfil/preferencias/?id=${q}">Preferências e observações</a>
         <a class="btn btn-suave" href="/brow-studio/anamnese/?cliente=${q}">Fichas de anamnese</a>
         <a class="btn btn-suave" href="/brow-studio/termos/?cliente=${q}">Termos e autorizações</a>
+        <a class="btn btn-suave" href="/brow-studio/registros/?cliente=${q}">Atendimentos realizados</a>
       </nav>`,
     acoes: `<a class="btn btn-linha" href="${BASE}">${SETA} Voltar à lista</a><a class="btn btn-cheio" href="${BASE}editar/?id=${q}">Editar cadastro</a>`
   });

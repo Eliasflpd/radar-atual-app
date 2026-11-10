@@ -422,10 +422,7 @@ async function telaAtendimento() {
   if (['agendado', 'confirmado'].includes(s)) acoes.push(B(`${BASE}atendimento/remarcar/?id=${q}`, 'Remarcar'));
   if (['agendado', 'confirmado'].includes(s)) acoes.push(B(`${BASE}atendimento/falta/?id=${q}`, 'Marcar falta'));
   if (['agendado', 'confirmado', 'chegou'].includes(s)) acoes.push(B(`${BASE}atendimento/cancelar/?id=${q}`, 'Cancelar', 'btn-perigo'));
-  acoes.push(B(`${BASE}whatsapp/?tipo=agendamento&id=${q}`, 'WhatsApp e avisos'));
-  acoes.push(B(`/brow-studio/anamnese/ficha/?ag=${q}`, 'Ficha de anamnese'));
-  acoes.push(B(`/brow-studio/termos/?agendamento=${q}`, 'Termo e autorização'));
-  acoes.push(B(`${BASE}historico/?tipo=agendamento&id=${q}`, 'Histórico'));
+  acoes.push(B(`${BASE}atendimento/documentos/?id=${q}`, 'Documentos e avisos', 'btn-cheio'));
   pagina({
     titulo: 'Atendimento', voltar: `${BASE}?data=${a.data}`, voltarTexto: 'Agenda',
     corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}${r.aviso ? avisoHTML(esc(r.aviso), 'erro') : ''}
@@ -455,6 +452,28 @@ async function telaAtendimento() {
   focarTitulo();
 }
 const app = document.getElementById('app');
+
+// Documentos e avisos do atendimento (página própria: WhatsApp, ficha, termo, registro, histórico)
+async function telaDocumentos() {
+  carregando('Documentos e avisos');
+  const r = await api('ag_ver', { id: params.get('id') });
+  if (!r.ok) return telaErro('Documentos e avisos', r.msg);
+  const a = r.agendamento; const q = qid(); const det = `${BASE}atendimento/?id=${q}`;
+  pagina({
+    titulo: 'Documentos e avisos', voltar: det, voltarTexto: 'Atendimento',
+    corpo: `<div class="servico-cabeca"><h2>${esc(a.cliente_nome)}</h2>${seloAg(a.situacao)}</div>
+      <p class="etapa">${esc(a.servico_nome)} · ${esc(dataLonga(a.data))}, ${a.inicio}</p>
+      <nav class="menu-botoes" aria-label="Documentos e avisos">
+        <a class="btn btn-suave" href="${BASE}whatsapp/?tipo=agendamento&id=${q}">WhatsApp e avisos</a>
+        <a class="btn btn-suave" href="/brow-studio/anamnese/ficha/?ag=${q}">Ficha de anamnese</a>
+        <a class="btn btn-suave" href="/brow-studio/termos/?agendamento=${q}">Termo e autorização</a>
+        <a class="btn btn-suave" href="/brow-studio/registros/?agendamento=${q}">Registro do atendimento</a>
+        <a class="btn btn-suave" href="${BASE}historico/?tipo=agendamento&id=${q}">Histórico de alterações</a>
+      </nav>`,
+    acoes: `<a class="btn btn-linha" href="${det}">${SETA} Voltar ao atendimento</a>`
+  });
+  focarTitulo();
+}
 
 // Chegada / início / término reais (página própria)
 async function telaRegistrar() {
@@ -1083,6 +1102,7 @@ const TELAS = {
   'novo-conferencia': novoConferencia,
   atendimento: telaAtendimento,
   registrar: telaRegistrar,
+  documentos: telaDocumentos,
   cancelar: () => telaConfirmarAg('cancelar'),
   falta: () => telaConfirmarAg('falta'),
   'remarcar-data': () => telaRemarcar('data'),
