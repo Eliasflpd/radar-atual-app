@@ -165,6 +165,10 @@
     {
       "source": "/ouvir",
       "destination": "/ouvir.html"
+    },
+    {
+      "source": "/api/brow",
+      "destination": "/api/dados?fn=brow"
     }
   ],
   "headers": [
