@@ -16,7 +16,7 @@ const F = BASE + 'ficha/';
 const RESP = { sim: 'Sim', nao: 'Não', nao_sabe: 'Não sabe informar' };
 const SIT = { rascunho: 'Rascunho', conferida: 'Conferida' };
 const PAGINA_DA_ETAPA = { cliente: '', atendimento: 'atendimento/', procedimento: 'procedimento/', alergias: 'alergias/', medicamentos: 'medicamentos/', historico: 'historico/', observacoes: 'observacoes/', conferencia: 'conferencia/' };
-const ACOES_HIST = { criada: 'Ficha criada', rascunho_salvo: 'Rascunho salvo', conferida: 'Salva como conferida', alterada_apos_conferencia: 'Alterada depois de conferida (voltou para rascunho)' };
+const ACOES_HIST = { criada: 'Ficha criada', rascunho_salvo: 'Rascunho salvo', conferida: 'Salva como conferida', criada_a_partir: 'Criada a partir de ficha conferida (respostas copiadas)', nova_ficha_criada: 'Nova ficha criada a partir desta', alterada_apos_conferencia: 'Alterada depois de conferida' };
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const dataCurta = (iso) => { if (!iso) return 'Sem data'; const [a, m, d] = iso.split('-'); return `${d} ${MESES[+m - 1]} ${a}`; };
 const reais = (c) => { const s = String(Math.max(0, c | 0)).padStart(3, '0'); return `R$ ${s.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${s.slice(-2)}`; };
@@ -60,7 +60,7 @@ function deFicha(f) {
     servico_id: f.servico_id, servico_nome: f.servico_nome || '', profissional_id: f.profissional_id, profissional_nome: f.profissional_nome || '', data: f.data || '',
     respostas: { alergias: { resposta: r.alergias.resposta, detalhe: r.alergias.detalhe || '' }, medicamentos: { resposta: r.medicamentos.resposta, detalhe: r.medicamentos.detalhe || '' },
       historico: { procedimentos_anteriores: r.historico.procedimentos_anteriores || '', pele: r.historico.pele || '' }, observacoes: r.observacoes || '' },
-    origem_situacao: f.situacao, alterada: false };
+    origem_situacao: f.situacao, alterada: false, copiada: !!f.copiada };
 }
 async function salvarNoServidor(etapa, { conferir = false, confirmacao = false } = {}) {
   const d = ler();
@@ -84,7 +84,8 @@ function ligarRascunho(etapa, antes) {
   };
 }
 const botaoRascunho = '<button type="button" class="btn btn-suave btn-rascunho" id="rascunho">Salvar rascunho e sair</button>';
-function avisoAlterada(d) { return d.origem_situacao === 'conferida' && d.alterada ? avisoHTML('As respostas foram alteradas: será preciso <strong>conferir novamente com a cliente</strong>.', 'erro') : ''; }
+// Ficha nova criada a partir de uma conferida: as respostas vieram copiadas e só valem depois de nova conferência.
+function avisoAlterada(d) { return d.copiada ? avisoHTML('Respostas <strong>copiadas da ficha conferida anterior</strong>. Confira cada uma com a cliente: só valem depois da nova conferência.', 'erro') : ''; }
 function rodapeEtapa(voltar, proxTexto) {
   const conf = params.get('conf') === '1';
   return `${botaoRascunho}<a class="btn btn-linha" href="${voltar}">${SETA} Voltar</a><button type="submit" class="btn btn-cheio">${conf ? 'Voltar à conferência' : (proxTexto || 'Próximo <span aria-hidden="true">→</span>')}</button>`;
@@ -431,6 +432,7 @@ function telaRevisar() {
 }
 
 // ═══════════════════════════ LER FICHA (paginada por seção) ════════════════
+const dataHora = (t) => new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 async function telaVer() {
   carregando('Ficha de anamnese');
   const r = await api('an_ver', { id: params.get('id') });
@@ -440,46 +442,80 @@ async function telaVer() {
   const paginas = [...SECOES, ['situacao', 'Situação e histórico']];
   let p = Math.min(Math.max(parseInt(params.get('p'), 10) || 1, 1), paginas.length);
   const q = encodeURIComponent(f.id);
-  const editar = () => {
-    gravarRasc('an:' + f.id, d);
-    const etapa = f.situacao === 'rascunho' ? (PAGINA_DA_ETAPA[f.etapa_atual] || '') : '';
-    location.href = `${F}${etapa}?id=${q}`;
-  };
+  // Rascunho: continua de onde parou. Conferida: registro histórico — atualizar = nova ficha vinculada.
+  let botao;
+  if (f.situacao === 'rascunho') botao = `<button type="button" class="btn btn-cheio" id="continuar">Continuar preenchimento</button>`;
+  else if (r.posterior && r.posterior.situacao === 'rascunho') botao = `<a class="btn btn-cheio" href="${BASE}ver/?id=${encodeURIComponent(r.posterior.id)}">Abrir ficha nova (rascunho)</a>`;
+  else botao = `<a class="btn btn-cheio" href="${BASE}nova-versao/?id=${q}">Atualizar em nova ficha</a>`;
   const desenhar = () => {
     const [s, t] = paginas[p - 1];
     const corpo = s === 'situacao'
-      ? `<div class="bloco"><dl class="dados"><dt>Situação</dt><dd>${SIT[f.situacao]}</dd>${f.conferida_em ? `<dt>Conferida em</dt><dd>${new Date(f.conferida_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</dd>` : ''}
+      ? `<div class="bloco"><dl class="dados"><dt>Situação</dt><dd>${SIT[f.situacao]}${f.situacao === 'conferida' ? ' · registro histórico' : ''}</dd>
+          <dt>Criada em</dt><dd>${dataHora(f.criado_em)}</dd>
+          ${f.conferida_em ? `<dt>Conferida em</dt><dd>${dataHora(f.conferida_em)}</dd>` : ''}
+          <dt>Autoria</dt><dd>${f.conferido_por || f.criado_por ? esc(f.conferido_por || f.criado_por) : 'registrada quando o login estiver ativo'}</dd>
+          ${r.anterior ? `<dt>Atualiza</dt><dd><a href="${BASE}ver/?id=${encodeURIComponent(r.anterior.id)}">ficha de ${dataCurta(r.anterior.data)}</a></dd>` : ''}
+          ${r.posterior ? `<dt>Atualizada por</dt><dd><a href="${BASE}ver/?id=${encodeURIComponent(r.posterior.id)}">ficha de ${dataCurta(r.posterior.data)} (${SIT[r.posterior.situacao]})</a></dd>` : ''}
           ${Object.keys(r.pendencias).length ? `<dt>Falta</dt><dd>${esc(Object.values(r.pendencias).join(' '))}</dd>` : ''}</dl>
-          <p class="ajuda" style="margin-top:8px">“Conferida” significa que as respostas foram revisadas com a cliente. Não é assinatura nem autorização para o procedimento.</p></div>
-        <ul class="lista linha-tempo hist-curto">${r.historico.slice(-4).reverse().map(h => `<li class="evento"><strong>${esc(ACOES_HIST[h.acao] || h.acao)}</strong><small>${esc(new Date(h.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }))}</small></li>`).join('')}</ul>`
+          <p class="ajuda" style="margin-top:8px">“Conferida” = respostas revisadas com a cliente. Não é assinatura nem autorização para o procedimento.</p></div>
+        <ul class="lista linha-tempo hist-curto">${r.historico.slice(-3).reverse().map(h => `<li class="evento"><strong>${esc(ACOES_HIST[h.acao] || h.acao)}</strong><small>${esc(dataHora(h.criado_em))}</small></li>`).join('')}</ul>`
       : `<div class="resumo">${blocoResumo(t, linhasSecao(s, d))}</div>`;
     pagina({
       titulo: 'Ficha de anamnese', voltar: BASE, voltarTexto: 'Fichas',
       corpo: `${msg && p === 1 ? avisoHTML(esc(msg), 'ok') : ''}
         <div class="servico-cabeca"><h2>${esc(f.cliente_nome)}</h2>${seloSit(f.situacao)}</div>
-        <p class="etapa">${esc(f.servico_nome || 'Procedimento não informado')} · ${dataCurta(f.data)} · seção ${p} de ${paginas.length}</p>
+        <p class="etapa">${esc(f.servico_nome || 'Procedimento não informado')} · ${esc(f.profissional_nome || 'sem profissional')} · ${dataCurta(f.data)} · seção ${p} de ${paginas.length}</p>
+        ${f.copiada && f.situacao === 'rascunho' && p === 1 ? avisoAlterada(d) : ''}
         ${corpo}${navPaginas('nav')}`,
       acoes: `<a class="btn btn-linha" href="${BASE}">${SETA} Fichas</a>
-        <a class="btn btn-linha" href="/brow-studio/clientes/perfil/?id=${encodeURIComponent(f.cliente_id)}">Perfil da cliente</a>
-        <button type="button" class="btn btn-cheio" id="editar">${f.situacao === 'rascunho' ? 'Continuar preenchimento' : 'Editar respostas'}</button>`
+        <a class="btn btn-linha" href="/brow-studio/clientes/perfil/?id=${encodeURIComponent(f.cliente_id)}">Perfil<span class="so-largo">&nbsp;da cliente</span></a>${botao}`
     });
     ligarNav($('#nav'), { pagina: p, paginas: paginas.length }, (n) => { p = n; const u = new URL(location.href); u.searchParams.set('p', p); history.replaceState(null, '', u); desenhar(); });
-    $('#editar').onclick = editar;
+    const c = $('#continuar');
+    if (c) c.onclick = () => { gravarRasc('an:' + f.id, d); location.href = `${F}${PAGINA_DA_ETAPA[f.etapa_atual] || ''}?id=${q}`; };
     focarTitulo();
   };
   desenhar();
+}
+
+// Nova ficha a partir de uma conferida (página própria de confirmação)
+async function telaNovaVersao() {
+  carregando('Atualizar ficha');
+  const r = await api('an_ver', { id: params.get('id') });
+  if (!r.ok) return telaErro('Atualizar ficha', r.msg || 'Ficha não encontrada.');
+  const f = r.ficha; const volta = `${BASE}ver/?id=${encodeURIComponent(f.id)}`;
+  pagina({
+    titulo: 'Atualizar ficha', voltar: volta, voltarTexto: 'Ficha',
+    corpo: `<div class="bloco"><div class="servico-cabeca"><h2>${esc(f.cliente_nome)}</h2>${seloSit(f.situacao)}</div>
+        <p class="ajuda">${esc(f.servico_nome || '')} · ${dataCurta(f.data)}${f.conferida_em ? ` · conferida em ${dataHora(f.conferida_em)}` : ''}</p></div>
+      ${avisoHTML('A ficha conferida <strong>continua guardada como está</strong>, como registro histórico. Será criada uma <strong>nova ficha</strong>, ligada a esta, com as respostas copiadas.')}
+      ${avisoHTML('As respostas copiadas <strong>não valem como atuais</strong>: confira cada uma com a cliente e salve a nova ficha como conferida.', 'erro')}
+      <div id="aviso"></div>`,
+    acoes: `<a class="btn btn-linha" href="${volta}">Cancelar</a><button type="button" class="btn btn-cheio" id="criar">Criar nova ficha</button>`
+  });
+  let enviando = false;
+  $('#criar').onclick = async () => {
+    if (enviando) return; enviando = true;
+    const b = $('#criar'); b.disabled = true; b.textContent = 'Criando…';
+    const rr = await api('an_nova_versao', { corpo: { id: f.id } });
+    if (!rr.ok) { enviando = false; b.disabled = false; b.textContent = 'Tentar novamente'; $('#aviso').innerHTML = avisoHTML(esc(rr.msg || 'Não foi possível criar a nova ficha.'), 'erro'); return; }
+    const v = await api('an_ver', { id: rr.id });
+    if (v.ok) gravarRasc('an:' + rr.id, deFicha(v.ficha));
+    location.replace(`${F}?id=${encodeURIComponent(rr.id)}`);
+  };
+  focarTitulo();
 }
 
 // ─── roteamento ─────────────────────────────────────────────────────────────
 const TELAS = {
   lista: telaLista, cliente: etapaCliente, atendimento: etapaAtendimento, procedimento: etapaProcedimento,
   alergias: () => etapaPergunta('alergias'), medicamentos: () => etapaPergunta('medicamentos'),
-  historico: etapaHistorico, observacoes: etapaObservacoes, conferencia: etapaConferencia, revisar: telaRevisar, ver: telaVer
+  historico: etapaHistorico, observacoes: etapaObservacoes, conferencia: etapaConferencia, revisar: telaRevisar, ver: telaVer, 'nova-versao': telaNovaVersao
 };
 (async () => {
   const pg = document.body.dataset.pagina;
   // etapa aberta direto pelo endereço de uma ficha salva: busca a ficha antes de desenhar
-  if (fichaId() && !['lista', 'ver'].includes(pg) && !ler()) {
+  if (fichaId() && !['lista', 'ver', 'nova-versao'].includes(pg) && !ler()) {
     carregando('Ficha de anamnese');
     const r = await api('an_ver', { id: fichaId() });
     if (!r.ok) return telaErro('Ficha de anamnese', r.msg || 'Não foi possível abrir a ficha.');

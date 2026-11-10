@@ -13,8 +13,11 @@
 //  • Rascunho aceita respostas incompletas (exige só a cliente).
 //  • "Conferida" exige: cliente, serviço, profissional, data, as duas perguntas
 //    respondidas, detalhe quando "Sim" e confirmacao === true.
-//  • Qualquer mudança nas respostas de uma ficha conferida a devolve para
-//    Rascunho (precisa de nova conferência) e fica registrada no histórico.
+//  • Ficha CONFERIDA é registro histórico: nunca é alterada. Para atualizar,
+//    cria-se uma NOVA ficha ligada à anterior (anterior_id), com as respostas
+//    copiadas e marcadas como "copiada" — só valem depois de nova conferência.
+//  • Autoria: criado_por / conferido_por vêm do login (hoje nulo); criado_em e
+//    conferida_em sempre gravados.
 //  • "modelo" guarda qual conjunto de perguntas foi usado (padrao_v1) — permite
 //    perguntas diferentes por procedimento no futuro sem perder as antigas.
 // ═══════════════════════════════════════════════════════════════════════════
@@ -34,9 +37,15 @@ async function garantirTabela(c) {
     situacao text not null default 'rascunho' check (situacao in ('rascunho','conferida')),
     etapa_atual text not null default 'cliente',
     conferida_em timestamptz, chave_envio text,
+    anterior_id text, versao integer not null default 1, copiada boolean not null default false,
+    criado_por text, conferido_por text,
     criado_em timestamptz not null default now(), atualizado_em timestamptz not null default now())`);
   await c.query(`create unique index if not exists brow_an_envio on brow_anamneses(estab, chave_envio) where chave_envio is not null`);
   await c.query(`create index if not exists brow_an_cliente on brow_anamneses(estab, cliente_id)`);
+  // tabela criada pela versão anterior deste módulo: acrescenta as colunas novas
+  for (const col of ["anterior_id text", "versao integer not null default 1", "copiada boolean not null default false", "criado_por text", "conferido_por text"])
+    await c.query(`alter table brow_anamneses add column if not exists ${col}`);
+  await c.query(`create unique index if not exists brow_an_rascunho_derivado on brow_anamneses(estab, anterior_id) where anterior_id is not null and situacao = 'rascunho'`);
 }
 
 const txt = (v, max) => { const s = (v == null ? '' : String(v)).trim(); return s ? s.slice(0, max) : null; };
@@ -107,7 +116,9 @@ module.exports = async function anamnese(c, estab, req, res, acao, garantirOutra
     const f = r.rows[0];
     f.respostas = lerRespostas(f.respostas);
     const h = await c.query(`select acao, detalhes, criado_em from brow_historico where estab=$1 and tipo='anamnese' and ref_id=$2 order by id`, [estab, f.id]);
-    res.status(200).json({ ok: true, ficha: f, pendencias: pendencias(f), historico: h.rows });
+    const ant = f.anterior_id ? (await c.query(`select id, to_char(data,'YYYY-MM-DD') data, conferida_em from brow_anamneses where estab=$1 and id=$2`, [estab, f.anterior_id])).rows[0] || null : null;
+    const pos = (await c.query(`select id, to_char(data,'YYYY-MM-DD') data, situacao from brow_anamneses where estab=$1 and anterior_id=$2 order by criado_em desc limit 1`, [estab, f.id])).rows[0] || null;
+    res.status(200).json({ ok: true, ficha: f, pendencias: pendencias(f), historico: h.rows, anterior: ant, posterior: pos });
     return;
   }
 
@@ -160,31 +171,63 @@ module.exports = async function anamnese(c, estab, req, res, acao, garantirOutra
         const r0 = await c.query(`${SEL} where estab=$1 and id=$2 for update`, [estab, id]);
         if (!r0.rows.length) { await c.query('rollback'); return erro(res, 404, 'nao_encontrada', 'Ficha não encontrada.'); }
         antes = r0.rows[0]; antes.respostas = lerRespostas(antes.respostas);
+        if (antes.situacao === 'conferida') { await c.query('rollback'); return erro(res, 409, 'conferida', 'Fichas conferidas são registros históricos e não podem ser alteradas. Para atualizar, crie uma nova ficha a partir desta.'); }
       } else {
         const chave = txt(b.chave_envio, 64);
         if (!chave) { await c.query('rollback'); return erro(res, 400, 'chave_envio', 'Pedido incompleto.'); }
         // toques simultâneos com a mesma chave: o segundo espera o primeiro e reaproveita a mesma ficha
         const novo = crypto.randomUUID();
-        const ins = await c.query(`insert into brow_anamneses(id,estab,cliente_id,cliente_nome,chave_envio) values($1,$2,$3,$4,$5)
-          on conflict (estab, chave_envio) where chave_envio is not null do nothing returning id`, [novo, estab, f.cliente_id, f.cliente_nome, chave]);
+        const ins = await c.query(`insert into brow_anamneses(id,estab,cliente_id,cliente_nome,chave_envio,criado_por) values($1,$2,$3,$4,$5,$6)
+          on conflict (estab, chave_envio) where chave_envio is not null do nothing returning id`, [novo, estab, f.cliente_id, f.cliente_nome, chave, req.brow_usuario || null]);
         if (ins.rows.length) { id = novo; await historico(c, estab, id, 'criada', null); }
         else {
           const r0 = await c.query(`${SEL} where estab=$1 and chave_envio=$2 for update`, [estab, chave]);
           id = r0.rows[0].id; antes = r0.rows[0]; antes.respostas = lerRespostas(antes.respostas);
+          if (antes.situacao === 'conferida') { await c.query('rollback'); res.status(200).json({ ok: true, id, situacao: 'conferida', repetido: true }); return; }
         }
       }
       const mudou = antes && (JSON.stringify(antes.respostas) !== JSON.stringify(f.respostas) ||
         ['cliente_id', 'servico_id', 'profissional_id', 'data', 'agendamento_id'].some(k => (antes[k] || null) !== (f[k] || null)));
       await c.query(`update brow_anamneses set cliente_id=$3, cliente_nome=$4, servico_id=$5, servico_nome=$6, profissional_id=$7, profissional_nome=$8,
           data=$9, agendamento_id=$10, respostas=$11, situacao=$12, etapa_atual=$13,
-          conferida_em = case when $12='conferida' then now() else null end, atualizado_em=now()
+          conferida_em = case when $12='conferida' then now() else null end,
+          conferido_por = case when $12='conferida' then $14 else null end,
+          copiada = case when $12='conferida' then false else copiada end, atualizado_em=now()
         where estab=$1 and id=$2`,
         [estab, id, f.cliente_id, f.cliente_nome, f.servico_id, f.servico_nome, f.profissional_id, f.profissional_nome, f.data, f.agendamento_id,
-          JSON.stringify(f.respostas), situacao, conferir ? 'conferencia' : etapa]);
-      if (antes && antes.situacao === 'conferida' && mudou && !conferir) await historico(c, estab, id, 'alterada_apos_conferencia', { situacao: 'voltou para rascunho' });
+          JSON.stringify(f.respostas), situacao, conferir ? 'conferencia' : etapa, req.brow_usuario || null]);
+      void mudou;
       await historico(c, estab, id, conferir ? 'conferida' : 'rascunho_salvo', conferir ? { confirmacao: 'Respostas conferidas com a cliente (não é assinatura nem autorização)' } : { etapa });
       await c.query('commit');
       res.status(200).json({ ok: true, id, situacao });
+      return;
+    } catch (e) { await c.query('rollback'); throw e; }
+  }
+
+  // NOVA FICHA A PARTIR DE UMA CONFERIDA (a anterior fica intacta como registro histórico)
+  if (req.method === 'POST' && acao === 'an_nova_versao') {
+    const b = corpo(req);
+    await c.query('begin');
+    try {
+      const r0 = await c.query(`${SEL} where estab=$1 and id=$2 for update`, [estab, String(b.id || '')]);
+      if (!r0.rows.length) { await c.query('rollback'); return erro(res, 404, 'nao_encontrada', 'Ficha não encontrada.'); }
+      const a = r0.rows[0];
+      if (a.situacao !== 'conferida') { await c.query('rollback'); return erro(res, 409, 'nao_conferida', 'Só fichas conferidas geram uma nova ficha. Esta ainda é rascunho: continue o preenchimento.'); }
+      // já existe um rascunho derivado desta ficha? devolve ele (toque repetido não cria cópias)
+      const ja = await c.query(`select id from brow_anamneses where estab=$1 and anterior_id=$2 and situacao='rascunho'`, [estab, a.id]);
+      if (ja.rows.length) { await c.query('rollback'); res.status(200).json({ ok: true, id: ja.rows[0].id, repetido: true }); return; }
+      const cfg = (await c.query('select fuso from brow_config where estab=$1', [estab])).rows[0];
+      const hoje = new Intl.DateTimeFormat('en-CA', { timeZone: (cfg && cfg.fuso) || 'America/Sao_Paulo' }).format(new Date());
+      const id = crypto.randomUUID();
+      await c.query(`insert into brow_anamneses(id,estab,modelo,cliente_id,cliente_nome,servico_id,servico_nome,profissional_id,profissional_nome,data,
+          respostas,situacao,etapa_atual,anterior_id,versao,copiada,criado_por)
+        values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'rascunho','cliente',$12,$13,true,$14)`,
+        [id, estab, a.modelo, a.cliente_id, a.cliente_nome, a.servico_id, a.servico_nome, a.profissional_id, a.profissional_nome, hoje,
+          JSON.stringify(lerRespostas(a.respostas)), a.id, (a.versao || 1) + 1, req.brow_usuario || null]);
+      await historico(c, estab, id, 'criada_a_partir', { anterior_id: a.id, observacao: 'respostas copiadas; exigem nova conferência' });
+      await historico(c, estab, a.id, 'nova_ficha_criada', { nova_id: id });
+      await c.query('commit');
+      res.status(201).json({ ok: true, id });
       return;
     } catch (e) { await c.query('rollback'); throw e; }
   }

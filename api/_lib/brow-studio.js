@@ -37,7 +37,8 @@ const MAX_MINI = 80 * 1024;
 
 // ─── trava de acesso (ver cabeçalho) ────────────────────────────────────────
 function acesso(req) {
-  if (process.env.BROW_TESTE_SEM_LOGIN === '1' && !process.env.VERCEL) return { ok: true, estab: 'principal' };
+  // usuario: quem está logado (o login vai preencher; hoje é nulo). Os módulos gravam a autoria com ele.
+  if (process.env.BROW_TESTE_SEM_LOGIN === '1' && !process.env.VERCEL) return { ok: true, estab: 'principal', usuario: null };
   return { ok: false };
 }
 
@@ -194,6 +195,7 @@ module.exports = async (req, res) => {
     // AGENDA, AGENDAMENTOS E ENCAIXES (módulo 3). Ver api/_lib/brow-agenda.js.
     // FICHA DE ANAMNESE (módulo 4). Ver api/_lib/brow-anamnese.js.
     if (acao.startsWith('an_')) {
+      req.brow_usuario = porta.usuario || null;
       await require('./brow-anamnese.js')(c, estab, req, res, acao, async (cc) => {
         await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
       });

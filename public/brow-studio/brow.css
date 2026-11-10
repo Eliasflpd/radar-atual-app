@@ -422,3 +422,5 @@ legend.pergunta{font-family:var(--serifa);font-weight:500;font-size:clamp(22px,3
 @media (max-height:680px){.hist-curto li:nth-child(n+2){display:none}.menu-botoes .btn{min-height:46px}.menu-botoes{gap:8px}}
 @media (max-height:680px){.aviso-caixa.vinculo{padding:6px 10px;font-size:13px}.opcao-linha span{min-height:46px;padding:4px 12px}.opcao-linha span small{font-size:13px}}
 @media (max-width:420px){.app-corpo>p.etapa:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+@media (max-width:600px){.hist-curto li:nth-child(n+2){display:none}.hist-curto{flex:0}}
+@media (max-height:680px){.hist-curto{display:none}.bloco .ajuda{font-size:13px}}
