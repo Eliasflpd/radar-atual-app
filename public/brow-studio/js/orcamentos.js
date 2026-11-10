@@ -320,19 +320,26 @@ async function etapaConferencia() {
   const d = ler(); if (!d || !d.itens || !d.itens.length) return ir(EP + qs());
   const sub = subtotal(d.itens), desc = centavos(d.desconto || '0') || 0;
   const corr = (e) => `${EP}${e}${qs(true, { conf: '1' })}`;
-  const its = d.itens.slice(0, 3).map((i, k) => [`Item ${k + 1}`, `${i.servico_nome} · ${sessoes(i.quantidade)} × ${reais(i.preco_centavos)} = ${reais(i.quantidade * i.preco_centavos)}`]);
-  if (d.itens.length > 3) its.push(['…', `e mais ${d.itens.length - 3} item(ns)`]);
+  const nIt = window.innerWidth < 600 ? 2 : 3;
+  const its = d.itens.slice(0, nIt).map((i, k) => [`Item ${k + 1}`, `${i.servico_nome} · ${sessoes(i.quantidade)} × ${reais(i.preco_centavos)} = ${reais(i.quantidade * i.preco_centavos)}`]);
+  if (d.itens.length > nIt) its.push(['…', `e mais ${d.itens.length - nIt} item(ns) — total de ${d.itens.length}`]);
+  const secoes = [
+    blocoResumo(MODO === 'm' ? 'Modelo' : 'Identificação', MODO === 'm' ? [['Nome', d.nome]] : [['Título', d.titulo], ['Cliente', d.cliente_nome], ['WhatsApp', fone(d.whatsapp)]], corr('')),
+    blocoResumo('Serviços e sessões', its, corr('itens/')),
+    blocoResumo('Valores e prazos', [['Subtotal / desconto', `${reais(sub)} − ${reais(desc)}`], ['Valor final', reais(sub - desc)], ...(MODO === 'p' ? [['Validade da proposta', dataBR(d.validade)], ['Prazo de utilização', d.prazo_uso ? dataBR(d.prazo_uso) : 'Sem prazo definido']] : [])], corr('condicoes/')),
+    blocoResumo('Inclusão e condições', [['Retoques', RETOQUES[d.retoques] || 'Não informado'], ['Incluído', curto(d.inclui)], ['Condições', curto(d.condicoes)]], corr('inclusao/'))];
   pagina({
     titulo: tituloEd(), etapa: 4, etapasTotal: TOTAL, voltar: EP + 'inclusao/' + qs(true), voltarTexto: 'Voltar',
-    corpo: `<div class="resumo resumo-ct">
-        ${blocoResumo(MODO === 'm' ? 'Modelo' : 'Identificação', MODO === 'm' ? [['Nome', d.nome]] : [['Título', d.titulo], ['Cliente', d.cliente_nome], ['WhatsApp', fone(d.whatsapp)]], corr(''))}
-        ${blocoResumo('Serviços e sessões', its, corr('itens/'))}
-        ${blocoResumo('Valores e prazos', [['Subtotal / desconto', `${reais(sub)} − ${reais(desc)}`], ['Valor final', reais(sub - desc)], ...(MODO === 'p' ? [['Validade da proposta', dataBR(d.validade)], ['Prazo de utilização', d.prazo_uso ? dataBR(d.prazo_uso) : 'Sem prazo definido']] : [])], corr('condicoes/'))}
-        ${blocoResumo('Inclusão e condições', [['Retoques', RETOQUES[d.retoques] || 'Não informado'], ['Incluído', curto(d.inclui)], ['Condições', curto(d.condicoes)]], corr('inclusao/'))}
-      </div><div id="aviso"></div>`,
+    corpo: `<div class="resumo resumo-ct" id="secoes"></div>${navPaginas('nav')}<div id="aviso"></div>`,
     acoes: MODO === 'm' ? `<a class="btn btn-linha" href="${EP}inclusao/${qs(true)}">${SETA} Voltar</a><button type="button" class="btn btn-cheio" data-salvar="0">Salvar modelo</button>`
       : `<a class="btn btn-linha" href="${EP}inclusao/${qs(true)}">${SETA} Voltar</a>${eid() && d.situacao === 'emitida' ? '' : '<button type="button" class="btn btn-suave" data-salvar="0">Salvar rascunho</button>'}<button type="button" class="btn btn-cheio" data-salvar="1">${eid() && d.situacao === 'emitida' ? 'Salvar revisão' : 'Salvar e emitir'}</button>`
   });
+  // mostra todas as seções se couberem; senão pagina (4 → 2 → 1 por tela), sem cortar conteúdo
+  let por = 4, pg = 1;
+  const desenhar = () => { const paginas = Math.ceil(secoes.length / por); pg = Math.min(pg, paginas); $('#secoes').innerHTML = secoes.slice((pg - 1) * por, pg * por).join('');
+    ligarNav($('#nav'), { pagina: pg, paginas, total: secoes.length, rotulo: 'seções' }, (n) => { pg = n; desenhar(); }); };
+  desenhar();
+  while (passou() && por > 1) { por = por === 4 ? 2 : 1; pg = 1; desenhar(); }
   let env = false;
   app.querySelectorAll('[data-salvar]').forEach(b => b.onclick = async () => {
     if (env) return; env = true; app.querySelectorAll('[data-salvar]').forEach(x => { x.disabled = true; }); const txtOrig = b.textContent; b.textContent = 'Salvando…';
@@ -357,7 +364,7 @@ async function telaProposta() {
   const B = (h, t, c = 'btn-suave', extra = '') => `<a class="btn ${c}" href="${h}" ${extra}>${t}</a>`;
   const a = [];
   if (p.situacao === 'rascunho') a.push(`<button type="button" class="btn btn-cheio" id="emitir" ${p.vencida ? 'disabled' : ''}>Emitir proposta</button>`);
-  if (p.situacao === 'emitida') a.push(p.vencida ? B(`${BASE}nova/?id=${q}`, 'Revisar (validade vencida)', 'btn-cheio', 'id="editar"') : B(`${BASE}aprovar/?id=${q}`, 'Registrar aprovação', 'btn-cheio'), B(`${BASE}recusar/?id=${q}`, 'Registrar recusa'));
+  if (p.situacao === 'emitida') a.push(p.vencida ? B(`${BASE}nova/?id=${q}`, 'Revisar validade', 'btn-cheio', 'id="editar"') : B(`${BASE}aprovar/?id=${q}`, 'Registrar aprovação', 'btn-cheio'), B(`${BASE}recusar/?id=${q}`, 'Registrar recusa'));
   if (p.situacao === 'aprovada' && p.pacote_id) a.push(B(`${BASE}pacote/?id=${encodeURIComponent(p.pacote_id)}`, 'Ver pacote', 'btn-cheio'));
   if (p.situacao === 'aprovada' && p.total_centavos > 0) a.push(r.lancamento && !r.lancamento.cancelado ? B(`/brow-studio/financeiro/ver/?id=${encodeURIComponent(r.lancamento.id)}`, 'Abrir receita') : B(`${BASE}receita/?id=${q}`, 'Receita no financeiro'));
   if (['rascunho', 'emitida'].includes(p.situacao) && !(p.situacao === 'emitida' && p.vencida)) a.push(B(`${BASE}nova/?id=${q}`, p.situacao === 'emitida' ? 'Revisar proposta' : 'Editar', 'btn-suave', 'id="editar"'));
@@ -367,9 +374,9 @@ async function telaProposta() {
     titulo: p.pacote_alvo_id ? 'Aditivo' : 'Proposta', voltar: BASE, voltarTexto: 'Propostas',
     corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}
       <div class="servico-cabeca"><h2>${esc(p.titulo)}</h2><span class="selos">${seloP(p)}</span></div>
-      ${p.vencida ? avisoHTML(`Validade vencida em ${dataBR(p.validade)}: revise antes de ${p.situacao === 'rascunho' ? 'emitir' : 'aprovar'}.`, 'erro') : ''}
+      ${p.vencida ? `<div class="so-largo-bloco">${avisoHTML(`Validade vencida em ${dataBR(p.validade)}: revise antes de ${p.situacao === 'rascunho' ? 'emitir' : 'aprovar'}.`, 'erro')}</div>` : ''}
       <div class="fin-valores"><div><span>Subtotal</span><strong>${reais(p.subtotal_centavos)}</strong></div><div><span>Desconto</span><strong>${reais(p.desconto_centavos)}</strong></div><div><span>Total</span><strong>${reais(p.total_centavos)}</strong></div></div>
-      <div class="resumo resumo-ct">${blocoResumo(`Versão ${p.versao} · criada em ${dataBR(p.criada_em)}`, [['Cliente', p.cliente_name || p.cliente_nome], ['Profissional', p.profissional_nome], ['Validade', dataBR(p.validade)], ['Prazo de utilização', p.prazo_uso ? dataBR(p.prazo_uso) : 'Sem prazo definido'],
+      <div class="resumo resumo-ct">${blocoResumo(`Versão ${p.versao} · criada em ${dataBR(p.criada_em)}`, [['Cliente', p.cliente_name || p.cliente_nome], ['Profissional', p.profissional_nome], ['Validade / prazo de uso', `${dataBR(p.validade)} / ${p.prazo_uso ? dataBR(p.prazo_uso) : 'sem prazo'}`],
         ...(p.situacao === 'aprovada' ? [['Aprovação', `${p.aprovacao_ref} · ${p.aprovada_por || 'login pendente'}`]] : []), ...(p.recusa_motivo ? [['Recusa', p.recusa_motivo]] : []), ...(p.cancel_motivo ? [['Cancelamento', p.cancel_motivo]] : [])])}</div>
       <div id="aviso"></div>
       <nav class="acoes-grade" aria-label="Ações da proposta">${a.join('')}</nav>`
