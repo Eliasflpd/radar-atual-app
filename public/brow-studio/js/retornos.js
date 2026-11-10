@@ -58,6 +58,7 @@ function fone(v) { const d = digitos(v); if (d.length === 11) return `(${d.slice
 const RE_VALOR = /^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/;
 function centavos(v) { let s = String(v || '').trim().replace(/^R\$\s*/i, '').replace(/\s/g, ''); if (!s || !RE_VALOR.test(s)) return null; const [i, d = ''] = s.replace(/\./g, '').split(','); const n = parseInt(i, 10) * 100 + parseInt((d + '00').slice(0, 2), 10); return Number.isSafeInteger(n) && n <= 100000000 ? n : null; }
 function reais(c) { const s = String(Math.max(0, c | 0)).padStart(3, '0'); return `R$ ${s.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${s.slice(-2)}`; }
+const curto = (t) => { const n = window.innerWidth < 600 ? (window.innerHeight < 700 ? 24 : 40) : 140; return t && t.length > n ? t.slice(0, n).trimEnd() + '…' : t; };
 const valorTexto = (c) => reais(c).replace('R$ ', '');
 const seloSit = (x) => `<span class="selo selo-rt-${x.situacao}">${SITUACOES[x.situacao]}</span>${x.ultrapassada ? ' <span class="selo selo-fin-vencido">Data ultrapassada</span>' : ''}`;
 const cobrancaTexto = (x) => x.cobranca === 'cobrado' ? `Cobrado · ${reais(x.valor_centavos)}` : COBRANCAS[x.cobranca];
@@ -254,11 +255,11 @@ async function etapaConferencia() {
   const form = pagina({
     titulo: titulo(), etapa: total(), etapasTotal: total(), formulario: true, voltar: N + 'valor/' + qs(true), voltarTexto: 'Voltar',
     corpo: `<div class="resumo resumo-ct">
-        ${blocoResumo('Acompanhamento', [['Cliente', o.cliente_nome], ['Atendimento original', `${o.servico_nome} · ${dataBR(o.data)}`], ['Tipo', TIPOS[d.tipo]], ['Profissional', o.profissional_nome]], rid() ? null : corr(''))}
-        ${blocoResumo('Data e contato', [['Data prevista', dataBR(d.data_prevista)], ['WhatsApp', dg ? fone(dg) + (d.atualizar_cadastro ? ' (atualiza o cadastro)' : (dg !== (o.telefone_cadastro || '') ? ' (só neste retorno)' : '')) : ''], ['Serviço do retorno', d.servico_retorno_nome || 'Escolher ao agendar']], corr('data/'))}
-        ${blocoResumo('Valor e observações', [['Cobrança', d.cobranca === 'cobrado' ? `Cobrado · ${reais(centavos(d.valor))}` : COBRANCAS[d.cobranca]], ['Política', d.politica ? d.politica + (d.politica_versao ? ` (v. ${d.politica_versao})` : '') : ''], ['Observações', d.observacoes]], corr('valor/'))}
+        ${blocoResumo('Acompanhamento', [['Cliente', o.cliente_nome], ['Original', `${curto(o.servico_nome)} · ${dataBR(o.data)}`], ['Tipo', `${TIPOS[d.tipo]} · ${o.profissional_nome}`]], rid() ? null : corr(''))}
+        ${blocoResumo('Data e contato', [['Data prevista', dataBR(d.data_prevista)], ['WhatsApp', dg ? fone(dg) + (d.atualizar_cadastro ? ' (atualiza cadastro)' : (dg !== (o.telefone_cadastro || '') ? ' (só neste retorno)' : '')) : ''], ['Serviço', d.servico_retorno_nome || 'Escolher ao agendar']], corr('data/'))}
+        ${blocoResumo('Valor e observações', [['Cobrança', d.cobranca === 'cobrado' ? `Cobrado · ${reais(centavos(d.valor))}` : COBRANCAS[d.cobranca]], ['Política', d.politica ? curto(d.politica) + (d.politica_versao ? ` (v. ${d.politica_versao})` : '') : ''], ['Observações', curto(d.observacoes)]], corr('valor/'))}
       </div>
-      ${rid() ? campoTexto({ id: 'motivo', rotulo: 'Motivo da alteração', valor: d.motivo || '', attrs: 'maxlength="300" autocomplete="off"' }) : '<p class="ajuda">Salvar não reserva horário: use “Agendar retorno” nos detalhes.</p>'}
+      ${rid() ? campoTexto({ id: 'motivo', rotulo: 'Motivo da alteração', valor: d.motivo || '', attrs: 'maxlength="300" autocomplete="off"' }) : '<p class="ajuda so-largo-bloco">Salvar não reserva horário: use “Agendar retorno” nos detalhes.</p>'}
       <div id="aviso"></div>`,
     acoes: `<a class="btn btn-linha" href="${N}valor/${qs(true)}">${SETA} Voltar</a><button type="submit" class="btn btn-cheio" id="salvar">${rid() ? 'Salvar alterações' : 'Salvar planejamento'}</button>`
   });
@@ -303,21 +304,21 @@ async function telaVer() {
   if (x.registro_id) acoes.push(B(`/brow-studio/registros/ver/?id=${encodeURIComponent(x.registro_id)}`, 'Registro do retorno'));
   if (aberto) acoes.push(B(`${N}data/?id=${q}`, 'Editar planejamento', 'btn-suave', 'editar'));
   acoes.push(B(`${BASE}historico/?id=${q}`, 'Histórico'));
+  acoes.push(B(`${AG}atendimento/?id=${encodeURIComponent(x.origem_agendamento_id)}`, 'Atendimento original'));
   if (aberto) acoes.push(B(`${BASE}cancelar/?id=${q}`, 'Cancelar acompanhamento', 'btn-perigo'));
   const nota = x.situacao === 'pendente' && x.reserva && !x.reserva.ativa ? `O horário de ${dataBR(x.reserva.data)} foi ${x.reserva.situacao === 'falta' ? 'marcado como falta' : 'cancelado'} na agenda. O planejamento continua pendente.`
     : x.situacao === 'agendado' && x.reserva && x.reserva.situacao === 'concluido' ? 'Atendimento concluído na agenda. Registre a realização para concluir o retorno.'
-    : x.situacao === 'encaixe' ? 'Na lista de encaixe: o atendimento depende de disponibilidade.' : x.situacao === 'pendente' ? 'Sem horário reservado.' : '';
+    : x.situacao === 'encaixe' ? 'Na lista de encaixe: o atendimento depende de disponibilidade.' : '';
   pagina({
     titulo: 'Retorno', voltar: BASE, voltarTexto: 'Retornos',
     corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}
       <div class="servico-cabeca"><h2>${esc(x.cliente_nome)}</h2><span class="selos">${seloSit(x)}</span></div>
-      ${x.ultrapassada ? avisoHTML(`A data prevista (${dataBR(x.data_prevista)}) já passou. O acompanhamento continua ${x.situacao === 'encaixe' ? 'na lista de encaixe' : 'pendente'}: nada é cancelado automaticamente.`, 'erro') : ''}
+      ${x.ultrapassada ? avisoHTML(`Data prevista já passou; continua ${x.situacao === 'encaixe' ? 'no encaixe' : 'pendente'} (nada é cancelado automaticamente).`, 'erro') : ''}
       ${x.situacao === 'cancelado' ? avisoHTML(`Cancelado: ${esc(x.cancel_motivo || '')}. Cancelar não estorna valores automaticamente.`) : ''}
-      <div class="resumo">${blocoResumo(`${x.tipo_nome} · prevista ${dataBR(x.data_prevista)}`, [['Atendimento original', `${x.origem_servico_nome} · ${dataBR(x.origem_data)}`], ['Profissional', x.profissional_nome],
-        ['Horário', horarioTexto(x)], ['WhatsApp', fone(x.whatsapp || r.cliente.telefone || '')], ['Cobrança', cobrancaTexto(x)], ...(x.politica ? [['Política', x.politica + (x.politica_versao ? ` (v. ${x.politica_versao})` : '')]] : []), ['Observações', x.observacoes]])}</div>
+      <div class="resumo resumo-ct">${blocoResumo(`${x.tipo_nome} · prevista ${dataBR(x.data_prevista)}`, [['Original', `${x.origem_servico_nome} · ${dataBR(x.origem_data)} · ${x.profissional_nome}`],
+        ['Horário', horarioTexto(x)], ['WhatsApp', fone(x.whatsapp || r.cliente.telefone || '')], ['Cobrança', cobrancaTexto(x)], ...(x.politica ? [['Política', x.politica + (x.politica_versao ? ` (v. ${x.politica_versao})` : '')]] : []), ['Observações', curto(x.observacoes)]])}</div>
       ${nota ? `<p class="ajuda">${esc(nota)}</p>` : ''}
-      <nav class="acoes-grade" aria-label="Ações do retorno">${acoes.join('')}</nav>`,
-    acoes: `<a class="btn btn-linha" href="${AG}atendimento/?id=${encodeURIComponent(x.origem_agendamento_id)}">Atendimento original</a>`
+      <nav class="acoes-grade" aria-label="Ações do retorno">${acoes.join('')}</nav>`
   });
   if ($('#editar')) $('#editar').onclick = () => apagarRasc('rt:' + x.id);
   focarTitulo();
