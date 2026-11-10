@@ -20,7 +20,7 @@
 // precisa preencher `acesso()` devolvendo o estabelecimento da pessoa logada —
 // todas as consultas já filtram por `estab`.
 //
-// Ações:
+// Ações (clientes; serviços em api/_lib/brow-servicos.js, ações "servico*"):
 //   GET  ?acao=listar&q=&limite=&pagina=   → { ok, itens:[{id,nome,apelido,telefone,mini}], total, pagina, limite }
 //   GET  ?acao=ver&id=                     → { ok, cliente:{..., foto:'data:image/jpeg;base64,...'|null} }
 //   POST ?acao=criar      { chave_envio, nome, ..., foto?, foto_mini? }   → { ok, id, repetido? }
@@ -188,6 +188,10 @@ module.exports = async (req, res) => {
   const c = new Client({ connectionString: cs, ssl });
   try {
     await c.connect();
+
+    // SERVIÇOS E VALORES (módulo 2): mesma trava e mesma conexão. Ver api/_lib/brow-servicos.js.
+    if (acao.startsWith('servico')) { await require('./brow-servicos.js')(c, estab, req, res, acao); return; }
+
     await garantirTabelas(c);
 
     if (req.method === 'GET' && acao === 'listar') {

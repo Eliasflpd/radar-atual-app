@@ -8,13 +8,8 @@
 // existe depois que o servidor responde "salvo". Nada de dado fictício.
 // ═══════════════════════════════════════════════════════════════════════════
 const BASE = '/brow-studio/clientes/';
-const API = '/api/brow';
-const $ = (s, el = document) => el.querySelector(s);
-const app = document.getElementById('app');
-const params = new URLSearchParams(location.search);
-
-// ─── utilidades ─────────────────────────────────────────────────────────────
-const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+import { $, app, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=1';
 const digitos = (v) => String(v || '').replace(/\D/g, '');
 function iniciais(nome) {
   const p = String(nome || '').trim().split(/\s+/).filter(x => !/^(d[aeo]s?|e)$/i.test(x));
@@ -39,7 +34,6 @@ function formatarData(iso) {
   const [a, m, d] = iso.split('-');
   return `${d}/${m}/${a}`;
 }
-const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
 
 const DDD = new Set('11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99'.split(' '));
 const valida = {
@@ -60,96 +54,16 @@ const ORIGENS = { instagram: 'Instagram', indicacao: 'Indicação', google: 'Goo
 
 // ─── rascunho (sessionStorage) ──────────────────────────────────────────────
 // chave "nova" = cadastro novo; "editar:<id>" = edição de uma cliente salva.
-const chaveRasc = (r) => 'brow:rascunho:' + r;
-function lerRasc(r) { try { return JSON.parse(sessionStorage.getItem(chaveRasc(r)) || 'null'); } catch (e) { return null; } }
-function gravarRasc(r, dados) {
-  try { sessionStorage.setItem(chaveRasc(r), JSON.stringify(dados)); return true; }
-  catch (e) { return false; }   // memória cheia (foto grande) — quem chama avisa
-}
-function apagarRasc(r) { try { sessionStorage.removeItem(chaveRasc(r)); } catch (e) {} }
 function rascNova() {
   let r = lerRasc('nova');
   if (!r) { r = { chave_envio: uuid(), lembretes: false, novidades: false }; gravarRasc('nova', r); }
   return r;
 }
 
-// ─── servidor ───────────────────────────────────────────────────────────────
-async function api(acao, { id, corpo, query } = {}) {
-  const qs = new URLSearchParams({ acao, ...(id ? { id } : {}), ...(query || {}) });
-  let resp;
-  try {
-    resp = await fetch(`${API}?${qs}`, {
-      method: corpo ? 'POST' : 'GET',
-      headers: corpo ? { 'Content-Type': 'application/json' } : {},
-      body: corpo ? JSON.stringify(corpo) : undefined,
-      credentials: 'same-origin', cache: 'no-store'
-    });
-  } catch (e) {
-    return { ok: false, erro: 'rede', msg: 'Sem conexão com a internet. Confira a rede e tente novamente.' };
-  }
-  let j = null;
-  try { j = await resp.json(); } catch (e) {}
-  if (!j) return { ok: false, erro: 'servidor', msg: 'O servidor não respondeu como esperado. Tente novamente.' };
-  return j;
-}
 
-// ─── moldura da página ──────────────────────────────────────────────────────
-const SETA = '<span aria-hidden="true">←</span>';
-function etapas(n) {
-  return `<p class="etapa">Etapa ${n} de 5</p><div class="progresso" aria-hidden="true">${[1, 2, 3, 4, 5].map(i => `<span class="${i <= n ? 'feito' : ''}"></span>`).join('')}</div>`;
-}
-function pagina({ titulo, voltar, voltarTexto = 'Voltar', etapa, corpo, acoes = '', formulario = false, extra = '' }) {
-  document.title = `${titulo} · Brow Studio`;
-  const abre = formulario ? '<form class="app-form" novalidate style="display:contents">' : '';
-  const fecha = formulario ? '</form>' : '';
-  app.innerHTML = `
-    <header class="app-topo">
-      ${voltar ? `<a class="voltar" href="${esc(voltar)}">${SETA} ${esc(voltarTexto)}</a>` : ''}
-      <div class="app-topo-titulo"><h1 id="titulo" tabindex="-1">${esc(titulo)}</h1>${etapa ? etapas(etapa) : ''}</div>
-      ${extra}
-    </header>
-    ${abre}
-    <main class="app-corpo" id="corpo">${corpo}</main>
-    ${acoes ? `<footer class="app-acoes">${acoes}</footer>` : ''}
-    ${fecha}`;
-  return formulario ? $('.app-form') : null;
-}
 function avatarHTML(nome, foto, grande) {
   return `<span class="avatar${grande ? ' grande' : ''}" aria-hidden="true">${foto ? `<img src="${esc(foto)}" alt="">` : esc(iniciais(nome))}</span>`;
 }
-function campoTexto({ id, rotulo, valor = '', tipo = 'text', opcional, ajuda, attrs = '' }) {
-  return `<div class="campo">
-    <label for="${id}">${esc(rotulo)}${opcional ? ' <span class="opcional">(opcional)</span>' : ''}</label>
-    <input id="${id}" name="${id}" type="${tipo}" value="${esc(valor)}" aria-describedby="${id}-erro${ajuda ? ` ${id}-ajuda` : ''}" ${attrs}>
-    ${ajuda ? `<span class="ajuda" id="${id}-ajuda">${esc(ajuda)}</span>` : ''}
-    <span class="erro" id="${id}-erro" aria-live="polite"></span>
-  </div>`;
-}
-function grupoOpcoes({ nome, legenda, opcoes, valor, colunas = 2 }) {
-  return `<fieldset class="campo" aria-describedby="${nome}-erro">
-    <legend>${esc(legenda)}</legend>
-    <div class="opcoes${colunas === 3 ? ' tres' : ''}">
-      ${Object.entries(opcoes).map(([v, t]) => `<label class="opcao"><input type="radio" name="${nome}" value="${v}" ${valor === v ? 'checked' : ''}><span>${esc(t)}</span></label>`).join('')}
-    </div>
-    <span class="erro" id="${nome}-erro" aria-live="polite"></span>
-  </fieldset>`;
-}
-function mostrarErros(form, erros) {
-  form.querySelectorAll('.erro').forEach(e => { e.textContent = ''; });
-  form.querySelectorAll('[aria-invalid]').forEach(e => e.removeAttribute('aria-invalid'));
-  let primeiro = null;
-  for (const [k, msg] of Object.entries(erros)) {
-    const alvo = form.querySelector(`[name="${k}"]`);
-    const e = form.querySelector(`#${k}-erro`);
-    if (e) e.textContent = msg;
-    if (alvo) { alvo.setAttribute('aria-invalid', 'true'); primeiro = primeiro || alvo; }
-  }
-  if (primeiro) primeiro.focus();
-  return !Object.keys(erros).length;
-}
-function avisoHTML(msg, tipo = '', extra = '') { return `<div class="aviso-caixa ${tipo}" role="${tipo === 'erro' ? 'alert' : 'status'}">${msg}${extra}</div>`; }
-function focarTitulo() { const t = $('#titulo'); if (t) t.focus({ preventScroll: true }); }
-const ir = (url) => { location.href = url; };
 
 // ─── validações por etapa (mesmas regras do servidor) ───────────────────────
 function errosDados(d) {
@@ -354,10 +268,6 @@ function telaEtapaNova(nome) {
 }
 
 // ─── 7. CONFERÊNCIA (duas páginas curtas) ───────────────────────────────────
-function blocoResumo(titulo, linhas, corrigir) {
-  return `<section class="bloco"><div class="bloco-topo"><h2>${esc(titulo)}</h2>${corrigir ? `<a class="corrigir" href="${corrigir}">Corrigir</a>` : ''}</div>
-    <dl class="dados">${linhas.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v ? esc(v) : '<span style="color:#a68b7a">Não informado</span>'}</dd>`).join('')}</dl></section>`;
-}
 function telaConferencia(parte) {
   const d = lerRasc('nova');
   const N = BASE + 'nova/';

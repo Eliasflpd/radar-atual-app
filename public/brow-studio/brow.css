@@ -281,3 +281,39 @@ fieldset.campo legend{font-weight:500;color:var(--marrom-escuro);font-size:18px;
   .paginacao{flex-wrap:nowrap}
   .paginacao .btn{flex:1 1 0;min-width:0}
 }
+
+/* ═══════════════ MÓDULO SERVIÇOS E VALORES ═══════════════ */
+.selo{flex:0 0 auto;display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:500;letter-spacing:.02em}
+.selo-ativo{background:#eef4e4;color:#3e5a20;border:1px solid #c4d6a8}
+.selo-inativo{background:#efe7e2;color:#7a6457;border:1px solid #d9c9bf}
+.item-inativo .item-nome,.item-inativo .item-extra{opacity:.7}
+.preco{color:var(--marrom-escuro);font-weight:600}
+.preco-grande{font-family:var(--serifa);font-weight:500;color:var(--marrom);font-size:clamp(28px,4.4vw,38px);line-height:1}
+.servico-cabeca{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.servico-cabeca h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:clamp(24px,3.8vw,32px);line-height:1.15;overflow-wrap:anywhere}
+.duas-colunas{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.linha-ajuda{display:flex;justify-content:space-between;gap:10px;min-height:20px}
+.contador{margin-left:auto;white-space:nowrap}
+.campo textarea.curta{min-height:110px}
+.btn-perigo-cheio{background:#9b2c1c;color:#fff5ec;border:2px solid #9b2c1c}
+.btn-perigo-cheio:hover{background:#86240f}
+.app .btn-perigo{border:2px solid #c9786b}
+@media (max-width:420px){.duas-colunas{gap:10px}.duas-colunas .campo label{font-size:15px}}
+@media (max-height:760px){.selo{min-height:26px;font-size:13px;padding:0 10px}.campo textarea.curta{min-height:84px}.duas-colunas{gap:10px}}
+@media (max-height:680px){
+  .app-corpo{gap:10px;padding-top:10px}
+  .campo textarea.curta{min-height:64px}
+  .linha-ajuda{min-height:18px}
+  .dados{grid-template-columns:minmax(86px,34%) 1fr}
+  .bloco{padding:10px 12px}
+}
+
+/* lista de serviços: no celular a situação vai para a linha de baixo, junto do preço */
+.selo-mini{display:none}
+.selo-lado{display:contents}
+@media (max-width:600px){
+  .selo-lado{display:none}
+  .selo-mini{display:inline;font-weight:500}
+  .selo-mini.ativo{color:#3e5a20}
+  .selo-mini.inativo{color:#7a6457}
+}
