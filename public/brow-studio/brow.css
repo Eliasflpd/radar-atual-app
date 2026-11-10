@@ -480,3 +480,25 @@ span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
 @media (orientation:landscape) and (min-width:900px){.menu-modulos{max-width:820px;grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:420px){.menu-modulos .btn{min-height:58px;font-size:16px}}
 @media (max-width:600px){.menu-botoes.grade-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.menu-botoes.grade-2 .btn{justify-content:center;text-align:center;font-size:15px;min-height:54px;padding:4px 8px;line-height:1.2}.menu-botoes.grade-2 .btn::after{content:none}}
+
+/* ═══════════════ MÓDULO CONTATOS ═══════════════ */
+.filtros-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.opcao-chip span{min-height:44px;font-size:15px;padding:4px 6px}
+.estrela{color:#b8862f}
+.canal .destinatario{font-size:17px;margin-bottom:8px}
+.canal.inativo{opacity:.75}
+.canal .campo{margin-bottom:8px}
+@media (max-width:600px){.filtros-chips{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.opcao-chip span{font-size:13px;min-height:40px;padding:2px 4px}}
+@media (max-height:760px){.opcao-chip span{min-height:40px}}
+.canal textarea.curta,.campo .canal textarea.curta{min-height:56px}
+.canal .ajuda:empty{display:none}
+.canal .linha-acoes .btn{min-height:50px}
+@media (max-width:600px){.canal{padding:12px 14px}.canal .destinatario{font-size:15px;margin-bottom:6px}.canal .bloco-topo h2{font-size:19px}.canal .linha-acoes .btn{min-height:46px;font-size:16px}}
+@media (max-width:420px) and (max-height:700px){.menu-modulos{margin-top:14px;gap:10px}.menu-modulos .btn{min-height:54px}}
+.canal .campo textarea.curta{min-height:56px;height:56px}
+@media (max-width:420px){.canal .linha-acoes .btn{font-size:15px;padding:0 8px;white-space:nowrap}.canal .bloco-topo{margin-bottom:2px}.canal .campo label{font-size:15px}}
+@media (max-width:420px) and (max-height:700px){.canal{padding:10px 12px}.canal .campo textarea.curta{min-height:44px;height:44px}.canal .linha-acoes .btn{min-height:44px}}
+@media (max-width:420px) and (max-height:700px){.nota-canal{font-size:13px;margin:0}.canal{margin-bottom:0}body[data-pagina=contato] .app-acoes{display:none}}
+@media (max-width:600px){.so-largo-bloco{display:none}.resumo-ct .bloco{padding:10px 14px}.resumo-ct .bloco h2{font-size:18px}.resumo-ct{gap:8px}}
+@media (max-width:420px){.aviso-dup{padding:8px 12px;font-size:15px}}
+@media (max-width:420px) and (max-height:700px){.resumo-ct .bloco{padding:8px 12px}.resumo-ct .bloco h2{font-size:17px}}

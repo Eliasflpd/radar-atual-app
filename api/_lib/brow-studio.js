@@ -193,6 +193,11 @@ module.exports = async (req, res) => {
     // SERVIÇOS E VALORES (módulo 2): mesma trava e mesma conexão. Ver api/_lib/brow-servicos.js.
     if (acao.startsWith('servico')) { await require('./brow-servicos.js')(c, estab, req, res, acao); return; }
     // AGENDA, AGENDAMENTOS E ENCAIXES (módulo 3). Ver api/_lib/brow-agenda.js.
+    // CONTATOS DO ESTÚDIO (módulo 7). Ver api/_lib/brow-contatos.js.
+    if (acao.startsWith('ct_')) {
+      await require('./brow-contatos.js')(c, estab, req, res, acao, async (cc) => { await require('./brow-agenda.js').garantirTabelas(cc); });
+      return;
+    }
     // REGISTRO DE ATENDIMENTOS E FOTOS (módulo 6). Ver api/_lib/brow-registros.js.
     if (acao.startsWith('rg_')) {
       req.brow_usuario = porta.usuario || null;
