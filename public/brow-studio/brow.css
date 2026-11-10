@@ -13,6 +13,7 @@
   --sans:'Lexend','Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}   /* o atributo hidden sempre vence o display dos componentes */
 html,body{height:100%}
 body{background:var(--nude);color:var(--texto);font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 a{color:inherit}
@@ -316,4 +317,92 @@ fieldset.campo legend{font-weight:500;color:var(--marrom-escuro);font-size:18px;
   .selo-mini{display:inline;font-weight:500}
   .selo-mini.ativo{color:#3e5a20}
   .selo-mini.inativo{color:#7a6457}
+}
+
+/* ═══════════════ MÓDULO AGENDA ═══════════════ */
+.barra-data{display:flex;gap:10px;align-items:stretch}
+.barra-data .campo-data{flex:1;min-width:0}
+.barra-data .campo-data input{min-height:54px}
+.app .btn-icone{flex:0 0 54px;min-height:54px;padding:0;font-size:26px;line-height:1}
+.barra-data .btn-suave{flex:0 0 auto;min-height:54px}
+.linha-dia{font-size:16px;color:var(--texto)}
+.linha-botoes{display:flex;gap:10px;flex-wrap:wrap}
+.linha-botoes>.btn{flex:1 1 220px;min-height:54px;justify-content:space-between}
+.linha-botoes .campo-filtro{flex:1 1 200px}
+.linha-botoes .campo-filtro select{min-height:54px}
+.contagem{display:inline-flex;align-items:center;min-height:28px;padding:0 10px;border-radius:999px;background:var(--marrom);color:#fff5ec;font-size:14px;font-weight:500;margin-left:10px}
+.hora-bloco{flex:0 0 64px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 0;border-right:1.5px solid #ead6c7;margin-right:4px}
+.hora-bloco strong{font-size:19px;color:var(--marrom-escuro);font-weight:600}
+.hora-bloco span{font-size:14px;color:#8a6a58}
+.hora-bloco.ordem strong{font-family:var(--serifa);font-size:22px}
+.lista-compacta{gap:8px}
+.item-compacto{min-height:64px;padding:8px 12px}
+.item-compacto .btn{min-height:46px}
+.vazio-compacto{flex:0;padding:10px}
+.app .btn-pequeno{min-height:42px;font-size:15px;padding:0 14px}
+.cliente-escolhida h2{font-size:22px}
+.opcao-linha span{flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;padding:10px 16px;gap:2px;min-height:58px}
+.opcao-linha span small{font-size:14px;opacity:.85;font-weight:400}
+.opcao-linha input:checked+span small{opacity:1}
+.grade-horarios{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.opcao-hora span{flex-direction:column;gap:2px;min-height:56px}
+.opcao-hora span strong{font-size:18px}
+.opcao-hora span small{font-size:13px;opacity:.8}
+.atalhos{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.app .btn-dia{flex-direction:column;min-height:58px;padding:4px 2px;font-size:14px;gap:0;border-radius:14px}
+.btn-dia small{font-size:12px;font-weight:400}
+.btn-dia.ativo{background:var(--marrom);color:#fff5ec;border-color:var(--marrom)}
+.acoes-grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.acoes-grade .btn{min-height:54px;font-size:16px;padding:0 10px;text-align:center}
+.selo-encaixe{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:16px;border:1.5px dashed var(--ouro-1);background:#fff8ee}
+.selo-encaixe strong{color:var(--marrom-escuro)}
+.selo-encaixe span{font-size:15px;color:#7d5a2c}
+.selo-agendado,.selo-enc-aguardando{background:#f3ebe4;color:#6b4a38;border:1px solid #e0cfc2}
+.selo-confirmado,.selo-chegou,.selo-enc-chegou{background:#eef4e4;color:#3e5a20;border:1px solid #c4d6a8}
+.selo-em_atendimento,.selo-enc-em_atendimento,.selo-enc-chamado{background:#fbf1dc;color:#7d5a2c;border:1px solid #e8cf9c}
+.selo-concluido,.selo-enc-concluido{background:#e8eef4;color:#2f4d6b;border:1px solid #c3d2e0}
+.selo-cancelado,.selo-falta,.selo-enc-cancelado,.selo-enc-desistiu{background:#f6e6e3;color:#8a3324;border:1px solid #e3bdb5}
+.linha-tempo{gap:8px}
+.evento{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-left:3px solid var(--ouro-3);background:#fffaf6;border-radius:0 14px 14px 0;min-height:56px}
+.evento small{color:#8a6a58;font-size:14px}
+.sub-btn{display:block;font-weight:400;font-size:14px;opacity:.8;margin-left:auto;padding-left:12px;text-align:right}
+.menu-botoes .btn .sub-btn{order:1}
+.rotulo-simples{font-size:17px}
+@media (max-width:600px){
+  .grade-horarios{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .atalhos{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .atalhos .btn-dia:nth-child(n+5){display:none}
+  .hora-bloco{flex-basis:56px}
+  .hora-bloco strong{font-size:17px}
+  .acoes-grade .btn{font-size:15px}
+  .sub-btn{display:none}
+}
+@media (max-height:760px){
+  .barra-data .campo-data input,.app .btn-icone,.barra-data .btn-suave,.linha-botoes>.btn,.linha-botoes .campo-filtro select{min-height:48px}
+  .acoes-grade{gap:8px}.acoes-grade .btn{min-height:48px}
+  .opcao-linha span{min-height:52px;padding:6px 14px}
+  .grade-horarios{gap:8px}.opcao-hora span{min-height:50px}
+  .item-compacto{min-height:58px}
+}
+
+/* campos lado a lado nunca estouram a largura (data/hora no celular) */
+.duas-colunas{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.campo input,.campo select,.campo textarea{min-width:0;max-width:100%}
+@media (max-height:680px){
+  .resumo .bloco-topo{margin-bottom:2px}.resumo .bloco h2{font-size:17px}
+  .selo-encaixe{padding:8px 12px}.selo-encaixe span{font-size:14px}
+  .item-compacto{min-height:52px;padding:6px 10px}.item-compacto .btn{min-height:44px}
+  .acoes-grade .btn{min-height:46px}
+}
+
+@media (max-width:600px){
+  .sm-cancelado,.sm-falta,.sm-desistiu{color:#8a3324}
+  .sm-confirmado,.sm-chegou{color:#3e5a20}
+  .sm-concluido{color:#2f4d6b}
+}
+@media (max-width:420px){
+  .barra-data{gap:6px}
+  .app .btn-icone{flex-basis:44px;font-size:22px}
+  .barra-data .btn-suave{padding:0 12px;font-size:15px}
+  .barra-data .campo-data input{padding:8px 8px;font-size:16px}
 }

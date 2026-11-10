@@ -135,12 +135,12 @@ module.exports = async function servicos(c, estab, req, res, acao) {
     const pagina = Math.max(parseInt(q.pagina, 10) || 1, 1);
     const termo = semAcento(txt(q.q, 60) || '');
     const params = [estab];
-    let filtro = '';
+    let filtro = q.ativos === '1' ? ' and ativo' : '';   // agendamento: só serviços ativos
     if (termo) {
       params.push('%' + termo + '%');
       // categoria é buscada pelo NOME que aparece na tela ("henna", "micropigmentação"...)
       const cats = Object.entries(CATEGORIAS).filter(([, nome]) => semAcento(nome).includes(termo)).map(([k]) => k);
-      filtro = ` and (translate(lower(nome),'áàâãäéèêëíìîïóòôõöúùûüçñ','aaaaaeeeeiiiiooooouuuucn') like $2`;
+      filtro += ` and (translate(lower(nome),'áàâãäéèêëíìîïóòôõöúùûüçñ','aaaaaeeeeiiiiooooouuuucn') like $2`;
       if (cats.length) { params.push(cats); filtro += ` or categoria = any($3)`; }
       filtro += ')';
     }
@@ -201,3 +201,4 @@ module.exports = async function servicos(c, estab, req, res, acao) {
   res.status(400).json({ ok: false, erro: 'acao', msg: 'Ação desconhecida.' });
 };
 module.exports._teste = { textoParaCentavos, inteiroEntre, lerCampos, CATEGORIAS };
+module.exports.garantirTabela = garantirTabela;
