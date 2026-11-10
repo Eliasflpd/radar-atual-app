@@ -198,6 +198,15 @@ module.exports = async (req, res) => {
       await require('./brow-contatos.js')(c, estab, req, res, acao, async (cc) => { await require('./brow-agenda.js').garantirTabelas(cc); });
       return;
     }
+    // ORÇAMENTOS, PROPOSTAS, COMBOS E SESSÕES (módulo 12). Ver api/_lib/brow-orcamentos.js.
+    if (acao.startsWith('or_')) {
+      req.brow_usuario = porta.usuario || null;
+      await require('./brow-orcamentos.js')(c, estab, req, res, acao, async (cc) => {
+        await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
+        await require('./brow-financeiro.js').garantirTabelas(cc);
+      });
+      return;
+    }
     // RETORNOS E RETOQUES (módulo 10). Ver api/_lib/brow-retornos.js.
     if (acao.startsWith('rt_')) {
       req.brow_usuario = porta.usuario || null;

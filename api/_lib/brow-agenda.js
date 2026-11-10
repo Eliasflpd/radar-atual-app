@@ -389,6 +389,12 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
       if (!v.ok) { await c.query('rollback'); return erro(res, 409, 'retorno', v.msg); }
       r.j.retorno_id = String(b.retorno_id);
     }
+    // pacote (módulo 12): reserva 1 sessão do item NA MESMA transação; recusa se passar do saldo
+    if (r.transacao && b.pacote_item_id && !r.j.repetido) {
+      const v = await require('./brow-orcamentos.js').vincularReserva(c, estab, b.pacote_item_id, { agendamentoId: r.j.id, clienteId: String(b.cliente_id || ''), servicoId: String(b.servico_id || ''), data: b.data, autor: null });
+      if (!v.ok) { await c.query('rollback'); return erro(res, 409, 'pacote', v.msg); }
+      r.j.pacote_item_id = String(b.pacote_item_id);
+    }
     if (r.transacao) await c.query('commit');
     res.status(r.st).json(r.j); return;
   }
