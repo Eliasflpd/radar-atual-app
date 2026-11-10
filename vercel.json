@@ -2,6 +2,11 @@
   "outputDirectory": "public",
   "redirects": [
     {
+      "source": "/brow-studio",
+      "destination": "/brow-studio/",
+      "permanent": false
+    },
+    {
       "source": "/libras",
       "destination": "/libras/",
       "permanent": false

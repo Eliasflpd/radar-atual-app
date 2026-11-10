@@ -1,0 +1,102 @@
+/* Brow Studio — identidade visual (nude, marrom e dourado).
+   Pasta isolada: nada aqui afeta o RADAR. */
+:root{
+  --nude:#f6e6d9;
+  --nude-2:#f3dfd0;
+  --marrom:#592d17;
+  --marrom-escuro:#4b2412;
+  --texto:#552c18;
+  --ouro-1:#a8742e;
+  --ouro-2:#f1d48a;
+  --ouro-3:#c99a4e;
+  --serifa:'Lora',Georgia,'Times New Roman',serif;
+  --sans:'Lexend','Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--nude);color:var(--texto);font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--ouro-1);outline-offset:3px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* ───────────── CAPA ─────────────
+   Medidas tiradas da referência 03-Capa-Tablet-Vertical (1024×1536):
+   a foto ocupa 700px e a apresentação 836px. Tudo abaixo é escrito em
+   "pixels da referência" multiplicados por --r, que é calculado para a
+   tela inteira caber sem rolar. */
+.capa{
+  --foto-min:68.36vw;                                   /* 700/1024: foto inteira, sem cortar */
+  --r:min(calc(100vw / 1024), calc((100dvh - var(--foto-min)) / 836));
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+}
+/* a foto ocupa exatamente o espaço que sobra acima da apresentação */
+.capa-foto{position:relative;flex:1 0 30vh;min-height:30vh;overflow:hidden;background:#3a2418}
+.capa-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block}
+/* curva nude com filete dourado (fica um pouco acima da curva que já vem na foto e a cobre) */
+.capa-curva{position:absolute;left:0;bottom:-1px;width:100%;height:100%;pointer-events:none}
+.capa-curva-v{display:none}
+
+.capa-conteudo{
+  flex:0 0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:0 16px max(calc(28 * var(--r)), env(safe-area-inset-bottom));
+}
+.simbolo{display:block;width:calc(186 * var(--r));height:auto;margin-top:calc(26 * var(--r))}
+.capa h1{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);
+  font-size:calc(78 * var(--r));line-height:1;letter-spacing:-.015em;margin-top:calc(4 * var(--r))}
+.filete{display:block;width:calc(220 * var(--r));height:auto;margin-top:calc(14 * var(--r))}
+.capa h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);
+  font-size:calc(70 * var(--r));line-height:1.1;letter-spacing:-.005em;margin-top:calc(36 * var(--r))}
+.capa .sub{font-weight:400;color:var(--texto);font-size:calc(40 * var(--r));line-height:1.25;margin-top:calc(16 * var(--r))}
+
+.botoes{width:min(100%, calc(804 * var(--r)));display:flex;flex-direction:column;gap:calc(30 * var(--r));margin-top:calc(54 * var(--r))}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;
+  min-height:max(48px, calc(108 * var(--r)));border-radius:999px;text-decoration:none;
+  font-family:var(--sans);font-weight:600;font-size:max(16px, calc(42 * var(--r)));line-height:1.1;
+  transition:background-color .2s,transform .12s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.985)}
+.btn-cheio{background:var(--marrom);color:#fff5ec;border:max(2px, calc(3 * var(--r))) solid var(--marrom);box-shadow:0 10px 24px -14px rgba(75,36,18,.7)}
+.btn-cheio:hover{background:#6a3820;border-color:#6a3820}
+.btn-linha{background:transparent;color:var(--marrom);border:max(2px, calc(4 * var(--r))) solid var(--marrom)}
+.btn-linha:hover{background:rgba(89,45,23,.06)}
+
+.rodape{display:flex;align-items:center;gap:calc(14 * var(--r));margin-top:calc(26 * var(--r));
+  font-size:max(14px, calc(30 * var(--r)));color:var(--texto)}
+.rodape a{text-decoration:none;padding:4px}
+.rodape a:hover{text-decoration:underline}
+
+/* Celular em pé: a foto pode cortar as laterais (cabelo) para os textos
+   e botões ficarem grandes o bastante para ler e tocar. */
+@media (max-width:600px) and (orientation:portrait){
+  .capa{--foto-min:0px;--r:min(calc(100vw / 860), calc(100dvh * .53 / 836))}
+  .capa-foto img{object-position:52% 25%}
+}
+
+/* Computador e tablet deitado: foto à esquerda, apresentação à direita */
+@media (orientation:landscape) and (min-width:640px){
+  .capa{flex-direction:row;--r:min(calc(46vw * .82 / 804), calc(100dvh * .9 / 836))}
+  .capa-foto{flex:0 0 54%;min-height:100dvh}
+  /* a foto é ampliada só o suficiente para esconder a curva da parte de baixo */
+  .capa-foto img{inset:auto;top:0;left:0;height:calc(100% * 700 / 585);object-position:70% 0}
+  .capa-curva{display:none}
+  .capa-curva-v{display:block;position:absolute;top:0;right:-1px;width:16%;height:100%;pointer-events:none}
+  .capa-conteudo{justify-content:center;padding:calc(40 * var(--r)) 24px}
+  .rodape{margin-top:calc(46 * var(--r))}
+}
+
+/* ───────────── PÁGINAS INTERNAS ───────────── */
+.pagina{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 20px 40px;
+  background:linear-gradient(180deg,var(--nude),var(--nude-2))}
+.topo{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.voltar{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;border-radius:999px;
+  border:2px solid var(--marrom);color:var(--marrom);text-decoration:none;font-weight:500;font-size:16px}
+.voltar:hover{background:rgba(89,45,23,.06)}
+.marca-mini{display:flex;align-items:center;gap:10px;font-family:var(--serifa);font-weight:500;font-size:22px;color:var(--marrom-escuro);text-decoration:none}
+.marca-mini svg{width:44px;height:auto}
+.cartao{width:100%;max-width:720px;margin-top:clamp(28px,6vh,64px);text-align:center;display:flex;flex-direction:column;align-items:center}
+.cartao h1{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:clamp(32px,6vw,52px);line-height:1.1}
+.cartao .filete{width:140px;margin:16px auto 0}
+.cartao p{font-weight:300;font-size:clamp(17px,2.4vw,21px);line-height:1.55;margin-top:18px;max-width:560px}
+.cartao .aviso{margin-top:28px;padding:16px 20px;border:1px solid rgba(169,116,46,.45);border-radius:18px;background:rgba(255,250,245,.55);font-size:16px}
+.texto-longo{text-align:left;max-width:640px}
+.texto-longo h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:22px;margin-top:28px}
+.texto-longo p{margin-top:10px;font-size:17px}
