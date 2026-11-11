@@ -28,7 +28,7 @@ async function telaEntrar() {
       ${campoTexto({ id: 'nome', rotulo: 'Seu nome', attrs: 'autocomplete="username" autocapitalize="words" maxlength="60"' })}
       ${campoPin('pin', 'PIN (6 números)')}
       <div id="aviso" aria-live="polite"></div>
-      <p class="ajuda">Esqueceu o PIN? Peça à dona do estúdio para redefinir.</p>`,
+      <p class="ajuda">Esqueceu o PIN? Peça à dona do estúdio para redefinir. <a href="/brow-studio/entrar/recuperar/">Sou a dona e não consigo entrar</a></p>`,
     acoes: `<button type="submit" class="btn btn-cheio" id="entrar">Entrar</button>` });
   form.nome.focus();
   let env = false;
@@ -69,6 +69,32 @@ async function telaPrimeira() {
     if (r.ok) { recado.pôr(`Conta criada. Bem-vinda, ${r.usuario.nome}!`); location.replace(MENU); return; }
     env = false; $('#criar').disabled = false;
     if (r.erros) mostrarErros(form, r.erros);
+    $('#aviso').innerHTML = avisoHTML(esc(r.erros ? Object.values(r.erros).join(' ') : r.msg), 'erro');
+  };
+  focarTitulo();
+}
+
+// Recuperação da dona com o código de primeiro acesso (uso único)
+function telaRecuperar() {
+  const form = pagina({ titulo: 'Recuperar acesso', voltar: '/brow-studio/entrar/', voltarTexto: 'Entrar', formulario: true,
+    corpo: `<p class="etapa" style="margin-top:-8px">Só para a dona, com o código de primeiro acesso. Funciona uma única vez.</p>
+      ${campoTexto({ id: 'codigo', rotulo: 'Código de primeiro acesso', attrs: 'autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" maxlength="200"' })}
+      ${campoTexto({ id: 'nome', rotulo: 'Seu nome para entrar', attrs: 'autocomplete="off" autocapitalize="words" maxlength="60"' })}
+      <div class="duas-colunas">${campoPinNovo('pin', 'Novo PIN')}${campoPinNovo('pin2', 'Repita o PIN')}</div>
+      <div id="aviso" aria-live="polite"></div>`,
+    acoes: `<a class="btn btn-linha" href="/brow-studio/entrar/">Cancelar</a><button type="submit" class="btn btn-cheio" id="salvar">Recuperar acesso</button>` });
+  $('#corpo').classList.add('fin-compacto');
+  let env = false;
+  form.onsubmit = async (ev) => {
+    ev.preventDefault(); if (env) return; const er = {};
+    if (!form.codigo.value.trim()) er.codigo = 'Informe o código.';
+    if (form.nome.value.trim().length < 2) er.nome = 'Informe seu nome.';
+    if (!/^\d{6}$/.test(form.pin.value)) er.pin = 'O PIN tem 6 números.'; else if (form.pin.value !== form.pin2.value) er.pin2 = 'Os PINs não conferem.';
+    if (!mostrarErros(form, er)) return;
+    env = true; $('#salvar').disabled = true;
+    const r = await api('au_recuperar', { corpo: { codigo: form.codigo.value, nome: form.nome.value, pin: form.pin.value, pin2: form.pin2.value } });
+    if (r.ok) { recado.pôr(`Acesso recuperado. Bem-vinda, ${r.usuario.nome}!`); location.replace(MENU); return; }
+    env = false; $('#salvar').disabled = false; if (r.erros) mostrarErros(form, r.erros);
     $('#aviso').innerHTML = avisoHTML(esc(r.erros ? Object.values(r.erros).join(' ') : r.msg), 'erro');
   };
   focarTitulo();
@@ -202,5 +228,5 @@ function mostrarInstalar() {
 }
 if (document.body.dataset.pagina === 'menu') window.addEventListener('load', () => setTimeout(mostrarInstalar, 1200));
 
-const TELAS = { entrar: telaEntrar, primeira: telaPrimeira, conta: telaConta, 'trocar-pin': telaTrocarPin, equipe: telaEquipe, pessoa: telaPessoa, 'redefinir-pin': telaRedefinirPin, menu };
+const TELAS = { entrar: telaEntrar, primeira: telaPrimeira, recuperar: telaRecuperar, conta: telaConta, 'trocar-pin': telaTrocarPin, equipe: telaEquipe, pessoa: telaPessoa, 'redefinir-pin': telaRedefinirPin, menu };
 (TELAS[document.body.dataset.pagina] || telaEntrar)();
