@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Lora:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/brow-studio/brow.css?v=32">
+<link rel="stylesheet" href="/brow-studio/brow.css?v=33">
 </head>
 <body>
 <div class="pagina">
@@ -28,9 +28,14 @@
   <main class="cartao">
     <h1>Área da cliente</h1>
     <svg class="filete" viewBox="0 0 220 16" aria-hidden="true" focusable="false"><path d="M2 13 C55 0 125 1 218 6 C150 6.5 120 4.5 70 8 C45 9.5 22 11 2 13 Z" fill="#d9b06a"/></svg>
-    <p>Aqui você vai agendar seu horário, ver seus atendimentos e receber os cuidados pós-procedimento.</p>
-    <p class="aviso">Esta área está em construção.</p>
+    <p>Veja seus próximos horários, agende, remarque ou cancele e consulte seu histórico de atendimentos.</p>
+    <p><a class="btn btn-cheio" id="entrar-cliente" href="/brow-studio/cliente/entrar/">Entrar na área da cliente</a></p>
+    <p class="aviso">Primeiro acesso? Peça ao seu salão o link pessoal pelo WhatsApp. Esqueceu o PIN? Peça um novo link.</p>
   </main>
 </div>
+<script>
+  // salão usado por último neste aparelho (só o endereço do salão)
+  try { var sl = localStorage.getItem('brow:cliente_salao'); if (sl) document.getElementById('entrar-cliente').href = '/brow-studio/cliente/entrar/?s=' + encodeURIComponent(sl); } catch (e) {}
+</script>
 </body>
 </html>

@@ -85,6 +85,8 @@ async function garantirTabelas(c) {
   await c.query(`alter table brow_config add column if not exists whatsapp_estudio text`);
   await c.query(`create table if not exists brow_pub_pedidos(id bigserial primary key, ip text not null, criado_em timestamptz not null default now())`);
   await c.query(`create index if not exists brow_pub_ip on brow_pub_pedidos(ip, criado_em)`);
+  // ÁREA DA CLIENTE: até quantas horas antes a cliente pode cancelar/remarcar sozinha
+  await c.query(`alter table brow_config add column if not exists cliente_antec_horas integer not null default 24`);
 }
 
 // ─── utilidades ─────────────────────────────────────────────────────────────
@@ -250,9 +252,17 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
   // ─── CONFIGURAÇÃO ─────────────────────────────────────────────────────────
   if (acao === 'ag_config_ver') {
     const pr = await c.query('select id,nome,ativo from brow_profissionais where estab=$1 order by ativo desc, lower(nome)', [estab]);
-    res.status(200).json({ ok: true, config: { nome_estudio: cfg.nome_estudio, fuso: cfg.fuso, passo_min: cfg.passo_min, horarios: cfg.horarios || null, online_ativo: !!cfg.online_ativo, whatsapp_estudio: cfg.whatsapp_estudio || null },
+    res.status(200).json({ ok: true, config: { nome_estudio: cfg.nome_estudio, fuso: cfg.fuso, passo_min: cfg.passo_min, horarios: cfg.horarios || null, online_ativo: !!cfg.online_ativo, whatsapp_estudio: cfg.whatsapp_estudio || null, cliente_antec_horas: cfg.cliente_antec_horas == null ? 24 : cfg.cliente_antec_horas },
       configurada, profissionais: pr.rows, fusos: FUSOS, hoje: ha.hoje, agora: minParaHhmm(ha.agora) });
     return;
+  }
+  // ─── ÁREA DA CLIENTE: antecedência para cancelar/remarcar (só a dona, ver SO_DONA) ─
+  if (req.method === 'POST' && acao === 'ag_area_cliente_salvar') {
+    const h = Number(b.horas);
+    if (!Number.isInteger(h) || h < 0 || h > 168) return erro(res, 422, 'validacao', 'Confira o campo.', { erros: { horas: 'Use um número inteiro de horas entre 0 e 168 (7 dias).' } });
+    await c.query(`insert into brow_config(estab,cliente_antec_horas) values($1,$2) on conflict(estab) do update set cliente_antec_horas=$2, atualizado_em=now()`, [estab, h]);
+    await historico(c, estab, 'config', estab, 'area_cliente_antecedencia', { horas: h, autor: req.brow_usuario || null });
+    res.status(200).json({ ok: true }); return;
   }
   // ─── AGENDAMENTO ONLINE: configuração (só a dona, ver SO_DONA) ─────────────
   if (req.method === 'POST' && acao === 'ag_online_salvar') {
@@ -545,6 +555,162 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
     return erro(res, 400, 'acao', 'Ação desconhecida.');
   }
 
+
+  // ═══ ÁREA DA CLIENTE (cl_*): só com a sessão da própria cliente (req.brow_cliente) ═══
+  // Devolve SÓ data, horário, serviço, profissional e situação — nunca valores,
+  // observações internas, anamnese, fotos ou técnica. Cada consulta filtra pelo
+  // cliente_id da sessão: uma cliente nunca vê nem mexe no horário de outra.
+  if (acao.startsWith('cl_')) {
+    const eu = req.brow_cliente;
+    if (!eu || !eu.id) return erro(res, 401, 'sem_sessao_cliente', 'Entre com seu WhatsApp e PIN para continuar.');
+    const antecH = cfg.cliente_antec_horas == null ? 24 : cfg.cliente_antec_horas;
+    const diasEntre = (a, z) => Math.round((Date.parse(z + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 864e5);
+    const faltamMin = (a) => diasEntre(ha.hoje, a.data) * 1440 + a.inicio_min - ha.agora;
+    const podeAlterar = (a) => ['agendado', 'confirmado'].includes(a.situacao) && faltamMin(a) >= antecH * 60;
+    const prazoTxt = antecH === 0 ? 'até o horário marcado' : antecH % 24 === 0 ? `até ${antecH / 24 === 1 ? '24 horas' : antecH / 24 + ' dias'} antes` : `até ${antecH} hora${antecH === 1 ? '' : 's'} antes`;
+    const MSG_PRAZO = `Pela regra do salão, só dá para cancelar ou remarcar por aqui ${prazoTxt}. Fale com o salão pelo WhatsApp.`;
+    const vista = (a) => ({ id: a.id, data: a.data, inicio: minParaHhmm(a.inicio_min), fim: minParaHhmm(a.fim_min), servico: a.servico_nome, servico_id: a.servico_id,
+      profissional: a.profissional_nome, situacao: a.situacao, situacao_nome: a.situacao === 'agendado' ? 'Agendado' : a.situacao === 'confirmado' ? 'Confirmado' : (SIT_AG[a.situacao] || a.situacao),
+      pode_alterar: podeAlterar(a) });
+    const meu = async (id, trava) => (await c.query(`${SEL_AG} where estab=$1 and id=$2 and cliente_id=$3${trava ? ' for update' : ''}`, [estab, String(id || ''), eu.id])).rows[0] || null;
+    const fimJanela = somaDiasISO(ha.hoje, DIAS_MAX);
+    const profsAtivas = async () => (await c.query('select id, nome from brow_profissionais where estab=$1 and ativo order by lower(nome)', [estab])).rows;
+    // horários livres para um serviço (todas as profissionais ativas, ou só uma); ignorarId = a própria reserva ao remarcar
+    async function livres(s, data, profId, ignorarId) {
+      const ativas = await profsAtivas();
+      const alvo = profId ? ativas.filter(p => p.id === profId) : ativas;
+      const dia = lerHorarioDia((cfg.horarios || {})[String(diaDaSemana(data))]);
+      const mapa = new Map();
+      for (const p of alvo) {
+        const ocup = await ocupacoes(c, estab, p.id, data, ignorarId);
+        for (const x of inicios(s.duracao_min, s.intervalo_min, dia, ocup, minimoOnline(data), cfg.passo_min)) if (!mapa.has(x)) mapa.set(x, p);
+      }
+      const horarios = [...mapa.entries()].sort((a, z) => a[0] - z[0]).map(([x, p]) => ({ inicio_min: x, inicio: minParaHhmm(x), fim: minParaHhmm(x + s.duracao_min), profissional_id: p.id, profissional_nome: p.nome }));
+      return { horarios, motivo: !dia.aberto ? 'O salão não abre neste dia.' : (!horarios.length ? 'Não há horário livre neste dia. Tente outro dia.' : null) };
+    }
+    const diasAbertos = () => { const d = []; for (let k = 0; k <= DIAS_MAX; k++) { const x = somaDiasISO(ha.hoje, k); if (lerHorarioDia((cfg.horarios || {})[String(diaDaSemana(x))]).aberto) d.push(x); } return d; };
+    const autoAgenda = !!cfg.online_ativo && configurada;
+
+    if (acao === 'cl_inicio') {
+      const r = await c.query(`${SEL_AG} where estab=$1 and cliente_id=$2 and situacao = any('{agendado,confirmado,chegou,em_atendimento}') and brow_agendamentos.data >= $3 order by brow_agendamentos.data, inicio_min limit 20`, [estab, eu.id, ha.hoje]);
+      const prox = r.rows.filter(a => a.data > ha.hoje || a.fim_min > ha.agora || a.situacao !== 'agendado' && a.situacao !== 'confirmado');
+      res.status(200).json({ ok: true, nome: eu.nome, estudio: cfg.nome_estudio, salao: req.brow_salao ? { slug: req.brow_salao.slug, nome: req.brow_salao.nome } : null,
+        proximos: prox.map(vista), pode_agendar: autoAgenda, antecedencia_horas: antecH, prazo_texto: prazoTxt, whatsapp_estudio: cfg.whatsapp_estudio || null, hoje: ha.hoje });
+      return;
+    }
+    if (acao === 'cl_historico') {
+      const r = await c.query(`select to_char(data,'YYYY-MM-DD') as data, servico_nome from brow_agendamentos where estab=$1 and cliente_id=$2 and situacao='concluido' order by data desc, inicio_min desc limit 200`, [estab, eu.id]);
+      res.status(200).json({ ok: true, itens: r.rows.map(x => ({ data: x.data, servico: x.servico_nome })) }); return;
+    }
+    if (acao === 'cl_ver') {
+      const a = await meu(q.id);
+      if (!a || !['agendado', 'confirmado', 'chegou', 'em_atendimento'].includes(a.situacao)) return erro(res, 404, 'nao_encontrado', 'Horário não encontrado.');
+      res.status(200).json({ ok: true, item: vista(a), prazo_texto: prazoTxt, pode_remarcar_online: autoAgenda, whatsapp_estudio: cfg.whatsapp_estudio || null }); return;
+    }
+    if (req.method === 'POST' && acao === 'cl_cancelar') {
+      await c.query('begin');
+      try {
+        const a = await meu(b.id, true);
+        if (!a) { await c.query('rollback'); return erro(res, 404, 'nao_encontrado', 'Horário não encontrado.'); }
+        if (a.situacao === 'cancelado') { await c.query('rollback'); res.status(200).json({ ok: true, repetido: true }); return; }
+        if (!['agendado', 'confirmado'].includes(a.situacao)) { await c.query('rollback'); return erro(res, 409, 'situacao', 'Este horário não pode mais ser cancelado por aqui.'); }
+        if (!podeAlterar(a)) { await c.query('rollback'); return erro(res, 409, 'prazo', MSG_PRAZO); }
+        await c.query(`update brow_agendamentos set situacao='cancelado', atualizado_em=now() where estab=$1 and id=$2`, [estab, a.id]);
+        await historico(c, estab, 'agendamento', a.id, 'cancelar', { motivo: 'Cancelado pela cliente', por: 'cliente' });
+        if (a.encaixe_id) await c.query(`update brow_encaixes set situacao='cancelado', atualizado_em=now() where estab=$1 and id=$2`, [estab, a.encaixe_id]);
+        await c.query('commit');
+        res.status(200).json({ ok: true }); return;
+      } catch (e) { await c.query('rollback'); throw e; }
+    }
+    if (acao === 'cl_remarcar_horarios') {
+      const a = await meu(q.id);
+      if (!a) return erro(res, 404, 'nao_encontrado', 'Horário não encontrado.');
+      if (!podeAlterar(a)) return erro(res, 409, 'prazo', MSG_PRAZO);
+      if (!autoAgenda) return erro(res, 503, 'indisponivel', 'Para remarcar, fale com o salão pelo WhatsApp.');
+      const s = await servicoAtivo(c, estab, a.servico_id);
+      if (!s) return erro(res, 404, 'servico', 'Serviço indisponível. Fale com o salão.');
+      const data = String(q.data || '');
+      if (!data) { res.status(200).json({ ok: true, dias: diasAbertos(), item: vista(a) }); return; }
+      if (!dataValida(data) || data < ha.hoje || data > fimJanela) return erro(res, 422, 'data', 'Escolha um dia entre hoje e os próximos 30 dias.');
+      res.status(200).json({ ok: true, data, ...(await livres({ duracao_min: a.duracao_min, intervalo_min: a.intervalo_min }, data, null, a.id)) }); return;
+    }
+    if (req.method === 'POST' && acao === 'cl_remarcar') {
+      const a0 = await meu(b.id);
+      if (!a0) return erro(res, 404, 'nao_encontrado', 'Horário não encontrado.');
+      if (!podeAlterar(a0)) return erro(res, 409, 'prazo', MSG_PRAZO);
+      if (!autoAgenda) return erro(res, 503, 'indisponivel', 'Para remarcar, fale com o salão pelo WhatsApp.');
+      const data = String(b.data || ''); const ini = Number(b.inicio_min);
+      if (!dataValida(data) || data < ha.hoje || data > fimJanela || !Number.isInteger(ini)) return erro(res, 422, 'validacao', 'Escolha o novo dia e horário.');
+      if (data === ha.hoje && ini < ha.agora + ANTEC_MIN) return erro(res, 422, 'validacao', 'Escolha um horário com pelo menos 2 horas de antecedência.');
+      const p = (await profsAtivas()).find(x => x.id === String(b.profissional_id || ''));
+      if (!p) return erro(res, 422, 'validacao', 'Profissional indisponível.');
+      await c.query('begin');
+      try {
+        const a = await meu(b.id, true);
+        if (!a) { await c.query('rollback'); return erro(res, 404, 'nao_encontrado', 'Horário não encontrado.'); }
+        if (a.data === data && a.inicio_min === ini && a.profissional_id === p.id) { await c.query('rollback'); res.status(200).json({ ok: true, repetido: true }); return; }
+        if (!['agendado', 'confirmado'].includes(a.situacao)) { await c.query('rollback'); return erro(res, 409, 'situacao', 'Este horário não pode mais ser remarcado por aqui.'); }
+        if (!podeAlterar(a)) { await c.query('rollback'); return erro(res, 409, 'prazo', MSG_PRAZO); }
+        const chaves = [[a.profissional_id, a.data], [p.id, data]].sort((x, y) => (x.join('|') < y.join('|') ? -1 : 1));
+        for (const [pp, dd] of chaves) await cadeado(c, estab, pp, dd);
+        const dia = lerHorarioDia((cfg.horarios || {})[String(diaDaSemana(data))]);
+        const ocup = await ocupacoes(c, estab, p.id, data, a.id);
+        const motivo = motivoOcupado(ini, a.duracao_min, a.intervalo_min, dia, ocup, minimoOnline(data));
+        if (motivo) { await c.query('rollback'); return erro(res, 409, 'indisponivel', 'Esse horário acabou de ser ocupado. Escolha outro. Seu horário anterior continua marcado.'); }
+        await c.query(`update brow_agendamentos set data=$3, inicio_min=$4, fim_min=$5, reserva_fim_min=$6, profissional_id=$7, profissional_nome=$8,
+          situacao='agendado', remarcado=true, atualizado_em=now() where estab=$1 and id=$2`,
+          [estab, a.id, data, ini, ini + a.duracao_min, ini + a.duracao_min + a.intervalo_min, p.id, p.nome]);
+        await historico(c, estab, 'agendamento', a.id, 'remarcado', { por: 'cliente', motivo: 'Remarcado pela cliente', de: `${a.data} ${minParaHhmm(a.inicio_min)} (${a.profissional_nome})`, para: `${data} ${minParaHhmm(ini)} (${p.nome})` });
+        await c.query('commit');
+        res.status(200).json({ ok: true, data, inicio: minParaHhmm(ini), profissional: p.nome }); return;
+      } catch (e) { await c.query('rollback'); throw e; }
+    }
+    // AGENDAR (o mesmo agendamento online, já identificada) — só com o agendamento online ligado
+    if (acao.startsWith('cl_agendar')) {
+      if (!autoAgenda) return erro(res, 503, 'indisponivel', 'O agendamento pelo aplicativo está desligado. Fale com o salão pelo WhatsApp.');
+      if (acao === 'cl_agendar_info') {
+        const sv = await c.query('select id, nome, descricao, duracao_min from brow_servicos where estab=$1 and ativo order by lower(nome)', [estab]);
+        res.status(200).json({ ok: true, estudio: cfg.nome_estudio, servicos: sv.rows, profissionais: await profsAtivas(), dias: diasAbertos(), hoje: ha.hoje }); return;
+      }
+      if (acao === 'cl_agendar_horarios') {
+        const data = String(q.data || '');
+        if (!dataValida(data) || data < ha.hoje || data > fimJanela) return erro(res, 422, 'data', 'Escolha um dia entre hoje e os próximos 30 dias.');
+        const s = await servicoAtivo(c, estab, q.servico_id);
+        if (!s || !s.ativo) return erro(res, 404, 'servico', 'Serviço indisponível.');
+        res.status(200).json({ ok: true, data, ...(await livres(s, data, q.profissional_id ? String(q.profissional_id) : null)) }); return;
+      }
+      if (req.method === 'POST' && acao === 'cl_agendar') {
+        const erros = {};
+        const data = String(b.data || ''); const ini = Number(b.inicio_min);
+        if (!dataValida(data) || data < ha.hoje || data > fimJanela) erros.data = 'Escolha um dia entre hoje e os próximos 30 dias.';
+        if (!Number.isInteger(ini)) erros.inicio_min = 'Escolha o horário.';
+        else if (data === ha.hoje && ini < ha.agora + ANTEC_MIN) erros.inicio_min = 'Escolha um horário com pelo menos 2 horas de antecedência.';
+        const chaveC = txt(b.chave_envio, 64); if (!chaveC) erros.chave_envio = 'Pedido incompleto.';
+        const ativas = await profsAtivas();
+        if (!ativas.some(p => p.id === String(b.profissional_id || ''))) erros.profissional_id = 'Profissional indisponível.';
+        const s = await servicoAtivo(c, estab, b.servico_id);
+        if (!s || !s.ativo) erros.servico_id = 'Serviço indisponível.';
+        if (Object.keys(erros).length) return erro(res, 422, 'validacao', 'Confira os dados.', { erros });
+        const chave = 'cli:' + eu.id.slice(0, 8) + ':' + chaveC;
+        const ja = await c.query(`${SEL_AG} where estab=$1 and chave_envio=$2 and cliente_id=$3`, [estab, chave, eu.id]);
+        if (ja.rows.length) { const a = ja.rows[0]; res.status(200).json({ ok: true, repetido: true, data: a.data, inicio: minParaHhmm(a.inicio_min), servico: a.servico_nome, profissional: a.profissional_nome }); return; }
+        const fut = await c.query(`select count(*)::int n from brow_agendamentos where estab=$1 and cliente_id=$2 and data >= $3 and situacao in ('agendado','confirmado')`, [estab, eu.id, ha.hoje]);
+        if (fut.rows[0].n >= 2) return erro(res, 409, 'limite_cliente', 'Você já tem 2 horários marcados. Para mais, fale com o salão pelo WhatsApp.');
+        const tel = digitos(eu.telefone);
+        const r = await reservar({ chave, clienteId: eu.id, whatsapp: telefoneValido(tel) ? tel : null, profId: String(b.profissional_id), servicoId: s.id, data, inicioMin: ini, observacoes: 'Agendado pela área da cliente' });
+        if (!r.transacao) {
+          if (r.st === 409) return erro(res, 409, 'indisponivel', 'Esse horário acabou de ser ocupado. Escolha outro, por favor.');
+          if (r.st === 200 && r.j && r.j.repetido) { res.status(200).json({ ok: true, repetido: true }); return; }
+          return erro(res, r.st, (r.j && r.j.erro) || 'erro', 'Não foi possível agendar. Confira os dados.');
+        }
+        await c.query(`update brow_agendamentos set origem='online' where estab=$1 and id=$2`, [estab, r.j.id]);
+        await c.query('commit');
+        const a = (await c.query(`${SEL_AG} where estab=$1 and id=$2`, [estab, r.j.id])).rows[0];
+        res.status(201).json({ ok: true, data: a.data, inicio: minParaHhmm(a.inicio_min), servico: a.servico_nome, profissional: a.profissional_nome }); return;
+      }
+    }
+    return erro(res, 400, 'acao', 'Ação desconhecida.');
+  }
 
   // ─── LANÇAR AGENDAMENTOS EM LOTE ──────────────────────────────────────────
   // Interpreta e valida todas as linhas (sem gravar). Usado na conferência e de novo ao gravar.
