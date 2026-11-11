@@ -188,6 +188,51 @@ function linhaEnc(x) {
 }
 const erro = (res, st, codigo, msg, extra) => res.status(st).json({ ok: false, erro: codigo, msg, ...(extra || {}) });
 
+
+// ─── LANÇAMENTO EM LOTE (página "Lançar agendamentos") ──────────────────────
+// Uma linha por agendamento: Nome; WhatsApp; Serviço; Data; Horário; Profissional (opc.); Observação (opc.)
+// Separador ';' ou tab. Tudo é interpretado e validado AQUI no servidor.
+const LOTE_MAX = 50;
+const semAcento = (v) => String(v == null ? '' : v).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+function loteData(v, hoje) {
+  const t = semAcento(v);
+  const soma = (n) => { const d = new Date(hoje + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  if (t === 'hoje') return hoje;
+  if (t === 'amanha') return soma(1);
+  let m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/); if (m) return dataValida(t) ? t : null;
+  m = t.match(/^(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2}|\d{4}))?$/);
+  if (!m) return null;
+  let ano = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : +hoje.slice(0, 4);
+  const iso = (a) => `${a}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+  let d = iso(ano);
+  if (!m[3] && dataValida(d) && d < soma(-180)) d = iso(ano + 1);   // "05/01" digitado em dezembro = ano que vem
+  return dataValida(d) ? d : null;
+}
+function loteHora(v) {
+  const m = semAcento(v).replace(/\s/g, '').match(/^(\d{1,2})(?:(?:h|:)(\d{2})?)?h?(?:min)?$/);
+  if (!m) return null;
+  const h = +m[1], mi = m[2] ? +m[2] : 0;
+  if (h > 23 || mi > 59) return null;
+  return h * 60 + mi;
+}
+function loteServico(nome, servs) {
+  const t = semAcento(nome); if (!t) return { erro: 'Informe o serviço.' };
+  const ex = servs.filter(s => semAcento(s.nome) === t);
+  if (ex.length === 1) return { s: ex[0] };
+  const cand = servs.filter(s => (' ' + semAcento(s.nome) + ' ').includes(' ' + t + ' '));
+  if (cand.length === 1) return { s: cand[0] };
+  if (cand.length > 1) return { erro: `Serviço ambíguo: “${nome}” pode ser ${cand.slice(0, 3).map(s => s.nome).join(', ')}${cand.length > 3 ? '…' : ''}. Escreva o nome completo.` };
+  return { erro: `Serviço “${nome}” não encontrado na tabela.` };
+}
+function loteProf(nome, profs) {
+  const t = semAcento(nome);
+  if (!t) return profs.length === 1 ? { p: profs[0] } : { erro: profs.length ? 'Informe a profissional (há mais de uma ativa).' : 'Nenhuma profissional ativa cadastrada.' };
+  const ex = profs.filter(p => semAcento(p.nome) === t); if (ex.length === 1) return { p: ex[0] };
+  const cand = profs.filter(p => semAcento(p.nome).startsWith(t) || (' ' + semAcento(p.nome) + ' ').includes(' ' + t + ' '));
+  if (cand.length === 1) return { p: cand[0] };
+  return { erro: cand.length > 1 ? `Profissional ambígua: “${nome}”.` : `Profissional “${nome}” não encontrada.` };
+}
+
 // Data no formato do banco (to_char evita qualquer conversão de fuso do driver)
 const SEL_AG = `select *, to_char(data,'YYYY-MM-DD') as data from brow_agendamentos`;
 const SEL_ENC = `select *, to_char(data,'YYYY-MM-DD') as data from brow_encaixes`;
@@ -270,7 +315,19 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
     const hs = { 0: { aberto: true, inicio: '08:00', fim: '12:00', pausas: [] }, 1: { aberto: false }, 2: aberto, 3: aberto, 4: aberto, 5: aberto, 6: aberto };
     await c.query(`insert into brow_config(estab,horarios) values($1,$2::jsonb) on conflict(estab) do update set horarios = coalesce(brow_config.horarios,'{}'::jsonb) || $2::jsonb, atualizado_em=now()`, [estab, JSON.stringify(hs)]);
     await historico(c, estab, 'config', estab, 'horarios_estudio_aplicados', { autor: req.brow_usuario || null });
-    res.status(200).json({ ok: true }); return;
+    // profissional "Rychelma" (pedido da dona): cadastra só se não existir nenhuma com esse nome (sem acento/maiúsculas)
+    await c.query('select pg_advisory_lock(hashtext($1))', ['brow-prof-rychelma|' + estab]);
+    let profCriada = false;
+    try {
+      const ex = (await c.query('select id, nome from brow_profissionais where estab=$1', [estab])).rows.find(p => semAcento(p.nome) === 'rychelma');
+      if (!ex) {
+        const pid = crypto.randomUUID();
+        await c.query('insert into brow_profissionais(id,estab,nome,ativo) values($1,$2,$3,true)', [pid, estab, 'Rychelma']);
+        await historico(c, estab, 'config', estab, 'profissional_cadastrada', { autor: req.brow_usuario || null, profissional: 'Rychelma', id: pid });
+        profCriada = true;
+      }
+    } finally { await c.query('select pg_advisory_unlock(hashtext($1))', ['brow-prof-rychelma|' + estab]); }
+    res.status(200).json({ ok: true, profissional_criada: profCriada }); return;
   }
   if (req.method === 'POST' && acao === 'ag_prof_salvar') {
     const nome = txt(b.nome, 60);
@@ -486,6 +543,94 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
       res.status(201).json({ ok: true, data: a.data, inicio: minParaHhmm(a.inicio_min), servico: a.servico_nome, profissional: a.profissional_nome, whatsapp_estudio: cfg.whatsapp_estudio || null }); return;
     }
     return erro(res, 400, 'acao', 'Ação desconhecida.');
+  }
+
+
+  // ─── LANÇAR AGENDAMENTOS EM LOTE ──────────────────────────────────────────
+  // Interpreta e valida todas as linhas (sem gravar). Usado na conferência e de novo ao gravar.
+  async function loteAnalisar(texto) {
+    const brutas = String(texto || '').split(/\r?\n/).map(l => l.replace(/ /g, ' ').trim());
+    const linhas = [];
+    brutas.forEach((l, i) => { if (l && !l.startsWith('#')) linhas.push({ n: i + 1, bruta: l }); });
+    if (linhas.length && /nome/i.test(linhas[0].bruta) && /whats|telefone/i.test(linhas[0].bruta)) linhas.shift();   // cabeçalho
+    if (!linhas.length) return { erro: 'Cole pelo menos uma linha.' };
+    if (linhas.length > LOTE_MAX) return { erro: `No máximo ${LOTE_MAX} linhas por vez (vieram ${linhas.length}).` };
+    const servs = (await c.query('select id, nome, duracao_min, intervalo_min, valor_centavos from brow_servicos where estab=$1 and ativo', [estab])).rows;
+    const profs = (await c.query('select id, nome from brow_profissionais where estab=$1 and ativo order by nome', [estab])).rows;
+    const extras = {};   // ocupações das linhas já aceitas do próprio lote: chave prof|data
+    const ocupCache = {};
+    const out = [];
+    for (const L of linhas) {
+      const cols = (L.bruta.includes('\t') ? L.bruta.split('\t') : L.bruta.split(';')).map(x => x.trim());
+      const r = { n: L.n, texto: L.bruta.slice(0, 200), nome: txt(cols[0], 80) || '', problemas: [] };
+      if (cols.length < 5) { r.problemas.push('Faltam campos: use Nome; WhatsApp; Serviço; Data; Horário.'); out.push(r); continue; }
+      if (r.nome.length < 2) r.problemas.push('Informe o nome da cliente.');
+      let tel = digitos(cols[1]); if (tel.startsWith('55') && tel.length >= 12) tel = tel.slice(2);
+      if (!telefoneValido(tel)) r.problemas.push('WhatsApp inválido (DDD + número).'); else r.telefone = tel;
+      const sv = loteServico(cols[2], servs); if (sv.erro) r.problemas.push(sv.erro); else r.servico = { id: sv.s.id, nome: sv.s.nome, duracao_min: sv.s.duracao_min, intervalo_min: sv.s.intervalo_min };
+      const data = loteData(cols[3], ha.hoje); if (!data) r.problemas.push(`Data “${cols[3]}” não entendida (use dd/mm, hoje ou amanhã).`); else r.data = data;
+      const ini = loteHora(cols[4]); if (ini == null) r.problemas.push(`Horário “${cols[4]}” não entendido (ex.: 9h, 9:00, 09h30).`); else { r.inicio_min = ini; r.inicio = minParaHhmm(ini); }
+      const pr = loteProf(cols[5] || '', profs); if (pr.erro) r.problemas.push(pr.erro); else r.profissional = { id: pr.p.id, nome: pr.p.nome };
+      r.observacoes = txt(cols.slice(6).join('; '), 300) || '';
+      if (r.telefone) { const cl = (await c.query('select id, nome from brow_clientes where estab=$1 and telefone=$2 order by criado_em limit 1', [estab, r.telefone])).rows[0]; r.cliente = cl ? { id: cl.id, nome: cl.nome, existente: true } : { existente: false }; }
+      if (!r.problemas.length) {
+        if (r.data < ha.hoje) r.problemas.push('Já passou: não entra na agenda.');
+        else {
+          const dia = lerHorarioDia((cfg.horarios || {})[String(diaDaSemana(r.data))]);
+          const k = r.profissional.id + '|' + r.data;
+          if (!ocupCache[k]) ocupCache[k] = await ocupacoes(c, estab, r.profissional.id, r.data);
+          const ocup = [...ocupCache[k], ...(extras[k] || [])];
+          const motivo = motivoOcupado(ini, r.servico.duracao_min, r.servico.intervalo_min, dia, ocup, minimoDoDia(r.data, ha));
+          if (motivo) r.problemas.push(motivo.replace(/^Não há tempo suficiente: o próximo atendimento/, 'Conflito: o atendimento') + (ocup.some(o => o.lote && sobrepoe(ini, ini + r.servico.duracao_min + r.servico.intervalo_min, o.a, o.b)) ? ' (choca com outra linha deste lote)' : ''));
+          else (extras[k] = extras[k] || []).push({ a: ini, b: ini + r.servico.duracao_min + r.servico.intervalo_min, tipo: 'agendamento', nome: 'linha ' + r.n, lote: true });
+        }
+      }
+      r.pronto = !r.problemas.length;
+      out.push(r);
+    }
+    return { linhas: out };
+  }
+  const loteResumo = (x) => ({ n: x.n, texto: x.texto, nome: x.nome, telefone: x.telefone || null, servico: x.servico ? x.servico.nome : null, profissional: x.profissional ? x.profissional.nome : null,
+    data: x.data || null, inicio: x.inicio || null, cliente: x.cliente ? (x.cliente.existente ? 'existente' : 'nova') : null, cliente_nome: x.cliente && x.cliente.existente ? x.cliente.nome : null,
+    pronto: !!x.pronto, problemas: x.problemas || [] });
+  if (req.method === 'POST' && acao === 'ag_lote_validar') {
+    const a = await loteAnalisar(b.texto);
+    if (a.erro) return erro(res, 422, 'validacao', a.erro);
+    res.status(200).json({ ok: true, hoje: ha.hoje, total: a.linhas.length, prontos: a.linhas.filter(x => x.pronto).length, linhas: a.linhas.map(loteResumo) }); return;
+  }
+  if (req.method === 'POST' && acao === 'ag_lote_criar') {
+    const lote = txt(b.lote_id, 64); if (!lote || !/^[\w-]{8,64}$/.test(lote)) return erro(res, 400, 'lote', 'Pedido incompleto.');
+    const a = await loteAnalisar(b.texto);
+    if (a.erro) return erro(res, 422, 'validacao', a.erro);
+    const resultado = [];
+    for (const x of a.linhas) {
+      const base = loteResumo(x);
+      const chave = 'lote:' + crypto.createHash('sha256').update(lote + '|' + x.n + '|' + semAcento(x.texto)).digest('hex').slice(0, 40);
+      const ja = await c.query(`${SEL_AG} where estab=$1 and chave_envio=$2`, [estab, chave]);
+      if (ja.rows.length) { resultado.push({ ...base, resultado: 'repetido', agendamento_id: ja.rows[0].id, data: ja.rows[0].data }); continue; }
+      if (!x.pronto) { resultado.push({ ...base, resultado: 'fora' }); continue; }
+      // cliente pelo telefone (nunca duplica); se não existir, cadastro novo marcado como "lançamento"
+      let clId = x.cliente && x.cliente.existente ? x.cliente.id : null, criada = false;
+      if (!clId) {
+        await c.query('select pg_advisory_lock(hashtext($1))', [`brow-pub-cli|${estab}|${x.telefone}`]);
+        try {
+          const cl = (await c.query('select id from brow_clientes where estab=$1 and telefone=$2 order by criado_em limit 1', [estab, x.telefone])).rows[0];
+          if (cl) clId = cl.id;
+          else { clId = crypto.randomUUID(); await c.query(`insert into brow_clientes(id,estab,nome,telefone,origem,contato_pref,observacoes) values($1,$2,$3,$4,'lancamento','whatsapp','Cadastro criado pelo lançamento de agendamentos.')`, [clId, estab, x.nome, x.telefone]); criada = true; }
+        } finally { await c.query('select pg_advisory_unlock(hashtext($1))', [`brow-pub-cli|${estab}|${x.telefone}`]); }
+      }
+      const r = await reservar({ chave, clienteId: clId, whatsapp: x.telefone, profId: x.profissional.id, servicoId: x.servico.id, data: x.data, inicioMin: x.inicio_min,
+        observacoes: `Lançado em lote${x.observacoes ? ' · ' + x.observacoes : ''}` });
+      if (!r.transacao) {
+        if (criada) await c.query('delete from brow_clientes where estab=$1 and id=$2 and not exists (select 1 from brow_agendamentos a where a.estab=$1 and a.cliente_id=$2)', [estab, clId]);
+        if (r.j && r.j.repetido) { resultado.push({ ...base, resultado: 'repetido', agendamento_id: r.j.id }); continue; }
+        resultado.push({ ...base, resultado: 'indisponivel', pronto: false, problemas: [r.st === 409 ? 'Esse horário foi ocupado depois da conferência.' : 'Não foi possível lançar esta linha.'] }); continue;
+      }
+      await c.query(`update brow_agendamentos set origem='lancamento' where estab=$1 and id=$2`, [estab, r.j.id]);
+      await c.query('commit');
+      resultado.push({ ...base, resultado: 'criado', agendamento_id: r.j.id, cliente: criada ? 'nova' : 'existente' });
+    }
+    res.status(200).json({ ok: true, criados: resultado.filter(x => x.resultado === 'criado').length, repetidos: resultado.filter(x => x.resultado === 'repetido').length, linhas: resultado }); return;
   }
 
   if (req.method === 'POST' && acao === 'ag_criar') {

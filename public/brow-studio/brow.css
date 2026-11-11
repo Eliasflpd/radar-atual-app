@@ -624,3 +624,11 @@ span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
 .aviso-online a{color:var(--marrom)}
 @media (max-width:420px){.grade-dias{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .link-quebra{overflow-wrap:anywhere;font-size:15px}
+/* ═══════════════ LANÇAR AGENDAMENTOS ═══════════════ */
+.campo textarea.lote-texto{min-height:220px;font-size:15px;line-height:1.45;font-family:inherit}
+@media (max-height:760px){.campo textarea.lote-texto{min-height:150px}}
+@media (max-width:420px) and (max-height:700px){.campo textarea.lote-texto{min-height:120px}}
+.lote-resumo{margin:0;font-size:17px}
+.lote-item.lote-erro{border-left:4px solid #c0533a}
+.lote-problema{color:#8f2b16}
+.lote-dias{flex-wrap:wrap;gap:8px}.lote-dias .btn{flex:1 1 140px}
