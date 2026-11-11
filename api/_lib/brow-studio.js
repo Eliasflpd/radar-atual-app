@@ -41,7 +41,7 @@ const ESTAB_PADRAO = 'principal';   // um estúdio por enquanto; a sessão carre
 const testeLocal = () => process.env.BROW_TESTE_SEM_LOGIN === '1' && !process.env.VERCEL;
 const corpoReq = (req) => { let b = req.body; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = null; } } return (b && typeof b === 'object') ? b : {}; };
 const SO_DONA = new Set(['es_estornar', 'es_despesa_criar', 'es_config_salvar', 'or_estornar', 'or_receita', 'or_receitas_cliente', 'rt_receita',
-  'ag_config_salvar', 'ag_horario_salvar', 'ag_prof_salvar']);
+  'ag_config_salvar', 'ag_horario_salvar', 'ag_prof_salvar', 'ag_horarios_aplicar_estudio']);
 function centavosTxt(v) { const s = String(v == null ? '' : v).trim().replace(/^R\$\s*/i, '').replace(/\./g, '').replace(',', '.'); const n = Number(s); return isFinite(n) ? Math.round(n * 100) : 0; }
 // ações restritas à função "dona" (financeiro, estornos, ajustes, descontos, exceções, configuração)
 function exigeDona(acao, req) {

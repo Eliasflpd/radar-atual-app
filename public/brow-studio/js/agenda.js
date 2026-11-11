@@ -978,9 +978,16 @@ async function telaCfgHorarios() {
       const x = h[d];
       return `<li class="item item-compacto"><div class="item-info"><div class="item-nome">${DIAS[d]}</div>
         <div class="item-extra">${x && x.aberto ? `${x.inicio}–${x.fim}${(x.pausas || []).length ? ` · pausa ${x.pausas.map(p => p.inicio + '–' + p.fim).join(', ')}` : ''}` : 'Fechado'}</div></div>
-        <a class="btn btn-linha" href="${C}horarios/dia/?d=${d}" aria-label="Editar ${DIAS[d]}">Editar</a></li>`; }).join('')}</ul>`,
+        <a class="btn btn-linha" href="${C}horarios/dia/?d=${d}" aria-label="Editar ${DIAS[d]}">Editar</a></li>`; }).join('')}</ul>
+      <button type="button" class="btn btn-suave" id="aplicar-estudio">Aplicar horários do estúdio (ter a sáb, 8h–11h e 13h–18h)</button><p class="ajuda" id="aplicar-aviso" aria-live="polite"></p>`,
     acoes: `<a class="btn btn-linha" href="${C}">${SETA} Voltar</a>`
   });
+  $('#aplicar-estudio').onclick = async () => {
+    const bt = $('#aplicar-estudio'); bt.disabled = true; bt.textContent = 'Aplicando…';
+    const ra = await api('ag_horarios_aplicar_estudio', { corpo: {} });
+    if (ra.ok) { recado.pôr('Horários do estúdio aplicados: terça a sábado, 8h às 11h e 13h às 18h.'); location.reload(); return; }
+    bt.disabled = false; bt.textContent = 'Aplicar horários do estúdio (ter a sáb, 8h–11h e 13h–18h)'; $('#aplicar-aviso').textContent = ra.msg || 'Não foi possível aplicar.';
+  };
   focarTitulo();
 }
 async function telaCfgDia() {
