@@ -104,3 +104,8 @@ export function blocoResumo(titulo, linhas, corrigir) {
   return `<section class="bloco"><div class="bloco-topo"><h2>${esc(titulo)}</h2>${corrigir ? `<a class="corrigir" href="${corrigir}">Corrigir</a>` : ''}</div>
     <dl class="dados">${linhas.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v ? esc(v) : '<span style="color:#a68b7a">Não informado</span>'}</dd>`).join('')}</dl></section>`;
 }
+
+// ─── aplicativo instalável (PWA): registra o service worker do Brow Studio ──
+if ('serviceWorker' in navigator && location.pathname.startsWith('/brow-studio/')) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/brow-studio/sw.js', { scope: '/brow-studio/' }).catch(() => {}); });
+}

@@ -9,7 +9,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 const BASE = '/brow-studio/clientes/';
 import { $, app, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=2';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=3';
 const digitos = (v) => String(v || '').replace(/\D/g, '');
 function iniciais(nome) {
   const p = String(nome || '').trim().split(/\s+/).filter(x => !/^(d[aeo]s?|e)$/i.test(x));

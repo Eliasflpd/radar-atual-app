@@ -6,7 +6,7 @@
 // realizado. Nada é pago, reservado ou enviado automaticamente.
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=2';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=3';
 
 const BASE = '/brow-studio/orcamentos/';
 const AG = '/brow-studio/agenda/';

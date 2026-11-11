@@ -5,7 +5,7 @@
 // Nada é baixado automaticamente; entrada de estoque não é pagamento.
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=2';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=3';
 
 const BASE = '/brow-studio/estoque/';
 const P = BASE + 'produto/';

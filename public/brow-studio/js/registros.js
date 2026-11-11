@@ -6,7 +6,7 @@
 // o texto, depois cada foto separadamente (falha numa foto não perde o resto).
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=2';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=3';
 
 const BASE = '/brow-studio/registros/';
 const R = BASE + 'reg/';

@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f6e6d9">
+<link rel="manifest" href="/brow-studio/manifest.webmanifest">
+<link rel="icon" href="/brow-studio/img/icones/icone-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/brow-studio/img/icones/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Brow Studio">
 <meta name="description" content="Brow Studio — beleza em cada detalhe. Seu atendimento organizado em um só lugar.">
 <title>Brow Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,5 +52,6 @@
     </nav>
   </section>
 </main>
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('/brow-studio/sw.js',{scope:'/brow-studio/'}).catch(function(){});});}</script>
 </body>
 </html>

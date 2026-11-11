@@ -3,7 +3,7 @@
 // Login por nome + PIN de 6 dígitos. A sessão fica num cookie HttpOnly
 // (o JavaScript não lê o token). Nada de PIN é guardado no navegador.
 // ═══════════════════════════════════════════════════════════════════════════
-import { $, params, esc, api, SETA, pagina, campoTexto, grupoOpcoes, mostrarErros, avisoHTML, focarTitulo, ir } from './comum.js?v=2';
+import { $, params, esc, api, SETA, pagina, campoTexto, grupoOpcoes, mostrarErros, avisoHTML, focarTitulo, ir } from './comum.js?v=3';
 
 const app = document.getElementById('app');
 const MENU = '/brow-studio/profissional.html';
@@ -178,6 +178,25 @@ async function menu() {
   if (caixa) caixa.innerHTML = `${msg ? `<span class="aviso-caixa ok">${esc(msg)}</span>` : ''}<span>Olá, <strong>${esc(u.nome)}</strong> · ${esc(u.funcao_nome)}</span> <a href="/brow-studio/conta/">Minha conta</a>`;
   if (u.funcao !== 'dona') document.querySelectorAll('[data-so-dona]').forEach(a => a.remove());
 }
+
+// ─── botão "Instalar no tablet" (Android/Chrome) e instrução para iPad/iPhone ──
+let pedidoInstalacao = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); pedidoInstalacao = e; mostrarInstalar(); });
+window.addEventListener('appinstalled', () => { const c = document.getElementById('instalar'); if (c) c.innerHTML = '<span class="ajuda">App instalado. Abra pelo ícone “Brow Studio”.</span>'; });
+function mostrarInstalar() {
+  const c = document.getElementById('instalar'); if (!c) return;
+  const instalado = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (instalado) { c.innerHTML = ''; return; }
+  if (pedidoInstalacao) {
+    c.innerHTML = '<button type="button" class="btn btn-suave" id="btn-instalar">Instalar no tablet</button>';
+    document.getElementById('btn-instalar').onclick = async () => { pedidoInstalacao.prompt(); const r = await pedidoInstalacao.userChoice; pedidoInstalacao = null; if (r.outcome !== 'accepted') mostrarInstalar(); else c.innerHTML = '<span class="ajuda">Instalando…</span>'; };
+    return;
+  }
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  c.innerHTML = ios ? '<span class="ajuda">Para instalar: toque em <strong>Compartilhar</strong> (quadrado com seta) e depois em <strong>Adicionar à Tela de Início</strong>.</span>'
+    : '<span class="ajuda">Para instalar: no menu do navegador (⋮), toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</span>';
+}
+if (document.body.dataset.pagina === 'menu') window.addEventListener('load', () => setTimeout(mostrarInstalar, 1200));
 
 const TELAS = { entrar: telaEntrar, primeira: telaPrimeira, conta: telaConta, 'trocar-pin': telaTrocarPin, equipe: telaEquipe, pessoa: telaPessoa, 'redefinir-pin': telaRedefinirPin, menu };
 (TELAS[document.body.dataset.pagina] || telaEntrar)();

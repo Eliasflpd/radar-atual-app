@@ -5,7 +5,7 @@
 // nada pessoal é guardado no navegador. Totais e detalhes vêm do servidor,
 // calculados sobre todos os registros filtrados.
 // ═══════════════════════════════════════════════════════════════════════════
-import { $, params, esc, api, SETA, pagina, campoTexto, mostrarErros, avisoHTML, focarTitulo, ir } from './comum.js?v=2';
+import { $, params, esc, api, SETA, pagina, campoTexto, mostrarErros, avisoHTML, focarTitulo, ir } from './comum.js?v=3';
 
 const BASE = '/brow-studio/relatorios/';
 const TIPOS = { financeiro: 'Financeiro', atendimentos: 'Atendimentos', servicos: 'Serviços', clientes: 'Clientes' };

@@ -10,7 +10,7 @@
 //   "ag:rem:<id>"    remarcação
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=2';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=3';
 
 const BASE = '/brow-studio/agenda/';
 const SIT_AG = { agendado: 'Agendado', confirmado: 'Presença confirmada', chegou: 'Chegou', em_atendimento: 'Em atendimento', concluido: 'Concluído', cancelado: 'Cancelado', falta: 'Faltou' };
