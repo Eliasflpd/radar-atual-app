@@ -12,7 +12,9 @@
 //   pessoa encerra as sessões.
 // • Primeira conta (dona): só com o código secreto da variável de ambiente
 //   BROW_CODIGO_INICIAL e só enquanto não existir nenhuma conta.
-// • Ações públicas: au_estado, au_entrar, au_primeira. As demais exigem sessão;
+// • Pedido de acesso (au_pedir): a pessoa escolhe nome + PIN e fica PENDENTE até a
+//   dona aprovar (eq_pedido_aprovar) ou recusar (eq_pedido_recusar).
+// • Ações públicas: au_estado, au_entrar, au_primeira, au_pedir. As demais exigem sessão;
 //   eq_* (equipe) exige função "dona".
 // ═══════════════════════════════════════════════════════════════════════════
 const crypto = require('crypto');
@@ -41,7 +43,18 @@ async function garantirTabelas(c) {
   await c.query(`create index if not exists brow_ses_usu on brow_sessoes(usuario_id)`);
   await c.query(`create table if not exists brow_login_falhas(id bigserial primary key, ip text not null, criado_em timestamptz not null default now())`);
   await c.query(`create index if not exists brow_lf_ip on brow_login_falhas(ip, criado_em)`);
+  if (!colunasPedido) {   // PEDIDOS DE ACESSO (12/11/2026): situacao ativo|pendente|recusado
+    await c.query(`alter table brow_usuarios add column if not exists situacao text not null default 'ativo',
+      add column if not exists pedido_msg text, add column if not exists pedido_ip text, add column if not exists pedido_em timestamptz,
+      add column if not exists decidido_por text, add column if not exists decidido_em timestamptz, add column if not exists recusa_motivo text`);
+    await c.query(`create table if not exists brow_pedido_tentativas(id bigserial primary key, ip text not null, criado_em timestamptz not null default now())`);
+    await c.query(`create index if not exists brow_pt_ip on brow_pedido_tentativas(ip, criado_em)`);
+    colunasPedido = true;
+  }
 }
+let colunasPedido = false;
+const MAX_PEDIDOS_IP_HORA = 3, MAX_PENDENTES = 20;
+const MSG_PEDIDO_OK = 'Pedido enviado. A dona do salão vai analisar e aprovar o seu acesso. Depois é só entrar com seu nome e o PIN que você escolheu.';
 
 // ─── utilidades ─────────────────────────────────────────────────────────────
 const chaveNome = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -109,7 +122,7 @@ async function publicas(c, req, res, acao, estabPadrao, salao) {
   await garantirTabelas(c);
   const ehPrincipal = estabPadrao === 'principal';
   const infoSalao = salao ? { slug: salao.slug, nome: salao.nome } : null;
-  const total = (await c.query('select count(*)::int n from brow_usuarios where estab=$1', [estabPadrao])).rows[0].n;
+  const total = (await c.query("select count(*)::int n from brow_usuarios where estab=$1 and situacao='ativo'", [estabPadrao])).rows[0].n;
   if (acao === 'au_estado') {
     const s = await lerSessao(c, req);
     const logadoAqui = !!s && s.estab === estabPadrao;
@@ -135,7 +148,7 @@ async function publicas(c, req, res, acao, estabPadrao, salao) {
     await c.query('begin');
     try {
       await c.query('select pg_advisory_xact_lock(hashtext($1))', ['brow-primeira|' + estabPadrao]);
-      const t2 = (await c.query('select count(*)::int n from brow_usuarios where estab=$1', [estabPadrao])).rows[0].n;
+      const t2 = (await c.query("select count(*)::int n from brow_usuarios where estab=$1 and situacao='ativo'", [estabPadrao])).rows[0].n;
       if (t2 > 0) { await c.query('rollback'); return erro(res, 409, 'ja_configurado', 'A primeira conta já foi criada.'), true; }
       const u = { id: crypto.randomUUID(), estab: estabPadrao, nome, funcao: 'dona' };
       await c.query('insert into brow_usuarios(id,estab,nome,nome_chave,funcao,pin_hash,criado_por) values($1,$2,$3,$4,$5,$6,$7)', [u.id, u.estab, nome, chaveNome(nome), 'dona', hashPin(pin), 'primeira configuração']);
@@ -164,7 +177,7 @@ async function publicas(c, req, res, acao, estabPadrao, salao) {
       await c.query('select pg_advisory_xact_lock(hashtext($1))', ['brow-primeira|' + estabPadrao]);
       await c.query(`create table if not exists brow_historico(id bigserial primary key, estab text not null, tipo text not null, ref_id text not null, acao text not null, detalhes jsonb, criado_em timestamptz not null default now())`);
       const usado = (await c.query(`select 1 from brow_historico where estab=$1 and tipo='usuario' and acao='recuperado_com_codigo' limit 1`, [estabPadrao])).rows.length;
-      const us = (await c.query('select * from brow_usuarios where estab=$1', [estabPadrao])).rows;
+      const us = (await c.query("select * from brow_usuarios where estab=$1 and situacao='ativo'", [estabPadrao])).rows;
       if (usado || us.length !== 1 || us[0].funcao !== 'dona') { await c.query('rollback'); return erro(res, 409, 'indisponivel', 'A recuperação com o código não está mais disponível. Peça a uma dona cadastrada para redefinir seu PIN.'), true; }
       const u = us[0];
       await c.query('update brow_usuarios set nome=$2, nome_chave=$3, pin_hash=$4, ativo=true, falhas=0, bloqueado_ate=null, atualizado_em=now() where id=$1', [u.id, nome, chaveNome(nome), hashPin(pin)]);
@@ -182,6 +195,13 @@ async function publicas(c, req, res, acao, estabPadrao, salao) {
     if (nIp >= MAX_IP) return erro(res, 429, 'bloqueado', `Muitas tentativas neste aparelho. Aguarde ${JANELA_MIN} minutos.`), true;
     const u = (await c.query('select * from brow_usuarios where estab=$1 and nome_chave=$2', [estabPadrao, chaveNome(b.nome)])).rows[0];
     const pin = String(b.pin || '');
+    if (u && u.situacao !== 'ativo') {
+      // pedido de acesso ainda não aprovado (ou recusado): só diz isso a quem acerta o PIN; nunca abre sessão
+      if (/^\d{6}$/.test(pin) && confere(pin, u.pin_hash)) {
+        return erro(res, 403, 'nao_aprovado', u.situacao === 'pendente' ? 'Seu acesso ainda não foi aprovado pela dona do salão. Assim que ela aprovar, entre com este nome e PIN.' : 'Seu pedido de acesso não foi aprovado pela dona do salão. Fale com ela.'), true;
+      }
+      await c.query('insert into brow_login_falhas(ip) values($1)', [ip]); return generico(), true;
+    }
     if (!u || !u.ativo) { confere(pin, FALSO); await c.query('insert into brow_login_falhas(ip) values($1)', [ip]); return generico(), true; }
     if (u.bloqueado_ate && new Date(u.bloqueado_ate) > new Date()) { confere(pin, FALSO); return erro(res, 429, 'bloqueado', `Acesso bloqueado por tentativas erradas. Tente de novo em ${JANELA_MIN} minutos ou peça à dona para redefinir o PIN.`), true; }
     if (!/^\d{6}$/.test(pin) || !confere(pin, u.pin_hash)) {
@@ -195,6 +215,41 @@ async function publicas(c, req, res, acao, estabPadrao, salao) {
     await abrirSessao(c, res, req, u);
     res.status(200).json({ ok: true, usuario: publico(u) }); return true;
   }
+  // PEDIDO DE ACESSO (público): cria a pessoa PENDENTE (sem acesso até a dona aprovar).
+  // Resposta sempre genérica — nunca revela se o nome já tem pedido.
+  if (req.method === 'POST' && acao === 'au_pedir') {
+    const b = corpo(req); const ip = ipDe(req); const erros = {};
+    if (total === 0) return erro(res, 409, 'indisponivel', 'Este salão ainda não está recebendo pedidos de acesso.'), true;
+    const nIp = (await c.query(`select count(*)::int n from brow_pedido_tentativas where ip=$1 and criado_em > now() - interval '1 hour'`, [ip])).rows[0].n;
+    if (nIp >= MAX_PEDIDOS_IP_HORA) return erro(res, 429, 'limite', 'Muitos pedidos enviados deste aparelho. Tente de novo mais tarde.'), true;
+    const nome = limparNome(b.nome); if (nome.length < 2) erros.nome = 'Informe seu nome.';
+    const pin = String(b.pin || ''); const fraco = pinFraco(pin); if (fraco) erros.pin = fraco; else if (pin !== String(b.pin2 || '')) erros.pin2 = 'Os PINs não conferem.';
+    const msgP = String(b.mensagem || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (Object.keys(erros).length) return erro(res, 422, 'validacao', 'Confira os campos.', { erros }), true;
+    await c.query('insert into brow_pedido_tentativas(ip) values($1)', [ip]);
+    const ok = () => (res.status(200).json({ ok: true, msg: MSG_PEDIDO_OK }), true);
+    if (String(b.site || '').trim()) return ok();   // armadilha anti-robô: finge que deu certo
+    await c.query('begin');
+    try {
+      await c.query('select pg_advisory_xact_lock(hashtext($1))', ['brow-pedido|' + estabPadrao]);
+      const a = (await c.query('select id, situacao from brow_usuarios where estab=$1 and nome_chave=$2', [estabPadrao, chaveNome(nome)])).rows[0];
+      if (a && a.situacao === 'ativo') { await c.query('rollback'); return erro(res, 409, 'nome_indisponivel', 'Não foi possível enviar o pedido com esse nome. Se você já tem acesso, entre com seu nome e PIN; se não, use seu nome completo (com sobrenome).'), true; }
+      if (a && a.situacao === 'pendente') { await c.query('rollback'); return ok(); }
+      const nPend = (await c.query(`select count(*)::int n from brow_usuarios where estab=$1 and situacao='pendente'`, [estabPadrao])).rows[0].n;
+      if (nPend >= MAX_PENDENTES) { await c.query('rollback'); return erro(res, 429, 'limite', 'Há muitos pedidos aguardando a dona. Fale diretamente com ela.'), true; }
+      let id;
+      if (a) {   // pedido recusado antes: vira um pedido novo
+        id = a.id;
+        await c.query(`update brow_usuarios set nome=$2, pin_hash=$3, situacao='pendente', ativo=false, funcao='profissional', profissional_id=null, pedido_msg=$4, pedido_ip=$5, pedido_em=now(), decidido_por=null, decidido_em=null, recusa_motivo=null, falhas=0, bloqueado_ate=null, atualizado_em=now() where id=$1`, [id, nome, hashPin(pin), msgP || null, ip]);
+      } else {
+        id = crypto.randomUUID();
+        await c.query(`insert into brow_usuarios(id,estab,nome,nome_chave,funcao,pin_hash,ativo,situacao,pedido_msg,pedido_ip,pedido_em,criado_por) values($1,$2,$3,$4,'profissional',$5,false,'pendente',$6,$7,now(),'pedido de acesso')`, [id, estabPadrao, nome, chaveNome(nome), hashPin(pin), msgP || null, ip]);
+      }
+      await historico(c, estabPadrao, id, 'pedido_enviado', { nome, ip });
+      await c.query('commit');
+      return ok();
+    } catch (e) { await c.query('rollback').catch(() => {}); throw e; }
+  }
   return false;
 }
 
@@ -202,7 +257,11 @@ async function publicas(c, req, res, acao, estabPadrao, salao) {
 async function comSessao(c, req, res, acao, sessao) {
   await garantirTabelas(c);
   const eu = sessao.usuario; const estab = sessao.estab;
-  if (acao === 'au_eu') { const sl = await require('./brow-saloes.js').porId(c, estab); res.status(200).json({ ok: true, usuario: eu, salao: sl ? { slug: sl.slug, nome: sl.nome, principal: sl.id === 'principal' } : null }); return true; }
+  if (acao === 'au_eu') {
+    const sl = await require('./brow-saloes.js').porId(c, estab);
+    const pedidos = eu.funcao === 'dona' ? (await c.query(`select count(*)::int n from brow_usuarios where estab=$1 and situacao='pendente'`, [estab])).rows[0].n : undefined;
+    res.status(200).json({ ok: true, usuario: eu, salao: sl ? { slug: sl.slug, nome: sl.nome, principal: sl.id === 'principal' } : null, pedidos_pendentes: pedidos }); return true;
+  }
   if (req.method === 'POST' && acao === 'au_sair') {
     const b = corpo(req);
     if (b.todos === true) await encerrarSessoes(c, eu.id); else await c.query('update brow_sessoes set revogada=true where token_hash=$1', [sessao.token_hash]);
@@ -225,8 +284,8 @@ async function comSessao(c, req, res, acao, sessao) {
   if (acao === 'eq_listar') {
     const r = await c.query(`select u.id, u.nome, u.funcao, u.ativo, u.profissional_id, p.nome profissional_nome, (u.bloqueado_ate > now()) bloqueado,
         (select max(s.ultimo_uso) from brow_sessoes s where s.usuario_id=u.id) ultimo_acesso
-      from brow_usuarios u left join brow_profissionais p on p.id=u.profissional_id and p.estab=u.estab where u.estab=$1 order by u.ativo desc, lower(u.nome)`, [estab]).catch(async () =>
-      c.query(`select u.id, u.nome, u.funcao, u.ativo, u.profissional_id, null profissional_nome, (u.bloqueado_ate > now()) bloqueado, null ultimo_acesso from brow_usuarios u where u.estab=$1 order by u.ativo desc, lower(u.nome)`, [estab]));
+      from brow_usuarios u left join brow_profissionais p on p.id=u.profissional_id and p.estab=u.estab where u.estab=$1 and u.situacao='ativo' order by u.ativo desc, lower(u.nome)`, [estab]).catch(async () =>
+      c.query(`select u.id, u.nome, u.funcao, u.ativo, u.profissional_id, null profissional_nome, (u.bloqueado_ate > now()) bloqueado, null ultimo_acesso from brow_usuarios u where u.estab=$1 and u.situacao='ativo' order by u.ativo desc, lower(u.nome)`, [estab]));
     res.status(200).json({ ok: true, eu: eu.id, itens: r.rows.map(x => ({ ...x, funcao_nome: FUNCOES[x.funcao] })) }); return true;
   }
   if (req.method === 'POST' && acao === 'eq_salvar') {
@@ -237,10 +296,12 @@ async function comSessao(c, req, res, acao, sessao) {
     const ativo = b.ativo !== false;
     if (!b.id) { const fraco = pinFraco(String(b.pin || '')); if (fraco) erros.pin = fraco; else if (String(b.pin) !== String(b.pin2 || '')) erros.pin2 = 'Os PINs não conferem.'; }
     if (Object.keys(erros).length) return erro(res, 422, 'validacao', 'Confira os campos.', { erros }), true;
-    const dup = (await c.query('select id from brow_usuarios where estab=$1 and nome_chave=$2 and id <> coalesce($3,\'\')', [estab, chaveNome(nome), b.id || null])).rows[0];
+    await c.query(`delete from brow_usuarios where estab=$1 and nome_chave=$2 and situacao='recusado' and id <> coalesce($3,'')`, [estab, chaveNome(nome), b.id || null]);
+    const dup = (await c.query('select id, situacao from brow_usuarios where estab=$1 and nome_chave=$2 and id <> coalesce($3,\'\')', [estab, chaveNome(nome), b.id || null])).rows[0];
+    if (dup && dup.situacao === 'pendente') return erro(res, 422, 'validacao', 'Confira os campos.', { erros: { nome: 'Há um pedido de acesso pendente com esse nome. Aprove ou recuse em “Pedidos de acesso”.' } }), true;
     if (dup) return erro(res, 422, 'validacao', 'Confira os campos.', { erros: { nome: 'Já existe alguém com esse nome. Use um nome diferente (ex.: com sobrenome).' } }), true;
     if (b.id) {
-      const a = (await c.query('select * from brow_usuarios where estab=$1 and id=$2', [estab, String(b.id)])).rows[0];
+      const a = (await c.query("select * from brow_usuarios where estab=$1 and id=$2 and situacao='ativo'", [estab, String(b.id)])).rows[0];
       if (!a) return erro(res, 404, 'nao_encontrado', 'Pessoa não encontrada.'), true;
       if (a.funcao === 'dona' && a.ativo && (b.funcao !== 'dona' || !ativo) && await donasAtivas(a.id) === 0) return erro(res, 409, 'ultima_dona', 'É preciso manter pelo menos uma dona ativa.'), true;
       await c.query('update brow_usuarios set nome=$3, nome_chave=$4, funcao=$5, profissional_id=$6, ativo=$7, atualizado_em=now() where estab=$1 and id=$2', [estab, a.id, nome, chaveNome(nome), b.funcao, prof ? prof.id : null, ativo]);
@@ -257,11 +318,40 @@ async function comSessao(c, req, res, acao, sessao) {
     const b = corpo(req); const erros = {};
     const fraco = pinFraco(String(b.pin || '')); if (fraco) erros.pin = fraco; else if (String(b.pin) !== String(b.pin2 || '')) erros.pin2 = 'Os PINs não conferem.';
     if (Object.keys(erros).length) return erro(res, 422, 'validacao', 'Confira os campos.', { erros }), true;
-    const r = await c.query('update brow_usuarios set pin_hash=$3, falhas=0, bloqueado_ate=null, atualizado_em=now() where estab=$1 and id=$2 returning id', [estab, String(b.id || ''), hashPin(String(b.pin))]);
+    const r = await c.query("update brow_usuarios set pin_hash=$3, falhas=0, bloqueado_ate=null, atualizado_em=now() where estab=$1 and id=$2 and situacao='ativo' returning id", [estab, String(b.id || ''), hashPin(String(b.pin))]);
     if (!r.rows.length) return erro(res, 404, 'nao_encontrado', 'Pessoa não encontrada.'), true;
     await encerrarSessoes(c, r.rows[0].id, r.rows[0].id === eu.id ? sessao.token_hash : null);
     await historico(c, estab, r.rows[0].id, 'pin_redefinido', { autor: eu.nome });
     res.status(200).json({ ok: true }); return true;
+  }
+  // PEDIDOS DE ACESSO (só a dona, só do próprio salão)
+  if (acao === 'eq_pedidos') {
+    const pend = (await c.query(`select id, nome, pedido_msg mensagem, pedido_em from brow_usuarios where estab=$1 and situacao='pendente' order by pedido_em`, [estab])).rows;
+    const hist = (await c.query(`select id, nome, situacao, funcao, decidido_por, decidido_em, recusa_motivo, pedido_em from brow_usuarios
+      where estab=$1 and pedido_em is not null and situacao <> 'pendente' and decidido_em is not null order by decidido_em desc limit 30`, [estab])).rows;
+    res.status(200).json({ ok: true, pendentes: pend, historico: hist.map(x => ({ ...x, funcao_nome: FUNCOES[x.funcao] })) }); return true;
+  }
+  if (req.method === 'POST' && (acao === 'eq_pedido_aprovar' || acao === 'eq_pedido_recusar')) {
+    const b = corpo(req); const erros = {};
+    let prof = null;   // consulta fora da transação (se a tabela da agenda não existir, não aborta a transação)
+    if (acao === 'eq_pedido_aprovar' && b.profissional_id) { prof = (await c.query('select id from brow_profissionais where estab=$1 and id=$2', [estab, String(b.profissional_id)]).catch(() => ({ rows: [] }))).rows[0]; if (!prof) erros.profissional_id = 'Profissional da agenda não encontrada.'; }
+    await c.query('begin');
+    try {
+      const p = (await c.query(`select * from brow_usuarios where estab=$1 and id=$2 and situacao='pendente' for update`, [estab, String(b.id || '')])).rows[0];
+      if (!p) { await c.query('rollback'); return erro(res, 404, 'nao_encontrado', 'Pedido não encontrado ou já decidido.'), true; }
+      if (acao === 'eq_pedido_aprovar') {
+        const funcao = b.funcao || 'profissional'; if (!FUNCOES[funcao]) erros.funcao = 'Escolha a função.';
+        if (Object.keys(erros).length) { await c.query('rollback'); return erro(res, 422, 'validacao', 'Confira os campos.', { erros }), true; }
+        await c.query(`update brow_usuarios set situacao='ativo', ativo=true, funcao=$3, profissional_id=$4, decidido_por=$5, decidido_em=now(), falhas=0, bloqueado_ate=null, atualizado_em=now() where estab=$1 and id=$2`, [estab, p.id, funcao, prof ? prof.id : null, eu.nome]);
+        await historico(c, estab, p.id, 'pedido_aprovado', { autor: eu.nome, funcao });
+      } else {
+        const motivo = String(b.motivo || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+        await c.query(`update brow_usuarios set situacao='recusado', ativo=false, recusa_motivo=$3, decidido_por=$4, decidido_em=now(), atualizado_em=now() where estab=$1 and id=$2`, [estab, p.id, motivo || null, eu.nome]);
+        await historico(c, estab, p.id, 'pedido_recusado', { autor: eu.nome, motivo: motivo || null });
+      }
+      await c.query('commit');
+      res.status(200).json({ ok: true, id: p.id, nome: p.nome }); return true;
+    } catch (e) { await c.query('rollback').catch(() => {}); throw e; }
   }
   return erro(res, 400, 'acao', 'Ação desconhecida.'), true;
 }

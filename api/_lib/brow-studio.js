@@ -207,13 +207,13 @@ module.exports = async (req, res) => {
       return;
     }
     // LOGIN e AGENDAMENTO ONLINE: públicos; o salão vem do endereço (?s=slug) resolvido AQUI (sem ?s → salão principal)
-    const ehPublica = ['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar'].includes(acao) || acao.startsWith('pub_');
+    const ehPublica = ['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar', 'au_pedir'].includes(acao) || acao.startsWith('pub_');
     let salaoPub = null;
     if (ehPublica) {
       salaoPub = await saloes.resolver(c, q.s);
       if (!salaoPub) { res.status(404).json({ ok: false, erro: 'salao_inexistente', msg: 'Salão não encontrado. Confira o endereço.' }); return; }
     }
-    if (['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar'].includes(acao)) { if (await auth.publicas(c, req, res, acao, salaoPub.id, salaoPub)) return; }
+    if (['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar', 'au_pedir'].includes(acao)) { if (await auth.publicas(c, req, res, acao, salaoPub.id, salaoPub)) return; }
     if (acao.startsWith('pub_')) {
       req.brow_usuario = null; req.brow_funcao = null; req.brow_salao = salaoPub;
       await require('./brow-agenda.js')(c, salaoPub.id, req, res, acao, async (cc) => { await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); });

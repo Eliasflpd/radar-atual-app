@@ -632,3 +632,8 @@ span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
 .lote-item.lote-erro{border-left:4px solid #c0533a}
 .lote-problema{color:#8f2b16}
 .lote-dias{flex-wrap:wrap;gap:8px}.lote-dias .btn{flex:1 1 140px}
+/* pedidos de acesso à equipe (12/11/2026) */
+.sub-equipe{font-size:1.05rem;margin:20px 0 8px}
+.historico-pedidos,.recusar{margin-top:12px}
+.historico-pedidos summary,.recusar summary{cursor:pointer;font-weight:600;color:var(--marrom);padding:10px 0;min-height:44px}
+.recusar .btn{margin-top:4px}

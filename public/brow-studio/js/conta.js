@@ -43,6 +43,7 @@ async function telaEntrar() {
       ${campoTexto({ id: 'nome', rotulo: 'Seu nome', attrs: 'autocomplete="username" autocorrect="off" spellcheck="false" autocapitalize="words" maxlength="60"' })}
       ${campoPin('pin', 'PIN (6 números)')}
       <div id="aviso" aria-live="polite"></div>
+      <p class="ajuda">Ainda não tem acesso? <a href="${comSalao('/brow-studio/entrar/pedir/', sl)}" id="pedir">Pedir acesso à equipe</a></p>
       <p class="ajuda">Esqueceu o PIN? Peça à dona do salão para redefinir.${sl === 'rychelma' ? ` <a href="${comSalao('/brow-studio/entrar/recuperar/', sl)}">Sou a dona e não consigo entrar</a>` : ''}</p>`,
     acoes: `<button type="submit" class="btn btn-cheio" id="entrar">Entrar</button>` });
   if ($('#trocar')) $('#trocar').onclick = () => { try { localStorage.removeItem('brow:salao'); } catch (x) {} };
@@ -58,6 +59,43 @@ async function telaEntrar() {
     if (r.ok) { gravarSalao(sl); location.replace(voltaSegura()); return; }
     env = false; $('#entrar').disabled = false; $('#entrar').textContent = 'Entrar'; form.pin.value = ''; form.pin.focus();
     $('#aviso').innerHTML = avisoHTML(esc(r.msg || 'Não foi possível entrar.'), 'erro');
+  };
+}
+// ═══════════════════════════ PEDIR ACESSO ══════════════════════════════════
+// A pessoa escolhe nome + PIN; o acesso só vale depois que a dona aprovar.
+async function telaPedir() {
+  const sl = params.get('s') || lerSalao();
+  if (!params.get('s') && sl) return location.replace(comSalao(location.pathname, sl));
+  if (!sl) return ir('/brow-studio/entrar/');
+  pagina({ titulo: 'Pedir acesso', corpo: avisoHTML('Carregando…') });
+  const e = await api('au_estado');
+  const voltar = comSalao('/brow-studio/entrar/', sl);
+  if (!e.ok) return pagina({ titulo: 'Pedir acesso', voltar, voltarTexto: 'Entrar', corpo: avisoHTML(esc(e.msg || 'Não foi possível falar com o servidor.'), 'erro') });
+  const form = pagina({ titulo: 'Pedir acesso', voltar, voltarTexto: 'Entrar', formulario: true,
+    corpo: `<p class="etapa salao-linha" style="margin-top:-8px">Salão: <strong>${esc(e.salao.nome)}</strong></p>
+      <p class="ajuda">Escolha o nome e o PIN que você vai usar para entrar. A dona do salão precisa aprovar antes do primeiro acesso.</p>
+      ${campoTexto({ id: 'nome', rotulo: 'Seu nome', ajuda: 'Use nome e sobrenome, como a dona conhece você.', attrs: 'autocomplete="name" autocorrect="off" spellcheck="false" autocapitalize="words" maxlength="60"' })}
+      <div class="duas-colunas">${campoPinNovo('pin', 'PIN (6 números)')}${campoPinNovo('pin2', 'Repita o PIN')}</div>
+      ${campoTexto({ id: 'mensagem', rotulo: 'Recado para a dona', opcional: true, ajuda: 'Ex.: “Sou a Ana, nova designer de sobrancelhas”.', attrs: 'maxlength="200" autocomplete="off"' })}
+      <div class="isca" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label for="site">Site</label><input id="site" name="site" tabindex="-1" autocomplete="off"></div>
+      <div id="aviso" aria-live="polite"></div>`,
+    acoes: `<a class="btn btn-linha" href="${voltar}">Cancelar</a><button type="submit" class="btn btn-cheio" id="enviar">Enviar pedido</button>` });
+  form.nome.focus();
+  let env = false;
+  form.onsubmit = async (ev) => {
+    ev.preventDefault(); if (env) return; const er = {};
+    if (form.nome.value.trim().length < 2) er.nome = 'Informe seu nome.';
+    if (!/^\d{6}$/.test(form.pin.value)) er.pin = 'O PIN tem 6 números.'; else if (form.pin.value !== form.pin2.value) er.pin2 = 'Os PINs não conferem.';
+    if (!mostrarErros(form, er)) return;
+    env = true; $('#enviar').disabled = true; $('#enviar').textContent = 'Enviando…';
+    const r = await api('au_pedir', { corpo: { nome: form.nome.value, pin: form.pin.value, pin2: form.pin2.value, mensagem: form.mensagem.value, site: form.site.value } });
+    if (r.ok) {
+      pagina({ titulo: 'Pedido enviado', voltar, voltarTexto: 'Entrar', corpo: `${avisoHTML(esc(r.msg), 'ok')}<nav class="acoes-grade"><a class="btn btn-cheio" href="${voltar}">Ir para Entrar</a></nav>` });
+      return focarTitulo();
+    }
+    env = false; $('#enviar').disabled = false; $('#enviar').textContent = 'Enviar pedido';
+    if (r.erros) mostrarErros(form, r.erros);
+    $('#aviso').innerHTML = avisoHTML(esc(r.erros ? Object.values(r.erros).join(' ') : r.msg), 'erro');
   };
 }
 // sem salão conhecido: pede o endereço do salão (ex.: o que vem depois de ?s= no link)
@@ -168,12 +206,23 @@ async function telaTrocarPin() {
 }
 
 // ═══════════════════════════ EQUIPE (dona) ═════════════════════════════════
+const dataHora = (v) => { try { return new Date(v).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
 async function telaEquipe() {
-  const r = await api('eq_listar'); const msg = recado.tirar();
+  const [r, pd] = await Promise.all([api('eq_listar'), api('eq_pedidos')]); const msg = recado.tirar();
+  const pend = pd.ok ? pd.pendentes : [], hist = pd.ok ? pd.historico : [];
+  const secPedidos = `<section class="bloco" aria-labelledby="tit-pedidos"><h2 id="tit-pedidos">Pedidos de acesso (${pend.length})</h2>
+      ${pend.length ? `<ul class="lista" aria-label="Pedidos de acesso">${pend.map(x => `<li class="item"><div class="item-info"><div class="item-nome">${esc(x.nome)}</div>
+        <div class="item-extra">Pedido em ${esc(dataHora(x.pedido_em))}${x.mensagem ? ' · “' + esc(x.mensagem) + '”' : ''}</div></div>
+        <a class="btn btn-cheio" href="/brow-studio/equipe/pedido/?id=${encodeURIComponent(x.id)}" aria-label="Analisar pedido de ${esc(x.nome)}">Analisar</a></li>`).join('')}</ul>`
+        : '<p class="ajuda">Nenhum pedido aguardando. Quem não tem acesso pode pedir pelo link “Pedir acesso à equipe” na tela de entrar.</p>'}
+      ${hist.length ? `<details class="historico-pedidos"><summary>Pedidos já decididos (${hist.length})</summary><ul class="lista" aria-label="Pedidos já decididos">${hist.map(x => `<li class="item"><div class="item-info"><div class="item-nome">${esc(x.nome)}</div>
+        <div class="item-extra">${x.situacao === 'recusado' ? `Recusado por ${esc(x.decidido_por || '—')} em ${esc(dataHora(x.decidido_em))}${x.recusa_motivo ? ' · motivo: ' + esc(x.recusa_motivo) : ''}` : `Aprovado por ${esc(x.decidido_por || '—')} em ${esc(dataHora(x.decidido_em))} · ${esc(x.funcao_nome || '')}`}</div></div></li>`).join('')}</ul></details>` : ''}
+    </section>`;
   if (!r.ok) return pagina({ titulo: 'Equipe e acessos', voltar: '/brow-studio/conta/', voltarTexto: 'Conta', corpo: avisoHTML(esc(r.msg), 'erro') });
   pagina({ titulo: 'Equipe e acessos', voltar: '/brow-studio/conta/', voltarTexto: 'Conta',
     extra: '<a class="btn btn-cheio btn-topo" href="/brow-studio/equipe/pessoa/" aria-label="Nova pessoa">+ Nova<span class="so-largo">&nbsp;pessoa</span></a>',
     corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}<p class="ajuda">Cada pessoa entra com o próprio nome e PIN. A autoria dos registros fica no nome de quem fez.</p>
+      ${secPedidos}<h2 class="sub-equipe">Pessoas com acesso</h2>
       <ul class="lista" aria-label="Equipe">${r.itens.map(x => `<li class="item${x.ativo ? '' : ' item-inativo'}"><div class="item-info"><div class="item-nome">${esc(x.nome)}${x.id === r.eu ? ' <small>· você</small>' : ''}</div>
         <div class="item-extra">${esc(x.funcao_nome)}${x.profissional_nome ? ' · agenda: ' + esc(x.profissional_nome) : ''}${x.ativo ? '' : ' · desativada'}${x.bloqueado ? ' · bloqueada por tentativas' : ''}</div></div>
         <a class="btn btn-linha" href="/brow-studio/equipe/pessoa/?id=${encodeURIComponent(x.id)}" aria-label="Abrir ${esc(x.nome)}">Abrir</a></li>`).join('')}</ul>` });
@@ -211,6 +260,42 @@ async function telaPessoa() {
   };
   focarTitulo();
 }
+async function telaPedido() {
+  const id = params.get('id');
+  const [pd, cfg] = await Promise.all([api('eq_pedidos'), api('ag_config_ver')]);
+  const p = pd.ok ? pd.pendentes.find(x => x.id === id) : null;
+  if (!p) return pagina({ titulo: 'Pedido de acesso', voltar: '/brow-studio/equipe/', voltarTexto: 'Equipe', corpo: avisoHTML(esc(pd.ok ? 'Pedido não encontrado ou já decidido.' : pd.msg), 'erro') });
+  const profs = cfg.ok ? cfg.profissionais : [];
+  const form = pagina({ titulo: 'Pedido de acesso', voltar: '/brow-studio/equipe/', voltarTexto: 'Equipe', formulario: true,
+    corpo: `<div class="bloco"><h2>${esc(p.nome)}</h2><p class="ajuda">Pedido em ${esc(dataHora(p.pedido_em))}</p>${p.mensagem ? `<p>“${esc(p.mensagem)}”</p>` : ''}</div>
+      <p class="ajuda">Ao aprovar, a pessoa entra com este nome e o PIN que ela mesma escolheu.</p>
+      ${grupoOpcoes({ nome: 'funcao', legenda: 'Função', opcoes: FUNCOES, valor: 'profissional' })}
+      <div class="campo"><label for="profissional_id">Profissional da agenda <span class="opcional">(opcional)</span></label><select id="profissional_id" name="profissional_id"><option value="">Não vincular</option>${profs.map(x => `<option value="${esc(x.id)}">${esc(x.nome)}</option>`).join('')}</select></div>
+      <details class="recusar"><summary>Recusar este pedido</summary>
+        ${campoTexto({ id: 'motivo', rotulo: 'Motivo', opcional: true, attrs: 'maxlength="200" autocomplete="off"' })}
+        <button type="button" class="btn btn-linha" id="recusar">Recusar pedido</button></details>
+      <div id="aviso" aria-live="polite"></div>`,
+    acoes: `<a class="btn btn-linha" href="/brow-studio/equipe/">Voltar</a><button type="submit" class="btn btn-cheio" id="aprovar">Aprovar acesso</button>` });
+  $('#corpo').classList.add('fin-compacto');
+  let env = false;
+  const fim = (r, txt) => {
+    if (r.ok) { recado.pôr(txt); location.replace('/brow-studio/equipe/'); return; }
+    env = false; $('#aprovar').disabled = false; $('#recusar').disabled = false; if (r.erros) mostrarErros(form, r.erros);
+    $('#aviso').innerHTML = avisoHTML(esc(r.erros ? Object.values(r.erros).join(' ') : r.msg), 'erro');
+  };
+  form.onsubmit = async (ev) => {
+    ev.preventDefault(); if (env) return;
+    const funcao = (form.querySelector('[name=funcao]:checked') || {}).value;
+    if (!mostrarErros(form, funcao ? {} : { funcao: 'Escolha a função.' })) return;
+    env = true; $('#aprovar').disabled = true;
+    fim(await api('eq_pedido_aprovar', { corpo: { id, funcao, profissional_id: form.profissional_id.value || null } }), `Acesso de ${p.nome} aprovado.`);
+  };
+  $('#recusar').onclick = async () => {
+    if (env) return; env = true; $('#recusar').disabled = true;
+    fim(await api('eq_pedido_recusar', { corpo: { id, motivo: form.motivo.value } }), `Pedido de ${p.nome} recusado.`);
+  };
+  focarTitulo();
+}
 async function telaRedefinirPin() {
   const id = params.get('id'); const lst = await api('eq_listar');
   const p = lst.ok ? lst.itens.find(x => x.id === id) : null;
@@ -243,6 +328,7 @@ async function menu() {
   const caixa = document.getElementById('sessao');
   if (caixa) caixa.innerHTML = `${msg ? `<span class="aviso-caixa ok">${esc(msg)}</span>` : ''}<span>Olá, <strong>${esc(u.nome)}</strong> · ${esc(u.funcao_nome)}${r.salao ? ` · <span class="salao-nome">${esc(r.salao.nome)}</span>` : ''}</span> <a href="/brow-studio/conta/">Minha conta</a>`;
   if (u.funcao !== 'dona') document.querySelectorAll('[data-so-dona]').forEach(a => a.remove());
+  if (u.funcao === 'dona' && r.pedidos_pendentes > 0 && caixa) caixa.insertAdjacentHTML('afterend', `<p class="aviso-online aviso-pedidos"><a href="/brow-studio/equipe/">${r.pedidos_pendentes === 1 ? '1 pedido de acesso à equipe' : r.pedidos_pendentes + ' pedidos de acesso à equipe'}</a></p>`);
   // pedidos do agendamento online ainda não confirmados
   const pend = await api('ag_online_pendentes');
   if (pend.ok && pend.pendentes && caixa) caixa.insertAdjacentHTML('afterend', `<p class="aviso-online"><a href="/brow-studio/agenda/">${pend.pendentes} pedido(s) online para confirmar</a></p>`);
@@ -358,5 +444,5 @@ async function telaMeuSalao() {
   focarTitulo();
 }
 
-const TELAS = { entrar: telaEntrar, primeira: telaPrimeira, recuperar: telaRecuperar, conta: telaConta, 'trocar-pin': telaTrocarPin, equipe: telaEquipe, pessoa: telaPessoa, 'redefinir-pin': telaRedefinirPin, menu, 'criar-salao': telaCriarSalao, 'meu-salao': telaMeuSalao };
+const TELAS = { entrar: telaEntrar, primeira: telaPrimeira, recuperar: telaRecuperar, conta: telaConta, 'trocar-pin': telaTrocarPin, equipe: telaEquipe, pessoa: telaPessoa, 'redefinir-pin': telaRedefinirPin, pedir: telaPedir, pedido: telaPedido, menu, 'criar-salao': telaCriarSalao, 'meu-salao': telaMeuSalao };
 (TELAS[document.body.dataset.pagina] || telaEntrar)();
