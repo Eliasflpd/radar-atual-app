@@ -47,6 +47,7 @@ async function garantirTabelas(c) {
 const chaveNome = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
 const limparNome = (s) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 60);
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
+const normCodigo = (v) => String(v || '').normalize('NFKC').replace(/[\u2010-\u2015\u2212]/g, '-').replace(/\s+/g, '').toUpperCase();
 function hashPin(pin) { const sal = crypto.randomBytes(16); const h = crypto.scryptSync(pin, sal, 32, { N: 16384, r: 8, p: 1 }); return `scrypt$${sal.toString('hex')}$${h.toString('hex')}`; }
 function confere(pin, guardado) {
   const [, salHex, hHex] = String(guardado || '').split('$');
@@ -115,10 +116,10 @@ async function publicas(c, req, res, acao, estabPadrao) {
     const b = corpo(req); const erros = {};
     if (total > 0) return erro(res, 409, 'ja_configurado', 'A primeira conta já foi criada. Entre com seu nome e PIN.'), true;
     const cod = process.env.BROW_CODIGO_INICIAL || '';
-    const digitado = String(b.codigo || '').trim();
-    const dado = Buffer.from(digitado), certo = Buffer.from(cod);
+    const digitado = normCodigo(b.codigo);
+    const dado = Buffer.from(String(b.codigo || '').trim()), certo = Buffer.from(cod);
     const igualEnv = !!cod && dado.length === certo.length && crypto.timingSafeEqual(dado, certo);
-    const igualHash = crypto.timingSafeEqual(Buffer.from(sha(digitado.toUpperCase()), 'hex'), Buffer.from(CODIGO_INICIAL_HASH, 'hex'));
+    const igualHash = crypto.timingSafeEqual(Buffer.from(sha(digitado), 'hex'), Buffer.from(CODIGO_INICIAL_HASH, 'hex'));
     const igual = igualEnv || igualHash;
     const ip = ipDe(req);
     const nIp = (await c.query(`select count(*)::int n from brow_login_falhas where ip=$1 and criado_em > now() - interval '${JANELA_MIN} minutes'`, [ip])).rows[0].n;
@@ -147,8 +148,8 @@ async function publicas(c, req, res, acao, estabPadrao) {
     const b = corpo(req); const erros = {}; const ip = ipDe(req);
     const nIp = (await c.query(`select count(*)::int n from brow_login_falhas where ip=$1 and criado_em > now() - interval '${JANELA_MIN} minutes'`, [ip])).rows[0].n;
     if (nIp >= MAX_IP) return erro(res, 429, 'bloqueado', `Muitas tentativas. Aguarde ${JANELA_MIN} minutos.`), true;
-    const digitado = String(b.codigo || '').trim();
-    const igual = crypto.timingSafeEqual(Buffer.from(sha(digitado.toUpperCase()), 'hex'), Buffer.from(CODIGO_INICIAL_HASH, 'hex'));
+    const digitado = normCodigo(b.codigo);
+    const igual = crypto.timingSafeEqual(Buffer.from(sha(digitado), 'hex'), Buffer.from(CODIGO_INICIAL_HASH, 'hex'));
     if (!igual) { await c.query('insert into brow_login_falhas(ip) values($1)', [ip]); return erro(res, 422, 'validacao', 'Confira os campos.', { erros: { codigo: 'Código incorreto.' } }), true; }
     const nome = limparNome(b.nome); if (nome.length < 2) erros.nome = 'Informe seu nome.';
     const pin = String(b.pin || ''); const fraco = pinFraco(pin); if (fraco) erros.pin = fraco; else if (pin !== String(b.pin2 || '')) erros.pin2 = 'Os PINs não conferem.';
