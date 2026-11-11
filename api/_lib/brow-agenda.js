@@ -243,10 +243,10 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
     res.status(200).json({ ok: true }); return;
   }
   // HORÁRIOS DO ESTÚDIO enviados pela dona (11/11/2026): terça a sábado, 08:00–18:00 com pausa 11:00–13:00;
-  // domingo e segunda fechados. Aplicados só por ação explícita da dona (botão em Horários).
+  // domingo 08:00–12:00 (sem pausa); segunda folga. Aplicados só por ação explícita da dona (botão em Horários).
   if (req.method === 'POST' && acao === 'ag_horarios_aplicar_estudio') {
     const aberto = { aberto: true, inicio: '08:00', fim: '18:00', pausas: [{ inicio: '11:00', fim: '13:00' }] };
-    const hs = { 0: { aberto: false }, 1: { aberto: false }, 2: aberto, 3: aberto, 4: aberto, 5: aberto, 6: aberto };
+    const hs = { 0: { aberto: true, inicio: '08:00', fim: '12:00', pausas: [] }, 1: { aberto: false }, 2: aberto, 3: aberto, 4: aberto, 5: aberto, 6: aberto };
     await c.query(`insert into brow_config(estab,horarios) values($1,$2::jsonb) on conflict(estab) do update set horarios = coalesce(brow_config.horarios,'{}'::jsonb) || $2::jsonb, atualizado_em=now()`, [estab, JSON.stringify(hs)]);
     await historico(c, estab, 'config', estab, 'horarios_estudio_aplicados', { autor: req.brow_usuario || null });
     res.status(200).json({ ok: true }); return;
