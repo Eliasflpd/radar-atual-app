@@ -171,8 +171,8 @@ module.exports = async function servicos(c, estab, req, res, acao) {
       ['Aplicação de henna', 'henna', 20, 2000, null],
       ['Design de sobrancelha e buço', 'design', 40, 3000, 'Combo especial.'],
       ['Design com henna e buço', 'henna', 40, 4000, 'Combo especial.'],
-      ['Micropigmentação de sobrancelhas', 'micro', 150, 28000, 'Retoque não incluso.'],
-      ['Micropigmentação labial', 'micro', 150, 28000, 'Retoque não incluso.']
+      ['Micropigmentação de sobrancelhas', 'micro', 60, 28000, 'Retoque não incluso.'],
+      ['Micropigmentação labial', 'micro', 60, 28000, 'Retoque não incluso.']
     ];
     await c.query('begin');
     try {
