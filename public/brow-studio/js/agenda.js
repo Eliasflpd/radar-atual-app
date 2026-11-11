@@ -96,6 +96,7 @@ async function telaDia() {
       <p class="linha-dia" id="linha-dia" aria-live="polite"></p>
       <div class="linha-botoes">
         <a class="btn btn-suave" id="ir-encaixes" href="${BASE}encaixes/?data=${data}">Encaixes do dia</a>
+        ${precisaConfig ? '' : `<a class="btn btn-suave" id="ir-lancar" href="${BASE}lancar/">Lançar vários</a>`}
         ${profs.length > 1 ? `<div class="campo campo-filtro"><label for="prof" class="sr-only">Profissional</label>
           <select id="prof"><option value="">Todas as profissionais</option>${profs.map(p => `<option value="${esc(p.id)}" ${p.id === prof ? 'selected' : ''}>${esc(p.nome)}</option>`).join('')}</select></div>` : ''}
       </div>
@@ -1009,14 +1010,14 @@ async function telaCfgHorarios() {
       return `<li class="item item-compacto"><div class="item-info"><div class="item-nome">${DIAS[d]}</div>
         <div class="item-extra">${x && x.aberto ? `${x.inicio}–${x.fim}${(x.pausas || []).length ? ` · pausa ${x.pausas.map(p => p.inicio + '–' + p.fim).join(', ')}` : ''}` : 'Fechado'}</div></div>
         <a class="btn btn-linha" href="${C}horarios/dia/?d=${d}" aria-label="Editar ${DIAS[d]}">Editar</a></li>`; }).join('')}</ul>
-      <button type="button" class="btn btn-suave" id="aplicar-estudio">Aplicar horários do estúdio (ter a sáb 8h–11h e 13h–18h · dom 8h–12h)</button><p class="ajuda" id="aplicar-aviso" aria-live="polite"></p>`,
+      <button type="button" class="btn btn-suave" id="aplicar-estudio">Aplicar horários do estúdio e cadastrar a profissional Rychelma</button><p class="ajuda" id="aplicar-aviso" aria-live="polite"></p>`,
     acoes: `<a class="btn btn-linha" href="${C}">${SETA} Voltar</a>`
   });
   $('#aplicar-estudio').onclick = async () => {
     const bt = $('#aplicar-estudio'); bt.disabled = true; bt.textContent = 'Aplicando…';
     const ra = await api('ag_horarios_aplicar_estudio', { corpo: {} });
-    if (ra.ok) { recado.pôr('Horários do estúdio aplicados: terça a sábado 8h–11h e 13h–18h; domingo 8h–12h; segunda folga.'); location.reload(); return; }
-    bt.disabled = false; bt.textContent = 'Aplicar horários do estúdio (ter a sáb 8h–11h e 13h–18h · dom 8h–12h)'; $('#aplicar-aviso').textContent = ra.msg || 'Não foi possível aplicar.';
+    if (ra.ok) { recado.pôr(`Horários do estúdio aplicados (terça a sábado 8h–11h e 13h–18h; domingo 8h–12h; segunda folga)${ra.profissional_criada ? ' e profissional Rychelma cadastrada' : '; a profissional Rychelma já estava cadastrada'}.`); location.reload(); return; }
+    bt.disabled = false; bt.textContent = 'Aplicar horários do estúdio e cadastrar a profissional Rychelma'; $('#aplicar-aviso').textContent = ra.msg || 'Não foi possível aplicar.';
   };
   focarTitulo();
 }
