@@ -201,7 +201,7 @@ module.exports = async (req, res) => {
   try {
     await c.connect();
     // LOGIN: ações públicas (estado, entrar, primeira conta)
-    if (['au_estado', 'au_entrar', 'au_primeira'].includes(acao)) { if (await auth.publicas(c, req, res, acao, ESTAB_PADRAO)) return; }
+    if (['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar'].includes(acao)) { if (await auth.publicas(c, req, res, acao, ESTAB_PADRAO)) return; }
     let porta;
     if (testeLocal()) porta = { estab: ESTAB_PADRAO, usuario: null, funcao: 'dona' };
     else {

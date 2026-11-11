@@ -140,6 +140,35 @@ async function publicas(c, req, res, acao, estabPadrao) {
       res.status(201).json({ ok: true, usuario: publico(u) }); return true;
     } catch (e) { await c.query('rollback').catch(() => {}); throw e; }
   }
+  // RECUPERAÇÃO DA DONA com o código de primeiro acesso (pedido da dona, que não conseguiu
+  // entrar depois de criar a conta). Uso ÚNICO e só enquanto existir uma única conta
+  // (a dona, sem equipe cadastrada). Redefine nome e PIN e encerra as sessões antigas.
+  if (req.method === 'POST' && acao === 'au_recuperar') {
+    const b = corpo(req); const erros = {}; const ip = ipDe(req);
+    const nIp = (await c.query(`select count(*)::int n from brow_login_falhas where ip=$1 and criado_em > now() - interval '${JANELA_MIN} minutes'`, [ip])).rows[0].n;
+    if (nIp >= MAX_IP) return erro(res, 429, 'bloqueado', `Muitas tentativas. Aguarde ${JANELA_MIN} minutos.`), true;
+    const digitado = String(b.codigo || '').trim();
+    const igual = crypto.timingSafeEqual(Buffer.from(sha(digitado.toUpperCase()), 'hex'), Buffer.from(CODIGO_INICIAL_HASH, 'hex'));
+    if (!igual) { await c.query('insert into brow_login_falhas(ip) values($1)', [ip]); return erro(res, 422, 'validacao', 'Confira os campos.', { erros: { codigo: 'Código incorreto.' } }), true; }
+    const nome = limparNome(b.nome); if (nome.length < 2) erros.nome = 'Informe seu nome.';
+    const pin = String(b.pin || ''); const fraco = pinFraco(pin); if (fraco) erros.pin = fraco; else if (pin !== String(b.pin2 || '')) erros.pin2 = 'Os PINs não conferem.';
+    if (Object.keys(erros).length) return erro(res, 422, 'validacao', 'Confira os campos.', { erros }), true;
+    await c.query('begin');
+    try {
+      await c.query('select pg_advisory_xact_lock(hashtext($1))', ['brow-primeira|' + estabPadrao]);
+      await c.query(`create table if not exists brow_historico(id bigserial primary key, estab text not null, tipo text not null, ref_id text not null, acao text not null, detalhes jsonb, criado_em timestamptz not null default now())`);
+      const usado = (await c.query(`select 1 from brow_historico where estab=$1 and tipo='usuario' and acao='recuperado_com_codigo' limit 1`, [estabPadrao])).rows.length;
+      const us = (await c.query('select * from brow_usuarios where estab=$1', [estabPadrao])).rows;
+      if (usado || us.length !== 1 || us[0].funcao !== 'dona') { await c.query('rollback'); return erro(res, 409, 'indisponivel', 'A recuperação com o código não está mais disponível. Peça a uma dona cadastrada para redefinir seu PIN.'), true; }
+      const u = us[0];
+      await c.query('update brow_usuarios set nome=$2, nome_chave=$3, pin_hash=$4, ativo=true, falhas=0, bloqueado_ate=null, atualizado_em=now() where id=$1', [u.id, nome, chaveNome(nome), hashPin(pin)]);
+      await encerrarSessoes(c, u.id);
+      await historico(c, estabPadrao, u.id, 'recuperado_com_codigo', { nome_anterior: u.nome, nome_novo: nome, ip });
+      await abrirSessao(c, res, req, { ...u, nome });
+      await c.query('commit');
+      res.status(200).json({ ok: true, usuario: publico({ ...u, nome }) }); return true;
+    } catch (e) { await c.query('rollback').catch(() => {}); throw e; }
+  }
   if (req.method === 'POST' && acao === 'au_entrar') {
     const b = corpo(req); const ip = ipDe(req);
     const generico = () => erro(res, 401, 'credenciais', 'Nome ou PIN incorretos.');
