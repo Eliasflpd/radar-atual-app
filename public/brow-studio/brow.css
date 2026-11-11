@@ -615,3 +615,4 @@ span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
 .sessao-linha{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;align-items:center;font-size:15px;margin:4px 0}
 .sessao-linha a{color:var(--marrom);font-weight:600}
 .instalar-linha{text-align:center;margin:12px 0 0}
+.pin-oculto{-webkit-text-security:disc;text-security:disc;font-family:inherit;letter-spacing:.2em}
