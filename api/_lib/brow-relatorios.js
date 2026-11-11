@@ -164,11 +164,11 @@ module.exports = async function relatorios(c, estab, req, res, acao, garantirOut
   if (acao === 'rl_inicio') {
     const pr = await c.query('select id, nome, ativo from brow_profissionais where estab=$1 order by ativo desc, lower(nome)', [estab]);
     const mes = hj.slice(0, 8) + '01'; const fim = new Date(Date.UTC(+hj.slice(0, 4), +hj.slice(5, 7), 0)).toISOString().slice(0, 10);
-    res.status(200).json({ ok: true, hoje: hj, padrao: { de: mes, ate: fim }, profissionais: pr.rows, fuso: cfg.fuso, financeiro_permitido: podeFinanceiro(usuario) }); return;
+    res.status(200).json({ ok: true, hoje: hj, padrao: { de: mes, ate: fim }, profissionais: pr.rows, fuso: cfg.fuso, financeiro_permitido: req.brow_funcao !== 'profissional' && podeFinanceiro(usuario) }); return;
   }
   const f = await lerFiltros(c, estab, q);
   if (f.erro) return erro(res, 422, 'filtros', f.erro, { campo: f.campo });
-  if (f.tipo === 'financeiro' && !podeFinanceiro(usuario)) return erro(res, 403, 'sem_permissao', 'Sua função não tem acesso ao relatório financeiro.');
+  if (f.tipo === 'financeiro' && (req.brow_funcao === 'profissional' || !podeFinanceiro(usuario))) return erro(res, 403, 'sem_permissao', 'Sua função não tem acesso ao relatório financeiro.');
   const filtrosTxt = { tipo: TIPOS[f.tipo], de: f.de, ate: f.ate, profissional: f.prof ? f.prof.nome : 'Todas', criterio: CRITERIO[f.tipo] };
 
   if (acao === 'rl_resumo') {

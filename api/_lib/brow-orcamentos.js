@@ -481,7 +481,7 @@ module.exports = async function orcamentos(c, estab, req, res, acao, garantirOut
     res.status(200).json({ ok: true, hoje: hj, pacote: { id: p.id, titulo: p.titulo, proposta_id: p.proposta_id, cliente_id: p.cliente_id, cliente_nome: p.cliente_nome, profissional_nome: p.profissional_nome,
       total_centavos: p.total_centavos, prazo_uso: p.prazo_s, situacao: p.situacao, encerrado_motivo: p.encerrado_motivo, prazo_ultrapassado: p.situacao === 'ativo' && !!p.prazo_s && p.prazo_s < hj,
       itens: its, sessoes: its.reduce((s, i) => s + i.quantidade, 0), realizadas: its.reduce((s, i) => s + i.realizadas, 0), reservadas: its.reduce((s, i) => s + i.reservadas, 0), disponivel: its.reduce((s, i) => s + i.disponivel, 0),
-      financeiro: { ...fin, contratado_centavos: p.total_centavos, saldo_centavos: p.total_centavos - fin.pago_centavos, sem_lancamento_centavos: p.total_centavos - fin.lancado_centavos } } });
+      financeiro: req.brow_funcao === 'profissional' ? null : { ...fin, contratado_centavos: p.total_centavos, saldo_centavos: p.total_centavos - fin.pago_centavos, sem_lancamento_centavos: p.total_centavos - fin.lancado_centavos } } });
     return;
   }
   if (acao === 'or_item_ver') {

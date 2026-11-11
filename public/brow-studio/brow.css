@@ -611,3 +611,6 @@ span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
 .item-contagem:hover,.item-contagem:focus-visible{border-color:var(--ouro-1)}
 .total-link{display:flex!important;justify-content:space-between!important;align-items:center;min-height:60px}.total-link strong{font-size:24px}
 @media (max-width:420px){.item-contagem{min-height:46px;padding:6px 12px}.item-contagem strong{font-size:17px}.filtros-aplicados{font-size:13px}}
+/* ═══════════════ LOGIN / SESSÃO ═══════════════ */
+.sessao-linha{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;align-items:center;font-size:15px;margin:4px 0}
+.sessao-linha a{color:var(--marrom);font-weight:600}

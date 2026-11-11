@@ -37,6 +37,11 @@ export async function api(acao, { id, corpo, query } = {}) {
   }
   let j = null;
   try { j = await resp.json(); } catch (e) {}
+  // sem sessão (ou sessão expirada): vai para a tela de entrar e volta para cá depois
+  if (resp.status === 401 && j && j.erro === 'sem_sessao') {
+    location.href = '/brow-studio/entrar/?volta=' + encodeURIComponent(location.pathname + location.search);
+    return new Promise(() => {});
+  }
   if (!j) return { ok: false, erro: 'servidor', msg: 'O servidor não respondeu como esperado. Tente novamente.' };
   return j;
 }

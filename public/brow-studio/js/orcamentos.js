@@ -6,7 +6,7 @@
 // realizado. Nada é pago, reservado ou enviado automaticamente.
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=1';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=2';
 
 const BASE = '/brow-studio/orcamentos/';
 const AG = '/brow-studio/agenda/';
@@ -555,9 +555,9 @@ async function telaPacote() {
     corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}<div class="servico-cabeca"><h2>${esc(p.cliente_nome)}</h2><span class="selos">${p.situacao === 'encerrado' ? '<span class="selo selo-or-cancelada">Encerrado</span>' : '<span class="selo selo-or-aprovada">Ativo</span>'}${p.prazo_ultrapassado ? ' <span class="selo selo-fin-vencido">Prazo vencido</span>' : ''}</span></div>
       <p class="etapa">${esc(p.titulo)} · prazo de utilização: ${p.prazo_uso ? dataBR(p.prazo_uso) : 'sem prazo'}</p>
       ${p.prazo_ultrapassado ? avisoHTML('Prazo de utilização vencido. O histórico continua e nada é cobrado automaticamente; uso fora do prazo exige justificativa.', 'erro') : ''}
-      <div class="fin-valores fin-4"><div><span>Valor contratado</span><strong>${reais(f.contratado_centavos)}</strong></div><div><span>Total pago</span><strong>${reais(f.pago_centavos)}</strong></div><div><span>Saldo financeiro</span><strong class="${f.saldo_centavos > 0 ? 'txt-pendente' : ''}">${reais(f.saldo_centavos)}</strong></div><div><span>Saldo de sessões</span><strong>${p.disponivel} de ${p.sessoes}</strong></div></div>
+      ${f ? `<div class="fin-valores fin-4"><div><span>Valor contratado</span><strong>${reais(f.contratado_centavos)}</strong></div><div><span>Total pago</span><strong>${reais(f.pago_centavos)}</strong></div><div><span>Saldo financeiro</span><strong class="${f.saldo_centavos > 0 ? 'txt-pendente' : ''}">${reais(f.saldo_centavos)}</strong></div><div><span>Saldo de sessões</span><strong>${p.disponivel} de ${p.sessoes}</strong></div></div>` : `<div class="fin-valores"><div><span>Saldo de sessões</span><strong>${p.disponivel} de ${p.sessoes}</strong></div></div>`}
       <ul class="lista" id="lista" aria-label="Serviços do pacote"></ul>${navPaginas('nav')}
-      <nav class="acoes-grade" aria-label="Ações do pacote"><a class="btn btn-suave" href="${BASE}pacote/financeiro/?id=${q}">Financeiro</a><a class="btn btn-suave" href="${BASE}pacote/usos/?pacote=${q}">Histórico de utilização</a>
+      <nav class="acoes-grade" aria-label="Ações do pacote">${f ? `<a class="btn btn-suave" href="${BASE}pacote/financeiro/?id=${q}">Financeiro</a>` : ''}<a class="btn btn-suave" href="${BASE}pacote/usos/?pacote=${q}">Histórico de utilização</a>
         ${p.situacao === 'ativo' ? `<a class="btn btn-suave" href="${BASE}nova/?novo=1&aditivo=${q}">Criar aditivo</a>` : ''}<a class="btn btn-suave" href="${BASE}proposta/?id=${encodeURIComponent(p.proposta_id)}">Proposta de origem</a>
         <a class="btn btn-suave" href="${BASE}historico/?tipo=pacote&id=${q}">Alterações</a>${p.situacao === 'ativo' ? `<a class="btn btn-perigo" href="${BASE}pacote/encerrar/?id=${q}">Encerrar pacote</a>` : ''}</nav>` });
   paginarLocal({ el: $('#lista'), nav: $('#nav'), itens: p.itens, altura: 74, abaixo: 82 + 170, rotulo: 'serviços',
@@ -568,6 +568,7 @@ async function telaPacote() {
 async function telaPacoteFinanceiro() {
   const r = await api('or_pacote_ver', { id: params.get('id') }); if (!r.ok) return telaErro('Financeiro do pacote', r.msg);
   const p = r.pacote, f = p.financeiro; const volta = `${BASE}pacote/?id=${encodeURIComponent(p.id)}`; const msg = recado.tirar();
+  if (!f) return telaErro('Financeiro do pacote', 'O financeiro é exclusivo da dona do estúdio.', volta);
   pagina({ titulo: 'Financeiro do pacote', voltar: volta, voltarTexto: 'Pacote',
     corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}<div class="fin-valores"><div><span>Contratado</span><strong>${reais(f.contratado_centavos)}</strong></div><div><span>Pago</span><strong>${reais(f.pago_centavos)}</strong></div><div><span>Saldo financeiro</span><strong>${reais(f.saldo_centavos)}</strong></div></div>
       <p class="ajuda">O saldo financeiro não depende das sessões restantes. Uma receita por proposta (original e aditivos).</p>

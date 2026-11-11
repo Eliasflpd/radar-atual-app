@@ -5,7 +5,7 @@
 // inteiros (nunca float). Rascunho entre etapas: "fn:novo" ou "fn:<id>".
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=1';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=2';
 
 const BASE = '/brow-studio/financeiro/';
 const N = BASE + 'novo/';

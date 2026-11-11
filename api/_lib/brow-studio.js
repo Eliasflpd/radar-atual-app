@@ -12,13 +12,14 @@
 // foto e ~5 KB a miniatura). Não existe link público: a foto só sai por esta
 // rota, para quem passar na trava de acesso abaixo.
 //
-// ⚠️ TRAVA DE ACESSO — O LOGIN AINDA NÃO EXISTE (decisão da dona: login por
-// último). Enquanto não existir, a rota RECUSA tudo (503 login_pendente) e
-// nenhum dado de cliente fica exposto na internet. Só para testes locais:
-// BROW_TESTE_SEM_LOGIN=1 libera como o estabelecimento "principal".
-// NUNCA ligar BROW_TESTE_SEM_LOGIN na Vercel. Quando o login vier, ele só
-// precisa preencher `acesso()` devolvendo o estabelecimento da pessoa logada —
-// todas as consultas já filtram por `estab`.
+// 🔒 TRAVA DE ACESSO — LOGIN (nome + PIN), ver api/_lib/brow-auth.js.
+// Toda ação (exceto au_estado / au_entrar / au_primeira) exige sessão válida;
+// sem sessão → 401 sem_sessao. O estabelecimento vem da SESSÃO (nunca do
+// pedido) e todas as consultas filtram por `estab`. Funções: dona | profissional;
+// ações financeiras, estornos, ajustes, descontos, exceções e configuração da
+// agenda/equipe são só da dona (exigeDona, conferido AQUI no servidor).
+// Só para testes locais: BROW_TESTE_SEM_LOGIN=1 (ignorado na Vercel) libera
+// como "principal" com função dona. NUNCA ligar na Vercel.
 //
 // Ações (clientes; serviços em api/_lib/brow-servicos.js, ações "servico*"):
 //   GET  ?acao=listar&q=&limite=&pagina=   → { ok, itens:[{id,nome,apelido,telefone,mini}], total, pagina, limite }
@@ -36,10 +37,23 @@ const MAX_FOTO = 1500 * 1024;   // bytes, depois de decodificar (a foto chega j�
 const MAX_MINI = 80 * 1024;
 
 // ─── trava de acesso (ver cabeçalho) ────────────────────────────────────────
-function acesso(req) {
-  // usuario: quem está logado (o login vai preencher; hoje é nulo). Os módulos gravam a autoria com ele.
-  if (process.env.BROW_TESTE_SEM_LOGIN === '1' && !process.env.VERCEL) return { ok: true, estab: 'principal', usuario: null };
-  return { ok: false };
+const ESTAB_PADRAO = 'principal';   // um estúdio por enquanto; a sessão carrega o estab da pessoa
+const testeLocal = () => process.env.BROW_TESTE_SEM_LOGIN === '1' && !process.env.VERCEL;
+const corpoReq = (req) => { let b = req.body; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = null; } } return (b && typeof b === 'object') ? b : {}; };
+const SO_DONA = new Set(['es_estornar', 'es_despesa_criar', 'es_config_salvar', 'or_estornar', 'or_receita', 'or_receitas_cliente', 'rt_receita',
+  'ag_config_salvar', 'ag_horario_salvar', 'ag_prof_salvar']);
+function centavosTxt(v) { const s = String(v == null ? '' : v).trim().replace(/^R\$\s*/i, '').replace(/\./g, '').replace(',', '.'); const n = Number(s); return isFinite(n) ? Math.round(n * 100) : 0; }
+// ações restritas à função "dona" (financeiro, estornos, ajustes, descontos, exceções, configuração)
+function exigeDona(acao, req) {
+  const q = req.query || {};
+  if (acao.startsWith('fn_') || acao.startsWith('eq_') || SO_DONA.has(acao)) return true;
+  if (['rl_resumo', 'rl_detalhes', 'rl_exportar'].includes(acao)) return q.tipo === 'financeiro';
+  if (req.method !== 'POST') return false;
+  const b = corpoReq(req);
+  if (acao === 'es_mov_salvar') return b.tipo === 'ajuste';
+  if (acao === 'or_sessao') return !!String(b.justificativa || '').trim();
+  if (acao === 'or_salvar' || acao === 'or_modelo_salvar') return centavosTxt(b.desconto) > 0;
+  return false;
 }
 
 async function garantirTabelas(c) {
@@ -173,22 +187,35 @@ module.exports = async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   // Sem CORS aberto: o app chama do mesmo endereço.
 
-  const porta = acesso(req);
-  if (!porta.ok) {
-    res.status(503).json({ ok: false, erro: 'login_pendente',
-      msg: 'O salvamento definitivo ainda não está ativo: falta configurar o login do Brow Studio.' });
-    return;
-  }
   const cs = (process.env.RADAR_DB_DATABASE_URL || process.env.RADAR_DB);
   if (!cs) { res.status(503).json({ ok: false, erro: 'sem_banco', msg: 'Banco de dados não configurado.' }); return; }
+  // pedidos de outro site não passam (além do cookie SameSite=Strict)
+  const origem = req.headers && req.headers.origin;
+  if (req.method === 'POST' && origem && req.headers.host && new URL(origem).host !== req.headers.host) { res.status(403).json({ ok: false, erro: 'origem', msg: 'Origem não permitida.' }); return; }
 
   const q = req.query || {};
   const acao = String(q.acao || '');
-  const estab = porta.estab;
   const ssl = /localhost|127\.0\.0\.1/.test(cs) ? false : { rejectUnauthorized: false };
   const c = new Client({ connectionString: cs, ssl });
+  const auth = require('./brow-auth.js');
   try {
     await c.connect();
+    // LOGIN: ações públicas (estado, entrar, primeira conta)
+    if (['au_estado', 'au_entrar', 'au_primeira'].includes(acao)) { if (await auth.publicas(c, req, res, acao, ESTAB_PADRAO)) return; }
+    let porta;
+    if (testeLocal()) porta = { estab: ESTAB_PADRAO, usuario: null, funcao: 'dona' };
+    else {
+      const s = await auth.lerSessao(c, req);
+      if (!s) { res.status(401).json({ ok: false, erro: 'sem_sessao', msg: 'Entre com seu nome e PIN para continuar.' }); return; }
+      porta = { estab: s.estab, usuario: s.usuario.nome, funcao: s.usuario.funcao, sessao: s };
+    }
+    const estab = porta.estab;
+    req.brow_usuario = porta.usuario; req.brow_funcao = porta.funcao;
+    if (exigeDona(acao, req) && porta.funcao !== 'dona') { res.status(403).json({ ok: false, erro: 'sem_permissao', msg: 'Esta ação é exclusiva da dona do estúdio.' }); return; }
+    if (acao.startsWith('au_') || acao.startsWith('eq_')) {
+      if (!porta.sessao) { res.status(200).json({ ok: true, usuario: { id: null, nome: 'Teste local', funcao: 'dona', funcao_nome: 'Dona' }, teste_local: true }); return; }
+      await auth.comSessao(c, req, res, acao, porta.sessao); return;
+    }
 
     // SERVIÇOS E VALORES (módulo 2): mesma trava e mesma conexão. Ver api/_lib/brow-servicos.js.
     if (acao.startsWith('servico')) { await require('./brow-servicos.js')(c, estab, req, res, acao); return; }
@@ -200,7 +227,6 @@ module.exports = async (req, res) => {
     }
     // RELATÓRIOS (somente leitura). Ver api/_lib/brow-relatorios.js.
     if (acao.startsWith('rl_')) {
-      req.brow_usuario = porta.usuario || null;
       await require('./brow-relatorios.js')(c, estab, req, res, acao, async (cc) => {
         await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
         await require('./brow-financeiro.js').garantirTabelas(cc); await require('./brow-registros.js').garantirTabelas(cc);
@@ -209,7 +235,6 @@ module.exports = async (req, res) => {
     }
     // ORÇAMENTOS, PROPOSTAS, COMBOS E SESSÕES (módulo 12). Ver api/_lib/brow-orcamentos.js.
     if (acao.startsWith('or_')) {
-      req.brow_usuario = porta.usuario || null;
       await require('./brow-orcamentos.js')(c, estab, req, res, acao, async (cc) => {
         await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
         await require('./brow-financeiro.js').garantirTabelas(cc);
@@ -218,7 +243,6 @@ module.exports = async (req, res) => {
     }
     // RETORNOS E RETOQUES (módulo 10). Ver api/_lib/brow-retornos.js.
     if (acao.startsWith('rt_')) {
-      req.brow_usuario = porta.usuario || null;
       await require('./brow-retornos.js')(c, estab, req, res, acao, async (cc) => {
         await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
         await require('./brow-financeiro.js').garantirTabelas(cc); await require('./brow-registros.js').garantirTabelas(cc);
@@ -227,7 +251,6 @@ module.exports = async (req, res) => {
     }
     // ESTOQUE E MATERIAIS (módulo 9). Ver api/_lib/brow-estoque.js.
     if (acao.startsWith('es_')) {
-      req.brow_usuario = porta.usuario || null;
       await require('./brow-estoque.js')(c, estab, req, res, acao, async (cc) => {
         await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
         await require('./brow-contatos.js').garantirTabela(cc); await require('./brow-financeiro.js').garantirTabelas(cc);
@@ -237,7 +260,6 @@ module.exports = async (req, res) => {
     }
     // FINANCEIRO E CAIXA (módulo 8). Ver api/_lib/brow-financeiro.js.
     if (acao.startsWith('fn_')) {
-      req.brow_usuario = porta.usuario || null;
       await require('./brow-financeiro.js')(c, estab, req, res, acao, async (cc) => {
         await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
         await require('./brow-contatos.js').garantirTabela(cc);
@@ -246,7 +268,6 @@ module.exports = async (req, res) => {
     }
     // REGISTRO DE ATENDIMENTOS E FOTOS (módulo 6). Ver api/_lib/brow-registros.js.
     if (acao.startsWith('rg_')) {
-      req.brow_usuario = porta.usuario || null;
       await require('./brow-registros.js')(c, estab, req, res, acao, async (cc) => {
         await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
       });
@@ -254,7 +275,6 @@ module.exports = async (req, res) => {
     }
     // TERMOS E AUTORIZAÇÕES (módulo 5). Ver api/_lib/brow-termos.js.
     if (acao.startsWith('tm_')) {
-      req.brow_usuario = porta.usuario || null;
       await require('./brow-termos.js')(c, estab, req, res, acao, async (cc) => {
         await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
       });
@@ -262,7 +282,6 @@ module.exports = async (req, res) => {
     }
     // FICHA DE ANAMNESE (módulo 4). Ver api/_lib/brow-anamnese.js.
     if (acao.startsWith('an_')) {
-      req.brow_usuario = porta.usuario || null;
       await require('./brow-anamnese.js')(c, estab, req, res, acao, async (cc) => {
         await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
       });

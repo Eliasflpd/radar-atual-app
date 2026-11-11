@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Lora:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/brow-studio/brow.css?v=27">
 </head>
-<body>
+<body data-pagina="menu">
 <div class="pagina">
   <header class="topo">
     <a class="voltar" href="/brow-studio/"><span aria-hidden="true">←</span> Voltar</a>
@@ -22,6 +22,7 @@
   <main class="cartao">
     <h1>Área da profissional</h1>
     <svg class="filete" viewBox="0 0 220 16" aria-hidden="true" focusable="false"><path d="M2 13 C55 0 125 1 218 6 C150 6.5 120 4.5 70 8 C45 9.5 22 11 2 13 Z" fill="#d9b06a"/></svg>
+    <p class="sessao-linha" id="sessao" aria-live="polite">Verificando acesso…</p>
     <p>Escolha um módulo.</p>
     <nav aria-label="Módulos" class="menu-modulos">
       <a class="btn btn-cheio" href="/brow-studio/agenda/">Agenda</a>
@@ -31,7 +32,7 @@
       <a class="btn btn-cheio" href="/brow-studio/termos/">Termos e autorizações</a>
       <a class="btn btn-cheio" href="/brow-studio/registros/">Atendimentos realizados</a>
       <a class="btn btn-cheio" href="/brow-studio/contatos/">Contatos do estúdio</a>
-      <a class="btn btn-cheio" href="/brow-studio/financeiro/">Financeiro e caixa</a>
+      <a class="btn btn-cheio" data-so-dona href="/brow-studio/financeiro/">Financeiro e caixa</a>
       <a class="btn btn-cheio" href="/brow-studio/estoque/">Estoque e materiais</a>
       <a class="btn btn-cheio" href="/brow-studio/retornos/">Retornos e retoques</a>
       <a class="btn btn-cheio" href="/brow-studio/orcamentos/">Propostas e combos</a>
@@ -39,5 +40,6 @@
     </nav>
   </main>
 </div>
+<script type="module" src="/brow-studio/js/conta.js?v=1"></script>
 </body>
 </html>

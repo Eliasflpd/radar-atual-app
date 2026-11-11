@@ -6,7 +6,7 @@
 // assinatura só vale para o conjunto exato de escolhas (assinatura_ref).
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=1';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=2';
 
 const BASE = '/brow-studio/termos/';
 const D = BASE + 'doc/';

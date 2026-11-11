@@ -5,7 +5,7 @@
 // nada pessoal é guardado no navegador. Totais e detalhes vêm do servidor,
 // calculados sobre todos os registros filtrados.
 // ═══════════════════════════════════════════════════════════════════════════
-import { $, params, esc, api, SETA, pagina, campoTexto, mostrarErros, avisoHTML, focarTitulo, ir } from './comum.js?v=1';
+import { $, params, esc, api, SETA, pagina, campoTexto, mostrarErros, avisoHTML, focarTitulo, ir } from './comum.js?v=2';
 
 const BASE = '/brow-studio/relatorios/';
 const TIPOS = { financeiro: 'Financeiro', atendimentos: 'Atendimentos', servicos: 'Serviços', clientes: 'Clientes' };
@@ -43,10 +43,12 @@ function falha(titulo, r, voltar) {
 const carregando = (t) => pagina({ titulo: t, corpo: avisoHTML('Carregando relatório…') });
 
 // ═══════════════════════════ MENU ══════════════════════════════════════════
-function telaMenu() {
+async function telaMenu() {
+  const ini = await api('rl_inicio');
+  const tipos = Object.entries(TIPOS).filter(([k]) => k !== 'financeiro' || (ini.ok && ini.financeiro_permitido));
   pagina({ titulo: 'Relatórios', voltar: '/brow-studio/profissional.html',
     corpo: `<p class="etapa" style="margin-top:-8px">Escolha o relatório. Os números vêm dos registros já salvos; gerar não altera nada.</p>
-      <nav class="menu-botoes menu-relatorios" aria-label="Relatórios">${Object.entries(TIPOS).map(([k, t]) => `<a class="btn btn-suave" href="${BASE}filtros/?tipo=${k}">${t}</a>`).join('')}</nav>` });
+      <nav class="menu-botoes menu-relatorios" aria-label="Relatórios">${tipos.map(([k, t]) => `<a class="btn btn-suave" href="${BASE}filtros/?tipo=${k}">${t}</a>`).join('')}</nav>` });
   focarTitulo();
 }
 
