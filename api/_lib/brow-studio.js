@@ -200,12 +200,23 @@ module.exports = async (req, res) => {
   const auth = require('./brow-auth.js');
   try {
     await c.connect();
-    // LOGIN: ações públicas (estado, entrar, primeira conta)
-    if (['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar'].includes(acao)) { if (await auth.publicas(c, req, res, acao, ESTAB_PADRAO)) return; }
-    // AGENDAMENTO ONLINE: ações públicas (pub_*) — sem login, sempre no estabelecimento padrão
+    const saloes = require('./brow-saloes.js');
+    // SALÕES: ações públicas (verificar endereço, ver salão, criar salão)
+    if (acao.startsWith('sl_')) {
+      await saloes.publicas(c, req, res, acao, auth, async (cc) => { await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc); });
+      return;
+    }
+    // LOGIN e AGENDAMENTO ONLINE: públicos; o salão vem do endereço (?s=slug) resolvido AQUI (sem ?s → salão principal)
+    const ehPublica = ['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar'].includes(acao) || acao.startsWith('pub_');
+    let salaoPub = null;
+    if (ehPublica) {
+      salaoPub = await saloes.resolver(c, q.s);
+      if (!salaoPub) { res.status(404).json({ ok: false, erro: 'salao_inexistente', msg: 'Salão não encontrado. Confira o endereço.' }); return; }
+    }
+    if (['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar'].includes(acao)) { if (await auth.publicas(c, req, res, acao, salaoPub.id, salaoPub)) return; }
     if (acao.startsWith('pub_')) {
-      req.brow_usuario = null; req.brow_funcao = null;
-      await require('./brow-agenda.js')(c, ESTAB_PADRAO, req, res, acao, async (cc) => { await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); });
+      req.brow_usuario = null; req.brow_funcao = null; req.brow_salao = salaoPub;
+      await require('./brow-agenda.js')(c, salaoPub.id, req, res, acao, async (cc) => { await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); });
       return;
     }
     let porta;
@@ -218,8 +229,10 @@ module.exports = async (req, res) => {
     const estab = porta.estab;
     req.brow_usuario = porta.usuario; req.brow_funcao = porta.funcao;
     if (exigeDona(acao, req) && porta.funcao !== 'dona') { res.status(403).json({ ok: false, erro: 'sem_permissao', msg: 'Esta ação é exclusiva da dona do estúdio.' }); return; }
+    // recursos feitos sob medida para o salão da Rychelma: só no salão principal
+    if (['servico_importar_tabela', 'ag_horarios_aplicar_estudio'].includes(acao) && estab !== ESTAB_PADRAO) { res.status(403).json({ ok: false, erro: 'exclusivo', msg: 'Este recurso é exclusivo do salão original.' }); return; }
     if (acao.startsWith('au_') || acao.startsWith('eq_')) {
-      if (!porta.sessao) { res.status(200).json({ ok: true, usuario: { id: null, nome: 'Teste local', funcao: 'dona', funcao_nome: 'Dona' }, teste_local: true }); return; }
+      if (!porta.sessao) { res.status(200).json({ ok: true, usuario: { id: null, nome: 'Teste local', funcao: 'dona', funcao_nome: 'Dona' }, salao: { slug: 'rychelma', nome: 'Rychelma Micro Designer', principal: true }, teste_local: true }); return; }
       await auth.comSessao(c, req, res, acao, porta.sessao); return;
     }
 

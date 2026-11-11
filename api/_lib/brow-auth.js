@@ -105,15 +105,19 @@ async function historico(c, estab, id, acao, det) {
 }
 
 // ─── ações públicas e da própria conta ──────────────────────────────────────
-async function publicas(c, req, res, acao, estabPadrao) {
+async function publicas(c, req, res, acao, estabPadrao, salao) {
   await garantirTabelas(c);
+  const ehPrincipal = estabPadrao === 'principal';
+  const infoSalao = salao ? { slug: salao.slug, nome: salao.nome } : null;
   const total = (await c.query('select count(*)::int n from brow_usuarios where estab=$1', [estabPadrao])).rows[0].n;
   if (acao === 'au_estado') {
     const s = await lerSessao(c, req);
-    res.status(200).json({ ok: true, tem_contas: total > 0, codigo_configurado: true, logado: !!s, usuario: s ? s.usuario : null }); return true;
+    const logadoAqui = !!s && s.estab === estabPadrao;
+    res.status(200).json({ ok: true, salao: infoSalao, tem_contas: total > 0, primeira_disponivel: ehPrincipal && total === 0, codigo_configurado: true, logado: logadoAqui, usuario: logadoAqui ? s.usuario : null }); return true;
   }
   if (req.method === 'POST' && acao === 'au_primeira') {
     const b = corpo(req); const erros = {};
+    if (!ehPrincipal) return erro(res, 403, 'indisponivel', 'Este salão já foi criado. Entre com seu nome e PIN.'), true;
     if (total > 0) return erro(res, 409, 'ja_configurado', 'A primeira conta já foi criada. Entre com seu nome e PIN.'), true;
     const cod = process.env.BROW_CODIGO_INICIAL || '';
     const digitado = normCodigo(b.codigo);
@@ -145,6 +149,7 @@ async function publicas(c, req, res, acao, estabPadrao) {
   // entrar depois de criar a conta). Uso ÚNICO e só enquanto existir uma única conta
   // (a dona, sem equipe cadastrada). Redefine nome e PIN e encerra as sessões antigas.
   if (req.method === 'POST' && acao === 'au_recuperar') {
+    if (!ehPrincipal) return erro(res, 409, 'indisponivel', 'A recuperação com código não está disponível para este salão. Peça a uma dona cadastrada para redefinir seu PIN.'), true;
     const b = corpo(req); const erros = {}; const ip = ipDe(req);
     const nIp = (await c.query(`select count(*)::int n from brow_login_falhas where ip=$1 and criado_em > now() - interval '${JANELA_MIN} minutes'`, [ip])).rows[0].n;
     if (nIp >= MAX_IP) return erro(res, 429, 'bloqueado', `Muitas tentativas. Aguarde ${JANELA_MIN} minutos.`), true;
@@ -197,7 +202,7 @@ async function publicas(c, req, res, acao, estabPadrao) {
 async function comSessao(c, req, res, acao, sessao) {
   await garantirTabelas(c);
   const eu = sessao.usuario; const estab = sessao.estab;
-  if (acao === 'au_eu') { res.status(200).json({ ok: true, usuario: eu }); return true; }
+  if (acao === 'au_eu') { const sl = await require('./brow-saloes.js').porId(c, estab); res.status(200).json({ ok: true, usuario: eu, salao: sl ? { slug: sl.slug, nome: sl.nome, principal: sl.id === 'principal' } : null }); return true; }
   if (req.method === 'POST' && acao === 'au_sair') {
     const b = corpo(req);
     if (b.todos === true) await encerrarSessoes(c, eu.id); else await c.query('update brow_sessoes set revogada=true where token_hash=$1', [sessao.token_hash]);
@@ -261,4 +266,12 @@ async function comSessao(c, req, res, acao, sessao) {
   return erro(res, 400, 'acao', 'Ação desconhecida.'), true;
 }
 
-module.exports = { garantirTabelas, lerSessao, publicas, comSessao, FUNCOES, _teste: { pinFraco, hashPin, confere, chaveNome } };
+// cria a dona de um salão novo e já abre a sessão (usado pelo cadastro de salões, dentro da transação dele)
+async function criarDona(c, res, req, estab, nome, pin) {
+  const u = { id: crypto.randomUUID(), estab, nome: limparNome(nome), funcao: 'dona' };
+  await c.query('insert into brow_usuarios(id,estab,nome,nome_chave,funcao,pin_hash,criado_por) values($1,$2,$3,$4,$5,$6,$7)', [u.id, estab, u.nome, chaveNome(u.nome), 'dona', hashPin(pin), 'cadastro do salão']);
+  await historico(c, estab, u.id, 'criada', { autor: 'cadastro do salão', funcao: 'dona' });
+  await abrirSessao(c, res, req, u);
+  return publico(u);
+}
+module.exports = { garantirTabelas, lerSessao, publicas, comSessao, criarDona, FUNCOES, _teste: { pinFraco, hashPin, confere, chaveNome } };

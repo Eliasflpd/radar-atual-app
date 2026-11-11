@@ -11,7 +11,7 @@
 // em centavos inteiros. Aqui a conta também é feita em centavos (inteiros).
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=3';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=4';
 
 const BASE = '/brow-studio/servicos/';
 const CATEGORIAS = { design: 'Design', henna: 'Henna/tintura', lamination: 'Brow lamination', micro: 'Micropigmentação', retoque: 'Retoque', outro: 'Outro' };
@@ -153,6 +153,7 @@ async function telaLista() {
         : `<li class="vazio"><span class="avatar grande" aria-hidden="true">✦</span><h2>Nenhum serviço cadastrado</h2><p>Toque em “Novo serviço” para cadastrar o primeiro, com duração e valor.</p>
             <button type="button" class="btn btn-suave" id="importar-tabela">Importar tabela de valores do estúdio (7 serviços)</button><p class="ajuda" id="importar-aviso" aria-live="polite"></p></li>`;
       const bt = document.getElementById('importar-tabela');
+      if (bt) api('au_eu').then(e => { if (!(e.ok && e.salao && e.salao.principal)) bt.remove(); });   // tabela exclusiva do salão original
       if (bt) bt.onclick = async () => {
         bt.disabled = true; bt.textContent = 'Importando…';
         const ri = await api('servico_importar_tabela', { corpo: {} });

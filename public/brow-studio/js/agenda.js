@@ -10,7 +10,7 @@
 //   "ag:rem:<id>"    remarcação
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=3';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=4';
 
 const BASE = '/brow-studio/agenda/';
 const SIT_AG = { agendado: 'Agendado', confirmado: 'Presença confirmada', chegou: 'Chegou', em_atendimento: 'Em atendimento', concluido: 'Concluído', cancelado: 'Cancelado', falta: 'Faltou' };
@@ -946,6 +946,7 @@ async function telaConfig() {
         <a class="btn btn-suave" href="${C}profissionais/">Profissionais <small class="sub-btn">${r.profissionais.filter(p => p.ativo).length} ativa(s)</small></a>
         <a class="btn btn-suave" href="${C}bloqueios/">Bloqueios de agenda <small class="sub-btn">folgas, cursos, compromissos</small></a>
         <a class="btn btn-suave" href="${C}online/">Agendamento online <small class="sub-btn">${r.config.online_ativo ? 'ligado' : 'desligado'}</small></a>
+        <a class="btn btn-suave" href="${C}salao/">Meu salão <small class="sub-btn">endereço e links para copiar</small></a>
       </nav>`,
     acoes: `<a class="btn btn-linha" href="${BASE}">${SETA} Voltar à agenda</a>`
   });
@@ -955,7 +956,8 @@ async function telaConfig() {
 async function telaCfgOnline() {
   const r = await api('ag_config_ver');
   if (!r.ok) return telaErro('Agendamento online', r.msg, C, 'Configurações');
-  const link = `${location.origin}/brow-studio/agendar/`;
+  const eu = await api('au_eu'); const slug = eu.ok && eu.salao ? eu.salao.slug : '';
+  const link = `${location.origin}/brow-studio/agendar/${slug ? '?s=' + encodeURIComponent(slug) : ''}`;
   const saud = `Oi! Agende seu horário aqui: ${link}`;
   const msg = recado.tirar();
   const form = pagina({
@@ -1013,6 +1015,7 @@ async function telaCfgHorarios() {
       <button type="button" class="btn btn-suave" id="aplicar-estudio">Aplicar horários do estúdio e cadastrar a profissional Rychelma</button><p class="ajuda" id="aplicar-aviso" aria-live="polite"></p>`,
     acoes: `<a class="btn btn-linha" href="${C}">${SETA} Voltar</a>`
   });
+  api('au_eu').then(e => { if (!(e.ok && e.salao && e.salao.principal)) { const b = $('#aplicar-estudio'); if (b) b.remove(); } });   // exclusivo do salão original
   $('#aplicar-estudio').onclick = async () => {
     const bt = $('#aplicar-estudio'); bt.disabled = true; bt.textContent = 'Aplicando…';
     const ra = await api('ag_horarios_aplicar_estudio', { corpo: {} });

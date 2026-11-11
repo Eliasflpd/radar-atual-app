@@ -22,8 +22,17 @@ export function gravarRasc(r, dados) {
 export function apagarRasc(r) { try { sessionStorage.removeItem(chaveRasc(r)); } catch (e) {} }
 
 // ─── servidor ───────────────────────────────────────────────────────────────
+// Salão do endereço (?s=slug): vai junto nas chamadas públicas (entrar, agendamento online).
+// Logada, o servidor usa o salão da sessão e ignora este valor.
+function salaoDoEndereco() {
+  const s = params.get('s');
+  if (s) return s;
+  try { if (location.pathname.startsWith('/brow-studio/agendar/')) return sessionStorage.getItem('brow:pub_s'); } catch (e) {}
+  return null;
+}
 export async function api(acao, { id, corpo, query } = {}) {
   const qs = new URLSearchParams({ acao, ...(id ? { id } : {}), ...(query || {}) });
+  const sal = salaoDoEndereco(); if (sal && !qs.has('s')) qs.set('s', sal);
   let resp;
   try {
     resp = await fetch(`${API}?${qs}`, {
@@ -39,7 +48,8 @@ export async function api(acao, { id, corpo, query } = {}) {
   try { j = await resp.json(); } catch (e) {}
   // sem sessão (ou sessão expirada): vai para a tela de entrar e volta para cá depois
   if (resp.status === 401 && j && j.erro === 'sem_sessao') {
-    location.href = '/brow-studio/entrar/?volta=' + encodeURIComponent(location.pathname + location.search);
+    let ult = ''; try { ult = localStorage.getItem('brow:salao') || ''; } catch (e) {}
+    location.href = '/brow-studio/entrar/?volta=' + encodeURIComponent(location.pathname + location.search) + (ult ? '&s=' + encodeURIComponent(ult) : '');
     return new Promise(() => {});
   }
   if (!j) return { ok: false, erro: 'servidor', msg: 'O servidor não respondeu como esperado. Tente novamente.' };

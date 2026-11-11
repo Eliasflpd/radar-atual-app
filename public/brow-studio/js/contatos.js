@@ -6,7 +6,7 @@
 // Nada é enviado ou discado automaticamente: só abre o app do aparelho.
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, params, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, grupoOpcoes,
-  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=3';
+  mostrarErros, avisoHTML, focarTitulo, ir, blocoResumo } from './comum.js?v=4';
 
 const BASE = '/brow-studio/contatos/';
 const F = BASE + 'form/';
