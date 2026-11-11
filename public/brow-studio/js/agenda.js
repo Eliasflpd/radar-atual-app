@@ -122,8 +122,8 @@ async function telaDia() {
       <li class="item item-ag${['cancelado', 'falta'].includes(a.situacao) ? ' item-inativo' : ''}">
         <div class="hora-bloco"><strong>${a.inicio}</strong><span>${a.fim}</span></div>
         <div class="item-info"><div class="item-nome">${esc(a.cliente_nome)}</div>
-          <div class="item-extra"><span class="selo-mini sm-${a.situacao}">${esc(SIT_AG[a.situacao])} · </span>${esc(a.servico_nome)} · ${esc(a.profissional_nome)}</div></div>
-        <span class="selo-lado">${seloAg(a.situacao)}</span>
+          <div class="item-extra"><span class="selo-mini sm-${a.situacao}">${esc(SIT_AG[a.situacao])} · </span>${a.origem === 'online' && a.situacao === 'agendado' ? '<strong class="txt-pendente">Online · confirmar</strong> · ' : ''}${esc(a.servico_nome)} · ${esc(a.profissional_nome)}</div></div>
+        <span class="selo-lado">${a.origem === 'online' && a.situacao === 'agendado' ? '<span class="selo selo-online">Online · confirmar</span>' : seloAg(a.situacao)}</span>
         <a class="btn btn-linha" href="${BASE}atendimento/?id=${encodeURIComponent(a.id)}" aria-label="Abrir atendimento de ${esc(a.cliente_nome)} às ${a.inicio}, ${esc(SIT_AG[a.situacao])}">Abrir</a>
       </li>`).join('')
       : `<li class="vazio"><h2>Nenhum atendimento</h2><p>${r.dia.aberto ? 'Não há agendamentos neste dia.' : 'O estúdio não abre neste dia.'}</p></li>`;
@@ -436,7 +436,8 @@ async function telaAtendimento() {
   pagina({
     titulo: 'Atendimento', voltar: `${BASE}?data=${a.data}`, voltarTexto: 'Agenda',
     corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}${r.aviso ? avisoHTML(esc(r.aviso), 'erro') : ''}
-      <div class="servico-cabeca"><h2>${esc(a.cliente_nome)}</h2>${seloAg(s)}</div>
+      <div class="servico-cabeca"><h2>${esc(a.cliente_nome)}</h2>${seloAg(s)}${a.origem === 'online' && s === 'agendado' ? ' <span class="selo selo-online">Online · confirmar</span>' : ''}</div>
+      ${a.origem === 'online' ? `<p class="ajuda">Pedido feito pela cliente no agendamento online${s === 'agendado' ? ': confirme com ela e toque em “Confirmar presença”' : ''}.</p>` : ''}
       ${a.encaixe_id ? `<p class="ajuda">Atendimento vindo de <a href="${BASE}encaixes/detalhe/?id=${encodeURIComponent(a.encaixe_id)}">encaixe</a>.</p>` : ''}
       <div class="bloco"><dl class="dados">
         <dt>WhatsApp</dt><dd>${a.whatsapp ? esc(fone(a.whatsapp)) : 'Não informado'}</dd>
@@ -943,9 +944,38 @@ async function telaConfig() {
         <a class="btn btn-suave" href="${C}horarios/">Horários e pausas <small class="sub-btn">${abertos ? `${abertos} dia(s) aberto(s)` : 'não configurado'}</small></a>
         <a class="btn btn-suave" href="${C}profissionais/">Profissionais <small class="sub-btn">${r.profissionais.filter(p => p.ativo).length} ativa(s)</small></a>
         <a class="btn btn-suave" href="${C}bloqueios/">Bloqueios de agenda <small class="sub-btn">folgas, cursos, compromissos</small></a>
+        <a class="btn btn-suave" href="${C}online/">Agendamento online <small class="sub-btn">${r.config.online_ativo ? 'ligado' : 'desligado'}</small></a>
       </nav>`,
     acoes: `<a class="btn btn-linha" href="${BASE}">${SETA} Voltar à agenda</a>`
   });
+  focarTitulo();
+}
+// Agendamento online: ligar/desligar, WhatsApp do estúdio, link e texto da saudação automática
+async function telaCfgOnline() {
+  const r = await api('ag_config_ver');
+  if (!r.ok) return telaErro('Agendamento online', r.msg, C, 'Configurações');
+  const link = `${location.origin}/brow-studio/agendar/`;
+  const saud = `Oi! Agende seu horário aqui: ${link}`;
+  const msg = recado.tirar();
+  const form = pagina({
+    titulo: 'Agendamento online', voltar: C, voltarTexto: 'Configurações', formulario: true,
+    corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}
+      <label class="chave"><input type="checkbox" name="ativo" ${r.config.online_ativo ? 'checked' : ''}><span><strong>Agendamento online ligado</strong><small>A cliente escolhe serviço, dia e um horário livre; o pedido cai na agenda como “Online · confirmar”.</small></span></label>
+      ${campoTexto({ id: 'whatsapp_estudio', rotulo: 'WhatsApp do estúdio', valor: r.config.whatsapp_estudio ? fone(r.config.whatsapp_estudio) : '', tipo: 'tel', opcional: true, attrs: 'inputmode="tel" maxlength="20"', ajuda: 'Para a cliente avisar o estúdio depois de agendar.' })}
+      <div class="campo"><span class="rotulo-campo">Link para as clientes</span><div class="pessoa-escolha"><strong class="link-quebra">${esc(link)}</strong><button type="button" class="btn btn-suave" data-copiar="${esc(link)}">Copiar</button></div></div>
+      <div class="campo"><span class="rotulo-campo">Saudação automática do WhatsApp Business</span><div class="pessoa-escolha"><span class="link-quebra">${esc(saud)}</span><button type="button" class="btn btn-suave" data-copiar="${esc(saud)}">Copiar</button></div>
+        <span class="ajuda">No WhatsApp Business: Ferramentas comerciais → Mensagem de saudação.</span></div><div id="aviso" aria-live="polite"></div>`,
+    acoes: `<a class="btn btn-linha" href="${C}">Cancelar</a><button type="submit" class="btn btn-cheio" id="salvar">Salvar</button>`
+  });
+  $('#corpo').classList.add('fin-compacto');
+  app.querySelectorAll('[data-copiar]').forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.copiar); b.textContent = 'Copiado'; } catch (e) { b.textContent = 'Copie manualmente'; } setTimeout(() => { b.textContent = 'Copiar'; }, 2000); });
+  form.onsubmit = async (e) => {
+    e.preventDefault(); $('#salvar').disabled = true;
+    const rr = await api('ag_online_salvar', { corpo: { ativo: form.ativo.checked, whatsapp_estudio: form.whatsapp_estudio.value } });
+    if (rr.ok) { recado.pôr(form.ativo.checked ? 'Agendamento online ligado.' : 'Agendamento online desligado.'); location.reload(); return; }
+    $('#salvar').disabled = false; if (rr.erros) mostrarErros(form, rr.erros);
+    $('#aviso').innerHTML = avisoHTML(esc(rr.erros ? Object.values(rr.erros).join(' ') : rr.msg), 'erro');
+  };
   focarTitulo();
 }
 async function telaCfgEstudio() {
@@ -1147,6 +1177,7 @@ const TELAS = {
   'cfg-profs': telaCfgProfs,
   'cfg-prof': telaCfgProf,
   'cfg-bloqueios': telaCfgBloqueios,
+  'cfg-online': telaCfgOnline,
   'cfg-bloqueio-novo': telaCfgBloqueioNovo
 };
 (TELAS[document.body.dataset.pagina] || telaDia)();

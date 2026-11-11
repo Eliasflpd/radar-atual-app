@@ -50,7 +50,7 @@ const valida = {
   }
 };
 const CONTATOS = { whatsapp: 'WhatsApp', ligacao: 'Ligação', email: 'E-mail', nenhum: 'Não deseja contato' };
-const ORIGENS = { instagram: 'Instagram', indicacao: 'Indicação', google: 'Google', ja_cliente: 'Já era cliente', outro: 'Outro', nao_informado: 'Não informado' };
+const ORIGENS = { instagram: 'Instagram', indicacao: 'Indicação', google: 'Google', ja_cliente: 'Já era cliente', outro: 'Outro', nao_informado: 'Não informado', online: 'Agendamento online' };
 
 // ─── rascunho (sessionStorage) ──────────────────────────────────────────────
 // chave "nova" = cadastro novo; "editar:<id>" = edição de uma cliente salva.

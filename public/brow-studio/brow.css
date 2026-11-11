@@ -616,3 +616,11 @@ span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
 .sessao-linha a{color:var(--marrom);font-weight:600}
 .instalar-linha{text-align:center;margin:12px 0 0}
 .pin-oculto{-webkit-text-security:disc;text-security:disc;font-family:inherit;letter-spacing:.2em}
+/* ═══════════════ AGENDAMENTO ONLINE ═══════════════ */
+.isca{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.grade-dias{grid-template-columns:repeat(4,minmax(0,1fr))}
+.selo-online{background:#f1d48a;color:#5a3d12}
+.aviso-online{display:block;text-align:center;margin:8px 0 0;font-weight:600}
+.aviso-online a{color:var(--marrom)}
+@media (max-width:420px){.grade-dias{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.link-quebra{overflow-wrap:anywhere;font-size:15px}
