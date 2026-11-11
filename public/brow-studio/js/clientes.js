@@ -511,6 +511,7 @@ async function telaPerfil() {
     corpo: `${params.get('salvo') ? avisoHTML('Cadastro salvo com sucesso.', 'ok') : ''}
       <div class="perfil-cabeca">${avatarHTML(c.nome, c.foto, true)}
         <h2>${esc(c.nome)}</h2>${c.apelido ? `<p>Prefere ser chamada de “${esc(c.apelido)}”</p>` : ''}<p class="status-imagem" id="status-imagem" aria-live="polite"></p></div>
+      <div class="cl-status" id="status-acesso" aria-live="polite"><span>Área da cliente: <strong>…</strong></span><a class="btn btn-suave" href="${BASE}acesso/?id=${q}">Enviar acesso<span class="cl-longo"> da área da cliente</span></a></div>
       <nav class="menu-botoes grade-2" aria-label="Informações da cliente">
         <a class="btn btn-suave" href="${BASE}perfil/dados/?id=${q}">Dados pessoais</a>
         <a class="btn btn-suave" href="${BASE}perfil/contato/?id=${q}">Contato</a>
@@ -524,6 +525,12 @@ async function telaPerfil() {
     acoes: `<a class="btn btn-linha" href="${BASE}">${SETA} Voltar à lista</a><a class="btn btn-cheio" href="${BASE}editar/?id=${q}">Editar cadastro</a>`
   });
   if (params.get('salvo')) { const u = new URL(location.href); u.searchParams.delete('salvo'); history.replaceState(null, '', u); }
+  // ÁREA DA CLIENTE: situação do acesso (o link é gerado na página "acesso")
+  api('ca_estado', { query: { cliente_id: id } }).then(s => {
+    const el = $('#status-acesso'); if (!el || !s || !s.ok) return;
+    const pode = s.situacao === 'ativo' || s.situacao === 'convite';
+    el.innerHTML = `<span>Área da cliente: <strong>${esc(s.situacao_nome)}</strong></span><a class="btn btn-suave" href="${BASE}acesso/?id=${q}">Enviar acesso<span class="cl-longo"> da área da cliente</span></a>${pode ? `<a class="btn btn-linha" href="${BASE}acesso/?id=${q}&desativar=1">Desativar</a>` : ''}`;
+  });
   // situação ATUAL da autorização de divulgação de imagem (a foto do cadastro não é autorização)
   api('tm_imagem_cliente', { query: { cliente: id } }).then(s => {
     if (!s || !s.ok) return;
@@ -629,6 +636,59 @@ async function telaEditar(parte) {
   focarTitulo();
 }
 
+// ─── ÁREA DA CLIENTE: enviar o link pessoal pelo WhatsApp do salão / desativar ──
+const dataHoraBR = (iso) => { if (!iso) return ''; const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+async function telaAcessoCliente() {
+  const id = params.get('id'); const q = encodeURIComponent(id || ''); const voltar = `${BASE}perfil/?id=${q}`;
+  carregandoTela('Área da cliente');
+  const s = await api('ca_estado', { query: { cliente_id: id } });
+  if (!s.ok) return telaErro('Área da cliente', s.msg || 'Não foi possível abrir.', voltar, 'Perfil');
+  const pode = s.situacao === 'ativo' || s.situacao === 'convite';
+  const det = s.situacao === 'ativo' ? `Ativado em ${dataHoraBR(s.ativado_em)}${s.ultimo_acesso ? ' · último acesso ' + dataHoraBR(s.ultimo_acesso) : ''}`
+    : s.situacao === 'convite' ? `Link válido até ${dataHoraBR(s.convite_expira)}` : '';
+  if (params.get('desativar') && pode) return telaDesativarAcesso(s, voltar);
+  pagina({ titulo: 'Área da cliente', voltar, voltarTexto: 'Perfil',
+    corpo: `<p class="etapa" style="margin-top:-8px">${esc(s.cliente.nome)}${s.cliente.telefone ? ' · ' + esc(formatarTelefone(s.cliente.telefone)) : ''}</p>
+      <div class="cl-status"><span>Situação: <strong>${esc(s.situacao_nome)}</strong>${det ? ` · ${esc(det)}` : ''}</span>${pode ? '<button type="button" class="btn btn-linha" id="desativar">Desativar</button>' : ''}</div>
+      <p class="ajuda">O link é pessoal: vale 7 dias e uma única vez. Um link novo cancela o anterior (use também quando a cliente esquecer o PIN). A cliente vê só seus horários, o histórico (data e serviço) e seus dados — nunca anamnese, fotos, valores ou observações internas.</p>
+      <div id="envio"></div><div id="aviso" aria-live="polite"></div>`,
+    acoes: `<a class="btn btn-linha" href="${voltar}">${SETA} Perfil</a><button type="button" class="btn btn-cheio" id="gerar">${s.situacao === 'sem_acesso' || s.situacao === 'desativado' ? 'Gerar link de acesso' : 'Gerar novo link'}</button>` });
+  const bd = $('#desativar'); if (bd) bd.onclick = () => telaDesativarAcesso(s, voltar);
+  let env = false;
+  $('#gerar').onclick = async () => {
+    if (env) return; env = true; $('#gerar').disabled = true;
+    const r = await api('ca_convite', { corpo: { cliente_id: id } });
+    env = false; $('#gerar').disabled = false;
+    if (!r.ok) { $('#aviso').innerHTML = avisoHTML(esc(r.msg || 'Não foi possível gerar o link.'), 'erro'); return; }
+    const link = location.origin + r.link;
+    $('#aviso').innerHTML = '';
+    $('#envio').innerHTML = `<div class="campo"><label for="msg">Mensagem (pode editar antes de enviar)</label><textarea id="msg" class="cl-msg" maxlength="900">${esc(r.mensagem + link)}</textarea></div>
+      <div class="linha-acoes acoes-grade"><a class="btn btn-cheio" id="abrir-wa" target="_blank" rel="noopener" href="#">Abrir WhatsApp da cliente</a><button type="button" class="btn btn-suave" id="copiar">Copiar mensagem</button></div>
+      <p class="ajuda">Nada é enviado sozinho: o WhatsApp abre com a mensagem pronta e você toca em enviar.</p>`;
+    $('#gerar').textContent = 'Gerar novo link';
+    const msg = $('#msg'), wa = $('#abrir-wa');
+    const atual = () => { wa.href = `https://wa.me/55${r.whatsapp}?text=${encodeURIComponent(msg.value)}`; };
+    msg.oninput = atual; atual();
+    $('#copiar').onclick = async () => { try { await navigator.clipboard.writeText(msg.value); $('#copiar').textContent = 'Copiado'; } catch (e) { msg.select(); $('#copiar').textContent = 'Copie manualmente'; } setTimeout(() => { $('#copiar').textContent = 'Copiar mensagem'; }, 2000); };
+    const st = document.querySelector('.cl-status strong'); if (st) st.textContent = r.situacao_nome;
+  };
+  focarTitulo();
+}
+function telaDesativarAcesso(s, voltar) {
+  const q = encodeURIComponent(s.cliente.id);
+  pagina({ titulo: 'Desativar acesso', voltar: `${BASE}acesso/?id=${q}`, voltarTexto: 'Voltar',
+    corpo: `${avisoHTML(`Desativar o acesso de <strong>${esc(s.cliente.nome)}</strong> à área da cliente?`)}
+      <p class="ajuda">Ela sai de todos os aparelhos na hora e o link pendente deixa de valer. Os horários dela continuam na agenda. Para reativar, gere um novo link.</p><div id="aviso" aria-live="polite"></div>`,
+    acoes: `<a class="btn btn-linha" href="${BASE}acesso/?id=${q}">Cancelar</a><button type="button" class="btn btn-cheio" id="confirmar">Desativar acesso</button>` });
+  $('#confirmar').onclick = async () => {
+    $('#confirmar').disabled = true;
+    const r = await api('ca_desativar', { corpo: { cliente_id: s.cliente.id } });
+    if (r.ok) { location.replace(voltar); return; }
+    $('#confirmar').disabled = false; $('#aviso').innerHTML = avisoHTML(esc(r.msg || 'Não foi possível desativar.'), 'erro');
+  };
+  focarTitulo();
+}
+
 // ─── roteamento ─────────────────────────────────────────────────────────────
 const TELAS = {
   lista: telaLista,
@@ -641,6 +701,7 @@ const TELAS = {
   foto: telaFoto,
   camera: telaCamera,
   perfil: telaPerfil,
+  'acesso-cliente': telaAcessoCliente,
   'perfil-dados': () => telaPerfilParte('dados'),
   'perfil-contato': () => telaPerfilParte('contato'),
   'perfil-preferencias': () => telaPerfilParte('preferencias'),

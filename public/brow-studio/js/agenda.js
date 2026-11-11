@@ -946,6 +946,7 @@ async function telaConfig() {
         <a class="btn btn-suave" href="${C}profissionais/">Profissionais <small class="sub-btn">${r.profissionais.filter(p => p.ativo).length} ativa(s)</small></a>
         <a class="btn btn-suave" href="${C}bloqueios/">Bloqueios de agenda <small class="sub-btn">folgas, cursos, compromissos</small></a>
         <a class="btn btn-suave" href="${C}online/">Agendamento online <small class="sub-btn">${r.config.online_ativo ? 'ligado' : 'desligado'}</small></a>
+        <a class="btn btn-suave" href="${C}area-cliente/">Área da cliente <small class="sub-btn">cancelar/remarcar até ${r.config.cliente_antec_horas} h antes</small></a>
         <a class="btn btn-suave" href="${C}salao/">Meu salão <small class="sub-btn">endereço e links para copiar</small></a>
       </nav>`,
     acoes: `<a class="btn btn-linha" href="${BASE}">${SETA} Voltar à agenda</a>`
@@ -978,6 +979,26 @@ async function telaCfgOnline() {
     if (rr.ok) { recado.pôr(form.ativo.checked ? 'Agendamento online ligado.' : 'Agendamento online desligado.'); location.reload(); return; }
     $('#salvar').disabled = false; if (rr.erros) mostrarErros(form, rr.erros);
     $('#aviso').innerHTML = avisoHTML(esc(rr.erros ? Object.values(rr.erros).join(' ') : rr.msg), 'erro');
+  };
+  focarTitulo();
+}
+// Área da cliente: até quantas horas antes a cliente pode cancelar/remarcar sozinha
+async function telaCfgAreaCliente() {
+  const r = await api('ag_config_ver');
+  if (!r.ok) return telaErro('Área da cliente', r.msg, C, 'Configurações');
+  const form = pagina({
+    titulo: 'Área da cliente', voltar: C, voltarTexto: 'Configurações', formulario: true,
+    corpo: `<p class="ajuda">Na área da cliente ela vê os próximos horários e o histórico, agenda (se o agendamento online estiver ligado) e pode cancelar ou remarcar sozinha dentro do prazo abaixo. Fora do prazo, ela é orientada a falar com o salão.</p>
+      ${campoTexto({ id: 'horas', rotulo: 'Permitir cancelar/remarcar até quantas horas antes', valor: String(r.config.cliente_antec_horas), tipo: 'number', attrs: 'inputmode="numeric" min="0" max="168" step="1"', ajuda: 'Padrão: 24 horas. Use 0 para permitir até o horário marcado.' })}
+      <p class="ajuda">Para dar acesso a uma cliente: Clientes → perfil dela → “Enviar acesso da área da cliente”.</p><div id="aviso" aria-live="polite"></div>`,
+    acoes: `<a class="btn btn-linha" href="${C}">Cancelar</a><button type="submit" class="btn btn-cheio" id="salvar">Salvar</button>`
+  });
+  form.onsubmit = async (e) => {
+    e.preventDefault(); $('#salvar').disabled = true;
+    const rr = await api('ag_area_cliente_salvar', { corpo: { horas: Number(form.horas.value) } });
+    if (rr.ok) { recado.pôr('Área da cliente: prazo salvo.'); location.replace(C); return; }
+    $('#salvar').disabled = false; if (rr.erros) mostrarErros(form, rr.erros);
+    $('#aviso').innerHTML = avisoHTML(esc(rr.erros ? Object.values(rr.erros).join(' ') : rr.msg || 'Não foi possível salvar.'), 'erro');
   };
   focarTitulo();
 }
@@ -1182,6 +1203,7 @@ const TELAS = {
   'cfg-prof': telaCfgProf,
   'cfg-bloqueios': telaCfgBloqueios,
   'cfg-online': telaCfgOnline,
+  'cfg-area-cliente': telaCfgAreaCliente,
   'cfg-bloqueio-novo': telaCfgBloqueioNovo
 };
 (TELAS[document.body.dataset.pagina] || telaDia)();
