@@ -5,7 +5,7 @@
 // (ag_lote_criar, revalida tudo e não duplica). Pensado também para o
 // Claude no Chrome: campo único, rótulos claros e botões com texto fixo.
 // ═══════════════════════════════════════════════════════════════════════════
-import { $, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, avisoHTML, focarTitulo, ir } from './comum.js?v=3';
+import { $, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, avisoHTML, focarTitulo, ir } from './comum.js?v=4';
 
 const BASE = '/brow-studio/agenda/';
 const L = BASE + 'lancar/';

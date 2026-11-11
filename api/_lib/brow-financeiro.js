@@ -245,6 +245,12 @@ module.exports = async function financeiro(c, estab, req, res, acao, garantirOut
   if (req.method === 'POST' && acao === 'fn_salvar') {
     const b = corpo(req);
     const { out, erros } = lerLancamento(b);
+    // cliente/contato vinculado precisa ser DESTE salão
+    if (out.pessoa_id) {
+      const tab = out.pessoa_tipo === 'cliente' ? 'brow_clientes' : 'brow_contatos';
+      const ex = (await c.query(`select 1 from ${tab} where estab=$1 and id=$2`, [estab, out.pessoa_id]).catch(() => ({ rows: [] }))).rows.length;
+      if (!ex) erros.pessoa_nome = out.pessoa_tipo === 'cliente' ? 'Escolha a cliente do cadastro.' : 'Escolha o contato do cadastro.';
+    }
     if (b.id) {
       if (Object.keys(erros).length) return erro(res, 422, 'validacao', 'Confira os campos.', { erros });
       await c.query('begin');

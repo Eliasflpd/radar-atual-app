@@ -4,9 +4,11 @@
 // confere → envia. O servidor revalida tudo (horário livre, 2 h de antecedência,
 // até 30 dias, limite por telefone/IP). Rascunho só nesta aba ("pub:ag").
 // ═══════════════════════════════════════════════════════════════════════════
-import { $, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, mostrarErros, avisoHTML, focarTitulo, ir } from './comum.js?v=3';
+import { $, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, mostrarErros, avisoHTML, focarTitulo, ir } from './comum.js?v=4';
 
 const BASE = '/brow-studio/agendar/';
+// salão do link (?s=slug): guardado só nesta aba para as próximas etapas; sem ?s na 1ª página = salão original
+try { if (location.pathname === BASE) { const sl = new URLSearchParams(location.search).get('s'); if (sl) sessionStorage.setItem('brow:pub_s', sl); else sessionStorage.removeItem('brow:pub_s'); } } catch (e) {}
 const app = document.getElementById('app');
 const CH = 'pub:ag';
 const ler = () => lerRasc(CH);
