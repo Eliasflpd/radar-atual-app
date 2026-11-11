@@ -150,7 +150,16 @@ async function telaLista() {
       nav.hidden = true;
       lista.innerHTML = termo
         ? `<li class="vazio"><h2>Nenhum serviço encontrado</h2><p>Nada com “${esc(termo)}”. Busque pelo nome ou pela categoria.</p></li>`
-        : `<li class="vazio"><span class="avatar grande" aria-hidden="true">✦</span><h2>Nenhum serviço cadastrado</h2><p>Toque em “Novo serviço” para cadastrar o primeiro, com duração e valor.</p></li>`;
+        : `<li class="vazio"><span class="avatar grande" aria-hidden="true">✦</span><h2>Nenhum serviço cadastrado</h2><p>Toque em “Novo serviço” para cadastrar o primeiro, com duração e valor.</p>
+            <button type="button" class="btn btn-suave" id="importar-tabela">Importar tabela de valores do estúdio (7 serviços)</button><p class="ajuda" id="importar-aviso" aria-live="polite"></p></li>`;
+      const bt = document.getElementById('importar-tabela');
+      if (bt) bt.onclick = async () => {
+        bt.disabled = true; bt.textContent = 'Importando…';
+        const ri = await api('servico_importar_tabela', { corpo: {} });
+        if (ri.ok) { location.reload(); return; }
+        bt.disabled = false; bt.textContent = 'Importar tabela de valores do estúdio (7 serviços)';
+        document.getElementById('importar-aviso').textContent = ri.msg || 'Não foi possível importar.';
+      };
       return;
     }
     lista.innerHTML = r.itens.map(s => `

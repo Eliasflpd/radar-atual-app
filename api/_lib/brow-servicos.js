@@ -161,6 +161,34 @@ module.exports = async function servicos(c, estab, req, res, acao) {
     return;
   }
 
+  // TABELA DE VALORES DO ESTÚDIO (enviada pela dona em 11/11/2026, imagem "Valores especiais").
+  // Importação única por ação explícita da dona; não duplica (pula nomes já existentes).
+  if (req.method === 'POST' && acao === 'servico_importar_tabela') {
+    if (req.brow_funcao && req.brow_funcao !== 'dona') { res.status(403).json({ ok: false, erro: 'sem_permissao', msg: 'Só a dona importa a tabela.' }); return; }
+    const TABELA = [
+      ['Design de sobrancelha', 'design', 45, 2500, null],
+      ['Design com henna', 'henna', 45, 3500, null],
+      ['Aplicação de henna', 'henna', 45, 2000, null],
+      ['Design de sobrancelha e buço', 'design', 40, 3000, 'Combo especial.'],
+      ['Design com henna e buço', 'henna', 40, 4000, 'Combo especial.'],
+      ['Micropigmentação de sobrancelhas', 'micro', 150, 28000, 'Retoque não incluso.'],
+      ['Micropigmentação labial', 'micro', 150, 28000, 'Retoque não incluso.']
+    ];
+    await c.query('begin');
+    try {
+      await c.query('select pg_advisory_xact_lock(hashtext($1))', ['brow-tabela|' + estab]);
+      let criados = 0;
+      for (const [nome, cat, dur, valor, desc] of TABELA) {
+        const ja = await c.query('select 1 from brow_servicos where estab=$1 and lower(nome)=lower($2)', [estab, nome]);
+        if (ja.rows.length) continue;
+        await c.query('insert into brow_servicos(id,estab,nome,categoria,descricao,duracao_min,intervalo_min,valor_centavos,ativo) values($1,$2,$3,$4,$5,$6,0,$7,true)',
+          [crypto.randomUUID(), estab, nome, cat, desc, dur, valor]);
+        criados++;
+      }
+      await c.query('commit');
+      res.status(200).json({ ok: true, criados, total: TABELA.length }); return;
+    } catch (e) { await c.query('rollback').catch(() => {}); throw e; }
+  }
   if (req.method === 'POST' && acao === 'servico_criar') {
     const b = corpo(req);
     const chave = txt(b.chave_envio, 64);
