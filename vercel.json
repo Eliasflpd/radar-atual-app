@@ -2,6 +2,11 @@
   "outputDirectory": "public",
   "redirects": [
     {
+      "source": "/brow-studio",
+      "destination": "/brow-studio/",
+      "permanent": false
+    },
+    {
       "source": "/libras",
       "destination": "/libras/",
       "permanent": false
@@ -160,11 +165,24 @@
     {
       "source": "/ouvir",
       "destination": "/ouvir.html"
+    },
+    {
+      "source": "/api/brow",
+      "destination": "/api/dados?fn=brow"
     }
   ],
   "headers": [
     {
       "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/brow-studio/sw.js",
       "headers": [
         {
           "key": "Cache-Control",

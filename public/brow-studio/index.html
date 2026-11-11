@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6e6d9">
+<link rel="manifest" href="/brow-studio/manifest.webmanifest">
+<link rel="icon" href="/brow-studio/img/icones/icone-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/brow-studio/img/icones/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Brow Studio">
+<meta name="description" content="Brow Studio — beleza em cada detalhe. Seu atendimento organizado em um só lugar.">
+<title>Brow Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Lora:wght@500&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="/brow-studio/img/capa-modelo.webp" type="image/webp">
+<link rel="stylesheet" href="/brow-studio/brow.css">
+</head>
+<body>
+<main class="capa">
+  <div class="capa-foto">
+    <picture>
+      <source srcset="/brow-studio/img/capa-modelo.webp" type="image/webp">
+      <img src="/brow-studio/img/capa-modelo.jpg" width="1024" height="700" alt="Mulher sorrindo, com sobrancelhas bem desenhadas" fetchpriority="high">
+    </picture>
+  </div>
+
+  <section class="capa-conteudo" aria-labelledby="marca">
+    <svg class="simbolo" viewBox="0 0 186 54" aria-hidden="true" focusable="false">
+      <path d="M2 53 C28 20 68 2 112 1.5 C143 1.5 169 15 184 42 C163 24 140 17 114 17.5 C78 19 42 31 2 53 Z" fill="#4b2412"/>
+    </svg>
+    <h1 id="marca">Brow Studio</h1>
+    <svg class="filete" viewBox="0 0 220 16" aria-hidden="true" focusable="false">
+      <defs><linearGradient id="ouro-f" x1="0" x2="1">
+        <stop offset="0" stop-color="#d9b77a" stop-opacity=".55"/><stop offset=".45" stop-color="#d9b06a"/><stop offset="1" stop-color="#c99a4e" stop-opacity=".9"/></linearGradient></defs>
+      <path d="M2 13 C55 0 125 1 218 6 C150 6.5 120 4.5 70 8 C45 9.5 22 11 2 13 Z" fill="url(#ouro-f)"/>
+    </svg>
+    <h2>Beleza em cada detalhe</h2>
+    <p class="sub">Seu atendimento organizado<br>em um só lugar.</p>
+
+    <nav class="botoes" aria-label="Como você quer entrar">
+      <a class="btn btn-cheio" href="/brow-studio/profissional.html">Sou profissional</a>
+      <a class="btn btn-linha" href="/brow-studio/cliente.html">Sou cliente</a>
+    </nav>
+
+    <nav class="rodape" aria-label="Informações">
+      <a href="/brow-studio/ajuda.html">Ajuda</a>
+      <span aria-hidden="true">•</span>
+      <a href="/brow-studio/privacidade.html">Privacidade</a>
+    </nav>
+  </section>
+</main>
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('/brow-studio/sw.js',{scope:'/brow-studio/'}).catch(function(){});});}</script>
+</body>
+</html>

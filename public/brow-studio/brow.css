@@ -1,0 +1,617 @@
+/* Brow Studio — identidade visual (nude, marrom e dourado).
+   Pasta isolada: nada aqui afeta o RADAR. */
+:root{
+  --nude:#f6e6d9;
+  --nude-2:#f3dfd0;
+  --marrom:#592d17;
+  --marrom-escuro:#4b2412;
+  --texto:#552c18;
+  --ouro-1:#a8742e;
+  --ouro-2:#f1d48a;
+  --ouro-3:#c99a4e;
+  --serifa:'Lora',Georgia,'Times New Roman',serif;
+  --sans:'Lexend','Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}   /* o atributo hidden sempre vence o display dos componentes */
+html,body{height:100%}
+body{background:var(--nude);color:var(--texto);font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--ouro-1);outline-offset:3px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* ───────────── CAPA ─────────────
+   Medidas tiradas da referência 03-Capa-Tablet-Vertical (1024×1536):
+   a foto ocupa 700px e a apresentação 836px. Tudo abaixo é escrito em
+   "pixels da referência" multiplicados por --r, que é calculado para a
+   tela inteira caber sem rolar. */
+.capa{
+  --foto-min:68.36vw;                                   /* 700/1024: foto inteira, sem cortar */
+  --r:min(calc(100vw / 1024), calc((100dvh - var(--foto-min)) / 836));
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+}
+/* a foto ocupa exatamente o espaço que sobra acima da apresentação */
+.capa-foto{position:relative;flex:1 0 30vh;min-height:30vh;overflow:hidden;background:var(--nude)}
+/* Degradê entre a foto e os textos (sem linha separando): a parte de baixo da
+   foto se dissolve no fundo nude acompanhando o arco do rosto. O degradê termina
+   antes da curva que já vem desenhada na foto original, que assim não aparece. */
+.capa-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block;
+  -webkit-mask-image:radial-gradient(ellipse 98% 98% at 50% 0%,#000 0%,#000 79%,rgba(0,0,0,.72) 85%,rgba(0,0,0,.32) 91%,rgba(0,0,0,.08) 95.5%,transparent 98.5%);
+          mask-image:radial-gradient(ellipse 98% 98% at 50% 0%,#000 0%,#000 79%,rgba(0,0,0,.72) 85%,rgba(0,0,0,.32) 91%,rgba(0,0,0,.08) 95.5%,transparent 98.5%)}
+
+.capa-conteudo{
+  flex:0 0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:0 16px max(calc(28 * var(--r)), env(safe-area-inset-bottom));
+}
+.simbolo{display:block;width:calc(186 * var(--r));height:auto;margin-top:calc(26 * var(--r))}
+.capa h1{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);
+  font-size:calc(78 * var(--r));line-height:1;letter-spacing:-.015em;margin-top:calc(4 * var(--r))}
+.filete{display:block;width:calc(220 * var(--r));height:auto;margin-top:calc(14 * var(--r))}
+.capa h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);
+  font-size:calc(70 * var(--r));line-height:1.1;letter-spacing:-.005em;margin-top:calc(36 * var(--r))}
+.capa .sub{font-weight:400;color:var(--texto);font-size:calc(40 * var(--r));line-height:1.25;margin-top:calc(16 * var(--r))}
+
+.botoes{width:min(100%, calc(804 * var(--r)));display:flex;flex-direction:column;gap:calc(30 * var(--r));margin-top:calc(54 * var(--r))}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;
+  min-height:max(48px, calc(108 * var(--r)));border-radius:999px;text-decoration:none;
+  font-family:var(--sans);font-weight:600;font-size:max(16px, calc(42 * var(--r)));line-height:1.1;
+  transition:background-color .2s,transform .12s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.985)}
+.btn-cheio{background:var(--marrom);color:#fff5ec;border:max(2px, calc(3 * var(--r))) solid var(--marrom);box-shadow:0 10px 24px -14px rgba(75,36,18,.7)}
+.btn-cheio:hover{background:#6a3820;border-color:#6a3820}
+.btn-linha{background:transparent;color:var(--marrom);border:max(2px, calc(4 * var(--r))) solid var(--marrom)}
+.btn-linha:hover{background:rgba(89,45,23,.06)}
+
+.rodape{display:flex;align-items:center;gap:calc(14 * var(--r));margin-top:calc(26 * var(--r));
+  font-size:max(14px, calc(30 * var(--r)));color:var(--texto)}
+.rodape a{text-decoration:none;padding:4px}
+.rodape a:hover{text-decoration:underline}
+
+/* Celular em pé: a foto pode cortar as laterais (cabelo) para os textos
+   e botões ficarem grandes o bastante para ler e tocar. */
+@media (max-width:600px) and (orientation:portrait){
+  .capa{--foto-min:0px;--r:min(calc(100vw / 860), calc(100dvh * .53 / 836))}
+  .capa-foto img{object-position:52% 25%}
+}
+
+/* Computador e tablet deitado: foto à esquerda, apresentação à direita */
+@media (orientation:landscape) and (min-width:640px){
+  .capa{flex-direction:row;--r:min(calc(46vw * .82 / 804), calc(100dvh * .9 / 836))}
+  .capa-foto{flex:0 0 54%;min-height:100dvh}
+  /* a foto é ampliada só o suficiente para esconder a curva da parte de baixo
+     e se dissolve no nude pela direita (degradê, sem linha) */
+  .capa-foto img{inset:auto;top:0;left:0;height:calc(100% * 700 / 585);object-position:70% 0;
+    -webkit-mask-image:linear-gradient(to right,#000 0%,#000 66%,rgba(0,0,0,.5) 84%,transparent 100%);
+            mask-image:linear-gradient(to right,#000 0%,#000 66%,rgba(0,0,0,.5) 84%,transparent 100%)}
+  .capa-conteudo{justify-content:center;padding:calc(40 * var(--r)) 24px}
+  .rodape{margin-top:calc(46 * var(--r))}
+}
+
+/* ───────────── PÁGINAS INTERNAS ───────────── */
+.pagina{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 20px 40px;
+  background:linear-gradient(180deg,var(--nude),var(--nude-2))}
+.topo{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.voltar{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;border-radius:999px;
+  border:2px solid var(--marrom);color:var(--marrom);text-decoration:none;font-weight:500;font-size:16px}
+.voltar:hover{background:rgba(89,45,23,.06)}
+.marca-mini{display:flex;align-items:center;gap:10px;font-family:var(--serifa);font-weight:500;font-size:22px;color:var(--marrom-escuro);text-decoration:none}
+.marca-mini svg{width:44px;height:auto}
+.cartao{width:100%;max-width:720px;margin-top:clamp(28px,6vh,64px);text-align:center;display:flex;flex-direction:column;align-items:center}
+.cartao h1{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:clamp(32px,6vw,52px);line-height:1.1}
+.cartao .filete{width:140px;margin:16px auto 0}
+.cartao p{font-weight:300;font-size:clamp(17px,2.4vw,21px);line-height:1.55;margin-top:18px;max-width:560px}
+.cartao .aviso{margin-top:28px;padding:16px 20px;border:1px solid rgba(169,116,46,.45);border-radius:18px;background:rgba(255,250,245,.55);font-size:16px}
+.texto-longo{text-align:left;max-width:640px}
+.texto-longo h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:22px;margin-top:28px}
+.texto-longo p{margin-top:10px;font-size:17px}
+
+/* ═══════════════ MÓDULO CLIENTES ═══════════════
+   Cada página é curta (uma etapa) e tem rota própria. O layout ocupa a tela
+   toda no uso normal; com teclado aberto ou texto ampliado a página rola em vez
+   de cortar conteúdo (nada de overflow:hidden aqui). */
+.app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;width:100%;max-width:820px;margin:0 auto;
+  padding:max(16px,env(safe-area-inset-top)) clamp(16px,4vw,40px) max(16px,env(safe-area-inset-bottom));font-size:18px}
+.app-topo{display:flex;align-items:center;gap:12px;min-height:56px;flex-wrap:wrap}
+.app-topo .voltar{flex:0 0 auto}
+.app-topo-titulo{flex:1;min-width:0}
+.app-topo h1{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:clamp(26px,4.2vw,36px);line-height:1.15}
+.etapa{font-size:15px;color:#8a6a58;letter-spacing:.02em;margin-top:2px}
+.progresso{display:flex;gap:6px;margin-top:14px}
+.progresso span{flex:1;height:5px;border-radius:5px;background:#ead6c7}
+.progresso span.feito{background:linear-gradient(90deg,var(--ouro-1),var(--ouro-3))}
+.app-corpo{flex:1 0 auto;display:flex;flex-direction:column;gap:18px;padding:22px 0 18px}
+.app-acoes{display:flex;gap:14px;padding-top:14px;flex-wrap:wrap}
+.app-acoes>*{flex:1 1 200px}
+.app .btn{width:auto;min-height:58px;font-size:19px;font-weight:600;padding:0 22px;border-radius:999px;cursor:pointer;font-family:var(--sans)}
+.app .btn-cheio{border:2px solid var(--marrom)}
+.app .btn-linha{border:2px solid var(--marrom);background:transparent}
+.app h1[tabindex="-1"]:focus{outline:none}
+.app .btn[disabled]{opacity:.55;cursor:not-allowed}
+.btn-suave{background:#fff8f2;color:var(--marrom);border:1.5px solid #e2cbbb}
+.btn-suave:hover{background:#fff}
+.btn-perigo{background:transparent;color:#9b2c1c;border:2px solid #c9786b}
+
+.campo{display:flex;flex-direction:column;gap:8px}
+.campo label,.campo .rotulo{font-weight:500;color:var(--marrom-escuro);font-size:18px}
+.campo .opcional{font-weight:300;color:#8a6a58;font-size:15px}
+.campo input,.campo textarea,.campo select{width:100%;min-height:58px;padding:14px 18px;border-radius:16px;border:1.5px solid #dcc5b5;
+  background:#fffaf6;color:var(--marrom-escuro);font:400 19px/1.3 var(--sans);transition:border-color .15s,box-shadow .15s}
+.campo textarea{min-height:180px;resize:vertical}
+.campo input:focus,.campo textarea:focus,.campo select:focus{outline:none;border-color:var(--ouro-1);box-shadow:0 0 0 4px rgba(201,154,78,.22)}
+.campo [aria-invalid="true"]{border-color:#b4442f;box-shadow:0 0 0 3px rgba(180,68,47,.14)}
+.campo .ajuda{font-size:15px;color:#8a6a58}
+.campo .erro{font-size:16px;color:#9b2c1c;font-weight:500}
+.campo .erro:empty{display:none}
+fieldset.campo{border:0;padding:0;margin:0;min-width:0}
+fieldset.campo legend{font-weight:500;color:var(--marrom-escuro);font-size:18px;margin-bottom:10px;padding:0}
+.opcoes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opcoes.tres{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opcao{position:relative;display:flex}
+.opcao input{position:absolute;opacity:0;width:1px;height:1px}
+.opcao span{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;min-height:56px;padding:8px 12px;border-radius:16px;
+  border:1.5px solid #dcc5b5;background:#fffaf6;font-size:17px;cursor:pointer;transition:all .15s;line-height:1.2}
+.opcao input:checked+span{background:var(--marrom);border-color:var(--marrom);color:#fff5ec;font-weight:500}
+.opcao input:focus-visible+span{outline:3px solid var(--ouro-1);outline-offset:2px}
+.chave{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border-radius:16px;border:1.5px solid #e2cbbb;background:#fffaf6;cursor:pointer;min-height:58px}
+.chave input{width:26px;height:26px;margin-top:1px;accent-color:var(--marrom);flex:0 0 auto}
+.chave strong{display:block;font-weight:500;color:var(--marrom-escuro)}
+.chave small{display:block;font-size:15px;color:#8a6a58;margin-top:2px}
+
+.aviso-caixa{padding:14px 18px;border-radius:16px;border:1px solid rgba(169,116,46,.45);background:rgba(255,250,244,.8);font-size:16px;line-height:1.45}
+.aviso-caixa.erro{border-color:#d29a8f;background:#fff1ee;color:#7d2416}
+.aviso-caixa.ok{border-color:#b9cf9e;background:#f4f9ec;color:#3e5a20}
+.aviso-caixa .linha-acoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.aviso-caixa .linha-acoes .btn{min-height:48px;font-size:16px;flex:1 1 160px}
+
+/* avatar: foto ou iniciais */
+.avatar{flex:0 0 auto;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background:linear-gradient(135deg,#ecd3c0,#d8b49a);color:var(--marrom-escuro);font-family:var(--serifa);font-weight:500;font-size:22px;
+  box-shadow:0 0 0 2px #fff8f2,0 0 0 3.5px rgba(201,154,78,.6)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar.grande{width:132px;height:132px;font-size:46px}
+
+/* lista */
+.busca{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap}
+.busca .campo{flex:1 1 260px}
+.busca .btn{flex:0 0 auto;align-self:flex-end}
+.lista{list-style:none;display:flex;flex-direction:column;gap:10px;flex:1}
+.item{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:18px;background:#fffaf6;border:1px solid #ecd8c9;min-height:84px}
+.item-info{flex:1;min-width:0}
+.item-nome{font-weight:500;color:var(--marrom-escuro);font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-extra{font-size:15px;color:#8a6a58;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .btn{flex:0 0 auto;min-height:50px;font-size:16px;padding:0 18px}
+.paginacao{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.paginacao .btn{flex:0 1 170px;min-height:52px;font-size:17px}
+.paginacao .pag-info{font-size:16px;color:var(--texto);text-align:center}
+.vazio{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px 8px}
+.vazio h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:26px}
+.vazio p{color:#8a6a58;max-width:420px}
+
+/* foto */
+.foto-area{display:flex;flex-direction:column;align-items:center;gap:16px}
+.foto-previa{width:min(62vw,300px);aspect-ratio:1;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#f0dccd,#e3c4ad);color:#8a6a58;text-align:center;font-size:16px;padding:0;
+  box-shadow:0 0 0 4px #fff8f2,0 0 0 6px rgba(201,154,78,.55)}
+.foto-previa img{width:100%;height:100%;object-fit:cover}
+.foto-botoes{display:grid;grid-template-columns:1fr;gap:12px;width:100%}
+.camera-video{width:100%;max-height:58dvh;aspect-ratio:3/4;object-fit:cover;border-radius:24px;background:#2a1a12}
+.camera-video.espelho{transform:scaleX(-1)}
+
+/* resumo / perfil */
+.resumo{display:flex;flex-direction:column;gap:12px}
+.bloco{padding:16px 18px;border-radius:18px;background:#fffaf6;border:1px solid #ecd8c9}
+.bloco-topo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.bloco h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:21px}
+.bloco a.corrigir{color:var(--marrom);font-weight:500;font-size:16px;min-height:44px;display:inline-flex;align-items:center;padding:0 6px}
+.dados{display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:6px 14px;font-size:17px}
+.dados dt{color:#8a6a58}
+.dados dd{color:var(--marrom-escuro);overflow-wrap:anywhere}
+.perfil-cabeca{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.perfil-cabeca h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:clamp(26px,4vw,34px);line-height:1.15}
+.perfil-cabeca p{color:#8a6a58}
+.menu-botoes{display:flex;flex-direction:column;gap:12px}
+.menu-botoes .btn{justify-content:space-between}
+.menu-botoes .btn::after{content:"›";font-size:26px;line-height:1;margin-left:12px}
+
+@media (max-width:600px){
+  .app{font-size:17px}
+  .opcoes.tres{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .item .btn{padding:0 14px}
+  .avatar{width:52px;height:52px;font-size:19px}
+  .dados{grid-template-columns:minmax(96px,40%) 1fr;gap:4px 10px;font-size:16px}
+}
+@media (orientation:landscape) and (min-width:900px){
+  .app{max-width:900px}
+}
+
+/* Telas baixas (celular pequeno, PC com janela baixa): mesmos elementos, mais compactos */
+@media (max-height:760px){
+  .app{padding-top:max(10px,env(safe-area-inset-top));padding-bottom:max(10px,env(safe-area-inset-bottom))}
+  .app-topo{min-height:48px}
+  .app-topo .voltar{min-height:44px;padding:0 14px;font-size:15px}
+  .app-topo h1{font-size:24px}
+  .etapa{font-size:14px}
+  .progresso{margin-top:8px}
+  .app-corpo{gap:12px;padding:12px 0 8px}
+  .campo{gap:5px}
+  .campo label,.campo .rotulo,fieldset.campo legend{font-size:16px}
+  fieldset.campo legend{margin-bottom:6px}
+  .campo input,.campo select{min-height:50px;padding:10px 14px;font-size:17px}
+  .campo textarea{min-height:130px;font-size:17px}
+  .campo .ajuda{font-size:14px}
+  .opcoes{gap:8px}
+  .opcao span{min-height:48px;font-size:15px;padding:6px 8px}
+  .chave{padding:10px 14px;min-height:50px;gap:12px}
+  .chave small{font-size:13px}
+  .app .btn{min-height:52px;font-size:17px}
+  .app-acoes{gap:10px;padding-top:10px}
+  .app-acoes>*{flex-basis:140px}
+  .bloco{padding:12px 14px}
+  .bloco h2{font-size:18px}
+  .bloco-topo{margin-bottom:4px}
+  .resumo{gap:10px}
+  .dados{grid-template-columns:minmax(96px,40%) 1fr;gap:3px 10px;font-size:15px}
+  .dados dd{margin-bottom:0}
+  .avatar.grande{width:104px;height:104px;font-size:38px}
+  .foto-previa{width:min(56vw,210px)}
+  .camera-video{max-height:46dvh}
+  .item{min-height:72px;padding:8px 12px}
+  .item .btn{min-height:46px}
+  .menu-botoes{gap:10px}
+  .aviso-caixa{padding:10px 14px;font-size:15px}
+}
+
+/* lista: botão "Nova cliente" no topo, aviso de rascunho compacto, paginação curta */
+.app-topo .btn-topo{flex:0 0 auto;min-height:52px;font-size:17px;padding:0 18px}
+.aviso-caixa.compacto{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
+.aviso-caixa.compacto .linha-acoes{margin-top:0;flex:1 1 220px}
+.aviso-caixa.compacto .linha-acoes .btn{min-height:44px;flex:1 1 100px}
+.paginacao .pag-info{white-space:nowrap;max-width:100%}
+@media (max-width:600px){
+  .app-topo .btn-topo{min-height:46px;font-size:15px;padding:0 14px}
+  .app-topo .voltar{padding:0 12px}
+  .paginacao .pag-total{display:none}
+  .paginacao .btn{flex:0 1 130px;font-size:15px;padding:0 10px}
+}
+
+@media (max-width:600px){
+  .app-acoes>*{flex-basis:120px}
+}
+@media (max-width:420px){
+  .so-largo{display:none}
+  .paginacao{flex-wrap:nowrap}
+  .paginacao .btn{flex:1 1 0;min-width:0}
+}
+
+/* ═══════════════ MÓDULO SERVIÇOS E VALORES ═══════════════ */
+.selo{flex:0 0 auto;display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:500;letter-spacing:.02em}
+.selo-ativo{background:#eef4e4;color:#3e5a20;border:1px solid #c4d6a8}
+.selo-inativo{background:#efe7e2;color:#7a6457;border:1px solid #d9c9bf}
+.item-inativo .item-nome,.item-inativo .item-extra{opacity:.7}
+.preco{color:var(--marrom-escuro);font-weight:600}
+.preco-grande{font-family:var(--serifa);font-weight:500;color:var(--marrom);font-size:clamp(28px,4.4vw,38px);line-height:1}
+.servico-cabeca{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.servico-cabeca h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:clamp(24px,3.8vw,32px);line-height:1.15;overflow-wrap:anywhere}
+.duas-colunas{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.linha-ajuda{display:flex;justify-content:space-between;gap:10px;min-height:20px}
+.contador{margin-left:auto;white-space:nowrap}
+.campo textarea.curta{min-height:110px}
+.btn-perigo-cheio{background:#9b2c1c;color:#fff5ec;border:2px solid #9b2c1c}
+.btn-perigo-cheio:hover{background:#86240f}
+.app .btn-perigo{border:2px solid #c9786b}
+@media (max-width:420px){.duas-colunas{gap:10px}.duas-colunas .campo label{font-size:15px}}
+@media (max-height:760px){.selo{min-height:26px;font-size:13px;padding:0 10px}.campo textarea.curta{min-height:84px}.duas-colunas{gap:10px}}
+@media (max-height:680px){
+  .app-corpo{gap:10px;padding-top:10px}
+  .campo textarea.curta{min-height:64px}
+  .linha-ajuda{min-height:18px}
+  .dados{grid-template-columns:minmax(86px,34%) 1fr}
+  .bloco{padding:10px 12px}
+}
+
+/* lista de serviços: no celular a situação vai para a linha de baixo, junto do preço */
+.selo-mini{display:none}
+.selo-lado{display:contents}
+@media (max-width:600px){
+  .selo-lado{display:none}
+  .selo-mini{display:inline;font-weight:500}
+  .selo-mini.ativo{color:#3e5a20}
+  .selo-mini.inativo{color:#7a6457}
+}
+
+/* ═══════════════ MÓDULO AGENDA ═══════════════ */
+.barra-data{display:flex;gap:10px;align-items:stretch}
+.barra-data .campo-data{flex:1;min-width:0}
+.barra-data .campo-data input{min-height:54px}
+.app .btn-icone{flex:0 0 54px;min-height:54px;padding:0;font-size:26px;line-height:1}
+.barra-data .btn-suave{flex:0 0 auto;min-height:54px}
+.linha-dia{font-size:16px;color:var(--texto)}
+.linha-botoes{display:flex;gap:10px;flex-wrap:wrap}
+.linha-botoes>.btn{flex:1 1 220px;min-height:54px;justify-content:space-between}
+.linha-botoes .campo-filtro{flex:1 1 200px}
+.linha-botoes .campo-filtro select{min-height:54px}
+.contagem{display:inline-flex;align-items:center;min-height:28px;padding:0 10px;border-radius:999px;background:var(--marrom);color:#fff5ec;font-size:14px;font-weight:500;margin-left:10px}
+.hora-bloco{flex:0 0 64px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 0;border-right:1.5px solid #ead6c7;margin-right:4px}
+.hora-bloco strong{font-size:19px;color:var(--marrom-escuro);font-weight:600}
+.hora-bloco span{font-size:14px;color:#8a6a58}
+.hora-bloco.ordem strong{font-family:var(--serifa);font-size:22px}
+.lista-compacta{gap:8px}
+.item-compacto{min-height:64px;padding:8px 12px}
+.item-compacto .btn{min-height:46px}
+.vazio-compacto{flex:0;padding:10px}
+.app .btn-pequeno{min-height:42px;font-size:15px;padding:0 14px}
+.cliente-escolhida h2{font-size:22px}
+.opcao-linha span{flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;padding:10px 16px;gap:2px;min-height:58px}
+.opcao-linha span small{font-size:14px;opacity:.85;font-weight:400}
+.opcao-linha input:checked+span small{opacity:1}
+.grade-horarios{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.opcao-hora span{flex-direction:column;gap:2px;min-height:56px}
+.opcao-hora span strong{font-size:18px}
+.opcao-hora span small{font-size:13px;opacity:.8}
+.atalhos{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.app .btn-dia{flex-direction:column;min-height:58px;padding:4px 2px;font-size:14px;gap:0;border-radius:14px}
+.btn-dia small{font-size:12px;font-weight:400}
+.btn-dia.ativo{background:var(--marrom);color:#fff5ec;border-color:var(--marrom)}
+.acoes-grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.acoes-grade .btn{min-height:54px;font-size:16px;padding:0 10px;text-align:center}
+.selo-encaixe{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:16px;border:1.5px dashed var(--ouro-1);background:#fff8ee}
+.selo-encaixe strong{color:var(--marrom-escuro)}
+.selo-encaixe span{font-size:15px;color:#7d5a2c}
+.selo-agendado,.selo-enc-aguardando{background:#f3ebe4;color:#6b4a38;border:1px solid #e0cfc2}
+.selo-confirmado,.selo-chegou,.selo-enc-chegou{background:#eef4e4;color:#3e5a20;border:1px solid #c4d6a8}
+.selo-em_atendimento,.selo-enc-em_atendimento,.selo-enc-chamado{background:#fbf1dc;color:#7d5a2c;border:1px solid #e8cf9c}
+.selo-concluido,.selo-enc-concluido{background:#e8eef4;color:#2f4d6b;border:1px solid #c3d2e0}
+.selo-cancelado,.selo-falta,.selo-enc-cancelado,.selo-enc-desistiu{background:#f6e6e3;color:#8a3324;border:1px solid #e3bdb5}
+.linha-tempo{gap:8px}
+.evento{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-left:3px solid var(--ouro-3);background:#fffaf6;border-radius:0 14px 14px 0;min-height:56px}
+.evento small{color:#8a6a58;font-size:14px}
+.sub-btn{display:block;font-weight:400;font-size:14px;opacity:.8;margin-left:auto;padding-left:12px;text-align:right}
+.menu-botoes .btn .sub-btn{order:1}
+.rotulo-simples{font-size:17px}
+@media (max-width:600px){
+  .grade-horarios{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .atalhos{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .atalhos .btn-dia:nth-child(n+5){display:none}
+  .hora-bloco{flex-basis:56px}
+  .hora-bloco strong{font-size:17px}
+  .acoes-grade .btn{font-size:15px}
+  .sub-btn{display:none}
+}
+@media (max-height:760px){
+  .barra-data .campo-data input,.app .btn-icone,.barra-data .btn-suave,.linha-botoes>.btn,.linha-botoes .campo-filtro select{min-height:48px}
+  .acoes-grade{gap:8px}.acoes-grade .btn{min-height:48px}
+  .opcao-linha span{min-height:52px;padding:6px 14px}
+  .grade-horarios{gap:8px}.opcao-hora span{min-height:50px}
+  .item-compacto{min-height:58px}
+}
+
+/* campos lado a lado nunca estouram a largura (data/hora no celular) */
+.duas-colunas{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.campo input,.campo select,.campo textarea{min-width:0;max-width:100%}
+@media (max-height:680px){
+  .resumo .bloco-topo{margin-bottom:2px}.resumo .bloco h2{font-size:17px}
+  .selo-encaixe{padding:8px 12px}.selo-encaixe span{font-size:14px}
+  .item-compacto{min-height:52px;padding:6px 10px}.item-compacto .btn{min-height:44px}
+  .acoes-grade .btn{min-height:46px}
+}
+
+@media (max-width:600px){
+  .sm-cancelado,.sm-falta,.sm-desistiu{color:#8a3324}
+  .sm-confirmado,.sm-chegou{color:#3e5a20}
+  .sm-concluido{color:#2f4d6b}
+}
+@media (max-width:420px){
+  .barra-data{gap:6px}
+  .app .btn-icone{flex-basis:44px;font-size:22px}
+  .barra-data .btn-suave{padding:0 12px;font-size:15px}
+  .barra-data .campo-data input{padding:8px 8px;font-size:16px}
+}
+
+.ja-chegou{color:#3e5a20;font-weight:600}
+.servico-cabeca>span{display:inline-flex;gap:6px;flex-wrap:wrap}
+
+/* ═══════════════ MÓDULO ANAMNESE ═══════════════ */
+legend.pergunta{font-family:var(--serifa);font-weight:500;font-size:clamp(22px,3.4vw,28px);line-height:1.25;margin-bottom:14px}
+.app-acoes .btn-rascunho{flex:1 1 100%;min-height:50px;font-size:16px}
+.sub-btn.sub-sempre{display:block}
+@media (min-width:700px){.app-acoes .btn-rascunho{flex:1 1 200px}}
+@media (max-height:760px){legend.pergunta{font-size:21px;margin-bottom:8px}.app-acoes .btn-rascunho{min-height:46px}}
+
+.app-acoes .btn-rascunho.par{flex:1 1 140px}
+@media (max-width:600px){.hist-curto li:nth-child(n+3){display:none}}
+@media (max-height:680px){.hist-curto li:nth-child(n+2){display:none}.menu-botoes .btn{min-height:46px}.menu-botoes{gap:8px}}
+@media (max-height:680px){.aviso-caixa.vinculo{padding:6px 10px;font-size:13px}.opcao-linha span{min-height:46px;padding:4px 12px}.opcao-linha span small{font-size:13px}}
+@media (max-width:420px){.app-corpo>p.etapa:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+@media (max-width:600px){.hist-curto li:nth-child(n+2){display:none}.hist-curto{flex:0}}
+@media (max-height:680px){.hist-curto{display:none}.bloco .ajuda{font-size:13px}}
+
+/* ═══════════════ MÓDULO TERMOS E AUTORIZAÇÕES ═══════════════ */
+.doc-cabeca{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.doc-cabeca h2{font-family:var(--serifa);font-weight:500;color:var(--marrom-escuro);font-size:clamp(21px,3.2vw,26px);line-height:1.2}
+.doc-texto{flex:1;background:#fffdf9;border:1px solid #ecd8c9;border-radius:18px;padding:18px 20px;font-size:18px;line-height:1.6;color:#3f2618}
+.doc-texto p+p{margin-top:12px}
+.doc-texto:focus-visible{outline:3px solid var(--ouro-1)}
+.assinatura-caixa{position:relative;background:#fff;border:2px dashed #d8bfa9;border-radius:18px;height:clamp(150px,24dvh,240px);touch-action:none}
+.assinatura-caixa canvas{display:block;width:100%;height:100%;border-radius:16px;cursor:crosshair;touch-action:none}
+.assinatura-linha{position:absolute;left:24px;right:24px;bottom:34px;border-top:1.5px solid #cdb4a0;font-size:13px;color:#a68b7a;padding-top:4px;pointer-events:none}
+.assinatura-mini{display:block;max-width:100%;max-height:100px;margin-top:8px;border:1px solid #ecd8c9;border-radius:10px;background:#fff}
+.chave-canal{min-height:54px;align-items:center}
+.img-retirada{color:#8a3324;font-weight:500}
+.campo textarea.texto-longo-campo{min-height:45dvh}
+@media (max-height:760px){.doc-texto{font-size:16px;padding:12px 14px}.assinatura-caixa{height:clamp(130px,22dvh,200px)}.assinatura-linha{bottom:26px}}
+.status-imagem{font-size:15px;font-weight:500}.status-imagem.ok{color:#3e5a20}.status-imagem.nao{color:#8a6a58}
+.linha-acoes{display:flex;gap:10px;flex-wrap:wrap}
+.linha-acoes>.btn{flex:1 1 120px}
+@media (max-height:680px){.assinatura-mini{max-height:64px}}
+@media (max-width:600px){.assinatura-caixa{height:clamp(130px,19dvh,220px)}#area-desenho .linha-acoes .btn{min-height:46px;font-size:16px}}
+@media (max-height:680px){.chave-canal{min-height:46px;padding:6px 12px}.assinatura-caixa{height:clamp(120px,19dvh,200px)}}
+
+/* ═══════════════ MÓDULO REGISTRO DE ATENDIMENTOS E FOTOS ═══════════════ */
+.busca.filtros{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,190px) minmax(0,190px);gap:10px;align-items:end}
+@media (max-width:600px){.busca.filtros{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.busca.filtros .campo:first-child{grid-column:1/-1}}
+.fotos-par{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.foto-cartao{display:flex;flex-direction:column;gap:8px;align-items:stretch;text-align:center}
+.foto-cartao h2{font-family:var(--serifa);font-weight:500;font-size:20px;color:var(--marrom-escuro)}
+.foto-quadro{aspect-ratio:3/4;border-radius:16px;background:#efe2d7;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #e3cfc0;color:#8a6a58;max-height:42dvh}
+.foto-quadro img{width:100%;height:100%;object-fit:contain;background:#2a1a12}
+.foto-quadro.foto-grande{width:min(100%,520px);margin:0 auto;max-height:46dvh}
+.foto-botoes.duas{grid-template-columns:repeat(2,minmax(0,1fr))}
+.foto-botoes.duas .btn-perigo{grid-column:1/-1}
+.foto-comparar{margin:0;display:flex;flex-direction:column;gap:6px;align-items:center}
+.foto-comparar img{max-width:100%;max-height:60dvh;width:auto;height:auto;object-fit:contain;border-radius:14px;background:#2a1a12;display:block}
+.foto-comparar figcaption{font-size:16px;color:var(--marrom-escuro)}
+.foto-comparar.vazia{min-height:200px;justify-content:center;background:#efe2d7;border-radius:16px;color:#8a6a58}
+.comparar-lado{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.comparar-lado .foto-comparar img{max-height:62dvh}
+.alternar{display:flex;gap:10px}.alternar .btn{flex:1}
+.evento span{display:block;margin-top:4px;font-size:15px;color:var(--marrom-escuro);white-space:pre-wrap}
+.documentos a{font-weight:500}
+span.btn[aria-disabled="true"]{opacity:.55;cursor:default}
+@media (max-height:760px){.foto-quadro{max-height:34dvh}.foto-quadro.foto-grande{max-height:38dvh}.foto-comparar img{max-height:50dvh}}
+.foto-comparar img{max-height:min(60dvh,calc(100dvh - 440px))}
+.comparar-lado .foto-comparar img{max-height:min(62dvh,calc(100dvh - 330px))}
+@media (max-width:600px){.foto-comparar img{max-height:max(200px,calc(100dvh - 480px))}}
+@media (max-height:680px){.foto-quadro{max-height:28dvh}.foto-quadro.foto-grande{max-height:32dvh}}
+@media (max-width:600px) and (max-height:900px){.foto-quadro.foto-grande{max-height:36dvh}}
+
+/* menu da profissional e menus em grade */
+.menu-modulos{width:100%;max-width:640px;margin-top:22px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.menu-modulos .btn{min-height:64px;font-size:18px;text-align:center;padding:0 12px}
+@media (orientation:landscape) and (min-width:900px){.menu-modulos{max-width:820px;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:420px){.menu-modulos .btn{min-height:58px;font-size:16px}}
+@media (max-width:600px){.menu-botoes.grade-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.menu-botoes.grade-2 .btn{justify-content:center;text-align:center;font-size:15px;min-height:54px;padding:4px 8px;line-height:1.2}.menu-botoes.grade-2 .btn::after{content:none}}
+
+/* ═══════════════ MÓDULO CONTATOS ═══════════════ */
+.filtros-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.opcao-chip span{min-height:44px;font-size:15px;padding:4px 6px}
+.estrela{color:#b8862f}
+.canal .destinatario{font-size:17px;margin-bottom:8px}
+.canal.inativo{opacity:.75}
+.canal .campo{margin-bottom:8px}
+@media (max-width:600px){.filtros-chips{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.opcao-chip span{font-size:13px;min-height:40px;padding:2px 4px}}
+@media (max-height:760px){.opcao-chip span{min-height:40px}}
+.canal textarea.curta,.campo .canal textarea.curta{min-height:56px}
+.canal .ajuda:empty{display:none}
+.canal .linha-acoes .btn{min-height:50px}
+@media (max-width:600px){.canal{padding:12px 14px}.canal .destinatario{font-size:15px;margin-bottom:6px}.canal .bloco-topo h2{font-size:19px}.canal .linha-acoes .btn{min-height:46px;font-size:16px}}
+@media (max-width:420px) and (max-height:700px){.menu-modulos{margin-top:14px;gap:10px}.menu-modulos .btn{min-height:54px}}
+.canal .campo textarea.curta{min-height:56px;height:56px}
+@media (max-width:420px){.canal .linha-acoes .btn{font-size:15px;padding:0 8px;white-space:nowrap}.canal .bloco-topo{margin-bottom:2px}.canal .campo label{font-size:15px}}
+@media (max-width:420px) and (max-height:700px){.canal{padding:10px 12px}.canal .campo textarea.curta{min-height:44px;height:44px}.canal .linha-acoes .btn{min-height:44px}}
+@media (max-width:420px) and (max-height:700px){.nota-canal{font-size:13px;margin:0}.canal{margin-bottom:0}body[data-pagina=contato] .app-acoes{display:none}}
+@media (max-width:600px){.so-largo-bloco{display:none}.resumo-ct .bloco{padding:10px 14px}.resumo-ct .bloco h2{font-size:18px}.resumo-ct{gap:8px}}
+@media (max-width:420px){.aviso-dup{padding:8px 12px;font-size:15px}}
+@media (max-width:420px) and (max-height:700px){.resumo-ct .bloco{padding:8px 12px}.resumo-ct .bloco h2{font-size:17px}}
+/* ═══════════════ MÓDULO FINANCEIRO ═══════════════ */
+.filtros-chips.chips-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.filtros-chips.chips-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fin-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:6px 0 12px}
+.fin-card{background:#fffaf5;border:1px solid #ead7c6;border-radius:18px;padding:14px 16px}
+.fin-card-largo{grid-column:1/-1;background:linear-gradient(135deg,#fffaf5,#f6e6d9)}
+.fin-card h2{font-family:var(--serifa);font-weight:500;font-size:18px;color:var(--marrom-escuro);margin:0}
+.fin-valor{font-size:28px;font-weight:600;margin:4px 0 2px;color:var(--marrom)}
+.fin-card-largo .fin-valor{font-size:34px}
+.fin-valor.negativo{color:#8f3b2a}
+.fin-pendentes h2{font-family:var(--serifa);font-weight:500;font-size:18px;margin:0}
+.fin-pendentes .dados{margin-top:6px}
+.txt-vencido{color:#a3361f}
+.txt-pendente{color:var(--ouro-1)}
+.nota-fin{margin-top:10px}
+.selo-fin-pendente{background:#f6e6d9;color:var(--marrom)}
+.selo-fin-parcial{background:#f1d48a;color:#5a3d12}
+.selo-fin-quitado{background:#dfe9d6;color:#2f5326}
+.selo-fin-cancelado{background:#e7e0db;color:#6d5f56}
+.selo-fin-vencido{background:#f6d5cc;color:#8f2b16}
+.servico-cabeca>span{display:inline-flex;gap:6px;flex-wrap:wrap}
+.acoes-tres>*{flex:1 1 30%}
+.pessoa-escolha{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:4px 4px 4px 14px;border:1px solid #e3cdb9;border-radius:14px;background:#fffaf5}
+.pessoa-escolha .btn{min-height:44px;flex:0 0 auto}
+.rotulo-campo{display:block;font-weight:500;margin-bottom:6px}
+.etapa.vinculo{margin-top:-8px;color:var(--ouro-1)}
+.linha-filtros{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}
+.linha-filtros p{margin:0;font-size:15px}.linha-filtros small{color:#8a6a58}
+.linha-filtros .btn{flex:0 0 auto;min-height:46px}
+.fin-item.fin-vencido{border-left:4px solid #c0533a}
+.tipo-receita{color:#2f6b2a;font-weight:600}.tipo-despesa{color:#8f3b2a;font-weight:600}
+.fin-valores{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
+.fin-valores>div{background:#fffaf5;border:1px solid #ead7c6;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.fin-valores span{font-size:14px;color:#8a6a58}.fin-valores strong{font-size:20px}
+.linha-livre{display:flex;align-items:flex-end;gap:10px}.linha-livre .campo{flex:1;margin:0}.linha-livre .btn{flex:0 0 auto;min-height:52px}
+.vazio-curto{padding:14px}
+@media (max-width:600px){.filtros-chips.chips-5{grid-template-columns:repeat(5,minmax(0,1fr))}.fin-cards{gap:8px}.fin-card{padding:10px 12px}.fin-card h2{font-size:15px}.fin-valor{font-size:21px}.fin-card-largo .fin-valor{font-size:26px}
+  .fin-valores{gap:6px}.fin-valores>div{padding:8px}.fin-valores span{font-size:12px}.fin-valores strong{font-size:16px}.acoes-tres>*{flex:1 1 40%}}
+@media (max-height:760px){.fin-card-largo .fin-valor{font-size:28px}.fin-valor{font-size:22px}}
+.linha-livre .campo .erro:empty{display:none}
+@media (max-width:420px){
+  .fin-compacto{gap:9px}
+  .fin-compacto .campo input,.fin-compacto .campo select{min-height:46px;padding:8px 12px}
+  .fin-compacto .opcao span{min-height:42px}
+  .fin-compacto .campo label,.fin-compacto fieldset.campo legend,.fin-compacto .rotulo-campo{font-size:15px}
+  .fin-compacto fieldset.campo legend{margin-bottom:4px}
+  .fin-compacto .pessoa-escolha{min-height:46px}.fin-compacto .pessoa-escolha .btn{min-height:40px}
+  .fin-compacto .linha-livre .btn{min-height:46px;font-size:15px;padding:0 12px}
+  .acoes-tres>*{flex:1 1 0;font-size:15px!important;padding:0 6px}
+  .fin-pendentes .dados{margin-top:2px}
+}
+@media (max-width:420px) and (max-height:700px){
+  .fin-card h2{font-size:14px}.fin-qtd{display:none}.fin-card-largo .fin-valor{font-size:22px}.fin-valor{font-size:19px;margin:2px 0}
+  .fin-card-largo .ajuda,.fin-pendentes .ajuda{font-size:13px}.fin-pendentes h2{font-size:16px}.nota-fin{font-size:13px;margin-top:4px}
+  .fin-compacto{gap:7px}.fin-compacto .campo{gap:3px}
+}
+@media (max-width:420px){.app .acoes-tres>.btn{flex:1 1 0;min-width:0;padding:0 6px;font-size:15px}.app .acoes-tres{flex-wrap:nowrap;gap:8px}}
+.txt-curto{display:none}@media (max-width:420px){.txt-largo{display:none}.txt-curto{display:inline}}
+/* ═══════════════ MÓDULO ESTOQUE ═══════════════ */
+.selos{display:inline-flex;flex-wrap:wrap;gap:4px;vertical-align:middle}
+.selos-grandes{display:flex;gap:6px}
+.selo-est{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap}
+.selo-est.alerta{background:#f1d48a;color:#5a3d12}.selo-est.perigo{background:#f6d5cc;color:#8f2b16}.selo-est.neutro{background:#ece3dc;color:#6d5f56}.selo-est.ok{background:#dfe9d6;color:#2f5326}
+.selos-grandes .selo-est{min-height:30px;font-size:14px;padding:0 12px}
+.chips-rotulo{grid-column:1/-1;margin:0}
+.valor-fixo{margin:0;min-height:46px;display:flex;align-items:center;font-weight:600}
+.marcar{display:flex;align-items:center;gap:8px;font-size:15px;min-height:40px;cursor:pointer}
+.marcar input{width:22px;height:22px;min-height:0!important;accent-color:var(--marrom)}
+.campos-lote .campo{gap:4px}
+.lista-lotes{gap:8px}
+.opcao-lote{display:flex}
+.opcao-lote span{flex:1;display:flex;flex-direction:column;align-items:flex-start!important;justify-content:center;text-align:left!important;gap:2px;min-height:58px;padding:8px 14px}
+.opcao-lote small{font-size:13px;font-weight:400}
+.opcao-lote.desativada span{opacity:.6;cursor:not-allowed}
+.item-nome small{font-weight:400;color:#8a6a58}
+@media (max-width:420px){.selo-est{font-size:11px;padding:0 6px}.opcao-lote span{min-height:52px;padding:6px 10px}.campos-lote{grid-template-columns:1fr}}
+.item-extra-quebra{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+@media (max-width:420px){.chips-5 .opcao-chip span{font-size:12px;padding:2px;overflow-wrap:anywhere;hyphens:auto}.filtros-chips.chips-5{gap:4px}}
+@media (max-width:420px) and (max-height:700px){.menu-modulos{margin-top:8px;gap:8px}.menu-modulos .btn{min-height:46px;font-size:15px}}
+.bloco h2,.servico-cabeca h2{overflow-wrap:anywhere}
+/* ═══════════════ MÓDULO RETORNOS ═══════════════ */
+.filtros-chips.chips-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.selo-rt-pendente{background:#f6e6d9;color:var(--marrom)}.selo-rt-encaixe{background:#f1d48a;color:#5a3d12}.selo-rt-agendado{background:#e3e9f2;color:#2d4466}
+.selo-rt-concluido{background:#dfe9d6;color:#2f5326}.selo-rt-cancelado{background:#e7e0db;color:#6d5f56}
+.link-botao{background:none;border:0;padding:0;color:var(--marrom);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer;min-height:32px}
+.bloco.origem .dados{margin-top:4px}
+@media (min-width:900px) and (max-height:960px){.menu-botoes.grade-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.menu-botoes.grade-2 .btn{min-height:52px}}
+@media (max-width:420px){.menu-botoes{gap:8px}.menu-botoes .btn{min-height:48px}}
+@media (max-width:420px) and (max-height:700px){.menu-botoes .btn{min-height:42px;font-size:15px}.menu-botoes{gap:6px}}
+@media (max-width:420px){.acoes-grade .btn{min-height:46px;font-size:15px;padding:4px 8px;line-height:1.15}}
+/* ═══════════════ MÓDULO ORÇAMENTOS / PACOTES ═══════════════ */
+.selo-or-rascunho{background:#ece3dc;color:#6d5f56}.selo-or-emitida{background:#f1d48a;color:#5a3d12}.selo-or-aprovada{background:#dfe9d6;color:#2f5326}
+.selo-or-recusada{background:#f6d5cc;color:#8f2b16}.selo-or-cancelada{background:#e7e0db;color:#6d5f56}
+.acessos-or{display:grid;grid-template-columns:1fr 1fr;gap:10px}.acessos-or .btn{min-height:48px}
+.fin-valores.fin-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.lista-simples{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.campo textarea.msg-proposta{min-height:220px;font-size:15px;line-height:1.35}
+@media (max-width:600px){.fin-valores.fin-4{grid-template-columns:repeat(2,minmax(0,1fr))}.campo textarea.msg-proposta{min-height:150px}}
+@media (max-height:760px){.campo textarea.msg-proposta{min-height:140px}}
+@media (max-width:420px) and (max-height:700px){.menu-modulos .btn{min-height:40px;font-size:14px;padding:0 6px}.menu-modulos{gap:6px;margin-top:6px}}
+/* ═══════════════ MÓDULO RELATÓRIOS ═══════════════ */
+.filtros-aplicados{margin:-6px 0 0;font-size:15px;color:#8a6a58}
+.menu-relatorios .btn{min-height:64px;font-size:19px}
+.lista-contagem{gap:8px}
+.item-contagem{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:54px;padding:8px 16px;border:1px solid #ead7c6;border-radius:16px;background:#fffaf5;color:var(--marrom);text-decoration:none;font-weight:500}
+.item-contagem strong{font-size:20px;white-space:nowrap}.item-contagem small{color:#8a6a58;font-weight:400}
+.item-contagem:hover,.item-contagem:focus-visible{border-color:var(--ouro-1)}
+.total-link{display:flex!important;justify-content:space-between!important;align-items:center;min-height:60px}.total-link strong{font-size:24px}
+@media (max-width:420px){.item-contagem{min-height:46px;padding:6px 12px}.item-contagem strong{font-size:17px}.filtros-aplicados{font-size:13px}}
+/* ═══════════════ LOGIN / SESSÃO ═══════════════ */
+.sessao-linha{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;align-items:center;font-size:15px;margin:4px 0}
+.sessao-linha a{color:var(--marrom);font-weight:600}
+.instalar-linha{text-align:center;margin:12px 0 0}

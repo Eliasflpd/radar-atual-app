@@ -622,7 +622,10 @@ const HANDLERS = {
   oficina: require('./_lib/oficina.js'),
   // FONTES DE PESQUISA (03/11/2026): o catálogo das obras escondidas, com as capas (porta dos livros particulares).
   // Ver api/_lib/fontes.js.
-  fontes: require('./_lib/fontes.js')
+  fontes: require('./_lib/fontes.js'),
+  // BROW STUDIO (10/11/2026): cadastro de clientes do app de sobrancelhas (não é do RADAR; tabelas brow_*).
+  // Ver api/_lib/brow-studio.js.
+  brow: require('./_lib/brow-studio.js')
 };
 
 module.exports = async (req, res) => {

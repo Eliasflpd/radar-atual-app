@@ -1,0 +1,18 @@
+{
+  "id": "/brow-studio/",
+  "name": "Brow Studio",
+  "short_name": "Brow Studio",
+  "description": "Agenda, clientes e atendimentos do estúdio de sobrancelhas.",
+  "lang": "pt-BR",
+  "start_url": "/brow-studio/profissional.html",
+  "scope": "/brow-studio/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6e6d9",
+  "theme_color": "#f6e6d9",
+  "icons": [
+    { "src": "/brow-studio/img/icones/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/brow-studio/img/icones/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/brow-studio/img/icones/icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
