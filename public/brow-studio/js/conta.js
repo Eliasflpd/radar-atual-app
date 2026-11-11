@@ -25,7 +25,7 @@ async function telaEntrar() {
   const msg = recado.tirar();
   const form = pagina({ titulo: 'Entrar', voltar: '/brow-studio/', voltarTexto: 'Capa', formulario: true,
     corpo: `${msg ? avisoHTML(esc(msg), 'ok') : ''}${!e.ok ? avisoHTML(esc(e.msg || 'Não foi possível falar com o servidor.'), 'erro') : ''}
-      ${campoTexto({ id: 'nome', rotulo: 'Seu nome', attrs: 'autocomplete="username" autocapitalize="words" maxlength="60"' })}
+      ${campoTexto({ id: 'nome', rotulo: 'Seu nome', attrs: 'autocomplete="username" autocorrect="off" spellcheck="false" autocapitalize="words" maxlength="60"' })}
       ${campoPin('pin', 'PIN (6 números)')}
       <div id="aviso" aria-live="polite"></div>
       <p class="ajuda">Esqueceu o PIN? Peça à dona do estúdio para redefinir. <a href="/brow-studio/entrar/recuperar/">Sou a dona e não consigo entrar</a></p>`,
@@ -52,7 +52,7 @@ async function telaPrimeira() {
     corpo: `<p class="etapa" style="margin-top:-8px">Criar a conta da dona do estúdio</p>
       ${e.ok && !e.codigo_configurado ? avisoHTML('Falta configurar o código inicial no servidor (variável <strong>BROW_CODIGO_INICIAL</strong> na Vercel).', 'erro') : ''}
       ${campoTexto({ id: 'codigo', rotulo: 'Código inicial', attrs: 'autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" maxlength="200"', ajuda: 'O código de primeiro acesso que você recebeu.' })}
-      ${campoTexto({ id: 'nome', rotulo: 'Seu nome', attrs: 'autocomplete="username" autocapitalize="words" maxlength="60"', ajuda: 'É o nome que você vai digitar para entrar.' })}
+      ${campoTexto({ id: 'nome', rotulo: 'Seu nome', attrs: 'autocomplete="username" autocorrect="off" spellcheck="false" autocapitalize="words" maxlength="60"', ajuda: 'É o nome que você vai digitar para entrar.' })}
       <div class="duas-colunas">${campoPinNovo('pin', 'Crie um PIN')}${campoPinNovo('pin2', 'Repita o PIN')}</div>
       <p class="ajuda">Evite datas de nascimento, 123456 ou números repetidos.</p><div id="aviso" aria-live="polite"></div>`,
     acoes: `<button type="submit" class="btn btn-cheio" id="criar">Criar conta da dona</button>` });
@@ -79,7 +79,7 @@ function telaRecuperar() {
   const form = pagina({ titulo: 'Recuperar acesso', voltar: '/brow-studio/entrar/', voltarTexto: 'Entrar', formulario: true,
     corpo: `<p class="etapa" style="margin-top:-8px">Só para a dona, com o código de primeiro acesso. Funciona uma única vez.</p>
       ${campoTexto({ id: 'codigo', rotulo: 'Código de primeiro acesso', attrs: 'autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" maxlength="200"' })}
-      ${campoTexto({ id: 'nome', rotulo: 'Seu nome para entrar', attrs: 'autocomplete="off" autocapitalize="words" maxlength="60"' })}
+      ${campoTexto({ id: 'nome', rotulo: 'Seu nome para entrar', attrs: 'autocomplete="username" autocorrect="off" spellcheck="false" autocapitalize="words" maxlength="60"' })}
       <div class="duas-colunas">${campoPinNovo('pin', 'Novo PIN')}${campoPinNovo('pin2', 'Repita o PIN')}</div>
       <div id="aviso" aria-live="polite"></div>`,
     acoes: `<a class="btn btn-linha" href="/brow-studio/entrar/">Cancelar</a><button type="submit" class="btn btn-cheio" id="salvar">Recuperar acesso</button>` });

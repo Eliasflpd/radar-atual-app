@@ -2,7 +2,7 @@
 // mostra uma página própria sem internet. NUNCA guarda respostas da API
 // (/api/...): dados de clientes, saúde e financeiro não ficam no aparelho.
 // Guarda só a "casca" (HTML, CSS, JS, ícones e fontes) para abrir rápido.
-const VERSAO = 'brow-v2';
+const VERSAO = 'brow-v3';
 const CASCA = ['/brow-studio/offline.html', '/brow-studio/brow.css?v=29', '/brow-studio/img/icones/icone-192.png', '/brow-studio/manifest.webmanifest'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSAO).then(c => c.addAll(CASCA)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {
