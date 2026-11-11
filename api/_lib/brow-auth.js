@@ -18,6 +18,11 @@
 const crypto = require('crypto');
 
 const COOKIE = 'brow_sessao';
+// Código de PRIMEIRO ACESSO (pedido da dona, que não consegue configurar a Vercel):
+// aqui fica só o SHA-256 do código; o código foi entregue a ela fora do repositório.
+// Vale apenas enquanto não existir nenhuma conta. BROW_CODIGO_INICIAL, se
+// configurado na Vercel, também continua valendo.
+const CODIGO_INICIAL_HASH = '4c68f34dd1229d5b8e5a4561a84b32c29e71bfa1999e45d6767a5e32276639fc';
 const FUNCOES = { dona: 'Dona', profissional: 'Profissional' };
 const INATIVO_MS = 7 * 864e5, MAXIMO_MS = 30 * 864e5;
 const MAX_USUARIO = 5, MAX_IP = 30, JANELA_MIN = 15;
@@ -104,15 +109,17 @@ async function publicas(c, req, res, acao, estabPadrao) {
   const total = (await c.query('select count(*)::int n from brow_usuarios where estab=$1', [estabPadrao])).rows[0].n;
   if (acao === 'au_estado') {
     const s = await lerSessao(c, req);
-    res.status(200).json({ ok: true, tem_contas: total > 0, codigo_configurado: !!process.env.BROW_CODIGO_INICIAL, logado: !!s, usuario: s ? s.usuario : null }); return true;
+    res.status(200).json({ ok: true, tem_contas: total > 0, codigo_configurado: true, logado: !!s, usuario: s ? s.usuario : null }); return true;
   }
   if (req.method === 'POST' && acao === 'au_primeira') {
     const b = corpo(req); const erros = {};
     if (total > 0) return erro(res, 409, 'ja_configurado', 'A primeira conta já foi criada. Entre com seu nome e PIN.'), true;
     const cod = process.env.BROW_CODIGO_INICIAL || '';
-    if (!cod) return erro(res, 503, 'sem_codigo', 'Falta configurar o código inicial (BROW_CODIGO_INICIAL) no servidor.'), true;
-    const dado = Buffer.from(String(b.codigo || '')), certo = Buffer.from(cod);
-    const igual = dado.length === certo.length && crypto.timingSafeEqual(dado, certo);
+    const digitado = String(b.codigo || '').trim();
+    const dado = Buffer.from(digitado), certo = Buffer.from(cod);
+    const igualEnv = !!cod && dado.length === certo.length && crypto.timingSafeEqual(dado, certo);
+    const igualHash = crypto.timingSafeEqual(Buffer.from(sha(digitado.toUpperCase()), 'hex'), Buffer.from(CODIGO_INICIAL_HASH, 'hex'));
+    const igual = igualEnv || igualHash;
     const ip = ipDe(req);
     const nIp = (await c.query(`select count(*)::int n from brow_login_falhas where ip=$1 and criado_em > now() - interval '${JANELA_MIN} minutes'`, [ip])).rows[0].n;
     if (nIp >= MAX_IP) return erro(res, 429, 'bloqueado', `Muitas tentativas. Aguarde ${JANELA_MIN} minutos.`), true;
