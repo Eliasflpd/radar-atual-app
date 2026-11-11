@@ -166,9 +166,9 @@ module.exports = async function servicos(c, estab, req, res, acao) {
   if (req.method === 'POST' && acao === 'servico_importar_tabela') {
     if (req.brow_funcao && req.brow_funcao !== 'dona') { res.status(403).json({ ok: false, erro: 'sem_permissao', msg: 'Só a dona importa a tabela.' }); return; }
     const TABELA = [
-      ['Design de sobrancelha', 'design', 45, 2500, null],
-      ['Design com henna', 'henna', 45, 3500, null],
-      ['Aplicação de henna', 'henna', 45, 2000, null],
+      ['Design de sobrancelha', 'design', 20, 2500, null],
+      ['Design com henna', 'henna', 30, 3500, null],
+      ['Aplicação de henna', 'henna', 20, 2000, null],
       ['Design de sobrancelha e buço', 'design', 40, 3000, 'Combo especial.'],
       ['Design com henna e buço', 'henna', 40, 4000, 'Combo especial.'],
       ['Micropigmentação de sobrancelhas', 'micro', 150, 28000, 'Retoque não incluso.'],
