@@ -207,6 +207,9 @@ async function menu() {
   const caixa = document.getElementById('sessao');
   if (caixa) caixa.innerHTML = `${msg ? `<span class="aviso-caixa ok">${esc(msg)}</span>` : ''}<span>Olá, <strong>${esc(u.nome)}</strong> · ${esc(u.funcao_nome)}</span> <a href="/brow-studio/conta/">Minha conta</a>`;
   if (u.funcao !== 'dona') document.querySelectorAll('[data-so-dona]').forEach(a => a.remove());
+  // pedidos do agendamento online ainda não confirmados
+  const pend = await api('ag_online_pendentes');
+  if (pend.ok && pend.pendentes && caixa) caixa.insertAdjacentHTML('afterend', `<p class="aviso-online"><a href="/brow-studio/agenda/">${pend.pendentes} pedido(s) online para confirmar</a></p>`);
 }
 
 // ─── botão "Instalar no tablet" (Android/Chrome) e instrução para iPad/iPhone ──

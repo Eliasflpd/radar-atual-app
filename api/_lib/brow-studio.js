@@ -31,7 +31,7 @@ const crypto = require('crypto');
 const { Client } = require('pg');
 
 const CONTATOS = ['whatsapp', 'ligacao', 'email', 'nenhum'];
-const ORIGENS = ['instagram', 'indicacao', 'google', 'ja_cliente', 'outro', 'nao_informado'];
+const ORIGENS = ['instagram', 'indicacao', 'google', 'ja_cliente', 'outro', 'nao_informado', 'online'];
 const DDD_BR = new Set('11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99'.split(' '));
 const MAX_FOTO = 1500 * 1024;   // bytes, depois de decodificar (a foto chega já comprimida)
 const MAX_MINI = 80 * 1024;
@@ -41,7 +41,7 @@ const ESTAB_PADRAO = 'principal';   // um estúdio por enquanto; a sessão carre
 const testeLocal = () => process.env.BROW_TESTE_SEM_LOGIN === '1' && !process.env.VERCEL;
 const corpoReq = (req) => { let b = req.body; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = null; } } return (b && typeof b === 'object') ? b : {}; };
 const SO_DONA = new Set(['es_estornar', 'es_despesa_criar', 'es_config_salvar', 'or_estornar', 'or_receita', 'or_receitas_cliente', 'rt_receita',
-  'ag_config_salvar', 'ag_horario_salvar', 'ag_prof_salvar', 'ag_horarios_aplicar_estudio']);
+  'ag_config_salvar', 'ag_horario_salvar', 'ag_prof_salvar', 'ag_horarios_aplicar_estudio', 'ag_online_salvar']);
 function centavosTxt(v) { const s = String(v == null ? '' : v).trim().replace(/^R\$\s*/i, '').replace(/\./g, '').replace(',', '.'); const n = Number(s); return isFinite(n) ? Math.round(n * 100) : 0; }
 // ações restritas à função "dona" (financeiro, estornos, ajustes, descontos, exceções, configuração)
 function exigeDona(acao, req) {
@@ -202,6 +202,12 @@ module.exports = async (req, res) => {
     await c.connect();
     // LOGIN: ações públicas (estado, entrar, primeira conta)
     if (['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar'].includes(acao)) { if (await auth.publicas(c, req, res, acao, ESTAB_PADRAO)) return; }
+    // AGENDAMENTO ONLINE: ações públicas (pub_*) — sem login, sempre no estabelecimento padrão
+    if (acao.startsWith('pub_')) {
+      req.brow_usuario = null; req.brow_funcao = null;
+      await require('./brow-agenda.js')(c, ESTAB_PADRAO, req, res, acao, async (cc) => { await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); });
+      return;
+    }
     let porta;
     if (testeLocal()) porta = { estab: ESTAB_PADRAO, usuario: null, funcao: 'dona' };
     else {

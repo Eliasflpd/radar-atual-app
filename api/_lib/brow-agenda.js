@@ -79,6 +79,12 @@ async function garantirTabelas(c) {
     id bigserial primary key, estab text not null, tipo text not null, ref_id text not null,
     acao text not null, detalhes jsonb, criado_em timestamptz not null default now())`);
   await c.query(`create index if not exists brow_hist_ref on brow_historico(estab, tipo, ref_id)`);
+  // AGENDAMENTO ONLINE (link público): origem do agendamento, liga/desliga e WhatsApp do estúdio
+  await c.query(`alter table brow_agendamentos add column if not exists origem text`);
+  await c.query(`alter table brow_config add column if not exists online_ativo boolean not null default false`);
+  await c.query(`alter table brow_config add column if not exists whatsapp_estudio text`);
+  await c.query(`create table if not exists brow_pub_pedidos(id bigserial primary key, ip text not null, criado_em timestamptz not null default now())`);
+  await c.query(`create index if not exists brow_pub_ip on brow_pub_pedidos(ip, criado_em)`);
 }
 
 // ─── utilidades ─────────────────────────────────────────────────────────────
@@ -199,9 +205,24 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
   // ─── CONFIGURAÇÃO ─────────────────────────────────────────────────────────
   if (acao === 'ag_config_ver') {
     const pr = await c.query('select id,nome,ativo from brow_profissionais where estab=$1 order by ativo desc, lower(nome)', [estab]);
-    res.status(200).json({ ok: true, config: { nome_estudio: cfg.nome_estudio, fuso: cfg.fuso, passo_min: cfg.passo_min, horarios: cfg.horarios || null },
+    res.status(200).json({ ok: true, config: { nome_estudio: cfg.nome_estudio, fuso: cfg.fuso, passo_min: cfg.passo_min, horarios: cfg.horarios || null, online_ativo: !!cfg.online_ativo, whatsapp_estudio: cfg.whatsapp_estudio || null },
       configurada, profissionais: pr.rows, fusos: FUSOS, hoje: ha.hoje, agora: minParaHhmm(ha.agora) });
     return;
+  }
+  // ─── AGENDAMENTO ONLINE: configuração (só a dona, ver SO_DONA) ─────────────
+  if (req.method === 'POST' && acao === 'ag_online_salvar') {
+    const tel = digitos(b.whatsapp_estudio);
+    const t = tel.startsWith('55') && tel.length >= 12 ? tel.slice(2) : tel;
+    if (t && !telefoneValido(t)) return erro(res, 422, 'validacao', 'Confira os campos.', { erros: { whatsapp_estudio: 'WhatsApp inválido. Use DDD + número.' } });
+    await c.query(`insert into brow_config(estab,online_ativo,whatsapp_estudio) values($1,$2,$3)
+      on conflict(estab) do update set online_ativo=$2, whatsapp_estudio=$3, atualizado_em=now()`, [estab, b.ativo === true, t || null]);
+    await historico(c, estab, 'config', estab, 'agendamento_online', { ativo: b.ativo === true, autor: req.brow_usuario || null });
+    res.status(200).json({ ok: true }); return;
+  }
+  // pedidos online ainda não confirmados (aparece no menu da profissional)
+  if (acao === 'ag_online_pendentes') {
+    const r = await c.query(`select count(*)::int n from brow_agendamentos where estab=$1 and origem='online' and situacao='agendado' and data >= $2`, [estab, ha.hoje]);
+    res.status(200).json({ ok: true, pendentes: r.rows[0].n }); return;
   }
   if (req.method === 'POST' && acao === 'ag_config_salvar') {
     const erros = {};
@@ -385,6 +406,86 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
         { data, inicio: minParaHhmm(inicioMin), profissional: p.nome, servico: s.nome, whatsapp_atualizou_cadastro: !!(atualizarCadastro && tel && tel !== cl.telefone), encaixe_id: encaixeId || null });
       return { st: 201, j: { ok: true, id }, transacao: true };
     } catch (e) { await c.query('rollback'); throw e; }
+  }
+
+  // ═══ AGENDAMENTO ONLINE — AÇÕES PÚBLICAS (pub_*), sem login, no estabelecimento padrão ═══
+  // Só funcionam com o agendamento online LIGADO. Nunca devolvem dados de clientes:
+  // a disponibilidade traz só horários livres. Antecedência mínima de 2 h; até 30 dias.
+  const ANTEC_MIN = 120, DIAS_MAX = 30;
+  const somaDiasISO = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const minimoOnline = (data) => data < ha.hoje ? Infinity : data === ha.hoje ? ha.agora + ANTEC_MIN : 0;
+  if (acao.startsWith('pub_')) {
+    if (!cfg.online_ativo || !configurada) return erro(res, 503, 'indisponivel', 'Agendamento online indisponível no momento. Fale com o estúdio pelo WhatsApp.');
+    const fim = somaDiasISO(ha.hoje, DIAS_MAX);
+    const profsAtivas = (await c.query('select id, nome from brow_profissionais where estab=$1 and ativo order by lower(nome)', [estab])).rows;
+    if (acao === 'pub_info') {
+      const sv = await c.query('select id, nome, descricao, duracao_min, valor_centavos from brow_servicos where estab=$1 and ativo order by lower(nome)', [estab]);
+      const dias = []; for (let k = 0; k <= DIAS_MAX; k++) { const d = somaDiasISO(ha.hoje, k); if (lerHorarioDia((cfg.horarios || {})[String(diaDaSemana(d))]).aberto) dias.push(d); }
+      res.status(200).json({ ok: true, estudio: cfg.nome_estudio, servicos: sv.rows, profissionais: profsAtivas, dias, hoje: ha.hoje, whatsapp_estudio: cfg.whatsapp_estudio || null }); return;
+    }
+    if (acao === 'pub_horarios') {
+      const data = String(q.data || '');
+      if (!dataValida(data) || data < ha.hoje || data > fim) return erro(res, 422, 'data', 'Escolha um dia entre hoje e os próximos 30 dias.');
+      const s = await servicoAtivo(c, estab, q.servico_id);
+      if (!s || !s.ativo) return erro(res, 404, 'servico', 'Serviço indisponível.');
+      const dia = lerHorarioDia((cfg.horarios || {})[String(diaDaSemana(data))]);
+      const alvo = q.profissional_id ? profsAtivas.filter(p => p.id === String(q.profissional_id)) : profsAtivas;
+      if (!alvo.length) return erro(res, 404, 'profissional', 'Profissional indisponível.');
+      const mapa = new Map();
+      for (const p of alvo) {
+        const ocup = await ocupacoes(c, estab, p.id, data);
+        for (const x of inicios(s.duracao_min, s.intervalo_min, dia, ocup, minimoOnline(data), cfg.passo_min)) if (!mapa.has(x)) mapa.set(x, p);
+      }
+      const horarios = [...mapa.entries()].sort((a, z) => a[0] - z[0]).map(([x, p]) => ({ inicio_min: x, inicio: minParaHhmm(x), fim: minParaHhmm(x + s.duracao_min), profissional_id: p.id, profissional_nome: p.nome }));
+      res.status(200).json({ ok: true, data, horarios, motivo: !dia.aberto ? 'O estúdio não abre neste dia.' : (!horarios.length ? 'Não há horário livre neste dia. Tente outro dia.' : null) }); return;
+    }
+    if (req.method === 'POST' && acao === 'pub_agendar') {
+      const ip = String((req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || (req.socket && req.socket.remoteAddress) || '?').split(',')[0].trim().slice(0, 64);
+      if (b.site) { res.status(200).json({ ok: true, enviado: true }); return; }   // campo isca preenchido: robô (não grava nada)
+      const nIp = (await c.query(`select count(*)::int n from brow_pub_pedidos where ip=$1 and criado_em > now() - interval '1 hour'`, [ip])).rows[0].n;
+      if (nIp >= 5) return erro(res, 429, 'limite', 'Muitos pedidos deste aparelho. Tente mais tarde ou fale com o estúdio pelo WhatsApp.');
+      const erros = {};
+      const nome = txt(b.nome, 80); if (!nome || nome.length < 2) erros.nome = 'Informe seu nome.';
+      let tel = digitos(b.whatsapp); if (tel.startsWith('55') && tel.length >= 12) tel = tel.slice(2);
+      if (!telefoneValido(tel)) erros.whatsapp = 'WhatsApp inválido. Use DDD + número.';
+      const data = String(b.data || '');
+      if (!dataValida(data) || data < ha.hoje || data > fim) erros.data = 'Escolha um dia entre hoje e os próximos 30 dias.';
+      const ini = Number(b.inicio_min);
+      if (!Number.isInteger(ini)) erros.inicio_min = 'Escolha o horário.';
+      else if (data === ha.hoje && ini < ha.agora + ANTEC_MIN) erros.inicio_min = 'Escolha um horário com pelo menos 2 horas de antecedência.';
+      const chaveC = txt(b.chave_envio, 64); if (!chaveC) erros.chave_envio = 'Pedido incompleto.';
+      if (!profsAtivas.some(p => p.id === String(b.profissional_id || ''))) erros.profissional_id = 'Profissional indisponível.';
+      if (Object.keys(erros).length) return erro(res, 422, 'validacao', 'Confira os dados.', { erros });
+      const chave = 'pub:' + chaveC;
+      const ja = await c.query(`${SEL_AG} where estab=$1 and chave_envio=$2`, [estab, chave]);
+      if (ja.rows.length) { const a = ja.rows[0]; res.status(200).json({ ok: true, repetido: true, data: a.data, inicio: minParaHhmm(a.inicio_min), servico: a.servico_nome, profissional: a.profissional_nome, whatsapp_estudio: cfg.whatsapp_estudio || null }); return; }
+      await c.query('insert into brow_pub_pedidos(ip) values($1)', [ip]);
+      // cliente pelo telefone (nunca duplica); se não existir, cadastro novo marcado como "online"
+      let cl = (await c.query('select id from brow_clientes where estab=$1 and telefone=$2 order by criado_em limit 1', [estab, tel])).rows[0];
+      let criada = false;
+      if (cl) {
+        const fut = await c.query(`select count(*)::int n from brow_agendamentos where estab=$1 and cliente_id=$2 and data >= $3 and situacao in ('agendado','confirmado')`, [estab, cl.id, ha.hoje]);
+        if (fut.rows[0].n >= 2) return erro(res, 409, 'limite_cliente', 'Você já tem 2 horários marcados. Para mais, fale com o estúdio pelo WhatsApp.');
+      } else {
+        await c.query('select pg_advisory_lock(hashtext($1))', [`brow-pub-cli|${estab}|${tel}`]);
+        try {
+          cl = (await c.query('select id from brow_clientes where estab=$1 and telefone=$2 order by criado_em limit 1', [estab, tel])).rows[0];
+          if (!cl) { cl = { id: crypto.randomUUID() }; await c.query(`insert into brow_clientes(id,estab,nome,telefone,origem,contato_pref,observacoes) values($1,$2,$3,$4,'online','whatsapp','Cadastro feito pela própria cliente no agendamento online.')`, [cl.id, estab, nome, tel]); criada = true; }
+        } finally { await c.query('select pg_advisory_unlock(hashtext($1))', [`brow-pub-cli|${estab}|${tel}`]); }
+      }
+      const obs = txt(b.observacoes, 300);
+      const r = await reservar({ chave, clienteId: cl.id, whatsapp: tel, profId: String(b.profissional_id), servicoId: b.servico_id, data, inicioMin: ini, observacoes: `Agendamento online${obs ? ' · ' + obs : ''}` });
+      if (!r.transacao) {
+        if (criada) await c.query('delete from brow_clientes where estab=$1 and id=$2 and not exists (select 1 from brow_agendamentos a where a.estab=$1 and a.cliente_id=$2)', [estab, cl.id]);
+        if (r.st === 409) return erro(res, 409, 'indisponivel', 'Esse horário acabou de ser ocupado. Escolha outro, por favor.');
+        return erro(res, r.st, (r.j && r.j.erro) || 'erro', 'Não foi possível agendar. Confira os dados.');
+      }
+      await c.query(`update brow_agendamentos set origem='online' where estab=$1 and id=$2`, [estab, r.j.id]);
+      await c.query('commit');
+      const a = (await c.query(`${SEL_AG} where estab=$1 and id=$2`, [estab, r.j.id])).rows[0];
+      res.status(201).json({ ok: true, data: a.data, inicio: minParaHhmm(a.inicio_min), servico: a.servico_nome, profissional: a.profissional_nome, whatsapp_estudio: cfg.whatsapp_estudio || null }); return;
+    }
+    return erro(res, 400, 'acao', 'Ação desconhecida.');
   }
 
   if (req.method === 'POST' && acao === 'ag_criar') {
