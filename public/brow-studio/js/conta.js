@@ -9,7 +9,11 @@ const app = document.getElementById('app');
 const MENU = '/brow-studio/profissional.html';
 const voltaSegura = () => { const v = params.get('volta') || ''; return /^\/brow-studio\/[\w\-/.?=&%]*$/.test(v) && !v.startsWith('/brow-studio/entrar') ? v : MENU; };
 const recado = { pôr(m) { try { sessionStorage.setItem('brow:recado', m); } catch (e) {} }, tirar() { try { const m = sessionStorage.getItem('brow:recado'); sessionStorage.removeItem('brow:recado'); return m; } catch (e) { return null; } } };
-const campoPin = (id, rotulo, ajuda) => campoTexto({ id, rotulo, tipo: 'password', ajuda, attrs: 'inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" enterkeyhint="go"' });
+// PIN de entrar: campo de senha comum (o aparelho pode lembrar).
+const campoPin = (id, rotulo, ajuda) => campoTexto({ id, rotulo, tipo: 'password', ajuda, attrs: 'inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password" enterkeyhint="go"' });
+// PIN NOVO (criar/repetir): o iPhone trata 2 campos de senha seguidos como "senha forte"
+// e apaga o 2º campo. Aqui é texto numérico com os dígitos escondidos por CSS.
+const campoPinNovo = (id, rotulo, ajuda) => campoTexto({ id, rotulo, tipo: 'text', ajuda, attrs: 'class="pin-oculto" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true"' });
 const FUNCOES = { dona: 'Dona (vê tudo, inclusive financeiro)', profissional: 'Profissional (atendimento, sem financeiro)' };
 
 // ═══════════════════════════ ENTRAR ════════════════════════════════════════
@@ -47,9 +51,9 @@ async function telaPrimeira() {
   const form = pagina({ titulo: 'Primeira configuração', voltar: '/brow-studio/', voltarTexto: 'Capa', formulario: true,
     corpo: `<p class="etapa" style="margin-top:-8px">Criar a conta da dona do estúdio</p>
       ${e.ok && !e.codigo_configurado ? avisoHTML('Falta configurar o código inicial no servidor (variável <strong>BROW_CODIGO_INICIAL</strong> na Vercel).', 'erro') : ''}
-      ${campoTexto({ id: 'codigo', rotulo: 'Código inicial', tipo: 'password', attrs: 'autocomplete="off" maxlength="200"', ajuda: 'O código secreto configurado na Vercel.' })}
+      ${campoTexto({ id: 'codigo', rotulo: 'Código inicial', attrs: 'autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" maxlength="200"', ajuda: 'O código de primeiro acesso que você recebeu.' })}
       ${campoTexto({ id: 'nome', rotulo: 'Seu nome', attrs: 'autocomplete="username" autocapitalize="words" maxlength="60"', ajuda: 'É o nome que você vai digitar para entrar.' })}
-      <div class="duas-colunas">${campoPin('pin', 'Crie um PIN')}${campoPin('pin2', 'Repita o PIN')}</div>
+      <div class="duas-colunas">${campoPinNovo('pin', 'Crie um PIN')}${campoPinNovo('pin2', 'Repita o PIN')}</div>
       <p class="ajuda">Evite datas de nascimento, 123456 ou números repetidos.</p><div id="aviso" aria-live="polite"></div>`,
     acoes: `<button type="submit" class="btn btn-cheio" id="criar">Criar conta da dona</button>` });
   $('#corpo').classList.add('fin-compacto');
@@ -84,7 +88,7 @@ async function telaConta() {
 }
 async function telaTrocarPin() {
   const form = pagina({ titulo: 'Trocar meu PIN', voltar: '/brow-studio/conta/', voltarTexto: 'Minha conta', formulario: true,
-    corpo: `${campoPin('atual', 'PIN atual')}<div class="duas-colunas">${campoPin('novo', 'Novo PIN')}${campoPin('novo2', 'Repita o novo PIN')}</div>
+    corpo: `${campoPin('atual', 'PIN atual')}<div class="duas-colunas">${campoPinNovo('novo', 'Novo PIN')}${campoPinNovo('novo2', 'Repita o novo PIN')}</div>
       <p class="ajuda">Os outros aparelhos conectados serão desconectados.</p><div id="aviso" aria-live="polite"></div>`,
     acoes: `<a class="btn btn-linha" href="/brow-studio/conta/">Cancelar</a><button type="submit" class="btn btn-cheio" id="salvar">Salvar PIN</button>` });
   let env = false;
@@ -126,7 +130,7 @@ async function telaPessoa() {
       ${grupoOpcoes({ nome: 'funcao', legenda: 'Função', opcoes: FUNCOES, valor: p ? p.funcao : '' })}
       <div class="campo"><label for="profissional_id">Profissional da agenda <span class="opcional">(opcional)</span></label><select id="profissional_id" name="profissional_id"><option value="">Não vincular</option>${profs.map(x => `<option value="${esc(x.id)}" ${p && p.profissional_id === x.id ? 'selected' : ''}>${esc(x.nome)}</option>`).join('')}</select></div>
       ${p ? `<label class="chave"><input type="checkbox" name="ativo" ${p.ativo ? 'checked' : ''}><span><strong>Acesso ativo</strong><small>Desativar desconecta e impede de entrar (os registros dela continuam).</small></span></label>`
-        : `<div class="duas-colunas">${campoPin('pin', 'PIN inicial')}${campoPin('pin2', 'Repita o PIN')}</div><p class="ajuda">Combine o PIN pessoalmente; a pessoa pode trocar depois em “Minha conta”.</p>`}
+        : `<div class="duas-colunas">${campoPinNovo('pin', 'PIN inicial')}${campoPinNovo('pin2', 'Repita o PIN')}</div><p class="ajuda">Combine o PIN pessoalmente; a pessoa pode trocar depois em “Minha conta”.</p>`}
       <div id="aviso" aria-live="polite"></div>`,
     acoes: `<a class="btn btn-linha" href="/brow-studio/equipe/">Cancelar</a>${p ? `<a class="btn btn-suave" href="/brow-studio/equipe/pin/?id=${encodeURIComponent(p.id)}">Redefinir PIN</a>` : ''}<button type="submit" class="btn btn-cheio" id="salvar">Salvar</button>` });
   $('#corpo').classList.add('fin-compacto');
@@ -151,7 +155,7 @@ async function telaRedefinirPin() {
   const p = lst.ok ? lst.itens.find(x => x.id === id) : null;
   if (!p) return pagina({ titulo: 'Redefinir PIN', voltar: '/brow-studio/equipe/', corpo: avisoHTML(esc(lst.msg || 'Pessoa não encontrada.'), 'erro') });
   const form = pagina({ titulo: 'Redefinir PIN', voltar: `/brow-studio/equipe/pessoa/?id=${encodeURIComponent(id)}`, voltarTexto: 'Voltar', formulario: true,
-    corpo: `<div class="bloco"><h2>${esc(p.nome)}</h2><p class="ajuda">${esc(p.funcao_nome)}</p></div><div class="duas-colunas">${campoPin('pin', 'Novo PIN')}${campoPin('pin2', 'Repita o PIN')}</div>
+    corpo: `<div class="bloco"><h2>${esc(p.nome)}</h2><p class="ajuda">${esc(p.funcao_nome)}</p></div><div class="duas-colunas">${campoPinNovo('pin', 'Novo PIN')}${campoPinNovo('pin2', 'Repita o PIN')}</div>
       <p class="ajuda">Desbloqueia o acesso e desconecta os aparelhos dela. Combine o novo PIN pessoalmente.</p><div id="aviso" aria-live="polite"></div>`,
     acoes: `<a class="btn btn-linha" href="/brow-studio/equipe/pessoa/?id=${encodeURIComponent(id)}">Cancelar</a><button type="submit" class="btn btn-cheio" id="salvar">Redefinir</button>` });
   let env = false;
