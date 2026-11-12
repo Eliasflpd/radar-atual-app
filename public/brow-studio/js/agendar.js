@@ -5,6 +5,7 @@
 // até 30 dias, limite por telefone/IP). Rascunho só nesta aba ("pub:ag").
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, esc, uuid, lerRasc, gravarRasc, apagarRasc, api, SETA, pagina, campoTexto, mostrarErros, avisoHTML, focarTitulo, ir } from './comum.js?v=4';
+import { cssPromo, cartaoPromo, resumoValores, textoRetoque } from './promo-card.js?v=1';
 
 const BASE = '/brow-studio/agendar/';
 // salão do link (?s=slug): guardado só nesta aba para as próximas etapas; sem ?s na 1ª página = salão original
@@ -34,23 +35,41 @@ function paginar(el, nav, itens, altura, abaixo, desenhar, rotulo) {
   d();
 }
 let INFO = null;
+// promoções no ar (públicas): cartão no topo da 1ª etapa e na tela de indisponível
+cssPromo();
+const SAL = () => { try { return sessionStorage.getItem('brow:pub_s') || ''; } catch (e) { return ''; } };
+const linkPromo = (p) => `/brow-studio/promocao/?${SAL() ? 's=' + encodeURIComponent(SAL()) + '&' : ''}id=${encodeURIComponent(p.id)}`;
+let PROMOS = null;
+async function promos() { if (PROMOS) return PROMOS; const r = await api('pp_lista'); PROMOS = r.ok ? r.itens : []; return PROMOS; }
 async function info() {
   if (INFO) return INFO;
-  const r = await api('pub_info');
+  const [r, pr] = await Promise.all([api('pub_info'), promos()]);
   if (!r.ok) {
-    pagina({ titulo: 'Agendar horário', corpo: avisoHTML(esc(r.msg || 'Agendamento online indisponível no momento.'), 'erro') });
+    pagina({ titulo: 'Agendar horário', corpo: avisoHTML(esc(r.msg || 'Agendamento online indisponível no momento.'), 'erro') + (pr[0] ? cartaoPromo(pr[0], { href: linkPromo(pr[0]) }) : '') });
     focarTitulo(); return null;
   }
   INFO = r; return r;
 }
+const linhaPromo = (d) => d.promocao_id ? `<dt>Promoção</dt><dd>${esc(d.promo_titulo)} · ${esc(d.promo_resumo)}${d.promo_retoque ? '<br>' + esc(d.promo_retoque) : ''}</dd>` : '';
 const cab = (r, sub) => `<p class="etapa" style="margin-top:-8px">${esc(r.estudio)}${sub ? ' · ' + esc(sub) : ''}</p>`;
 
 // 1 — serviço
 async function telaServico() {
   const r = await info(); if (!r) return;
   const d = ler() || { chave_envio: uuid() }; if (!d.chave_envio) d.chave_envio = uuid(); gravarRasc(CH, d);
+  // "Quero essa promoção": já entra com o serviço da promoção escolhido
+  const pq = new URLSearchParams(location.search).get('promo');
+  if (pq) {
+    const p = (await promos()).find(x => x.id === pq); const s = p && r.servicos.find(x => x.id === p.servico_id);
+    if (p && s) {
+      guardar({ servico_id: s.id, servico_nome: s.nome, duracao_min: s.duracao_min, valor_centavos: p.preco_centavos, inicio_min: null,
+        promocao_id: p.id, promo_titulo: p.titulo, promo_resumo: resumoValores(p), promo_retoque: textoRetoque(p) });
+      return ir(r.profissionais.length > 1 ? BASE + 'profissional/' : BASE + 'dia/');
+    }
+  }
+  const pr = (await promos())[0];
   const form = pagina({ titulo: 'Agendar horário', etapa: 1, etapasTotal: TOTAL, formulario: true,
-    corpo: `${cab(r, 'escolha o serviço')}<fieldset class="campo"><legend class="sr-only">Serviço</legend><ul class="lista lista-lotes" id="lista"></ul><span class="erro" id="servico-erro" aria-live="polite"></span></fieldset><nav class="paginacao" id="nav" hidden></nav>`,
+    corpo: `${cab(r, 'escolha o serviço')}${pr ? cartaoPromo(pr, { href: linkPromo(pr) }) : ''}<fieldset class="campo"><legend class="sr-only">Serviço</legend><ul class="lista lista-lotes" id="lista"></ul><span class="erro" id="servico-erro" aria-live="polite"></span></fieldset><nav class="paginacao" id="nav" hidden></nav>`,
     acoes: `<button type="submit" class="btn btn-cheio">Próximo <span aria-hidden="true">→</span></button>` });
   if (!r.servicos.length) { $('#lista').innerHTML = '<li class="vazio vazio-curto"><p>Nenhum serviço disponível no momento.</p></li>'; }
   else paginar($('#lista'), $('#nav'), r.servicos, 62, 82 + 60, (s) => `<li><label class="opcao opcao-lote"><input type="radio" name="servico" value="${esc(s.id)}" ${s.id === d.servico_id ? 'checked' : ''}><span><strong>${esc(s.nome)}</strong><small>${tempo(s.duracao_min)} · ${reais(s.valor_centavos)}${s.descricao ? ' · ' + esc(s.descricao) : ''}</small></span></label></li>`, 'serviços');
@@ -58,7 +77,7 @@ async function telaServico() {
     e.preventDefault(); const v = form.querySelector('[name=servico]:checked');
     if (!v) { $('#servico-erro').textContent = 'Escolha um serviço.'; return; }
     const s = r.servicos.find(x => x.id === v.value);
-    guardar({ servico_id: s.id, servico_nome: s.nome, duracao_min: s.duracao_min, valor_centavos: s.valor_centavos, inicio_min: null });
+    guardar({ servico_id: s.id, servico_nome: s.nome, duracao_min: s.duracao_min, valor_centavos: s.valor_centavos, inicio_min: null, promocao_id: null, promo_titulo: null, promo_resumo: null, promo_retoque: null });
     ir(r.profissionais.length > 1 ? BASE + 'profissional/' : BASE + 'dia/');
   };
   focarTitulo();
@@ -128,7 +147,7 @@ async function telaConferencia() {
   const r = await info(); if (!r) return; const d = ler(); if (!d || !d.nome) return ir(BASE + 'dados/');
   pagina({ titulo: 'Confira seu pedido', voltar: BASE + 'dados/', voltarTexto: 'Voltar',
     corpo: `<div class="resumo"><section class="bloco"><dl class="dados">
-        <dt>Serviço</dt><dd>${esc(d.servico_nome)} · ${tempo(d.duracao_min)} · ${reais(d.valor_centavos)}</dd>
+        <dt>Serviço</dt><dd>${esc(d.servico_nome)} · ${tempo(d.duracao_min)}${d.promocao_id ? '' : ' · ' + reais(d.valor_centavos)}</dd>${linhaPromo(d)}
         <dt>Dia</dt><dd>${esc(dataLonga(d.data))}</dd><dt>Horário</dt><dd>${esc(d.inicio)} às ${esc(d.fim)}</dd>
         <dt>Profissional</dt><dd>${esc(d.profissional_nome)}</dd><dt>Nome</dt><dd>${esc(d.nome)}</dd><dt>WhatsApp</dt><dd>${esc(d.whatsapp)}</dd>
         ${d.observacoes ? `<dt>Observação</dt><dd>${esc(d.observacoes)}</dd>` : ''}</dl></section></div>
@@ -137,7 +156,7 @@ async function telaConferencia() {
   let env = false;
   $('#enviar').onclick = async () => {
     if (env) return; env = true; const b = $('#enviar'); b.disabled = true; b.textContent = 'Enviando…';
-    const rr = await api('pub_agendar', { corpo: { chave_envio: d.chave_envio, servico_id: d.servico_id, profissional_id: d.profissional_id, data: d.data, inicio_min: d.inicio_min, nome: d.nome, whatsapp: d.whatsapp, observacoes: d.observacoes, site: d.site || '' } });
+    const rr = await api('pub_agendar', { corpo: { chave_envio: d.chave_envio, servico_id: d.servico_id, profissional_id: d.profissional_id, data: d.data, inicio_min: d.inicio_min, nome: d.nome, whatsapp: d.whatsapp, observacoes: d.observacoes, site: d.site || '', ...(d.promocao_id ? { promocao_id: d.promocao_id } : {}) } });
     if (rr.ok) { gravarRasc('pub:feito', { ...rr, nome: d.nome }); apagarRasc(CH); location.replace(BASE + 'enviado/'); return; }
     env = false; b.disabled = false; b.textContent = 'Tentar de novo';
     const outro = rr.erro === 'indisponivel' ? `<div class="linha-acoes"><a class="btn btn-cheio" href="${BASE}horario/">Escolher outro horário</a></div>` : '';
@@ -148,8 +167,8 @@ async function telaConferencia() {
 // enviado
 function telaEnviado() {
   const f = lerRasc('pub:feito'); if (!f) return ir(BASE);
-  const msg = `Olá! Acabei de agendar pelo link: ${f.servico}, ${dataLonga(f.data)} às ${f.inicio}. Nome: ${f.nome}.`;
-  pagina({ titulo: 'Pedido enviado', corpo: `${avisoHTML(`Seu horário foi reservado: <strong>${esc(f.servico)}</strong>, ${esc(dataLonga(f.data))} às <strong>${esc(f.inicio)}</strong>, com ${esc(f.profissional)}.`, 'ok')}
+  const msg = `Olá! Acabei de agendar pelo link: ${f.servico}${f.promocao ? ` (promoção ${f.promocao})` : ''}, ${dataLonga(f.data)} às ${f.inicio}. Nome: ${f.nome}.`;
+  pagina({ titulo: 'Pedido enviado', corpo: `${avisoHTML(`Seu horário foi reservado: <strong>${esc(f.servico)}</strong>${f.promocao ? ` (promoção ${esc(f.promocao)})` : ''}, ${esc(dataLonga(f.data))} às <strong>${esc(f.inicio)}</strong>, com ${esc(f.profissional)}.`, 'ok')}
       <p class="ajuda">O estúdio vai confirmar com você pelo WhatsApp. Se precisar mudar, fale com o estúdio.</p>`,
     acoes: `${f.whatsapp_estudio ? `<a class="btn btn-cheio" href="https://wa.me/55${esc(f.whatsapp_estudio)}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Avisar o estúdio no WhatsApp</a>` : ''}<a class="btn btn-linha" href="${BASE}" id="novo">Fazer outro agendamento</a>` });
   $('#novo').onclick = () => apagarRasc('pub:feito');

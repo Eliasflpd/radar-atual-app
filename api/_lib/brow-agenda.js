@@ -87,6 +87,14 @@ async function garantirTabelas(c) {
   await c.query(`create index if not exists brow_pub_ip on brow_pub_pedidos(ip, criado_em)`);
   // ÁREA DA CLIENTE: até quantas horas antes a cliente pode cancelar/remarcar sozinha
   await c.query(`alter table brow_config add column if not exists cliente_antec_horas integer not null default 24`);
+  // PROMOÇÕES: cópia dos valores da promoção usada no horário (ver api/_lib/brow-promocoes.js)
+  await c.query(`alter table brow_agendamentos add column if not exists promocao_id text`);
+  await c.query(`alter table brow_agendamentos add column if not exists promo_titulo text`);
+  await c.query(`alter table brow_agendamentos add column if not exists promo_preco_centavos integer`);
+  await c.query(`alter table brow_agendamentos add column if not exists promo_sinal_centavos integer`);
+  await c.query(`alter table brow_agendamentos add column if not exists promo_retoque_centavos integer`);
+  await c.query(`alter table brow_agendamentos add column if not exists promo_retoque_dias integer`);
+  await c.query(`alter table brow_agendamentos add column if not exists promo_retorno_id text`);
 }
 
 // ─── utilidades ─────────────────────────────────────────────────────────────
@@ -547,10 +555,18 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
         if (r.st === 409) return erro(res, 409, 'indisponivel', 'Esse horário acabou de ser ocupado. Escolha outro, por favor.');
         return erro(res, r.st, (r.j && r.j.erro) || 'erro', 'Não foi possível agendar. Confira os dados.');
       }
+      if (b.promocao_id) {
+        const v = await require('./brow-promocoes.js').aplicarPromocao(c, estab, r.j.id, b.promocao_id, b.servico_id);
+        if (!v.ok) {
+          await c.query('rollback');
+          if (criada) await c.query('delete from brow_clientes where estab=$1 and id=$2 and not exists (select 1 from brow_agendamentos a where a.estab=$1 and a.cliente_id=$2)', [estab, cl.id]);
+          return erro(res, 409, 'promocao', v.msg);
+        }
+      }
       await c.query(`update brow_agendamentos set origem='online' where estab=$1 and id=$2`, [estab, r.j.id]);
       await c.query('commit');
       const a = (await c.query(`${SEL_AG} where estab=$1 and id=$2`, [estab, r.j.id])).rows[0];
-      res.status(201).json({ ok: true, data: a.data, inicio: minParaHhmm(a.inicio_min), servico: a.servico_nome, profissional: a.profissional_nome, whatsapp_estudio: cfg.whatsapp_estudio || null }); return;
+      res.status(201).json({ ok: true, data: a.data, inicio: minParaHhmm(a.inicio_min), servico: a.servico_nome, profissional: a.profissional_nome, promocao: a.promo_titulo || null, whatsapp_estudio: cfg.whatsapp_estudio || null }); return;
     }
     return erro(res, 400, 'acao', 'Ação desconhecida.');
   }
@@ -703,10 +719,14 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
           if (r.st === 200 && r.j && r.j.repetido) { res.status(200).json({ ok: true, repetido: true }); return; }
           return erro(res, r.st, (r.j && r.j.erro) || 'erro', 'Não foi possível agendar. Confira os dados.');
         }
+        if (b.promocao_id) {
+          const v = await require('./brow-promocoes.js').aplicarPromocao(c, estab, r.j.id, b.promocao_id, s.id);
+          if (!v.ok) { await c.query('rollback'); return erro(res, 409, 'promocao', v.msg); }
+        }
         await c.query(`update brow_agendamentos set origem='online' where estab=$1 and id=$2`, [estab, r.j.id]);
         await c.query('commit');
         const a = (await c.query(`${SEL_AG} where estab=$1 and id=$2`, [estab, r.j.id])).rows[0];
-        res.status(201).json({ ok: true, data: a.data, inicio: minParaHhmm(a.inicio_min), servico: a.servico_nome, profissional: a.profissional_nome }); return;
+        res.status(201).json({ ok: true, data: a.data, inicio: minParaHhmm(a.inicio_min), servico: a.servico_nome, profissional: a.profissional_nome, promocao: a.promo_titulo || null }); return;
       }
     }
     return erro(res, 400, 'acao', 'Ação desconhecida.');
@@ -816,6 +836,12 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
       if (!v.ok) { await c.query('rollback'); return erro(res, 409, 'pacote', v.msg); }
       r.j.pacote_item_id = String(b.pacote_item_id);
     }
+    // promoção: grava a cópia dos valores NA MESMA transação; recusa promoção fora do período ou de outro serviço
+    if (r.transacao && b.promocao_id && !r.j.repetido) {
+      const v = await require('./brow-promocoes.js').aplicarPromocao(c, estab, r.j.id, b.promocao_id, b.servico_id);
+      if (!v.ok) { await c.query('rollback'); return erro(res, 409, 'promocao', v.msg); }
+      r.j.promocao_id = String(b.promocao_id);
+    }
     if (r.transacao) await c.query('commit');
     res.status(r.st).json(r.j); return;
   }
@@ -835,8 +861,11 @@ module.exports = async function agenda(c, estab, req, res, acao, garantirOutras)
       if (prox.rows.length && fimEsperado > prox.rows[0].inicio_min)
         aviso = `Atenção: pelo horário real, este atendimento vai até ${minParaHhmm(fimEsperado)} e alcança o próximo (${minParaHhmm(prox.rows[0].inicio_min)} · ${prox.rows[0].cliente_nome}). O horário da outra cliente não foi alterado.`;
     }
+    // promoção no ar para este serviço (só para oferecer "Usar promoção" em horário ainda não atendido)
+    let promoDisponivel = false;
+    if (!a.promocao_id && ['agendado', 'confirmado'].includes(a.situacao)) promoDisponivel = await require('./brow-promocoes.js').temVigente(c, estab, a.servico_id, ha.hoje);
     res.status(200).json({ ok: true, agendamento: a, cliente: cl ? { nome: cl.nome, apelido: cl.apelido, telefone: cl.telefone, contato_pref: cl.contato_pref } : null,
-      historico: h.rows, aviso, hoje: ha.hoje, agora: minParaHhmm(ha.agora), estudio: cfg.nome_estudio });
+      historico: h.rows, aviso, hoje: ha.hoje, agora: minParaHhmm(ha.agora), estudio: cfg.nome_estudio, promo_disponivel: promoDisponivel });
     return;
   }
 

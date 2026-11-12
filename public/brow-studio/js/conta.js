@@ -332,6 +332,11 @@ async function menu() {
   // pedidos do agendamento online ainda não confirmados
   const pend = await api('ag_online_pendentes');
   if (pend.ok && pend.pendentes && caixa) caixa.insertAdjacentHTML('afterend', `<p class="aviso-online"><a href="/brow-studio/agenda/">${pend.pendentes} pedido(s) online para confirmar</a></p>`);
+  // profissional: atalho para a promoção no ar (a dona usa o botão "Promoções", que é só dela)
+  if (u.funcao !== 'dona') {
+    const pr = await api('pm_ativas'); const nav = document.querySelector('.menu-modulos');
+    if (pr.ok && pr.itens && pr.itens[0] && nav) nav.insertAdjacentHTML('beforeend', `<a class="btn btn-cheio" id="promo-ativa" href="/brow-studio/promocoes/ver/?id=${encodeURIComponent(pr.itens[0].id)}">Promoção no ar</a>`);
+  }
 }
 
 // ─── botão "Instalar no tablet" (Android/Chrome) e instrução para iPad/iPhone ──
