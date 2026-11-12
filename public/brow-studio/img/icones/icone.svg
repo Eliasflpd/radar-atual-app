@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<defs><radialGradient id="f" cx="35%" cy="25%" r="85%"><stop offset="0" stop-color="#fbf1e8"/><stop offset="1" stop-color="#ecd3bf"/></radialGradient>
-<linearGradient id="o" x1="0" x2="1"><stop offset="0" stop-color="#d9b77a" stop-opacity=".6"/><stop offset=".5" stop-color="#d9b06a"/><stop offset="1" stop-color="#c99a4e"/></linearGradient></defs>
+<defs><radialGradient id="f" cx="35%" cy="25%" r="85%"><stop offset="0" stop-color="#d27d5c"/><stop offset="1" stop-color="#93412a"/></radialGradient>
+<linearGradient id="o" x1="0" x2="1"><stop offset="0" stop-color="#c9ccd1" stop-opacity=".6"/><stop offset=".5" stop-color="#f4f5f7"/><stop offset="1" stop-color="#c9ccd1"/></linearGradient></defs>
 <rect width="512" height="512" fill="url(#f)"/>
 <g transform="translate(256 256) scale(2.05) translate(-93 -40)">
-<path d="M2 53 C28 20 68 2 112 1.5 C143 1.5 169 15 184 42 C163 24 140 17 114 17.5 C78 19 42 31 2 53 Z" fill="#4b2412"/>
+<path d="M2 53 C28 20 68 2 112 1.5 C143 1.5 169 15 184 42 C163 24 140 17 114 17.5 C78 19 42 31 2 53 Z" fill="#ffffff"/>
 <path d="M10 76 C60 62 120 63 178 67 C135 68 110 66.5 72 69 C50 70.5 30 72.5 10 76 Z" fill="url(#o)"/>
 </g></svg>
