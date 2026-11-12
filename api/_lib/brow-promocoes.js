@@ -331,7 +331,10 @@ async function acoesEquipe(c, estab, req, res, acao, salao, garantirOutras) {
     const x = await lerPlano(c, estab, q.agendamento_id);
     if (!x) return erro(res, 404, 'nao_encontrado', 'Atendimento não encontrado.');
     if (!x.a.promocao_id) return erro(res, 404, 'sem_promocao', 'Este atendimento não tem promoção.');
-    res.status(200).json({ ok: true, ...planoSaida(x), formas: FORMAS, pode_receber: req.brow_funcao === 'dona' }); return;
+    const dona = req.brow_funcao === 'dona';
+    const saidaPlano = planoSaida(x);
+    if (!dona) { saidaPlano.movimentos = []; saidaPlano.lancamento_id = null; }   // detalhes do caixa: só a dona
+    res.status(200).json({ ok: true, ...saidaPlano, formas: FORMAS, pode_receber: dona }); return;
   }
 
   // ── etapas 1 e 2: sinal e saldo (Financeiro: 1 lançamento do atendimento + movimentos) ──
