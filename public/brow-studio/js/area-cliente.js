@@ -6,6 +6,7 @@
 // da equipe. O servidor revalida tudo; aqui nada fica guardado além do salão.
 // ═══════════════════════════════════════════════════════════════════════════
 import { $, esc, uuid, SETA, pagina, campoTexto, mostrarErros, avisoHTML, focarTitulo } from './comum.js?v=4';
+import { cssPromo, cartaoPromo, resumoValores, textoRetoque } from './promo-card.js?v=1';
 
 const API = '/api/brow';
 const BASE = '/brow-studio/cliente/';
@@ -134,12 +135,16 @@ async function telaEntrar() {
 // ═══════════════════════════ INÍCIO ════════════════════════════════════════
 const linhaHorario = (a) => `<li><a class="item item-link" href="${L('horario/', { id: a.id })}"><div class="item-info"><div class="item-nome">${esc(dataLonga(a.data))}, ${esc(a.inicio)}</div>
   <div class="item-extra">${esc(a.servico)} · ${esc(a.profissional)} · ${esc(a.situacao_nome)}</div></div><span aria-hidden="true">›</span></a></li>`;
+// promoções no ar do salão (públicas): cartão na tela inicial
+async function promosNoAr() { const r = await capi('pp_lista'); return r && r.ok ? r.itens : []; }
+const linkPromo = (p) => `/brow-studio/promocao/?${SALAO ? 's=' + encodeURIComponent(SALAO) + '&' : ''}id=${encodeURIComponent(p.id)}&de=cliente`;
 async function telaInicio() {
-  const r = await capi('cl_inicio');
+  cssPromo();
+  const [r, pr] = await Promise.all([capi('cl_inicio'), promosNoAr()]);
   if (!r.ok) return telaErro('Área da cliente', r.msg, L('entrar/'));
   const msg = recado.tirar();
   pagina({ titulo: `Olá, ${r.nome.split(' ')[0]}`,
-    corpo: `<p class="etapa" style="margin-top:-8px">${esc(r.salao ? r.salao.nome : r.estudio)}</p>${msg ? avisoHTML(esc(msg), 'ok') : ''}
+    corpo: `<p class="etapa" style="margin-top:-8px">${esc(r.salao ? r.salao.nome : r.estudio)}</p>${msg ? avisoHTML(esc(msg), 'ok') : ''}${pr[0] ? cartaoPromo(pr[0], { href: linkPromo(pr[0]) }) : ''}
       <h2 class="cl-sub">Próximos horários</h2>
       ${r.proximos.length ? '<ul class="lista lista-compacta" id="lista"></ul><nav class="paginacao" id="nav" hidden></nav>' : '<p class="ajuda" id="lista-vazia">Você não tem horários marcados.</p>'}
       <nav class="acoes-grade" aria-label="Área da cliente">
@@ -251,9 +256,13 @@ async function telaRemarcar() {
 
 // ═══════════════════════════ AGENDAR ═══════════════════════════════════════
 async function telaAgendar() {
-  const r = await capi('cl_agendar_info');
+  const [r, pr] = await Promise.all([capi('cl_agendar_info'), qs.get('promo') ? promosNoAr() : Promise.resolve([])]);
   if (!r.ok) return telaErro('Agendar horário', r.msg);
   const st = { chave_envio: uuid() };
+  // "Quero essa promoção": serviço já escolhido pela promoção
+  const promo = pr.find(x => x.id === qs.get('promo'));
+  const svPromo = promo && r.servicos.find(x => x.id === promo.servico_id);
+  if (svPromo) Object.assign(st, { servico_id: svPromo.id, servico_nome: svPromo.nome, promocao_id: promo.id, promo_titulo: promo.titulo, promo_resumo: resumoValores(promo), promo_retoque: textoRetoque(promo) });
   const temProf = r.profissionais.length > 1;
   const TOTAL = temProf ? 5 : 4;
   const passoServico = () => {
@@ -265,7 +274,7 @@ async function telaAgendar() {
     form.onsubmit = (e) => {
       e.preventDefault(); const v = form.querySelector('[name=servico]:checked');
       if (!v) { $('#servico-erro').textContent = 'Escolha um serviço.'; return; }
-      const s = r.servicos.find(x => x.id === v.value); st.servico_id = s.id; st.servico_nome = s.nome;
+      const s = r.servicos.find(x => x.id === v.value); st.servico_id = s.id; st.servico_nome = s.nome; st.promocao_id = null;
       temProf ? passoProf() : passoDia();
     };
     focarTitulo();
@@ -287,7 +296,7 @@ async function telaAgendar() {
   const passoConf = () => {
     pagina({ titulo: 'Confira seu horário', etapa: TOTAL, etapasTotal: TOTAL,
       corpo: `<div class="resumo"><section class="bloco"><dl class="dados">
-          <dt>Serviço</dt><dd>${esc(st.servico_nome)}</dd><dt>Dia</dt><dd>${esc(dataLonga(st.data))}</dd>
+          <dt>Serviço</dt><dd>${esc(st.servico_nome)}</dd>${st.promocao_id ? `<dt>Promoção</dt><dd>${esc(st.promo_titulo)} · ${esc(st.promo_resumo)}${st.promo_retoque ? '<br>' + esc(st.promo_retoque) : ''}</dd>` : ''}<dt>Dia</dt><dd>${esc(dataLonga(st.data))}</dd>
           <dt>Horário</dt><dd>${esc(st.inicio)} às ${esc(st.fim)}</dd><dt>Profissional</dt><dd>${esc(st.profissional_nome)}</dd></dl></section></div>
         <p class="ajuda">O salão confirma o horário com você pelo WhatsApp.</p><div id="aviso" aria-live="polite"></div>`,
       acoes: `<button type="button" class="btn btn-linha" id="voltar">${SETA} Voltar</button><button type="button" class="btn btn-cheio" id="confirmar">Agendar</button>` });
@@ -295,8 +304,8 @@ async function telaAgendar() {
     let env = false;
     $('#confirmar').onclick = async () => {
       if (env) return; env = true; $('#confirmar').disabled = true;
-      const rr = await capi('cl_agendar', { corpo: { chave_envio: st.chave_envio, servico_id: st.servico_id, profissional_id: st.profissional_id, data: st.data, inicio_min: st.inicio_min } });
-      if (rr.ok) { recado.pôr(`Horário agendado: ${st.servico_nome}, ${dataLonga(st.data)} às ${st.inicio}. O salão vai confirmar com você.`); location.replace(L('inicio/')); return; }
+      const rr = await capi('cl_agendar', { corpo: { chave_envio: st.chave_envio, servico_id: st.servico_id, profissional_id: st.profissional_id, data: st.data, inicio_min: st.inicio_min, ...(st.promocao_id ? { promocao_id: st.promocao_id } : {}) } });
+      if (rr.ok) { recado.pôr(`Horário agendado: ${st.servico_nome}${st.promocao_id ? ` (promoção ${st.promo_titulo})` : ''}, ${dataLonga(st.data)} às ${st.inicio}. O salão vai confirmar com você.`); location.replace(L('inicio/')); return; }
       env = false; $('#confirmar').disabled = false;
       const outro = rr.erro === 'indisponivel' ? '<div class="linha-acoes"><button type="button" class="btn btn-cheio" id="outro">Escolher outro horário</button></div>' : '';
       $('#aviso').innerHTML = avisoHTML(esc(rr.erros ? Object.values(rr.erros).join(' ') : rr.msg || 'Não foi possível agendar.'), 'erro', outro);
@@ -304,7 +313,7 @@ async function telaAgendar() {
     };
     focarTitulo();
   };
-  passoServico();
+  if (st.promocao_id) temProf ? passoProf() : passoDia(); else passoServico();
 }
 
 // ═══════════════════════════ HISTÓRICO ═════════════════════════════════════

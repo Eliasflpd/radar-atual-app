@@ -442,7 +442,7 @@ async function telaAtendimento() {
       ${a.encaixe_id ? `<p class="ajuda">Atendimento vindo de <a href="${BASE}encaixes/detalhe/?id=${encodeURIComponent(a.encaixe_id)}">encaixe</a>.</p>` : ''}
       <div class="bloco"><dl class="dados">
         <dt>WhatsApp</dt><dd>${a.whatsapp ? esc(fone(a.whatsapp)) : 'Não informado'}</dd>
-        <dt>Serviço</dt><dd>${esc(a.servico_nome)} · ${reais(a.valor_centavos)}</dd>
+        <dt>Serviço</dt><dd>${esc(a.servico_nome)} · ${reais(a.valor_centavos)}${a.promocao_id ? ` · <a href="${BASE}atendimento/promocao/?id=${q}">Promoção: pagamento</a>` : (r.promo_disponivel ? ` · <a href="${BASE}atendimento/promocao/usar/?id=${q}">Usar promoção</a>` : '')}</dd>
         <dt>Profissional</dt><dd>${esc(a.profissional_nome)}</dd>
         <dt>Data</dt><dd>${esc(dataLonga(a.data))}</dd>
         <dt>Horário</dt><dd>${a.inicio}–${a.fim} · intervalo até ${a.reserva_fim}</dd>

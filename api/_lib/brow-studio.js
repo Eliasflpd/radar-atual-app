@@ -41,7 +41,8 @@ const ESTAB_PADRAO = 'principal';   // um estúdio por enquanto; a sessão carre
 const testeLocal = () => process.env.BROW_TESTE_SEM_LOGIN === '1' && !process.env.VERCEL;
 const corpoReq = (req) => { let b = req.body; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = null; } } return (b && typeof b === 'object') ? b : {}; };
 const SO_DONA = new Set(['es_estornar', 'es_despesa_criar', 'es_config_salvar', 'or_estornar', 'or_receita', 'or_receitas_cliente', 'rt_receita',
-  'ag_config_salvar', 'ag_horario_salvar', 'ag_prof_salvar', 'ag_horarios_aplicar_estudio', 'ag_online_salvar', 'ag_area_cliente_salvar']);
+  'ag_config_salvar', 'ag_horario_salvar', 'ag_prof_salvar', 'ag_horarios_aplicar_estudio', 'ag_online_salvar', 'ag_area_cliente_salvar',
+  'pm_listar', 'pm_salvar', 'pm_ativar', 'pm_semente', 'pm_receber', 'pm_aplicar']);
 function centavosTxt(v) { const s = String(v == null ? '' : v).trim().replace(/^R\$\s*/i, '').replace(/\./g, '').replace(',', '.'); const n = Number(s); return isFinite(n) ? Math.round(n * 100) : 0; }
 // ações restritas à função "dona" (financeiro, estornos, ajustes, descontos, exceções, configuração)
 function exigeDona(acao, req) {
@@ -217,6 +218,13 @@ module.exports = async (req, res) => {
       await require('./brow-cliente.js').acoesCliente(c, req, res, acao, salao, (cc, est, rq, rs, ac) => agenda(cc, est, rq, rs, ac, garantirOutras));
       return;
     }
+    // PROMOÇÕES — lado público (pp_*): salão pelo endereço; só promoções no ar. Ver api/_lib/brow-promocoes.js.
+    if (acao.startsWith('pp_')) {
+      const salao = await saloes.resolver(c, q.s);
+      if (!salao) { res.status(404).json({ ok: false, erro: 'salao_inexistente', msg: 'Salão não encontrado. Confira o endereço.' }); return; }
+      await require('./brow-promocoes.js').acoesPublicas(c, req, res, acao, salao, async (cc) => { await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc); });
+      return;
+    }
     // LOGIN e AGENDAMENTO ONLINE: públicos; o salão vem do endereço (?s=slug) resolvido AQUI (sem ?s → salão principal)
     const ehPublica = ['au_estado', 'au_entrar', 'au_primeira', 'au_recuperar', 'au_pedir'].includes(acao) || acao.startsWith('pub_');
     let salaoPub = null;
@@ -252,6 +260,15 @@ module.exports = async (req, res) => {
       await garantirTabelas(c);
       const salao = (await saloes.porId(c, estab)) || { slug: 'rychelma', nome: 'Brow Studio' };
       await require('./brow-cliente.js').acoesEquipe(c, req, res, acao, estab, salao); return;
+    }
+    // PROMOÇÕES — lado da equipe (pm_*). Gestão e recebimentos só da dona (SO_DONA).
+    if (acao.startsWith('pm_')) {
+      const salao = await saloes.porId(c, estab);
+      await require('./brow-promocoes.js').acoesEquipe(c, estab, req, res, acao, salao, async (cc) => {
+        await garantirTabelas(cc); await require('./brow-servicos.js').garantirTabela(cc); await require('./brow-agenda.js').garantirTabelas(cc);
+        await require('./brow-financeiro.js').garantirTabelas(cc);
+      });
+      return;
     }
     // SERVIÇOS E VALORES (módulo 2): mesma trava e mesma conexão. Ver api/_lib/brow-servicos.js.
     if (acao.startsWith('servico')) { await require('./brow-servicos.js')(c, estab, req, res, acao); return; }
