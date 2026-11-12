@@ -385,7 +385,7 @@ async function telaSituacao() {
   pagina({
     titulo: desativar ? 'Desativar serviço?' : 'Ativar serviço?', voltar: detalhes, voltarTexto: 'Detalhes',
     corpo: `<div class="bloco"><div class="servico-cabeca"><h2>${esc(s.nome)}</h2>${selo(s.ativo)}</div>
-        <p style="margin-top:6px;color:#8a6a58">${reais(s.valor_centavos)} · ${tempo(s.duracao_min)} · ${esc(s.categoria_nome)}</p></div>
+        <p style="margin-top:6px;color:#64646b">${reais(s.valor_centavos)} · ${tempo(s.duracao_min)} · ${esc(s.categoria_nome)}</p></div>
       ${desativar
         ? avisoHTML('Ao desativar, o serviço <strong>não poderá ser escolhido em novos agendamentos</strong> quando a agenda existir. O cadastro e o histórico <strong>são preservados</strong>, e você pode ativá-lo de novo quando quiser.')
         : avisoHTML('Ao ativar, o serviço volta a poder ser escolhido em novos agendamentos quando a agenda existir.')}

@@ -112,7 +112,7 @@ export function focarTitulo() { const t = $('#titulo'); if (t) t.focus({ prevent
 export const ir = (url) => { location.href = url; };
 export function blocoResumo(titulo, linhas, corrigir) {
   return `<section class="bloco"><div class="bloco-topo"><h2>${esc(titulo)}</h2>${corrigir ? `<a class="corrigir" href="${corrigir}">Corrigir</a>` : ''}</div>
-    <dl class="dados">${linhas.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v ? esc(v) : '<span style="color:#a68b7a">Não informado</span>'}</dd>`).join('')}</dl></section>`;
+    <dl class="dados">${linhas.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v ? esc(v) : '<span style="color:#6e6e76">Não informado</span>'}</dd>`).join('')}</dl></section>`;
 }
 
 // ─── aplicativo instalável (PWA): registra o service worker do Brow Studio ──
