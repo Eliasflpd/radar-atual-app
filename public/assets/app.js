@@ -2265,6 +2265,23 @@ const EBD_LICOES = {
     {n:12, titulo:'O Messias de Israel em Zacarias',                    licao:'/ebd/adulto1/html/licao-12.html', ppt:null, apoio:null, mapa:null},
     {n:13, titulo:'O Futuro Glorioso de Israel e a Aparição do Messias',licao:'/ebd/adulto1/html/licao-13.html', ppt:null, apoio:null, mapa:null},
   ],
+  // 15/11/2026: Lições Bíblicas Jovens — 1º Tri 2027 "O Trono da Graça" (Hebreus), comentarista Pr. Alexandre Coelho.
+  // Só o texto por enquanto (as capas das lições vêm depois). Abre em 01/01/2027; antes, prévia + PIN.
+  jovem1:[
+    {n:1,  titulo:'A Carta aos Hebreus',                    licao:'/ebd/jovem1/html/licao-01.html', ppt:null, apoio:null, mapa:null},
+    {n:2,  titulo:'Preste Atenção nas Palavras de Deus',    licao:'/ebd/jovem1/html/licao-02.html', ppt:null, apoio:null, mapa:null},
+    {n:3,  titulo:'Não Tenha um Coração Mau e Infiel',      licao:'/ebd/jovem1/html/licao-03.html', ppt:null, apoio:null, mapa:null},
+    {n:4,  titulo:'Encontrando Misericórdia e Graça',       licao:'/ebd/jovem1/html/licao-04.html', ppt:null, apoio:null, mapa:null},
+    {n:5,  titulo:'Jesus, Nosso Sumo Sacerdote',            licao:'/ebd/jovem1/html/licao-05.html', ppt:null, apoio:null, mapa:null},
+    {n:6,  titulo:'Advertência contra a Apostasia',         licao:'/ebd/jovem1/html/licao-06.html', ppt:null, apoio:null, mapa:null},
+    {n:7,  titulo:'Novo Sacerdócio e Nova Lei',             licao:'/ebd/jovem1/html/licao-07.html', ppt:null, apoio:null, mapa:null},
+    {n:8,  titulo:'Um Concerto Melhor para a Humanidade',   licao:'/ebd/jovem1/html/licao-08.html', ppt:null, apoio:null, mapa:null},
+    {n:9,  titulo:'O Sacrifício que Deus Aceitou',          licao:'/ebd/jovem1/html/licao-09.html', ppt:null, apoio:null, mapa:null},
+    {n:10, titulo:'O Novo e Vivo Caminho',                  licao:'/ebd/jovem1/html/licao-10.html', ppt:null, apoio:null, mapa:null},
+    {n:11, titulo:'Entre os Gigantes de Deus',              licao:'/ebd/jovem1/html/licao-11.html', ppt:null, apoio:null, mapa:null},
+    {n:12, titulo:'Enquanto Corremos para o Alvo',          licao:'/ebd/jovem1/html/licao-12.html', ppt:null, apoio:null, mapa:null},
+    {n:13, titulo:'Finalizando a Carreira',                 licao:'/ebd/jovem1/html/licao-13.html', ppt:null, apoio:null, mapa:null},
+  ],
   jovem4:[
     {n:1,  titulo:'Carta aos Filipenses: Um Chamado à Alegria',    licao:'/ebd/jovem4/html/licao-01.html', ppt:null, apoio:'/ebd/jovem4/html/apoio-01.html', mapa:null},
     {n:2,  titulo:'Uma Vida Digna do Evangelho',                   licao:'/ebd/jovem4/html/licao-02.html', ppt:null, apoio:'/ebd/jovem4/html/apoio-02.html', mapa:null},
@@ -2677,10 +2694,10 @@ function previaLic(turma,n){ try{ return (EBD_PREVIA&&EBD_PREVIA[turma]&&EBD_PRE
 function abrirEbdTurma(turma){
   ebdTurmaAtual=turma;
   carregarPrevia();
-  try{ var _te=document.getElementById('tela-ebd-turma'); _te.classList.toggle('ebd-mag',turma==='adulto4'||turma==='jovem4'||turma==='adulto1'); _te.classList.toggle('j',turma==='jovem4'); _te.classList.toggle('t1',turma==='adulto1'); }catch(_){}
+  try{ var _te=document.getElementById('tela-ebd-turma'); _te.classList.toggle('ebd-mag',turma==='adulto4'||turma==='jovem4'||turma==='adulto1'||turma==='jovem1'); _te.classList.toggle('j',turma==='jovem4'||turma==='jovem1'); _te.classList.toggle('t1',turma==='adulto1'); }catch(_){}
   const lics=EBD_LICOES[turma];
-  const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS',adolescentes:'LIÇÃO ADOLESCENTES',juniores:'LIÇÃO JUNIORES',adulto4:'ADULTO · 4º TRI',jovem4:'JOVEM · 4º TRI',adulto1:'ADULTO · 1º TRI 2027'}[turma]||'LIÇÃO';
-  const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒',adolescentes:'🧑‍🎓',juniores:'🧒',adulto4:'📘',jovem4:'📗',adulto1:'📘'}[turma]||'📖';
+  const label={adulto:'LIÇÃO ADULTO',jovem:'LIÇÃO JOVEM',juvenis:'LIÇÃO JUVENIS',adolescentes:'LIÇÃO ADOLESCENTES',juniores:'LIÇÃO JUNIORES',adulto4:'ADULTO · 4º TRI',jovem4:'JOVEM · 4º TRI',adulto1:'ADULTO · 1º TRI 2027',jovem1:'JOVEM · 1º TRI 2027'}[turma]||'LIÇÃO';
+  const icon={adulto:'👨',jovem:'🧑',juvenis:'🧒',adolescentes:'🧑‍🎓',juniores:'🧒',adulto4:'📘',jovem4:'📗',adulto1:'📘',jovem1:'📗'}[turma]||'📖';
   document.getElementById('ebd-turma-titulo').textContent=label;
   document.getElementById('ebd-turma-icon').textContent=icon;
   const body=document.getElementById('ebd-turma-body');
@@ -2712,7 +2729,7 @@ function abrirEbdTurma(turma){
       const _feita=ebdConcluida(turma,lic.n);
       const _selo=_feita?'<div style="position:absolute;top:10px;left:10px;background:#25D366;color:#fff;font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.4)">✓ CONCLUÍDA</div>':'';
       const _selo2=_feita?'<span style="background:#25D366;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;flex-shrink:0">✓</span>':'';
-      const isLocked=pinMaster()?false:(turma.endsWith('4') ? ebd4TriTravado() : turma==='adulto1' ? ebd1T27Travado() : (lic.n!==licaoDaSemana())); /* PIN mestre abre tudo; senão 4º tri travado até OUT, 1º tri 2027 até 01/01/2027, e só a do domingo atual */
+      const isLocked=pinMaster()?false:(turma.endsWith('4') ? ebd4TriTravado() : (turma==='adulto1'||turma==='jovem1') ? ebd1T27Travado() : (lic.n!==licaoDaSemana())); /* PIN mestre abre tudo; senão 4º tri travado até OUT, 1º tri 2027 até 01/01/2027, e só a do domingo atual */
       const tags=[lic.licao?'Lição':'',lic.ppt?'PPT':'',lic.apoio?'Apoio':'',(turma==='adulto1'&&_pg1[lic.n-1])?'p. '+_pg1[lic.n-1]:''].filter(Boolean).join(' · ');
       if(ebdTurmaAtual==='adulto' && lic.n>=1 && lic.n<=13){
         const nn=String(lic.n).padStart(2,'0');
@@ -2778,7 +2795,7 @@ function fecharEbdTurma(){
 
 function abrirLicaoDetalhe(idx){
   const _lc=EBD_LICOES[ebdTurmaAtual][idx];
-  const _detLocked=pinMaster()?false:(ebdTurmaAtual.endsWith('4') ? ebd4TriTravado() : ebdTurmaAtual==='adulto1' ? ebd1T27Travado() : !!(_lc && _lc.n>0 && _lc.n>licaoDaSemana()));  /* PIN mestre abre; senão 4º tri travado até OUT e só a FUTURA trava */
+  const _detLocked=pinMaster()?false:(ebdTurmaAtual.endsWith('4') ? ebd4TriTravado() : (ebdTurmaAtual==='adulto1'||ebdTurmaAtual==='jovem1') ? ebd1T27Travado() : !!(_lc && _lc.n>0 && _lc.n>licaoDaSemana()));  /* PIN mestre abre; senão 4º tri travado até OUT e só a FUTURA trava */
   const _needPrevia=_detLocked && !EBD_PREVIA;
   ebdDetalheIdx=idx;
   const lic=EBD_LICOES[ebdTurmaAtual][idx];
@@ -2821,7 +2838,7 @@ function abrirLicaoDetalhe(idx){
     {num:'7',icon:'👩‍🏫',nome:'PLANO DE AULA',
      ativo:lic.n>0,
      tap:lic.n>0?`abrirPlanoAula(${idx})`:null}
-  ].filter(it=>ebdTurmaAtual!=='adulto1'||['LIÇÃO','PPT','APOIO','PLANO DE AULA'].includes(it.nome))  /* 1º tri 2027: só o que existe (Lição da revista do Professor + Plano de Aula; PPT/Apoio "em breve") */
+  ].filter(it=>(ebdTurmaAtual!=='adulto1'&&ebdTurmaAtual!=='jovem1')||['LIÇÃO','PPT','APOIO','PLANO DE AULA'].includes(it.nome))  /* 1º tri 2027: só o que existe (Lição da revista do Professor + Plano de Aula; PPT/Apoio "em breve") */
    .map((it,i)=>({...it,num:String(i+1)}));
   const _fnd=lic.n>0&&ebdConcluida(ebdTurmaAtual,lic.n);
   const _btnConcluir=(lic.n>0&&!_detLocked)?`<button id="ebd-btn-concluir" onclick="ebdMarcarConcluida(${idx})" style="width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${_fnd?'background:#25D366;color:#fff':((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4')?'background:'+(ebdTurmaAtual==='jovem4'?'#a34a5e':'#962030')+';color:#f9f5da;border:1.5px solid #d9a441':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)')}">${_fnd?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA'}</button>`:'';
@@ -2831,17 +2848,17 @@ function abrirLicaoDetalhe(idx){
       <div style="display:flex;align-items:center;gap:9px;margin-bottom:${(_pv&&(_pv.aureo||_pv.pratica))?'13px':'4px'}">
         <span style="font-size:22px">🔒</span>
         <div><div style="font-size:13px;font-weight:800;color:#f0dca0;letter-spacing:.4px">PRÉVIA DA LIÇÃO</div>
-        <div style="font-size:11.5px;color:var(--sub)">O conteúdo completo abre no domingo — ou agora com o PIN</div></div>
+        <div style="font-size:11.5px;color:var(--sub)">O conteúdo completo abre ${(ebdTurmaAtual==='adulto1'||ebdTurmaAtual==='jovem1')?'em janeiro de 2027':'no domingo'} — ou agora com o PIN</div></div>
       </div>
       ${_pv&&_pv.aureo?`<div style="background:rgba(201,161,74,.10);border:1px solid rgba(201,161,74,.28);border-radius:12px;padding:12px 14px;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:900;color:#e8c877;letter-spacing:2px;margin-bottom:6px">✨ TEXTO ÁUREO</div>
+        <div style="font-size:11px;font-weight:900;color:#e8c877;letter-spacing:2px;margin-bottom:6px">✨ ${ebdTurmaAtual==='jovem1'?'TEXTO PRINCIPAL':'TEXTO ÁUREO'}</div>
         <div style="font-size:14.5px;line-height:1.55;color:#efe7d2;font-style:italic">${_pv.aureo}</div></div>`:''}
       ${_pv&&_pv.pratica?`<div style="background:rgba(52,199,123,.09);border:1px solid rgba(52,199,123,.26);border-radius:12px;padding:12px 14px;margin-bottom:12px">
-        <div style="font-size:11px;font-weight:900;color:#6fe0a3;letter-spacing:2px;margin-bottom:6px">🎯 VERDADE PRÁTICA</div>
+        <div style="font-size:11px;font-weight:900;color:#6fe0a3;letter-spacing:2px;margin-bottom:6px">🎯 ${ebdTurmaAtual==='jovem1'?'RESUMO DA LIÇÃO':'VERDADE PRÁTICA'}</div>
         <div style="font-size:14px;line-height:1.55;color:#dceee3">${_pv.pratica}</div></div>`:''}
       <button onclick="pedirPinMaster(function(){abrirLicaoDetalhe(${idx});})" style="width:100%;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;background:var(--gold);color:#0a2a24;letter-spacing:.3px">🔓 ABRIR AGORA COM PIN</button>
     </div>`:'';
-  const _magTema=(ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4'||ebdTurmaAtual==='adulto1');   /* tema da revista (paleta CPAD Adultos 4T/2026) */
+  const _magTema=(ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4'||ebdTurmaAtual==='adulto1'||ebdTurmaAtual==='jovem1');   /* tema da revista (paleta CPAD Adultos 4T/2026) */
   // 20/10/2026, pedido do Elias: Texto Áureo, Verdade Prática e "Marcar como concluída" saíram do menu da lição —
   // já estão dentro da própria lição. O menu vai direto aos materiais.
   const _cardsMag='';
@@ -2865,7 +2882,7 @@ function abrirLicaoDetalhe(idx){
   if(_cardsMag&&!EBD_PREVIA) carregarPrevia(function(){ var b=document.getElementById('ebd-mag-cards'); if(b) b.innerHTML=cardsMagHtml(ebdTurmaAtual,lic.n); });
   ocultarTodas();
   document.getElementById('tela-ebd-detalhe').classList.toggle('ebd-mag',_magTema);
-  document.getElementById('tela-ebd-detalhe').classList.toggle('j',ebdTurmaAtual==='jovem4');
+  document.getElementById('tela-ebd-detalhe').classList.toggle('j',ebdTurmaAtual==='jovem4'||ebdTurmaAtual==='jovem1');
   document.getElementById('tela-ebd-detalhe').classList.add('ativa');
 }
 
