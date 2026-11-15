@@ -1303,6 +1303,30 @@ html[data-pele="azul"] #home::selection{background:rgba(231,184,79,.35)}
 .ebd-mag-card.pratica .mc-titulo{color:var(--mag-vinho)}
 .ebd-mag-btn-concluir{background:var(--mag-vinho) !important;color:var(--mag-creme) !important;border:1.5px solid var(--mag-ouro) !important}
 
+/* ══ EBD · ÍNDICE = SUMÁRIO DA REVISTA (Adultos 4T/2026) — 15/11/2026, pedido do Elias ══
+   Cores medidas na página do SUMÁRIO da revista do aluno: fundo branco, faixa creme #f1f0de, títulos azul-ardósia #495b79,
+   faixa azul-aço #4487bc, filetes azul-claros #afc5d4, texto grafite #464646. Só a tela da turma de Adultos 4º tri (Jovens não muda). */
+.ebd-sumario{display:none}
+#tela-ebd-turma.ebd-mag:not(.j){--sum-creme:#f1f0de;--sum-ardosia:#495b79;--sum-aco:#4487bc;--sum-filete:#afc5d4;--sum-texto:#464646;background:#fefefe !important}
+#tela-ebd-turma.ebd-mag:not(.j) .std-header{background:var(--sum-creme);border-bottom:7px solid var(--sum-aco)}
+#tela-ebd-turma.ebd-mag:not(.j) .std-titulo{color:var(--sum-ardosia);font-family:Georgia,'Times New Roman',serif;font-weight:700;letter-spacing:1px}
+#tela-ebd-turma.ebd-mag:not(.j) .std-sub{color:var(--sum-aco);font-weight:700}
+#tela-ebd-turma.ebd-mag:not(.j) .std-back{background:#fff;color:var(--sum-ardosia);border:1px solid var(--sum-filete)}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-sumario{display:block;margin:4px 2px 6px}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-sumario .s-tit{font-family:Georgia,'Times New Roman',serif;font-size:38px;line-height:1.05;color:var(--sum-ardosia);letter-spacing:.5px}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-sumario .s-tema{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:17px;color:#1f1f1f;margin-top:10px}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-sumario .s-sub{font-family:Georgia,'Times New Roman',serif;font-size:14.5px;line-height:1.35;color:var(--sum-texto);margin:2px 0 4px}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-item{background:transparent;border:0;border-bottom:1px solid var(--sum-filete);border-radius:0;box-shadow:none;margin:0;padding:13px 4px}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-lic-num{background:transparent;color:var(--sum-aco);font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:700;font-size:15px;width:30px}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-item-titulo{color:var(--sum-texto);font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:400;font-size:15.5px}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-item-meta{color:var(--sum-ardosia);opacity:.85}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-chev{color:var(--sum-aco) !important}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-prog{background:var(--sum-creme) !important;border:1px solid var(--sum-filete) !important}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-prog > div:first-child > div:first-child{color:var(--sum-ardosia) !important}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-prog > div:first-child > div:last-child{color:var(--sum-texto) !important}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-prog > div:last-child{background:#dfe8ef !important}
+#tela-ebd-turma.ebd-mag:not(.j) .ebd-prog > div:last-child > div{background:linear-gradient(90deg,var(--sum-aco),var(--sum-ardosia)) !important}
+
 /* ══ EBD · variante JOVENS (revista de tom dourado/quente: âmbar, creme, rosa-vinho) ══ */
 .ebd-mag.j{--mag-navy:#2b1d10;--mag-navy2:#1a1108;--mag-azul:#b66e28;--mag-aco:#8e5513;--mag-ceu:#f1e4cc;--mag-vinho:#a34a5e;--mag-creme:#f6edda;--mag-bronze:#b66e28;--mag-ouro:#e3a845}
 .ebd-mag.j .std-header{border-bottom-color:rgba(227,168,69,.5)}

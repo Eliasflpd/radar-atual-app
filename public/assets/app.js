@@ -2674,7 +2674,7 @@ function abrirEbdTurma(turma){
     document.getElementById('ebd-turma-sub').textContent=main.length+' lições';
     const _capaHero=`<div style="margin:2px 0 10px;overflow:hidden"><img src="/ebd/${turma}/img/capa.jpg?v=206" style="width:100%;display:block;border-radius:14px;-webkit-mask-image:linear-gradient(to bottom,#000 72%,transparent 100%);mask-image:linear-gradient(to bottom,#000 72%,transparent 100%)" onerror="this.parentNode.style.display='none'"></div>`;
     const _pg=ebdProgTurma(turma); const _pct=_pg.total?Math.round(_pg.feitas/_pg.total*100):0;
-    const _progBar=_pg.total?`<div style="margin:0 0 16px;background:rgba(15,24,38,.6);border:1px solid rgba(240,226,184,.18);border-radius:14px;padding:12px 14px">
+    const _progBar=_pg.total?`<div class="ebd-prog" style="margin:0 0 16px;background:rgba(15,24,38,.6);border:1px solid rgba(240,226,184,.18);border-radius:14px;padding:12px 14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:12.5px;font-weight:800;color:#f0dca0;letter-spacing:.3px">📗 MEU PROGRESSO</div>
         <div style="font-size:12px;color:var(--sub)">${_pg.feitas} de ${_pg.total} concluídas</div>
@@ -2683,7 +2683,9 @@ function abrirEbdTurma(turma){
         <div style="height:100%;width:${_pct}%;background:linear-gradient(90deg,#c8873f,#f0dca0);border-radius:99px;transition:width .4s"></div>
       </div>
     </div>`:'';
-    body.innerHTML=_capaHero+_progBar+main.map(lic=>{
+    /* 15/11/2026: Adultos 4º tri — o índice segue o SUMÁRIO da revista (cores em radar.css, #tela-ebd-turma.ebd-mag:not(.j)) */
+    const _sumario=turma==='adulto4'?'<div class="ebd-sumario"><div class="s-tit">SUMÁRIO</div><div class="s-tema">O Deus da Aliança</div><div class="s-sub">Advertências, Promessas e Bênçãos no Livro de Deuteronômio</div></div>':'';
+    body.innerHTML=_capaHero+_progBar+_sumario+main.map(lic=>{
       const idx=lics.indexOf(lic);
       const _feita=ebdConcluida(turma,lic.n);
       const _selo=_feita?'<div style="position:absolute;top:10px;left:10px;background:#25D366;color:#fff;font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.4)">✓ CONCLUÍDA</div>':'';
@@ -2728,7 +2730,7 @@ function abrirEbdTurma(turma){
           <div class="ebd-item-titulo">${lic.titulo}</div>
           <div class="ebd-item-meta">${tags}</div>
         </div>
-        ${_selo2}<span style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>
+        ${_selo2}<span class="ebd-chev" style="color:var(--sub);font-size:22px;flex-shrink:0">›</span>
       </div>`;
     }).join('')+
     (extra.length?`<div style="padding:8px 0 4px"><div class="bh-secao" style="margin:0">Extra</div></div>`+
