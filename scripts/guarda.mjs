@@ -236,7 +236,9 @@ function checarLixo() {
     ['.vercel/', 'pasta .vercel'],
   ];
   for (const [p, nome] of proibidos) {
-    const linhas = versionados.split('\n').filter(l => l.startsWith(p) || l.includes('/' + p));
+    // 15/11/2026 (Elias autorizou): .env.example é modelo sem chave e passa; .env de verdade continua travando.
+    // O conteúdo de todo arquivo versionado continua passando pela caça de ASSINATURAS de chave.
+    const linhas = versionados.split('\n').filter(l => (l.startsWith(p) || l.includes('/' + p)) && !l.endsWith('.env.example'));
     if (linhas.length) falha(`${nome} está no git (${linhas.length} arquivo${linhas.length > 1 ? 's' : ''}). `
       + `Rode: git rm -r --cached ${p.replace(/\/$/, '')}`);
   }
