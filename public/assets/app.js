@@ -2259,7 +2259,7 @@ const EBD_LICOES = {
   // 15/11/2026: Lições Bíblicas Adultos — 1º Tri 2027 "Tornai para mim e Eu Tornarei para vós" (Zacarias), comentarista Esequias Soares.
   // Texto da Revista do Professor (OCR revisado lição por lição). Abre em 01/01/2027; antes disso, só com o PIN (ebd1T27Travado).
   adulto1:[
-    {n:1,  titulo:'O Chamado ao Arrependimento e à Esperança',          licao:'/ebd/adulto1/html/licao-01.html', ppt:null, apoio:null, mapa:null},  /* 15/11/2026: PPT em pausa — o Elias quer slides normais e visuais (sem letra gigante) */
+    {n:1,  titulo:'O Chamado ao Arrependimento e à Esperança',          licao:'/ebd/adulto1/html/licao-01.html', ppt:null, apoio:null, mapa:null, prof:true},  /* 15/11/2026: Lição (aluno) + Material do Professor separados, molde do 4º tri; PPT em pausa (slides normais e visuais) */
     {n:2,  titulo:'Deus Está Presente entre o seu Povo',                licao:'/ebd/adulto1/html/licao-02.html', ppt:null, apoio:null, mapa:null},
     {n:3,  titulo:'O Poder de Deus contra os Inimigos',                 licao:'/ebd/adulto1/html/licao-03.html', ppt:null, apoio:null, mapa:null},
     {n:4,  titulo:'Jerusalém e o Homem com o Cordel de Medir',          licao:'/ebd/adulto1/html/licao-04.html', ppt:null, apoio:null, mapa:null},
@@ -2761,9 +2761,11 @@ function abrirEbdTurma(turma){
           </div>
         </div>`;
       }
+      /* 15/11/2026: 2027 — miniatura da capa de cada lição na lista (a revista bem organizada: capa, lições, contracapa) */
+      const _thumb=(turma==='adulto1'||turma==='jovem1')?`<img class="ebd-thumb" src="/ebd/${turma}/img/capa-licao-${String(lic.n).padStart(2,'0')}.jpg?d=2" alt="" loading="lazy" onerror="this.remove()">`:'';
       if(isLocked){
         return `<div class="ebd-item ppt-item" style="opacity:.72;cursor:pointer" onclick="abrirLicaoDetalhe(${idx})">
-          <div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
+          ${_thumb}<div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
           <div class="ebd-item-info">
             <div class="ebd-item-titulo">${lic.titulo}</div>
             <div class="ebd-item-meta">🔒 Ver prévia · abre com PIN</div>
@@ -2772,7 +2774,7 @@ function abrirEbdTurma(turma){
         </div>`;
       }
       return `<div class="ebd-item ppt-item" onclick="abrirLicaoDetalhe(${idx})">
-        <div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
+        ${_thumb}<div class="ebd-lic-num">${String(lic.n).padStart(2,'0')}</div>
         <div class="ebd-item-info">
           <div class="ebd-item-titulo">${lic.titulo}</div>
           <div class="ebd-item-meta">${tags}</div>
@@ -2790,7 +2792,9 @@ function abrirEbdTurma(turma){
         </div>
         <span style="font-size:18px;flex-shrink:0">🔒</span>
       </div>`;
-    }).join(''):'');
+    }).join(''):'')+
+    /* 15/11/2026: 2027 — contracapa da revista no fim da lista, como o fechamento da revista impressa */
+    ((turma==='adulto1'||turma==='jovem1')?`<div class="ebd-contracapa"><div class="ebd-contracapa-tit">Contracapa</div><img src="/ebd/${turma}/img/contracapa.jpg?v=1" alt="Contracapa da revista" loading="lazy" onerror="this.parentNode.remove()"></div>`:'');
   }
   ocultarTodas();
   document.getElementById('tela-ebd-turma').classList.add('ativa');
@@ -2842,12 +2846,18 @@ function abrirLicaoDetalhe(idx){
       // 20/10/2026: a revista Obreiro Aprovado nº 115 (CPAD, tema Missões) acompanha o trimestre inteiro — uma página só
       {num:'',icon:'🕊️',nome:'REVISTA OBREIRO APROVADO',ativo:true,tap:`abrirReader(${idx},'obreiro')`}
     ]:[]),
+    // 15/11/2026: 1º tri 2027 (Adultos) — os mesmos itens da lição do 4º tri; o que ainda não chegou (Devocional,
+    // Obreiro Aprovado 116, Apoio, Cristão Alerta, vídeo, PPT) fica com o título e "Em breve" até o Elias mandar
+    ...(ebdTurmaAtual==='adulto1'&&lic.n>0?[
+      {num:'',icon:'🎓',nome:'MATERIAL DO PROFESSOR',ativo:!!lic.prof,tap:lic.prof?`abrirReader(${idx},'professor')`:null},
+      {num:'',icon:'🌅',nome:'DEVOCIONAL LEITURA DIÁRIA',ativo:false,tap:null},
+      {num:'',icon:'🕊️',nome:'REVISTA OBREIRO APROVADO',ativo:false,tap:null}
+    ]:[]),
     // Igreja Squad: a Priscila monta a aula a partir desta lição (api/_lib/ebd-plano.js)
     {num:'7',icon:'👩‍🏫',nome:'PLANO DE AULA',
      ativo:lic.n>0,
      tap:lic.n>0?`abrirPlanoAula(${idx})`:null}
-  ].filter(it=>(ebdTurmaAtual!=='adulto1'&&ebdTurmaAtual!=='jovem1')||['LIÇÃO','PPT','APOIO','MAPA MENTAL','PLANO DE AULA'].includes(it.nome))  /* 1º tri 2027: só o que existe (Lição da revista do Professor + Plano de Aula; PPT/Apoio "em breve") */
-   .map((it,i)=>({...it,num:String(i+1)}));
+  ].map((it,i)=>({...it,num:String(i+1)}));   /* 15/11/2026: 2027 mostra TODOS os itens do molde do 4º tri (os sem material ficam "Em breve") */
   const _fnd=lic.n>0&&ebdConcluida(ebdTurmaAtual,lic.n);
   const _btnConcluir=(lic.n>0&&!_detLocked)?`<button id="ebd-btn-concluir" onclick="ebdMarcarConcluida(${idx})" style="width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${_fnd?'background:#25D366;color:#fff':((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4')?'background:'+(ebdTurmaAtual==='jovem4'?'#a34a5e':'#962030')+';color:#f9f5da;border:1.5px solid #d9a441':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)')}">${_fnd?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA'}</button>`:'';
   // PRÉVIA da lição bloqueada: capa (acima) + Texto Áureo + Verdade Prática + botão de PIN

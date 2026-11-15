@@ -15,7 +15,8 @@ import { fileURLToPath } from 'node:url';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EBD = path.join(RAIZ, 'public', 'ebd');
-const TURMAS = ['adulto4', 'jovem4'];
+// 15/11/2026: turmas pela linha de comando (ex.: node scripts/ebd-voz-pacote.mjs adulto1); sem nada, as do 4º tri
+const TURMAS = process.argv.slice(2).length ? process.argv.slice(2) : ['adulto4', 'jovem4'];
 
 const ent = (s) => s.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
   .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&[a-z]+;/g, '');

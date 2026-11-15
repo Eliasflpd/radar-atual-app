@@ -1333,6 +1333,11 @@ html[data-pele="azul"] #home::selection{background:rgba(231,184,79,.35)}
 #tela-ebd-turma.ebd-mag.t1 .ebd-sumario .s-tema{color:#2f2f2f}
 #tela-ebd-turma.ebd-mag.t1 .ebd-item-titulo{font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#555}
 #tela-ebd-turma.ebd-mag.t1 .ebd-item{border-bottom-width:1.5px}
+/* 15/11/2026: 2027 — miniatura da capa na linha da lição e contracapa no fim da lista */
+.ebd-thumb{width:44px;height:70px;object-fit:cover;border-radius:5px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.ebd-contracapa{margin:18px 0 8px;text-align:center}
+.ebd-contracapa-tit{font:800 12px/1 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:2px;text-transform:uppercase;opacity:.7;margin-bottom:8px}
+.ebd-contracapa img{width:100%;height:auto;display:block;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 
 /* ══ EBD · variante JOVENS (revista de tom dourado/quente: âmbar, creme, rosa-vinho) ══ */
 .ebd-mag.j{--mag-navy:#2b1d10;--mag-navy2:#1a1108;--mag-azul:#b66e28;--mag-aco:#8e5513;--mag-ceu:#f1e4cc;--mag-vinho:#a34a5e;--mag-creme:#f6edda;--mag-bronze:#b66e28;--mag-ouro:#e3a845}

@@ -345,6 +345,7 @@ async function abrirCatalogoEBD(origem) {
 // existe. O 4º trimestre começou em 04/10/2026 e mora nas turmas adulto4/jovem4 (mesma conta de
 // licaoDaSemana4 no app). Trimestre novo = acrescentar uma linha aqui (o mais novo em cima).
 const TRIMESTRES = [
+  { inicio: '2027-01-03', nome: '1º trimestre de 2027', turmas: { adulto: 'adulto1', jovem: 'jovem1' } },   // 15/11/2026
   { inicio: '2026-10-04', nome: '4º trimestre de 2026', turmas: { adulto: 'adulto4', jovem: 'jovem4' } },
   { inicio: '2026-07-05', nome: '3º trimestre de 2026', turmas: { adulto: 'adulto', jovem: 'jovem', juvenis: 'juvenis', adolescentes: 'adolescentes', juniores: 'juniores' } },
 ];
