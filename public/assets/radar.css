@@ -1397,3 +1397,162 @@ html[data-pele="azul"] #home::selection{background:rgba(231,184,79,.35)}
 .bib-mod .bm-comp{position:absolute;top:8px;right:8px;z-index:3;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.95);box-shadow:0 2px 6px rgba(0,0,0,.35);font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .bib-mod.com-comp .bm-cadeado{right:46px}
 @media (max-width:520px){ .bib-grade .bib-mod:last-child:nth-child(odd){grid-column:1/-1;aspect-ratio:5/2.2} }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   HOME NOVA — "Tempo com Deus. Conhecimento para a vida."  (15/11/2026, mockup do Elias)
+   Só vale com a classe .nh no #home. Tirando a classe, volta a vitrine antiga (intacta).
+   Celular (padrão): medidas em px e a tela rola. Tablet/telas largas (>=600px): tudo em
+   --u = 1 px do mockup (992x1586), limitado pela altura — a tela inteira cabe sem rolar e
+   a LARGURA é sempre a tela toda (nada de faixa vazia nos lados).
+   ══════════════════════════════════════════════════════════════════════════════ */
+html body #home.nh{
+  --nh-bg:#0A1729; --nh-bg2:#0E1F36; --nh-card:#11233B; --nh-borda:rgba(160,185,215,.20);
+  --nh-ouro:#E9B54C; --nh-ouro2:#F3C969; --nh-txt:#F1F4F8; --nh-sub:#A9B6C6;
+  background:radial-gradient(120% 60% at 50% 0%,#10223B 0%,var(--nh-bg) 60%) fixed,var(--nh-bg);
+  color:var(--nh-txt);font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+html body #home.nh .vitrine,html body #home.nh .sec-label,html body #home.nh #modulos{display:none!important}
+html body #home.nh .home-scroll{background:transparent;display:block;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  padding:0 16px calc(76px + env(safe-area-inset-bottom))}
+.nh-wrap{display:flex;flex-direction:column}
+.nh-wrap svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.nh-wrap button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.nh-wrap [onclick]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+/* topo */
+.nh-top{display:flex;align-items:center;gap:12px;padding:max(env(safe-area-inset-top),12px) 0 6px}
+.nh-logo{color:var(--nh-ouro);width:40px;display:grid;place-items:center}
+.nh-logo svg{width:40px;height:34px;stroke-width:2.4}
+.nh-sep{width:1px;align-self:stretch;margin:6px 0;background:var(--nh-borda)}
+.nh-marca{flex:1;font-size:21px;font-weight:600;letter-spacing:.2px;color:var(--nh-txt)}
+.nh-ibtn{background:none;border:0;padding:4px;color:var(--nh-ouro);display:grid;place-items:center}
+.nh-ibtn svg{width:26px;height:26px}
+.nh-ibtn:last-child{color:var(--nh-txt)}
+.nh-lema{font-size:21px;font-weight:700;line-height:1.2;margin:10px 0 0;color:var(--nh-txt);letter-spacing:-.1px}
+.nh-traco{width:44px;height:4px;border-radius:3px;background:var(--nh-ouro);margin:8px 0 14px}
+
+/* busca */
+.nh-busca{display:flex;align-items:center;gap:12px;width:100%;height:48px;padding:0 16px;border-radius:12px;
+  background:rgba(17,35,59,.85);border:1px solid var(--nh-borda);color:var(--nh-sub);font-size:15px;text-align:left}
+.nh-busca svg{width:20px;height:20px;color:var(--nh-txt)}
+.nh-busca span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* sua próxima leitura */
+.nh-prox{position:relative;margin-top:14px;border-radius:14px;overflow:hidden;border:1px solid var(--nh-borda);min-height:172px;display:flex;
+  background:linear-gradient(90deg,#14243a 0%,#1a2737 46%,rgba(26,39,55,.55) 58%,rgba(26,39,55,0) 74%),url(/img/home/nh-biblia.jpg) right center / auto 100% no-repeat,#2a2418}
+.nh-prox-txt{position:relative;padding:18px 18px 18px;display:flex;flex-direction:column;align-items:flex-start;max-width:68%}
+.nh-prox-rot{font-size:11.5px;font-weight:700;letter-spacing:2px;color:var(--nh-ouro)}
+.nh-prox-tit{font-size:21px;font-weight:700;line-height:1.15;margin-top:6px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.45);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.nh-prox-sub{font-size:13.5px;color:var(--nh-sub);margin-top:4px}
+.nh-prox-btn{margin-top:14px;display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 18px;border:0;border-radius:9px;
+  background:var(--nh-ouro);color:#1B1408;font-size:15px;font-weight:600;box-shadow:0 4px 14px rgba(233,181,76,.25)}
+.nh-prox-btn svg{width:18px;height:18px;stroke-width:2.2}
+.nh-prox:active .nh-prox-btn{background:var(--nh-ouro2)}
+
+/* seções */
+.nh-sec{font-size:18px;font-weight:600;margin:18px 0 10px;color:var(--nh-txt)}
+.nh-grade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.nh-card{display:flex;align-items:center;gap:12px;min-height:66px;padding:10px 12px;border-radius:10px;background:var(--nh-card);border:1px solid var(--nh-borda);
+  transition:transform .12s,border-color .12s}
+.nh-card svg{width:30px;height:30px;color:var(--nh-ouro)}
+.nh-card b{display:block;font-size:15px;font-weight:600;color:var(--nh-txt);line-height:1.2}
+.nh-card span{display:block;font-size:12px;color:var(--nh-sub);line-height:1.3;margin-top:2px}
+.nh-card:active,.nh-linha:active,.nh-ouca>div:active,.nh-vers:active{transform:scale(.98);border-color:rgba(233,181,76,.6)}
+.nh-linha{display:flex;align-items:center;gap:14px;height:52px;padding:0 16px;border-radius:10px;background:var(--nh-card);border:1px solid var(--nh-borda)}
+.nh-linha svg{width:24px;height:24px;color:var(--nh-ouro)}
+.nh-linha b{font-size:15.5px;font-weight:600;color:var(--nh-txt);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nh-linha i{width:1px;height:26px;background:var(--nh-borda)}
+.nh-linha .nh-seta{width:22px;height:22px;color:var(--nh-txt)}
+.nh-dupla{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px}
+.nh-dupla .nh-linha{padding:0 12px;gap:10px}
+.nh-dupla .nh-linha b{font-size:14px}
+.nh-linha{min-width:0}.nh-card>div{min-width:0}
+
+/* ouça e reflita */
+.nh-ouca{--oh:84px;display:flex;align-items:stretch;height:var(--oh);border-radius:12px;overflow:hidden;border:1px solid var(--nh-borda);
+  background:linear-gradient(90deg,rgba(17,35,59,0) 0,rgba(17,35,59,.15) calc(var(--oh)*.8),rgba(17,35,59,.75) calc(var(--oh)*1.55),var(--nh-card) calc(var(--oh)*1.95)),url(/img/home/nh-sol.jpg) left center / auto 100% no-repeat,var(--nh-card)}
+.nh-ouca-mus{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 10px 0 24%}
+.nh-ouca-mus b{font-size:15px;font-weight:600;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);text-align:right;line-height:1.2}
+.nh-play{width:42px;height:42px;border-radius:50%;background:var(--nh-ouro);color:#1B1408;display:grid;place-items:center;flex-shrink:0}
+.nh-play svg{width:20px;height:20px;margin-left:2px}
+.nh-ouca>i{width:1px;margin:16px 0;background:var(--nh-borda)}
+.nh-ouca-voz{display:flex;align-items:center;gap:6px;padding:0 12px 0 10px;flex-shrink:0}
+.nh-ouca-voz svg{width:26px;height:26px;color:var(--nh-ouro)}
+.nh-ouca-voz b{font-size:13.5px;font-weight:500;color:var(--nh-txt);line-height:1.25}
+
+/* versículo */
+.nh-vers{display:flex;align-items:center;gap:14px;margin-top:14px;padding:14px 16px;border-radius:12px;background:var(--nh-card);border:1px solid var(--nh-borda)}
+.nh-aspas{font-family:Georgia,'Lora',serif;font-size:44px;line-height:.6;color:var(--nh-ouro);font-weight:700;padding-top:12px}
+.nh-vers>i{width:1px;align-self:stretch;background:var(--nh-borda)}
+.nh-vtxt{font-family:'Lora',Georgia,serif;font-style:italic;font-size:15.5px;line-height:1.35;color:var(--nh-txt)}
+.nh-vref{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--nh-ouro);margin-top:6px}
+
+/* barra de baixo */
+html body #home.nh .nav-bottom{background:rgba(8,18,33,.97);border-top:1px solid var(--nh-borda);box-shadow:0 -4px 18px rgba(0,0,0,.35);padding:8px 0 max(env(safe-area-inset-bottom),8px)}
+html body #home.nh .nav-btn .ni{filter:none;color:var(--nh-txt);display:grid;place-items:center;font-size:0}
+html body #home.nh .nav-btn .ni svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+html body #home.nh .nav-btn .nl{font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--nh-txt)}
+html body #home.nh .nav-btn.on .ni,html body #home.nh .nav-btn.on .nl{color:var(--nh-ouro)}
+html body #home.nh .nav-btn.on .nl{position:relative}
+html body #home.nh .nav-btn.on .nl::after{content:"";position:absolute;left:-14px;right:-14px;bottom:-6px;height:3px;border-radius:2px;background:var(--nh-ouro)}
+
+/* escolha "Músicas ou pregações" */
+.nh-folha{position:fixed;inset:0;z-index:9000;background:rgba(3,9,18,.6);display:flex;align-items:flex-end;justify-content:center}
+.nh-folha>div{width:100%;max-width:560px;background:#0E1F36;border-top:1px solid rgba(233,181,76,.35);border-radius:18px 18px 0 0;padding:18px 16px max(env(safe-area-inset-bottom),18px);display:flex;flex-direction:column;gap:10px}
+.nh-folha button{height:54px;border-radius:12px;border:1px solid rgba(160,185,215,.2);background:#11233B;color:#F1F4F8;font-size:16px;font-weight:600;font-family:inherit}
+.nh-folha button.x{background:none;border:0;color:#A9B6C6;height:40px;font-weight:500}
+
+/* ── TABLET e telas largas: escala do mockup (1 --u = 1 px do mockup) ── */
+@media (min-width:600px){
+  html body #home.nh{--u:min(.1008vw,.0578vh)}
+  html body #home.nh .home-scroll{padding:0 calc(var(--u)*30) calc(var(--u)*150 + env(safe-area-inset-bottom))}
+  .nh-top{gap:calc(var(--u)*20);padding:calc(var(--u)*18) 0 calc(var(--u)*6)}
+  .nh-logo,.nh-logo svg{width:calc(var(--u)*68);height:calc(var(--u)*56)}
+  .nh-marca{font-size:calc(var(--u)*36)}
+  .nh-ibtn svg{width:calc(var(--u)*44);height:calc(var(--u)*44)}
+  .nh-lema{font-size:calc(var(--u)*40);margin-top:calc(var(--u)*16)}
+  .nh-traco{width:calc(var(--u)*76);height:calc(var(--u)*6);margin:calc(var(--u)*12) 0 calc(var(--u)*26)}
+  .nh-busca{height:calc(var(--u)*64);gap:calc(var(--u)*24);padding:0 calc(var(--u)*26);font-size:calc(var(--u)*25);border-radius:calc(var(--u)*13)}
+  .nh-busca svg{width:calc(var(--u)*32);height:calc(var(--u)*32)}
+  .nh-prox{margin-top:calc(var(--u)*24);min-height:calc(var(--u)*248);border-radius:calc(var(--u)*14);
+    background:linear-gradient(90deg,#14243a 0%,#1a2737 46%,rgba(26,39,55,.55) 56%,rgba(26,39,55,0) 70%),url(/img/home/nh-biblia.jpg) right center / auto 100% no-repeat,#2a2418}
+  .nh-prox-txt{padding:calc(var(--u)*34) calc(var(--u)*38);max-width:60%}
+  .nh-prox-rot{font-size:calc(var(--u)*21)}
+  .nh-prox-tit{font-size:calc(var(--u)*44);margin-top:calc(var(--u)*8);-webkit-line-clamp:2}
+  .nh-prox-sub{font-size:calc(var(--u)*24);margin-top:calc(var(--u)*6)}
+  .nh-prox-btn{height:calc(var(--u)*56);padding:0 calc(var(--u)*30);gap:calc(var(--u)*18);font-size:calc(var(--u)*26);border-radius:calc(var(--u)*10);margin-top:calc(var(--u)*18)}
+  .nh-prox-btn svg{width:calc(var(--u)*28);height:calc(var(--u)*28)}
+  .nh-sec{font-size:calc(var(--u)*34);margin:calc(var(--u)*26) 0 calc(var(--u)*18)}
+  .nh-grade{grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(var(--u)*16)}
+  .nh-card{min-height:calc(var(--u)*112);gap:calc(var(--u)*24);padding:0 calc(var(--u)*24);border-radius:calc(var(--u)*10)}
+  .nh-card svg{width:calc(var(--u)*56);height:calc(var(--u)*56)}
+  .nh-card b{font-size:calc(var(--u)*27)}
+  .nh-card span{font-size:calc(var(--u)*19.5);margin-top:calc(var(--u)*4)}
+  .nh-linha{height:calc(var(--u)*68);gap:calc(var(--u)*26);padding:0 calc(var(--u)*32);border-radius:calc(var(--u)*10)}
+  .nh-linha svg{width:calc(var(--u)*40);height:calc(var(--u)*40)}
+  .nh-linha b{font-size:calc(var(--u)*28)}
+  .nh-linha i{height:calc(var(--u)*30)}
+  .nh-linha .nh-seta{width:calc(var(--u)*32);height:calc(var(--u)*32)}
+  .nh-dupla{gap:calc(var(--u)*18);margin-top:calc(var(--u)*16)}
+  .nh-dupla .nh-linha{padding:0 calc(var(--u)*32);gap:calc(var(--u)*30)}
+  .nh-dupla .nh-linha b{font-size:calc(var(--u)*27)}
+  .nh-ouca{--oh:calc(var(--u)*138);border-radius:calc(var(--u)*12)}
+  .nh-ouca-mus{gap:calc(var(--u)*40);padding:0 calc(var(--u)*40) 0 28%}
+  .nh-ouca-mus b{font-size:calc(var(--u)*32)}
+  .nh-play{width:calc(var(--u)*62);height:calc(var(--u)*62)}
+  .nh-play svg{width:calc(var(--u)*28);height:calc(var(--u)*28)}
+  .nh-ouca>i{margin:calc(var(--u)*30) 0}
+  .nh-ouca-voz{gap:calc(var(--u)*20);padding:0 calc(var(--u)*24) 0 calc(var(--u)*40)}
+  .nh-ouca-voz svg{width:calc(var(--u)*44);height:calc(var(--u)*44)}
+  .nh-ouca-voz b{font-size:calc(var(--u)*24)}
+  .nh-vers{margin-top:calc(var(--u)*26);padding:calc(var(--u)*22) calc(var(--u)*34);gap:calc(var(--u)*30);border-radius:calc(var(--u)*12)}
+  .nh-aspas{font-size:calc(var(--u)*72);padding-top:calc(var(--u)*22)}
+  .nh-vtxt{font-size:calc(var(--u)*28)}
+  .nh-vref{font-size:calc(var(--u)*18);margin-top:calc(var(--u)*8)}
+  html body #home.nh .nav-bottom{padding:calc(var(--u)*22) 0 max(env(safe-area-inset-bottom),calc(var(--u)*22))}
+  html body #home.nh .nav-btn{gap:calc(var(--u)*8)}
+  html body #home.nh .nav-btn .ni svg{width:calc(var(--u)*42);height:calc(var(--u)*42)}
+  html body #home.nh .nav-btn .nl{font-size:calc(var(--u)*24)}
+  html body #home.nh .nav-btn.on .nl::after{bottom:calc(var(--u)*-14);height:calc(var(--u)*6)}
+}

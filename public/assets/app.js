@@ -430,6 +430,7 @@ function irHome(){
   ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
+  try{ nhRender(); }catch(e){}  // home nova: "Sua próxima leitura"
   mostrarAvisoConfirmacao();    // faixa "Confirme seu WhatsApp" (só para quem entrou sem confirmar)
   if(!_acessoVerificado){ _acessoVerificado=true; verificarAcesso(); renovarChave(); }
   if(!_deepLinkFeito){                 // ?mod=... / ?ir=... abre direto SÓ na 1ª carga; voltar nunca reabre
@@ -4538,6 +4539,40 @@ function flyersExtrasCards(){
     return d>=hoje;
   }).map(function(f,i){ return {id:'fx'+i, tipo:'flyer', imagem:f.img}; });
 }
+// ── HOME NOVA (15/11/2026): "Sua próxima leitura" = a lição do domingo que vem (no domingo, a do dia) ──
+function nhProxima(){
+  var hoje=_hoje0(), t='adulto4', rot='EBD Adultos', ini=new Date(2026,9,4);
+  var ini27=new Date(2027,0,3);
+  if(hoje>=ini27){ t='adulto1'; ini=ini27; }
+  ini.setHours(0,0,0,0);
+  var n=hoje<ini?1:Math.ceil(((hoje-ini)/86400000)/7)+1;
+  if(n>13 && t==='adulto4'){ t='adulto1'; n=1; }
+  n=Math.max(1,Math.min(13,n));
+  var lics=(typeof EBD_LICOES!=='undefined'&&EBD_LICOES[t])||[], idx=-1;
+  for(var i=0;i<lics.length;i++){ if(lics[i].n===n){ idx=i; break; } }
+  return {turma:t, n:n, idx:idx, titulo:(idx>=0?lics[idx].titulo:'Lição da semana'), rot:rot};
+}
+function nhRender(){
+  var p=nhProxima(), a=document.getElementById('nh-prox-tit'), b=document.getElementById('nh-prox-sub');
+  if(a) a.textContent=p.titulo;
+  if(b) b.textContent=p.rot+' · Lição '+p.n;
+}
+function nhAbrirProxima(){
+  var p=nhProxima();
+  try{ abrirEbdTurma(p.turma); if(p.idx>=0) abrirLicaoDetalhe(p.idx); }catch(e){ abrirEbd(); }
+}
+function nhOuvir(){
+  var f=document.createElement('div'); f.className='nh-folha';
+  f.innerHTML='<div><button data-v="m">🎵 Músicas</button><button data-v="p">🎙️ Pregações</button><button class="x" data-v="x">Fechar</button></div>';
+  f.addEventListener('click',function(e){
+    var v=e.target&&e.target.getAttribute&&e.target.getAttribute('data-v');
+    if(e.target===f||v){ f.remove(); }
+    if(v==='m'){ if(window.abrirMusicas) abrirMusicas(); }
+    if(v==='p'){ location.href='/biblioteca/mensagens/'; }
+  });
+  document.body.appendChild(f);
+}
+document.addEventListener('DOMContentLoaded',function(){ try{ nhRender(); }catch(e){} });
 function licaoDaSemana4(){
   var start=new Date(2026,9,4); start.setHours(0,0,0,0); // 1o domingo do 4o tri 2026
   var d=_hoje0();

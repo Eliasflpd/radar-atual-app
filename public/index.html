@@ -12,9 +12,9 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/radar.css?v=344">
-<link rel="stylesheet" href="/assets/musicas.css?v=344">
-<link rel="preload" as="script" href="/assets/app.js?v=344">
+<link rel="stylesheet" href="/assets/radar.css?v=345">
+<link rel="stylesheet" href="/assets/musicas.css?v=345">
+<link rel="preload" as="script" href="/assets/app.js?v=345">
 <script>
 /* ── A PELE DA HOME (bege ou azul) ──────────────────────────────────────────
    Isto roda AQUI NO <head>, antes de o navegador pintar qualquer coisa.
@@ -56,7 +56,7 @@
 
 <!-- ══ VITRINE 3×3 — NOVO VISUAL DA HOME (azul claro + dourado) ══ -->
 <!-- HOME -->
-<div class="tela" id="home">
+<div class="tela nh" id="home">
   <div class="home-search">
     <div class="home-search-inner">
       <span style="font-size:16px;opacity:.4">🔍</span>
@@ -65,6 +65,67 @@
   </div>
   <div class="home-divider"></div>
   <div class="home-scroll">
+
+    <!-- ══ HOME NOVA (15/11/2026) — mockup do Elias: azul-noite + dourado, "Tempo com Deus".
+         Para voltar à vitrine antiga: tirar a classe "nh" do <div id="home"> (a vitrine continua aqui embaixo, intacta). ══ -->
+    <div class="nh-wrap">
+      <header class="nh-top">
+        <div class="nh-logo" onclick="tapLogo()" title="Radar Atual">
+          <svg viewBox="0 0 48 40" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a14 14 0 0 1 20 0"/><path d="M18.5 13.5a7.5 7.5 0 0 1 11 0"/><circle cx="24" cy="17.5" r="1.6" fill="currentColor"/><path d="M4 22c7-3 14-2 20 3 6-5 13-6 20-3v13c-7-3-14-2-20 3-6-5-13-6-20-3z"/><path d="M24 25v13"/></svg>
+        </div>
+        <div class="nh-sep"></div>
+        <div class="nh-marca">Radar Atual</div>
+        <button class="nh-ibtn" title="Avisos" onclick="var w=document.getElementById('painel-hoje-wrap');if(w&&w.innerText.trim()){w.style.display='block';w.scrollIntoView({behavior:'smooth'})}else{irPerfil()}"><svg viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"/><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"/></svg></button>
+        <div class="nh-sep"></div>
+        <button class="nh-ibtn" title="Meu perfil" onclick="irPerfil()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.66V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.66"/></svg></button>
+      </header>
+
+      <h1 class="nh-lema">Tempo com Deus. Conhecimento para a vida.</h1>
+      <div class="nh-traco"></div>
+
+      <button class="nh-busca" onclick="location.href='/biblioteca/busca/'"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span>Busque na Bíblia, nas lições e nos estudos</span></button>
+
+      <div class="nh-prox" onclick="nhAbrirProxima()">
+        <div class="nh-prox-txt">
+          <div class="nh-prox-rot">SUA PRÓXIMA LEITURA</div>
+          <div class="nh-prox-tit" id="nh-prox-tit">Lição da semana</div>
+          <div class="nh-prox-sub" id="nh-prox-sub">EBD Adultos</div>
+          <button class="nh-prox-btn" onclick="event.stopPropagation();nhAbrirProxima()">Abrir lição <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        </div>
+      </div>
+
+      <h2 class="nh-sec">Acesse rapidamente</h2>
+      <div class="nh-grade">
+        <div class="nh-card" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)"><svg viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg><div><b>Bíblia e Harpa</b><span>Palavra e louvores</span></div></div>
+        <div class="nh-card" onclick="abrirEbd()"><svg viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg><div><b>EBD</b><span>Estudo da Bíblia por faixas etárias</span></div></div>
+        <div class="nh-card" onclick="abrirMod('manuais')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="5" width="5" height="16" rx="1"/><path d="m16 6.6 3.4-.9 2.6 14.4-3.4.9z"/><path d="M3 7h5M9.5 9h5"/></svg><div><b>Biblioteca</b><span>Bíblias de estudo, concílios e mais</span></div></div>
+        <div class="nh-card" onclick="location.href='/biblioteca/curso-teologia/'"><svg viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg><div><b>Teologia</b><span>Estude a fé a fundo</span></div></div>
+        <div class="nh-card" onclick="location.href='/biblioteca/sermoes/'"><svg viewBox="0 0 24 24"><path d="M12 2v3"/><path d="M4 9.5 12 5l8 4.5"/><path d="M5 9.5h14v2H5z"/><path d="M7 11.5V21h10v-9.5"/><path d="M12 13.5v5M10 15.5h4"/></svg><div><b>Sermões</b><span>Mensagens que inspiram</span></div></div>
+        <div class="nh-card" onclick="abrirMod('desafiomateus')"><svg viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><div><b>Quiz bíblico</b><span>Desafie seu conhecimento</span></div></div>
+      </div>
+
+      <h2 class="nh-sec">Prepare sua mensagem</h2>
+      <div class="nh-linha nh-larga" onclick="location.href='/biblioteca/preparador/'"><svg viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg><i></i><b>Preparador de sermões</b><svg class="nh-seta" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></div>
+      <div class="nh-dupla">
+        <div class="nh-linha" onclick="location.href='/biblioteca/escola-pregacao/'"><svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg><b>Aprenda a pregar</b></div>
+        <div class="nh-linha" onclick="location.href='/biblioteca/estudo-doutrina/'"><svg viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg><b>Estudo de doutrina</b></div>
+      </div>
+
+      <h2 class="nh-sec">Ouça e reflita</h2>
+      <div class="nh-ouca">
+        <div class="nh-ouca-mus" onclick="nhOuvir()">
+          <b>Músicas e pregações</b>
+          <span class="nh-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/></svg></span>
+        </div>
+        <i></i>
+        <div class="nh-ouca-voz" onclick="location.href='/biblioteca/voz/'"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg><b>Conversar<br>por voz</b></div>
+      </div>
+
+      <div class="nh-vers" onclick="ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0)">
+        <span class="nh-aspas">&ldquo;</span><i></i>
+        <div><div class="nh-vtxt">Lâmpada para os meus pés é a tua palavra e luz, para o meu caminho.</div><div class="nh-vref">SALMOS 119:105</div></div>
+      </div>
+    </div>
 
     <!-- VITRINE 3×3 -->
     <div class="vitrine">
@@ -189,10 +250,10 @@
     <div class="modulos" id="modulos"></div>
   </div>
   <nav class="nav-bottom">
-    <button class="nav-btn on" id="nav-inicio"><span class="ni">🏠</span><span class="nl">Início</span></button>
-    <button class="nav-btn" onclick="location.href='/biblioteca/busca/'" id="nav-buscar"><span class="ni">🔍</span><span class="nl">Buscar</span></button>
-    <button class="nav-btn" onclick="irFavoritos()" id="nav-fav"><span class="ni">⭐</span><span class="nl">Favoritos</span></button>
-    <button class="nav-btn" onclick="irPerfil()" id="nav-perfil"><span class="ni">👤</span><span class="nl">Perfil</span></button>
+    <button class="nav-btn on" id="nav-inicio"><span class="ni"><svg viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><span class="nl">Início</span></button>
+    <button class="nav-btn" onclick="location.href='/biblioteca/busca/'" id="nav-buscar"><span class="ni"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><span class="nl">Buscar</span></button>
+    <button class="nav-btn" onclick="irFavoritos()" id="nav-fav"><span class="ni"><svg viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg></span><span class="nl">Favoritos</span></button>
+    <button class="nav-btn" onclick="irPerfil()" id="nav-perfil"><span class="ni"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="nl">Perfil</span></button>
   </nav>
 </div>
 
@@ -675,23 +736,23 @@
     <div class="bh-secao">📚 Revistas da EBD</div>
     <div class="rev-car" id="rev-car">
       <div class="rev-track" id="rev-track">
-        <div class="rev-slide" style="--capa:url('/ebd/adulto4/img/capa.jpg?v=344')">
-          <img src="/ebd/adulto4/img/capa.jpg?v=344" alt="Capa — O Deus da Aliança" decoding="async">
+        <div class="rev-slide" style="--capa:url('/ebd/adulto4/img/capa.jpg?v=345')">
+          <img src="/ebd/adulto4/img/capa.jpg?v=345" alt="Capa — O Deus da Aliança" decoding="async">
           <div class="rev-info"><span class="rev-selo">✦ DISPONÍVEL AGORA</span><div class="rev-tit">O Deus da Aliança</div><div class="rev-sub">Adultos · 4º Tri 2026 · Deuteronômio</div>
             <button class="rev-btn" onclick="abrirEbdTurma('adulto4')">📖 Entrar nas lições</button></div>
         </div>
-        <div class="rev-slide" style="--capa:url('/ebd/jovem4/img/capa.jpg?v=344')">
-          <img src="/ebd/jovem4/img/capa.jpg?v=344" alt="Capa — Alegria em Cristo" loading="lazy" decoding="async">
+        <div class="rev-slide" style="--capa:url('/ebd/jovem4/img/capa.jpg?v=345')">
+          <img src="/ebd/jovem4/img/capa.jpg?v=345" alt="Capa — Alegria em Cristo" loading="lazy" decoding="async">
           <div class="rev-info"><span class="rev-selo">✦ DISPONÍVEL AGORA</span><div class="rev-tit">Alegria em Cristo — Filipenses</div><div class="rev-sub">Jovens · 4º Tri 2026 · Filipenses</div>
             <button class="rev-btn" onclick="abrirEbdTurma('jovem4')">📖 Entrar nas lições</button></div>
         </div>
-        <div class="rev-slide" style="--capa:url('/ebd/adulto1/img/capa.jpg?v=344')">
-          <img src="/ebd/adulto1/img/capa.jpg?v=344" alt="Capa — Tornai para mim e Eu Tornarei para vós" loading="lazy" decoding="async">
+        <div class="rev-slide" style="--capa:url('/ebd/adulto1/img/capa.jpg?v=345')">
+          <img src="/ebd/adulto1/img/capa.jpg?v=345" alt="Capa — Tornai para mim e Eu Tornarei para vós" loading="lazy" decoding="async">
           <div class="rev-info"><span class="rev-selo breve">🔜 EM BREVE · JAN 2027</span><div class="rev-tit">Tornai para mim e Eu Tornarei para vós</div><div class="rev-sub">Adultos · 1º Tri 2027 · Zacarias</div>
             <div class="rev-btns"><button class="rev-btn" onclick="abrirEbdTurma('adulto1')">📖 Entrar nas lições</button><button class="rev-btn sec" onclick="location.href='/ebd/proxima/'">✨ Apresentação</button></div></div>
         </div>
-        <div class="rev-slide" style="--capa:url('/ebd/jovem1/img/capa.jpg?v=344')">
-          <img src="/ebd/jovem1/img/capa.jpg?v=344" alt="Capa — O Trono da Graça" loading="lazy" decoding="async">
+        <div class="rev-slide" style="--capa:url('/ebd/jovem1/img/capa.jpg?v=345')">
+          <img src="/ebd/jovem1/img/capa.jpg?v=345" alt="Capa — O Trono da Graça" loading="lazy" decoding="async">
           <div class="rev-info"><span class="rev-selo breve">🔜 EM BREVE · JAN 2027</span><div class="rev-tit">O Trono da Graça</div><div class="rev-sub">Jovens · 1º Tri 2027 · Hebreus</div>
             <button class="rev-btn" onclick="abrirEbdTurma('jovem1')">📖 Entrar nas lições</button></div>
         </div>
@@ -1027,7 +1088,7 @@
   </div>
 </div>
 
-<script src="/assets/app.js?v=344"></script>
+<script src="/assets/app.js?v=345"></script>
 
 <!-- REF SHEET -->
 <div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>
@@ -2025,8 +2086,8 @@ function compartilharApp(nome){
   </div>
 </div>
 
-<script src="/assets/lupa.js?v=344"></script>
-<script src="/assets/musicas.js?v=344" defer></script>
-<script src="/_uso.js?v=344" defer></script>
+<script src="/assets/lupa.js?v=345"></script>
+<script src="/assets/musicas.js?v=345" defer></script>
+<script src="/_uso.js?v=345" defer></script>
 </body>
 </html>
