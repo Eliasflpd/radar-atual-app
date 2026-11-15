@@ -1505,7 +1505,7 @@ html body #home.nh .nav-btn.on .nl::after{content:"";position:absolute;left:-14p
 
 /* ── TABLET e telas largas: escala do mockup (1 --u = 1 px do mockup) ── */
 @media (min-width:600px){
-  html body #home.nh{--u:min(.1008vw,.0578vh)}
+  html body #home.nh{--u:min(.1008vw,.0558vh)}
   html body #home.nh .home-scroll{padding:0 calc(var(--u)*30) calc(var(--u)*150 + env(safe-area-inset-bottom))}
   .nh-top{gap:calc(var(--u)*20);padding:calc(var(--u)*18) 0 calc(var(--u)*6)}
   .nh-logo,.nh-logo svg{width:calc(var(--u)*68);height:calc(var(--u)*56)}
