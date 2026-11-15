@@ -12,9 +12,9 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/radar.css?v=343">
-<link rel="stylesheet" href="/assets/musicas.css?v=343">
-<link rel="preload" as="script" href="/assets/app.js?v=343">
+<link rel="stylesheet" href="/assets/radar.css?v=344">
+<link rel="stylesheet" href="/assets/musicas.css?v=344">
+<link rel="preload" as="script" href="/assets/app.js?v=344">
 <script>
 /* ── A PELE DA HOME (bege ou azul) ──────────────────────────────────────────
    Isto roda AQUI NO <head>, antes de o navegador pintar qualquer coisa.
@@ -675,23 +675,23 @@
     <div class="bh-secao">📚 Revistas da EBD</div>
     <div class="rev-car" id="rev-car">
       <div class="rev-track" id="rev-track">
-        <div class="rev-slide" style="--capa:url('/ebd/adulto4/img/capa.jpg?v=343')">
-          <img src="/ebd/adulto4/img/capa.jpg?v=343" alt="Capa — O Deus da Aliança" decoding="async">
+        <div class="rev-slide" style="--capa:url('/ebd/adulto4/img/capa.jpg?v=344')">
+          <img src="/ebd/adulto4/img/capa.jpg?v=344" alt="Capa — O Deus da Aliança" decoding="async">
           <div class="rev-info"><span class="rev-selo">✦ DISPONÍVEL AGORA</span><div class="rev-tit">O Deus da Aliança</div><div class="rev-sub">Adultos · 4º Tri 2026 · Deuteronômio</div>
             <button class="rev-btn" onclick="abrirEbdTurma('adulto4')">📖 Entrar nas lições</button></div>
         </div>
-        <div class="rev-slide" style="--capa:url('/ebd/jovem4/img/capa.jpg?v=343')">
-          <img src="/ebd/jovem4/img/capa.jpg?v=343" alt="Capa — Alegria em Cristo" loading="lazy" decoding="async">
+        <div class="rev-slide" style="--capa:url('/ebd/jovem4/img/capa.jpg?v=344')">
+          <img src="/ebd/jovem4/img/capa.jpg?v=344" alt="Capa — Alegria em Cristo" loading="lazy" decoding="async">
           <div class="rev-info"><span class="rev-selo">✦ DISPONÍVEL AGORA</span><div class="rev-tit">Alegria em Cristo — Filipenses</div><div class="rev-sub">Jovens · 4º Tri 2026 · Filipenses</div>
             <button class="rev-btn" onclick="abrirEbdTurma('jovem4')">📖 Entrar nas lições</button></div>
         </div>
-        <div class="rev-slide" style="--capa:url('/ebd/adulto1/img/capa.jpg?v=343')">
-          <img src="/ebd/adulto1/img/capa.jpg?v=343" alt="Capa — Tornai para mim e Eu Tornarei para vós" loading="lazy" decoding="async">
+        <div class="rev-slide" style="--capa:url('/ebd/adulto1/img/capa.jpg?v=344')">
+          <img src="/ebd/adulto1/img/capa.jpg?v=344" alt="Capa — Tornai para mim e Eu Tornarei para vós" loading="lazy" decoding="async">
           <div class="rev-info"><span class="rev-selo breve">🔜 EM BREVE · JAN 2027</span><div class="rev-tit">Tornai para mim e Eu Tornarei para vós</div><div class="rev-sub">Adultos · 1º Tri 2027 · Zacarias</div>
             <div class="rev-btns"><button class="rev-btn" onclick="abrirEbdTurma('adulto1')">📖 Entrar nas lições</button><button class="rev-btn sec" onclick="location.href='/ebd/proxima/'">✨ Apresentação</button></div></div>
         </div>
-        <div class="rev-slide" style="--capa:url('/ebd/jovem1/img/capa.jpg?v=343')">
-          <img src="/ebd/jovem1/img/capa.jpg?v=343" alt="Capa — O Trono da Graça" loading="lazy" decoding="async">
+        <div class="rev-slide" style="--capa:url('/ebd/jovem1/img/capa.jpg?v=344')">
+          <img src="/ebd/jovem1/img/capa.jpg?v=344" alt="Capa — O Trono da Graça" loading="lazy" decoding="async">
           <div class="rev-info"><span class="rev-selo breve">🔜 EM BREVE · JAN 2027</span><div class="rev-tit">O Trono da Graça</div><div class="rev-sub">Jovens · 1º Tri 2027 · Hebreus</div>
             <button class="rev-btn" onclick="abrirEbdTurma('jovem1')">📖 Entrar nas lições</button></div>
         </div>
@@ -989,6 +989,8 @@
     </div>
     <button class="btn-cad" id="btn-cad-enviar" onclick="submitCadastro()">ACESSAR O APP</button>
     <div id="cad-erro" style="color:var(--red);font-size:13px;text-align:center;margin-top:14px;display:none"></div>
+    <!-- 15/11/2026 (LGPD): o app passou a guardar cidade aproximada e acessos ("Quem usa o app") — avisar quem se cadastra -->
+    <div style="text-align:center;margin-top:12px;font-size:12px;line-height:1.4;color:var(--sub)">🔒 Seu nome e WhatsApp ficam só com a igreja. Registramos também a cidade aproximada e os acessos, apenas para estatística do app. Nada é vendido ou repassado.</div>
     <div style="text-align:center;margin-top:18px;font-size:14px;color:var(--sub)">Já cadastrado? <a onclick="jaCadastrado()" style="color:var(--gold);font-weight:700;cursor:pointer;text-decoration:underline">Clique aqui</a></div>
   </div>
 </div>
@@ -1025,7 +1027,7 @@
   </div>
 </div>
 
-<script src="/assets/app.js?v=343"></script>
+<script src="/assets/app.js?v=344"></script>
 
 <!-- REF SHEET -->
 <div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>
@@ -2023,8 +2025,8 @@ function compartilharApp(nome){
   </div>
 </div>
 
-<script src="/assets/lupa.js?v=343"></script>
-<script src="/assets/musicas.js?v=343" defer></script>
-<script src="/_uso.js?v=343" defer></script>
+<script src="/assets/lupa.js?v=344"></script>
+<script src="/assets/musicas.js?v=344" defer></script>
+<script src="/_uso.js?v=344" defer></script>
 </body>
 </html>

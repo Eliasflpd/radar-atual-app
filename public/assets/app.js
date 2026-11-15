@@ -3958,8 +3958,10 @@ if('serviceWorker' in navigator){
     reg.addEventListener('updatefound',function(){ ativar(reg.installing); });
   }).catch(function(){});
   navigator.serviceWorker.addEventListener('controllerchange',function(){
-    // trava por SESSÃO (sobrevive ao reload) — impede LOOP de recarregar que travava o app
-    try{ if(sessionStorage.getItem('_swReloaded')==='1') return; sessionStorage.setItem('_swReloaded','1'); }catch(e){}
+    // trava contra LOOP de recarregar (sobrevive ao reload). 15/11/2026: era "1 recarga por SESSÃO" — com o app
+    // aberto o dia todo (tablet do Elias), só a 1ª versão nova entrava; a 342 e a 343 chegavam e a tela continuava
+    // velha ("não estou vendo nada"). Agora a trava é de 30 s: impede o loop e deixa cada versão nova entrar.
+    try{ var _t=+sessionStorage.getItem('_swReloadedAt')||0; if(Date.now()-_t<30000) return; sessionStorage.setItem('_swReloadedAt',String(Date.now())); }catch(e){}
     location.reload();
   });
   // reforço: checa versão nova toda vez que o app volta pro primeiro plano
