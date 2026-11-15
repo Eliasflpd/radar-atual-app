@@ -2260,18 +2260,18 @@ const EBD_LICOES = {
   // Texto da Revista do Professor (OCR revisado lição por lição). Abre em 01/01/2027; antes disso, só com o PIN (ebd1T27Travado).
   adulto1:[
     {n:1,  titulo:'O Chamado ao Arrependimento e à Esperança',          licao:'/ebd/adulto1/html/licao-01.html', ppt:null, apoio:null, mapa:null, prof:true},  /* 15/11/2026: Lição (aluno) + Material do Professor separados, molde do 4º tri; PPT em pausa (slides normais e visuais) */
-    {n:2,  titulo:'Deus Está Presente entre o seu Povo',                licao:'/ebd/adulto1/html/licao-02.html', ppt:null, apoio:null, mapa:null},
-    {n:3,  titulo:'O Poder de Deus contra os Inimigos',                 licao:'/ebd/adulto1/html/licao-03.html', ppt:null, apoio:null, mapa:null},
-    {n:4,  titulo:'Jerusalém e o Homem com o Cordel de Medir',          licao:'/ebd/adulto1/html/licao-04.html', ppt:null, apoio:null, mapa:null},
-    {n:5,  titulo:'O Simbolismo da Purificação do Sumo Sacerdote Josué',licao:'/ebd/adulto1/html/licao-05.html', ppt:null, apoio:null, mapa:null},
-    {n:6,  titulo:'O Simbolismo do Castiçal de Ouro e das Duas Oliveiras',licao:'/ebd/adulto1/html/licao-06.html', ppt:null, apoio:null, mapa:null},
-    {n:7,  titulo:'O Juízo de Deus e o Pecado no Meio do Povo',         licao:'/ebd/adulto1/html/licao-07.html', ppt:null, apoio:null, mapa:null},
-    {n:8,  titulo:'O Juízo de Deus sobre as Nações Inimigas de Israel', licao:'/ebd/adulto1/html/licao-08.html', ppt:null, apoio:null, mapa:null},
-    {n:9,  titulo:'O Rei-Sacerdote e a Era Messiânica',                 licao:'/ebd/adulto1/html/licao-09.html', ppt:null, apoio:null, mapa:null},
-    {n:10, titulo:'Religião sem Justiça não Agrada a Deus',             licao:'/ebd/adulto1/html/licao-10.html', ppt:null, apoio:null, mapa:null},
-    {n:11, titulo:'O Deus que Restaura e Consola',                      licao:'/ebd/adulto1/html/licao-11.html', ppt:null, apoio:null, mapa:null},
-    {n:12, titulo:'O Messias de Israel em Zacarias',                    licao:'/ebd/adulto1/html/licao-12.html', ppt:null, apoio:null, mapa:null},
-    {n:13, titulo:'O Futuro Glorioso de Israel e a Aparição do Messias',licao:'/ebd/adulto1/html/licao-13.html', ppt:null, apoio:null, mapa:null},
+    {n:2,  titulo:'Deus Está Presente entre o seu Povo',                licao:'/ebd/adulto1/html/licao-02.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:3,  titulo:'O Poder de Deus contra os Inimigos',                 licao:'/ebd/adulto1/html/licao-03.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:4,  titulo:'Jerusalém e o Homem com o Cordel de Medir',          licao:'/ebd/adulto1/html/licao-04.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:5,  titulo:'O Simbolismo da Purificação do Sumo Sacerdote Josué',licao:'/ebd/adulto1/html/licao-05.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:6,  titulo:'O Simbolismo do Castiçal de Ouro e das Duas Oliveiras',licao:'/ebd/adulto1/html/licao-06.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:7,  titulo:'O Juízo de Deus e o Pecado no Meio do Povo',         licao:'/ebd/adulto1/html/licao-07.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:8,  titulo:'O Juízo de Deus sobre as Nações Inimigas de Israel', licao:'/ebd/adulto1/html/licao-08.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:9,  titulo:'O Rei-Sacerdote e a Era Messiânica',                 licao:'/ebd/adulto1/html/licao-09.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:10, titulo:'Religião sem Justiça não Agrada a Deus',             licao:'/ebd/adulto1/html/licao-10.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:11, titulo:'O Deus que Restaura e Consola',                      licao:'/ebd/adulto1/html/licao-11.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:12, titulo:'O Messias de Israel em Zacarias',                    licao:'/ebd/adulto1/html/licao-12.html', ppt:null, apoio:null, mapa:null, prof:true},
+    {n:13, titulo:'O Futuro Glorioso de Israel e a Aparição do Messias',licao:'/ebd/adulto1/html/licao-13.html', ppt:null, apoio:null, mapa:null, prof:true},
   ],
   // 15/11/2026: Lições Bíblicas Jovens — 1º Tri 2027 "O Trono da Graça" (Hebreus), comentarista Pr. Alexandre Coelho.
   // Só o texto por enquanto (as capas das lições vêm depois). Abre em 01/01/2027; antes, prévia + PIN.
