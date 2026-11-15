@@ -29,15 +29,21 @@ h1{margin:0;text-align:center;font-size:27px;line-height:1.2;color:var(--ceu2)}
 .ficha b{color:var(--ceu2)}
 .versiculo{font-style:italic;font-size:18px;line-height:1.6;text-align:center;color:#24324f;margin:0}
 .ref{display:block;text-align:center;font:800 13px/1 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:1.5px;color:var(--oliva);margin-top:10px;font-style:normal}
-.sumario{background:#fff;border-radius:16px;overflow:hidden;margin:0 0 14px;box-shadow:0 6px 18px rgba(0,0,0,.28)}
-.sumario .cab{background:var(--creme);padding:16px 18px 12px;border-bottom:6px solid var(--oliva)}
-.sumario .cab .t{font-size:34px;line-height:1;color:var(--ceu2);letter-spacing:.5px}
-.sumario .cab .s{font-size:14px;line-height:1.4;color:#4b4b4b;margin-top:6px}
-.lic{display:flex;gap:10px;align-items:baseline;padding:12px 18px;border-bottom:1px solid var(--filete)}
-.lic:last-child{border-bottom:0}
-.lic .n{flex:0 0 68px;white-space:nowrap;font-style:italic;font-weight:700;font-size:14.5px;color:var(--oliva)}
-.lic .tt{font-style:italic;font-size:16px;line-height:1.4;color:var(--texto)}
-.aviso{font:13px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;color:#6b6b6b;padding:10px 18px 14px;text-align:center;background:#fafaf6}
+/* SUMÁRIO no molde da página 1 da revista (Professor, 1º Tri 2027) — 15/11/2026, pedido do Elias.
+   Cores medidas no PDF: topo creme #ece8e2, letreiro anil #2a2850, faixa azul #134286, filetes #97a0cc, faixa da oliveira à esquerda. */
+.sumario{--s-creme:#ece8e2;--s-anil:#2a2850;--s-faixa:#134286;--s-filete:#97a0cc;display:flex;background:#f8f8f6;border-radius:16px;overflow:hidden;margin:0 0 14px;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.sumario .foto{flex:0 0 15%;max-width:92px;background:url(/ebd/proxima/img/faixa-oliveira-1t2027.jpg?v=1) center/cover no-repeat #1f5fa8}
+.sumario .corpo{flex:1;min-width:0}
+.sumario .lb{background:var(--s-creme);padding:14px 16px 10px;font-family:Georgia,'Times New Roman',serif;color:var(--s-anil);font-size:44px;line-height:.98;letter-spacing:1px;text-transform:uppercase;font-weight:400}
+.sumario .faixa{background:var(--s-faixa);color:#fff;padding:9px 16px;font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:16px;line-height:1.3}
+.sumario .t{font-family:Georgia,'Times New Roman',serif;color:var(--s-anil);font-size:40px;line-height:1;padding:16px 16px 0;letter-spacing:.5px}
+.sumario .tema{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:18px;line-height:1.25;color:#2f2f2f;padding:12px 16px 0}
+.sumario .s{font-family:Georgia,'Times New Roman',serif;font-size:13.5px;line-height:1.4;color:#3a3a3a;padding:3px 16px 8px}
+.lic{display:flex;gap:8px;align-items:baseline;margin:0 16px;padding:9px 0 6px;border-bottom:1.5px solid var(--s-filete)}
+.lic .tt{flex:1;min-width:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-style:italic;font-size:15px;line-height:1.35;color:#555}
+.lic .pg{flex:0 0 auto;font-family:'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;color:#555}
+.aviso{font:12.5px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;color:#777;padding:10px 16px 14px;text-align:left}
+@media (max-width:420px){.sumario .lb{font-size:34px}.sumario .t{font-size:32px}.lic .tt{font-size:14px}}
 .loja{display:flex;gap:13px;align-items:center;padding:12px 0;border-bottom:1px solid var(--filete)}
 .loja:last-child{border-bottom:0;padding-bottom:2px}
 .loja img{width:78px;height:auto;flex:0 0 78px;filter:drop-shadow(0 4px 7px rgba(0,0,0,.28))}
@@ -62,7 +68,7 @@ h1{margin:0;text-align:center;font-size:27px;line-height:1.2;color:var(--ceu2)}
       <h1>Tornai para mim e Eu tornarei para vós</h1>
       <p class="sub">Arrependimento, Restauração e o Reino de Cristo no Livro de Zacarias</p>
       <div class="fio"></div>
-      <p class="ficha">Livro de Apoio por <b>Esequias Soares</b> e <b>Daniele Soares</b><br>CPAD · 13 lições</p>
+      <p class="ficha">Comentarista: <b>Esequias Soares</b><br>Livro de Apoio: Esequias Soares e Daniele Soares · CPAD · 13 lições</p>
     </div>
 
     <div class="cartao">
@@ -72,21 +78,28 @@ h1{margin:0;text-align:center;font-size:27px;line-height:1.2;color:var(--ceu2)}
     </div>
 
     <div class="sumario">
-      <div class="cab"><div class="t">SUMÁRIO</div><div class="s">Os 13 temas do trimestre, na ordem do Livro de Apoio</div></div>
-      <div class="lic"><span class="n">Lição 1</span><span class="tt">O Chamado ao Arrependimento e à Esperança</span></div>
-      <div class="lic"><span class="n">Lição 2</span><span class="tt">Deus Está Presente entre o Seu Povo</span></div>
-      <div class="lic"><span class="n">Lição 3</span><span class="tt">O Poder de Deus contra os Inimigos</span></div>
-      <div class="lic"><span class="n">Lição 4</span><span class="tt">Jerusalém e o Homem com o Cordel de Medir</span></div>
-      <div class="lic"><span class="n">Lição 5</span><span class="tt">O Simbolismo da Purificação do Sumo Sacerdote Josué</span></div>
-      <div class="lic"><span class="n">Lição 6</span><span class="tt">O Simbolismo do Castiçal de Ouro e das Duas Oliveiras</span></div>
-      <div class="lic"><span class="n">Lição 7</span><span class="tt">O Juízo de Deus e o Pecado no Meio do Povo</span></div>
-      <div class="lic"><span class="n">Lição 8</span><span class="tt">O Juízo de Deus sobre as Nações Inimigas de Israel</span></div>
-      <div class="lic"><span class="n">Lição 9</span><span class="tt">O Rei-Sacerdote e a Era Messiânica</span></div>
-      <div class="lic"><span class="n">Lição 10</span><span class="tt">Religião sem Justiça não Agrada a Deus</span></div>
-      <div class="lic"><span class="n">Lição 11</span><span class="tt">O Deus que Restaura e Consola</span></div>
-      <div class="lic"><span class="n">Lição 12</span><span class="tt">O Messias de Israel em Zacarias</span></div>
-      <div class="lic"><span class="n">Lição 13</span><span class="tt">O Futuro Glorioso de Israel e a Aparição do Messias</span></div>
-      <div class="aviso">Temas tirados do sumário do Livro de Apoio, que acompanha as lições capítulo por capítulo. O título de cada lição na revista pode variar um pouco.</div>
+      <div class="foto" aria-hidden="true"></div>
+      <div class="corpo">
+      <div class="lb">Lições<br>Bíblicas</div>
+      <div class="faixa">Professor | 1º Trimestre de 2027<br>Comentarista: Esequias Soares</div>
+      <div class="t">SUMÁRIO</div>
+      <div class="tema">Tornai para mim<br>e Eu Tornarei para vós</div>
+      <div class="s">Arrependimento, Restauração e o Reino de Cristo no Livro de Zacarias</div>
+      <div class="lic"><span class="tt">Lição 1 – O Chamado ao Arrependimento e à Esperança</span><span class="pg">3</span></div>
+      <div class="lic"><span class="tt">Lição 2 – Deus Está Presente entre o seu Povo</span><span class="pg">11</span></div>
+      <div class="lic"><span class="tt">Lição 3 – O Poder de Deus contra os Inimigos</span><span class="pg">18</span></div>
+      <div class="lic"><span class="tt">Lição 4 – Jerusalém e o Homem com o Cordel de Medir</span><span class="pg">25</span></div>
+      <div class="lic"><span class="tt">Lição 5 – O Simbolismo da Purificação do Sumo Sacerdote Josué</span><span class="pg">32</span></div>
+      <div class="lic"><span class="tt">Lição 6 – O Simbolismo do Castiçal de Ouro e das Duas Oliveiras</span><span class="pg">40</span></div>
+      <div class="lic"><span class="tt">Lição 7 – O Juízo de Deus e o Pecado no Meio do Povo</span><span class="pg">48</span></div>
+      <div class="lic"><span class="tt">Lição 8 – O Juízo de Deus sobre as Nações Inimigas de Israel</span><span class="pg">55</span></div>
+      <div class="lic"><span class="tt">Lição 9 – O Rei-Sacerdote e a Era Messiânica</span><span class="pg">62</span></div>
+      <div class="lic"><span class="tt">Lição 10 – Religião sem Justiça não Agrada a Deus</span><span class="pg">69</span></div>
+      <div class="lic"><span class="tt">Lição 11 – O Deus que Restaura e Consola</span><span class="pg">76</span></div>
+      <div class="lic"><span class="tt">Lição 12 – O Messias de Israel em Zacarias</span><span class="pg">83</span></div>
+      <div class="lic"><span class="tt">Lição 13 – O Futuro Glorioso de Israel e a Aparição do Messias</span><span class="pg">90</span></div>
+      <div class="aviso">Conforme o sumário da revista Lições Bíblicas Adultos — Professor (CPAD).</div>
+      </div>
     </div>
 
     <div class="cartao">
