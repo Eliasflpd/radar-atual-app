@@ -5007,9 +5007,44 @@ const BREF_MAP={
   'Ed':'ed','Ne':'ne','Et':'et','Jó':'jó','Sl':'sl','Pv':'pv',
   'Ec':'ec','Ct':'ct','Is':'is','Jr':'jr','Lm':'lm','Ez':'ez',
   'Dn':'dn','Os':'os','Jl':'jl','Am':'am','Ob':'ob','Jn':'jn',
-  'Mq':'mq','Na':'na','Hc':'hc','Sf':'sf','Ag':'ag','Zc':'zc','Ml':'ml'
+  'Mq':'mq','Na':'na','Hc':'hc','Sf':'sf','Ag':'ag','Zc':'zc','Ml':'ml',
+  'Êx':'ex'
 };
 let _brefData=null;
+
+/* 15/11/2026 (pedido do Elias: "todas as referências bíblicas devem ser linkadas, um versículo ou vários"):
+   leitor completo — lista (Hb 1.1-8,13,14), letra (Dt 6.7a), capítulo inteiro (Hb 7), capítulos (Zc 9-14 / Lv 3,4),
+   trecho que cruza capítulo (Is 44.28-45.1), travessão longo e livro com acento. Devolve vários blocos (um por capítulo). */
+function _brefLivro(bookRaw){
+  const ab=BREF_MAP[(bookRaw||'').replace(/\s/g,'')]; if(!ab||!_brefData) return null;
+  return _brefData.find(x=>x.abbrev===ab)||null;
+}
+function _parseRefBlocos(token,lastBook){
+  const t=(token||'').trim().replace(/[–—]/g,'-');
+  const m=t.match(/^((?:[123]\s*)?[A-ZÀ-ÚÊ][a-záàâãéêíóôõúü]{0,5})\s*(\d.*)$/);
+  let bookRaw,spec;
+  if(m){bookRaw=m[1].replace(/\s/g,'');spec=m[2];}
+  else if(/^\d/.test(t)&&lastBook){bookRaw=lastBook;spec=t;}
+  else return null;
+  const livro=_brefLivro(bookRaw); if(!livro) return null;
+  spec=spec.replace(/\s/g,'').replace(/[a-c](?=[,\-]|$)/g,'');
+  if(livro.chapters.length===1&&!/[.:]/.test(spec)) spec='1.'+spec;   /* Judas, Obadias, Filemom, 2 e 3 João: "Jd 14" é o versículo 14 */
+  const blocos=[];
+  const add=(cap,vs)=>{const ch=livro.chapters[cap-1]; if(!ch) return;
+    const lista=(vs||ch.map((_,i)=>i+1)).filter(n=>ch[n-1]);
+    if(lista.length) blocos.push({label:livro.name+' '+cap,verses:lista.map(n=>({n,t:ch[n-1]}))});};
+  let x=spec.match(/^(\d+)[.:](\d+)-(\d+)[.:](\d+)$/);                 /* cruza capítulo */
+  if(x){const c1=+x[1],v1=+x[2],c2=+x[3],v2=+x[4];
+    for(let c=c1;c<=Math.min(c2,c1+12);c++){const ch=livro.chapters[c-1]; if(!ch) continue;
+      const a=c===c1?v1:1,b=c===c2?v2:ch.length,vs=[]; for(let n=a;n<=b;n++) vs.push(n); add(c,vs);} }
+  else if((x=spec.match(/^(\d+)[.:](.+)$/))){                           /* capítulo.versículos (lista e intervalos) */
+    const vs=[]; x[2].split(',').forEach(p=>{const r=p.split('-'),a=+r[0],b=r[1]?+r[1]:a; if(a) for(let n=a;n<=Math.min(b,a+200);n++) vs.push(n);});
+    add(+x[1],vs); }
+  else if((x=spec.match(/^\d+(?:[-,]\d+)*$/))){                         /* só capítulo(s) */
+    const caps=[]; spec.split(',').forEach(p=>{const r=p.split('-'),a=+r[0],b=r[1]?+r[1]:a; for(let c=a;c<=Math.min(b,a+12);c++) caps.push(c);});
+    caps.forEach(c=>add(c,null)); }
+  return blocos.length?{blocos,bookRaw}:null;
+}
 
 function fecharRefSheet(){
   document.getElementById('ref-sheet').style.display='none';
@@ -5042,14 +5077,16 @@ function mostrarRefSheet(refStr){
   const tokens=refStr.split(/;\s*/);
   let html='',lastBook=null;
   for(const tok of tokens){
-    const r=_parseSingleRef(tok,lastBook);
+    const r=_parseRefBlocos(tok,lastBook);   /* 15/11/2026: leitor completo (vários blocos); o antigo _parseSingleRef fica de reserva */
     if(!r)continue;
     lastBook=r.bookRaw;
-    html+=`<div style="margin-bottom:18px"><p style="font-weight:900;color:#1d3a8a;margin:0 0 8px;font-size:13px;letter-spacing:.5px">${r.label}</p>`;
-    for(const v of r.verses){
-      html+=`<p style="margin:0 0 8px;text-align:justify;font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#1a1a1a"><sup style="color:#c9a14a;font-weight:900;font-size:10px">${v.n}</sup> ${v.t}</p>`;
+    for(const b of r.blocos){
+      html+=`<div style="margin-bottom:18px"><p style="font-weight:900;color:#1d3a8a;margin:0 0 8px;font-size:13px;letter-spacing:.5px">${b.label}</p>`;
+      for(const v of b.verses){
+        html+=`<p style="margin:0 0 8px;text-align:justify;font-family:Georgia,serif;font-size:15px;line-height:1.75;color:#1a1a1a"><sup style="color:#c9a14a;font-weight:900;font-size:10px">${v.n}</sup> ${v.t}</p>`;
+      }
+      html+='</div>';
     }
-    html+='</div>';
   }
   if(!html)return;
   document.getElementById('ref-sheet-titulo').textContent=tokens.length>1?'Referências':'Referência';
