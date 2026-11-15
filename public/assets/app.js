@@ -1393,6 +1393,14 @@ function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function _hoje0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
 /* 4º Trimestre LIBERADO (trabalho na revista). Reverter p/ `return _hoje0() < new Date(2026,9,4);` se quiser re-travar. */
 function ebd4TriTravado(){ return false; }
+/* 15/11/2026: capa da lição por aparelho — celular (tela 9:16, mais estreita) usa "capa-licao-NN-cel.jpg" (720x1280);
+   tablet usa "capa-licao-NN.jpg" (10:16, 800x1280). Só nas turmas que já têm as duas versões. */
+var EBD_CAPA_CEL={jovem1:true};
+function ebdCapaLicaoSrc(turma,n){
+  var nn=String(n).padStart(2,'0');
+  var cel=EBD_CAPA_CEL[turma] && (window.innerWidth/Math.max(1,window.innerHeight) < 0.6);
+  return '/ebd/'+turma+'/img/capa-licao-'+nn+(cel?'-cel':'')+'.jpg?d=2';
+}
 /* 15/11/2026: Adultos 1º tri 2027 (Zacarias) — fica travado (só prévia + PIN) até 01/01/2027, como foi o 4º tri até outubro */
 function ebd1T27Travado(){ try{ return _hoje0() < new Date(2027,0,1); }catch(_){ return true; } }
 function _mesNum(s){
@@ -2804,8 +2812,8 @@ function abrirLicaoDetalhe(idx){
   document.getElementById('ebd-det-sub').textContent=lic.titulo;
   const n=String(lic.n>0?lic.n:0).padStart(2,'0');
   /* Adultos 4º tri (17/10/2026): capa nova (arte + LIÇÃO N + título), sem a foto da página da revista (letra miúda, ruim no celular) */
-  const _licBanner=(lic.n>=1&&lic.n<=13)?((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4'||ebdTurmaAtual==='adulto1')
-    ?`<div id="ebd-capa-stage" style="position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:60;display:flex;flex-direction:column;background:${(ebdTurmaAtual==='adulto1'?['#19447a','#083b78','#625951','#0b3b77','#281209','#382f1c','#160e08','#424443','#202528','#5a4d32','#4f5c78','#0d0e18','#162840']:ebdTurmaAtual==='jovem4'?['#0a1b35','#03142d','#04152e','#001334','#001232','#001130','#001333','#001130','#00112f','#00112c','#001131','#001132','#001132']:['#021b41','#011941','#0a1c30','#01173f','#04162d','#02162f','#02142b','#011228','#01133b','#01123a','#02152c','#01162f','#01162d'])[lic.n-1]};transition:opacity .35s ease,transform .35s ease"><img src="/ebd/${ebdTurmaAtual}/img/capa-licao-${String(lic.n).padStart(2,'0')}.jpg?d=2" alt="Lição ${lic.n}" style="flex:1 1 auto;min-height:0;width:100%;height:calc(100% - 80px);object-fit:contain;object-position:50% 0;display:block" onerror="ebdEntrarLicao(true)"><button type="button" onclick="fecharLicaoDetalhe()" aria-label="Voltar" style="position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;width:46px;height:46px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.62);color:#fff;font-size:28px;line-height:1;padding:0 0 4px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5)">‹</button><button type="button" onclick="ebdEntrarLicao()" style="position:absolute;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));height:54px;border:3px solid #fff;border-radius:16px;font-size:19px;font-weight:900;letter-spacing:.5px;cursor:pointer;background:#f2c14e;color:#0a164a;box-shadow:0 0 0 2px rgba(0,0,0,.6),0 8px 24px rgba(0,0,0,.65)">👆 Clique aqui</button></div>`
+  const _licBanner=(lic.n>=1&&lic.n<=13)?((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4'||ebdTurmaAtual==='adulto1'||ebdTurmaAtual==='jovem1')
+    ?`<div id="ebd-capa-stage" style="position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;height:100dvh;z-index:60;display:flex;flex-direction:column;background:${(ebdTurmaAtual==='jovem1'?['#aa7c46','#c1915f','#e3cbae','#90838c','#5f276d','#40332e','#514437','#d0aa8f','#4c4e5b','#5883be','#6a6743','#5b4c19','#9598a3']:ebdTurmaAtual==='adulto1'?['#19447a','#083b78','#625951','#0b3b77','#281209','#382f1c','#160e08','#424443','#202528','#5a4d32','#4f5c78','#0d0e18','#162840']:ebdTurmaAtual==='jovem4'?['#0a1b35','#03142d','#04152e','#001334','#001232','#001130','#001333','#001130','#00112f','#00112c','#001131','#001132','#001132']:['#021b41','#011941','#0a1c30','#01173f','#04162d','#02162f','#02142b','#011228','#01133b','#01123a','#02152c','#01162f','#01162d'])[lic.n-1]};transition:opacity .35s ease,transform .35s ease"><img src="${ebdCapaLicaoSrc(ebdTurmaAtual,lic.n)}" alt="Lição ${lic.n}" style="flex:1 1 auto;min-height:0;width:100%;height:calc(100% - 80px);object-fit:contain;object-position:50% 0;display:block" onerror="ebdEntrarLicao(true)"><button type="button" onclick="fecharLicaoDetalhe()" aria-label="Voltar" style="position:absolute;top:calc(10px + env(safe-area-inset-top));left:10px;width:46px;height:46px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.62);color:#fff;font-size:28px;line-height:1;padding:0 0 4px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5)">‹</button><button type="button" onclick="ebdEntrarLicao()" style="position:absolute;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));height:54px;border:3px solid #fff;border-radius:16px;font-size:19px;font-weight:900;letter-spacing:.5px;cursor:pointer;background:#f2c14e;color:#0a164a;box-shadow:0 0 0 2px rgba(0,0,0,.6),0 8px 24px rgba(0,0,0,.65)">👆 Clique aqui</button></div>`
     :`<img src="/ebd/${ebdTurmaAtual}/img/licao-${String(lic.n).padStart(2,'0')}.jpg" style="width:100%;border-radius:14px;margin-bottom:14px;box-shadow:0 8px 22px rgba(0,0,0,.28);display:block" onerror="this.style.display='none'">`):'';
   const itens=[
     {num:'1',icon:'📝',nome:'LIÇÃO',
@@ -2862,7 +2870,7 @@ function abrirLicaoDetalhe(idx){
   // 20/10/2026, pedido do Elias: Texto Áureo, Verdade Prática e "Marcar como concluída" saíram do menu da lição —
   // já estão dentro da própria lição. O menu vai direto aos materiais.
   const _cardsMag='';
-  const _comCapa=((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4'||ebdTurmaAtual==='adulto1')&&lic.n>=1&&lic.n<=13);  /* capa + botão "Clique aqui" → a capa some e a lição entra */
+  const _comCapa=((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4'||ebdTurmaAtual==='adulto1'||ebdTurmaAtual==='jovem1')&&lic.n>=1&&lic.n<=13);  /* capa + botão "Clique aqui" → a capa some e a lição entra */
   // 20/10/2026: capa de cada material do 4º tri (Adultos) no lugar do ícone — o Elias mandou as capas
   const _capaMat={'APOIO':'capa-livro-apoio','REVISTA CRISTÃO ALERTA':'capa-cristao-alerta','DEVOCIONAL LEITURA DIÁRIA':'capa-devocional','REVISTA OBREIRO APROVADO':'capa-obreiro-115'};
   const _conteudo=_previaBlk+_cardsMag+(_magTema?'':_btnConcluir)+itens.map(it=>{
