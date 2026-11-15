@@ -2280,7 +2280,7 @@ const EBD_LICOES = {
   // 15/11/2026: Lições Bíblicas Adultos — 1º Tri 2027 "Tornai para mim e Eu Tornarei para vós" (Zacarias), comentarista Esequias Soares.
   // Texto da Revista do Professor (OCR revisado lição por lição). Abre em 01/01/2027; antes disso, só com o PIN (ebd1T27Travado).
   adulto1:[
-    {n:1,  titulo:'O Chamado ao Arrependimento e à Esperança',          licao:'/ebd/adulto1/html/licao-01.html', ppt:null, apoio:null, mapa:null, prof:true},  /* 15/11/2026: Lição (aluno) + Material do Professor separados, molde do 4º tri; PPT em pausa (slides normais e visuais) */
+    {n:1,  titulo:'O Chamado ao Arrependimento e à Esperança',          licao:'/ebd/adulto1/html/licao-01.html', ppt:null, apoio:null, mapa:null, prof:true, video:'/ebd/adulto1/video/licao-01.mp4'},  /* vídeo: "O Verdadeiro Retorno — A Mensagem de Zacarias" (1 min 18 s, em pé), enviado pelo Elias 15/11/2026 */  /* 15/11/2026: Lição (aluno) + Material do Professor separados, molde do 4º tri; PPT em pausa (slides normais e visuais) */
     {n:2,  titulo:'Deus Está Presente entre o seu Povo',                licao:'/ebd/adulto1/html/licao-02.html', ppt:null, apoio:null, mapa:null, prof:true},
     {n:3,  titulo:'O Poder de Deus contra os Inimigos',                 licao:'/ebd/adulto1/html/licao-03.html', ppt:null, apoio:null, mapa:null, prof:true},
     {n:4,  titulo:'Jerusalém e o Homem com o Cordel de Medir',          licao:'/ebd/adulto1/html/licao-04.html', ppt:null, apoio:null, mapa:null, prof:true},
