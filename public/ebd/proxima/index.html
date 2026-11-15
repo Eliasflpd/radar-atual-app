@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f2f57">
+<title>Próxima revista — Tornai para mim · 1º Tri 2027</title>
+<!-- 15/11/2026, pedido do Elias: apresentação da PRÓXIMA revista de Adultos (Lições Bíblicas, CPAD, 1º trimestre de 2027).
+     Capa: a personalizada que o Elias fez (Downloads, "Lições Bíblicas_ Tornai para Mim.png"; original em D:\RADAR-OFICINA\capas).
+     Temas das 13 lições: sumário do Livro de Apoio (foto do produto na loja da CPAD). Paleta tirada da capa: céu azul, oliveira, ouro. -->
+<style>
+:root{--ceu:#1f5fa8;--ceu2:#0f2f57;--oliva:#55652a;--ouro:#d6a63a;--creme:#f6f1e1;--texto:#2b2b2b;--filete:#c9d6c0}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ceu2);color:var(--texto);font-family:Georgia,'Times New Roman',serif;-webkit-text-size-adjust:100%}
+.topo{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:linear-gradient(180deg,rgba(15,47,87,.92),rgba(15,47,87,0))}
+.voltar{width:38px;height:38px;border-radius:11px;border:1px solid rgba(214,166,58,.6);background:rgba(15,47,87,.55);color:#fff;font-size:22px;line-height:1;cursor:pointer}
+.topo span{color:#fff;font:700 13px/1.2 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:1.5px;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.wrap{max-width:640px;margin:0 auto}
+.hero{position:relative}
+.hero img{width:100%;display:block;-webkit-mask-image:linear-gradient(180deg,#000 82%,transparent 100%);mask-image:linear-gradient(180deg,#000 82%,transparent 100%)}
+.selo{position:absolute;left:50%;transform:translateX(-50%);bottom:4%;background:var(--ouro);color:#1d1606;font:900 12.5px/1 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:2px;padding:9px 16px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.45);white-space:nowrap}
+.conteudo{padding:6px 16px 60px}
+.cartao{background:var(--creme);border-radius:16px;padding:18px 18px 16px;margin:0 0 14px;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.rotulo{display:block;text-align:center;font:800 12px/1 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:2.5px;color:var(--oliva);text-transform:uppercase;margin:0 0 10px}
+h1{margin:0;text-align:center;font-size:27px;line-height:1.2;color:var(--ceu2)}
+.sub{text-align:center;font-style:italic;font-size:16.5px;line-height:1.45;color:#3c4a1b;margin:8px 0 0}
+.fio{height:2px;width:120px;margin:14px auto;background:linear-gradient(90deg,transparent,var(--ouro),transparent)}
+.ficha{text-align:center;font-size:15.5px;line-height:1.6;color:var(--texto);margin:0}
+.ficha b{color:var(--ceu2)}
+.versiculo{font-style:italic;font-size:18px;line-height:1.6;text-align:center;color:#24324f;margin:0}
+.ref{display:block;text-align:center;font:800 13px/1 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:1.5px;color:var(--oliva);margin-top:10px;font-style:normal}
+.sumario{background:#fff;border-radius:16px;overflow:hidden;margin:0 0 14px;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.sumario .cab{background:var(--creme);padding:16px 18px 12px;border-bottom:6px solid var(--oliva)}
+.sumario .cab .t{font-size:34px;line-height:1;color:var(--ceu2);letter-spacing:.5px}
+.sumario .cab .s{font-size:14px;line-height:1.4;color:#4b4b4b;margin-top:6px}
+.lic{display:flex;gap:10px;align-items:baseline;padding:12px 18px;border-bottom:1px solid var(--filete)}
+.lic:last-child{border-bottom:0}
+.lic .n{flex:0 0 68px;white-space:nowrap;font-style:italic;font-weight:700;font-size:14.5px;color:var(--oliva)}
+.lic .tt{font-style:italic;font-size:16px;line-height:1.4;color:var(--texto)}
+.aviso{font:13px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif;color:#6b6b6b;padding:10px 18px 14px;text-align:center;background:#fafaf6}
+.loja{display:flex;gap:13px;align-items:center;padding:12px 0;border-bottom:1px solid var(--filete)}
+.loja:last-child{border-bottom:0;padding-bottom:2px}
+.loja img{width:78px;height:auto;flex:0 0 78px;filter:drop-shadow(0 4px 7px rgba(0,0,0,.28))}
+.loja .tx{flex:1;min-width:0}
+.loja .nm{font-weight:700;font-size:16px;line-height:1.3;color:var(--ceu2)}
+.loja .ds{font-size:14px;line-height:1.4;color:#555;margin:3px 0 8px}
+.btn{display:inline-block;background:var(--oliva);color:#fff;text-decoration:none;border-radius:9px;padding:9px 13px;font:800 14.5px/1.2 system-ui,-apple-system,'Segoe UI',sans-serif}
+.rodape{text-align:center;color:rgba(255,255,255,.7);font:13px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;margin-top:6px}
+@media (min-width:700px){h1{font-size:31px}.conteudo{padding-top:10px}}
+</style>
+</head>
+<body>
+<div class="topo"><button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/'}" aria-label="Voltar">‹</button><span>PRÓXIMA REVISTA · ADULTOS</span></div>
+<div class="wrap">
+  <div class="hero">
+    <img src="/ebd/proxima/img/capa-1t2027.jpg?v=1" alt="Capa da revista Lições Bíblicas Adultos, 1º trimestre de 2027: Tornai para mim e Eu tornarei para vós">
+    <div class="selo">EM BREVE · JANEIRO DE 2027</div>
+  </div>
+  <div class="conteudo">
+    <div class="cartao">
+      <span class="rotulo">Lições Bíblicas · 1º Trimestre de 2027</span>
+      <h1>Tornai para mim e Eu tornarei para vós</h1>
+      <p class="sub">Arrependimento, Restauração e o Reino de Cristo no Livro de Zacarias</p>
+      <div class="fio"></div>
+      <p class="ficha">Livro de Apoio por <b>Esequias Soares</b> e <b>Daniele Soares</b><br>CPAD · 13 lições</p>
+    </div>
+
+    <div class="cartao">
+      <span class="rotulo">Versículo-tema</span>
+      <p class="versiculo">“Portanto, dize-lhes: Assim diz o SENHOR dos Exércitos: Tornai para mim, diz o SENHOR dos Exércitos, e eu tornarei para vós, diz o SENHOR dos Exércitos.”</p>
+      <span class="ref">ZACARIAS 1.3 · ARC</span>
+    </div>
+
+    <div class="sumario">
+      <div class="cab"><div class="t">SUMÁRIO</div><div class="s">Os 13 temas do trimestre, na ordem do Livro de Apoio</div></div>
+      <div class="lic"><span class="n">Lição 1</span><span class="tt">O Chamado ao Arrependimento e à Esperança</span></div>
+      <div class="lic"><span class="n">Lição 2</span><span class="tt">Deus Está Presente entre o Seu Povo</span></div>
+      <div class="lic"><span class="n">Lição 3</span><span class="tt">O Poder de Deus contra os Inimigos</span></div>
+      <div class="lic"><span class="n">Lição 4</span><span class="tt">Jerusalém e o Homem com o Cordel de Medir</span></div>
+      <div class="lic"><span class="n">Lição 5</span><span class="tt">O Simbolismo da Purificação do Sumo Sacerdote Josué</span></div>
+      <div class="lic"><span class="n">Lição 6</span><span class="tt">O Simbolismo do Castiçal de Ouro e das Duas Oliveiras</span></div>
+      <div class="lic"><span class="n">Lição 7</span><span class="tt">O Juízo de Deus e o Pecado no Meio do Povo</span></div>
+      <div class="lic"><span class="n">Lição 8</span><span class="tt">O Juízo de Deus sobre as Nações Inimigas de Israel</span></div>
+      <div class="lic"><span class="n">Lição 9</span><span class="tt">O Rei-Sacerdote e a Era Messiânica</span></div>
+      <div class="lic"><span class="n">Lição 10</span><span class="tt">Religião sem Justiça não Agrada a Deus</span></div>
+      <div class="lic"><span class="n">Lição 11</span><span class="tt">O Deus que Restaura e Consola</span></div>
+      <div class="lic"><span class="n">Lição 12</span><span class="tt">O Messias de Israel em Zacarias</span></div>
+      <div class="lic"><span class="n">Lição 13</span><span class="tt">O Futuro Glorioso de Israel e a Aparição do Messias</span></div>
+      <div class="aviso">Temas tirados do sumário do Livro de Apoio, que acompanha as lições capítulo por capítulo. O título de cada lição na revista pode variar um pouco.</div>
+    </div>
+
+    <div class="cartao">
+      <span class="rotulo">Garanta o seu na CPAD</span>
+      <div class="loja"><a href="https://www.cpad.com.br/licoes-biblicas-professor-adultos-1-trimestre/p" target="_blank" rel="noopener"><img src="/ebd/proxima/img/revista-professor-1t2027.jpg?v=1" alt="Capa da revista do Professor" loading="lazy"></a>
+        <div class="tx"><div class="nm">Revista do Professor</div><div class="ds">Lições Bíblicas Adultos · 1º Tri 2027 · 96 páginas</div><a class="btn" href="https://www.cpad.com.br/licoes-biblicas-professor-adultos-1-trimestre/p" target="_blank" rel="noopener">🛒 Ver na loja da CPAD</a></div></div>
+      <div class="loja"><a href="https://www.cpad.com.br/licoes-biblicas-aluno-adultos-1-trimestre-de-2024/p" target="_blank" rel="noopener"><img src="/ebd/proxima/img/revista-aluno-1t2027.jpg?v=1" alt="Capa da revista do Aluno" loading="lazy"></a>
+        <div class="tx"><div class="nm">Revista do Aluno</div><div class="ds">Lições Bíblicas Adultos · 1º Tri 2027 · 64 páginas</div><a class="btn" href="https://www.cpad.com.br/licoes-biblicas-aluno-adultos-1-trimestre-de-2024/p" target="_blank" rel="noopener">🛒 Ver na loja da CPAD</a></div></div>
+      <div class="loja"><a href="https://www.cpad.com.br/tornai-para-mim-e-eu-tornarei-para-vos-380781/p" target="_blank" rel="noopener"><img src="/ebd/proxima/img/livro-apoio-1t2027.jpg?v=1" alt="Capa do Livro de Apoio" loading="lazy"></a>
+        <div class="tx"><div class="nm">Livro de Apoio</div><div class="ds">Esequias Soares e Daniele Soares · 160 páginas</div><a class="btn" href="https://www.cpad.com.br/tornai-para-mim-e-eu-tornarei-para-vos-380781/p" target="_blank" rel="noopener">🛒 Ver na loja da CPAD</a></div></div>
+    </div>
+    <p class="rodape">RADAR · EBD · Cong. Monte Carmelo</p>
+  </div>
+</div>
+</body>
+</html>
