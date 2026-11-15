@@ -1393,6 +1393,26 @@ function esc2(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function _hoje0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
 /* 4º Trimestre LIBERADO (trabalho na revista). Reverter p/ `return _hoje0() < new Date(2026,9,4);` se quiser re-travar. */
 function ebd4TriTravado(){ return false; }
+/* 15/11/2026: CARROSSEL das revistas na tela da EBD — setinhas, pontinhos e arrastar com o dedo (scroll-snap) */
+function revCar(dir){
+  var t=document.getElementById('rev-track'); if(!t) return;
+  var i=Math.round(t.scrollLeft/Math.max(1,t.clientWidth))+dir;
+  i=Math.max(0,Math.min(t.children.length-1,i));
+  t.scrollTo({left:i*t.clientWidth,behavior:'smooth'});
+}
+function revCarAtualiza(){
+  var t=document.getElementById('rev-track'), d=document.getElementById('rev-dots'); if(!t||!d) return;
+  var n=t.children.length, i=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));
+  if(d.children.length!==n){ d.innerHTML=''; for(var k=0;k<n;k++){ d.appendChild(document.createElement('i')); } }
+  for(var k=0;k<n;k++){ d.children[k].className=(k===i?'on':''); }
+  var c=document.getElementById('rev-car');
+  if(c){ var e=c.querySelector('.rev-seta.esq'), r=c.querySelector('.rev-seta.dir'); if(e) e.disabled=(i<=0); if(r) r.disabled=(i>=n-1); }
+}
+(function(){ function liga(){ var t=document.getElementById('rev-track'); if(!t) return; var to=null;
+  t.addEventListener('scroll',function(){ clearTimeout(to); to=setTimeout(revCarAtualiza,60); },{passive:true});
+  window.addEventListener('resize',revCarAtualiza); revCarAtualiza(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',liga); else liga(); })();
+
 /* 15/11/2026: capa da lição por aparelho — celular (tela 9:16, mais estreita) usa "capa-licao-NN-cel.jpg" (720x1280);
    tablet usa "capa-licao-NN.jpg" (10:16, 800x1280). Só nas turmas que já têm as duas versões. */
 var EBD_CAPA_CEL={jovem1:true,adulto1:true};
@@ -3294,7 +3314,14 @@ async function renderCadastros(){
     var lista=(d&&d.cadastros)||[];
     document.getElementById('cad-adm-sub').textContent=lista.length+' cadastrado'+(lista.length!==1?'s':'');
     if(!lista.length){ box.innerHTML='<div style="text-align:center;color:var(--sub);padding:40px">Ninguém cadastrado ainda.</div>'; return; }
-    box.innerHTML=lista.map(function(c){
+    /* 15/11/2026 (pedido do Elias): resumo da aceitação do app + cidade, último acesso e nº de acessos de cada um */
+    var rs=(d&&d.resumo)||{}, cids=(d&&d.cidades)||[];
+    var _qt=function(n,t){ return '<div style="flex:1 1 30%;min-width:96px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--gold)">'+(n||0)+'</div><div style="font-size:11.5px;color:var(--sub);line-height:1.25">'+t+'</div></div>'; };
+    var _quando=function(iso){ if(!iso) return 'ainda não abriu'; var m=Math.round((Date.now()-new Date(iso).getTime())/60000); if(m<2) return 'agora'; if(m<60) return 'há '+m+' min'; var h=Math.round(m/60); if(h<24) return 'há '+h+' h'; var dd=Math.round(h/24); return dd===1?'ontem':'há '+dd+' dias'; };
+    var topo='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">'+_qt(rs.total,'cadastrados')+_qt(rs.hoje,'usaram hoje')+_qt(rs.semana,'usaram na semana')+_qt(rs.mes,'usaram no mês')+_qt(rs.novos_mes,'novos no mês')+_qt(rs.acessos,'acessos no total')+'</div>'
+      +(cids.length?'<div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:var(--gold);letter-spacing:.5px;margin-bottom:6px">📍 DE ONDE ACESSAM (cidade aproximada)</div>'
+        +cids.map(function(x){ return '<div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--txt);padding:3px 0;border-bottom:1px dashed var(--line)"><span>'+x.lugar+'</span><b>'+x.n+'</b></div>'; }).join('')+'</div>':'');
+    box.innerHTML=topo+lista.map(function(c){
       var fone=(c.whatsapp||'').replace(/\D/g,'');
       var wa=fone?('https://wa.me/55'+fone):'';
       var foneFmt=fone?('('+fone.slice(0,2)+') '+fone.slice(2)):'sem WhatsApp';
@@ -3302,7 +3329,9 @@ async function renderCadastros(){
         +'<div style="width:44px;height:44px;border-radius:50%;background:rgba(201,161,74,.15);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--gold);flex-shrink:0">'+((c.nome||'?')[0].toUpperCase())+'</div>'
         +'<div style="flex:1;min-width:0"><div style="font-weight:800;color:var(--txt);font-size:15px">'+(c.nome||'')+'</div>'
         +'<div style="font-size:12.5px;color:var(--gold);font-weight:600">'+(c.cargo||'')+'</div>'
-        +'<div style="font-size:12.5px;color:var(--sub)">📱 '+foneFmt+'</div></div>'
+        +'<div style="font-size:12.5px;color:var(--sub)">📱 '+foneFmt+'</div>'
+        +'<div style="font-size:12px;color:var(--sub)">📍 '+(c.cidade?(c.cidade+(c.uf?' - '+c.uf:'')+(c.pais&&c.pais!=='BR'?' ('+c.pais+')':'')):'cidade ainda não registrada')+'</div>'
+        +'<div style="font-size:12px;color:var(--sub)">🕒 '+_quando(c.ultimo_acesso)+' · '+(c.acessos||0)+' acesso'+((c.acessos||0)===1?'':'s')+'</div></div>'
         +(wa?'<a href="'+wa+'" target="_blank" style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;font-size:13px;font-weight:800;padding:10px 14px;border-radius:999px;text-decoration:none">💬 Recado</a>':'')
         +(fone?'<button onclick="apagarCadastro(\''+fone+'\',\''+(c.nome||'').replace(/\x27/g,"")+'\')" style="flex-shrink:0;background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.3);color:#ff6b6b;font-size:16px;padding:9px 11px;border-radius:999px;cursor:pointer;line-height:1">🗑️</button>':'')
         +'</div>';

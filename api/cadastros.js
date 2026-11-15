@@ -62,7 +62,16 @@ async function garantirTabela(c) {
   await c.query(`create table if not exists radar_cadastros(
     id bigserial primary key, nome text, cargo text, whatsapp text,
     criado_em timestamptz default now(), trial_inicio timestamptz default now(), liberado_ate timestamptz)`);
+  // 15/11/2026: estatística de uso (quem acessa e de onde) — ver também api/_lib/acesso.js
+  await c.query(`alter table radar_cadastros
+    add column if not exists ultimo_acesso timestamptz, add column if not exists acessos integer default 0,
+    add column if not exists cidade text, add column if not exists uf text, add column if not exists pais text`);
   _tabelaOk = true;
+}
+// cidade APROXIMADA pelo IP (cabeçalhos da Vercel) — sem GPS, sem guardar o IP
+function geoCad(h) {
+  const dec = (v) => { try { return decodeURIComponent(String(v || '')).slice(0, 60); } catch (_) { return ''; } };
+  return [dec(h['x-vercel-ip-city']), dec(h['x-vercel-ip-country-region']).slice(0, 10), dec(h['x-vercel-ip-country']).slice(0, 4)];
 }
 
 module.exports = async (req, res) => {
@@ -92,9 +101,9 @@ module.exports = async (req, res) => {
         const ex = await c.query('select id from radar_cadastros where regexp_replace(coalesce(whatsapp,\'\'),\'\\D\',\'\',\'g\') = $1 limit 1', [whatsapp]);
         jaExistia = !!ex.rows[0];
         if (ex.rows[0]) exId = ex.rows[0].id;
-        else await c.query('insert into radar_cadastros(nome,cargo,whatsapp) values($1,$2,$3)', [nome, cargo, whatsapp]);
+        else await c.query('insert into radar_cadastros(nome,cargo,whatsapp,cidade,uf,pais,ultimo_acesso,acessos) values($1,$2,$3,nullif($4,\'\'),nullif($5,\'\'),nullif($6,\'\'),now(),1)', [nome, cargo, whatsapp, ...geoCad(req.headers || {})]);
       } else {
-        await c.query('insert into radar_cadastros(nome,cargo,whatsapp) values($1,$2,$3)', [nome, cargo, whatsapp]);
+        await c.query('insert into radar_cadastros(nome,cargo,whatsapp,cidade,uf,pais,ultimo_acesso,acessos) values($1,$2,$3,nullif($4,\'\'),nullif($5,\'\'),nullif($6,\'\'),now(),1)', [nome, cargo, whatsapp, ...geoCad(req.headers || {})]);
       }
 
       // ── O CRACHÁ DO APARELHO ────────────────────────────────────────────
@@ -230,8 +239,19 @@ module.exports = async (req, res) => {
         res.json({ ok: true, apagados: rd.rowCount });
         return;
       }
-      const r = await c.query('select nome,cargo,whatsapp,criado_em from radar_cadastros order by criado_em desc');
-      res.json({ total: r.rows.length, cadastros: r.rows });
+      // 15/11/2026: lista com o uso (último acesso, nº de acessos, cidade aproximada) + resumo da aceitação
+      const r = await c.query(`select nome,cargo,whatsapp,criado_em,ultimo_acesso,coalesce(acessos,0) as acessos,cidade,uf,pais
+                                 from radar_cadastros order by coalesce(ultimo_acesso, criado_em) desc`);
+      const s = await c.query(`select count(*)::int as total,
+              count(*) filter (where ultimo_acesso > now() - interval '1 day')::int as hoje,
+              count(*) filter (where ultimo_acesso > now() - interval '7 days')::int as semana,
+              count(*) filter (where ultimo_acesso > now() - interval '30 days')::int as mes,
+              count(*) filter (where criado_em > now() - interval '30 days')::int as novos_mes,
+              coalesce(sum(acessos),0)::int as acessos
+         from radar_cadastros`);
+      const cid = await c.query(`select coalesce(nullif(cidade,''),'(sem cidade)') || coalesce(' - ' || nullif(uf,''),'') as lugar, count(*)::int as n
+         from radar_cadastros group by 1 order by 2 desc limit 12`);
+      res.json({ total: r.rows.length, cadastros: r.rows, resumo: s.rows[0], cidades: cid.rows });
     }
   } catch (e) {
     res.status(500).json({ error: String(e && e.message || e) });

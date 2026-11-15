@@ -1333,6 +1333,32 @@ html[data-pele="azul"] #home::selection{background:rgba(231,184,79,.35)}
 #tela-ebd-turma.ebd-mag.t1 .ebd-sumario .s-tema{color:#2f2f2f}
 #tela-ebd-turma.ebd-mag.t1 .ebd-item-titulo{font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#555}
 #tela-ebd-turma.ebd-mag.t1 .ebd-item{border-bottom-width:1.5px}
+/* ══ EBD · CARROSSEL DAS REVISTAS (15/11/2026, pedido do Elias) ══
+   capa grande do tamanho da tela, arrastar com o dedo (scroll-snap) ou setinhas, botão embaixo para entrar.
+   O fundo de cada slide é a capa desfocada: no tablet a capa não fica com faixas vazias dos lados. */
+.rev-car{position:relative;margin:0 -14px 6px}
+.rev-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain}
+.rev-track::-webkit-scrollbar{display:none}
+.rev-slide{position:relative;flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;flex-direction:column;align-items:center;padding:14px 14px 16px;box-sizing:border-box;overflow:hidden}
+.rev-slide::before{content:"";position:absolute;inset:-30px;background:var(--capa) center/cover no-repeat;filter:blur(26px) brightness(.45) saturate(1.2);transform:scale(1.1);z-index:0}
+.rev-slide>*{position:relative;z-index:1}
+.rev-slide img{display:block;width:auto;max-width:100%;height:min(62vh,128vw);max-height:820px;object-fit:contain;border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.6)}
+.rev-info{text-align:center;margin-top:14px;width:100%;max-width:560px}
+.rev-selo{display:inline-block;background:rgba(240,212,136,.2);color:#f0d488;font:800 11px/1 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:.6px;padding:6px 11px;border-radius:999px;border:1px solid rgba(240,212,136,.35)}
+.rev-selo.breve{background:rgba(120,190,255,.18);color:#bfe0ff;border-color:rgba(160,205,255,.4)}
+.rev-tit{font-family:'Playfair Display',Georgia,serif;font-size:21px;font-weight:900;color:#fff;line-height:1.2;margin-top:9px;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.rev-sub{font-size:13px;color:#e4ecf5;margin-top:3px}
+.rev-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.rev-btn{margin-top:12px;min-height:46px;padding:0 20px;border:2px solid #fff;border-radius:14px;background:#f2c14e;color:#0a164a;font:900 16px/1 system-ui,-apple-system,'Segoe UI',sans-serif;letter-spacing:.3px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.rev-btn.sec{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.7)}
+.rev-btn:active{transform:scale(.97)}
+.rev-seta{position:absolute;top:calc(14px + min(31vh,64vw));transform:translateY(-50%);z-index:2;width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,.85);background:rgba(0,0,0,.45);color:#fff;font-size:28px;line-height:1;padding:0 0 4px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5)}
+.rev-seta.esq{left:8px}.rev-seta.dir{right:8px}
+.rev-seta[disabled]{opacity:.25;pointer-events:none}
+.rev-dots{position:relative;z-index:2;display:flex;justify-content:center;gap:7px;margin-top:6px}
+.rev-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);transition:all .25s}
+.rev-dots i.on{width:22px;border-radius:5px;background:#f2c14e}
+
 /* 15/11/2026: 2027 — miniatura da capa na linha da lição e contracapa no fim da lista */
 .ebd-thumb{width:44px;height:70px;object-fit:cover;border-radius:5px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .ebd-contracapa{margin:18px 0 8px;text-align:center}

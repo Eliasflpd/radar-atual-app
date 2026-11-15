@@ -12,9 +12,9 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/radar.css?v=342">
-<link rel="stylesheet" href="/assets/musicas.css?v=342">
-<link rel="preload" as="script" href="/assets/app.js?v=342">
+<link rel="stylesheet" href="/assets/radar.css?v=343">
+<link rel="stylesheet" href="/assets/musicas.css?v=343">
+<link rel="preload" as="script" href="/assets/app.js?v=343">
 <script>
 /* ── A PELE DA HOME (bege ou azul) ──────────────────────────────────────────
    Isto roda AQUI NO <head>, antes de o navegador pintar qualquer coisa.
@@ -669,59 +669,36 @@
     </button>
   </div>
   <div class="bh-scroll">
-    <div class="bh-secao">📘 Revista deste trimestre · 4º Tri 2026</div>
-    <div onclick="abrirEbdTurma('adulto4')" style="background:linear-gradient(160deg,#0a2a3a,#123a52);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3);margin-bottom:10px">
-      <div style="display:flex;gap:12px;padding:12px;align-items:center">
-        <img src="/ebd/adulto4/img/capa.jpg?v=342" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.src='/ebd/adulto4/img/licao-01.jpg'" loading="lazy" decoding="async">
-        <div style="min-width:0">
-          <div style="display:inline-block;background:rgba(240,212,136,.18);color:#f0d488;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:999px;margin-bottom:6px">✦ DISPONÍVEL AGORA</div>
-          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;line-height:1.15">O Deus da Aliança</div>
-          <div style="font-size:12px;color:#cfe0ea;margin-top:2px">Adultos · 4º Tri 2026 · Deuteronômio</div>
-          <div style="font-size:11.5px;color:#f0d488;margin-top:6px;font-weight:700">Ver as 13 lições ›</div>
+    <!-- 15/11/2026 (pedido do Elias): CARROSSEL das revistas — capa grande do tamanho da tela, arrasta com o dedo
+         ou pelas setinhas, e o botão embaixo entra na revista. O fundo de cada slide é a própria capa desfocada,
+         para não sobrar espaço nas laterais no tablet. -->
+    <div class="bh-secao">📚 Revistas da EBD</div>
+    <div class="rev-car" id="rev-car">
+      <div class="rev-track" id="rev-track">
+        <div class="rev-slide" style="--capa:url('/ebd/adulto4/img/capa.jpg?v=343')">
+          <img src="/ebd/adulto4/img/capa.jpg?v=343" alt="Capa — O Deus da Aliança" decoding="async">
+          <div class="rev-info"><span class="rev-selo">✦ DISPONÍVEL AGORA</span><div class="rev-tit">O Deus da Aliança</div><div class="rev-sub">Adultos · 4º Tri 2026 · Deuteronômio</div>
+            <button class="rev-btn" onclick="abrirEbdTurma('adulto4')">📖 Entrar nas lições</button></div>
+        </div>
+        <div class="rev-slide" style="--capa:url('/ebd/jovem4/img/capa.jpg?v=343')">
+          <img src="/ebd/jovem4/img/capa.jpg?v=343" alt="Capa — Alegria em Cristo" loading="lazy" decoding="async">
+          <div class="rev-info"><span class="rev-selo">✦ DISPONÍVEL AGORA</span><div class="rev-tit">Alegria em Cristo — Filipenses</div><div class="rev-sub">Jovens · 4º Tri 2026 · Filipenses</div>
+            <button class="rev-btn" onclick="abrirEbdTurma('jovem4')">📖 Entrar nas lições</button></div>
+        </div>
+        <div class="rev-slide" style="--capa:url('/ebd/adulto1/img/capa.jpg?v=343')">
+          <img src="/ebd/adulto1/img/capa.jpg?v=343" alt="Capa — Tornai para mim e Eu Tornarei para vós" loading="lazy" decoding="async">
+          <div class="rev-info"><span class="rev-selo breve">🔜 EM BREVE · JAN 2027</span><div class="rev-tit">Tornai para mim e Eu Tornarei para vós</div><div class="rev-sub">Adultos · 1º Tri 2027 · Zacarias</div>
+            <div class="rev-btns"><button class="rev-btn" onclick="abrirEbdTurma('adulto1')">📖 Entrar nas lições</button><button class="rev-btn sec" onclick="location.href='/ebd/proxima/'">✨ Apresentação</button></div></div>
+        </div>
+        <div class="rev-slide" style="--capa:url('/ebd/jovem1/img/capa.jpg?v=343')">
+          <img src="/ebd/jovem1/img/capa.jpg?v=343" alt="Capa — O Trono da Graça" loading="lazy" decoding="async">
+          <div class="rev-info"><span class="rev-selo breve">🔜 EM BREVE · JAN 2027</span><div class="rev-tit">O Trono da Graça</div><div class="rev-sub">Jovens · 1º Tri 2027 · Hebreus</div>
+            <button class="rev-btn" onclick="abrirEbdTurma('jovem1')">📖 Entrar nas lições</button></div>
         </div>
       </div>
-    </div>
-    <div onclick="abrirEbdTurma('jovem4')" style="background:linear-gradient(160deg,#08272a,#0f4038);border:1px solid rgba(240,226,184,.25);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
-      <div style="display:flex;gap:12px;padding:12px;align-items:center">
-        <img src="/ebd/jovem4/img/capa.jpg?v=342" style="width:82px;height:108px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.src='/ebd/jovem4/img/licao-01.jpg'" loading="lazy" decoding="async">
-        <div style="min-width:0">
-          <div style="display:inline-block;background:rgba(240,212,136,.18);color:#f0d488;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:999px;margin-bottom:6px">✦ DISPONÍVEL AGORA</div>
-          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;line-height:1.15">Alegria em Cristo — Filipenses</div>
-          <div style="font-size:12px;color:#cfe0ea;margin-top:2px">Jovens · 4º Tri 2026 · Filipenses</div>
-          <div style="font-size:11.5px;color:#f0d488;margin-top:6px;font-weight:700">Ver as 13 lições ›</div>
-        </div>
-      </div>
-    </div>
-    <!-- 15/11/2026: apresentação da PRÓXIMA revista de Adultos (1º tri 2027) — página /ebd/proxima/ -->
-    <div class="bh-secao" style="margin-top:14px">🔜 Próxima revista · 1º Tri 2027</div>
-    <div onclick="location.href='/ebd/proxima/'" style="background:linear-gradient(160deg,#0f2f57,#2d4a1f);border:1px solid rgba(214,166,58,.45);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3)">
-      <div style="display:flex;gap:12px;padding:12px;align-items:center">
-        <img src="/ebd/proxima/img/capa-1t2027.jpg?v=342" style="width:82px;height:108px;object-fit:cover;object-position:50% 0;border-radius:8px;flex-shrink:0" loading="lazy" decoding="async" alt="">
-        <div style="min-width:0">
-          <div style="display:inline-block;background:rgba(214,166,58,.22);color:#f0d488;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:999px;margin-bottom:6px">🔜 EM BREVE · JAN 2027</div>
-          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:#fff;line-height:1.15">Tornai para mim e Eu tornarei para vós</div>
-          <div style="font-size:12px;color:#d7e4c8;margin-top:2px">Adultos · 1º Tri 2027 · Zacarias</div>
-          <div style="font-size:11.5px;color:#f0d488;margin-top:6px;font-weight:700">Ver a apresentação e os 13 temas ›</div>
-        </div>
-      </div>
-    </div>
-    <!-- 15/11/2026: as 13 lições do 1º tri 2027 (turma adulto1) — abrem em 01/01/2027; antes, prévia + PIN -->
-    <div onclick="abrirEbdTurma('adulto1')" style="margin-top:10px;background:linear-gradient(160deg,#134286,#0f2f57);border:1px solid rgba(214,166,58,.45);border-radius:16px;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3);display:flex;align-items:center;gap:12px;padding:12px 14px">
-      <div style="font-size:26px;flex-shrink:0">📖</div>
-      <div style="min-width:0;flex:1">
-        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:#fff;line-height:1.2">As 13 lições do 1º Tri 2027</div>
-        <div style="font-size:12px;color:#cfdcf0;margin-top:2px">Adultos · Revista do Professor · abre em janeiro</div>
-      </div>
-      <div style="color:#f0d488;font-size:24px;flex-shrink:0">›</div>
-    </div>
-    <!-- 15/11/2026: Jovens 1º tri 2027 "O Trono da Graça" (turma jovem1) — só texto por enquanto; abre em 01/01/2027 -->
-    <div onclick="abrirEbdTurma('jovem1')" style="margin-top:10px;background:linear-gradient(160deg,#5a3412,#2b1d10);border:1px solid rgba(227,168,69,.5);border-radius:16px;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3);display:flex;align-items:center;gap:12px;padding:12px">
-      <img src="/ebd/jovem1/img/capa.jpg?v=342" style="width:46px;height:64px;object-fit:cover;border-radius:6px;flex-shrink:0" loading="lazy" decoding="async" alt="">
-      <div style="min-width:0;flex:1">
-        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:#fff;line-height:1.2">Jovens · O Trono da Graça</div>
-        <div style="font-size:12px;color:#f1e4cc;margin-top:2px">1º Tri 2027 · Hebreus · 13 lições · abre em janeiro</div>
-      </div>
-      <div style="color:#e3a845;font-size:24px;flex-shrink:0">›</div>
+      <button class="rev-seta esq" onclick="revCar(-1)" aria-label="Revista anterior">‹</button>
+      <button class="rev-seta dir" onclick="revCar(1)" aria-label="Próxima revista">›</button>
+      <div class="rev-dots" id="rev-dots"></div>
     </div>
     <div class="bh-secao" style="margin-top:14px">Administração</div>
     <div class="bh-tiles">
@@ -1048,7 +1025,7 @@
   </div>
 </div>
 
-<script src="/assets/app.js?v=342"></script>
+<script src="/assets/app.js?v=343"></script>
 
 <!-- REF SHEET -->
 <div id="ref-overlay" onclick="fecharRefSheet()" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.45)"></div>
@@ -1082,8 +1059,8 @@
       <div class="adm-tile" style="--tc:#25D366" onclick="abrirAdm('cadastros')">
         <div class="adm-tile-bar"></div>
         <div class="adm-tile-icon">📇</div>
-        <div class="adm-tile-nome">Cadastros</div>
-        <div class="adm-tile-cnt">Todos + WhatsApp</div>
+        <div class="adm-tile-nome">Quem usa o app</div>
+        <div class="adm-tile-cnt">Cadastros, acessos e cidades</div>
       </div>
       <div class="adm-tile" style="--tc:#2563eb" onclick="abrirAdm('igrejas')">
         <div class="adm-tile-bar"></div>
@@ -1189,7 +1166,7 @@
 <div class="tela" id="tela-adm-cadastros">
   <div class="std-header">
     <button class="std-back" onclick="abrirTelaAdm('tela-painel-adm')">←</button>
-    <div class="std-hinfo"><div class="std-titulo">📇 Cadastros</div><div class="std-sub" id="cad-adm-sub">carregando…</div></div>
+    <div class="std-hinfo"><div class="std-titulo">📇 Quem usa o app</div><div class="std-sub" id="cad-adm-sub">carregando…</div></div>
     <button style="background:none;border:none;color:var(--gold);font-size:20px;padding:0;cursor:pointer;font-family:inherit;line-height:1" onclick="renderCadastros()">↻</button>
   </div>
   <div class="dash-scroll" style="padding:14px" id="cad-adm-lista"></div>
@@ -2046,8 +2023,8 @@ function compartilharApp(nome){
   </div>
 </div>
 
-<script src="/assets/lupa.js?v=342"></script>
-<script src="/assets/musicas.js?v=342" defer></script>
-<script src="/_uso.js?v=342" defer></script>
+<script src="/assets/lupa.js?v=343"></script>
+<script src="/assets/musicas.js?v=343" defer></script>
+<script src="/_uso.js?v=343" defer></script>
 </body>
 </html>
