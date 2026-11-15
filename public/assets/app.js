@@ -1395,7 +1395,7 @@ function _hoje0(){ var d=new Date(); d.setHours(0,0,0,0); return d; }
 function ebd4TriTravado(){ return false; }
 /* 15/11/2026: capa da lição por aparelho — celular (tela 9:16, mais estreita) usa "capa-licao-NN-cel.jpg" (720x1280);
    tablet usa "capa-licao-NN.jpg" (10:16, 800x1280). Só nas turmas que já têm as duas versões. */
-var EBD_CAPA_CEL={jovem1:true};
+var EBD_CAPA_CEL={jovem1:true,adulto1:true};
 function ebdCapaLicaoSrc(turma,n){
   var nn=String(n).padStart(2,'0');
   var cel=EBD_CAPA_CEL[turma] && (window.innerWidth/Math.max(1,window.innerHeight) < 0.6);
