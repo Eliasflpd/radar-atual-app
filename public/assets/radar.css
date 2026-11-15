@@ -1326,6 +1326,13 @@ html[data-pele="azul"] #home::selection{background:rgba(231,184,79,.35)}
 #tela-ebd-turma.ebd-mag:not(.j) .ebd-prog > div:first-child > div:last-child{color:var(--sum-texto) !important}
 #tela-ebd-turma.ebd-mag:not(.j) .ebd-prog > div:last-child{background:#dfe8ef !important}
 #tela-ebd-turma.ebd-mag:not(.j) .ebd-prog > div:last-child > div{background:linear-gradient(90deg,var(--sum-aco),var(--sum-ardosia)) !important}
+/* ══ 1º TRI 2027 (Zacarias): o mesmo índice-sumário com as cores da revista nova — medidas no PDF (15/11/2026) ══
+   topo creme #ece8e2, letreiro anil #2a2850, faixa azul #134286 (com Professor | Comentarista), filetes #97a0cc */
+#tela-ebd-turma.ebd-mag.t1{--sum-creme:#ece8e2;--sum-ardosia:#2a2850;--sum-aco:#134286;--sum-filete:#97a0cc;--sum-texto:#555}
+#tela-ebd-turma.ebd-mag.t1 .ebd-sumario .s-faixa{background:var(--sum-aco);color:#fff;font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:15px;line-height:1.35;padding:9px 14px;margin:0 -14px 14px;border-radius:0}
+#tela-ebd-turma.ebd-mag.t1 .ebd-sumario .s-tema{color:#2f2f2f}
+#tela-ebd-turma.ebd-mag.t1 .ebd-item-titulo{font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#555}
+#tela-ebd-turma.ebd-mag.t1 .ebd-item{border-bottom-width:1.5px}
 
 /* ══ EBD · variante JOVENS (revista de tom dourado/quente: âmbar, creme, rosa-vinho) ══ */
 .ebd-mag.j{--mag-navy:#2b1d10;--mag-navy2:#1a1108;--mag-azul:#b66e28;--mag-aco:#8e5513;--mag-ceu:#f1e4cc;--mag-vinho:#a34a5e;--mag-creme:#f6edda;--mag-bronze:#b66e28;--mag-ouro:#e3a845}
