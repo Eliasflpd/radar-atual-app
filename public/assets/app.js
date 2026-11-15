@@ -430,7 +430,7 @@ function irHome(){
   ocultarTodas();
   document.getElementById('home').classList.add('ativa');
   renderHome();
-  try{ nhRender(); }catch(e){}  // home nova: "Sua próxima leitura"
+  try{ nhRender(); hvAplicar(); }catch(e){}  // home nova: "Sua próxima leitura" + visual escolhido (noite/estudo/revista)
   mostrarAvisoConfirmacao();    // faixa "Confirme seu WhatsApp" (só para quem entrou sem confirmar)
   if(!_acessoVerificado){ _acessoVerificado=true; verificarAcesso(); renovarChave(); }
   if(!_deepLinkFeito){                 // ?mod=... / ?ir=... abre direto SÓ na 1ª carga; voltar nunca reabre
@@ -4572,7 +4572,96 @@ function nhOuvir(){
   });
   document.body.appendChild(f);
 }
-document.addEventListener('DOMContentLoaded',function(){ try{ nhRender(); }catch(e){} });
+// ── 3 VISUAIS DA TELA INICIAL (15/11/2026): noite (padrão) · estudo · revista. Escolha no Perfil, guardada no aparelho ──
+var HV_CLASSE={noite:'nh', estudo:'he', revista:'hr'};
+var HV_NAV={
+  noite:  [['Início'],['Buscar'],['Favoritos'],['Perfil']],
+  estudo: [['Início'],['Buscar'],['Favoritos'],['Perfil']],
+  revista:[['Início','<svg viewBox="0 0 24 24"><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="currentColor"/></svg>'],
+           ['Explorar','<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></svg>'],
+           ['Salvos','<svg viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>'],['Perfil']]
+};
+var _hvNavOrig=null;
+function hvAtual(){ var v='noite'; try{ v=localStorage.getItem('radar_home_visual')||'noite'; }catch(e){} return HV_CLASSE[v]?v:'noite'; }
+function hvAplicar(){
+  var v=hvAtual(), h=document.getElementById('home'); if(!h) return;
+  h.classList.remove('nh','he','hr'); h.classList.add(HV_CLASSE[v]);
+  var btns=h.querySelectorAll('.nav-bottom .nav-btn');
+  if(!_hvNavOrig){ _hvNavOrig=[].map.call(btns,function(b){ return b.querySelector('.ni').innerHTML; }); }
+  [].forEach.call(btns,function(b,i){ var d=(HV_NAV[v]||HV_NAV.noite)[i]||[]; if(d[0]) b.querySelector('.nl').textContent=d[0]; b.querySelector('.ni').innerHTML=d[1]||_hvNavOrig[i]; });
+  document.querySelectorAll('#hv-opcoes button').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-hv')===v); });
+  var meta=document.querySelector('meta[name="theme-color"]');
+  if(meta && h.classList.contains('ativa')) meta.setAttribute('content', v==='noite'?'#0A1729':(v==='estudo'?'#E8EEF6':'#FBF7F0'));
+  if(v==='estudo'){ try{ heRender(); }catch(e){} }
+}
+function hvEscolher(v){ try{ localStorage.setItem('radar_home_visual',v); }catch(e){} hvAplicar(); }
+function _hTurmas(){ var hoje=_hoje0(); return hoje>=new Date(2027,0,3)?{a:'adulto1',j:'jovem1'}:{a:'adulto4',j:'jovem4'}; }
+function _hLic(turma,n){ var l=(typeof EBD_LICOES!=='undefined'&&EBD_LICOES[turma])||[]; for(var i=0;i<l.length;i++){ if(l[i].n===n) return {idx:i,titulo:l[i].titulo}; } return {idx:-1,titulo:'—'}; }
+var HE_HEBREUS=57; // índice de Hebreus na biblia.json (padrão quando a pessoa ainda não leu nada)
+function heRender(){
+  var p=nhProxima(), t=_hTurmas();
+  var la=_hLic(t.a,p.n), lj=_hLic(t.j,p.n);
+  var ea=document.getElementById('he-lic-a'), ej=document.getElementById('he-lic-j');
+  if(ea) ea.textContent=la.titulo; if(ej) ej.textContent=lj.titulo;
+  var ca=document.getElementById('he-capa-a'), cj=document.getElementById('he-capa-j');
+  if(ca) ca.src='/ebd/'+t.a+'/img/capa.jpg'; if(cj) cj.src='/ebd/'+t.j+'/img/capa.jpg';
+  // anotações da Bíblia (as que a pessoa guardou no app)
+  var box=document.getElementById('he-notas');
+  if(box){
+    var ns=[]; try{ ns=getData('crm_biblia')||[]; }catch(e){}
+    var ic='<svg viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M8 11h8M8 15h8M8 7h3"/></svg>';
+    if(!ns.length){ box.innerHTML='<div class="he-nota he-nota-vazia" onclick="abrirCRM(\'crm_biblia\',\'Anotações da Bíblia\',\'📋\',\'home\')">'+ic+'<div><b>Nenhuma anotação ainda</b><span>Toque para escrever a primeira</span></div></div>'; }
+    else {
+      box.innerHTML=ns.slice(-3).reverse().map(function(n){
+        var vals=Object.keys(n).filter(function(k){ return k!=='id'&&typeof n[k]==='string'&&n[k].trim(); }).map(function(k){ return n[k]; });
+        var tit=n.titulo||n.nome||n.assunto||vals[0]||'Anotação', sub=n.ref||n.referencia||n.versiculo||n.livro||vals[1]||'';
+        return '<div class="he-nota" onclick="abrirCRM(\'crm_biblia\',\'Anotações da Bíblia\',\'📋\',\'home\')">'+ic+'<div><b>'+esc2(String(tit).slice(0,80))+'</b><span>'+esc2(String(sub).slice(0,60))+'</span></div><em>⋮</em></div>';
+      }).join('');
+    }
+  }
+  // "Estudo aberto": o último capítulo que a pessoa leu na Bíblia (bib_pos) — 3 primeiros versículos
+  var pos=null; try{ pos=JSON.parse(localStorage.getItem('bib_pos')||'null'); }catch(e){}
+  var L=pos?pos.l:HE_HEBREUS, C=pos?pos.c:0;
+  function pinta(){
+    var liv=bibData&&bibData[L]; if(!liv||!liv.chapters[C]) return;
+    var nome=liv.name||'';
+    document.getElementById('he-livro').textContent=nome.toUpperCase();
+    document.getElementById('he-cap').textContent=nome+' '+(C+1);
+    document.getElementById('he-vers').innerHTML=liv.chapters[C].slice(0,3).map(function(v){ return '<li>'+esc2(v)+'</li>'; }).join('');
+  }
+  if(bibData) pinta(); else fetch('/biblia.json').then(function(r){ return r.json(); }).then(function(d){ bibData=d; pinta(); }).catch(function(){});
+}
+function heRetomar(){
+  var pos=null; try{ pos=JSON.parse(localStorage.getItem('bib_pos')||'null'); }catch(e){}
+  var L=pos?pos.l:HE_HEBREUS, C=pos?pos.c:0;
+  function vai(){ abrirBiblia(); try{ bibMostrarVers(L,C); }catch(e){} }
+  if(bibData) vai(); else fetch('/biblia.json').then(function(r){ return r.json(); }).then(function(d){ bibData=d; vai(); }).catch(function(){ abrirBiblia(); });
+}
+function heAbrirEbd(q){
+  var p=nhProxima(), t=_hTurmas(), turma=(q==='jovem'?t.j:t.a), l=_hLic(turma,p.n);
+  try{ abrirEbdTurma(turma); if(l.idx>=0) abrirLicaoDetalhe(l.idx); }catch(e){ abrirEbd(); }
+}
+function hFolha(itens){
+  var f=document.createElement('div'); f.className='nh-folha';
+  f.innerHTML='<div>'+itens.map(function(it,i){ return '<button data-i="'+i+'">'+it[0]+'</button>'; }).join('')+'<button class="x" data-i="x">Fechar</button></div>';
+  f.addEventListener('click',function(e){
+    var i=e.target&&e.target.getAttribute&&e.target.getAttribute('data-i');
+    if(e.target===f||i!==null&&i!==undefined){ f.remove(); }
+    if(i!==null&&i!==undefined&&i!=='x'&&itens[+i]) itens[+i][1]();
+  });
+  document.body.appendChild(f);
+}
+function hrMinisterio(){
+  hFolha([['📝 Preparar sermão',function(){location.href='/biblioteca/preparador/';}],['🔥 Aprender a pregar',function(){location.href='/biblioteca/escola-pregacao/';}],
+          ['⚖️ Doutrina',function(){location.href='/biblioteca/estudo-doutrina/';}],['🎙️ Conversar por voz',function(){location.href='/biblioteca/voz/';}]]);
+}
+function hrMenu(){
+  hFolha([['📖 Bíblia e Harpa',function(){ocultarTodas();document.getElementById('tela-bh-landing').classList.add('ativa');window.scrollTo(0,0);}],
+          ['🏫 EBD',abrirEbd],['📚 Biblioteca',function(){abrirMod('manuais');}],['🎓 Teologia',function(){location.href='/biblioteca/curso-teologia/';}],
+          ['📜 Sermões',function(){location.href='/biblioteca/sermoes/';}],['🧠 Quiz bíblico',function(){abrirMod('desafiomateus');}],
+          ['✍️ Ministério…',hrMinisterio],['🎵 Músicas e pregações',nhOuvir]]);
+}
+document.addEventListener('DOMContentLoaded',function(){ try{ nhRender(); hvAplicar(); }catch(e){} });
 function licaoDaSemana4(){
   var start=new Date(2026,9,4); start.setHours(0,0,0,0); // 1o domingo do 4o tri 2026
   var d=_hoje0();
