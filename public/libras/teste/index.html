@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Conecta Libras — Teste do alfabeto</title>
+<meta name="theme-color" content="#071e3c">
+<link rel="icon" href="../icons/icon-192.png" type="image/png">
+<style>
+*{box-sizing:border-box}html,body{margin:0;max-width:100%;overflow-x:clip}
+body{font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#13284a;background:#f3f6fa}
+header{background:linear-gradient(180deg,#0a2350,#061a3a);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 18px;text-align:center}
+header img{width:90px;height:auto}
+header h1{margin:4px 0 2px;font-size:clamp(22px,4vw,32px)}
+header p{margin:0;color:#bcd2ea;font-size:.9em}
+main{max-width:1000px;margin:0 auto;padding:16px 16px 60px}
+.box{background:#fff;border:1px solid #e0e8f0;border-radius:20px;padding:18px;margin-top:16px;box-shadow:0 10px 30px #071e3c12}
+.box h2{margin:0 0 4px;font-size:1.25em}
+.tag{display:inline-block;font-size:.72em;font-weight:800;border-radius:99px;padding:4px 10px;background:#e3f5f2;color:#147e75;margin-bottom:8px}
+.muted{color:#5f6f83;font-size:.9em;margin:0 0 12px}
+.player{display:grid;grid-template-columns:1fr;gap:12px}
+.stage{position:relative;width:min(100%,420px);aspect-ratio:1;margin:0 auto;border-radius:16px;overflow:hidden;background:#0b1626}
+.stage video{width:100%;height:100%;object-fit:cover;display:block}
+.stage b{position:absolute;left:12px;top:10px;background:#ffc857;color:#071e3c;border-radius:12px;padding:2px 12px;font-size:1.6em}
+.letters{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:8px}
+.letters button{aspect-ratio:1;border:1px solid #e0e8f0;background:#fff;border-radius:12px;font:900 1.2em system-ui;color:#173b66;cursor:pointer}
+.letters button.on{background:#2878c8;color:#fff;border-color:#2878c8}
+.vl{display:flex;flex-wrap:wrap;gap:8px}
+.vl span{display:inline-block;border:1px solid #c9daf0;background:#eef5fe;border-radius:12px;padding:8px 14px;font-weight:800;cursor:pointer}
+ol{padding-left:20px;margin:6px 0 12px}
+.note{background:#fff8e8;border:1px solid #f1dca7;color:#75591d;border-radius:12px;padding:10px 12px;font-size:.82em;margin-top:12px}
+a.back{display:inline-block;margin-top:18px;font-weight:800;color:#2878c8}
+@media(min-width:760px){.player{grid-template-columns:420px 1fr;align-items:start}}
+</style>
+</head>
+<body>
+<header>
+  <img src="../img/logo-transp.png" alt="">
+  <h1>Teste do alfabeto manual</h1>
+  <p>Compare as opções e diga qual fica melhor para o Conecta Libras</p>
+</header>
+<main>
+
+  <section class="box">
+    <span class="tag">OPÇÃO 1 · VÍDEOS RECORTADOS</span>
+    <h2>Só a mão, uma letra por vídeo</h2>
+    <p class="muted">Feito a partir dos vídeos já enviados: zoom na mão, cada vídeo só com a sua letra. Toque numa letra.</p>
+    <div class="player">
+      <div class="stage"><video id="v" playsinline muted loop autoplay preload="auto"></video><b id="t">A</b></div>
+      <div class="letters" id="letters"></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <span class="tag">OPÇÃO 2 · AVATAR VLIBRAS (GOVERNO FEDERAL, GRATUITO)</span>
+    <h2>Avatar 3D que faz os sinais</h2>
+    <p class="muted">O VLibras é uma ferramenta livre do governo: um avatar gerado por computador que traduz textos para Libras e soletra letras e nomes.</p>
+    <ol>
+      <li>Toque no <b>botão azul com a mão</b> no canto direito da tela.</li>
+      <li>Depois toque em uma letra ou palavra abaixo: o avatar faz o sinal.</li>
+    </ol>
+    <div class="vl" id="vl"></div>
+    <p class="note">O VLibras ajuda, mas não substitui intérprete nem professora: estudos mostram que ele segue a ordem do português. Para o alfabeto e palavras soltas funciona bem.</p>
+  </section>
+
+  <a class="back" href="../">← Voltar ao Conecta Libras</a>
+</main>
+
+<!-- VLibras (governo federal) -->
+<div vw class="enabled">
+  <div vw-access-button class="active"></div>
+  <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
+</div>
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>try { new window.VLibras.Widget('https://vlibras.gov.br/app'); } catch (e) {}</script>
+
+<script>
+const L = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'Ç'];
+const f = (l) => (l === 'Ç' ? 'C-cedilha' : l);
+const v = document.getElementById('v'), box = document.getElementById('letters');
+function show(i) {
+  const l = L[i];
+  v.poster = 'maos/' + f(l) + '.jpg'; v.src = 'maos/' + f(l) + '.mp4'; v.play().catch(() => {});
+  document.getElementById('t').textContent = l;
+  [...box.children].forEach((b, j) => b.classList.toggle('on', j === i));
+}
+L.forEach((l, i) => { const b = document.createElement('button'); b.textContent = l; b.onclick = () => show(i); box.appendChild(b); });
+show(0);
+document.getElementById('vl').innerHTML = L.concat(['OLÁ', 'OBRIGADO', 'BOM DIA', 'JOCIMARA', 'CONECTA LIBRAS']).map((w) => '<span>' + w + '</span>').join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+/* BROW STUDIO — PROMOÇÕES (cartaz e plano de pagamento). Usa as cores do brow.css. */
+.promo-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;
+  background:linear-gradient(135deg,var(--branco,#fff) 0%,var(--prata-claro,#eef0f2) 100%);
+  border:1px solid var(--prata,#c9ccd1);box-shadow:0 8px 20px -16px rgba(46,46,51,.6);margin-bottom:12px}
+.promo-card .promo-mini{flex:0 0 auto;width:62px;height:82px;border-radius:12px;overflow:hidden;background:var(--prata-claro,#eef0f2);display:block}
+.promo-card .promo-mini img{width:100%;height:100%;object-fit:cover;display:block}
+.promo-card .promo-info{flex:1;min-width:0}
+.promo-card .promo-rotulo{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--terracota,#b5573b)}
+.promo-card .promo-titulo{font-weight:500;color:var(--grafite-escuro,#2e2e33);font-size:17px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.promo-card .promo-preco{font-size:14px;color:var(--grafite,#3f3f46);margin-top:2px}
+.promo-card .btn{flex:0 0 auto;min-height:46px;font-size:15px;padding:0 14px}
+.promo-cartaz{display:flex;justify-content:center;align-items:flex-start;min-height:0}
+.promo-cartaz img{display:block;max-width:100%;height:auto;border-radius:16px;box-shadow:0 14px 30px -20px rgba(46,46,51,.7);object-fit:contain}
+.promo-cartaz .sem-cartaz{padding:28px 18px;border-radius:16px;background:var(--prata-claro,#eef0f2);color:var(--grafite,#3f3f46);text-align:center;width:100%}
+.promo-lado{display:flex;gap:16px;align-items:flex-start}
+.promo-lado .promo-cartaz{flex:0 0 auto}
+.promo-lado .promo-texto{flex:1;min-width:0}
+.promo-etapas{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.promo-etapa{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:var(--branco,#fff);border:1px solid var(--prata,#c9ccd1)}
+.promo-etapa .num{flex:0 0 auto;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;
+  color:#fff;background:var(--grad-principal,linear-gradient(135deg,#b85a3d,#8e3f28))}
+.promo-etapa.feita .num{background:linear-gradient(135deg,#6f8f4e,#4f6d33)}
+.promo-etapa .txt{flex:1;min-width:0}
+.promo-etapa .txt strong{display:block;color:var(--grafite-escuro,#2e2e33);font-weight:500;font-size:16px}
+.promo-etapa .txt small{display:block;color:var(--grafite,#3f3f46);font-size:14px}
+.promo-etapa .btn{flex:0 0 auto;min-height:44px;font-size:15px;padding:0 14px}
+.promo-etapa .ok{flex:0 0 auto;font-size:14px;font-weight:500;color:#4f6d33}
+.promo-resumo{font-size:15px;color:var(--grafite,#3f3f46);margin:6px 0 10px}
+@media (max-width:420px){
+  .promo-card{gap:10px;padding:8px 10px}
+  .promo-card .promo-mini{width:48px;height:64px}
+  .promo-card .promo-titulo{font-size:15px}
+  .promo-card .btn{min-height:42px;font-size:14px;padding:0 10px}
+  .promo-etapa{padding:8px 10px;gap:10px}
+  .promo-etapa .btn{min-height:42px;font-size:14px;padding:0 10px}
+  .promo-lado{flex-direction:column;align-items:stretch}
+}
+@media (max-height:760px){
+  .promo-card .promo-mini{width:44px;height:58px}
+  .promo-etapa{padding:7px 10px}
+}
