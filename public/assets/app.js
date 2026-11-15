@@ -2827,8 +2827,8 @@ function abrirLicaoDetalhe(idx){
      ativo:!!lic.apoio,
      tap:lic.apoio?`abrirReader(${idx},'apoio',this)`:null},
     {num:'4',icon:'🧠',nome:'MAPA MENTAL',
-     ativo:lic.n>0 && (ebdTurmaAtual==='adulto4'||(ebdTurmaAtual==='jovem4'&&lic.n>=3)||(ebdTurmaAtual==='adolescentes'&&lic.n>=10&&!!lic.licao)),
-     tap:lic.n>0 && (ebdTurmaAtual==='adulto4'||(ebdTurmaAtual==='jovem4'&&lic.n>=3)||(ebdTurmaAtual==='adolescentes'&&lic.n>=10&&!!lic.licao))?`abrirReader(${idx},'mapa')`:null},
+     ativo:lic.n>0 && (ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='adulto1'||ebdTurmaAtual==='jovem1'||(ebdTurmaAtual==='jovem4'&&lic.n>=3)||(ebdTurmaAtual==='adolescentes'&&lic.n>=10&&!!lic.licao)),
+     tap:lic.n>0 && (ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='adulto1'||ebdTurmaAtual==='jovem1'||(ebdTurmaAtual==='jovem4'&&lic.n>=3)||(ebdTurmaAtual==='adolescentes'&&lic.n>=10&&!!lic.licao))?`abrirReader(${idx},'mapa')`:null},
     {num:'5',icon:'📰',nome:'REVISTA CRISTÃO ALERTA',
      ativo:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4'),
      tap:lic.n>0 && (ebdTurmaAtual==='adulto'||ebdTurmaAtual==='adulto4')?`abrirReader(${idx},'subsidio')`:null},
@@ -2846,7 +2846,7 @@ function abrirLicaoDetalhe(idx){
     {num:'7',icon:'👩‍🏫',nome:'PLANO DE AULA',
      ativo:lic.n>0,
      tap:lic.n>0?`abrirPlanoAula(${idx})`:null}
-  ].filter(it=>(ebdTurmaAtual!=='adulto1'&&ebdTurmaAtual!=='jovem1')||['LIÇÃO','PPT','APOIO','PLANO DE AULA'].includes(it.nome))  /* 1º tri 2027: só o que existe (Lição da revista do Professor + Plano de Aula; PPT/Apoio "em breve") */
+  ].filter(it=>(ebdTurmaAtual!=='adulto1'&&ebdTurmaAtual!=='jovem1')||['LIÇÃO','PPT','APOIO','MAPA MENTAL','PLANO DE AULA'].includes(it.nome))  /* 1º tri 2027: só o que existe (Lição da revista do Professor + Plano de Aula; PPT/Apoio "em breve") */
    .map((it,i)=>({...it,num:String(i+1)}));
   const _fnd=lic.n>0&&ebdConcluida(ebdTurmaAtual,lic.n);
   const _btnConcluir=(lic.n>0&&!_detLocked)?`<button id="ebd-btn-concluir" onclick="ebdMarcarConcluida(${idx})" style="width:100%;margin-bottom:14px;padding:13px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.3px;${_fnd?'background:#25D366;color:#fff':((ebdTurmaAtual==='adulto4'||ebdTurmaAtual==='jovem4')?'background:'+(ebdTurmaAtual==='jovem4'?'#a34a5e':'#962030')+';color:#f9f5da;border:1.5px solid #d9a441':'background:rgba(15,24,38,.7);color:#f0dca0;border:1px solid rgba(240,226,184,.35)')}">${_fnd?'✓ LIÇÃO CONCLUÍDA':'MARCAR COMO CONCLUÍDA'}</button>`:'';
