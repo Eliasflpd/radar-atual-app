@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Memorizar a mensagem</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--cinza:#6b7280;--linha:#e3e6ee;--suave:#f4f7f9}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:820px;background:var(--branco);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;padding:14px 14px calc(40px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  .voltar{background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700}
+  .selo{text-align:center;color:var(--teal);font-size:.8rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin:14px 0 2px}
+  h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:1.75rem;line-height:1.2;margin:0 0 2px}
+  .ref{text-align:center;color:var(--dourado);font-weight:800;margin-bottom:14px}
+  .amago{background:var(--navy);color:#fff;border-radius:16px;padding:16px;text-align:center;font-family:Georgia,serif;font-size:1.22rem;line-height:1.45;font-weight:700;margin-bottom:14px}
+  .amago small{display:block;font-family:'Segoe UI',system-ui,sans-serif;font-size:.72rem;letter-spacing:3px;color:#f0d9a0;margin-bottom:6px}
+  .abertura{background:var(--suave);border-left:5px solid var(--dourado);border-radius:12px;padding:12px 14px;font-size:1.02rem;margin-bottom:16px}
+  .abertura b{color:var(--dourado);font-size:.78rem;letter-spacing:2px;display:block}
+
+  .ensaios{border:1px solid var(--linha);border-radius:16px;padding:14px;margin-bottom:16px}
+  .ensaios h2{margin:0 0 4px;font-size:1.05rem;color:var(--navy)}
+  .ensaios p{margin:0 0 10px;color:var(--cinza);font-size:.95rem}
+  .bolas{display:flex;gap:8px;margin-bottom:12px}
+  .bola{flex:1;text-align:center;border-radius:12px;padding:8px 4px;background:var(--suave);border:2px solid var(--linha);font-size:.85rem;font-weight:700;color:var(--cinza)}
+  .bola.feito{background:#e8f6ee;border-color:#2e9d5b;color:#1d6b3d}
+  .bola .n{display:block;font-size:1.3rem}
+  .linha-btn{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .btn{border:none;border-radius:12px;padding:11px 16px;font-size:1rem;font-weight:800;min-height:44px}
+  .btn.ouro{background:var(--dourado);color:#fff}
+  .btn.navy{background:var(--navy);color:#fff}
+  .btn.claro{background:var(--suave);color:var(--navy);border:1px solid var(--linha)}
+  .btn.verde{background:#2e9d5b;color:#fff}
+  .btn.vinho{background:var(--vinho);color:#fff}
+  label.data{font-size:.95rem;color:var(--texto);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  input[type=date]{font-size:1rem;padding:8px;border:1px solid var(--linha);border-radius:10px;font-family:inherit}
+
+  .abas{display:flex;gap:6px;position:sticky;top:0;background:#fff;padding:8px 0;z-index:5;margin-bottom:10px}
+  .aba{flex:1;border:1px solid var(--linha);background:var(--suave);color:var(--navy);border-radius:12px;padding:10px 4px;font-size:.92rem;font-weight:800;min-height:44px}
+  .aba.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .painel{display:none}
+  .painel.on{display:block}
+  .dica{color:var(--cinza);font-size:.98rem;margin:0 0 12px;text-align:center}
+
+  .card{border:1px solid var(--linha);border-radius:18px;overflow:hidden;margin-bottom:16px;background:#fff;box-shadow:0 4px 14px rgba(15,61,92,.07)}
+  .card .img{position:relative;aspect-ratio:1/1;max-height:420px;width:100%;background:linear-gradient(135deg,#0f3d5c,#a9791c);display:flex;align-items:center;justify-content:center;color:#fff;font-size:3rem;font-weight:800}
+  .card .img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .card .num{position:absolute;top:10px;left:10px;background:rgba(15,61,92,.92);color:#fff;border-radius:999px;padding:4px 12px;font-size:.9rem;font-weight:800;z-index:2}
+  .card .corpo{padding:14px}
+  .card .lugar{color:var(--teal);font-weight:800;font-size:.85rem;letter-spacing:1px;text-transform:uppercase}
+  .card .gatilho{font-family:Georgia,serif;font-size:1.3rem;font-weight:800;color:var(--navy);line-height:1.3;margin:2px 0 4px}
+  .card .tit{color:var(--vinho);font-weight:800;font-size:1.05rem;margin-bottom:8px}
+  .card ul{margin:8px 0 0;padding:0;list-style:none}
+  .card li{position:relative;padding-left:20px;margin-bottom:8px;font-size:1.05rem}
+  .card li::before{content:"◆";color:var(--dourado);position:absolute;left:0;top:0}
+  .oculto{display:none}
+
+  .teste-prog{text-align:center;font-weight:800;color:var(--navy);margin-bottom:8px}
+  .resultado{text-align:center;border:2px solid var(--dourado);background:#fbf6ea;border-radius:16px;padding:18px;margin-bottom:16px}
+  .resultado .grande{font-family:Georgia,serif;font-size:1.6rem;font-weight:800;color:var(--navy)}
+
+  .frase{border:1px solid var(--linha);border-radius:16px;padding:14px;margin-bottom:14px}
+  .frase .rot{color:var(--teal);font-weight:800;font-size:.85rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+  .frase .txt{font-family:Georgia,serif;font-size:1.3rem;line-height:1.5;color:var(--navy);min-height:2em;letter-spacing:.5px}
+  .frase .niveis{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .frase .niveis button{flex:1;min-width:90px;border:1px solid var(--linha);background:var(--suave);color:var(--navy);border-radius:10px;padding:8px 6px;font-weight:800;font-size:.88rem;min-height:40px}
+  .frase .niveis button.on{background:var(--dourado);color:#fff;border-color:var(--dourado)}
+
+  .pulpito{border:2px solid var(--navy);border-radius:16px;padding:14px}
+  .pulpito .amago{margin-bottom:10px;font-size:1.1rem}
+  .pgrade{display:grid;grid-template-columns:1fr;gap:10px}
+  .pitem{display:flex;gap:10px;align-items:center;border:1px solid var(--linha);border-radius:12px;padding:8px}
+  .pitem .mini{flex:0 0 74px;height:74px;border-radius:10px;background:linear-gradient(135deg,#0f3d5c,#a9791c);position:relative;overflow:hidden;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.4rem}
+  .pitem .mini img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pitem b{display:block;color:var(--navy);font-size:1.05rem;line-height:1.3}
+  .pitem span{color:var(--cinza);font-size:.9rem}
+  .papelo{margin-top:10px;font-weight:700;color:var(--vinho);text-align:center}
+  @media(min-width:640px){.pgrade{grid-template-columns:1fr 1fr}}
+  @media print{
+    body{padding:0;max-width:none}
+    .nao-imprime{display:none!important}
+    .painel{display:none!important}
+    #p-pulpito{display:block!important}
+    .pulpito{border:none}
+    .pgrade{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+  <div class="nao-imprime">
+    <button class="voltar" id="voltar">← Voltar à mensagem</button>
+    <div class="selo">🧠 Memorizar</div>
+    <h1 id="titulo">…</h1>
+    <div class="ref" id="ref"></div>
+
+    <div class="amago"><small>GRAVE ESTA FRASE PALAVRA POR PALAVRA</small><span id="amago"></span></div>
+    <div class="abertura" id="abertura-box"><b>COMO ABRIR</b><span id="abertura"></span></div>
+
+    <div class="ensaios">
+      <h2>Três ensaios falados</h2>
+      <p>Feche o texto e pregue em voz alta: no dia em que estudar, no dia seguinte e na véspera.</p>
+      <div class="bolas" id="bolas"></div>
+      <div class="linha-btn" style="margin-bottom:10px">
+        <button class="btn verde" id="marcar">✅ Terminei um ensaio hoje</button>
+      </div>
+      <div class="linha-btn">
+        <label class="data">Vou pregar em: <input type="date" id="pregar"></label>
+        <button class="btn claro" id="agenda">📅 Lembretes na agenda</button>
+      </div>
+    </div>
+
+    <div class="abas">
+      <button class="aba on" data-p="passeio">🏠 Passeio</button>
+      <button class="aba" data-p="teste">🎤 Teste</button>
+      <button class="aba" data-p="frases">🔤 Frases</button>
+      <button class="aba" data-p="pulpito">📄 Púlpito</button>
+    </div>
+  </div>
+
+  <section class="painel on nao-imprime" id="p-passeio">
+    <p class="dica">Ande pela sua casa em pensamento. Em cada lugar, veja a imagem bem viva. Ela puxa a parte inteira.</p>
+    <div id="passeio"></div>
+  </section>
+
+  <section class="painel nao-imprime" id="p-teste">
+    <div id="teste"></div>
+  </section>
+
+  <section class="painel nao-imprime" id="p-frases">
+    <p class="dica">Só estas frases precisam sair exatas. Treine olhando só as primeiras letras; depois tente de cor.</p>
+    <div id="frases"></div>
+  </section>
+
+  <section class="painel" id="p-pulpito">
+    <p class="dica nao-imprime">Leve isto ao púlpito, impresso ou no celular. Não é para ler: é para olhar de relance, como um mapa.</p>
+    <div class="linha-btn nao-imprime" style="justify-content:center;margin-bottom:12px"><button class="btn navy" onclick="window.print()">🖨️ Imprimir cartão</button></div>
+    <div class="pulpito" id="pulpito"></div>
+  </section>
+
+<script>
+(function(){
+  var q = new URLSearchParams(location.search);
+  var slug = (q.get('m') || '').replace(/[^a-z0-9-]/g,'');
+  var CHAVE = 'memorizar.' + slug;
+  var D = null;
+  var LUGAR_ICONE = ['🚪','🛋️','🍳','🛏️','🚪'];
+
+  function el(tag, cls, txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+  function ler(){ try { return JSON.parse(localStorage.getItem(CHAVE)) || {}; } catch(e){ return {}; } }
+  function gravar(o){ try { localStorage.setItem(CHAVE, JSON.stringify(o)); } catch(e){} }
+  function hoje(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function imgSrc(nome){ return slug + '/' + nome + '?v=1'; }
+  function caixaImg(cls, i, nome){
+    var box = el('div', cls, String(i+1));
+    if(nome){ var im = new Image(); im.alt=''; im.loading='lazy'; im.src=imgSrc(nome); im.onerror=function(){ im.remove(); }; box.appendChild(im); }
+    return box;
+  }
+
+  document.getElementById('voltar').onclick = function(){
+    if(history.length>1){ history.back(); } else { location.href = '../' + slug + '.html'; }
+  };
+
+  // primeiras letras, mantendo a pontuação
+  function primeiras(t){
+    return t.split(/\s+/).map(function(w){
+      var m = w.match(/^([^\p{L}\p{N}]*)([\p{L}\p{N}])[\p{L}\p{N}\-'’]*(.*)$/u);
+      return m ? m[1]+m[2]+m[3] : w;
+    }).join(' ');
+  }
+
+  // ── ensaios ──
+  function desenharEnsaios(){
+    var st = ler(); var ens = st.ensaios || [];
+    var b = document.getElementById('bolas'); b.innerHTML='';
+    ['1º ensaio','2º ensaio','3º ensaio'].forEach(function(n,i){
+      var d = el('div','bola'+(ens[i]?' feito':''));
+      d.appendChild(el('span','n', ens[i]?'✅':String(i+1)));
+      d.appendChild(document.createTextNode(ens[i] ? ens[i].split('-').reverse().slice(0,2).join('/') : n));
+      b.appendChild(d);
+    });
+    if(st.pregar) document.getElementById('pregar').value = st.pregar;
+  }
+  document.getElementById('marcar').onclick = function(){
+    var st = ler(); st.ensaios = st.ensaios || [];
+    var h = hoje();
+    if(st.ensaios.indexOf(h) === -1 && st.ensaios.length < 3){ st.ensaios.push(h); }
+    gravar(st); desenharEnsaios();
+  };
+  document.getElementById('pregar').onchange = function(){ var st=ler(); st.pregar=this.value; gravar(st); };
+
+  function icsData(d, h){ return d.replace(/-/g,'') + 'T' + h + '00'; }
+  function maisDias(iso, n){ var p=iso.split('-'); var d=new Date(+p[0], +p[1]-1, +p[2]+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  document.getElementById('agenda').onclick = function(){
+    var pregar = document.getElementById('pregar').value;
+    var evs = [{ dia: maisDias(hoje(),1), hora:'0800', nome:'Ensaiar (2º): ' + D.titulo }];
+    if(pregar){ evs.push({ dia: maisDias(pregar,-1), hora:'1900', nome:'Ensaiar na véspera: ' + D.titulo }); }
+    var link = location.href;
+    var linhas = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//RADAR//Memorizar//PT'];
+    evs.forEach(function(e,i){
+      linhas.push('BEGIN:VEVENT','UID:radar-mem-'+slug+'-'+i+'-'+e.dia,'DTSTAMP:'+icsData(hoje(),'0000')+'00',
+        'DTSTART:'+icsData(e.dia,e.hora)+'00','DURATION:PT15M','SUMMARY:'+e.nome,
+        'DESCRIPTION:Feche o texto e pregue em voz alta. Depois confira. '+link,
+        'BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:'+e.nome,'END:VALARM','END:VEVENT');
+    });
+    linhas.push('END:VCALENDAR');
+    var blob = new Blob([linhas.join('\r\n')], {type:'text/calendar'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ensaio-' + slug + '.ics';
+    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    if(!pregar){ alert('Lembrete de amanhã criado. Escolha a data em que vai pregar para criar também o da véspera.'); }
+  };
+
+  // ── abas ──
+  Array.prototype.forEach.call(document.querySelectorAll('.aba'), function(b){
+    b.onclick = function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.aba'), function(x){ x.classList.toggle('on', x===b); });
+      Array.prototype.forEach.call(document.querySelectorAll('.painel'), function(p){ p.classList.toggle('on', p.id === 'p-'+b.dataset.p); });
+      if(b.dataset.p === 'teste') iniciarTeste();
+    };
+  });
+
+  function cartao(p, i, abrir){
+    var c = el('div','card');
+    var im = caixaImg('img', i, p.imagem); im.appendChild(el('span','num', (i+1)+' · '+LUGAR_ICONE[i%5]+' '+p.lugar)); c.appendChild(im);
+    var corpo = el('div','corpo');
+    corpo.appendChild(el('div','gatilho', p.gatilho));
+    var oculto = el('div', abrir ? '' : 'oculto');
+    oculto.appendChild(el('div','tit', p.titulo));
+    var ul = el('ul'); p.resumo.forEach(function(r){ ul.appendChild(el('li',null,r)); }); oculto.appendChild(ul);
+    c.appendChild(corpo);
+    return { card:c, corpo:corpo, oculto:oculto };
+  }
+
+  // ── passeio ──
+  function desenharPasseio(){
+    var box = document.getElementById('passeio'); box.innerHTML='';
+    D.partes.forEach(function(p,i){
+      var k = cartao(p,i,false);
+      var bt = el('button','btn claro','👁️ Ver o que esta imagem puxa');
+      bt.onclick = function(){ var vis = k.oculto.classList.toggle('oculto'); bt.textContent = vis ? '👁️ Ver o que esta imagem puxa' : '🙈 Esconder'; };
+      k.corpo.appendChild(bt); k.corpo.appendChild(k.oculto);
+      box.appendChild(k.card);
+    });
+  }
+
+  // ── teste: sempre as 5 partes, na ordem ──
+  var T = { i:0, lembrou:[], ordem:[] };
+  function iniciarTeste(lista){
+    T.ordem = lista || D.partes.map(function(_,i){ return i; });
+    T.i = 0; T.lembrou = [];
+    passoTeste();
+  }
+  function passoTeste(){
+    var box = document.getElementById('teste'); box.innerHTML='';
+    if(T.i >= T.ordem.length){ return fimTeste(box); }
+    var idx = T.ordem[T.i], p = D.partes[idx];
+    box.appendChild(el('div','teste-prog','Parte ' + (T.i+1) + ' de ' + T.ordem.length));
+    box.appendChild(el('p','dica','Olhe a imagem e pregue esta parte em voz alta, sem olhar o texto. Depois toque em Conferir.'));
+    var k = cartao(p, idx, false);
+    var conf = el('button','btn navy','👁️ Conferir');
+    conf.onclick = function(){
+      conf.remove(); k.oculto.classList.remove('oculto');
+      var l = el('div','linha-btn'); l.style.marginTop='12px';
+      var sim = el('button','btn verde','✅ Lembrei'), nao = el('button','btn vinho','🔁 Esqueci');
+      sim.onclick = function(){ T.lembrou.push(true); T.i++; passoTeste(); window.scrollTo(0, document.querySelector('.abas').offsetTop); };
+      nao.onclick = function(){ T.lembrou.push(false); T.i++; passoTeste(); window.scrollTo(0, document.querySelector('.abas').offsetTop); };
+      l.appendChild(sim); l.appendChild(nao); k.corpo.appendChild(l);
+    };
+    k.corpo.appendChild(conf); k.corpo.appendChild(k.oculto);
+    box.appendChild(k.card);
+  }
+  function fimTeste(box){
+    var ok = T.lembrou.filter(Boolean).length, tot = T.ordem.length;
+    var r = el('div','resultado');
+    r.appendChild(el('div','grande', ok + ' de ' + tot));
+    r.appendChild(el('p',null, ok===tot ? 'Você pregou a mensagem inteira de cabeça. Glória a Deus! Amanhã, mais um ensaio.' : 'O que esqueceu é justamente o que o ensaio está gravando agora. Passe de novo pelas imagens e faça mais uma rodada.'));
+    var l = el('div','linha-btn'); l.style.justifyContent='center';
+    var de = el('button','btn navy','🔁 Fazer de novo (as 5 partes)'); de.onclick = function(){ iniciarTeste(); };
+    var mk = el('button','btn verde','✅ Marcar ensaio de hoje'); mk.onclick = function(){ document.getElementById('marcar').click(); mk.textContent='Ensaio marcado ✔'; mk.disabled=true; };
+    l.appendChild(de); l.appendChild(mk); r.appendChild(l);
+    box.appendChild(r);
+  }
+
+  // ── frases exatas ──
+  function desenharFrases(){
+    var box = document.getElementById('frases'); box.innerHTML='';
+    D.exatas.forEach(function(f){
+      var c = el('div','frase'); c.appendChild(el('div','rot', f.rotulo));
+      var t = el('div','txt'); c.appendChild(t);
+      var nv = el('div','niveis');
+      var modos = [['Inteira', function(){ return f.texto; }], ['Primeiras letras', function(){ return primeiras(f.texto); }], ['De cor', function(){ return '… diga em voz alta …'; }]];
+      var bts = modos.map(function(m, i){
+        var b = el('button', null, m[0]);
+        b.onclick = function(){ bts.forEach(function(x){ x.classList.toggle('on', x===b); }); t.textContent = m[1](); t.style.color = i===2 ? '#9aa1ad' : ''; };
+        nv.appendChild(b); return b;
+      });
+      c.appendChild(nv); box.appendChild(c);
+      bts[1].click();
+    });
+  }
+
+  // ── cartão de púlpito ──
+  function desenharPulpito(){
+    var box = document.getElementById('pulpito'); box.innerHTML='';
+    var h = el('div'); h.style.textAlign='center';
+    h.appendChild(el('div','ref', D.titulo + ' · ' + D.ref)); box.appendChild(h);
+    var a = el('div','amago'); a.textContent = D.amago; box.appendChild(a);
+    if(D.abertura){ var ab = el('div','abertura'); ab.appendChild(el('b',null,'ABERTURA')); ab.appendChild(document.createTextNode(D.abertura)); box.appendChild(ab); }
+    var g = el('div','pgrade');
+    D.partes.forEach(function(p,i){
+      var it = el('div','pitem'); it.appendChild(caixaImg('mini', i, p.imagem));
+      var tx = el('div'); tx.appendChild(el('b',null,(i+1)+'. '+p.titulo)); tx.appendChild(el('span',null,p.gatilho)); it.appendChild(tx);
+      g.appendChild(it);
+    });
+    box.appendChild(g);
+    if(D.apelo) box.appendChild(el('div','papelo','🔥 ' + D.apelo));
+  }
+
+  if(!slug){ document.getElementById('titulo').textContent = 'Mensagem não encontrada'; return; }
+  fetch(slug + '.json?v=1').then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(d){
+    D = d;
+    document.title = 'Memorizar · ' + d.titulo;
+    document.getElementById('titulo').textContent = d.titulo;
+    document.getElementById('ref').textContent = d.ref;
+    document.getElementById('amago').textContent = d.amago;
+    if(d.abertura){ document.getElementById('abertura').textContent = d.abertura; } else { document.getElementById('abertura-box').remove(); }
+    desenharEnsaios(); desenharPasseio(); desenharFrases(); desenharPulpito();
+  }).catch(function(){ document.getElementById('titulo').textContent = 'Esta mensagem ainda não tem o modo Memorizar.'; });
+})();
+</script>
+<script src="/_uso.js?v=1" defer></script>
+</body>
+</html>
