@@ -1,0 +1,89 @@
+/* Mapa mental ilustrado (16/11/2026): cartaz com ramos coloridos, desenhos e animação.
+   O texto é real (não é imagem), as referências abrem a Bíblia do app e cada quadro abre o detalhe. */
+/* fontes hospedadas aqui (o app é PWA e funciona offline): subconjunto latin, Google Fonts (SIL OFL) */
+@font-face{font-family:'Baloo 2';font-style:normal;font-weight:600 800;font-display:swap;src:url(/ebd/mapa2/fonts/baloo2-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD}
+@font-face{font-family:'Nunito';font-style:normal;font-weight:500 800;font-display:swap;src:url(/ebd/mapa2/fonts/nunito-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD}
+:root{--papel:#fbf8f1;--tinta:#1d2a44;--sub:#4a5468;--c1:#1f63c6;--c2:#1f8a43;--c3:#7140a8;--c4:#e2701b;--c5:#c23a3a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--papel);color:var(--tinta);font-family:'Nunito',system-ui,sans-serif;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+body{min-height:100vh;background-image:radial-gradient(rgba(29,42,68,.045) 1px,transparent 1px);background-size:22px 22px}
+button{font-family:inherit;cursor:pointer}
+.barra{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:linear-gradient(var(--papel) 70%,rgba(251,248,241,0))}
+.barra button{height:36px;border-radius:18px;border:2px solid var(--tinta);background:#fff;color:var(--tinta);font-weight:800;font-size:14px;padding:0 14px;box-shadow:2px 2px 0 var(--tinta)}
+.barra .esp{flex:1}
+.barra .rot{font-family:'Baloo 2';font-weight:800;font-size:15px;letter-spacing:.06em;color:var(--sub);text-transform:uppercase}
+#palco{position:relative;padding:4px 14px 40px;max-width:1500px;margin:0 auto}
+#fios{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:0}
+#fios path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.grade{position:relative;z-index:1;display:grid;grid-template-columns:1fr;gap:26px}
+/* CENTRO: ilustração grande acima da caixa do título */
+.centro{justify-self:center;width:min(100%,460px);text-align:center;position:relative}
+.centro .ilu{width:230px;height:230px;margin:0 auto -24px;display:block;mix-blend-mode:multiply;filter:saturate(1.08)}
+.centro .caixa{position:relative;background:#fff;border:3.5px solid var(--tinta);border-radius:30px 26px 32px 24px;padding:18px 18px 16px;box-shadow:5px 6px 0 var(--tinta)}
+.centro .num{font-family:'Baloo 2';font-weight:800;font-size:15px;letter-spacing:.14em;color:var(--c5);text-transform:uppercase}
+.centro h1{font-family:'Baloo 2';font-weight:800;font-size:31px;line-height:1.02;margin:4px 0 6px;color:var(--tinta);text-transform:uppercase}
+.centro h1 em{font-style:normal;color:var(--c5)}
+.centro .data{font-family:'Baloo 2';font-weight:700;font-size:17px;color:var(--sub)}
+.centro .data::before,.centro .data::after{content:' ✦ ';color:var(--c4)}
+/* RAMOS */
+.ramo{position:relative}
+.ramo .cab{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.ramo .bola{flex:0 0 40px;height:40px;border-radius:50%;background:var(--cor);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2';font-weight:800;font-size:20px;box-shadow:2px 3px 0 rgba(0,0,0,.18)}
+.ramo .ric{flex:0 0 62px;width:62px;height:62px;mix-blend-mode:multiply;object-fit:contain}
+.ramo .tit{font-family:'Baloo 2';font-weight:800;font-size:25px;line-height:1.05;color:var(--cor);text-transform:uppercase}
+.ramo .sin{font-size:15px;line-height:1.4;color:var(--sub);margin:0 0 14px 50px;font-weight:600;background:var(--papel);padding:0 4px}
+/* QUADROS: cartão vertical, figurinha grande em cima e título centralizado embaixo; 2 por linha, mesma altura */
+.filhos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-left:50px}
+.filho{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;background:#fff;border:2.5px solid var(--cor);border-radius:18px 14px 20px 16px;padding:10px 8px 12px;min-width:0;text-align:center;color:var(--tinta);box-shadow:3px 3px 0 color-mix(in srgb,var(--cor) 35%,transparent);transition:transform .15s}
+.filho:active{transform:scale(.97)}
+.filho img{flex:0 0 auto;width:112px;height:112px;mix-blend-mode:multiply;object-fit:contain}
+.filho .ft{font-family:'Baloo 2';font-weight:700;font-size:17px;line-height:1.12;color:var(--cor);display:block;overflow-wrap:normal;word-break:normal;hyphens:none}
+/* RODAPÉ */
+.aureo,.pratica{position:relative;z-index:1;border:2.5px solid var(--tinta);border-radius:20px;background:#fff;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;box-shadow:4px 4px 0 var(--tinta)}
+.aureo img,.pratica img{flex:0 0 84px;width:84px;height:84px;mix-blend-mode:multiply;object-fit:contain}
+.aureo .r,.pratica .r{font-family:'Baloo 2';font-weight:800;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--c4)}
+.aureo p,.pratica p{margin:2px 0 0;font-size:16px;line-height:1.42;font-weight:600}
+.aureo p{font-style:italic}
+.ref{color:var(--c1);font-weight:800;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;cursor:pointer;white-space:nowrap}
+.rodape{display:grid;gap:16px;margin-top:26px}
+/* FOLHA (detalhe) */
+#veu{position:fixed;inset:0;background:rgba(29,42,68,.38);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}
+#folha{position:fixed;left:0;right:0;bottom:0;z-index:41;background:#fff;border-radius:26px 26px 0 0;border-top:5px solid var(--cor,#1f63c6);padding:18px 18px calc(22px + env(safe-area-inset-bottom));transform:translateY(110%);visibility:hidden;transition:transform .32s cubic-bezier(.2,.9,.25,1.1),visibility .32s;max-height:78vh;overflow:auto;max-width:720px;margin:0 auto}
+body.aberto #veu{opacity:1;pointer-events:auto}
+body.aberto #folha{transform:none;visibility:visible}
+#folha .fcab{display:flex;align-items:center;gap:12px}
+#folha .fcab img{width:70px;height:70px;mix-blend-mode:multiply}
+#folha .fram{font-family:'Baloo 2';font-weight:800;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--cor)}
+#folha h2{font-family:'Baloo 2';font-weight:800;font-size:25px;line-height:1.08;margin:0;color:var(--tinta)}
+#folha ul{margin:14px 0 6px;padding:0;list-style:none}
+#folha li{position:relative;padding:0 0 0 26px;margin:0 0 12px;font-size:17px;line-height:1.48;font-weight:600}
+#folha li::before{content:'';position:absolute;left:6px;top:9px;width:10px;height:10px;border-radius:50%;background:var(--cor)}
+#folha .fechar{margin-top:6px;width:100%;height:40px;border-radius:20px;border:2px solid var(--tinta);background:#fff;font-weight:800;font-size:15px;color:var(--tinta)}
+/* ANIMAÇÃO */
+.ani .centro .caixa{animation:pop .7s cubic-bezier(.2,1.4,.4,1) both}
+.ani .centro .ilu{animation:flutua 4.5s ease-in-out infinite,sobe .7s ease both}
+.ani .ramo .cab,.ani .ramo .sin{animation:sobe .5s ease both;animation-delay:calc(var(--d) * 1s)}
+.ani .filho{animation:pop .5s cubic-bezier(.2,1.5,.4,1) both;animation-delay:calc(var(--d) * 1s)}
+.ani .rodape>*{animation:sobe .6s ease both;animation-delay:calc(var(--d) * 1s)}
+.filho img,.centro .ilu{animation:flutua 4.5s ease-in-out infinite;animation-delay:calc(var(--f,0) * -1s)}
+@keyframes pop{0%{opacity:0;transform:scale(.4) rotate(-4deg)}100%{opacity:1;transform:none}}
+@keyframes sobe{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
+@keyframes flutua{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(2deg)}}
+@media (prefers-reduced-motion:reduce){.ani *{animation:none!important}}
+/* TELA LARGA (tablet deitado, PC): cartaz com o centro no meio e os ramos dos dois lados */
+@media (min-width:900px){
+  #palco{padding:4px 28px 40px}
+  .grade{grid-template-columns:minmax(0,1fr) 400px minmax(0,1fr);column-gap:70px;row-gap:34px;align-items:start}
+  .centro{grid-column:2;grid-row:1 / span 2;align-self:center;width:100%}
+  .centro h1{font-size:36px}
+  .ramo.e{grid-column:1}.ramo.d{grid-column:3}
+  .ramo.e .cab{flex-direction:row-reverse;text-align:right}
+  .ramo.e .sin{margin:0 50px 14px 0;text-align:right}
+  .ramo.e .filhos{margin:0 50px 0 0}
+  .rodape{grid-template-columns:1fr 1fr;margin-top:34px}
+  /* três ramos: o terceiro ocupa a largura, embaixo e centralizado (abaixo do centro) */
+  .ramo.baixo{grid-column:1 / 4;grid-row:3;justify-self:center;width:min(100%,960px)}
+  .ramo.baixo .cab{justify-content:center}
+  .ramo.baixo .sin{margin:0 auto 14px;text-align:center;max-width:720px}
+  .ramo.baixo .filhos{margin:0;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+}
