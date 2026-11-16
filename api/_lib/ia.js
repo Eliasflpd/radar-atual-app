@@ -113,6 +113,22 @@ export const DEGRAUS = [
     modelos: [M(process.env.ANTHROPIC_MODEL || 'claude-sonnet-5')],
   },
   {
+    // 0,5º — GEMINI FUNDO (16/11/2026): reserva das partes fundas quando o Claude está sem crédito.
+    // Também `premium: true` (só Bereia, Concílio, Mensagem...). Antes, sem Claude, a pregação caía no
+    // flash-lite/Groq e saía rasa ("está me dando nojo", disse o Elias). Os flash 3.6/3.7 são grátis e
+    // escreveram bem os roteiros da "Lição para ouvir". O 3.8-flash fica de fora: é o redator do app.
+    id: 'gemini-fundo',
+    nome: 'Gemini (fundo)',
+    pago: false,
+    premium: true,
+    dialeto: 'gemini',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models',
+    env: ['GEMINI_API_KEYS', 'GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+    // pensa um pouco antes de escrever (o 1º pedaço do stream só sai depois); 18 s não bastava (medido 16/11)
+    timeout: 45000,
+    modelos: [M('gemini-3.6-flash', { thinkingConfig: { thinkingBudget: 2048 } }), M('gemini-3.7-flash', { thinkingConfig: { thinkingBudget: 2048 } })],
+  },
+  {
     // 1º — Groq. Mediu 2,02s com o prompt inteiro do Wagner e atende praticamente
     // sempre (7 chaves em rodízio). O `reasoning_effort: 'low'` é o que tirou 1,8s:
     // sem ele o gpt-oss gasta metade do orçamento pensando antes de escrever.
@@ -672,14 +688,18 @@ async function cascata(p, stream) {
     // Vale a pena abrir MAIS UM degrau? Se já queimamos o prazo, não: o Edge da Vercel
     // corta a função aos 25s e o pastor leva um 504 mudo. Um erro escrito em português
     // é melhor que uma tela de gateway.
-    if (Date.now() - comecou > PRAZO_TOTAL_MS) {
-      tentativas.push(`parou em ${degrau.id}: estourou o prazo da cascata (${PRAZO_TOTAL_MS}ms)`);
+    // 16/11/2026: quem pede `fundo` (o Bereia, que já está mandando etapas pelo stream) pode esperar mais.
+    const prazoTotal = (p.fundo && p.prazoTotal) || PRAZO_TOTAL_MS;
+    if (Date.now() - comecou > prazoTotal) {
+      tentativas.push(`parou em ${degrau.id}: estourou o prazo da cascata (${prazoTotal}ms)`);
       break;
     }
     if (pular.includes(degrau.id)) { tentativas.push(`${degrau.id}: pulado (já devolveu vazio)`); continue; }
     // DEGRAU PREMIUM (Claude): só entra quando o chamador pede `premium:true`. Nas
     // chamadas comuns ele é pulado, pra a chave paga não ser gasta em tudo.
     if (degrau.premium && !p.premium) { continue; }
+    // o Gemini fundo só entra para quem pede `fundo: true` (o Bereia): os outros premium seguem como antes
+    if (degrau.id === 'gemini-fundo' && !p.fundo) { continue; }
     const chaves = lerChaves(degrau);
     if (!chaves.length) { tentativas.push(`${degrau.id}: sem chave configurada`); continue; }
     if (castigado(degrau.id)) { tentativas.push(`${degrau.id}: em castigo (falhou há pouco)`); continue; }

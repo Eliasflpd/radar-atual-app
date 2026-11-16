@@ -35,7 +35,7 @@ const SYS_PLANO = `Você planeja a pesquisa de uma pregação evangélica pentec
 Devolva SÓ um JSON, sem nada antes ou depois:
 {"titulo":"título forte, curto, sem clichê","refs":["Gn 40:14","Sl 105:17-19"],"buscas":["...","...","..."],"camadas":{"original":"...","ecos":"...","estrutura":"...","contexto":"..."},"noticia":"palavras-chave curtas ou vazio"}
 - refs: 4 a 10 referências bíblicas REAIS e certeiras para o tema (formato "Livro cap:vers" ou "Livro cap:v1-v2", siglas como Gn, Ex, 1Sm, Sl, Pv, Is, Mt, Jo, Rm, Hb, Ap).
-- buscas: 3 ou 4 perguntas em português natural para uma biblioteca de comentários, dicionários, história e aulas. Cada uma sobre um ângulo diferente: o texto em si, palavra no original, contexto histórico, aplicação. NÃO ponha nome de autor nem de livro de comentário na pergunta (só o assunto e a referência bíblica).
+- buscas: 5 perguntas em português natural para uma biblioteca de comentários, dicionários, história e aulas. Cada uma sobre um ângulo diferente: (1) o texto em si; (2) a palavra no original; (3) o mundo antigo da época (costume, arqueologia, Josefo, história); (4) o que a igreja antiga e a tradição cristã disseram sobre esse texto ou tema; (5) a doutrina e a escatologia ligadas ao tema. NÃO ponha nome de autor nem de livro de comentário na pergunta (só o assunto e a referência bíblica).
 - camadas: uma pergunta para cada camada de descoberta do texto principal, no mesmo estilo das buscas (sem nome de autor):
   original = a palavra-chave grega ou hebraica do texto e o seu sentido; ecos = onde o Antigo Testamento já falou disso (profecia, tipo, alusão);
   estrutura = como o texto se liga ao começo, ao meio e ao fim do próprio livro; contexto = costume, lei, lugar ou história da época que o leitor de hoje não sabe.
@@ -52,7 +52,7 @@ async function planejar(pedido) {
     const p = {
       titulo: String(j.titulo || '').slice(0, 120),
       refs: (Array.isArray(j.refs) ? j.refs : []).map(String).slice(0, 12),
-      buscas: (Array.isArray(j.buscas) ? j.buscas : []).map(String).filter(Boolean).slice(0, 4),
+      buscas: (Array.isArray(j.buscas) ? j.buscas : []).map(String).filter(Boolean).slice(0, 5),
       noticia: String(j.noticia || '').slice(0, 80),
       camadas: Object.fromEntries(CAMADAS.map((c) => [c.id, String((j.camadas && j.camadas[c.id]) || '').slice(0, 300)]).filter((x) => x[1])),
     };
@@ -190,7 +190,7 @@ async function descobrir(pedido, versos, fontes, biblia, ecos = [], doOficina = 
   let j;
   try {
     const r = await iaTexto({ sys: SYS_CAMADAS, user: p.join('\n\n'), temperature: 0.4, max_tokens: 9000, tag: 'bereia-camadas',
-      premium: true, prazoPremium: 70000 });
+      premium: true, prazoPremium: 70000, fundo: true, prazoTotal: 120000 });
     j = JSON.parse(String(r.texto || '').replace(/^[\s\S]*?(\{[\s\S]*\})[\s\S]*$/, '$1'));
   } catch (_) { return { achados: doOficina, md: montarMd(doOficina) }; }
   const autores = fontes.map((x) => String(x.autor || '').toLowerCase()).filter(Boolean);
@@ -223,6 +223,17 @@ REGRAS DO PASTOR (obrigatórias):
 4. PROIBIDO pergunta binária batida ("em qual das duas você está?", "você é X ou Y?"). Afirme em vez de perguntar.
 5. Nunca use um versículo que puxe contra a tese.
 6. Doutrina pentecostal clássica, sem teologia da prosperidade.
+PROFUNDIDADE (16/11/2026 — o pastor recusou mensagens rasas: "quem ouve tem que saber que o pregador pesquisou e foi a fundo"):
+A. Cada parte do corpo traz pelo menos UMA camada funda, e a pregação inteira passa por TODAS estas:
+   - o ORIGINAL: a palavra hebraica ou grega que abre o texto, com o sentido explicado em português simples;
+   - a ANTIGUIDADE: o mundo do texto (costume, lei, geografia, arqueologia, Josefo, história de Israel e dos impérios) contado como cena;
+   - os PAIS DA IGREJA e a igreja antiga (Inácio, Policarpo, Justino, Irineu, Tertuliano, Orígenes, Atanásio, Crisóstomo, Agostinho, Jerônimo…) ou a história da igreja (reforma, avivamentos, Azusa, os pioneiros da Assembleia de Deus no Brasil): o que disseram ou viveram sobre esse texto. Cite a OBRA ("Agostinho, nas Confissões"), só o que você sabe com certeza, e liste em "Fatos para conferir";
+   - a TEOLOGIA: a doutrina que o texto sustenta, dita com firmeza (Cristo, Espírito Santo, salvação, santificação, Igreja);
+   - a ESCATOLOGIA quando o texto abrir essa porta (sem forçar): a esperança da volta de Cristo na linha da Assembleia de Deus (arrebatamento da Igreja, tribulação, milênio, juízo, novos céus e nova terra).
+B. PRENDER O POVO: cada parte termina com um gancho que puxa para a próxima ("mas o que aconteceu naquela noite ninguém esperava…"); conte pelo menos duas cenas (uma bíblica narrada por dentro e uma da história antiga ou da igreja); alterne frase longa com frase curta de impacto; nada de parágrafo que só repete o versículo.
+C. A IGREJA TEM QUE ENTENDER: todo termo técnico (palavra grega, nome de concílio, "escatologia", "tipologia") vem explicado na mesma frase, com palavras do dia a dia. Profundo, nunca difícil.
+D. Proibido o genérico: frases que caberiam em qualquer pregação ("Deus é fiel", "precisamos buscar mais a Deus") só entram se vierem amarradas a um fato do texto.
+
 7. Se vierem DESCOBERTAS DAS 4 CAMADAS, as 3 a 5 mais fortes entram no CORPO da pregação (não só nas notas), cada uma dita de onde vem ("no grego…", "isso ecoa Daniel 7…", "Edersheim lembra que…"). Descoberta marcada "conferir" só entra se você tiver certeza, e vai para "Fatos para conferir".
 
 A BÍBLIA: você NUNCA digita o texto de um versículo. Escreva a referência entre chaves duplas — {{Gn 40:14}} ou {{Sl 105:17-19}} — e o servidor põe o texto da Almeida. Use as referências do PLANO e outras que conheça com certeza. Pode citar sem chaves só a referência entre parênteses, ex.: (Gn 37:2).
@@ -361,7 +372,7 @@ export default async function handler(req) {
 
       await manda({ t: 'etapa', id: 'escrita', msg: 'Escrevendo a pregação…' });
       const r = await iaStreamTexto({ sys: SYS_PREGACAO, user: montarPedido(pedido, plano, todas, notas, versos, cav.achados),
-        temperature: 0.8, max_tokens: 14000, tag: 'bereia', premium: true });
+        temperature: 0.8, max_tokens: 14000, tag: 'bereia', premium: true, fundo: true, prazoTotal: 120000 });
       await manda({ t: 'ia', modelo: r.modelo || '', provedor: r.provedorNome || r.provedor || '' });
       const reader = r.stream.getReader(), dec = new TextDecoder();
       let buf = '', tudo = '';
