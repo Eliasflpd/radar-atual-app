@@ -147,6 +147,10 @@
       "destination": "/api/edge?fn=bereia"
     },
     {
+      "source": "/api/pergunte",
+      "destination": "/api/edge?fn=pergunte"
+    },
+    {
       "source": "/api/ws-ouvir",
       "destination": "/api/dados?fn=ws-ouvir"
     },

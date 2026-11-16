@@ -15,8 +15,9 @@ import ebdPlano from './_lib/ebd-plano.js';
 import cursoVideo from './_lib/curso-video.js';
 import disco from './_lib/disco.js';   // MÚSICAS (27/10): Deezer + achar a faixa no YouTube
 import bereia from './_lib/bereia.js'; // BEREIA (01/11): o ajudante de pregação
+import pergunte from './_lib/pergunte.js'; // PERGUNTE À LIÇÃO (16/11): dúvida do aluno + vídeo do Dr. Wagner no segundo certo
 
-const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor, voz, 'ebd-plano': ebdPlano, 'curso-video': cursoVideo, disco, bereia };
+const MAP = { perolas, mensagem, concilio, 'concilio-wagner': concilioWagner, peca, 'estudo-doutrina': estudoDoutrina, 'busca-vetor': buscaVetor, voz, 'ebd-plano': ebdPlano, 'curso-video': cursoVideo, disco, bereia, pergunte };
 
 // ⚠️ O SEGUNDO ARGUMENTO NÃO É ENFEITE — MEDIDO EM PRODUÇÃO (22/09/2026).
 // A Vercel entrega um `context` com `waitUntil`: é ele que deixa a resposta sair

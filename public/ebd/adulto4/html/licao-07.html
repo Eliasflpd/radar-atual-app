@@ -40,4 +40,4 @@ li{margin-bottom:8px;text-align:justify}
 document.addEventListener('touchstart',function(e){if(e.target.closest('.bref'))e.preventDefault();},{passive:false});
 document.addEventListener('touchend',function(e){var el=e.target.closest('.bref');if(el){e.preventDefault();window.parent.postMessage({type:'ebd-ref',ref:el.dataset.ref},'*');}},{passive:false});
 document.addEventListener('click',function(e){var el=e.target.closest('.bref');if(el)window.parent.postMessage({type:'ebd-ref',ref:el.dataset.ref},'*');});
-</script><script src="/ebd/hifen.js"></script></body></html>
+</script><script src="/ebd/hifen.js"></script><script src="/ebd/pergunte-licao.js" defer></script></body></html>
