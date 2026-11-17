@@ -34,7 +34,8 @@ const chaveFalsa = {
 const id = (n) => '00000000-0000-4000-8000-' + String(n).padStart(12, '0');
 // Crachás e telefones FICTÍCIOS (prefixo 999 não existe).
 const K = { coord: 'rk_nav_coord_aaaaaaaaaaaaaaaaaaaaaaaa', davi: 'rk_nav_davi_bbbbbbbbbbbbbbbbbbbbbbbbb', novo: 'rk_nav_novo_cccccccccccccccccccccccc',
-            pre: 'rk_nav_pre_dddddddddddddddddddddddddd', pastor: 'rk_nav_pastor_eeeeeeeeeeeeeeeeeeeeeeee' };
+            pre: 'rk_nav_pre_dddddddddddddddddddddddddd', pastor: 'rk_nav_pastor_eeeeeeeeeeeeeeeeeeeeeeee',
+            rafael: 'rk_nav_rafael_ffffffffffffffffffffffff', lucas: 'rk_nav_lucas_gggggggggggggggggggggggg' };
 
 let ok = 0; const falhas = [];
 function confere(c, nome) { if (c) { ok++; console.log('  ✔ ' + nome); } else { falhas.push(nome); console.log('  ✘ ' + nome); } }
@@ -50,13 +51,16 @@ async function prepararBanco() {
   await db.query(fs.readFileSync(path.join(__dirname, '00_supabase_minimo.sql'), 'utf8'));
   await db.query(ler('supabase/migrations/001_conexao_jovem.sql'));
   await db.query(ler('supabase/migrations/002_gestao_pessoas.sql'));
+  await db.query(ler('supabase/migrations/003_circulos.sql'));
   await db.query("set cj.permitir_seed_demo = 'sim'"); await db.query(ler('supabase/seed_demo.sql'));
   await db.query('create table radar_chaves(id bigserial primary key, user_key text not null, chave_hash text not null unique)');
-  const tel = { coord: '99900000002', davi: '99900000007', novo: '99900000099', pre: '21998765432', pastor: '99900000001' };
+  const tel = { coord: '99900000002', davi: '99900000007', novo: '99900000099', pre: '21998765432', pastor: '99900000001', rafael: '99900000004', lucas: '99900000009' };
   for (const k of Object.keys(K)) await db.query('insert into radar_chaves(user_key, chave_hash) values ($1, $2)', [tel[k], sha(K[k])]);
   await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovem.hashVinculo(tel.coord), id(2)]);
   await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovem.hashVinculo(tel.davi), id(7)]);
   await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovem.hashVinculo(tel.pastor), id(1)]);
+  await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovem.hashVinculo(tel.rafael), id(4)]);
+  await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovem.hashVinculo(tel.lucas), id(9)]);
   return db;
 }
 
@@ -197,8 +201,91 @@ function servidor() {
     await ctx.close();
   }
 
+  console.log('\n6) Módulo 2 · Círculos com o banco');
+  for (const vp of [{ width: 360, height: 800 }, { width: 390, height: 844 }]) {
+    const tag = vp.width + 'x' + vp.height;
+    const { ctx, pg } = await abrir(K.davi, vp);
+    await pg.goto(BASE + '/jovem/#/circulo'); await pg.waitForSelector('#circ-box .hero', { timeout: 8000 });
+    confere((await pg.textContent('.hero h2')).includes('Círculo Esperança'), `[${tag}] Meu Círculo real (Davi → Esperança)`);
+    confere(await pg.isVisible('text=Casa de família (endereço fictício)'), `[${tag}] integrante vê o local do encontro`);
+    confere(await pg.locator('.cab .demo-pill').count() === 0, `[${tag}] Meu Círculo sem selo "Demonstração"`);
+    await foto(pg, `meu-circulo-${tag}`);
+    await ctx.close();
+  }
+  {
+    const { ctx, pg } = await abrir(K.davi);
+    await pg.goto(BASE + '/jovem/#/circulo'); await pg.waitForSelector('[data-acao="presenca-real"][data-v="sim"]');
+    await pg.click('[data-acao="presenca-real"][data-v="sim"]'); await espera(1200);
+    confere((await q(`select response from cj.meeting_rsvps where meeting_id = $1 and user_id = $2`, [id(151), id(7)]))[0].response === 'sim', 'Davi confirma presença (gravado)');
+    await pg.click('#tela [data-acao="propor-real"]'); await espera(300);
+    const d = new Date(Date.now() + 9 * 864e5).toISOString().slice(0, 10);
+    await pg.fill('#fe-data', d); await pg.fill('#fe-tema', 'Piquenique (navegador)'); await pg.click('dialog [type=submit]'); await espera(1500);
+    confere((await q(`select status from cj.circle_meetings where theme = 'Piquenique (navegador)'`))[0].status === 'proposto', 'proposta do Davi gravada como "proposto"');
+    confere(await pg.isVisible('text=aguardando o líder (sua proposta)'), 'Davi vê a proposta aguardando o líder');
+    await ctx.close();
+  }
+  {
+    const { ctx, pg } = await abrir(K.lucas);
+    await pg.goto(BASE + '/jovem/#/circulo'); await pg.waitForSelector('[data-acao="troca-real"]');
+    await pg.click('[data-acao="troca-real"]'); await pg.fill('#c-troca-r', 'Horário (navegador)'); await pg.click('#b-troca'); await espera(1500);
+    confere((await q(`select change_requested from cj.circle_members where user_id = $1 and membership_status = 'ativo'`, [id(9)]))[0].change_requested === true, 'Lucas pede troca (gravado)');
+    await pg.goto(BASE + '/jovem/#/encontrar-circulo'); await pg.waitForSelector('[data-acao="pedir-circulo"]');
+    confere(!(await pg.isVisible('text=Casa de família')), 'lista de círculos sem local de encontro');
+    await foto(pg, 'encontrar-circulo-360x800');
+    await pg.click('.cartao:has-text("Círculo Esperança") [data-acao="pedir-circulo"]'); await espera(1500);
+    confere(await pg.isVisible('text=Aguardando o líder'), 'Lucas pede entrada no Esperança');
+    await ctx.close();
+  }
+  for (const vp of [{ width: 360, height: 800 }, { width: 390, height: 844 }]) {
+    const tag = vp.width + 'x' + vp.height;
+    const { ctx, pg } = await abrir(K.rafael, vp);
+    await pg.goto(BASE + '/jovem/#/lider-circulo'); await pg.waitForSelector('#gc-box .info-linhas', { timeout: 8000 });
+    confere(await pg.isVisible('#gc-box >> text=Lucas M.') && !(await pg.isVisible('#gc-box >> text=Pediu troca')), `[${tag}] líder vê o pedido do Lucas, sem o pedido de troca`);
+    await foto(pg, `lider-${tag}`);
+    if (vp.width === 360) {
+      await pg.click('[data-acao="decidir-membro"][data-v="ativo"]'); await espera(1500);
+      confere((await q(`select circle_id from cj.circle_members where user_id = $1 and membership_status = 'ativo'`, [id(9)]))[0].circle_id === id(101), 'líder aceita: Lucas trocou para o Esperança');
+      await pg.click('.cartao:has-text("Piquenique (navegador)") [data-acao="encontro-status"][data-v="confirmado"]'); await espera(1500);
+      confere((await q(`select status from cj.circle_meetings where theme = 'Piquenique (navegador)'`))[0].status === 'confirmado', 'líder confirma a proposta do Davi');
+      confere(await pg.isVisible('text=1 vai'), 'líder vê a presença confirmada do Davi');
+    }
+    await ctx.close();
+  }
+  {
+    const { ctx, pg } = await abrir(K.davi);
+    await pg.goto(BASE + '/jovem/#/lider-circulo'); await espera(1500);
+    confere(await pg.isVisible('text=Área de líderes e auxiliares'), 'membro não abre a visão do líder');
+    await pg.goto(BASE + '/jovem/#/circulos'); await espera(800);
+    confere(await pg.isVisible('text=Área da equipe'), 'membro não abre a gestão de círculos');
+    await ctx.close();
+  }
+  for (const vp of [{ width: 360, height: 800 }, { width: 390, height: 844 }]) {
+    const tag = vp.width + 'x' + vp.height;
+    const { ctx, pg } = await abrir(K.coord, vp);
+    await pg.goto(BASE + '/jovem/#/circulos'); await pg.waitForSelector('#cg-box .cartao-link', { timeout: 8000 });
+    const esperados = vp.width === 360 ? 3 : 4;   // na 2ª volta já existe o círculo criado (pausado) na 1ª
+    confere(await pg.locator('#cg-box .cartao-link').count() === esperados, `[${tag}] gestão lista os ${esperados} círculos do banco`);
+    await foto(pg, `circulos-${tag}`);
+    if (vp.width === 360) {
+      await pg.click('#tela [data-acao="novo-circulo"]'); await espera(500);
+      await pg.fill('#fc-nome', 'Círculo Farol (navegador)'); await pg.click('dialog .opcao:has-text("18–21")'); await pg.fill('#fc-lim', '6');
+      await pg.selectOption('#fc-lider', { label: 'Marcos Lima (demo)' }); await pg.selectOption('#fc-aux', { label: 'Camila Souza (demo)' });
+      await pg.click('dialog [type=submit]'); await pg.waitForURL(/#\/circulos\/[0-9a-f-]{36}/, { timeout: 8000 }); await pg.waitForSelector('#gc-box .info-linhas');
+      const c = (await q(`select id, leader_id, assistant_id, max_members from cj.circles where name = 'Círculo Farol (navegador)'`))[0];
+      confere(c && c.leader_id === id(6) && c.assistant_id === id(5) && c.max_members === 6, 'gestão cria círculo com líder e auxiliar (gravado)');
+      await pg.click('[data-acao="adicionar-pessoa-circ"]'); await pg.waitForSelector('dialog [data-add]');
+      await foto(pg, 'adicionar-pessoa-360x800', false);
+      await pg.click('dialog li:has-text("Ana Barros") [data-add]'); await espera(1500);
+      confere((await q(`select circle_id from cj.circle_members where user_id = $1 and membership_status = 'ativo'`, [id(8)]))[0].circle_id === c.id, 'gestão move a Ana para o novo círculo');
+      await pg.click('[data-acao="status-circulo"][data-v="pausado"]'); await pg.click('#b-st'); await espera(1500);
+      confere((await q(`select status from cj.circles where id = $1`, [c.id]))[0].status === 'pausado', 'gestão pausa o círculo');
+      await foto(pg, 'circulo-gestao-360x800');
+    }
+    await ctx.close();
+  }
+
   const aud = (await q(`select distinct action from cj.audit_logs`)).map((x) => x.action);
-  for (const a of ['consultar', 'ativar_perfil', 'conceder_papel', 'pre_cadastrar', 'vincular', 'criar_perfil']) confere(aud.includes(a), 'auditoria registrou: ' + a);
+  for (const a of ['consultar', 'ativar_perfil', 'conceder_papel', 'pre_cadastrar', 'vincular', 'criar_perfil', 'pedir_troca', 'pedir_entrada', 'decidir_membro', 'criar_circulo', 'adicionar_ao_circulo', 'pausar_circulo']) confere(aud.includes(a), 'auditoria registrou: ' + a);
   confere(erros.filter((e) => !/Failed to load resource/.test(e)).length === 0, 'sem erros de JavaScript no console (' + erros.join(' | ') + ')');
 
   await browser.close(); srv.close(); await db.end();

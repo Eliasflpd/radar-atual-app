@@ -155,6 +155,60 @@ window.CJ_DEMO = {
     { id: 'd14', nome: 'Sara Lopes (demo)', faixa: '18-21', status: 'suspenso', papeis: [], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true }
   ],
 
+  // Módulo 2 · Círculos (gestão, líder e "Encontrar um círculo"). Tudo FICTÍCIO.
+  // Mesmo formato que a função devolve (api/_lib/jovem.js). `dias`/`hora` viram datas
+  // relativas a hoje, para a demonstração nunca "vencer".
+  circulosDemo: {
+    v: 1,
+    lider: 'p-rafael',
+    pessoas: [
+      { id: 'p-rafael', nome: 'Rafael Teixeira (demo)', faixa: '22-25', papeis: ['circle_leader'] },
+      { id: 'p-camila', nome: 'Camila Souza (demo)', faixa: '22-25', papeis: ['assistant'] },
+      { id: 'p-marcos', nome: 'Marcos Lima (demo)', faixa: '22-25', papeis: ['circle_leader'] },
+      { id: 'p-bruno', nome: 'Bruno Costa (demo)', faixa: '22-25', papeis: ['circle_leader', 'assistant'] },
+      { id: 'p-helena', nome: 'Helena Prado (demo)', faixa: '22-25', papeis: ['assistant'] },
+      { id: 'p-ana', nome: 'Ana Barros (demo)', faixa: '18-21', papeis: [] },
+      { id: 'p-lucas', nome: 'Lucas Mendes (demo)', faixa: '18-21', papeis: [] },
+      { id: 'p-julia', nome: 'Júlia Rocha (demo)', faixa: '18-21', papeis: [] },
+      { id: 'p-pedro', nome: 'Pedro Henrique (demo)', faixa: '18-21', papeis: [] },
+      { id: 'p-sara', nome: 'Sara Lopes (demo)', faixa: '18-21', papeis: [] },
+      { id: 'p-davi', nome: 'Davi Andrade (demo)', faixa: '18-21', papeis: [] },
+      { id: 'p-jonas', nome: 'Jonas Pereira (demo)', faixa: '18-21', papeis: [] },
+      { id: 'p-tiago', nome: 'Tiago Alves (demo)', faixa: '18-21', papeis: [] },
+      { id: 'p-bia', nome: 'Bia Ramos (demo)', faixa: '15-17', papeis: [], autorizacao: true },
+      { id: 'p-theo', nome: 'Theo Nunes (demo)', faixa: '15-17', papeis: [], autorizacao: false },
+      { id: 'p-livia', nome: 'Lívia Matos (demo)', faixa: '22-25', papeis: [] },
+      { id: 'p-caio', nome: 'Caio Ferreira (demo)', faixa: '22-25', papeis: [] }
+    ],
+    circulos: [
+      { id: 'c-esp', nome: 'Círculo Esperança', descricao: 'Grupo pequeno para caminhar junto: conversa, oração, amizade e serviço. Encontros quinzenais em casas de família.', faixa: '18-21', limite: 10, status: 'ativo', lider_id: 'p-rafael', auxiliar_id: 'p-camila' },
+      { id: 'c-cam', nome: 'Círculo Caminho', descricao: 'Encontros às sextas, com estudo e lanche.', faixa: '18-21', limite: 8, status: 'ativo', lider_id: 'p-bruno', auxiliar_id: null },
+      { id: 'c-luz', nome: 'Círculo Luz', descricao: 'Para quem está chegando agora: conversa leve, perguntas sinceras e um passo de cada vez.', faixa: '18-21', limite: 6, status: 'ativo', lider_id: 'p-marcos', auxiliar_id: 'p-helena' },
+      { id: 'c-ren', nome: 'Círculo Renovo', descricao: 'Círculo de adolescentes, sempre com dois adultos responsáveis.', faixa: '15-17', limite: 10, status: 'ativo', lider_id: 'p-marcos', auxiliar_id: null },
+      { id: 'c-rai', nome: 'Círculo Raízes', descricao: 'Jovens adultos: fé, trabalho e família.', faixa: '22-25', limite: 10, status: 'pausado', lider_id: null, auxiliar_id: null }
+    ],
+    membros: [
+      { circulo: 'c-esp', usuario: 'p-ana', situacao: 'ativo', dias: -35 },
+      { circulo: 'c-esp', usuario: 'p-davi', situacao: 'ativo', dias: -10 },
+      { circulo: 'c-esp', usuario: 'p-julia', situacao: 'ativo', dias: -60 },
+      { circulo: 'c-esp', usuario: 'p-pedro', situacao: 'ativo', dias: -20, troca: true, motivo: 'O horário de sábado bate com o meu trabalho.' },
+      { circulo: 'c-esp', usuario: 'p-sara', situacao: 'ativo', dias: -8 },
+      { circulo: 'c-esp', usuario: 'p-jonas', situacao: 'solicitado', dias: -1 },
+      { circulo: 'c-cam', usuario: 'p-lucas', situacao: 'ativo', dias: -20 },
+      { circulo: 'c-cam', usuario: 'p-tiago', situacao: 'solicitado', dias: -2 },
+      { circulo: 'c-luz', usuario: 'p-livia', situacao: 'ativo', dias: -15 },
+      { circulo: 'c-ren', usuario: 'p-bia', situacao: 'ativo', dias: -4 }
+    ],
+    encontros: [
+      { id: 'e1', circulo: 'c-esp', dias: 4, hora: 16, tema: 'Como ser presença na vida de alguém? (Lucas 10:25-37)', local: 'Casa de família (endereço fictício)', status: 'confirmado', por: 'p-rafael',
+        presencas: [{ usuario: 'p-ana', resposta: 'sim' }, { usuario: 'p-julia', resposta: 'sim' }, { usuario: 'p-sara', resposta: 'nao' }] },
+      { id: 'e2', circulo: 'c-esp', dias: 18, hora: 15, tema: 'Piquenique e conversa sobre amizade', local: null, status: 'proposto', por: 'p-davi', presencas: [] },
+      { id: 'e3', circulo: 'c-esp', dias: -10, hora: 16, tema: 'Quem é o meu próximo?', local: 'Casa de família (endereço fictício)', status: 'realizado', por: 'p-rafael',
+        presencas: [{ usuario: 'p-ana', resposta: 'sim' }, { usuario: 'p-davi', resposta: 'sim' }] },
+      { id: 'e4', circulo: 'c-cam', dias: 3, hora: 20, tema: 'Estudo de Marcos 1', local: 'Sala 3 (fictícia)', status: 'confirmado', por: 'p-bruno', presencas: [] }
+    ]
+  },
+
   lideranca: {
     kpis: [
       { rot: 'Tempo médio até o acolhimento', val: '41 h', meta: 'meta: até 72 h úteis' },

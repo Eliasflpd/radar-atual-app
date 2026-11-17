@@ -438,3 +438,8 @@ a.cartao-navy{color:var(--branco)}
 @media (prefers-reduced-motion:no-preference){.esqueleto{animation:brilho 1.4s linear infinite}}
 @media (prefers-reduced-motion:reduce){.gira-ic{animation:none;border-top-color:var(--azul)}}
 .modal-corpo .interruptor .chave input:disabled+i{opacity:.45}
+
+/* ── Módulo 2 · Círculos (17/11/2026) ── */
+#cg-box>*+*,#gc-box>*+*,#enc-box>*+*{margin-top:14px}
+#cg-box>.tit-sec,#gc-box>.tit-sec{margin-top:22px}
+.pessoas>li>.pessoa-bt:not(button):not(a){cursor:default}

@@ -13,6 +13,7 @@ const { Client } = require('pg');
 const RAIZ = path.resolve(__dirname, '..');
 const MIGRACAO = path.join(RAIZ, 'supabase/migrations/001_conexao_jovem.sql');
 const MIGRACAO_2 = path.join(RAIZ, 'supabase/migrations/002_gestao_pessoas.sql');
+const MIGRACAO_3 = path.join(RAIZ, 'supabase/migrations/003_circulos.sql');
 const SEED = path.join(RAIZ, 'supabase/seed_demo.sql');
 const MINIMO = path.join(__dirname, '00_supabase_minimo.sql');
 
@@ -663,6 +664,216 @@ teste('M1: primeiro administrador — só o dono do banco, e só sem pastor ativ
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// 10. MÓDULO 2 — CÍRCULOS (migração 003)
+// ═══════════════════════════════════════════════════════════════════════════════
+const ENC_ESP = id(151), ENC_CAM = id(152);
+// Jonas (pendente no seed) vira um jovem 18–21 ativo e sem círculo, para os testes de pedido.
+async function jonasLivre(t) {
+  await t.comoDono();
+  await t.q(`update cj.profiles set status = 'ativo' where id = $1`, [P.novo]);
+  await t.q(`insert into cj.term_acceptances(user_id, document, version) values ($1, 'regras_comunidade', '2026-11') on conflict do nothing`, [P.novo]);
+}
+teste('M2: coordenação (youth_admin) cria círculo; membro e líder não; criação auditada', async (t) => {
+  await t.como(P.davi);
+  await t.falha(`select cj.salvar_circulo(null, 'Círculo do Davi', null, '18-21', 8, null, null)`, [], '42501', 'membro criando círculo');
+  await t.como(P.rafael);
+  await t.falha(`select cj.salvar_circulo(null, 'Círculo do Rafael', null, '18-21', 8, null, null)`, [], '42501', 'líder criando círculo');
+  await t.como(P.coord);
+  const novo = (await t.um(`select cj.salvar_circulo(null, 'Círculo Farol (teste)', 'Encontros aos sábados.', '22-25', 8, $1, $2) as id`, [P.bruno, P.camila])).id;
+  const c = await t.um('select name, age_band, max_members, leader_id, assistant_id, status from cj.circles where id = $1', [novo]);
+  igual([c.name, c.age_band, c.max_members, c.leader_id, c.assistant_id, c.status], ['Círculo Farol (teste)', '22-25', 8, P.bruno, P.camila, 'ativo'], 'círculo criado');
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where action = 'criar_circulo' and actor_id = $1 and entity_id = $2`, [P.coord, novo]), 1, 'auditado');
+});
+teste('M2: líder e auxiliar precisam ser adultos ativos com o papel certo', async (t) => {
+  await t.como(P.coord);
+  await t.falha(`select cj.salvar_circulo(null, 'X1', null, '18-21', 8, $1, null)`, [P.davi], '23514', 'líder sem o papel circle_leader');
+  await t.falha(`select cj.salvar_circulo(null, 'X2', null, '18-21', 8, null, $1)`, [P.rafael], '23514', 'auxiliar sem o papel assistant');
+  await t.falha(`select cj.salvar_circulo(null, 'X3', null, '15-17', 8, $1, $1)`, [P.marcos], '23514', 'líder = auxiliar');
+  await t.falha(`select cj.salvar_circulo(null, 'X4', null, '18-21', 25, null, null)`, [], '22023', 'limite acima de 20');
+  await t.comoDono();
+  await t.q(`update cj.profiles set status = 'suspenso' where id = $1`, [P.bruno]);
+  await t.como(P.coord);
+  await t.falha(`select cj.salvar_circulo(null, 'X5', null, '18-21', 8, $1, null)`, [P.bruno], '23514', 'líder desativado');
+});
+teste('M2: editar círculo — faixa não muda com integrantes; limite não fica abaixo dos ativos', async (t) => {
+  await t.como(P.coord);
+  await t.falha(`select cj.salvar_circulo($1, 'Círculo Esperança (demo)', null, '22-25', 10, $2, $3)`, [C.esperanca, P.rafael, P.camila], '23514', 'mudar faixa com integrantes');
+  await t.falha(`select cj.salvar_circulo($1, 'Círculo Esperança (demo)', null, '18-21', 1, $2, $3)`, [C.esperanca, P.rafael, P.camila], '22023', 'limite 1');
+  await t.q(`select cj.salvar_circulo($1, 'Círculo Esperança', 'Nova descrição', '18-21', 2, $2, null)`, [C.esperanca, P.rafael]);
+  const c = await t.um('select name, max_members, assistant_id from cj.circles where id = $1', [C.esperanca]);
+  igual([c.name, c.max_members, c.assistant_id], ['Círculo Esperança', 2, null], 'editado (sem auxiliar, limite = ativos)');
+});
+teste('M2: pausar tira a gestão do líder; encerrar libera integrantes e cancela encontros', async (t) => {
+  await t.como(P.davi);
+  await t.falha(`select cj.definir_status_circulo($1, 'pausado')`, [C.esperanca], '42501', 'membro pausando');
+  await t.como(P.coord);
+  await t.q(`select cj.definir_status_circulo($1, 'pausado')`, [C.esperanca]);
+  await t.como(P.rafael);
+  igual((await t.um('select cj.lidera_circulo($1) as ok', [C.esperanca])).ok, false, 'pausado: líder sem gestão');
+  await t.falha('select * from cj.integrantes_do_circulo($1)', [C.esperanca], '42501', 'líder de círculo pausado');
+  await t.como(P.coord);
+  await t.q(`select cj.definir_status_circulo($1, 'encerrado')`, [C.caminho]);
+  await t.falha(`select cj.definir_status_circulo($1, 'ativo')`, [C.caminho], '22023', 'reabrir encerrado');
+  await t.comoDono();
+  igual((await t.um('select membership_status from cj.circle_members where circle_id = $1 and user_id = $2', [C.caminho, P.lucas])).membership_status, 'removido', 'Lucas liberado');
+  igual((await t.um('select status from cj.circle_meetings where id = $1', [ENC_CAM])).status, 'cancelado', 'encontro futuro cancelado');
+  igual(await t.n(`select count(*) from cj.audit_logs where action in ('pausar_circulo','encerrar_circulo') and actor_id = $1`, [P.coord]), 2, 'auditado');
+});
+teste('M2: jovem de outra faixa não pede entrada (nem vê o círculo na lista)', async (t) => {
+  await t.como(P.bia);
+  await t.falha('select cj.pedir_entrada($1)', [C.esperanca], '23514', 'Bia (15–17) no Esperança (18–21)');
+  const r = (await t.q('select nome from cj.circulos_disponiveis()')).map((x) => x.nome);
+  igual(r, ['Círculo Renovo (demo)'], 'Bia só enxerga círculos 15–17');
+});
+teste('M2: menor SEM consentimento não pede entrada', async (t) => {
+  await t.como(P.theo);
+  const e = await t.falha('select cj.pedir_entrada($1)', [C.renovo], '42501', 'Theo pedindo o Renovo');
+  espera(/autorização do responsável/.test(e.message), 'mensagem explica o motivo: ' + e.message);
+});
+teste('M2: círculo cheio bloqueia o pedido e o aceite', async (t) => {
+  await jonasLivre(t);
+  await t.q('update cj.circles set max_members = 2 where id = $1', [C.esperanca]);
+  await t.como(P.novo);
+  await t.falha('select cj.pedir_entrada($1)', [C.esperanca], '23514', 'pedido em círculo cheio');
+  igual((await t.um('select vagas from cj.circulos_disponiveis() where id = $1', [C.esperanca])).vagas, 0, 'lista mostra 0 vagas');
+  await t.comoDono(); await t.q('update cj.circles set max_members = 3 where id = $1', [C.esperanca]);
+  await t.como(P.novo);
+  igual((await t.um('select cj.pedir_entrada($1) as s', [C.esperanca])).s, 'solicitado', 'com vaga, o pedido entra');
+  await t.comoDono(); await t.q('update cj.circles set max_members = 2 where id = $1', [C.esperanca]);
+  await t.como(P.rafael);
+  await t.falha(`select cj.decidir_membro($1, $2, 'ativo')`, [C.esperanca, P.novo], '23514', 'aceitar com o círculo cheio');
+});
+teste('M2: líder só gerencia o próprio círculo (integrantes, pedidos e encontros)', async (t) => {
+  await t.como(P.rafael);
+  await t.falha('select * from cj.integrantes_do_circulo($1)', [C.caminho], '42501', 'Rafael lendo integrantes do Caminho');
+  await t.falha(`select cj.decidir_membro($1, $2, 'removido')`, [C.caminho, P.lucas], '42501', 'Rafael removendo do Caminho');
+  await t.falha(`select cj.atualizar_encontro($1, 'cancelado')`, [ENC_CAM], '42501', 'Rafael cancelando encontro do Caminho');
+  await t.falha(`insert into cj.circle_meetings(circle_id, starts_at, theme) values ($1, now() + interval '2 days', 'x')`, [C.caminho], '42501', 'Rafael propondo no Caminho');
+  const r = await t.q('select nome, situacao, quer_trocar, papel from cj.integrantes_do_circulo($1)', [C.esperanca]);
+  igual(r.map((x) => x.nome).sort(), ['Ana B.', 'Davi A.'], 'no próprio círculo: nomes curtos');
+  await t.como(P.bruno);
+  igual((await t.q('select nome from cj.integrantes_do_circulo($1)', [C.caminho])).length, 1, 'Bruno lê o Caminho');
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where action = 'consultar' and entity_type = 'circle_members' and actor_id = $1`, [P.rafael]), 1, 'consulta auditada');
+});
+teste('M2: integrante não vê círculo alheio (integrantes, encontros, local)', async (t) => {
+  await t.como(P.davi);
+  igual(await t.n('select count(*) from cj.circle_members where circle_id = $1', [C.caminho]), 0, 'integrantes do Caminho');
+  igual(await t.n('select count(*) from cj.circle_meetings where circle_id = $1', [C.caminho]), 0, 'encontros do Caminho');
+  await t.falha('select * from cj.integrantes_do_circulo($1)', [C.esperanca], '42501', 'integrante comum não usa a visão do líder');
+  const cam = await t.um('select nome, vagas, lider, sou_integrante from cj.circulos_disponiveis() where id = $1', [C.caminho]);
+  igual([cam.nome, cam.vagas, cam.lider, cam.sou_integrante], ['Círculo Caminho (demo)', 9, 'Bruno C.', false], 'vê só o básico do Caminho (para pedir troca)');
+});
+teste('M2: local do encontro só para integrantes (nem quem pediu entrada vê)', async (t) => {
+  await t.como(P.davi);
+  igual((await t.um('select place_note from cj.circle_meetings where id = $1', [ENC_ESP])).place_note, 'Casa de família (endereço fictício)', 'integrante vê o local');
+  await jonasLivre(t);
+  await t.como(P.novo);
+  await t.q('select cj.pedir_entrada($1)', [C.esperanca]);
+  igual(await t.n('select count(*) from cj.circle_meetings where id = $1', [ENC_ESP]), 0, 'pedido pendente não vê o encontro nem o local');
+  await t.como(P.lucas);
+  igual(await t.n('select count(*) from cj.circle_meetings where id = $1', [ENC_ESP]), 0, 'integrante de outro círculo não vê');
+  const linhaLista = await t.um('select * from cj.circulos_disponiveis() where id = $1', [C.esperanca]);
+  espera(!Object.keys(linhaLista).some((k) => /place|local|integrantes/.test(k)), 'a lista de círculos não traz local nem integrantes');
+});
+teste('M2: troca sem constrangimento — líder não vê o pedido; gestão vê o motivo; aceitar move de círculo', async (t) => {
+  await t.como(P.lucas);
+  await t.falha('select cj.pedir_entrada($1)', [C.esperanca], '23514', 'sem pedir troca, não pede outro círculo');
+  igual((await t.um(`select cj.pedir_troca(true, 'Horário não combina') as t`)).t, true, 'troca pedida');
+  igual((await t.um('select cj.pedir_entrada($1) as s', [C.esperanca])).s, 'solicitado', 'agora pede o Esperança');
+  await t.como(P.bruno);
+  const vb = await t.um('select quer_trocar, motivo_troca from cj.integrantes_do_circulo($1) where user_id = $2', [C.caminho, P.lucas]);
+  igual([vb.quer_trocar, vb.motivo_troca], [null, null], 'o líder atual NÃO vê o pedido de troca nem o motivo');
+  await t.como(P.coord);
+  const vc = await t.um('select quer_trocar, motivo_troca from cj.integrantes_do_circulo($1) where user_id = $2', [C.caminho, P.lucas]);
+  igual([vc.quer_trocar, vc.motivo_troca], [true, 'Horário não combina'], 'a gestão vê');
+  await t.como(P.rafael);
+  await t.q(`select cj.decidir_membro($1, $2, 'ativo')`, [C.esperanca, P.lucas]);
+  await t.comoDono();
+  const r = await t.q('select circle_id, membership_status, change_requested from cj.circle_members where user_id = $1 order by membership_status', [P.lucas]);
+  igual(r, [{ circle_id: C.esperanca, membership_status: 'ativo', change_requested: false }, { circle_id: C.caminho, membership_status: 'saiu', change_requested: false }], 'mudou de círculo');
+  igual(await t.n(`select count(*) from cj.audit_logs where action in ('pedir_troca','pedir_entrada','decidir_membro') and entity_id like $1`, ['%' + P.lucas]), 3, 'tudo auditado');
+});
+teste('M2: um pedido de entrada por vez; jovem cancela o próprio pedido', async (t) => {
+  await jonasLivre(t);
+  await t.como(P.novo);
+  await t.q('select cj.pedir_entrada($1)', [C.esperanca]);
+  await t.falha('select cj.pedir_entrada($1)', [C.caminho], '23514', 'segundo pedido ao mesmo tempo');
+  igual((await t.q(`delete from cj.circle_members where circle_id = $1 and user_id = $2 and membership_status = 'solicitado' returning 1`, [C.esperanca, P.novo])).length, 1, 'cancela o pedido');
+  igual((await t.um('select cj.pedir_entrada($1) as s', [C.caminho])).s, 'solicitado', 'agora pede outro');
+});
+teste('M2: sair do círculo (fica "saiu"); quem foi removido não volta sozinho', async (t) => {
+  await t.como(P.ana);
+  await t.q('select cj.sair_do_circulo()');
+  igual(await t.n('select count(*) from cj.circle_meetings where id = $1', [ENC_ESP]), 0, 'depois de sair, não vê mais o encontro');
+  igual((await t.um('select membership_status from cj.circle_members where user_id = $1', [P.ana])).membership_status, 'saiu', 'histórico mantido');
+  igual((await t.um('select cj.pedir_entrada($1) as s', [C.esperanca])).s, 'solicitado', 'quem saiu pode pedir de novo');
+  await t.como(P.rafael);
+  await t.falha(`select cj.decidir_membro($1, $2, 'removido')`, [C.esperanca, P.ana], '23514', 'remover quem não é ativo');
+  await t.q(`select cj.decidir_membro($1, $2, 'removido')`, [C.esperanca, P.davi]);
+  await t.como(P.davi);
+  await t.falha('select cj.pedir_entrada($1)', [C.esperanca], '42501', 'removido pedindo de novo o mesmo círculo');
+  await t.falha('select cj.sair_do_circulo()', [], 'P0002', 'sair sem círculo');
+});
+teste('M2: integrante propõe encontro (vira "proposto"); só o líder confirma; presença e auditoria', async (t) => {
+  await t.como(P.davi);
+  const m = await t.um(`insert into cj.circle_meetings(circle_id, starts_at, theme, place_note, status) values ($1, now() + interval '5 days', 'Piquenique', 'Praça (fictícia)', 'confirmado') returning id, status`, [C.esperanca]);
+  igual(m.status, 'proposto', 'integrante não confirma sozinho');
+  await t.falha(`select cj.atualizar_encontro($1, 'confirmado')`, [m.id], '42501', 'integrante confirmando');
+  await t.q(`update cj.circle_meetings set status = 'confirmado' where id = $1`, [m.id]);   // RLS: atualiza 0 linhas
+  igual((await t.um('select status from cj.circle_meetings where id = $1', [m.id])).status, 'proposto', 'continua proposto');
+  await t.como(P.camila);
+  await t.q(`select cj.atualizar_encontro($1, 'confirmado', null, 'Piquenique e conversa')`, [m.id]);
+  await t.como(P.davi);
+  await t.q(`insert into cj.meeting_rsvps(meeting_id, user_id, response) values ($1, $2, 'sim')`, [m.id, P.davi]);
+  await t.como(P.rafael);
+  igual(await t.n('select count(*) from cj.meeting_rsvps where meeting_id = $1', [m.id]), 1, 'líder vê a confirmação');
+  await t.como(P.lucas);
+  igual(await t.n('select count(*) from cj.meeting_rsvps where meeting_id = $1', [m.id]), 0, 'outro círculo não vê');
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where entity_type = 'circle_meetings' and entity_id = $1`, [m.id]), 2, 'proposta e confirmação auditadas');
+  igual(await t.n(`select count(*) from cj.audit_logs where entity_type = 'circle_meetings' and metadata::text ilike '%Piquenique%'`), 0, 'auditoria não guarda o tema');
+});
+teste('M2: encontro cancelado não aceita presença; data passada não confirma', async (t) => {
+  await t.como(P.rafael);
+  await t.q(`select cj.atualizar_encontro($1, 'cancelado')`, [ENC_ESP]);
+  await t.falha(`select cj.atualizar_encontro($1, 'confirmado')`, [ENC_ESP], '23514', 'reabrir cancelado');
+  await t.como(P.davi);
+  await t.falha(`insert into cj.meeting_rsvps(meeting_id, user_id, response) values ($1, $2, 'sim')`, [ENC_ESP, P.davi], '23514', 'presença em encontro cancelado');
+  await t.como(P.rafael);
+  const m = await t.um(`insert into cj.circle_meetings(circle_id, starts_at, theme) values ($1, now() + interval '1 day', 'X') returning id`, [C.esperanca]);
+  await t.falha(`select cj.atualizar_encontro($1, 'confirmado', now() - interval '1 day')`, [m.id], '23514', 'confirmar no passado');
+});
+teste('M2: gestão adiciona pessoa direto — menor sem consentimento não; mover de círculo só com a opção', async (t) => {
+  await t.como(P.rafael);
+  await t.falha('select cj.adicionar_ao_circulo($1, $2)', [C.esperanca, P.novo], '42501', 'líder não adiciona direto');
+  await t.como(P.coord);
+  await t.falha('select cj.adicionar_ao_circulo($1, $2)', [C.renovo, P.theo], '23514', 'Theo sem autorização');
+  await t.falha('select cj.adicionar_ao_circulo($1, $2)', [C.renovo, P.davi], '23514', 'faixa errada');
+  await t.falha('select cj.adicionar_ao_circulo($1, $2)', [C.esperanca, P.novo], '23514', 'perfil pendente');
+  await t.falha('select cj.adicionar_ao_circulo($1, $2)', [C.esperanca, P.lucas], '23514', 'já está noutro círculo');
+  await t.q('select cj.adicionar_ao_circulo($1, $2, true)', [C.esperanca, P.lucas]);
+  await t.comoDono();
+  igual((await t.q(`select circle_id from cj.circle_members where user_id = $1 and membership_status = 'ativo'`, [P.lucas])).map((x) => x.circle_id), [C.esperanca], 'movido');
+  igual(await t.n(`select count(*) from cj.audit_logs where action = 'adicionar_ao_circulo' and actor_id = $1`, [P.coord]), 1, 'auditado');
+});
+teste('M2: proteção consulta integrantes, mas não cria nem muda círculo', async (t) => {
+  await t.como(P.protecao);
+  igual((await t.q('select * from cj.integrantes_do_circulo($1)', [C.esperanca])).length, 2, 'proteção lê');
+  await t.falha(`select cj.salvar_circulo(null, 'X', null, '18-21', 8, null, null)`, [], '42501', 'proteção criando');
+  await t.falha(`select cj.definir_status_circulo($1, 'pausado')`, [C.esperanca], '42501', 'proteção pausando');
+});
+teste('M2: visitante (anon) não chama nenhuma função de círculos', async (t) => {
+  await t.como(null);
+  for (const f of ['cj.circulos_disponiveis()', `cj.pedir_entrada('${C.esperanca}')`, 'cj.sair_do_circulo()', `cj.integrantes_do_circulo('${C.esperanca}')`]) {
+    await t.falha('select * from ' + f, [], '42501', 'anon chamando ' + f);
+  }
+  await t.como(P.davi);
+  await t.falha(`select cj.nome_curto($1)`, [P.lucas], '42501', 'função interna nome_curto sem grant');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // 8. A FUNÇÃO (api/_lib/jovem.js, antes api-proposta/jovem.js) DE PONTA A PONTA
 // Crachá falso numa tabela radar_chaves LOCAL (cópia mínima do formato do Radar).
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -834,6 +1045,71 @@ testeHandler('M1 handler: tudo o que a liderança fez está em audit_logs', asyn
   const novoPerfil = (await dono(`select count(*) from cj.audit_logs where action = 'criar_perfil'`))[0].count;
   espera(Number(novoPerfil) >= 1, 'criação de perfil pelo "entrar" auditada');
 });
+// ─── MÓDULO 2 · círculos pela função (estado persiste entre estes testes, em ordem) ─
+const CRACHA_RAFAEL = 'rk_teste_rafael_hhhhhhhhhhhhhhhhhhhhhhhh';
+const CRACHA_LUCAS = 'rk_teste_lucas_iiiiiiiiiiiiiiiiiiiiiiii';
+testeHandler('M2 handler: Davi vê "Meu Círculo" com nomes curtos, encontro e local (é integrante)', async () => {
+  const r = await chamar(CRACHA_DAVI, { acao: 'circulo' });
+  igual(r.code, 200, 'status');
+  const d = r.body.dados;
+  igual(d.circulo.name, 'Círculo Esperança (demo)', 'círculo');
+  igual(d.integrantes.map((x) => x.nome).sort(), ['Ana B.', 'Davi A.'], 'nomes públicos (primeiro nome + inicial)');
+  igual(d.lideres.map((x) => x.papel), ['Líder', 'Auxiliar'], 'líder e auxiliar');
+  const e = d.encontros.find((x) => x.id === id(151));
+  espera(e && e.place_note && e.theme, 'encontro com tema e local');
+  espera(!JSON.stringify(d).match(/radar_key_hash|99900/), 'nada de vínculo/telefone na resposta');
+});
+testeHandler('M2 handler: Lucas (Caminho) vê o Esperança na lista, sem integrantes nem local', async () => {
+  const r = await chamar(CRACHA_LUCAS, { acao: 'circulos_disponiveis' });
+  igual(r.code, 200, 'status');
+  const esp = r.body.dados.find((x) => x.id === id(101));
+  espera(esp && esp.vagas === 8 && esp.lider === 'Rafael T.', 'Esperança com vagas e líder: ' + JSON.stringify(esp));
+  espera(!JSON.stringify(r.body).match(/Casa de família|Davi|Ana/), 'sem local e sem nomes de integrantes');
+  const p = await chamar(CRACHA_LUCAS, { acao: 'pedir_circulo', circulo: id(101) });
+  igual([p.code, p.body.motivo], [400, 'Você já participa de um círculo. Se quiser outro, peça a troca primeiro'], 'sem troca, recusado com mensagem clara');
+});
+testeHandler('M2 handler: troca → pedido → líder aceita; o líder do Caminho não vê o motivo', async () => {
+  igual((await chamar(CRACHA_LUCAS, { acao: 'pedir_troca', trocar: true, motivo: 'Horário' })).code, 200, 'pede troca');
+  igual((await chamar(CRACHA_LUCAS, { acao: 'pedir_circulo', circulo: id(101) })).body.dados.membership_status, 'solicitado', 'pede o Esperança');
+  const g = await chamar(CRACHA_RAFAEL, { acao: 'gerir_circulo', circulo: id(101) });
+  igual(g.code, 200, 'líder abre o próprio círculo');
+  const pedido = g.body.dados.integrantes.find((x) => x.situacao === 'solicitado');
+  espera(pedido && pedido.nome === 'Lucas M.' && pedido.quer_trocar === null && pedido.motivo_troca === null, 'pedido visível ao líder, sem motivo da troca');
+  igual((await chamar(CRACHA_RAFAEL, { acao: 'decidir_membro', circulo: id(101), usuario: P.lucas, status: 'ativo' })).code, 200, 'aceita');
+  igual((await chamar(CRACHA_LUCAS, { acao: 'circulo' })).body.dados.circulo.name, 'Círculo Esperança (demo)', 'Lucas agora no Esperança');
+});
+testeHandler('M2 handler: líder não abre círculo alheio; membro não abre a visão do líder', async () => {
+  igual((await chamar(CRACHA_RAFAEL, { acao: 'gerir_circulo', circulo: id(103) })).code, 403, 'Rafael no Caminho');
+  igual((await chamar(CRACHA_DAVI, { acao: 'gerir_circulo', circulo: id(101) })).code, 403, 'Davi na visão do líder');
+  const l = await chamar(CRACHA_RAFAEL, { acao: 'lider_circulos' });
+  igual(l.body.dados.map((x) => [x.nome, x.meu_papel, x.ativos]), [['Círculo Esperança (demo)', 'lider', 3]], 'Rafael conduz só o Esperança');
+});
+testeHandler('M2 handler: Davi propõe encontro, Rafael confirma, Davi confirma presença, Rafael vê quem vai', async () => {
+  const quando = new Date(Date.now() + 6 * 864e5).toISOString();
+  const p = await chamar(CRACHA_DAVI, { acao: 'propor_encontro', circulo: id(101), quando, tema: 'Piquenique (teste)', local: 'Praça (fictícia)', confirmar: true });
+  igual([p.code, p.body.dados.status], [200, 'proposto'], 'proposta do integrante nasce "proposto" mesmo pedindo confirmar');
+  igual((await chamar(CRACHA_DAVI, { acao: 'atualizar_encontro', encontro: p.body.dados.id, status: 'confirmado' })).code, 403, 'integrante não confirma');
+  igual((await chamar(CRACHA_RAFAEL, { acao: 'atualizar_encontro', encontro: p.body.dados.id, status: 'confirmado' })).code, 200, 'líder confirma');
+  igual((await chamar(CRACHA_DAVI, { acao: 'responder_presenca', encontro: p.body.dados.id, resposta: 'sim' })).code, 200, 'presença');
+  const g = await chamar(CRACHA_RAFAEL, { acao: 'gerir_circulo', circulo: id(101) });
+  const enc = g.body.dados.encontros.find((x) => x.id === p.body.dados.id);
+  igual([enc.status, enc.presencas], ['confirmado', [{ nome: 'Davi A.', resposta: 'sim' }]], 'líder vê a confirmação');
+  igual((await chamar(CRACHA_DAVI, { acao: 'propor_encontro', circulo: id(101), quando: '2020-01-01T10:00:00Z' })).code, 400, 'data passada recusada');
+});
+testeHandler('M2 handler: gestão lista, cria e edita círculo; membro recebe 403', async () => {
+  igual((await chamar(CRACHA_DAVI, { acao: 'circulos_gestao' })).code, 403, 'membro na gestão');
+  igual((await chamar(CRACHA_DAVI, { acao: 'salvar_circulo', nome: 'Círculo do Davi', faixa: '18-21', limite: 8 })).code, 403, 'membro criando');
+  const g = await chamar(CRACHA_COORD, { acao: 'circulos_gestao' });
+  igual(g.code, 200, 'coordenação lista');
+  const esp = g.body.dados.circulos.find((x) => x.id === id(101));
+  igual([esp.ativos, esp.lider], [3, 'Rafael Teixeira (demo)'], 'contagem e líder');
+  espera(g.body.dados.candidatos.some((x) => x.id === P.rafael && x.papeis.includes('circle_leader')), 'Rafael entre os candidatos a líder');
+  const n = await chamar(CRACHA_COORD, { acao: 'salvar_circulo', nome: 'Círculo Raízes (teste)', descricao: 'Domingos à tarde.', faixa: '22-25', limite: 8, lider: P.marcos, auxiliar: P.camila });
+  igual(n.code, 200, 'cria');
+  const e = await chamar(CRACHA_COORD, { acao: 'salvar_circulo', id: n.body.dados.id, nome: 'Círculo Raízes (teste)', faixa: '22-25', limite: 8, lider: P.davi });
+  igual([e.code, e.body.motivo], [400, 'Líder precisa ser adulto, estar ativo e ter o papel de líder de círculo'], 'líder sem papel: mensagem clara');
+  igual((await chamar(CRACHA_COORD, { acao: 'status_circulo', circulo: n.body.dados.id, status: 'pausado' })).code, 200, 'pausa');
+});
 testeHandler('M1 handler: sem CJ_DB_URL/CJ_VINCULO_SEGREDO a rota responde "não configurado" (JSON) sem exceção', async () => {
   const salvo = { CJ_DB_URL: process.env.CJ_DB_URL, CJ_VINCULO_SEGREDO: process.env.CJ_VINCULO_SEGREDO, RADAR_DB_DATABASE_URL: process.env.RADAR_DB_DATABASE_URL };
   delete process.env.CJ_DB_URL; delete process.env.CJ_VINCULO_SEGREDO; delete process.env.RADAR_DB_DATABASE_URL;
@@ -881,7 +1157,9 @@ async function principal() {
   await db.query(ler(MINIMO));
   try { await db.query(ler(MIGRACAO)); marcar(true, 'migração aplicada (1ª vez)'); } catch (e) { marcar(false, 'migração aplicada (1ª vez)', e.message); throw e; }
   try { await db.query(ler(MIGRACAO_2)); marcar(true, 'migração 002 (gestão de pessoas) aplicada'); } catch (e) { marcar(false, 'migração 002 aplicada', e.message); throw e; }
-  try { await db.query(ler(MIGRACAO)); await db.query(ler(MIGRACAO_2)); marcar(true, 'migrações 001 + 002 reaplicadas sem erro (idempotentes)'); } catch (e) { marcar(false, 'migração idempotente', e.message); }
+  try { await db.query(ler(MIGRACAO_3)); marcar(true, 'migração 003 (círculos) aplicada'); } catch (e) { marcar(false, 'migração 003 aplicada', e.message); throw e; }
+  try { await db.query(ler(MIGRACAO)); await db.query(ler(MIGRACAO_2)); await db.query(ler(MIGRACAO_3)); marcar(true, 'migrações 001 + 002 + 003 reaplicadas sem erro (idempotentes)'); } catch (e) { marcar(false, 'migração idempotente', e.message); }
+  marcar(!/\b(drop\s+\w+|delete\s+from|truncate)\b/i.test(ler(MIGRACAO_3).replace(/--[^\n]*/g, '')), '003 não tem drop/delete/truncate (roda no Supabase sem confirmação manual)', 'achou comando destrutivo');
   try { await db.query(ler(SEED)); marcar(false, 'seed recusa rodar sem a trava', 'rodou sem a trava'); } catch (e) { marcar(/recusado/.test(e.message), 'seed recusa rodar sem a trava', e.message); }
   await db.query("set cj.permitir_seed_demo = 'sim'");
   await db.query(ler(SEED));
@@ -907,6 +1185,9 @@ async function principal() {
   await db.query(`insert into radar_chaves(user_key, chave_hash) values ('99900000002', $1), ('99900000001', $2)`, [sha(CRACHA_COORD), sha(CRACHA_PASTOR)]);
   await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovemMod.hashVinculo('99900000002'), P.coord]);
   await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovemMod.hashVinculo('99900000001'), P.pastor]);
+  await db.query(`insert into radar_chaves(user_key, chave_hash) values ('99900000004', $1), ('99900000009', $2)`, [sha(CRACHA_RAFAEL), sha(CRACHA_LUCAS)]);
+  await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovemMod.hashVinculo('99900000004'), P.rafael]);
+  await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovemMod.hashVinculo('99900000009'), P.lucas]);
   for (const t of testesHandler) {
     try { await t.fn(); marcar(true, t.nome); }
     catch (e) { marcar(false, t.nome, e instanceof Falha ? e.message : `erro inesperado: ${e.code || ''} ${e.message}`); }

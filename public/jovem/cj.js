@@ -1,7 +1,9 @@
 /* CONEXÃO JOVEM — protótipo navegável (Fase 1 · 17/11/2026)
    SPA simples com rotas por hash (#/inicio, #/circulo...). Sem backend: o que o jovem faz fica só
    no localStorage deste aparelho, sempre com aviso de demonstração. Dados fictícios em dados-demo.js.
-   Fase 2: login igual ao do Radar (código pelo WhatsApp), banco com RLS, papéis e auditoria (ver dossiê). */
+   Fase 2: login igual ao do Radar (código pelo WhatsApp), banco com RLS, papéis e auditoria (ver dossiê).
+   Módulo 1: login pelo crachá do Radar e Pessoas. Módulo 2: Círculos (Meu Círculo real, Encontrar um círculo,
+   Conduzir meu círculo e o painel Círculos), com simulador local na demonstração. */
 (function () {
   'use strict';
   var D = window.CJ_DEMO;
@@ -376,7 +378,9 @@
         '<div class="cartao"><h3>Participar do círculo</h3><ul class="lista lista-link">' +
           '<li><button type="button" data-acao="propor"><span class="ic-caixa">' + ic('plus') + '</span><span class="li-t"><b>Propor um encontro</b><span>Sugira data e tema ao líder</span></span>' + ic('right', 'ic seta') + '</button></li>' +
           '<li>' + (menorPendente() ? '<button type="button" data-acao="bloqueado"><span class="ic-caixa">' + ic('lock') + '</span><span class="li-t"><b>Mural do círculo</b><span>Liberado após a aprovação</span></span>' : '<a href="#/comunidade?aba=circulo"><span class="ic-caixa">' + ic('message') + '</span><span class="li-t"><b>Mural do círculo</b><span>Fechado e moderado</span></span>' + ic('right', 'ic seta') + '</a>') + '</li>' +
-          '<li><button type="button" data-acao="troca"><span class="ic-caixa">' + ic('repeat') + '</span><span class="li-t"><b>Pedir troca de círculo</b><span>' + (E.trocaPedida ? 'Pedido enviado à liderança' : 'Sem constrangimento, sem explicação obrigatória') + '</span></span>' + ic('right', 'ic seta') + '</button></li></ul></div>' +
+          '<li><button type="button" data-acao="troca"><span class="ic-caixa">' + ic('repeat') + '</span><span class="li-t"><b>Pedir troca de círculo</b><span>' + (E.trocaPedida ? 'Pedido enviado à liderança' : 'Sem constrangimento, sem explicação obrigatória') + '</span></span>' + ic('right', 'ic seta') + '</button></li>' +
+          '<li><a href="#/encontrar-circulo"><span class="ic-caixa">' + ic('compass') + '</span><span class="li-t"><b>Encontrar um círculo</b><span>Como fica para quem ainda não tem</span></span>' + ic('right', 'ic seta') + '</a></li>' +
+          '<li><a href="#/lider-circulo"><span class="ic-caixa">' + ic('shield') + '</span><span class="li-t"><b>Visão do líder</b><span>Pedidos de entrada, encontros e presença</span></span>' + ic('right', 'ic seta') + '</a></li></ul></div>' +
         (E.propostas.length ? '<div class="cartao"><h3>Suas propostas enviadas</h3><ul class="lista">' + E.propostas.map(function (x) { return li('calendar', esc(x.tema), esc(x.data) + ' · aguardando o líder (demonstração)'); }).join('') + '</ul></div>' : '') +
         '<div class="cartao cartao-azul"><p style="color:#1D3B78">' + esc(c.descricao) + '</p></div>' +
       '</div>' };
@@ -639,9 +643,11 @@
           it('#/acolhimento', 'heart', 'Acolhimento', 'Pedido de oração e conversa') +
           it('#/jornada', 'compass', 'Minha Jornada', '90 dias, no seu ritmo') +
           it('#/missao', 'target', 'Missão da Semana', D.missao.titulo) +
-          it('#/circulo', 'users', 'Meu Círculo', D.circulo.nome) + '</ul></div>' +
+          it('#/circulo', 'users', 'Meu Círculo', real() ? (euAtivo() && euAtivo().circulo) || 'Encontrar um círculo' : D.circulo.nome) +
+          (!real() || souLider() ? it('#/lider-circulo', 'shield', 'Conduzir meu círculo', real() ? 'Pedidos, encontros e presença' : 'Visão do líder (demonstração)') : '') + '</ul></div>' +
         '<div class="cartao"><ul class="lista lista-link">' +
           (!real() || (euAtivo() && euAtivo().equipe) ? it('#/pessoas', 'users', 'Pessoas', real() ? 'Aprovar, cadastrar e dar papéis' : 'Gestão de pessoas (demonstração)') +
+            it('#/circulos', 'heartHandshake', 'Círculos', real() ? 'Criar, líderes, integrantes e trocas' : 'Gestão de círculos (demonstração)') +
             it('#/lideranca', 'chart', 'Painel de liderança', 'Prévia com dados fictícios') : '') +
           '<li><button type="button" data-acao="regras"><span class="ic-caixa">' + ic('shield') + '</span><span class="li-t"><b>Regras da comunidade</b><span>Respeito, cuidado e proteção</span></span>' + ic('right', 'ic seta') + '</button></li>' +
           '<li><button type="button" data-acao="politica"><span class="ic-caixa">' + ic('lock') + '</span><span class="li-t"><b>Privacidade</b><span>Como cuidamos dos seus dados</span></span>' + ic('right', 'ic seta') + '</button></li>' +
@@ -649,8 +655,8 @@
         '<div class="cartao"><ul class="lista lista-link">' +
           '<li><a href="/?radar"><span class="ic-caixa ouro">' + ic('radar') + '</span><span class="li-t"><b>Ir para o Radar Atual</b><span>Bíblia, pregações e mais</span></span>' + ic('right', 'ic seta') + '</a></li>' +
           '<li><a href="/?capa"><span class="ic-caixa ouro">' + ic('left') + '</span><span class="li-t"><b>Voltar à capa</b><span>Escolher entre Radar e Conexão Jovem</span></span>' + ic('right', 'ic seta') + '</a></li></ul></div>' +
-        (real() ? aviso('<b>Conectado com a sua conta do Radar.</b> Perfil, consentimento e Pessoas usam dados reais. As demais telas ainda mostram a demonstração.', 'aviso-azul', 'info') : AV_DEMO) +
-        '<p class="peq" style="text-align:center;letter-spacing:.04em">CONEXÃO JOVEM · ' + (real() ? 'Módulo 1' : 'demonstração') + '</p>' +
+        (real() ? aviso('<b>Conectado com a sua conta do Radar.</b> Perfil, consentimento, Pessoas e Círculos usam dados reais. As demais telas ainda mostram a demonstração.', 'aviso-azul', 'info') : AV_DEMO) +
+        '<p class="peq" style="text-align:center;letter-spacing:.04em">CONEXÃO JOVEM · ' + (real() ? 'Módulos 1 e 2' : 'demonstração') + '</p>' +
       '</div>' };
   };
 
@@ -660,6 +666,7 @@
     return { cab: 'normal', voltar: '#/mais', nav: 'mais', titulo: 'Painel de liderança', html:
       '<div class="sec pt">' +
         '<a class="cartao cartao-link" href="#/pessoas"><span class="ic-caixa">' + ic('users') + '</span><div><h3>Pessoas</h3><p>Aprovar pendentes, cadastrar pelo WhatsApp, dar e retirar papéis.</p></div>' + ic('right', 'ic seta') + '</a>' +
+        '<a class="cartao cartao-link" href="#/circulos"><span class="ic-caixa">' + ic('heartHandshake') + '</span><div><h3>Círculos</h3><p>Criar e editar círculos, escolher líder e auxiliar, integrantes, pedidos e trocas.</p></div>' + ic('right', 'ic seta') + '</a>' +
         aviso('<b>Os números abaixo são fictícios.</b> Só papéis autorizados acessam, com registro de auditoria. O painel mostra dados agregados: nunca diário espiritual nem o conteúdo de pedidos de oração.', '', 'info') +
         '<h2 class="tit-sec" style="margin-top:8px">Integração · últimos 30 dias</h2>' +
         '<div class="kpis">' + L.kpis.map(function (k) { return '<div class="kpi"><small>' + esc(k.rot) + '</small><b>' + esc(k.val) + '</b><span>' + esc(k.meta) + '</span></div>'; }).join('') + '</div>' +
@@ -668,7 +675,7 @@
         '<h2 class="tit-sec">Alertas operacionais</h2>' +
         '<div class="cartao"><ul class="lista">' + L.alertas.map(function (a) { var ok = E.alertasOk.indexOf(a.id) >= 0;
           return '<li style="align-items:flex-start"><span class="ic-caixa ' + (ok ? 'verde' : 'ouro') + '">' + ic(ok ? 'check' : a.ic) + '</span><span class="li-t"><b>' + esc(a.titulo) + '</b><span>' + esc(a.texto) + '</span><br><button class="btn btn-txt" type="button" data-acao="alerta" data-v="' + a.id + '" style="padding-left:0">' + (ok ? 'Encaminhado · desfazer' : 'Marcar como encaminhado') + '</button></span></li>'; }).join('') + '</ul></div>' +
-        '<h2 class="tit-sec">Círculos</h2>' +
+        '<h2 class="tit-sec">Círculos (prévia fictícia)</h2>' +
         '<div class="cartao"><ul class="lista">' + D.outrosCirculos.map(function (c) { return li('users', esc(c.nome) + (c.alerta ? ' <span class="selo selo-alerta">Atenção</span>' : ''), esc(c.faixa + ' · ' + c.membros + ' integrantes · ' + c.encontro)); }).join('') + '</ul></div>' +
         '<h2 class="tit-sec">Conteúdos e pedidos</h2>' +
         '<div class="cartao"><ul class="lista">' + L.conteudos.map(function (c) { return li('file', esc(c.titulo), esc(c.status)); }).join('') +
@@ -1355,6 +1362,661 @@
       ['catch'](function (r) { ocupado(el, false); toast('Não foi possível aprovar', msgErro(r)); });
   };
   A['cadastrar-pessoa'] = function () { if (souGestao()) abrirCadastro(); };
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     MÓDULO 2 · Círculos (17/11/2026) — dossiê 6.3
+     Telas: Meu Círculo (real), Encontrar um círculo, Conduzir meu círculo (líder/auxiliar)
+     e Círculos (painel da gestão). Uma só porta para os dados: cx() usa o banco no modo
+     real e um simulador local (dados FICTÍCIOS de dados-demo.js) na demonstração.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  var CI = { dados: null, erro: '', seq: 0 };
+  var SEM = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+  var MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  function quando(iso, curto) {
+    var d = new Date(iso); if (isNaN(d.getTime())) return '';
+    var h = d.getHours(), m = d.getMinutes(), hora = h + 'h' + (m ? ('0' + m).slice(-2) : '');
+    if (curto) return SEM[d.getDay()].slice(0, 3).replace(/^./, function (c) { return c.toUpperCase(); }) + ', ' + ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + ' · ' + hora;
+    return SEM[d.getDay()].replace(/^./, function (c) { return c.toUpperCase(); }) + ', ' + d.getDate() + ' de ' + MESES[d.getMonth()] + ' · ' + hora;
+  }
+  function souLider() { return real() ? !!(euAtivo() && (euAtivo().papeis || []).some(function (p) { return p === 'circle_leader' || p === 'assistant'; })) : true; }
+  function souEquipe() { return real() ? !!(euAtivo() && euAtivo().equipe) : true; }
+  var ST_ENC = { proposto: ['selo-alerta', 'Proposta'], confirmado: ['selo-verde', 'Confirmado'], realizado: ['selo-cinza', 'Realizado'], cancelado: ['selo-cinza', 'Cancelado'] };
+  var ST_CIRC = { ativo: ['selo-verde', 'Ativo'], pausado: ['selo-alerta', 'Pausado'], encerrado: ['selo-cinza', 'Encerrado'] };
+  function selo(par, icone) { return '<span class="selo ' + par[0] + '">' + (icone ? ic(icone) : '') + esc(par[1]) + '</span>'; }
+  function caixaCarregando(txt) { return '<div class="cartao carregando-cartao" aria-busy="true"><span class="gira-ic" aria-hidden="true"></span><div><h3>' + esc(txt) + '</h3><p>Só um instante.</p></div></div>'; }
+  function caixaFalha(msg, acao) { return aviso('<b>Não foi possível carregar.</b> ' + esc(msg), 'aviso-erro', 'alert') + '<button class="btn btn-sec btn-cheio" type="button" data-acao="' + acao + '" style="margin-top:10px">Tentar de novo</button>'; }
+  function dataHoraIso(d, h) { var x = new Date(d + 'T' + (h || '19:00')); return isNaN(x.getTime()) ? '' : x.toISOString(); }
+  function hojeIso() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function plural(n, um, varios) { return n + ' ' + (n === 1 ? um : varios); }
+
+  function cx(acao, d) { return real() ? api(acao, d || {}).then(function (r) { return r.dados; }) : simCirc(acao, d || {}); }
+
+  /* ─── simulador da demonstração (só neste aparelho) ─────────────────────── */
+  function demoCirc() {
+    var s = E.circDemo;
+    if (!s || s.v !== (D.circulosDemo || {}).v) {
+      s = JSON.parse(JSON.stringify(D.circulosDemo));
+      var dia = function (n, h) { var x = new Date(); x.setDate(x.getDate() + n); x.setHours(h || 12, 0, 0, 0); return x.toISOString(); };
+      s.membros.forEach(function (m) { m.pedido_em = dia(m.dias - 1); m.entrou_em = m.situacao === 'ativo' ? dia(m.dias) : null; m.troca = !!m.troca; m.motivo = m.motivo || null; delete m.dias; });
+      s.encontros.forEach(function (e) { e.quando = dia(e.dias, e.hora); delete e.dias; delete e.hora; });
+      E.circDemo = s; salva();
+    }
+    return s;
+  }
+  function simCirc(acao, d) {
+    var s = demoCirc(), EU = 'p-voce';
+    function P(id) { return s.pessoas.filter(function (p) { return p.id === id; })[0] || (id === EU ? { id: EU, nome: (E.perfil.nome || 'Você') + ' (você)', faixa: E.perfil.faixa, papeis: [], autorizacao: !menorPendente() } : null); }
+    function C(id) { return s.circulos.filter(function (c) { return c.id === id; })[0]; }
+    function curto(id) { var p = P(id); if (!p) return null; var n = p.nome.replace(/\s*\(.*\)$/, '').trim().split(/\s+/); return n[0] + (n[1] ? ' ' + n[1][0] + '.' : ''); }
+    function ativos(c) { return s.membros.filter(function (m) { return m.circulo === c && m.situacao === 'ativo'; }).length; }
+    function M(c, u) { return s.membros.filter(function (m) { return m.circulo === c && m.usuario === u; })[0]; }
+    function ativoDe(u) { return s.membros.filter(function (m) { return m.usuario === u && m.situacao === 'ativo'; })[0]; }
+    function ok(v) { salva(); return v; }
+    return new Promise(function (r) { setTimeout(r, 260); }).then(function () {
+      var gestao = d._visao !== 'lider';
+      switch (acao) {
+        case 'circulos_disponiveis': {
+          var eu = P(EU);
+          return s.circulos.filter(function (c) { return c.status === 'ativo' && c.faixa === eu.faixa; }).map(function (c) {
+            var m = M(c.id, EU);
+            return { id: c.id, nome: c.nome, descricao: c.descricao, faixa: c.faixa, limite: c.limite, vagas: Math.max(c.limite - ativos(c.id), 0),
+              lider: c.lider_id ? curto(c.lider_id) : null, auxiliar: c.auxiliar_id ? curto(c.auxiliar_id) : null, meu_pedido: m ? m.situacao : null, sou_integrante: !!(m && m.situacao === 'ativo') };
+          });
+        }
+        case 'pedir_circulo': {
+          var c = C(d.circulo), me = P(EU);
+          if (me.faixa === '15-17' && !me.autorizacao) return recusa('Para entrar num círculo, seu cadastro precisa estar aprovado (e, para 15–17 anos, com a autorização do responsável)');
+          if (!c || c.status !== 'ativo') return recusa('Este círculo não está recebendo pedidos agora', 'nao_encontrado');
+          if (c.faixa !== me.faixa) return recusa('Círculos são separados por faixa etária', 'dados_invalidos');
+          if (s.membros.some(function (m) { return m.usuario === EU && m.situacao === 'solicitado'; })) return recusa('Você já tem um pedido aguardando resposta. Cancele-o para pedir outro círculo', 'dados_invalidos');
+          if (ativos(c.id) >= c.limite) return recusa('Este círculo está cheio no momento. Escolha outro ou fale com a coordenação', 'dados_invalidos');
+          var x = M(c.id, EU); if (x) { x.situacao = 'solicitado'; x.pedido_em = new Date().toISOString(); } else s.membros.push({ circulo: c.id, usuario: EU, situacao: 'solicitado', pedido_em: new Date().toISOString(), entrou_em: null, troca: false, motivo: null });
+          return ok({ circulo: c.id, membership_status: 'solicitado' });
+        }
+        case 'cancelar_pedido_circulo': s.membros = s.membros.filter(function (m) { return !(m.circulo === d.circulo && m.usuario === EU && m.situacao === 'solicitado'); }); return ok({ ok: true });
+        case 'lider_circulos':
+          return s.circulos.filter(function (c) { return c.status === 'ativo' && (c.lider_id === s.lider || c.auxiliar_id === s.lider); }).map(function (c) {
+            return { id: c.id, nome: c.nome, faixa: c.faixa, limite: c.limite, meu_papel: c.lider_id === s.lider ? 'lider' : 'auxiliar', ativos: ativos(c.id),
+              pedidos: s.membros.filter(function (m) { return m.circulo === c.id && m.situacao === 'solicitado'; }).length, proximo: null };
+          });
+        case 'gerir_circulo': {
+          var ci = C(d.circulo); if (!ci) return recusa(MSG.nao_encontrado, 'nao_encontrado');
+          if (!gestao && ci.lider_id !== s.lider && ci.auxiliar_id !== s.lider) return recusa(MSG.sem_permissao);
+          return {
+            circulo: { id: ci.id, nome: ci.nome, descricao: ci.descricao, faixa: ci.faixa, limite: ci.limite, status: ci.status, lider_id: ci.lider_id, auxiliar_id: ci.auxiliar_id,
+              lider: ci.lider_id ? curto(ci.lider_id) : null, auxiliar: ci.auxiliar_id ? curto(ci.auxiliar_id) : null, conduzo: ci.lider_id === s.lider || ci.auxiliar_id === s.lider },
+            integrantes: s.membros.filter(function (m) { return m.circulo === ci.id && (m.situacao === 'ativo' || m.situacao === 'solicitado'); }).map(function (m) {
+              var p = P(m.usuario) || { nome: '?', faixa: ci.faixa };
+              return { id: m.usuario, nome: gestao ? p.nome : curto(m.usuario), situacao: m.situacao, faixa: p.faixa, menor: p.faixa === '15-17', autorizacao_ok: p.faixa !== '15-17' || !!p.autorizacao,
+                pedido_em: m.pedido_em, entrou_em: m.entrou_em, quer_trocar: gestao ? m.troca : null, motivo_troca: gestao ? m.motivo : null, papel: null };
+            }).sort(function (a, b) { return (a.situacao === 'solicitado' ? 0 : 1) - (b.situacao === 'solicitado' ? 0 : 1) || a.nome.localeCompare(b.nome, 'pt-BR'); }),
+            encontros: s.encontros.filter(function (e) { return e.circulo === ci.id; }).sort(function (a, b) { var pa = new Date(a.quando) < new Date(), pb = new Date(b.quando) < new Date(); return (pa - pb) || (new Date(a.quando) - new Date(b.quando)); }).map(function (e) {
+              return { id: e.id, starts_at: e.quando, theme: e.tema, place_note: e.local, status: e.status, proposto_por: curto(e.por), presencas: e.presencas.map(function (x) { return { nome: curto(x.usuario), resposta: x.resposta }; }) };
+            })
+          };
+        }
+        case 'decidir_membro': {
+          var cc = C(d.circulo), mm = M(d.circulo, d.usuario);
+          if (!mm) return recusa('pedido não encontrado', 'nao_encontrado');
+          if ((d.status === 'ativo' || d.status === 'recusado') && mm.situacao !== 'solicitado') return recusa('Este pedido já foi respondido', 'dados_invalidos');
+          if (d.status === 'removido' && mm.situacao !== 'ativo') return recusa('Esta pessoa não é integrante ativa do círculo', 'dados_invalidos');
+          if (d.status === 'ativo') {
+            if (ativos(cc.id) >= cc.limite) return recusa('círculo cheio', 'dados_invalidos');
+            var pp = P(d.usuario); if (pp && pp.faixa === '15-17' && !pp.autorizacao) return recusa('Menor de idade só entra em círculo com a autorização do responsável aprovada', 'dados_invalidos');
+            var outro = ativoDe(d.usuario);
+            if (outro) { if (!outro.troca) return recusa('Esta pessoa já participa de outro círculo', 'dados_invalidos'); outro.situacao = 'saiu'; outro.troca = false; outro.motivo = null; }
+            mm.entrou_em = new Date().toISOString();
+          }
+          mm.situacao = d.status; mm.troca = false; mm.motivo = null;
+          return ok({ ok: true });
+        }
+        case 'propor_encontro': {
+          var e = { id: 'e' + Date.now().toString(36), circulo: d.circulo, quando: d.quando, tema: d.tema || null, local: d.local || null, status: d.confirmar ? 'confirmado' : 'proposto', por: s.lider, presencas: [] };
+          if (new Date(e.quando) < new Date()) return recusa('Escolha uma data futura', 'dados_invalidos');
+          s.encontros.push(e); return ok({ id: e.id, status: e.status });
+        }
+        case 'atualizar_encontro': {
+          var en = s.encontros.filter(function (x) { return x.id === d.encontro; })[0];
+          if (!en) return recusa('encontro não encontrado', 'nao_encontrado');
+          if ((en.status === 'cancelado' || en.status === 'realizado') && d.status && d.status !== en.status) return recusa('Este encontro já foi encerrado', 'dados_invalidos');
+          if (d.status === 'confirmado' && new Date(d.quando || en.quando) < new Date()) return recusa('Escolha uma data futura para confirmar o encontro', 'dados_invalidos');
+          if (d.status === 'realizado' && new Date(en.quando) > new Date()) return recusa('Só dá para marcar como realizado depois do horário do encontro', 'dados_invalidos');
+          if (d.status) en.status = d.status; if (d.quando) en.quando = d.quando; if (d.tema) en.tema = d.tema; if (d.local) en.local = d.local;
+          return ok({ ok: true });
+        }
+        case 'circulos_gestao':
+          return {
+            gestao: true,
+            circulos: s.circulos.filter(function (c) { return c.status !== 'encerrado'; }).map(function (c) {
+              var prox = s.encontros.filter(function (e) { return e.circulo === c.id && e.status === 'confirmado' && new Date(e.quando) > new Date(); }).sort(function (a, b) { return new Date(a.quando) - new Date(b.quando); })[0];
+              return { id: c.id, nome: c.nome, descricao: c.descricao, faixa: c.faixa, limite: c.limite, status: c.status, lider_id: c.lider_id, auxiliar_id: c.auxiliar_id,
+                lider: c.lider_id ? P(c.lider_id).nome : null, auxiliar: c.auxiliar_id ? P(c.auxiliar_id).nome : null, ativos: ativos(c.id),
+                pedidos: s.membros.filter(function (m) { return m.circulo === c.id && m.situacao === 'solicitado'; }).length,
+                trocas: s.membros.filter(function (m) { return m.circulo === c.id && m.situacao === 'ativo' && m.troca; }).length, proximo: prox ? prox.quando : null };
+            }).sort(function (a, b) { return (a.status === 'ativo' ? 0 : 1) - (b.status === 'ativo' ? 0 : 1) || a.faixa.localeCompare(b.faixa) || a.nome.localeCompare(b.nome, 'pt-BR'); }),
+            candidatos: s.pessoas.filter(function (p) { return p.faixa !== '15-17' && p.papeis.some(function (r) { return r === 'circle_leader' || r === 'assistant'; }); }).map(function (p) { return { id: p.id, nome: p.nome, faixa: p.faixa, papeis: p.papeis.slice() }; }),
+            trocas: s.membros.filter(function (m) { return m.situacao === 'ativo' && m.troca; }).map(function (m) { var p = P(m.usuario), c = C(m.circulo); return { id: m.usuario, nome: p.nome, faixa: p.faixa, circulo_id: c.id, circulo: c.nome, motivo: m.motivo }; })
+          };
+        case 'salvar_circulo': {
+          var lid = d.lider ? P(d.lider) : null, aux = d.auxiliar ? P(d.auxiliar) : null;
+          if (!d.nome || d.nome.trim().length < 2) return recusa('O nome do círculo precisa ter entre 2 e 60 caracteres', 'dados_invalidos');
+          if (!(d.limite >= 2 && d.limite <= 20)) return recusa('O limite de integrantes precisa ficar entre 2 e 20', 'dados_invalidos');
+          if (lid && aux && lid.id === aux.id) return recusa('Líder e auxiliar precisam ser pessoas diferentes', 'dados_invalidos');
+          if (lid && (lid.faixa === '15-17' || lid.papeis.indexOf('circle_leader') < 0)) return recusa('Líder precisa ser adulto, estar ativo e ter o papel de líder de círculo', 'dados_invalidos');
+          if (aux && (aux.faixa === '15-17' || aux.papeis.indexOf('assistant') < 0)) return recusa('Auxiliar precisa ser adulto, estar ativo e ter o papel de auxiliar', 'dados_invalidos');
+          var alvo = d.id ? C(d.id) : null;
+          if (alvo) {
+            var n = ativos(alvo.id);
+            if (alvo.faixa !== d.faixa && s.membros.some(function (m) { return m.circulo === alvo.id && (m.situacao === 'ativo' || m.situacao === 'solicitado'); })) return recusa('Não dá para mudar a faixa de um círculo que tem integrantes ou pedidos', 'dados_invalidos');
+            if (d.limite < n) return recusa('O limite não pode ficar abaixo dos ' + n + ' integrantes atuais', 'dados_invalidos');
+          } else { alvo = { id: 'c' + Date.now().toString(36), status: 'ativo' }; s.circulos.push(alvo); }
+          alvo.nome = d.nome.trim(); alvo.descricao = d.descricao || null; alvo.faixa = d.faixa; alvo.limite = d.limite; alvo.lider_id = d.lider || null; alvo.auxiliar_id = d.auxiliar || null;
+          return ok({ id: alvo.id });
+        }
+        case 'status_circulo': {
+          var cs = C(d.circulo); if (!cs) return recusa('círculo não encontrado', 'nao_encontrado');
+          if (cs.status === 'encerrado') return recusa('Círculo encerrado não pode ser reaberto: crie um novo', 'dados_invalidos');
+          if (d.status === 'encerrado') {
+            s.membros.forEach(function (m) { if (m.circulo === cs.id && (m.situacao === 'ativo' || m.situacao === 'solicitado')) { m.situacao = 'removido'; m.troca = false; } });
+            s.encontros.forEach(function (e) { if (e.circulo === cs.id && (e.status === 'proposto' || e.status === 'confirmado') && new Date(e.quando) > new Date()) e.status = 'cancelado'; });
+          }
+          cs.status = d.status; return ok({ ok: true });
+        }
+        case 'candidatos_circulo':
+          return s.pessoas.filter(function (p) { return p.faixa === d.faixa; }).map(function (p) {
+            var a = ativoDe(p.id), c = a ? C(a.circulo) : null;
+            return { id: p.id, nome: p.nome, circulo_id: c ? c.id : null, circulo_nome: c ? c.nome : null, consentimento: p.faixa !== '15-17' ? 'nao_exigido' : (p.autorizacao ? 'aprovado' : 'pendente') };
+          });
+        case 'adicionar_ao_circulo': {
+          var ca = C(d.circulo), pa = P(d.usuario);
+          if (!ca || ca.status !== 'ativo') return recusa('Este círculo não está ativo', 'dados_invalidos');
+          if (pa.faixa !== ca.faixa) return recusa('Círculos são separados por faixa etária', 'dados_invalidos');
+          if (pa.faixa === '15-17' && !pa.autorizacao) return recusa('Menor de idade só entra em círculo com a autorização do responsável aprovada', 'dados_invalidos');
+          var ja = M(ca.id, pa.id); if (ja && ja.situacao === 'ativo') return ok({ ok: true });
+          if (ativos(ca.id) >= ca.limite) return recusa('Círculo cheio: aumente o limite ou escolha outro', 'dados_invalidos');
+          var de = ativoDe(pa.id);
+          if (de) { if (!d.mover) return recusa('Esta pessoa já participa de outro círculo', 'dados_invalidos'); de.situacao = 'saiu'; de.troca = false; de.motivo = null; }
+          if (ja) { ja.situacao = 'ativo'; ja.entrou_em = new Date().toISOString(); } else s.membros.push({ circulo: ca.id, usuario: pa.id, situacao: 'ativo', pedido_em: new Date().toISOString(), entrou_em: new Date().toISOString(), troca: false, motivo: null });
+          s.membros.forEach(function (m) { if (m.usuario === pa.id && m.situacao === 'solicitado' && m.circulo !== ca.id) m.situacao = 'recusado'; });
+          return ok({ ok: true });
+        }
+      }
+      return recusa('Ação não disponível na demonstração', 'dados_invalidos');
+    });
+  }
+
+  /* ─── 05 · Meu Círculo (real) ─────────────────────────────────────────────── */
+  var circuloDemo = T.circulo;
+  T.circulo = function () {
+    if (verificando()) return telaCarregando('Meu Círculo', '#/comunidade');
+    if (!real()) return circuloDemo();
+    if (!euAtivo()) return telaSemPerfil('Meu Círculo', '#/comunidade');
+    return { cab: 'normal', voltar: '#/comunidade', nav: 'comunidade', titulo: 'Meu Círculo', real: true,
+      html: '<div id="circ-box">' + (CI.dados ? '' : '<div class="sec pt">' + caixaCarregando('Carregando seu círculo') + '</div>') + '</div>',
+      depois: function () { if (CI.dados) pintarMeuCirculo(); carregarMeuCirculo(); } };
+  };
+  function carregarMeuCirculo() {
+    var s = ++CI.seq; CI.erro = '';
+    cx('circulo').then(function (d) { if (s !== CI.seq) return; CI.dados = d; pintarMeuCirculo(); })
+      ['catch'](function (r) { if (s !== CI.seq) return; CI.erro = msgErro(r); pintarMeuCirculo(); });
+  }
+  function avisoSemSocial() {
+    var e = euAtivo() || {};
+    if (e.status === 'pendente') return aviso('<b>Seu cadastro aguarda o acolhimento.</b> Depois que alguém da liderança falar com você, dá para pedir um círculo.', '', 'hourglass');
+    if (e.faixa === '15-17') return aviso('<b>Falta a autorização do responsável.</b> Para quem tem 15–17 anos, o círculo é liberado depois que a equipe confirmar a autorização. <a href="#/consentimento">Ver situação</a>', '', 'shield');
+    return aviso('<b>Falta aceitar as regras da comunidade.</b> <a href="#/consentimento">Aceitar agora</a>', '', 'shield');
+  }
+  function pintarMeuCirculo() {
+    var box = document.getElementById('circ-box'); if (!box) return;
+    if (CI.erro && !CI.dados) { box.innerHTML = '<div class="sec pt">' + caixaFalha(CI.erro, 'recarregar-circulo') + '</div>'; return; }
+    var d = CI.dados; if (!d) return;
+    if (!d.circulo) { box.innerHTML = '<div class="sec pt">' + htmlEncontrar(d.disponiveis || [], d.pode_social, null) + '</div>'; return; }
+    var c = d.circulo, integ = d.integrantes || [], lid = d.lideres || [];
+    var futuros = (d.encontros || []).filter(function (e) { return e.status !== 'cancelado'; });
+    var prox = futuros.filter(function (e) { return e.status === 'confirmado'; })[0];
+    var outros = (d.encontros || []).filter(function (e) { return e !== prox; });
+    var p = prox ? prox.minha_resposta : null;
+    var html = '<div class="hero"><div class="hero-arte">' + arte('lar', true) + '</div><div class="hero-txt"><p class="sobre">' + ic('users', 'ic-sm') + 'Meu Círculo</p><h2>' + esc(c.name) + '</h2><p>' + esc(FAIXAS[c.age_band] || c.age_band) + ' · ' + plural(integ.length, 'integrante', 'integrantes') + '</p></div></div>' +
+      '<div class="sec pt">' +
+      (CI.erro ? aviso(esc(CI.erro), 'aviso-erro', 'alert') : '') +
+      (souLider() ? '<a class="cartao cartao-link" href="#/lider-circulo"><span class="ic-caixa ouro">' + ic('shield') + '</span><div><h3>Conduzir meu círculo</h3><p>Pedidos de entrada, encontros e presença.</p></div>' + ic('right', 'ic seta') + '</a>' : '') +
+      '<div class="cartao"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><div class="avs">' +
+        integ.slice(0, 5).map(function (x) { return av(x.nome, x.eu ? '#2462D2' : '#56627A'); }).join('') + (integ.length > 5 ? '<span class="av av-mais" aria-hidden="true">+' + (integ.length - 5) + '</span>' : '') + '</div>' +
+        '<button class="btn btn-txt" type="button" data-acao="integrantes-real">Ver integrantes</button></div>' +
+        (lid.length ? '<p class="peq">' + lid.map(function (l) { return esc(l.papel) + ': <b>' + esc(l.nome || '—') + '</b>'; }).join(' · ') + '</p>' : aviso('Este círculo está sem líder no momento. A coordenação já foi avisada.', '', 'info')) +
+        '<p class="peq" style="display:flex;gap:6px;align-items:flex-start">' + ic('lock', 'ic-sm') + '<span>Só quem é do círculo vê esta lista. Telefones e endereços não aparecem.</span></p></div>' +
+      '<div class="cartao"><h3>Próximo encontro</h3>' + (prox ?
+        '<div class="info-linhas"><div class="info-linha">' + ic('calendar') + '<div><b>' + esc(quando(prox.starts_at)) + '</b><span>Confirmado pelo líder</span></div></div>' +
+        '<div class="info-linha">' + ic('pin') + '<div><b>' + esc(prox.place_note || 'Local a combinar') + '</b><span>Só integrantes veem o local.</span></div></div></div>' +
+        '<div class="btns-2"><button class="btn ' + (p === 'sim' ? 'btn-pri' : 'btn-sec') + '" type="button" aria-pressed="' + (p === 'sim') + '" data-acao="presenca-real" data-id="' + esc(prox.id) + '" data-v="sim">' + (p === 'sim' ? ic('check', 'ic-sm') : '') + 'Vou participar</button>' +
+        '<button class="btn ' + (p === 'nao' ? 'btn-pri' : 'btn-sec') + '" type="button" aria-pressed="' + (p === 'nao') + '" data-acao="presenca-real" data-id="' + esc(prox.id) + '" data-v="nao">Não poderei ir</button></div>' +
+        (p === 'nao' ? '<p class="peq">Tudo bem! O líder fica sabendo, sem cobrança. Você faz falta e é sempre bem-vindo.</p>' : p === 'sim' ? '<p class="peq">Presença confirmada. Até lá!</p>' : '')
+        : '<p>Ainda não há encontro confirmado. Que tal sugerir um?</p><button class="btn btn-sec btn-cheio" type="button" data-acao="propor-real">' + ic('plus', 'ic-sm') + 'Propor um encontro</button>') + '</div>' +
+      (prox && prox.theme ? '<div class="cartao"><span class="selo selo-ouro">' + ic('message') + 'Tema da conversa</span><h3>' + esc(prox.theme) + '</h3></div>' : '') +
+      (outros.length ? '<div class="cartao"><h3>Outros encontros</h3><ul class="lista">' + outros.map(function (e) {
+        return li('calendar', esc(quando(e.starts_at, true)) + ' ' + selo(ST_ENC[e.status] || ['selo-cinza', e.status]), esc(e.theme || 'Sem tema definido') + (e.status === 'proposto' ? ' · aguardando o líder' + (e.minha_proposta ? ' (sua proposta)' : '') : ''));
+      }).join('') + '</ul></div>' : '') +
+      '<div class="cartao"><h3>Participar do círculo</h3><ul class="lista lista-link">' +
+        '<li><button type="button" data-acao="propor-real"><span class="ic-caixa">' + ic('plus') + '</span><span class="li-t"><b>Propor um encontro</b><span>Sugira data e tema ao líder</span></span>' + ic('right', 'ic seta') + '</button></li>' +
+        '<li><a href="#/comunidade?aba=circulo"><span class="ic-caixa">' + ic('message') + '</span><span class="li-t"><b>Mural do círculo</b><span>Fechado e moderado</span></span>' + ic('right', 'ic seta') + '</a></li>' +
+        '<li><button type="button" data-acao="troca-real"><span class="ic-caixa">' + ic('repeat') + '</span><span class="li-t"><b>' + (c.change_requested ? 'Pedido de troca enviado' : 'Pedir troca de círculo') + '</b><span>' + (c.change_requested ? 'A coordenação vai conversar com você · tocar para desfazer' : 'Sem constrangimento, sem explicação obrigatória') + '</span></span>' + ic('right', 'ic seta') + '</button></li>' +
+        (c.change_requested ? '<li><a href="#/encontrar-circulo"><span class="ic-caixa">' + ic('compass') + '</span><span class="li-t"><b>Ver outros círculos</b><span>Você pode pedir entrada num círculo da sua faixa</span></span>' + ic('right', 'ic seta') + '</a></li>' : '') +
+        '<li><button type="button" data-acao="sair-circulo"><span class="ic-caixa">' + ic('logout') + '</span><span class="li-t"><b>Sair do círculo</b><span>Você pode voltar a pedir um círculo quando quiser</span></span>' + ic('right', 'ic seta') + '</button></li></ul></div>' +
+      (c.description ? '<div class="cartao cartao-azul"><p style="color:#1D3B78">' + esc(c.description) + '</p></div>' : '') +
+      '</div>';
+    box.innerHTML = html;
+  }
+
+  /* ─── Encontrar um círculo (quem ainda não tem, ou pediu troca) ────────────── */
+  var EN = { dados: null, meu: null, pode: true, erro: '', seq: 0 };
+  T['encontrar-circulo'] = function () {
+    if (verificando()) return telaCarregando('Encontrar um círculo', '#/circulo');
+    if (real() && !euAtivo()) return telaSemPerfil('Encontrar um círculo', '#/circulo');
+    return { cab: 'normal', voltar: '#/circulo', nav: 'comunidade', titulo: 'Encontrar um círculo', real: true,
+      html: '<div class="sec pt">' + (!real() ? aviso('<b>Demonstração.</b> É assim que a tela aparece para quem ainda não tem círculo. Círculos fictícios; pedidos ficam só neste aparelho.', '', 'info') : '') +
+        '<div id="enc-box">' + caixaCarregando('Procurando círculos da sua faixa') + '</div></div>',
+      depois: carregarEncontrar };
+  };
+  function carregarEncontrar() {
+    var s = ++EN.seq; EN.erro = '';
+    var pega = real() ? cx('circulo').then(function (d) { EN.meu = d.circulo; EN.pode = d.pode_social; return d.circulo ? cx('circulos_disponiveis') : d.disponiveis; })
+      : (EN.meu = null, EN.pode = !menorPendente(), cx('circulos_disponiveis'));
+    pega.then(function (l) { if (s !== EN.seq) return; EN.dados = l || []; pintarEncontrar(); })
+      ['catch'](function (r) { if (s !== EN.seq) return; EN.erro = msgErro(r); pintarEncontrar(); });
+  }
+  function pintarEncontrar() {
+    var box = document.getElementById('enc-box'); if (!box) return;
+    if (EN.erro) { box.innerHTML = caixaFalha(EN.erro, 'recarregar-encontrar'); return; }
+    box.innerHTML = htmlEncontrar(EN.dados || [], EN.pode, EN.meu);
+  }
+  function htmlEncontrar(lista, pode, meu) {
+    var pendente = lista.filter(function (c) { return c.meu_pedido === 'solicitado'; })[0];
+    var travado = meu && !meu.change_requested;
+    var topo = '<div><h2 class="tit" style="font-size:20px">' + (meu ? 'Outros círculos da sua faixa' : 'Encontre o seu círculo') + '</h2><p class="sub" style="margin-top:4px">Grupos pequenos, com líder e auxiliar aprovados, para caminhar junto. Você pede para entrar e o líder confirma.</p></div>';
+    if (pode === false) topo += avisoSemSocial();
+    if (travado) topo += aviso('Você já participa do <b>' + esc(meu.name) + '</b>. Para pedir outro, primeiro peça a troca em <a href="#/circulo">Meu Círculo</a>.', 'aviso-azul', 'info');
+    if (pendente) topo += aviso('<b>Pedido enviado ao ' + esc(pendente.nome) + '.</b> O líder responde em breve. Você pode cancelar se mudar de ideia.', 'aviso-verde', 'checkCircle');
+    if (!lista.length) return topo + '<div class="vazio">' + ic('users') + '<b>Nenhum círculo aberto na sua faixa agora</b><p>A coordenação de jovens pode abrir um novo. Peça uma conversa e conte que quer participar.</p><a class="btn btn-sec" href="#/acolhimento?aba=conversa" style="margin-top:14px">Pedir conversa</a></div>';
+    return topo + lista.map(function (c) {
+      var cheio = c.vagas <= 0, meuPed = c.meu_pedido === 'solicitado';
+      var bt;
+      if (c.sou_integrante) bt = '<span class="selo selo-verde">' + ic('check') + 'Seu círculo</span>';
+      else if (meuPed) bt = '<button class="btn btn-sec btn-cheio" type="button" data-acao="cancelar-pedido-circ" data-v="' + esc(c.id) + '">Cancelar pedido</button>';
+      else if (pode === false || travado) bt = '';
+      else if (cheio) bt = '<button class="btn btn-sec btn-cheio" type="button" disabled>Círculo cheio</button>';
+      else if (c.meu_pedido === 'removido') bt = '<p class="peq">Para voltar a este círculo, fale com a coordenação de jovens.</p>';
+      else bt = '<button class="btn btn-pri btn-cheio" type="button" data-acao="pedir-circulo" data-v="' + esc(c.id) + '"' + (pendente ? ' disabled' : '') + '>Pedir para entrar</button>';
+      return '<div class="cartao"><div class="selos">' + '<span class="selo selo-azul">' + esc(FAIXAS[c.faixa] || c.faixa) + '</span>' +
+        (cheio ? '<span class="selo selo-cinza">Sem vagas</span>' : '<span class="selo selo-verde">' + plural(c.vagas, 'vaga', 'vagas') + '</span>') + (meuPed ? '<span class="selo selo-alerta">' + ic('hourglass') + 'Aguardando o líder</span>' : '') + '</div>' +
+        '<h3 style="margin-top:8px">' + esc(c.nome) + '</h3>' + (c.descricao ? '<p>' + esc(c.descricao) + '</p>' : '') +
+        '<p class="peq">' + (c.lider ? 'Líder: <b>' + esc(c.lider) + '</b>' : 'Líder a definir') + (c.auxiliar ? ' · Auxiliar: <b>' + esc(c.auxiliar) + '</b>' : '') + '</p>' +
+        (bt ? '<div style="margin-top:10px">' + bt + '</div>' : '') + '</div>';
+    }).join('') + '<p class="peq" style="text-align:center">Local e horário dos encontros aparecem depois que o líder confirmar a sua entrada.</p>';
+  }
+
+  /* ─── Conduzir meu círculo (líder/auxiliar) e detalhe na gestão ──────────── */
+  var GC = { id: null, visao: 'lider', dados: null, erro: '', seq: 0, lista: null };
+  T['lider-circulo'] = function (param) {
+    if (verificando()) return telaCarregando('Conduzir meu círculo', '#/mais');
+    if (real() && !euAtivo()) return telaSemPerfil('Conduzir meu círculo', '#/mais');
+    if (real() && !souLider()) return { cab: 'normal', voltar: '#/mais', nav: 'mais', titulo: 'Conduzir meu círculo', real: true, html:
+      '<div class="sec pt-l"><div class="vazio">' + ic('lock') + '<b>Área de líderes e auxiliares</b><p>Esta tela é para quem conduz um círculo. Se você quer servir assim, converse com a coordenação de jovens.</p><a class="btn btn-sec" href="#/circulo" style="margin-top:14px">Ir para Meu Círculo</a></div></div>' };
+    GC.visao = 'lider';
+    return { cab: 'normal', voltar: param ? '#/lider-circulo' : '#/mais', nav: 'mais', titulo: 'Conduzir meu círculo', real: true,
+      html: '<div class="sec pt">' + (!real() ? aviso('<b>Demonstração.</b> Você está vendo como o líder Rafael T. (fictício) enxerga o círculo. O que mudar fica só neste aparelho.', '', 'info') : '') + '<div id="gc-box">' + caixaCarregando('Carregando seu círculo') + '</div></div>',
+      depois: function () {
+        if (param) { abrirGestaoCirculo(param); return; }
+        cx('lider_circulos').then(function (l) {
+          GC.lista = l || [];
+          if (GC.lista.length === 1) return abrirGestaoCirculo(GC.lista[0].id);
+          var box = document.getElementById('gc-box'); if (!box) return;
+          box.innerHTML = !GC.lista.length ? '<div class="vazio">' + ic('users') + '<b>Nenhum círculo ativo com você</b><p>Quando a coordenação colocar você como líder ou auxiliar de um círculo ativo, ele aparece aqui.</p></div>' :
+            '<ul class="pessoas">' + GC.lista.map(function (c) {
+              return '<li><a class="pessoa-bt" href="#/lider-circulo/' + esc(c.id) + '" style="text-decoration:none;color:inherit">' + av(c.nome, '#142544', 'av-sm') + '<span class="li-t"><b>' + esc(c.nome) + '</b><span>' + esc((c.meu_papel === 'lider' ? 'Líder' : 'Auxiliar') + ' · ' + c.ativos + '/' + c.limite + ' integrantes') + '</span>' +
+                (c.pedidos ? '<span class="selos"><span class="selo selo-alerta">' + plural(c.pedidos, 'pedido', 'pedidos') + '</span></span>' : '') + '</span></a></li>';
+            }).join('') + '</ul>';
+        })['catch'](function (r) { var box = document.getElementById('gc-box'); if (box) box.innerHTML = caixaFalha(msgErro(r), 'recarregar-gc'); });
+      } };
+  };
+  // A visão vem da ROTA (#/circulos/… = gestão; #/lider-circulo = líder), nunca de uma resposta atrasada.
+  function abrirGestaoCirculo(id) {
+    var rota = rotaAtual().nome;
+    if (rota !== 'circulos' && rota !== 'lider-circulo') return Promise.resolve();
+    GC.visao = rota === 'circulos' ? 'gestao' : 'lider';
+    var s = ++GC.seq; GC.id = id; GC.erro = '';
+    return cx('gerir_circulo', real() ? { circulo: id } : { circulo: id, _visao: GC.visao }).then(function (d) { if (s !== GC.seq) return; GC.dados = d; pintarGestaoCirculo(); })
+      ['catch'](function (r) { if (s !== GC.seq) return; GC.dados = null; GC.erro = msgErro(r); pintarGestaoCirculo(); });
+  }
+  function pintarGestaoCirculo() {
+    var box = document.getElementById('gc-box'); if (!box) return;
+    if (GC.erro) { box.innerHTML = caixaFalha(GC.erro, 'recarregar-gc'); return; }
+    var d = GC.dados; if (!d || !d.circulo) return;
+    var c = d.circulo, gest = GC.visao === 'gestao' && souGestao();
+    var pedidos = d.integrantes.filter(function (x) { return x.situacao === 'solicitado'; }), ativos = d.integrantes.filter(function (x) { return x.situacao === 'ativo'; });
+    var cheio = ativos.length >= c.limite, agora = new Date();
+    var futuros = d.encontros.filter(function (e) { return new Date(e.starts_at) >= agora; }), passados = d.encontros.filter(function (e) { return new Date(e.starts_at) < agora; });
+    var podeMexer = c.status === 'ativo' && (gest || c.conduzo !== false);
+    var html = '<div class="cartao"><div class="selos">' + selo(ST_CIRC[c.status] || ['selo-cinza', c.status]) + '<span class="selo selo-azul">' + esc(FAIXAS[c.faixa] || c.faixa) + '</span>' + (cheio ? '<span class="selo selo-alerta">Cheio</span>' : '') + '</div>' +
+      '<h3 style="margin-top:8px;font-size:19px">' + esc(c.nome) + '</h3>' + (c.descricao ? '<p>' + esc(c.descricao) + '</p>' : '') +
+      '<div class="info-linhas"><div class="info-linha">' + ic('users') + '<div><b>' + ativos.length + ' de ' + c.limite + ' integrantes</b><span>' + (cheio ? 'Sem vagas: novos pedidos ficam bloqueados.' : plural(c.limite - ativos.length, 'vaga', 'vagas') + ' livres') + '</span></div></div>' +
+      '<div class="info-linha">' + ic('shield') + '<div><b>' + esc(c.lider ? 'Líder: ' + c.lider : 'Sem líder') + '</b><span>' + esc(c.auxiliar ? 'Auxiliar: ' + c.auxiliar : 'Sem auxiliar') + '</span></div></div></div>' +
+      (gest ? '<div class="btns-2"><button class="btn btn-sec" type="button" data-acao="editar-circulo">' + ic('pencil', 'ic-sm') + 'Editar</button>' +
+        (c.status === 'ativo' ? '<button class="btn btn-sec" type="button" data-acao="status-circulo" data-v="pausado">Pausar</button>' : '<button class="btn btn-sec" type="button" data-acao="status-circulo" data-v="ativo">Reativar</button>') + '</div>' +
+        (c.status === 'ativo' ? '<button class="btn btn-pri btn-cheio" type="button" data-acao="adicionar-pessoa-circ" style="margin-top:10px">' + ic('plus', 'ic-sm') + 'Adicionar pessoa</button>' : '') : '') + '</div>' +
+      (c.status === 'pausado' ? aviso('Círculo pausado: ninguém pede entrada e o líder não consegue gerir até a coordenação reativar.', '', 'info') : '');
+
+    html += '<h2 class="tit-sec">Pedidos de entrada' + (pedidos.length ? ' (' + pedidos.length + ')' : '') + '</h2>';
+    html += !pedidos.length ? '<div class="cartao"><p>Nenhum pedido aguardando resposta.</p></div>' :
+      (cheio ? aviso('O círculo está cheio: para aceitar alguém, a coordenação precisa aumentar o limite.', '', 'alert') : '') +
+      '<ul class="pessoas">' + pedidos.map(function (x) {
+        var bloq = x.menor && !x.autorizacao_ok;
+        return '<li style="flex-wrap:wrap;padding:10px 12px 12px"><div class="pessoa-bt" style="padding:4px 0;min-height:48px">' + av(x.nome, '#2462D2', 'av-sm') + '<span class="li-t"><b>' + esc(x.nome) + '</b><span>Pediu ' + esc(quando(x.pedido_em, true).split(' · ')[0]) + '</span>' +
+          (bloq ? '<span class="selos"><span class="selo selo-ouro">' + ic('shield') + 'Sem autorização do responsável</span></span>' : '') + '</span></div>' +
+          (podeMexer ? '<div class="btns-2" style="width:100%"><button class="btn btn-sec" type="button" data-acao="decidir-membro" data-u="' + esc(x.id) + '" data-v="recusado">Recusar</button>' +
+            '<button class="btn btn-pri" type="button" data-acao="decidir-membro" data-u="' + esc(x.id) + '" data-v="ativo"' + (cheio || bloq ? ' disabled' : '') + '>' + ic('check', 'ic-sm') + 'Aceitar</button></div>' : '') + '</li>';
+      }).join('') + '</ul>' + '<p class="peq">Recusar não envia mensagem: a pessoa vê que o pedido não foi aceito e pode procurar outro círculo.</p>';
+
+    html += '<h2 class="tit-sec">Integrantes (' + ativos.length + ')</h2>';
+    html += !ativos.length ? '<div class="vazio">' + ic('users') + '<b>Ainda sem integrantes</b><p>' + (gest ? 'Adicione pessoas ou aguarde os pedidos de entrada.' : 'Os pedidos de entrada aparecem acima.') + '</p></div>' :
+      '<ul class="pessoas">' + ativos.map(function (x) {
+        return '<li><button type="button" class="pessoa-bt" data-acao="integrante-circ" data-v="' + esc(x.id) + '">' + av(x.nome, '#56627A', 'av-sm') + '<span class="li-t"><b>' + esc(x.nome) + '</b><span>' + (x.entrou_em ? 'Desde ' + esc(quando(x.entrou_em, true).split(' · ')[0]) : 'Integrante') + '</span>' +
+          (x.quer_trocar ? '<span class="selos"><span class="selo selo-alerta">' + ic('repeat') + 'Pediu troca</span></span>' : '') + '</span>' + ic('right', 'ic seta') + '</button></li>';
+      }).join('') + '</ul>';
+
+    html += '<h2 class="tit-sec">Encontros</h2>' + (podeMexer ? '<button class="btn btn-pri btn-cheio" type="button" data-acao="marcar-encontro">' + ic('calendar', 'ic-sm') + 'Marcar encontro</button>' : '');
+    html += !d.encontros.length ? '<div class="vazio">' + ic('calendar') + '<b>Nenhum encontro planejado</b><p>Marque o próximo: data, tema e local (só os integrantes veem o local).</p></div>' :
+      futuros.concat(passados).map(function (e) {
+        var vai = e.presencas.filter(function (x) { return x.resposta === 'sim'; }), nao = e.presencas.filter(function (x) { return x.resposta === 'nao'; });
+        var passado = new Date(e.starts_at) < agora;
+        var acoes = '';
+        if (podeMexer && e.status === 'proposto' && !passado) acoes = '<div class="btns-2"><button class="btn btn-sec" type="button" data-acao="encontro-status" data-id="' + esc(e.id) + '" data-v="cancelado">Recusar</button><button class="btn btn-pri" type="button" data-acao="encontro-status" data-id="' + esc(e.id) + '" data-v="confirmado">' + ic('check', 'ic-sm') + 'Confirmar</button></div>';
+        else if (podeMexer && e.status === 'confirmado' && !passado) acoes = '<button class="btn btn-sec btn-cheio" type="button" data-acao="encontro-status" data-id="' + esc(e.id) + '" data-v="cancelado">Cancelar encontro</button>';
+        else if (podeMexer && e.status === 'confirmado' && passado) acoes = '<button class="btn btn-sec btn-cheio" type="button" data-acao="encontro-status" data-id="' + esc(e.id) + '" data-v="realizado">' + ic('checkCircle', 'ic-sm') + 'Marcar como realizado</button>';
+        return '<div class="cartao"><div class="selos">' + selo(ST_ENC[e.status] || ['selo-cinza', e.status]) + (e.status === 'proposto' && e.proposto_por ? '<span class="selo selo-azul">Proposto por ' + esc(e.proposto_por) + '</span>' : '') + '</div>' +
+          '<div class="info-linhas"><div class="info-linha">' + ic('calendar') + '<div><b>' + esc(quando(e.starts_at)) + '</b><span>' + esc(e.theme || 'Sem tema definido') + '</span></div></div>' +
+          '<div class="info-linha">' + ic('pin') + '<div><b>' + esc(e.place_note || 'Local a combinar') + '</b><span>Visível só para integrantes</span></div></div>' +
+          '<div class="info-linha">' + ic('checkCircle') + '<div><b>' + plural(vai.length, 'vai', 'vão') + ' · ' + plural(nao.length, 'não vai', 'não vão') + '</b><span>' + (e.presencas.length ? esc(vai.map(function (x) { return x.nome; }).join(', ') || '—') + (nao.length ? ' · não: ' + esc(nao.map(function (x) { return x.nome; }).join(', ')) : '') : 'Ninguém respondeu ainda') + '</span></div></div></div>' + acoes + '</div>';
+      }).join('');
+    html += '<div id="gc-erro" role="alert"></div>';
+    box.innerHTML = html;
+  }
+
+  /* ─── Painel · Círculos (gestão) ───────────────────────────────────────────── */
+  var CG = { dados: null, erro: '', seq: 0 };
+  T.circulos = function (param) {
+    var voltar = param ? '#/circulos' : '#/lideranca';
+    if (verificando()) return telaCarregando('Círculos', voltar);
+    if (real() && !souEquipe()) return { cab: 'normal', voltar: '#/mais', nav: 'mais', titulo: 'Círculos', real: true, html:
+      '<div class="sec pt-l"><div class="vazio">' + ic('lock') + '<b>Área da equipe</b><p>A gestão de círculos é da coordenação de jovens e do pastor.</p><a class="btn btn-sec" href="#/circulo" style="margin-top:14px">Ir para Meu Círculo</a></div></div>' };
+    if (param) {
+      GC.visao = 'gestao';
+      return { cab: 'normal', voltar: voltar, nav: 'mais', titulo: 'Círculo', real: true, html: '<div class="sec pt">' + (!real() ? aviso('<b>Demonstração.</b> Pessoas fictícias; o que você mudar fica só neste aparelho.', '', 'info') : '') + '<div id="gc-box">' + caixaCarregando('Carregando o círculo') + '</div></div>',
+        depois: function () { garantirGestao().then(function () { abrirGestaoCirculo(param); }); } };
+    }
+    var gest = souGestao();
+    return { cab: 'normal', voltar: voltar, nav: 'mais', titulo: 'Círculos', real: true,
+      direita: gest ? '<button class="cab-bt" type="button" data-acao="novo-circulo" aria-label="Novo círculo">' + ic('plus') + '</button>' : '',
+      html: '<div class="sec pt">' + (!real() ? aviso('<b>Demonstração.</b> Círculos e pessoas fictícios; o que você mudar fica só neste aparelho.', '', 'info') : '') +
+        (real() && !gest ? aviso('Você pode consultar. Criar, editar e mover pessoas é com a coordenação de jovens e o pastor.', 'aviso-azul', 'info') : '') +
+        (gest ? '<button class="btn btn-pri btn-cheio" type="button" data-acao="novo-circulo">' + ic('plus', 'ic-sm') + 'Novo círculo</button>' : '') +
+        '<div id="cg-box">' + caixaCarregando('Carregando círculos') + '</div></div>',
+      depois: carregarCirculosGestao };
+  };
+  function garantirGestao() { return CG.dados ? Promise.resolve(CG.dados) : cx('circulos_gestao').then(function (d) { CG.dados = d; return d; })['catch'](function () { return null; }); }
+  function carregarCirculosGestao() {
+    var s = ++CG.seq; CG.erro = '';
+    cx('circulos_gestao').then(function (d) { if (s !== CG.seq) return; CG.dados = d; pintarCirculosGestao(); })
+      ['catch'](function (r) { if (s !== CG.seq) return; CG.erro = msgErro(r); pintarCirculosGestao(); });
+  }
+  function pintarCirculosGestao() {
+    var box = document.getElementById('cg-box'); if (!box) return;
+    if (CG.erro) { box.innerHTML = caixaFalha(CG.erro, 'recarregar-cg'); return; }
+    var d = CG.dados || { circulos: [], trocas: [] }, gest = souGestao();
+    var html = '';
+    if (d.trocas.length) {
+      html += '<h2 class="tit-sec">Pedidos de troca (' + d.trocas.length + ')</h2><ul class="pessoas">' + d.trocas.map(function (t) {
+        return '<li style="flex-wrap:wrap;padding:10px 12px 12px"><div class="pessoa-bt" style="padding:4px 0;min-height:48px">' + av(t.nome, '#9A5B00', 'av-sm') + '<span class="li-t"><b>' + esc(t.nome) + '</b><span>' + esc(t.circulo + ' · ' + (FAIXAS[t.faixa] || t.faixa)) + '</span>' +
+          (t.motivo ? '<span style="color:var(--texto)">“' + esc(t.motivo) + '”</span>' : '<span>Sem motivo informado</span>') + '</span></div>' +
+          (gest ? '<button class="btn btn-sec btn-cheio" type="button" data-acao="mover-troca" data-v="' + esc(t.id) + '">' + ic('repeat', 'ic-sm') + 'Mover para outro círculo</button>' : '') + '</li>';
+      }).join('') + '</ul><p class="peq">O líder atual não vê estes pedidos nem os motivos: a conversa é com a coordenação.</p>';
+    }
+    html += '<h2 class="tit-sec">Círculos (' + d.circulos.length + ')</h2>';
+    if (!d.circulos.length) html += '<div class="vazio">' + ic('users') + '<b>Nenhum círculo ainda</b><p>' + (gest ? 'Crie o primeiro: nome, faixa etária, limite e quem conduz.' : 'A coordenação ainda não criou círculos.') + '</p></div>';
+    html += d.circulos.map(function (c) {
+      var al = [];
+      if (c.status === 'pausado') al.push(selo(ST_CIRC.pausado));
+      if (!c.lider_id) al.push('<span class="selo selo-alerta">' + ic('alert') + 'Sem líder</span>');
+      if (c.faixa === '15-17' && (!c.lider_id || !c.auxiliar_id)) al.push('<span class="selo selo-ouro">' + ic('shield') + 'Menores: falta 2º adulto</span>');
+      if (c.status === 'ativo' && !c.proximo) al.push('<span class="selo selo-cinza">Sem encontro marcado</span>');
+      if (c.pedidos) al.push('<span class="selo selo-azul">' + plural(c.pedidos, 'pedido', 'pedidos') + '</span>');
+      if (c.trocas) al.push('<span class="selo selo-alerta">' + ic('repeat') + plural(c.trocas, 'troca', 'trocas') + '</span>');
+      return '<a class="cartao cartao-link" href="#/circulos/' + esc(c.id) + '"><span class="ic-caixa">' + ic('users') + '</span><div style="min-width:0"><h3>' + esc(c.nome) + '</h3>' +
+        '<p>' + esc((FAIXAS[c.faixa] || c.faixa) + ' · ' + c.ativos + '/' + c.limite + ' integrantes') + '</p>' +
+        '<p class="peq">' + esc(c.lider ? 'Líder: ' + c.lider : 'Líder a definir') + (c.auxiliar ? ' · Auxiliar: ' + esc(c.auxiliar) : '') + (c.proximo ? '<br>Próximo encontro: ' + esc(quando(c.proximo, true)) : '') + '</p>' +
+        (al.length ? '<span class="selos" style="margin-top:6px">' + al.join('') + '</span>' : '') + '</div>' + ic('right', 'ic seta') + '</a>';
+    }).join('');
+    box.innerHTML = html;
+  }
+  function formCirculo(c) {
+    var cand = (CG.dados && CG.dados.candidatos) || [];
+    var op = function (papel, atual) {
+      return '<option value="">Nenhum por enquanto</option>' + cand.filter(function (p) { return p.papeis.indexOf(papel) >= 0; }).map(function (p) {
+        return '<option value="' + esc(p.id) + '"' + (p.id === atual ? ' selected' : '') + '>' + esc(p.nome) + '</option>'; }).join('');
+    };
+    var fx = c ? c.faixa : '';
+    modal(c ? 'Editar círculo' : 'Novo círculo', '<form class="form" id="f-circ" novalidate>' +
+      '<div class="campo"><label for="fc-nome">Nome</label><input class="entrada" id="fc-nome" maxlength="60" value="' + esc(c ? c.nome : '') + '" placeholder="Ex.: Círculo Esperança" aria-describedby="fc-e-nome"><span class="erro-msg" id="fc-e-nome" role="alert"></span></div>' +
+      '<div class="campo"><label for="fc-desc">Descrição <span class="peq">(opcional)</span></label><textarea class="entrada" id="fc-desc" maxlength="600" style="min-height:90px" placeholder="Quando se encontram, o jeito do grupo">' + esc(c && c.descricao ? c.descricao : '') + '</textarea></div>' +
+      '<fieldset style="border:0"><legend class="rot" style="margin-bottom:8px">Faixa etária</legend><div class="opcoes opcoes-3">' + ['15-17', '18-21', '22-25'].map(function (v) {
+        return '<label class="opcao"><input type="radio" name="fc-faixa" value="' + v + '"' + (fx === v ? ' checked' : '') + '><b>' + v.replace('-', '–') + '</b><span>anos</span></label>'; }).join('') + '</div><span class="erro-msg" id="fc-e-faixa" role="alert"></span></fieldset>' +
+      '<div class="campo"><label for="fc-lim">Limite de integrantes</label><input class="entrada" id="fc-lim" type="number" inputmode="numeric" min="2" max="20" value="' + (c ? c.limite : 10) + '" aria-describedby="fc-d-lim fc-e-lim"><span class="dica" id="fc-d-lim">Entre 2 e 20. Sugestão do piloto: 6 a 10.</span><span class="erro-msg" id="fc-e-lim" role="alert"></span></div>' +
+      '<div class="campo"><label for="fc-lider">Líder</label><select class="entrada" id="fc-lider">' + op('circle_leader', c && c.lider_id) + '</select></div>' +
+      '<div class="campo"><label for="fc-aux">Auxiliar</label><select class="entrada" id="fc-aux">' + op('assistant', c && c.auxiliar_id) + '</select><span class="dica">Aparecem só adultos ativos com o papel de líder de círculo ou auxiliar (dado em Pessoas).</span></div>' +
+      aviso('Círculos de 15–17 anos: sempre dois adultos responsáveis (líder e auxiliar).', '', 'shield') +
+      '<div id="m-erro" role="alert"></div><button class="btn btn-pri btn-cheio" type="submit">' + (c ? 'Salvar alterações' : 'Criar círculo') + '</button></form>', function (dlg) {
+      dlg.querySelector('form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var nome = dlg.querySelector('#fc-nome'), lim = dlg.querySelector('#fc-lim'), f = dlg.querySelector('input[name=fc-faixa]:checked'), n = parseInt(lim.value, 10);
+        var ok = erroCampo(nome, nome.value.trim().length < 2 ? 'Dê um nome ao círculo (pelo menos 2 letras).' : '');
+        ok = erroCampo(lim, !(n >= 2 && n <= 20) ? 'Use um número entre 2 e 20.' : '') && ok;
+        dlg.querySelector('#fc-e-faixa').innerHTML = f ? '' : ic('alert') + 'Escolha a faixa etária.'; ok = !!f && ok;
+        if (!ok) return;
+        var bt = this.querySelector('[type=submit]'); ocupado(bt, true); caixaErro('m-erro', '');
+        cx('salvar_circulo', { id: c ? c.id : null, nome: nome.value.trim(), descricao: dlg.querySelector('#fc-desc').value.trim(), faixa: f.value, limite: n,
+          lider: dlg.querySelector('#fc-lider').value || null, auxiliar: dlg.querySelector('#fc-aux').value || null }).then(function (r) {
+          fecha(); toast(c ? 'Círculo atualizado' : 'Círculo criado', real() ? 'Registrado no histórico (auditoria).' : 'Demonstração: só neste aparelho.');
+          CG.dados = null;
+          if (c) abrirGestaoCirculo(c.id); else location.hash = '#/circulos/' + r.id;
+        })['catch'](function (r) { ocupado(bt, false); caixaErro('m-erro', msgErro(r)); });
+      });
+    });
+  }
+  function moverPessoa(pessoaId, faixa, deCirculo, nome) {
+    garantirGestao().then(function (d) {
+      var alvos = ((d && d.circulos) || []).filter(function (c) { return c.status === 'ativo' && c.faixa === faixa && c.id !== deCirculo; });
+      modal('Mover ' + nome, '<p>Escolha o novo círculo. A saída do círculo atual fica registrada, sem constrangimento.</p>' +
+        (alvos.length ? '<div class="opcoes">' + alvos.map(function (c) { var cheio = c.ativos >= c.limite;
+          return '<label class="opcao"><input type="radio" name="mv-c" value="' + esc(c.id) + '"' + (cheio ? ' disabled' : '') + '><div><b>' + esc(c.nome) + '</b><span>' + (cheio ? 'Sem vagas' : plural(c.limite - c.ativos, 'vaga', 'vagas')) + (c.lider ? ' · ' + esc(c.lider) : '') + '</span></div></label>'; }).join('') + '</div>'
+          : aviso('Não há outro círculo ativo nesta faixa. Crie um novo em "Novo círculo".', '', 'info')) +
+        '<div id="m-erro" role="alert"></div>' + (alvos.length ? '<button class="btn btn-pri btn-cheio" type="button" id="b-mover">Mover</button>' : ''), function (dlg) {
+        var b = dlg.querySelector('#b-mover'); if (!b) return;
+        b.addEventListener('click', function () {
+          var r = dlg.querySelector('input[name=mv-c]:checked'); if (!r) { caixaErro('m-erro', 'Escolha um círculo.'); return; }
+          ocupado(b, true);
+          cx('adicionar_ao_circulo', { circulo: r.value, usuario: pessoaId, mover: true }).then(function () {
+            fecha(); toast('Pessoa movida', real() ? 'Registrado no histórico (auditoria).' : 'Demonstração: só neste aparelho.'); CG.dados = null;
+            if (rotaAtual().nome === 'circulos' && !rotaAtual().param) carregarCirculosGestao(); else if (GC.id) abrirGestaoCirculo(GC.id);
+          })['catch'](function (x) { ocupado(b, false); caixaErro('m-erro', msgErro(x)); });
+        });
+      });
+    });
+  }
+
+  /* ─── ações do Módulo 2 ─────────────────────────────────────────────────── */
+  A['recarregar-circulo'] = function () { CI.dados = null; render(true); };
+  A['recarregar-encontrar'] = function () { render(true); };
+  A['recarregar-gc'] = function () { render(true); };
+  A['recarregar-cg'] = function () { carregarCirculosGestao(); };
+  A['integrantes-real'] = function () {
+    var d = CI.dados; if (!d || !d.circulo) return;
+    modal('Integrantes · ' + d.circulo.name, '<ul class="lista">' + (d.lideres || []).map(function (l) { return '<li>' + av(l.nome || '?', '#142544', 'av-sm') + '<span class="li-t"><b>' + esc(l.nome || '—') + '</b><span>' + esc(l.papel) + ' · aprovado pela liderança</span></span></li>'; }).join('') +
+      (d.integrantes || []).map(function (p) { return '<li>' + av(p.nome || '?', p.eu ? '#2462D2' : '#56627A', 'av-sm') + '<span class="li-t"><b>' + esc(p.nome || '—') + (p.eu ? ' (você)' : '') + '</b><span>Integrante</span></span></li>'; }).join('') + '</ul>' +
+      aviso('Só nome de exibição: sem telefone, endereço ou idade exata.', '', 'lock'));
+  };
+  A['presenca-real'] = function (el) {
+    var id = el.getAttribute('data-id'), v = el.getAttribute('data-v');
+    ocupado(el, true);
+    cx('responder_presenca', { encontro: id, resposta: v }).then(function () {
+      (CI.dados.encontros || []).forEach(function (e) { if (e.id === id) e.minha_resposta = v; });
+      pintarMeuCirculo(); toast(v === 'sim' ? 'Presença confirmada' : 'Avisamos o líder que você não poderá ir', 'O líder vê a sua resposta.');
+    })['catch'](function (r) { ocupado(el, false); toast('Não foi possível responder', msgErro(r)); });
+  };
+  function modalEncontro(titulo, lider, enviar) {
+    modal(titulo, '<form class="form" id="f-enc" novalidate>' +
+      '<div class="filtros-2"><div class="campo"><label for="fe-data">Data</label><input class="entrada" id="fe-data" type="date" min="' + hojeIso() + '" aria-describedby="fe-e-data"></div>' +
+      '<div class="campo"><label for="fe-hora">Horário</label><input class="entrada" id="fe-hora" type="time" value="19:00"></div></div><span class="erro-msg" id="fe-e-data" role="alert"></span>' +
+      '<div class="campo"><label for="fe-tema">Tema ou atividade</label><input class="entrada" id="fe-tema" maxlength="200" placeholder="Ex.: piquenique e conversa sobre amizade" aria-describedby="fe-e-tema"><span class="erro-msg" id="fe-e-tema" role="alert"></span></div>' +
+      '<div class="campo"><label for="fe-local">Local <span class="peq">(opcional)</span></label><input class="entrada" id="fe-local" maxlength="200" placeholder="' + (lider ? 'Ex.: casa da família Souza' : 'Sugestão de lugar') + '" aria-describedby="fe-d-local"><span class="dica" id="fe-d-local">Só integrantes do círculo veem o local. Não ponha telefone.</span></div>' +
+      (lider ? '<label class="marcar"><input type="checkbox" id="fe-conf" checked><span>Já confirmar o encontro (avisar os integrantes)</span></label>' : '<p>A proposta vai para o líder e o auxiliar, que confirmam com segurança.</p>') +
+      '<div id="m-erro" role="alert"></div><button class="btn btn-pri btn-cheio" type="submit">' + (lider ? 'Marcar encontro' : 'Enviar proposta') + '</button></form>', function (dlg) {
+      dlg.querySelector('form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var dt = dlg.querySelector('#fe-data'), tm = dlg.querySelector('#fe-tema'), iso = dataHoraIso(dt.value, dlg.querySelector('#fe-hora').value);
+        var ok = erroCampo(dt, !iso ? 'Escolha a data.' : new Date(iso) < new Date() ? 'Escolha uma data futura.' : '');
+        ok = erroCampo(tm, tm.value.trim().length < 3 ? 'Descreva o tema em poucas palavras.' : '') && ok;
+        if (!ok) return;
+        var bt = this.querySelector('[type=submit]'); ocupado(bt, true); caixaErro('m-erro', '');
+        var cf = dlg.querySelector('#fe-conf');
+        enviar({ quando: iso, tema: tm.value.trim(), local: dlg.querySelector('#fe-local').value.trim() || null, confirmar: !!(cf && cf.checked) })
+          ['catch'](function (r) { ocupado(bt, false); caixaErro('m-erro', msgErro(r)); });
+      });
+    });
+  }
+  A['propor-real'] = function () {
+    var d = CI.dados; if (!d || !d.circulo) return;
+    modalEncontro('Propor um encontro', false, function (v) {
+      v.circulo = d.circulo.id; v.confirmar = false;
+      return cx('propor_encontro', v).then(function () { fecha(); toast('Proposta enviada ao líder', 'Aparece como "aguardando o líder" até ele confirmar.'); carregarMeuCirculo(); });
+    });
+  };
+  A['troca-real'] = function () {
+    var d = CI.dados; if (!d || !d.circulo) return;
+    var ja = !!d.circulo.change_requested;
+    modal('Pedir troca de círculo', ja ? '<p>Seu pedido de troca já está com a coordenação. Se mudou de ideia, pode desfazer.</p><div id="m-erro" role="alert"></div><button class="btn btn-sec btn-cheio" type="button" id="b-troca">Desfazer pedido de troca</button>' :
+      '<p>Tudo bem querer outro grupo. A coordenação de jovens conversa com você com carinho. <b>O líder do seu círculo não vê este pedido.</b></p><div class="campo"><label for="c-troca-r">Quer contar o motivo? <span class="peq">(opcional)</span></label><textarea class="entrada" id="c-troca-r" maxlength="300" style="min-height:90px"></textarea></div>' +
+      '<div id="m-erro" role="alert"></div><button class="btn btn-pri btn-cheio" type="button" id="b-troca">Enviar pedido</button>', function (dlg) {
+      dlg.querySelector('#b-troca').addEventListener('click', function () {
+        var b = this, mt = dlg.querySelector('#c-troca-r'); ocupado(b, true);
+        cx('pedir_troca', { trocar: !ja, motivo: mt ? mt.value.trim() || null : null }).then(function () {
+          fecha(); toast(ja ? 'Pedido de troca desfeito' : 'Pedido de troca enviado', ja ? 'Você continua no seu círculo.' : 'Você também pode pedir entrada em outro círculo da sua faixa.'); carregarMeuCirculo();
+        })['catch'](function (r) { ocupado(b, false); caixaErro('m-erro', msgErro(r)); });
+      });
+    });
+  };
+  A['sair-circulo'] = function () {
+    var d = CI.dados; if (!d || !d.circulo) return;
+    modal('Sair do ' + d.circulo.name + '?', '<p>Você deixa de ver os integrantes, os encontros e o mural do círculo. Pode pedir outro círculo (ou este de novo) quando quiser.</p>' +
+      '<div id="m-erro" role="alert"></div><div class="btns-2"><button class="btn btn-sec" type="button" data-fechar>Ficar</button><button class="btn btn-perigo" type="button" id="b-sair">Sair do círculo</button></div>', function (dlg) {
+      dlg.querySelector('#b-sair').addEventListener('click', function () {
+        var b = this; ocupado(b, true);
+        cx('sair_circulo', { confirmo: 'SAIR' }).then(atualizarEu).then(function () { fecha(); toast('Você saiu do círculo', 'Quando quiser, peça outro em "Encontrar um círculo".'); CI.dados = null; render(true); })
+          ['catch'](function (r) { ocupado(b, false); caixaErro('m-erro', msgErro(r)); });
+      });
+    });
+  };
+  A['pedir-circulo'] = function (el) {
+    var id = el.getAttribute('data-v'); ocupado(el, true);
+    cx('pedir_circulo', { circulo: id }).then(function () {
+      toast('Pedido enviado', 'O líder recebe o seu pedido e confirma a sua entrada.');
+      if (rotaAtual().nome === 'circulo') carregarMeuCirculo(); else carregarEncontrar();
+    })['catch'](function (r) { ocupado(el, false); toast('Não foi possível pedir', msgErro(r)); });
+  };
+  A['cancelar-pedido-circ'] = function (el) {
+    var id = el.getAttribute('data-v'); ocupado(el, true);
+    cx('cancelar_pedido_circulo', { circulo: id }).then(function () {
+      toast('Pedido cancelado'); if (rotaAtual().nome === 'circulo') carregarMeuCirculo(); else carregarEncontrar();
+    })['catch'](function (r) { ocupado(el, false); toast('Não foi possível cancelar', msgErro(r)); });
+  };
+  A['decidir-membro'] = function (el) {
+    var u = el.getAttribute('data-u'), v = el.getAttribute('data-v'); ocupado(el, true); caixaErro('gc-erro', '');
+    cx('decidir_membro', { circulo: GC.id, usuario: u, status: v }).then(function () {
+      toast(v === 'ativo' ? 'Entrada aceita' : v === 'recusado' ? 'Pedido recusado' : 'Removido do círculo', real() ? 'Registrado no histórico (auditoria).' : 'Demonstração: só neste aparelho.');
+      CG.dados = null; fecha(); abrirGestaoCirculo(GC.id);
+    })['catch'](function (r) { ocupado(el, false); toast('Não foi possível concluir', msgErro(r)); caixaErro('gc-erro', msgErro(r)); });
+  };
+  A['integrante-circ'] = function (el) {
+    var x = (GC.dados.integrantes || []).filter(function (p) { return p.id === el.getAttribute('data-v'); })[0]; if (!x) return;
+    var gest = GC.visao === 'gestao' && souGestao(), c = GC.dados.circulo, pode = c.status === 'ativo' && (gest || c.conduzo !== false);
+    modal(x.nome, '<div class="info-linhas"><div class="info-linha">' + ic('calendar') + '<div><b>' + esc(FAIXAS[x.faixa] || x.faixa) + '</b><span>' + (x.entrou_em ? 'No círculo desde ' + esc(quando(x.entrou_em).split(' · ')[0]) : 'Integrante') + '</span></div></div>' +
+      (x.quer_trocar ? '<div class="info-linha">' + ic('repeat') + '<div><b>Pediu troca de círculo</b><span>' + esc(x.motivo_troca || 'Sem motivo informado') + '</span></div></div>' : '') + '</div>' +
+      (gest && x.quer_trocar ? '<button class="btn btn-sec btn-cheio" type="button" id="b-mov">' + ic('repeat', 'ic-sm') + 'Mover para outro círculo</button>' : '') +
+      (pode ? '<button class="btn btn-perigo btn-cheio" type="button" id="b-rem" style="margin-top:10px">Remover do círculo</button><p class="peq">Remover é para casos combinados com a coordenação. A pessoa não volta a este círculo sozinha.</p>' : '') +
+      '<div id="m-erro" role="alert"></div>', function (dlg) {
+      var mv = dlg.querySelector('#b-mov'); if (mv) mv.addEventListener('click', function () { moverPessoa(x.id, x.faixa, c.id, x.nome); });
+      var rm = dlg.querySelector('#b-rem'); if (rm) rm.addEventListener('click', function () {
+        ocupado(rm, true);
+        cx('decidir_membro', { circulo: GC.id, usuario: x.id, status: 'removido' }).then(function () { fecha(); toast('Removido do círculo', real() ? 'Registrado no histórico (auditoria).' : 'Demonstração.'); CG.dados = null; abrirGestaoCirculo(GC.id); })
+          ['catch'](function (r) { ocupado(rm, false); caixaErro('m-erro', msgErro(r)); });
+      });
+    });
+  };
+  A['marcar-encontro'] = function () {
+    modalEncontro('Marcar encontro', true, function (v) {
+      v.circulo = GC.id;
+      return cx('propor_encontro', v).then(function () { fecha(); toast(v.confirmar ? 'Encontro marcado' : 'Encontro proposto', 'Os integrantes veem data, tema e local.'); abrirGestaoCirculo(GC.id); });
+    });
+  };
+  A['encontro-status'] = function (el) {
+    var id = el.getAttribute('data-id'), v = el.getAttribute('data-v');
+    var fazer = function (b) { ocupado(b, true);
+      cx('atualizar_encontro', { encontro: id, status: v }).then(function () { fecha(); toast({ confirmado: 'Encontro confirmado', cancelado: 'Encontro cancelado', realizado: 'Marcado como realizado' }[v] || 'Feito'); abrirGestaoCirculo(GC.id); })
+        ['catch'](function (r) { ocupado(b, false); toast('Não foi possível concluir', msgErro(r)); caixaErro('m-erro', msgErro(r)); }); };
+    if (v !== 'cancelado') return fazer(el);
+    modal('Cancelar este encontro?', '<p>Os integrantes veem que o encontro foi cancelado. Você pode marcar outro depois.</p><div id="m-erro" role="alert"></div><div class="btns-2"><button class="btn btn-sec" type="button" data-fechar>Voltar</button><button class="btn btn-perigo" type="button" id="b-canc">Cancelar encontro</button></div>',
+      function (dlg) { dlg.querySelector('#b-canc').addEventListener('click', function () { fazer(this); }); });
+  };
+  A['novo-circulo'] = function () { if (!souGestao()) return; garantirGestao().then(function () { formCirculo(null); }); };
+  A['editar-circulo'] = function () { var c = GC.dados && GC.dados.circulo; if (!c) return; garantirGestao().then(function () { formCirculo(c); }); };
+  A['status-circulo'] = function (el) {
+    var c = GC.dados && GC.dados.circulo, v = el.getAttribute('data-v'); if (!c) return;
+    var fazer = function (b) { ocupado(b, true);
+      cx('status_circulo', { circulo: c.id, status: v }).then(function () { fecha(); toast(v === 'ativo' ? 'Círculo reativado' : v === 'pausado' ? 'Círculo pausado' : 'Círculo encerrado', real() ? 'Registrado no histórico (auditoria).' : 'Demonstração.'); CG.dados = null;
+        if (v === 'encerrado') location.hash = '#/circulos'; else abrirGestaoCirculo(c.id); })['catch'](function (r) { ocupado(b, false); toast('Não foi possível concluir', msgErro(r)); caixaErro('m-erro', msgErro(r)); }); };
+    if (v === 'ativo') return fazer(el);
+    modal(v === 'pausado' ? 'Pausar ' + c.nome + '?' : 'Encerrar ' + c.nome + '?', (v === 'pausado' ? '<p>Ninguém pede entrada e o líder não gerencia até você reativar. Integrantes continuam no círculo.</p>' :
+      '<p>Os integrantes ficam livres para pedir outro círculo e os próximos encontros são cancelados. <b>Não dá para reabrir.</b></p>') +
+      '<div id="m-erro" role="alert"></div><div class="btns-2"><button class="btn btn-sec" type="button" data-fechar>Voltar</button><button class="btn ' + (v === 'pausado' ? 'btn-pri' : 'btn-perigo') + '" type="button" id="b-st">' + (v === 'pausado' ? 'Pausar' : 'Encerrar') + '</button></div>' +
+      (v === 'pausado' ? '<button class="btn btn-txt btn-cheio" type="button" data-acao="status-circulo" data-v="encerrado">Prefiro encerrar o círculo</button>' : ''),
+      function (dlg) { dlg.querySelector('#b-st').addEventListener('click', function () { fazer(this); }); });
+  };
+  A['adicionar-pessoa-circ'] = function () {
+    var c = GC.dados && GC.dados.circulo; if (!c) return;
+    modal('Adicionar ao ' + c.nome, caixaCarregando('Buscando pessoas da faixa ' + (FAIXAS[c.faixa] || c.faixa)), function () {
+      cx('candidatos_circulo', { faixa: c.faixa }).then(function (l) {
+        var lista = (l || []).filter(function (p) { return p.circulo_id !== c.id; });
+        var corpo = !lista.length ? '<div class="vazio">' + ic('users') + '<b>Ninguém disponível nesta faixa</b><p>Só aparecem pessoas com acesso aprovado. Aprove ou cadastre em Pessoas.</p><a class="btn btn-sec" href="#/pessoas" data-fechar style="margin-top:12px">Ir para Pessoas</a></div>' :
+          '<p>Pessoas ativas de ' + esc(FAIXAS[c.faixa] || c.faixa) + '. Quem já está noutro círculo é <b>movido</b> (a saída fica registrada).</p><ul class="pessoas">' + lista.map(function (p) {
+            var semAut = c.faixa === '15-17' && p.consentimento !== 'aprovado';
+            return '<li style="flex-wrap:wrap;padding:8px 12px 10px"><div class="pessoa-bt" style="padding:4px 0;min-height:48px">' + av(p.nome, '#2462D2', 'av-sm') + '<span class="li-t"><b>' + esc(p.nome) + '</b><span>' + esc(p.circulo_nome ? 'Hoje no ' + p.circulo_nome : 'Sem círculo') + '</span>' +
+              (semAut ? '<span class="selos"><span class="selo selo-ouro">' + ic('shield') + 'Sem autorização do responsável</span></span>' : '') + '</span></div>' +
+              '<button class="btn ' + (p.circulo_id ? 'btn-sec' : 'btn-pri') + ' btn-mini" type="button" data-add="' + esc(p.id) + '" data-mover="' + (p.circulo_id ? '1' : '') + '"' + (semAut ? ' disabled' : '') + '>' + (p.circulo_id ? 'Mover para cá' : 'Adicionar') + '</button></li>';
+          }).join('') + '</ul>';
+        if (!dlg || !dlg.open) return;
+        dlg.querySelector('.modal-corpo').innerHTML = corpo + '<div id="m-erro" role="alert"></div>';
+        dlg.querySelectorAll('[data-add]').forEach(function (b) { b.addEventListener('click', function () {
+          ocupado(b, true); caixaErro('m-erro', '');
+          cx('adicionar_ao_circulo', { circulo: c.id, usuario: b.getAttribute('data-add'), mover: b.getAttribute('data-mover') === '1' }).then(function () {
+            fecha(); toast('Pessoa adicionada ao círculo', real() ? 'Registrado no histórico (auditoria).' : 'Demonstração: só neste aparelho.'); CG.dados = null; abrirGestaoCirculo(c.id);
+          })['catch'](function (r) { ocupado(b, false); caixaErro('m-erro', msgErro(r)); });
+        }); });
+      })['catch'](function (r) { if (dlg && dlg.open) dlg.querySelector('.modal-corpo').innerHTML = aviso(esc(msgErro(r)), 'aviso-erro', 'alert'); });
+    });
+  };
+  A['mover-troca'] = function (el) {
+    var t = ((CG.dados && CG.dados.trocas) || []).filter(function (x) { return x.id === el.getAttribute('data-v'); })[0]; if (!t) return;
+    moverPessoa(t.id, t.faixa, t.circulo_id, t.nome);
+  };
+
   function salvarPrefReal(k, on, input) {
     var e = euAtivo(); if (!e) return;
     var n = JSON.parse(JSON.stringify(e.notificacoes || {})), dados;
@@ -1387,7 +2049,7 @@
 
   /* ═══ roteador ═══ */
   var NAV = [['inicio', 'Início', 'home'], ['comunidade', 'Comunidade', 'users'], ['palavra', 'Palavra', 'book'], ['eventos', 'Eventos', 'calendar'], ['mais', 'Mais', 'grid']];
-  var VITRINE = [['boas-vindas', 'Boas-vindas'], ['entrar', 'Entrar / cadastro'], ['consentimento', 'Consentimento e idade'], ['inicio', 'Início'], ['circulo', 'Meu Círculo'], ['jornada', 'Minha Jornada'], ['missao', 'Missão da Semana'], ['eventos', 'Eventos'], ['palavra', 'Palavra / Devocional'], ['comunidade', 'Comunidade'], ['talentos', 'Talentos e Serviço'], ['acolhimento', 'Acolhimento'], ['perfil', 'Perfil e preferências'], ['lideranca', 'Painel de liderança'], ['pessoas', 'Pessoas (liderança)']];
+  var VITRINE = [['boas-vindas', 'Boas-vindas'], ['entrar', 'Entrar / cadastro'], ['consentimento', 'Consentimento e idade'], ['inicio', 'Início'], ['circulo', 'Meu Círculo'], ['jornada', 'Minha Jornada'], ['missao', 'Missão da Semana'], ['eventos', 'Eventos'], ['palavra', 'Palavra / Devocional'], ['comunidade', 'Comunidade'], ['talentos', 'Talentos e Serviço'], ['acolhimento', 'Acolhimento'], ['perfil', 'Perfil e preferências'], ['lideranca', 'Painel de liderança'], ['pessoas', 'Pessoas (liderança)'], ['encontrar-circulo', 'Encontrar um círculo'], ['lider-circulo', 'Conduzir meu círculo (líder)'], ['circulos', 'Círculos (liderança)']];
   function rotaAtual() {
     var h = location.hash.replace(/^#\/?/, ''), q = {}, partes = h.split('?');
     (partes[1] || '').split('&').forEach(function (kv) { if (kv) { var p = kv.split('='); q[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ''); } });

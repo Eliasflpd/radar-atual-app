@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONEXÃO JOVEM — função do módulo (fn=jovem no roteador api/dados.js)
 // Módulo 1 (17/11/2026): identidade, login pelo crachá do Radar e gestão de pessoas.
+// Módulo 2 (17/11/2026): Círculos (gestão, líder/auxiliar e jovem) — migração 003.
 // Origem: conexao-jovem/api-proposta/jovem.js (Fase 2), revisada e testada em
 // conexao-jovem/testes/ (Postgres local descartável).
 //
@@ -172,36 +173,139 @@ const ACOES = {
                               and current_date between start_at and end_at order by start_at desc limit 1`)
   }),
 
-  // Meu Círculo (tela 05)
+  // ─── MÓDULO 2 · Círculos (dossiê 6.3) ────────────────────────────────────────
+  // Meu Círculo (tela 05). Sem círculo: os da minha faixa (tela "Encontrar um círculo").
+  // O local do encontro só chega a quem é integrante: o RLS de circle_meetings decide.
   circulo: async (c) => {
-    const ci = await linha(c, `select ci.id, ci.name, ci.description, ci.age_band, cm.change_requested
+    const ci = await linha(c, `select ci.id, ci.name, ci.description, ci.age_band, ci.max_members, cm.change_requested,
+                                      cm.change_note, cm.joined_at
                                  from cj.circle_members cm join cj.circles ci on ci.id = cm.circle_id
                                 where cm.user_id = auth.uid() and cm.membership_status = 'ativo'`);
-    if (!ci) return { circulo: null, disponiveis: await linhas(c, `select id, name, description, age_band from cj.circles
-                                                                     where status = 'ativo' and age_band = cj.minha_faixa() order by name`) };
+    const pode_social = (await linha(c, 'select cj.pode_social() as ok')).ok;
+    if (!ci) return { circulo: null, pode_social, disponiveis: await ACOES.circulos_disponiveis(c) };
     return {
       circulo: ci,
+      pode_social,
       lideres: await linhas(c, `select cj.nome_publico(x.id) as nome, x.papel from (
                                   select leader_id as id, 'Líder' as papel from cj.circles where id = $1 and leader_id is not null
                                   union all select assistant_id, 'Auxiliar' from cj.circles where id = $1 and assistant_id is not null) x`, [ci.id]),
-      integrantes: await linhas(c, `select cj.nome_publico(user_id) as nome from cj.circle_members
-                                     where circle_id = $1 and membership_status = 'ativo'`, [ci.id]),
-      encontros: await linhas(c, `select m.id, m.starts_at, m.theme, m.place_note, m.status, r.response as minha_resposta
+      integrantes: await linhas(c, `select cj.nome_publico(user_id) as nome, user_id = auth.uid() as eu from cj.circle_members
+                                     where circle_id = $1 and membership_status = 'ativo' order by joined_at`, [ci.id]),
+      encontros: await linhas(c, `select m.id, m.starts_at, m.theme, m.place_note, m.status, r.response as minha_resposta,
+                                         m.proposed_by = auth.uid() as minha_proposta
                                     from cj.circle_meetings m
                                     left join cj.meeting_rsvps r on r.meeting_id = m.id and r.user_id = auth.uid()
-                                   where m.circle_id = $1 and m.starts_at > now() - interval '1 day' order by m.starts_at limit 5`, [ci.id])
+                                   where m.circle_id = $1 and m.starts_at > now() - interval '6 hours'
+                                     and m.status in ('proposto','confirmado','cancelado')
+                                   order by m.starts_at limit 6`, [ci.id])
     };
   },
-  pedir_circulo: async (c, b) => linha(c, `insert into cj.circle_members(circle_id, user_id) values ($1, auth.uid())
-                                           returning circle_id, membership_status`, [uuid(b.circulo, 'círculo')]),
-  pedir_troca: async (c, b) => linha(c, `update cj.circle_members set change_requested = $1
-                                          where user_id = auth.uid() and membership_status = 'ativo' returning change_requested`, [b.trocar !== false]),
-  propor_encontro: async (c, b) => linha(c, `insert into cj.circle_meetings(circle_id, starts_at, theme)
-                                             values ($1, $2, $3) returning id, status`,
-    [uuid(b.circulo, 'círculo'), dataHora(b.quando, 'data'), opcional(b.tema, 'tema', 200)]),
+  circulos_disponiveis: async (c) => linhas(c, `select id, nome, descricao, faixa, limite, vagas, lider, auxiliar, meu_pedido, sou_integrante
+                                                 from cj.circulos_disponiveis()`),
+  pedir_circulo: async (c, b) => ({ circulo: uuid(b.circulo, 'círculo'),
+    membership_status: (await linha(c, 'select cj.pedir_entrada($1) as s', [uuid(b.circulo, 'círculo')])).s }),
+  cancelar_pedido_circulo: async (c, b) => {
+    const r = await linha(c, `delete from cj.circle_members where circle_id = $1 and user_id = auth.uid() and membership_status = 'solicitado'
+                              returning circle_id`, [uuid(b.circulo, 'círculo')]);
+    if (!r) throw Object.assign(new Error('pedido não encontrado'), { code: 'P0002' });
+    return { ok: true };
+  },
+  pedir_troca: async (c, b) => ({ change_requested: (await linha(c, 'select cj.pedir_troca($1, $2) as t',
+    [b.trocar !== false, opcional(b.motivo, 'motivo', 300)])).t }),
+  sair_circulo: async (c, b) => {
+    if (b.confirmo !== 'SAIR') throw new ErroEntrada('confirmação ausente');
+    await c.query('select cj.sair_do_circulo()'); return { ok: true };
+  },
+  // Integrante PROPÕE (o gatilho força 'proposto'); líder/gestão pode já confirmar.
+  propor_encontro: async (c, b) => {
+    const quando = dataHora(b.quando, 'data');
+    if (new Date(quando).getTime() < Date.now()) throw new ErroEntrada('Escolha uma data futura');
+    return linha(c, `insert into cj.circle_meetings(circle_id, starts_at, theme, place_note, status)
+                     values ($1, $2, $3, $4, $5) returning id, status`,
+      [uuid(b.circulo, 'círculo'), quando, opcional(b.tema, 'tema', 200), opcional(b.local, 'local', 200), b.confirmar === true ? 'confirmado' : 'proposto']);
+  },
   responder_presenca: async (c, b) => linha(c, `insert into cj.meeting_rsvps(meeting_id, user_id, response) values ($1, auth.uid(), $2)
                                                 on conflict (meeting_id, user_id) do update set response = excluded.response
                                                 returning response`, [uuid(b.encontro, 'encontro'), umDe(b.resposta, 'resposta', ['sim', 'nao'])]),
+
+  // Líder/auxiliar: os círculos que eu conduzo (cj.lidera_circulo: só ativos e com o papel).
+  lider_circulos: async (c) => linhas(c, `select ci.id, ci.name as nome, ci.age_band as faixa, ci.max_members as limite,
+                                                 case when ci.leader_id = auth.uid() then 'lider' else 'auxiliar' end as meu_papel,
+                                                 (select count(*) from cj.circle_members m where m.circle_id = ci.id and m.membership_status = 'ativo')::int as ativos,
+                                                 (select count(*) from cj.circle_members m where m.circle_id = ci.id and m.membership_status = 'solicitado')::int as pedidos,
+                                                 (select min(m.starts_at) from cj.circle_meetings m where m.circle_id = ci.id and m.status = 'confirmado' and m.starts_at > now()) as proximo
+                                            from cj.circles ci where cj.lidera_circulo(ci.id) order by ci.name`),
+  // Um círculo, visto por quem conduz (líder/auxiliar) ou pela equipe: integrantes, pedidos,
+  // encontros e quem confirmou presença. Integrante comum recebe 403 do banco.
+  gerir_circulo: async (c, b) => {
+    const id = uuid(b.circulo, 'círculo');
+    const integrantes = await linhas(c, `select user_id as id, nome, situacao, faixa, menor, autorizacao_ok, pedido_em, entrou_em,
+                                                quer_trocar, motivo_troca, papel from cj.integrantes_do_circulo($1)`, [id]);
+    const circulo = await linha(c, `select ci.id, ci.name as nome, ci.description as descricao, ci.age_band as faixa, ci.max_members as limite,
+                                           ci.status, ci.leader_id as lider_id, ci.assistant_id as auxiliar_id,
+                                           cj.nome_publico(ci.leader_id) as lider, cj.nome_publico(ci.assistant_id) as auxiliar,
+                                           cj.lidera_circulo(ci.id) as conduzo
+                                      from cj.circles ci where ci.id = $1`, [id]);
+    const encontros = await linhas(c, `select m.id, m.starts_at, m.theme, m.place_note, m.status, cj.nome_publico(m.proposed_by) as proposto_por,
+                                              coalesce((select json_agg(json_build_object('nome', cj.nome_publico(r.user_id), 'resposta', r.response) order by r.response desc)
+                                                          from cj.meeting_rsvps r where r.meeting_id = m.id), '[]'::json) as presencas
+                                         from cj.circle_meetings m
+                                        where m.circle_id = $1 and m.starts_at > now() - interval '30 days'
+                                        order by (m.starts_at < now()), m.starts_at limit 12`, [id]);
+    return { circulo, integrantes, encontros };
+  },
+  atualizar_encontro: async (c, b) => {
+    await c.query('select cj.atualizar_encontro($1, $2, $3, $4, $5)', [uuid(b.encontro, 'encontro'),
+      b.status ? umDe(b.status, 'situação', ['proposto', 'confirmado', 'realizado', 'cancelado']) : null,
+      b.quando ? dataHora(b.quando, 'data') : null, opcional(b.tema, 'tema', 200), opcional(b.local, 'local', 200)]);
+    return { ok: true };
+  },
+
+  // Gestão (youth_admin/pastor; a proteção só consulta): lista, candidatos a líder/auxiliar
+  // e pedidos de troca. O RLS da equipe libera a leitura; as escritas são funções auditadas.
+  circulos_gestao: async (c) => {
+    const eq = (await linha(c, 'select cj.eh_equipe() as e, cj.eh_gestao() as g'));
+    if (!eq.e) throw Object.assign(new Error('sem permissão'), { code: '42501' });
+    return {
+      gestao: eq.g,
+      circulos: await linhas(c, `select ci.id, ci.name as nome, ci.description as descricao, ci.age_band as faixa, ci.max_members as limite,
+                                        ci.status, ci.leader_id as lider_id, ci.assistant_id as auxiliar_id,
+                                        lp.display_name as lider, ap.display_name as auxiliar,
+                                        (select count(*) from cj.circle_members m where m.circle_id = ci.id and m.membership_status = 'ativo')::int as ativos,
+                                        (select count(*) from cj.circle_members m where m.circle_id = ci.id and m.membership_status = 'solicitado')::int as pedidos,
+                                        (select count(*) from cj.circle_members m where m.circle_id = ci.id and m.membership_status = 'ativo' and m.change_requested)::int as trocas,
+                                        (select min(m.starts_at) from cj.circle_meetings m where m.circle_id = ci.id and m.status = 'confirmado' and m.starts_at > now()) as proximo
+                                   from cj.circles ci
+                                   left join cj.profiles lp on lp.id = ci.leader_id
+                                   left join cj.profiles ap on ap.id = ci.assistant_id
+                                  where ci.status <> 'encerrado'
+                                  order by (ci.status = 'ativo') desc, ci.age_band, ci.name`),
+      candidatos: await linhas(c, `select p.id, p.display_name as nome, p.age_band as faixa,
+                                          array_agg(r.role::text order by r.role) as papeis
+                                     from cj.profiles p join cj.roles r on r.user_id = p.id
+                                    where p.status = 'ativo' and p.age_band <> '15-17' and r.role in ('circle_leader', 'assistant')
+                                    group by p.id order by lower(p.display_name)`),
+      trocas: await linhas(c, `select m.user_id as id, p.display_name as nome, p.age_band as faixa, ci.id as circulo_id, ci.name as circulo,
+                                      case when cj.eh_gestao() then m.change_note end as motivo
+                                 from cj.circle_members m join cj.profiles p on p.id = m.user_id join cj.circles ci on ci.id = m.circle_id
+                                where m.membership_status = 'ativo' and m.change_requested order by p.display_name`)
+    };
+  },
+  salvar_circulo: async (c, b) => {
+    const limite = Number(b.limite);
+    if (!Number.isInteger(limite)) throw new ErroEntrada('limite inválido');
+    const r = await linha(c, 'select cj.salvar_circulo($1, $2, $3, $4, $5, $6, $7) as id',
+      [b.id ? uuid(b.id, 'círculo') : null, texto(b.nome, 'nome', 2, 60), opcional(b.descricao, 'descrição', 600),
+       umDe(b.faixa, 'faixa etária', FAIXAS), limite, b.lider ? uuid(b.lider, 'líder') : null, b.auxiliar ? uuid(b.auxiliar, 'auxiliar') : null]);
+    return { id: r.id };
+  },
+  status_circulo: async (c, b) => { await c.query('select cj.definir_status_circulo($1, $2)', [uuid(b.circulo, 'círculo'),
+    umDe(b.status, 'situação', ['ativo', 'pausado', 'encerrado'])]); return { ok: true }; },
+  adicionar_ao_circulo: async (c, b) => { await c.query('select cj.adicionar_ao_circulo($1, $2, $3)', [uuid(b.circulo, 'círculo'),
+    uuid(b.usuario, 'usuário'), b.mover === true]); return { ok: true }; },
+  // Quem pode entrar num círculo desta faixa (para "Adicionar pessoa"): ativos da faixa.
+  candidatos_circulo: async (c, b) => linhas(c, `select id, nome, circulo_id, circulo_nome, consentimento
+                                                   from cj.listar_pessoas('ativo', $1, null, null, null)`, [umDe(b.faixa, 'faixa etária', FAIXAS)]),
 
   // Minha Jornada (tela 06): convite, não prova.
   jornada: async (c) => ({

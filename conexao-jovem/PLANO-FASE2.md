@@ -1,5 +1,10 @@
 # Conexão Jovem — Fase 2: banco de dados, segurança e login
 
+> **Atualização 17/11/2026 — Módulo 2 (Círculos) construído, ainda NÃO ligado em produção.**
+> - Migração nova `supabase/migrations/003_circulos.sql` (aplicar depois da 001 e da 002; se a 001 for reaplicada, reaplicar 002 e 003). Sem `drop`/`delete`/`truncate` em lugar nenhum do arquivo; nenhuma política RLS alterada. Funções novas (security definer, auditadas): `salvar_circulo`, `definir_status_circulo`, `adicionar_ao_circulo`, `integrantes_do_circulo`, `atualizar_encontro`, `circulos_disponiveis`, `pedir_entrada`, `pedir_troca`, `sair_do_circulo`; `decidir_membro` substituída (limite, consentimento de menor, troca). Coluna nova `circle_members.change_note` (motivo da troca, só a gestão lê; o líder não vê o pedido de troca).
+> - Ações novas em `api/_lib/jovem.js`: `circulos_disponiveis`, `cancelar_pedido_circulo`, `sair_circulo`, `lider_circulos`, `gerir_circulo`, `atualizar_encontro`, `circulos_gestao`, `salvar_circulo`, `status_circulo`, `adicionar_ao_circulo`, `candidatos_circulo` (e `circulo`, `pedir_circulo`, `pedir_troca`, `propor_encontro` revistas).
+> - Telas: Meu Círculo (real), Encontrar um círculo, Conduzir meu círculo (líder/auxiliar) e Círculos (painel da gestão). Na demonstração, simulador local com círculos fictícios.
+
 > **Atualização 17/11/2026 — Módulo 1 (gestão de pessoas e login) construído, ainda NÃO ligado em produção.**
 > - Função de verdade: `api/_lib/jovem.js`, registrada como `fn=jovem` em `api/dados.js` (uma linha). Sem `CJ_DB_URL` / `CJ_VINCULO_SEGREDO` ela responde `{"ok":false,"motivo":"nao_configurado"}` e o app fica na demonstração. `api-proposta/jovem.js` agora só reaponta para ela.
 > - Migração nova `supabase/migrations/002_gestao_pessoas.sql` (aplicar depois da 001): pré-cadastro por WhatsApp via HMAC, lista de pessoas para a equipe, regras de papéis/status reforçadas, auditoria explícita e `cj.promover_primeiro_admin`.
