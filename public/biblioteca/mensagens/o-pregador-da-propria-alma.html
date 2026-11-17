@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>O Pregador da Própria Alma — Salmo 42</title>
+<style>
+  :root{
+    --branco:#ffffff;
+    --texto:#1c2230;
+    --navy:#0f3d5c;
+    --teal:#0f6d78;
+    --dourado:#a9791c;
+    --vinho:#8a1c1c;
+  }
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{
+    margin:0 auto;max-width:820px;background:var(--branco);color:var(--texto);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.7;
+    padding:16px 13px calc(46px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  .voltar{
+    display:inline-block;margin:0 0 14px;background:#1c2230;color:#fff;border:none;
+    border-radius:999px;padding:9px 17px;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer;
+  }
+  .selo{text-align:center;color:var(--teal);font-size:.82rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+  h1{
+    font-family:Georgia,'Times New Roman',serif;text-align:center;color:var(--navy);
+    font-size:2rem;line-height:1.2;font-weight:800;margin:2px 0 4px;
+  }
+  .ref{text-align:center;color:var(--dourado);font-weight:800;font-size:1.15rem;margin-bottom:16px}
+  .divisor{height:3px;width:64px;background:var(--dourado);border-radius:3px;margin:0 auto 22px}
+  .intro{
+    background:#f2f7f8;border:1px solid #d5e6e8;border-radius:14px;
+    padding:16px 16px;margin-bottom:22px;
+  }
+  .intro p{margin:0 0 12px}
+  .intro p:last-child{margin:0}
+  .amago{
+    background:var(--navy);color:#fff;border-radius:14px;padding:16px 16px;margin:0 0 26px;text-align:center;
+    font-family:Georgia,serif;font-size:1.2rem;line-height:1.45;font-weight:700;
+  }
+  .amago small{display:block;font-family:'Segoe UI',system-ui,Arial,sans-serif;font-size:.75rem;letter-spacing:3px;color:#f0d9a0;margin-bottom:6px}
+  p{font-size:1.12rem;margin:0 0 16px;text-align:justify;text-justify:inter-word}
+  strong{color:var(--vinho);font-weight:800}
+  em{color:var(--navy);font-style:italic}
+  .gr{font-style:normal;font-weight:800;color:var(--teal)}
+  h2.sec{
+    font-family:Georgia,serif;text-align:center;color:var(--navy);
+    font-size:1.28rem;font-weight:800;line-height:1.35;
+    margin:30px 0 14px;padding-top:18px;border-top:1px solid #e8e8ee;
+  }
+  h2.sec .num{
+    display:inline-block;background:var(--navy);color:#fff;border-radius:50%;
+    width:1.7em;height:1.7em;line-height:1.7em;font-size:.85rem;margin-right:6px;font-family:inherit;
+  }
+  ul{list-style:none;margin:0 0 16px;padding:0}
+  ul li{position:relative;padding:0 0 0 22px;margin:0 0 10px;font-size:1.1rem;text-align:left}
+  ul li::before{content:"◆";color:var(--dourado);position:absolute;left:2px;top:0}
+  .final{
+    background:#fbf6ea;border:2px solid #ecd9ad;border-radius:16px;
+    padding:18px 16px;margin-top:24px;
+  }
+  .final h2.sec{margin-top:0;border-top:none;padding-top:0}
+  .notas{
+    background:#f6f6f9;border:1px solid #e2e2ea;border-radius:14px;padding:14px 16px;margin-top:24px;font-size:.98rem;
+  }
+  .notas h3{margin:0 0 8px;color:var(--navy);font-family:Georgia,serif;font-size:1.05rem}
+  .notas p,.notas li{font-size:.98rem;text-align:left}
+  .capa-wrap{position:relative;margin:0 -13px -38px;border-radius:18px 18px 0 0;overflow:hidden}
+  .capa-wrap::after{content:'';position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,.55) 45%,rgba(255,255,255,.92) 80%,#fff 100%);pointer-events:none}
+  .capa-top{display:block;width:100%}
+  .capa-wrap + h1{position:relative;z-index:1}
+  .fonte{text-align:center;color:#6b7280;font-size:.82rem;margin-bottom:12px}
+  .assinatura{text-align:center;color:var(--teal);font-size:.9rem;font-weight:800;letter-spacing:2px;margin-top:26px}
+  .marca{font-size:.92rem;color:#8a6a1c;font-style:italic;font-weight:700;text-align:left;margin:4px 0 10px}
+  .resp{background:#fff;border:2px dashed #d9b968;border-radius:14px;padding:12px 14px;margin:0 0 16px}
+  .resp p{text-align:left;margin:0 0 10px}
+  .resp b{color:var(--teal)}
+</style>
+</head>
+<body>
+
+  <button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/biblioteca/mensagens/'}">← Mensagens para Pregar</button>
+  <div class="capa-wrap"><img class="capa-top" src="capas/o-pregador-da-propria-alma-titulo.jpg?v=1" alt="O Pregador da Própria Alma — Salmo 42" onerror="this.parentNode.remove()"></div>
+  <h1>O Pregador da Própria Alma</h1>
+  <div class="ref">Salmos 42 e 43 · Mateus 26:38 · Atos 2:1-14 · Apocalipse 7:16-17</div>
+  <div class="fonte">Mensagem curta · cerca de 20 minutos</div>
+  <div class="divisor"></div>
+
+  <div class="intro">
+    <p><strong>Londres</strong>, domingo, 19 de outubro de 1856. Cerca de dez mil pessoas lotavam o salão do <strong>Surrey Gardens</strong> para ouvir um pregador de 22 anos, <strong>Charles Spurgeon</strong>. No meio do culto, alguém gritou: <strong>“Fogo!”</strong>. Não havia fogo nenhum. Na correria, sete pessoas morreram pisoteadas.</p>
+    <p>Spurgeon afundou numa escuridão de que nunca se livrou de todo. O homem que seria chamado de “príncipe dos pregadores” passou a vida enfrentando crises de abatimento tão fundas que ele mesmo dizia não desejar a ninguém.</p>
+    <p>O maior pregador do século XIX conheceu por dentro a pergunta do Salmo 42.</p>
+  </div>
+
+  <div class="amago"><small>ÂMAGO</small>Não escute a sua alma abatida. Pregue para ela: espera em Deus.</div>
+
+  <h2 class="sec"><span class="num">1</span>🦌 O Cervo no Rio Seco</h2>
+  <p><em>“Como o cervo anseia pelas correntes das águas, assim a minha alma anseia por ti, ó Deus!”</em> (Sl 42:1).</p>
+  <p>O verbo hebraico de “anseia” é <span class="gr">'arag</span>. Ele só aparece mais uma vez em toda a Bíblia, em Joel: <em>“Até os animais do campo suspiram por ti; porque as correntes d'água se secaram”</em> (Jl 1:20). É o gemido de um animal na seca, diante do leito vazio do rio.</p>
+  <p>E o salmista não tem sede de bênção. Ele tem sede <em>“de Deus, do Deus vivo”</em> (v.2).</p>
+  <p><strong>Agostinho</strong> pregou este salmo no século V. No tempo dele, acreditava-se que o cervo matava serpentes e depois ficava com ainda mais sede, e ele aplicou a imagem assim: <em>as serpentes são os teus pecados; mata-as, e terás mais sede da Fonte</em>. Em <strong>Ravena</strong>, na Itália, um mosaico da mesma época, no mausoléu de Gala Placídia, mostra dois cervos caminhando para uma fonte. Os cristãos antigos liam ali a alma correndo para Cristo.</p>
+
+  <h2 class="sec"><span class="num">2</span>🍽️ Lágrimas no Prato</h2>
+  <p><em>“As minhas lágrimas têm sido o meu alimento de dia e de noite, porquanto se me diz constantemente: Onde está o teu Deus?”</em> (v.3). A pergunta volta no versículo 10 e dói <em>“como com ferida mortal nos meus ossos”</em>.</p>
+  <p>O pior, porém, é a lembrança: <em>“eu ia com a multidão, guiando-a em procissão à casa de Deus”</em> (v.4). Quem escreve era um líder, e agora se sente longe e vazio. Quem já esteve na frente do povo conhece essa dor.</p>
+  <p>Repare em quem escreveu: os <strong>filhos de Corá</strong>. Corá se rebelou contra Moisés, e <em>“a terra abriu a boca e os tragou”</em> (Nm 16:32). Mas a Bíblia registra: <em>“os filhos de Corá não morreram”</em> (Nm 26:11). Os descendentes dele viraram guardas e cantores da casa de Deus (1Cr 9:19). <strong>A família que nasceu de uma tragédia escreveu a canção da esperança.</strong> Deus não desperdiça abismo.</p>
+
+  <h2 class="sec"><span class="num">3</span>🌊 Um Abismo Chama Outro Abismo</h2>
+  <p>Ele está longe de Jerusalém, <em>“desde a terra do Jordão, e desde o Hermom, desde o monte Mizar”</em> (v.6). Mizar quer dizer <em>pequeno</em>: é de um monte pequeno que ele se lembra de Deus. Ao pé do <strong>Hermom</strong>, no extremo norte de Israel, nascem as águas do Jordão, e até hoje as cachoeiras de <strong>Banias</strong> rugem ali.</p>
+  <p><em>“Um abismo chama outro abismo ao ruído das tuas catadupas”</em> (v.7). Catadupas são cachoeiras. Uma dor puxa a outra, como água caindo sobre água.</p>
+  <p>Mas preste atenção numa palavra pequena: <em>“todas as <strong>tuas</strong> ondas e vagas têm passado sobre mim”</em>. Até as ondas que o afogam têm dono. Jonas, no ventre do peixe, orou com essa mesma frase (Jn 2:3).</p>
+  <p>E o versículo 8 começa com “Contudo”: <em>“de noite a sua canção está comigo”</em>. Em <strong>Filipos</strong>, Paulo e Silas foram açoitados e postos no tronco, e <em>“pela meia-noite [...] oravam e cantavam hinos a Deus”</em> (At 16:25). O Espírito Santo dá canção na noite.</p>
+
+  <h2 class="sec"><span class="num">4</span>🗣️ O Homem que Pregou para Si Mesmo</h2>
+  <p>Duas palavras hebraicas abrem o refrão. <strong>“Abatida”</strong> é <span class="gr">shachach</span>: curvar-se até o chão, andar encurvado. <strong>“Te perturbas”</strong> é <span class="gr">hamah</span>: bramar, o barulho do mar revolto. A alma dele estava curvada e rugindo ao mesmo tempo.</p>
+  <p>Então ele faz o que mudou tudo: para de ouvir a alma e começa a falar com ela. <em>“Espera em Deus, pois ainda o louvarei”</em> (v.5).</p>
+  <p>Os Salmos 42 e 43 eram um único cântico; o 43 nem tem título. O refrão aparece <strong>três vezes</strong> (42:5; 42:11; 43:5). Três vezes a alma cai, e três vezes ele a levanta.</p>
+  <p><strong>Martyn Lloyd-Jones</strong> era médico em Londres e deixou a medicina para pregar. Ele abriu o livro <em>Depressão Espiritual</em> com este salmo. A ideia central do livro é que boa parte da nossa tristeza vem de ficarmos ouvindo a nós mesmos, em vez de falarmos com nós mesmos.</p>
+  <ul>
+    <li><strong>Ouvir a alma</strong> é escutar: “Você fracassou, Deus esqueceu você.”</li>
+    <li><strong>Pregar para ela</strong> é responder: “Espera em Deus.” E a palavra <strong>“ainda”</strong> marca o louvor para a frente: ele ainda vai louvar.</li>
+  </ul>
+
+  <h2 class="sec"><span class="num">5</span>✝️ Jesus Entrou neste Salmo</h2>
+  <p>No Getsêmani, Jesus disse: <em>“A minha alma está triste até a morte”</em> (Mt 26:38). No grego, “triste” é <span class="gr">perílypos</span>, a mesma palavra que a antiga tradução grega usa em “por que estás abatida”. Dias antes, ele tinha dito: <em>“Agora a minha alma está perturbada”</em> (Jo 12:27). É a frase da versão grega do Salmo 42:6.</p>
+  <p><strong>Jesus entrou no Salmo 42 para que você não ficasse sozinho nele.</strong></p>
+  <p>O salmo pergunta: <em>“quando entrarei e verei a face de Deus?”</em> (v.2). O Apocalipse responde: <em>“Nunca mais terão fome, nunca mais terão sede [...] o Cordeiro [...] os conduzirá às fontes das águas da vida; e Deus lhes enxugará dos olhos toda lágrima”</em> (Ap 7:16,17). As lágrimas que hoje são alimento um dia serão enxugadas pela mão do próprio Deus.</p>
+
+  <div class="final">
+    <h2 class="sec"><span class="num">✦</span>🔥 Fecho: Ainda o Louvarei!</h2>
+    <p class="marca">[Baixe a voz. Fale devagar.]</p>
+    <p>Agora eu quero falar com quem está curvado. Com quem entrou aqui hoje sorrindo e por dentro está encurvado até o chão. Com quem já guiou a multidão e hoje se sente seco como o leito de um rio no verão. Deus viu você entrar.</p>
+    <p>Lembra de Pedro? Na noite em que negou Jesus, <em>“saindo dali, chorou amargamente”</em> (Mt 26:75). Depois, os discípulos ficaram trancados, <em>“com as portas cerradas por medo”</em> (Jo 20:19). Era a alma deles abatida, era a alma deles perturbada.</p>
+    <p class="marca">[Comece a subir.]</p>
+    <p>Mas cinquenta dias depois veio o Pentecoste! <em>“De repente veio do céu um ruído, como que de um vento impetuoso [...] E lhes apareceram umas línguas como que de fogo [...] E todos ficaram cheios do Espírito Santo”</em> (At 2:2-4). E o mesmo Pedro que chorou amargamente, <em>“pondo-se em pé com os onze, <strong>levantou a voz</strong>”</em> (At 2:14)!</p>
+    <p>O homem curvado ficou de pé. O que chorou virou pregador. O que se escondeu atrás da porta abriu a boca diante de Jerusalém inteira. <strong>O Espírito Santo não veio só para consolar o abatido: veio para levantar o abatido.</strong></p>
+    <p>E eu profetizo sobre esta casa: <strong>ainda!</strong></p>
+    <ul>
+      <li><strong>Ainda</strong> tem fogo no altar, porque <em>“o fogo se conservará continuamente aceso sobre o altar; não se apagará”</em> (Lv 6:13).</li>
+      <li><strong>Ainda</strong> tem <em>“óleo de gozo em vez de pranto, vestidos de louvor em vez de espírito angustiado”</em> (Is 61:3).</li>
+      <li><strong>Ainda</strong> tem rio para quem secou, porque <em>“do seu interior correrão rios de água viva”</em> (Jo 7:38).</li>
+      <li><strong>Ainda</strong> tem canção para a sua noite: <em>“de noite a sua canção está comigo”</em> (Sl 42:8).</li>
+    </ul>
+    <p class="marca">[Peça à igreja que fique de pé.]</p>
+    <p>Fique de pé! Hoje você não vai mais escutar a sua alma. Hoje você vai pregar para ela! Eu pergunto e a igreja responde:</p>
+    <div class="resp">
+      <p><b>Pregador:</b> “Por que estás abatida, ó minha alma?”<br><b>Igreja:</b> <strong>“Espera em Deus!”</strong></p>
+      <p class="marca">[Mais alto.]</p>
+      <p><b>Pregador:</b> “E por que te perturbas dentro de mim?”<br><b>Igreja:</b> <strong>“Espera em Deus!”</strong></p>
+      <p class="marca">[No auge.]</p>
+      <p><b>Pregador:</b> “Pois ainda…”<br><b>Igreja:</b> <strong>“Ainda o louvarei!”</strong></p>
+    </div>
+    <p>Ponha a mão no peito e fale com a sua alma agora: <strong>“Alma, levanta! Alma, espera em Deus!”</strong></p>
+    <p class="marca">[Clamor.]</p>
+    <p>Hoje o abismo da sua dor vai chamar o abismo da misericórdia de Deus, e a misericórdia é mais funda!</p>
+    <p>Vem, Espírito Santo! Sopra sobre esta igreja como no dia de Pentecostes!</p>
+    <ul>
+      <li>Quem está curvado, <strong>levanta a cabeça!</strong></li>
+      <li>Quem perdeu a canção, <strong>recebe a canção da noite!</strong></li>
+      <li>Quem secou como rio no verão, <strong>deixa correr os rios de água viva!</strong></li>
+      <li>Quem chorou amargamente, <strong>hoje fica de pé e levanta a voz!</strong></li>
+    </ul>
+    <p>O Cordeiro que vai enxugar dos seus olhos toda lágrima está no meio de nós agora. Levante as mãos e diga com a igreja inteira: <strong>“Espera em Deus, pois ainda o louvarei!”</strong></p>
+    <p class="marca">[A banda entra suave. Ministre e ore pelos abatidos.]</p>
+  </div>
+
+  <div class="notas">
+    <h3>📝 Notas para quem vai pregar</h3>
+    <ul>
+      <li><strong>Fontes:</strong> Agostinho, <em>Exposições sobre os Salmos</em> (Salmo 41 na numeração antiga), a imagem do cervo e das serpentes; o mausoléu de Gala Placídia, em Ravena (século V), com o mosaico dos cervos na fonte (a ligação com o Salmo 42 é uma leitura dos estudiosos); D. Martyn Lloyd-Jones, <em>Depressão Espiritual</em> (1965), em paráfrase; o desastre do Surrey Gardens, 19 de outubro de 1856.</li>
+      <li><strong>Fatos para conferir:</strong> o público do Surrey Gardens (as fontes falam de 7 mil a 12 mil pessoas); as palavras gregas <em>perílypos</em> e <em>tarássō</em> na versão grega antiga do Salmo 42 (que lá é o 41); as cachoeiras de Banias como pano de fundo do versículo 7, que é a leitura mais comum, mas não é certa.</li>
+      <li><strong>Tempo:</strong> cerca de 20 minutos.</li>
+    </ul>
+  </div>
+
+  <script src="_leitura.js?v=5" defer></script>
+  <script src="_memorizar.js?v=1" defer></script>
+  <script src="_lupa.js?v=4" defer></script>
+  <script src="_refs.js" defer></script>
+<script src="/_uso.js?v=1" defer></script>
+<script src="/_pregado.js?v=2" defer></script>
+</body>
+</html>
