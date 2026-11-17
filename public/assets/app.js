@@ -418,9 +418,43 @@ function toastBloqueado(){
   showToast('🔒 Lição será liberada em breve');
 }
 
-// ══ SPLASH ════════════════════════════════════════
-// sem cadastro? vai DIRETO pro cadastro (logo no início). Já cadastrado? mostra o splash.
-if(getUser()){ setTimeout(irHome, 2200); } else { irHome(); }
+// ══ SPLASH — CAPA COM DOIS CAMINHOS (17/11/2026) ══════════════
+// Antes: cadastrado via a capa 2,2 s e entrava sozinho no Radar; sem cadastro ia direto pro cadastro.
+// Agora a capa é a porta de dois caminhos: Radar Atual (irHome, que continua cuidando do cadastro)
+// ou Conexão Jovem (/jovem/). Link direto (?mod= ?ir= ?hist= ?manual=) continua indo direto pro Radar.
+// "Sempre abrir no caminho escolhido" grava a escolha: a capa abre sozinha em 2,2 s; um toque cancela.
+// /?capa = mostra a capa sem abrir sozinha; /?radar = entra direto no Radar (os dois são links do Conexão Jovem).
+var CAM_KEY='radar_caminho', _camTimer=null;
+function camLer(){ try{ var v=localStorage.getItem(CAM_KEY); return (v==='radar'||v==='jovem')?v:''; }catch(e){ return ''; } }
+function camGravar(v){ try{ if(v) localStorage.setItem(CAM_KEY,v); else localStorage.removeItem(CAM_KEY); }catch(e){} }
+function camCancelarAuto(){
+  if(_camTimer){ clearTimeout(_camTimer); _camTimer=null; }
+  var a=document.getElementById('cam-auto'); if(a) a.hidden=true;
+  document.querySelectorAll('.cam-card.cam-salvo').forEach(function(c){ c.classList.remove('cam-salvo'); });
+}
+function camEntrar(c){ camCancelarAuto(); if(c==='jovem'){ location.href='/jovem/'; } else { irHome(); } }
+function escolherCaminho(c){
+  var chk=document.getElementById('cam-sempre');
+  camGravar(chk&&chk.checked?c:'');
+  camEntrar(c);
+}
+function iniciarCapa(){
+  var qs=new URLSearchParams(location.search);
+  var forcar=qs.has('capa');
+  if(forcar){ try{ history.replaceState({},'',location.pathname); }catch(e){} }
+  else if(qs.has('radar')){ try{ history.replaceState({},'',location.pathname); }catch(e){} irHome(); return; }   // /?radar = entra direto no Radar
+  else if(qs.get('mod')||qs.get('ir')||qs.get('hist')||qs.get('manual')){ irHome(); return; }
+  var salvo=camLer();
+  var chk=document.getElementById('cam-sempre'); if(chk) chk.checked=!!salvo;
+  if(!salvo||forcar) return;
+  var card=document.getElementById('cam-'+salvo); if(card) card.classList.add('cam-salvo');
+  var a=document.getElementById('cam-auto');
+  if(a){ a.textContent='Abrindo '+(salvo==='jovem'?'Conexão Jovem':'Radar Atual')+'… toque na tela para escolher outro caminho'; a.hidden=false; }
+  _camTimer=setTimeout(function(){ camEntrar(salvo); },2200);
+  var sp=document.getElementById('splash');
+  if(sp) sp.addEventListener('pointerdown',camCancelarAuto,{once:true,capture:true});
+}
+setTimeout(iniciarCapa,0);   // depois do app.js inteiro carregar (irHome usa variáveis declaradas mais abaixo)
 var _deepLinkFeito=false;
 function irHome(){
   if(!checkAuth()) return;

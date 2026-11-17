@@ -1,0 +1,42 @@
+/* ══ CAPA COM DOIS CAMINHOS (17/11/2026) — Radar Atual | Conexão Jovem ══
+   A arte de cima é a capa-2026-10.jpg cortada logo abaixo do slogan (800×960 dos 800×1423).
+   A largura da arte encolhe em tela baixa para os dois cartões sempre caberem sem rolar. */
+#splash{cursor:default;flex-direction:column;align-items:center;justify-content:center;padding-bottom:max(12px,env(safe-area-inset-bottom));
+  background:#060c1a;font-family:Manrope,system-ui,-apple-system,sans-serif}
+#splash .sv-arte{position:relative;flex:none;overflow:hidden;aspect-ratio:800/960;
+  width:min(100%,460px,calc((100dvh - 318px) / 1.2))}
+#splash .sv-arte img{position:absolute;left:0;top:0;width:100%;height:auto;object-fit:initial;z-index:1}
+#splash .sv-arte::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(6,12,26,0) 80%,#060c1a 100%)}
+
+.cam{width:100%;max-width:460px;padding:0 16px;margin-top:-6px;position:relative;z-index:4}
+.cam-tit{text-align:center;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#D6B66E;font-weight:700;margin-bottom:16px}
+.cam-tit::before,.cam-tit::after{content:"";display:inline-block;width:34px;height:1px;vertical-align:middle;margin:0 10px;
+  background:linear-gradient(90deg,transparent,#D6B66E)}
+.cam-tit::after{background:linear-gradient(90deg,#D6B66E,transparent)}
+.cam-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cam-card{all:unset;box-sizing:border-box;cursor:pointer;border-radius:20px;padding:16px 12px 14px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;min-height:224px;color:#fff;font-family:inherit;
+  transition:transform .15s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent}
+.cam-card:active{transform:scale(.97)}
+.cam-card:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.cam-radar{background:linear-gradient(160deg,#141c30,#0a1120);border:1.5px solid #c9a24a;box-shadow:0 0 24px rgba(214,182,110,.18)}
+.cam-jovem{background:linear-gradient(160deg,#2462D2,#142544 70%);border:1.5px solid #5d8ff0;box-shadow:0 0 24px rgba(36,98,210,.35)}
+.cam-card.cam-salvo{box-shadow:0 0 0 3px rgba(255,255,255,.85),0 0 28px rgba(214,182,110,.4)}
+.cam-ic{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;margin-bottom:10px;border:2px solid #D6B66E}
+.cam-jovem .cam-ic{background:rgba(255,255,255,.12)}
+.cam-ic svg{width:32px;height:32px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cam-radar svg{stroke:#E8C877}.cam-radar .cam-fill{fill:#E8C877}
+.cam-jovem svg{stroke:#fff}
+.cam-nome{font-weight:800;font-size:17px;line-height:1.12;letter-spacing:.02em}
+.cam-nome b{font-weight:800;color:#E8C877}
+.cam-jovem .cam-nome b{color:#D6B66E}
+.cam-sub{font-size:12px;color:#c6cde0;margin:8px 2px 12px;line-height:1.35}
+.cam-btn{margin-top:auto;height:44px;width:100%;border-radius:12px;font-weight:700;font-size:14px;display:grid;place-items:center}
+.cam-radar .cam-btn{background:linear-gradient(90deg,#c9a24a,#E8C877);color:#1a1405}
+.cam-jovem .cam-btn{background:#fff;color:#142544}
+.cam-lembrar{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;min-height:44px;font-size:13px;color:#b4bcd0;cursor:pointer}
+.cam-lembrar input{width:20px;height:20px;accent-color:#D6B66E;margin:0}
+.cam-auto{text-align:center;font-size:12.5px;color:#D6B66E;margin-top:2px}
+@media (max-width:340px){.cam-sub{display:none}.cam-card{min-height:180px}}
+@media (prefers-reduced-motion:reduce){.cam-card{transition:none}}

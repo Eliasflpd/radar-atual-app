@@ -61,10 +61,18 @@
   bola('sv-logo', 177, 755, 97, 'animation-delay:-0.3s');
   bola('sv-onda', 177, 755, 120, 'animation-delay:-0.4s;border-width:1.5px');
 
-  splash.appendChild(palco);
+  // 17/11/2026: capa com dois caminhos — a arte fica dentro de .sv-arte (cortada embaixo, largura da caixa);
+  // sem ela, vale o encaixe antigo (arte inteira com object-fit:contain).
+  var arte = splash.querySelector('.sv-arte');
+  (arte || splash).appendChild(palco);
 
-  // encaixa o palco exatamente sobre a arte (a imagem usa object-fit:contain)
+  // encaixa o palco exatamente sobre a arte
   function encaixar(){
+    if(arte){
+      var w = arte.clientWidth; if(!w) return;
+      palco.style.transform = 'scale(' + (w / W0) + ')';
+      return;
+    }
     var W = splash.clientWidth, H = splash.clientHeight;
     if(!W || !H) return;
     var s = Math.min(W / W0, H / H0);
