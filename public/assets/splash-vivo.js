@@ -16,14 +16,16 @@
   // a home nova (radar.css: #home{display:flex}) fica sempre ligada e cobria a capa; enquanto a capa está ativa, ela vem por cima
   + '#splash.ativa{z-index:60}'
   + '#sv-palco{position:absolute;left:0;top:0;width:'+W0+'px;height:'+H0+'px;transform-origin:0 0;z-index:2;pointer-events:none}'
-  + '#sv-palco *{position:absolute;pointer-events:none}'
-  + '.sv-feixe{border-radius:50%;mix-blend-mode:screen;'
+  + '#sv-palco *{position:absolute;pointer-events:none;will-change:transform,opacity}'
+  // leve no tablet: depois de 12 s parado na capa, a animação para (a arte fica igual)
+  + '#sv-palco.parado *{animation-play-state:paused}'
+  + '.sv-feixe{border-radius:50%;'
   +   'background:conic-gradient(from 0deg,rgba(255,196,70,0) 0deg,rgba(255,196,70,0) 260deg,rgba(255,200,80,.03) 285deg,rgba(255,200,80,.08) 310deg,rgba(255,205,90,.16) 330deg,rgba(255,212,105,.27) 345deg,rgba(255,222,130,.42) 354deg,rgba(255,240,190,.95) 359.3deg,rgba(255,240,190,0) 360deg);-webkit-mask:radial-gradient(circle closest-side,#000 82%,transparent 100%);mask:radial-gradient(circle closest-side,#000 82%,transparent 100%);'
   +   'animation:sv-gira 2s linear infinite}'
-  + '.sv-onda{border-radius:50%;border:2px solid rgba(255,206,96,.75);box-shadow:0 0 14px rgba(255,200,80,.45);opacity:0;animation:sv-onda 2.2s ease-out infinite}'
-  + '.sv-ponto{width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#ffe39a;box-shadow:0 0 10px 4px rgba(255,205,90,.9);opacity:0;animation:sv-pisca 2s linear infinite}'
-  + '.sv-brilho{border-radius:50%;mix-blend-mode:screen;background:radial-gradient(circle,rgba(255,215,120,.22) 0%,rgba(255,215,120,0) 70%);animation:sv-respira 2.2s ease-in-out infinite}'
-  + '.sv-logo{border-radius:50%;mix-blend-mode:screen;'
+  + '.sv-onda{border-radius:50%;border:2px solid rgba(255,206,96,.75);opacity:0;animation:sv-onda 2.2s ease-out infinite}'
+  + '.sv-ponto{width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:radial-gradient(circle,#fff3c4 0%,#ffe39a 40%,rgba(255,205,90,0) 100%);opacity:0;animation:sv-pisca 2s linear infinite}'
+  + '.sv-brilho{border-radius:50%;background:radial-gradient(circle,rgba(255,215,120,.22) 0%,rgba(255,215,120,0) 70%);animation:sv-respira 2.2s ease-in-out infinite}'
+  + '.sv-logo{border-radius:50%;'
   +   'background:conic-gradient(from 0deg,rgba(255,196,70,0) 0deg,rgba(255,196,70,0) 280deg,rgba(255,205,90,.08) 320deg,rgba(255,215,110,.25) 348deg,rgba(255,240,180,.9) 359.3deg,rgba(255,240,180,0) 360deg);-webkit-mask:radial-gradient(circle closest-side,#000 80%,transparent 100%);mask:radial-gradient(circle closest-side,#000 80%,transparent 100%);'
   +   'animation:sv-gira 2s linear infinite}'
   + '@keyframes sv-gira{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}'
@@ -73,5 +75,9 @@
   }
   encaixar();
   window.addEventListener('resize', encaixar);
+  setTimeout(function(){ palco.classList.add('parado'); }, 12000);
+  // quando a capa sai da tela, tira o palco de vez (não gasta nada por trás da home)
+  var obs = new MutationObserver(function(){ if(!splash.classList.contains('ativa')){ palco.remove(); obs.disconnect(); } });
+  obs.observe(splash, {attributes:true, attributeFilter:['class']});
   if(img && !img.complete){ img.addEventListener('load', encaixar); }
 })();

@@ -1,4 +1,6 @@
-const V='radar-v358';               // cache do SHELL — troca a cada versão do app
+const V='radar-v359';
+// troque esta data SÓ quando a biblia.json mudar: aí o aparelho baixa a Bíblia de novo (4 MB). Antes baixava a cada versão, 2 vezes.
+const BIBLIA_V='2026-11-17';               // cache do SHELL — troca a cada versão do app
 const PACOTE='radar-pacote-v1';     // pacote que o irmão baixou de propósito — NUNCA apagado ao subir versão
 // ⚠️ 27/09/2026 — POR QUE ESTE CACHE EXISTE (bug real: "clico na mensagem e não abre"):
 // o `activate` apagava o cache da versão anterior a CADA subida de versão. Como as
@@ -48,8 +50,14 @@ self.addEventListener('activate',e=>
     .then(ks=>Promise.all(ks.filter(k=>k!==V && k!==PACOTE && k!==CONTEUDO).map(k=>caches.delete(k))))
     // A BÍBLIA GUARDADA TAMBÉM SE CORRIGE (22/10/2026: Dt 5:33 e 1Cr 29:20 tinham "a Senhor"). O pacote e o
     // conteúdo nunca são apagados, e a despensa os lê antes da rede — sem isto o celular leria o erro pra sempre.
-    .then(()=>Promise.all([PACOTE,CONTEUDO].map(nome=>caches.open(nome).then(c=>c.match('/biblia.json').then(tem=>
-      tem ? fetch('/biblia.json',{cache:'reload'}).then(r=>r.ok?c.put('/biblia.json',r):null) : null)).catch(()=>{}))))
+    .then(()=>caches.open(V).then(cv=>cv.match('/__biblia-v').then(m=>m?m.text():'').then(atual=>{
+      if(atual===BIBLIA_V) return;   // Bíblia não mudou: nada a baixar
+      return Promise.all([PACOTE,CONTEUDO].map(nome=>caches.open(nome).then(c=>c.match('/biblia.json').then(tem=>tem?c:null))))
+        .then(cs=>{ cs=cs.filter(Boolean); if(!cs.length) return;
+          return fetch('/biblia.json',{cache:'reload'}).then(r=>{ if(!r.ok) return;   // UM download só, guardado nos dois
+            return Promise.all(cs.map((c,i)=>c.put('/biblia.json', i<cs.length-1 ? r.clone() : r))); }); })
+        .then(()=>cv.put('/__biblia-v', new Response(BIBLIA_V)));
+    })).catch(()=>{}))
     .then(()=>self.clients.claim())));
 
 self.addEventListener('message',e=>{

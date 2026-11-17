@@ -3953,7 +3953,7 @@ function whatsappVisitante(){
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'}).then(function(reg){
     reg.update();
-    setInterval(function(){ reg.update(); }, 60000); // checa versão nova a cada 1 min
+    setInterval(function(){ reg.update(); }, 600000); // checa versão nova a cada 10 min (era 1 min: pesava no tablet); ao voltar pro app também checa
     function ativar(w){ w&&w.addEventListener('statechange',function(){
       if(w.state==='installed' && navigator.serviceWorker.controller){ w.postMessage({type:'SKIP_WAITING'}); }
     }); }
