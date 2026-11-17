@@ -1,5 +1,13 @@
 # Conexão Jovem — Fase 2: banco de dados, segurança e login
 
+> **Atualização 17/11/2026 — Módulo 1 (gestão de pessoas e login) construído, ainda NÃO ligado em produção.**
+> - Função de verdade: `api/_lib/jovem.js`, registrada como `fn=jovem` em `api/dados.js` (uma linha). Sem `CJ_DB_URL` / `CJ_VINCULO_SEGREDO` ela responde `{"ok":false,"motivo":"nao_configurado"}` e o app fica na demonstração. `api-proposta/jovem.js` agora só reaponta para ela.
+> - Migração nova `supabase/migrations/002_gestao_pessoas.sql` (aplicar depois da 001): pré-cadastro por WhatsApp via HMAC, lista de pessoas para a equipe, regras de papéis/status reforçadas, auditoria explícita e `cj.promover_primeiro_admin`.
+> - Primeiro administrador: `supabase/primeiro-admin.md`.
+> - Frontend: `public/jovem/cj-api.js` (modo automático real/demonstração) e as telas Entrar, Consentimento, Perfil e **Pessoas** ligadas à API.
+> - Testes: `bash testes/rodar.sh` (banco + função) e `bash testes/navegador.sh` (Chromium contra a função e o Postgres local; precisa do pacote `playwright`).
+> - Decisão pendente nova: faixas vão só até 22–25; adultos da equipe acima de 25 entram como 22–25 por enquanto.
+
 > **Situação: pronto para revisão, NADA está no ar.**
 > Tudo desta fase mora na pasta `conexao-jovem/`. A Vercel só publica `public/` e `api/`, então esta pasta não muda nada no app Radar. Nenhum banco real foi tocado.
 

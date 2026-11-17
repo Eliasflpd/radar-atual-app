@@ -12,6 +12,7 @@ const { Client } = require('pg');
 
 const RAIZ = path.resolve(__dirname, '..');
 const MIGRACAO = path.join(RAIZ, 'supabase/migrations/001_conexao_jovem.sql');
+const MIGRACAO_2 = path.join(RAIZ, 'supabase/migrations/002_gestao_pessoas.sql');
 const SEED = path.join(RAIZ, 'supabase/seed_demo.sql');
 const MINIMO = path.join(__dirname, '00_supabase_minimo.sql');
 
@@ -530,10 +531,143 @@ teste('anon não tem nenhum privilégio em tabela do cj', async (t) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 8. A FUNÇÃO PROPOSTA (api-proposta/jovem.js) DE PONTA A PONTA
+// 9. MÓDULO 1 — GESTÃO DE PESSOAS (migração 002)
+// ═══════════════════════════════════════════════════════════════════════════════
+const HASH_PRE = 'ab'.repeat(32);   // HMAC fictício de um WhatsApp (o banco nunca vê o número)
+teste('M1: membro comum NÃO lista pessoas', async (t) => {
+  await t.como(P.davi);
+  await t.falha('select * from cj.listar_pessoas()', [], '42501', 'Davi listando pessoas');
+});
+teste('M1: líder de círculo NÃO lista pessoas (só vê o próprio círculo pelo RLS)', async (t) => {
+  await t.como(P.rafael);
+  await t.falha('select * from cj.listar_pessoas()', [], '42501', 'Rafael listando pessoas');
+});
+teste('M1: visitante (anon) não chama nenhuma função nova', async (t) => {
+  await t.como(null);
+  await t.falha('select * from cj.listar_pessoas()', [], '42501', 'anon listando');
+  await t.falha('select cj.quem_sou()', [], '42501', 'anon quem_sou');
+  await t.falha(`select cj.pre_cadastrar($1, 'x', '18-21')`, [HASH_PRE], '42501', 'anon pré-cadastrando');
+});
+teste('M1: coordenação lista pessoas com filtros e a lista NÃO traz o vínculo do WhatsApp', async (t) => {
+  await t.como(P.coord);
+  const todos = await t.q('select * from cj.listar_pessoas()');
+  igual(todos.length, 13, 'todas as 13 pessoas do seed');
+  espera(!Object.keys(todos[0]).some((k) => /hash|radar|whats|telefone/i.test(k)), 'nenhuma coluna de vínculo/telefone na lista');
+  igual(todos[0].status, 'pendente', 'pendentes aparecem primeiro');
+  igual((await t.q(`select id from cj.listar_pessoas('pendente')`)).map((x) => x.id), [P.novo], 'filtro pendentes');
+  igual((await t.q(`select id from cj.listar_pessoas(null, '15-17')`)).map((x) => x.id).sort(), [P.bia, P.theo].sort(), 'filtro faixa 15–17');
+  igual((await t.q(`select id from cj.listar_pessoas(null, null, $1)`, [C.esperanca])).map((x) => x.id).sort(), [P.davi, P.ana].sort(), 'filtro círculo');
+  igual((await t.q(`select id from cj.listar_pessoas(null, null, null, 'lucas')`)).map((x) => x.id), [P.lucas], 'busca por nome');
+  igual((await t.q(`select id from cj.listar_pessoas(null, null, null, null, 'circle_leader')`)).map((x) => x.id).sort(), [P.rafael, P.marcos, P.bruno].sort(), 'filtro papel');
+  const theo = (await t.q(`select consentimento, papeis from cj.listar_pessoas(null, null, null, 'theo')`))[0];
+  igual(theo.consentimento, 'pendente', 'situação do consentimento do menor');
+  await t.falha(`select * from cj.listar_pessoas('qualquer')`, [], '22023', 'filtro inválido');
+});
+teste('M1: proteção (safeguarding_admin) lê a lista, mas não pré-cadastra nem dá papel', async (t) => {
+  await t.como(P.protecao);
+  espera((await t.q('select id from cj.listar_pessoas()')).length === 13, 'proteção lê a lista');
+  await t.falha(`select cj.pre_cadastrar($1, 'Fulano', '18-21')`, [HASH_PRE], '42501', 'proteção pré-cadastrando');
+  await t.falha(`select cj.conceder_papel($1, 'assistant')`, [P.ana], '42501', 'proteção concedendo papel');
+});
+teste('M1: cada consulta da lista de pessoas fica em audit_logs (sem o texto da busca)', async (t) => {
+  await t.como(P.coord);
+  await t.q(`select id from cj.listar_pessoas('ativo', null, null, 'Ana Barros')`);
+  await t.comoDono();
+  const log = await t.q(`select metadata from cj.audit_logs where actor_id = $1 and action = 'consultar' and entity_type = 'pessoas'`, [P.coord]);
+  igual(log.length, 1, 'uma linha de auditoria');
+  igual(log[0].metadata.status, 'ativo', 'filtro registrado');
+  espera(!/Ana/.test(JSON.stringify(log[0].metadata)), 'o nome buscado não vai para a auditoria');
+});
+teste('M1: youth_admin concede líder/auxiliar, mas NÃO concede pastor, proteção nem coordenação', async (t) => {
+  await t.como(P.coord);
+  await t.q(`select cj.conceder_papel($1, 'circle_leader')`, [P.ana]);
+  await t.falha(`select cj.conceder_papel($1, 'pastor')`, [P.ana], '42501', 'youth_admin dando pastor');
+  await t.falha(`select cj.conceder_papel($1, 'safeguarding_admin')`, [P.ana], '42501', 'youth_admin dando proteção');
+  await t.falha(`select cj.conceder_papel($1, 'youth_admin')`, [P.ana], '42501', 'youth_admin dando coordenação');
+  await t.falha(`select cj.revogar_papel($1, 'safeguarding_admin')`, [P.protecao], '42501', 'youth_admin tirando proteção');
+  await t.falha(`select cj.revogar_papel($1, 'pastor')`, [P.pastor], '42501', 'youth_admin tirando pastor');
+  igual((await t.um('select cj.papeis_que_concedo() as p')).p, '{member,circle_leader,assistant}', 'papéis que a coordenação concede');
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where action = 'conceder_papel' and actor_id = $1 and entity_id = $2 and metadata ->> 'papel' = 'circle_leader'`, [P.coord, P.ana]), 1, 'concessão auditada');
+});
+teste('M1: pastor concede e retira pastor/proteção/coordenação, tudo auditado', async (t) => {
+  await t.como(P.pastor);
+  for (const papel of ['safeguarding_admin', 'youth_admin', 'pastor']) await t.q(`select cj.conceder_papel($1, $2)`, [P.ana, papel]);
+  igual((await t.q('select role from cj.roles where user_id = $1 order by role', [P.ana])).map((x) => x.role), ['youth_admin', 'pastor', 'safeguarding_admin'], 'papéis da Ana');
+  await t.q(`select cj.revogar_papel($1, 'pastor')`, [P.ana]);
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where actor_id = $1 and entity_id = $2 and action in ('conceder_papel','revogar_papel')`, [P.pastor, P.ana]), 4, '3 concessões + 1 retirada auditadas');
+});
+teste('M1: o último pastor ativo não perde o papel nem é desativado', async (t) => {
+  await t.como(P.pastor);
+  await t.falha(`select cj.revogar_papel($1, 'pastor')`, [P.pastor], '23514', 'tirar o próprio papel de último pastor');
+  await t.q(`select cj.conceder_papel($1, 'pastor')`, [P.coord]);
+  await t.q(`select cj.revogar_papel($1, 'pastor')`, [P.pastor]);   // agora há outro pastor ativo
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.roles where role = 'pastor'`), 1, 'sobrou um pastor');
+});
+teste('M1: desativar — gestão desativa membro; ninguém se desativa; só o pastor mexe na equipe', async (t) => {
+  await t.como(P.coord);
+  await t.falha(`select cj.definir_status_perfil($1, 'suspenso')`, [P.coord], '42501', 'coordenação se desativando');
+  await t.falha(`select cj.definir_status_perfil($1, 'suspenso')`, [P.pastor], '42501', 'coordenação desativando o pastor');
+  await t.falha(`select cj.definir_status_perfil($1, 'suspenso')`, [P.protecao], '42501', 'coordenação desativando a proteção');
+  await t.q(`select cj.definir_status_perfil($1, 'suspenso')`, [P.rafael]);
+  await t.como(P.rafael);
+  igual((await t.um('select cj.lidera_circulo($1) as ok', [C.esperanca])).ok, false, 'desativado perde o efeito do papel de líder');
+  await t.como(P.davi);
+  await t.falha(`select cj.definir_status_perfil($1, 'ativo')`, [P.rafael], '42501', 'membro reativando alguém');
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where action = 'desativar_perfil' and actor_id = $1 and entity_id = $2`, [P.coord, P.rafael]), 1, 'desativação auditada');
+  igual(await t.n(`select count(*) from cj.roles where user_id = $1`, [P.rafael]), 1, 'o papel fica guardado (nada é apagado)');
+});
+teste('M1: pré-cadastro pelo WhatsApp — só gestão; nasce sem vínculo; duplicado recusado; auditado', async (t) => {
+  await t.como(P.davi);
+  await t.falha(`select cj.pre_cadastrar($1, 'Fulano', '18-21')`, [HASH_PRE], '42501', 'membro pré-cadastrando');
+  await t.como(P.coord);
+  const novo = (await t.um(`select cj.pre_cadastrar($1, 'Maria Pré (teste)', '18-21') as id`, [HASH_PRE])).id;
+  await t.falha(`select cj.pre_cadastrar($1, 'Outra', '22-25')`, [HASH_PRE], '23505', 'mesmo WhatsApp duas vezes');
+  await t.falha(`select cj.pre_cadastrar('123', 'Outra', '22-25')`, [], '22023', 'vínculo fora do formato');
+  const r = (await t.q(`select vinculado, pre_cadastrado, status from cj.listar_pessoas('nao_vinculado')`));
+  igual(r, [{ vinculado: false, pre_cadastrado: true, status: 'ativo' }], 'aparece como "ainda não entrou"');
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where action = 'pre_cadastrar' and actor_id = $1 and entity_id = $2`, [P.coord, novo]), 1, 'pré-cadastro auditado');
+  // a pessoa entra: o vínculo acende uma única vez e fica auditado
+  await t.como(novo);
+  igual((await t.um('select cj.confirmar_vinculo() as v')).v, true, '1ª entrada vincula');
+  igual((await t.um('select cj.confirmar_vinculo() as v')).v, false, '2ª entrada não muda nada');
+  igual((await t.um('select cj.quem_sou() as q')).q.nome, 'Maria Pré (teste)', 'ela se vê com o nome do pré-cadastro');
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where action = 'vincular' and actor_id = $1`, [novo]), 1, 'vínculo auditado');
+});
+teste('M1: quem_sou devolve papéis e o que cada um pode conceder', async (t) => {
+  await t.como(P.pastor);
+  const p = (await t.um('select cj.quem_sou() as q')).q;
+  igual([p.papeis, p.gestao, p.pode_conceder.length], [['pastor'], true, 6], 'pastor');
+  await t.como(P.davi);
+  const d = (await t.um('select cj.quem_sou() as q')).q;
+  igual([d.papeis, d.equipe, d.pode_conceder, d.circulo], [[], false, [], 'Círculo Esperança (demo)'], 'membro');
+  espera(!('radar_key_hash' in d), 'sem vínculo na resposta');
+});
+teste('M1: primeiro administrador — só o dono do banco, e só sem pastor ativo', async (t) => {
+  await t.como(P.coord);
+  await t.falha('select cj.promover_primeiro_admin($1)', [P.coord], '42501', 'app chamando promover_primeiro_admin');
+  await t.comoDono();
+  await t.falha('select cj.promover_primeiro_admin($1)', [P.lucas], '23514', 'já existe pastor ativo');
+  await t.q(`delete from cj.roles where role = 'pastor'`);
+  await t.falha('select cj.promover_primeiro_admin($1)', [P.bia], '23514', 'menor não vira admin');
+  const r = (await t.um('select cj.promover_primeiro_admin($1) as r', [P.novo])).r;
+  igual(r.papeis, ['pastor', 'youth_admin'], 'papéis do primeiro admin');
+  igual((await t.um('select status from cj.profiles where id = $1', [P.novo])).status, 'ativo', 'perfil ativado');
+  igual(await t.n(`select count(*) from cj.audit_logs where action = 'primeiro_admin' and entity_id = $1`, [P.novo]), 1, 'auditado');
+  await t.falha('select cj.promover_primeiro_admin($1)', [P.lucas], '23514', 'segunda vez recusada');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 8. A FUNÇÃO (api/_lib/jovem.js, antes api-proposta/jovem.js) DE PONTA A PONTA
 // Crachá falso numa tabela radar_chaves LOCAL (cópia mínima do formato do Radar).
 // ═══════════════════════════════════════════════════════════════════════════════
-const jovemMod = require(path.join(RAIZ, 'api-proposta/jovem.js'));
+const ARQ_FUNCAO = path.resolve(RAIZ, '..', 'api/_lib/jovem.js');
+const jovemMod = require(ARQ_FUNCAO);
 const crypto = require('crypto');
 const sha = (s) => crypto.createHash('sha256').update(String(s), 'utf8').digest('hex');
 // Funções puras equivalentes às de api/_lib/chave.js (o teste não importa nada do Radar).
@@ -546,6 +680,9 @@ const chaveFalsa = {
 const CRACHA_DAVI = 'rk_teste_davi_aaaaaaaaaaaaaaaaaaaaaaaa';
 const CRACHA_NOVO = 'rk_teste_novato_bbbbbbbbbbbbbbbbbbbbbbbb';
 const CRACHA_APARELHO = 'rk_teste_aparelho_cccccccccccccccccccc';
+const CRACHA_COORD = 'rk_teste_coord_eeeeeeeeeeeeeeeeeeeeeeee';
+const CRACHA_PASTOR = 'rk_teste_pastor_ffffffffffffffffffffffff';
+const CRACHA_MARIA = 'rk_teste_maria_gggggggggggggggggggggggg';   // pré-cadastrada pela liderança
 const handler = jovemMod.criarHandler({
   chave: chaveFalsa,
   conectar: async () => { const c = new Client(CONEXAO); await c.connect(); return c; }
@@ -611,6 +748,117 @@ testeHandler('handler: pessoa nova entra, nasce "pendente" e não publica até s
   igual((await chamar(CRACHA_NOVO, { acao: 'devocionais' })).code, 200, 'mas lê a Palavra');
 });
 
+// ─── Módulo 1 pela função, de ponta a ponta ───────────────────────────────────
+const dono = async (sql, p) => (await db.query(sql, p)).rows;
+testeHandler('M1 handler: "status" responde sem crachá (o app descobre se o módulo está no ar)', async () => {
+  const r = await chamar(null, { acao: 'status' });
+  igual([r.code, r.body.configurado], [200, true], 'status');
+  igual((await chamar(null, { acao: 'eu' })).code, 401, '"eu" sem crachá continua 401');
+});
+testeHandler('M1 handler: "eu" de quem entrou no Radar mas ainda não tem perfil → perfil null', async () => {
+  await dono(`insert into radar_chaves(user_key, chave_hash) values ('99900000123', $1) on conflict do nothing`, [sha('rk_teste_sem_perfil_hhhhhhhhhhhhhhhhhh')]);
+  const r = await chamar('rk_teste_sem_perfil_hhhhhhhhhhhhhhhhhh', { acao: 'eu' });
+  igual([r.code, r.body.dados.perfil], [200, null], 'sem perfil');
+});
+testeHandler('M1 handler: "eu" devolve papéis e status (Davi, membro)', async () => {
+  const r = await chamar(CRACHA_DAVI, { acao: 'eu' });
+  igual([r.code, r.body.dados.perfil.status, r.body.dados.perfil.papeis, r.body.dados.perfil.equipe], [200, 'ativo', [], false], 'eu do Davi');
+});
+testeHandler('M1 handler: membro comum NÃO lista pessoas nem dá papel (403 do banco)', async () => {
+  igual((await chamar(CRACHA_DAVI, { acao: 'pessoas' })).code, 403, 'Davi listando');
+  igual((await chamar(CRACHA_DAVI, { acao: 'conceder_papel', usuario: P.ana, papel: 'circle_leader' })).code, 403, 'Davi dando papel');
+  igual((await chamar(CRACHA_DAVI, { acao: 'pre_cadastrar', nome: 'X Y', whatsapp: '11990000000', faixa: '18-21' })).code, 403, 'Davi pré-cadastrando');
+});
+testeHandler('M1 handler: coordenação lista pessoas com filtros', async () => {
+  const r = await chamar(CRACHA_COORD, { acao: 'pessoas', filtros: { status: 'pendente' } });
+  igual(r.code, 200, 'status');
+  espera(r.body.dados.pessoas.some((x) => x.id === P.novo) && r.body.dados.pessoas.every((x) => x.status === 'pendente'), 'só pendentes');
+  igual(r.body.dados.pode_conceder, ['member', 'circle_leader', 'assistant'], 'o que a coordenação concede');
+  espera(r.body.dados.circulos.length === 3, 'círculos para o filtro');
+  igual((await chamar(CRACHA_COORD, { acao: 'pessoas', filtros: { faixa: '99' } })).code, 400, 'filtro inválido');
+});
+testeHandler('M1 handler: youth_admin NÃO dá pastor/proteção; dá líder de círculo', async () => {
+  igual((await chamar(CRACHA_COORD, { acao: 'conceder_papel', usuario: P.ana, papel: 'pastor' })).code, 403, 'youth_admin → pastor');
+  igual((await chamar(CRACHA_COORD, { acao: 'conceder_papel', usuario: P.ana, papel: 'safeguarding_admin' })).code, 403, 'youth_admin → proteção');
+  igual((await chamar(CRACHA_COORD, { acao: 'conceder_papel', usuario: P.ana, papel: 'circle_leader' })).code, 200, 'youth_admin → líder');
+  igual((await chamar(CRACHA_COORD, { acao: 'revogar_papel', usuario: P.ana, papel: 'circle_leader' })).code, 200, 'youth_admin retira líder');
+  igual((await chamar(CRACHA_COORD, { acao: 'conceder_papel', usuario: P.bia, papel: 'assistant' })).code, 400, 'menor não vira auxiliar');
+});
+testeHandler('M1 handler: pastor dá proteção e pastor (e retira)', async () => {
+  igual((await chamar(CRACHA_PASTOR, { acao: 'conceder_papel', usuario: P.ana, papel: 'safeguarding_admin' })).code, 200, 'pastor → proteção');
+  igual((await chamar(CRACHA_PASTOR, { acao: 'conceder_papel', usuario: P.ana, papel: 'pastor' })).code, 200, 'pastor → pastor');
+  igual((await dono('select role from cj.roles where user_id = $1 order by role', [P.ana])).map((x) => x.role), ['pastor', 'safeguarding_admin'], 'papéis da Ana');
+  igual((await chamar(CRACHA_PASTOR, { acao: 'revogar_papel', usuario: P.ana, papel: 'pastor' })).code, 200, 'retira pastor');
+  igual((await chamar(CRACHA_PASTOR, { acao: 'revogar_papel', usuario: P.ana, papel: 'safeguarding_admin' })).code, 200, 'retira proteção');
+  igual((await chamar(CRACHA_PASTOR, { acao: 'conceder_papel', usuario: P.ana, papel: 'dono_de_tudo' })).code, 400, 'papel inexistente');
+});
+testeHandler('M1 handler: pré-cadastro pelo WhatsApp se vincula quando a pessoa entra no Radar com aquele número', async () => {
+  // a liderança digita com +55 e máscara; o Radar guarda sem o 55 — os dois casam
+  const p = await chamar(CRACHA_COORD, { acao: 'pre_cadastrar', nome: 'Maria Pré (teste)', whatsapp: '+55 (21) 99876-5432', faixa: '18-21' });
+  igual(p.code, 200, 'pré-cadastro');
+  const dup = await chamar(CRACHA_COORD, { acao: 'pre_cadastrar', nome: 'Maria de novo', whatsapp: '21998765432', faixa: '18-21' });
+  igual(dup.code, 409, 'mesmo número de novo');
+  igual((await chamar(CRACHA_COORD, { acao: 'pre_cadastrar', nome: 'Curto', whatsapp: '1234', faixa: '18-21' })).code, 400, 'número curto');
+  const linhaPre = (await dono('select radar_key_hash, vinculado_em from cj.profiles where id = $1', [p.body.dados.id]))[0];
+  espera(!/21998765432|99876/.test(JSON.stringify(linhaPre)) && linhaPre.vinculado_em === null, 'banco guarda só o HMAC, ainda sem vínculo');
+  // a Maria se cadastra no Radar (crachá emitido para o número sem 55) e abre o Conexão Jovem
+  await dono(`insert into radar_chaves(user_key, chave_hash) values ('21998765432', $1)`, [sha(CRACHA_MARIA)]);
+  const eu = await chamar(CRACHA_MARIA, { acao: 'eu' });
+  igual([eu.code, eu.body.dados.perfil.id, eu.body.dados.perfil.nome, eu.body.dados.acabou_de_vincular], [200, p.body.dados.id, 'Maria Pré (teste)', true], 'vinculou na 1ª entrada');
+  igual((await chamar(CRACHA_MARIA, { acao: 'eu' })).body.dados.acabou_de_vincular, false, 'não vincula duas vezes');
+  igual((await chamar(CRACHA_MARIA, { acao: 'entrar', nome: 'Outro Nome', faixa: '22-25' })).body.novo, false, 'entrar não cria perfil duplicado');
+  igual((await chamar(CRACHA_MARIA, { acao: 'aceitar_termos', documentos: ['termos_uso', 'privacidade', 'regras_comunidade'], versao: '2026-11' })).code, 200, 'aceita os termos');
+  igual((await chamar(CRACHA_MARIA, { acao: 'eu' })).body.dados.perfil.termos.length, 3, 'termos registrados');
+});
+testeHandler('M1 handler: desativar e reativar pessoa; desativado não usa o app', async () => {
+  igual((await chamar(CRACHA_COORD, { acao: 'desativar_pessoa', usuario: P.davi })).code, 200, 'desativa o Davi');
+  const r = await chamar(CRACHA_DAVI, { acao: 'perfil' });
+  igual([r.code, r.body.motivo], [403, 'perfil_suspenso'], 'Davi bloqueado');
+  igual((await chamar(CRACHA_DAVI, { acao: 'eu' })).body.dados.perfil, { status: 'suspenso' }, '"eu" só conta a situação');
+  igual((await chamar(CRACHA_COORD, { acao: 'desativar_pessoa', usuario: P.pastor })).code, 403, 'coordenação não desativa o pastor');
+  igual((await chamar(CRACHA_COORD, { acao: 'ativar_perfil', usuario: P.davi })).code, 200, 'reativa');
+  igual((await chamar(CRACHA_DAVI, { acao: 'perfil' })).code, 200, 'Davi de volta');
+});
+testeHandler('M1 handler: aprovar pendente (ativar) e corrigir faixa', async () => {
+  igual((await chamar(CRACHA_COORD, { acao: 'ativar_perfil', usuario: P.novo })).code, 200, 'aprova o pendente');
+  igual((await dono('select status from cj.profiles where id = $1', [P.novo]))[0].status, 'ativo', 'ativo');
+  igual((await chamar(CRACHA_COORD, { acao: 'definir_faixa', usuario: P.novo, faixa: '22-25' })).code, 200, 'corrige faixa');
+});
+testeHandler('M1 handler: tudo o que a liderança fez está em audit_logs', async () => {
+  const acoes = (await dono(`select distinct action from cj.audit_logs where actor_id = any($1::uuid[])`, [[P.coord, P.pastor]])).map((x) => x.action);
+  for (const a of ['consultar', 'conceder_papel', 'revogar_papel', 'pre_cadastrar', 'desativar_perfil', 'ativar_perfil']) {
+    espera(acoes.includes(a), 'faltou na auditoria: ' + a);
+  }
+  const maria = (await dono(`select id from cj.profiles where display_name = 'Maria Pré (teste)'`))[0].id;
+  igual(Number((await dono(`select count(*) from cj.audit_logs where action = 'vincular' and actor_id = $1`, [maria]))[0].count), 1, 'vínculo auditado');
+  const novoPerfil = (await dono(`select count(*) from cj.audit_logs where action = 'criar_perfil'`))[0].count;
+  espera(Number(novoPerfil) >= 1, 'criação de perfil pelo "entrar" auditada');
+});
+testeHandler('M1 handler: sem CJ_DB_URL/CJ_VINCULO_SEGREDO a rota responde "não configurado" (JSON) sem exceção', async () => {
+  const salvo = { CJ_DB_URL: process.env.CJ_DB_URL, CJ_VINCULO_SEGREDO: process.env.CJ_VINCULO_SEGREDO, RADAR_DB_DATABASE_URL: process.env.RADAR_DB_DATABASE_URL };
+  delete process.env.CJ_DB_URL; delete process.env.CJ_VINCULO_SEGREDO; delete process.env.RADAR_DB_DATABASE_URL;
+  try {
+    for (const req of [{ method: 'POST', headers: { 'x-radar-chave': CRACHA_DAVI }, body: { acao: 'eu' } }, { method: 'GET', headers: {}, query: {} },
+                       { method: 'POST', headers: {}, body: 'isto não é json' }]) {
+      const res = { code: 0, body: null, setHeader() {}, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
+      await jovemMod(req, res);
+      igual([res.code, res.body.ok, res.body.motivo], [200, false, 'nao_configurado'], 'resposta sem configuração');
+    }
+    igual(jovemMod.configuracao({}).faltando, ['CJ_DB_URL', 'CJ_VINCULO_SEGREDO', 'RADAR_DB_DATABASE_URL'], 'o que falta');
+    igual(jovemMod.configuracao({ CJ_DB_URL: 'x', RADAR_DB: 'y', CJ_VINCULO_SEGREDO: 'curto' }).faltando, ['CJ_VINCULO_SEGREDO'], 'segredo curto');
+  } finally {
+    for (const k of Object.keys(salvo)) if (salvo[k] !== undefined) process.env[k] = salvo[k];
+  }
+});
+testeHandler('M1 handler: o arquivo carrega sem o pacote pg e sem variáveis (não derruba o api/dados.js)', async () => {
+  const { spawnSync } = require('child_process');
+  const env = { PATH: process.env.PATH };   // sem NODE_PATH (sem pg) e sem nenhuma variável do módulo
+  const r = spawnSync(process.execPath, ['-e', `const j = require(${JSON.stringify(ARQ_FUNCAO)});
+    const res = { setHeader() {}, status(c) { this.c = c; return this; }, json(b) { console.log(this.c, b.motivo); } };
+    j({ method: 'POST', headers: {}, body: { acao: 'eu' } }, res);`], { env, encoding: 'utf8' });
+  igual([r.status, r.stdout.trim()], [0, '200 nao_configurado'], 'carregou e respondeu: ' + r.stderr);
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 async function principal() {
   // banco limpo
@@ -632,7 +880,8 @@ async function principal() {
   console.log('\nPreparação');
   await db.query(ler(MINIMO));
   try { await db.query(ler(MIGRACAO)); marcar(true, 'migração aplicada (1ª vez)'); } catch (e) { marcar(false, 'migração aplicada (1ª vez)', e.message); throw e; }
-  try { await db.query(ler(MIGRACAO)); marcar(true, 'migração reaplicada sem erro (idempotente)'); } catch (e) { marcar(false, 'migração idempotente', e.message); }
+  try { await db.query(ler(MIGRACAO_2)); marcar(true, 'migração 002 (gestão de pessoas) aplicada'); } catch (e) { marcar(false, 'migração 002 aplicada', e.message); throw e; }
+  try { await db.query(ler(MIGRACAO)); await db.query(ler(MIGRACAO_2)); marcar(true, 'migrações 001 + 002 reaplicadas sem erro (idempotentes)'); } catch (e) { marcar(false, 'migração idempotente', e.message); }
   try { await db.query(ler(SEED)); marcar(false, 'seed recusa rodar sem a trava', 'rodou sem a trava'); } catch (e) { marcar(/recusado/.test(e.message), 'seed recusa rodar sem a trava', e.message); }
   await db.query("set cj.permitir_seed_demo = 'sim'");
   await db.query(ler(SEED));
@@ -648,13 +897,16 @@ async function principal() {
     finally { await db.query('rollback'); }
   }
 
-  console.log('\nFunção proposta api-proposta/jovem.js (ponta a ponta)');
+  console.log('\nFunção api/_lib/jovem.js (ponta a ponta)');
   process.env.CJ_VINCULO_SEGREDO = 'segredo-de-teste-local-com-mais-de-32-caracteres';
   // radar_chaves/vínculo LOCAIS e fictícios: Davi (telefone fictício 99900000007) e uma pessoa nova.
   await db.query(`create table radar_chaves(id bigserial primary key, user_key text not null, chave_hash text not null unique)`);
   await db.query(`insert into radar_chaves(user_key, chave_hash) values ('99900000007', $1), ('99900000099', $2), ('ap3f9k2zz', $3)`,
                  [sha(CRACHA_DAVI), sha(CRACHA_NOVO), sha(CRACHA_APARELHO)]);
   await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovemMod.hashVinculo('99900000007'), P.davi]);
+  await db.query(`insert into radar_chaves(user_key, chave_hash) values ('99900000002', $1), ('99900000001', $2)`, [sha(CRACHA_COORD), sha(CRACHA_PASTOR)]);
+  await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovemMod.hashVinculo('99900000002'), P.coord]);
+  await db.query('update cj.profiles set radar_key_hash = $1 where id = $2', [jovemMod.hashVinculo('99900000001'), P.pastor]);
   for (const t of testesHandler) {
     try { await t.fn(); marcar(true, t.nome); }
     catch (e) { marcar(false, t.nome, e instanceof Falha ? e.message : `erro inesperado: ${e.code || ''} ${e.message}`); }

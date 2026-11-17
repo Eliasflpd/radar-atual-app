@@ -414,3 +414,27 @@ a.cartao-navy{color:var(--branco)}
 .post-acoes{flex-wrap:nowrap;gap:0}
 .post-acao{padding:0 7px;white-space:nowrap}
 .etapa.atual .selo-ouro{background:var(--branco)}
+
+/* ── Módulo 1 · login real e tela Pessoas (17/11/2026) ── */
+.carregando-cartao{display:flex;align-items:center;gap:14px}
+.carregando-cartao>*+*{margin-top:0}
+.gira-ic{width:26px;height:26px;border-radius:50%;border:3px solid var(--cinza-2);border-top-color:var(--azul);flex:none;animation:gira 1s linear infinite}
+.filtro-chips .chip{min-height:48px}
+.filtros-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.selo-cinza{background:var(--cinza-2);color:var(--texto-2)}
+.pessoas{list-style:none;background:var(--branco);border-radius:var(--raio);box-shadow:var(--sombra);overflow:hidden}
+.pessoas>li{display:flex;align-items:center;gap:6px;border-top:1px solid var(--linha);padding-right:10px}
+.pessoas>li:first-child{border-top:0}
+.pessoa-bt{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;padding:12px 4px 12px 14px;min-height:64px}
+.pessoa-bt .li-t{flex:1;min-width:0;display:grid;gap:3px}
+.pessoa-bt .li-t b{font-weight:800;color:var(--navy);overflow-wrap:anywhere;line-height:1.3}
+.pessoa-bt .li-t>span{font-size:13px;color:var(--texto-2)}
+.pessoa-bt .selos{margin-top:3px;gap:4px}
+.pessoa-bt .selo{font-size:11px;padding:3px 8px;white-space:normal}
+.btn-mini{min-height:48px;padding:0 14px;font-size:14px;flex:none}
+.lista-carregando{opacity:.55;pointer-events:none}
+.esqueleto{height:64px;border-top:1px solid var(--linha);background:linear-gradient(90deg,var(--cinza) 0,var(--branco) 50%,var(--cinza) 100%);background-size:200% 100%}
+.esqueleto:first-of-type{border-top:0}
+@media (prefers-reduced-motion:no-preference){.esqueleto{animation:brilho 1.4s linear infinite}}
+@media (prefers-reduced-motion:reduce){.gira-ic{animation:none;border-top-color:var(--azul)}}
+.modal-corpo .interruptor .chave input:disabled+i{opacity:.45}

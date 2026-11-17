@@ -130,6 +130,31 @@ window.CJ_DEMO = {
   ],
   disponibilidade: ['Sábado de manhã', 'Sábado à tarde', 'Domingo', 'Durante a semana, à noite'],
 
+  // Módulo 1 · tela "Pessoas" (painel de liderança). Pessoas FICTÍCIAS, só para a demonstração.
+  // Mesmo formato que a função devolve (api/_lib/jovem.js, ação "pessoas").
+  pessoasCirculos: [
+    { id: 'c-esp', nome: 'Círculo Esperança', faixa: '18-21' },
+    { id: 'c-ren', nome: 'Círculo Renovo', faixa: '15-17' },
+    { id: 'c-cam', nome: 'Círculo Caminho', faixa: '18-21' },
+    { id: 'c-rai', nome: 'Círculo Raízes', faixa: '22-25' }
+  ],
+  pessoas: [
+    { id: 'd01', nome: 'Pastor Samuel (demo)', faixa: '22-25', status: 'ativo', papeis: ['pastor'], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true, voce: true },
+    { id: 'd02', nome: 'Coordenadora Lia (demo)', faixa: '22-25', status: 'ativo', papeis: ['youth_admin'], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true },
+    { id: 'd03', nome: 'Irmã Rute (demo)', faixa: '22-25', status: 'ativo', papeis: ['safeguarding_admin'], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true },
+    { id: 'd04', nome: 'Rafael Teixeira (demo)', faixa: '22-25', status: 'ativo', papeis: ['circle_leader'], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true },
+    { id: 'd05', nome: 'Camila Souza (demo)', faixa: '22-25', status: 'ativo', papeis: ['assistant'], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true },
+    { id: 'd06', nome: 'Davi Andrade (demo)', faixa: '18-21', status: 'ativo', papeis: [], circulo_id: 'c-esp', circulo_nome: 'Círculo Esperança', vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true },
+    { id: 'd07', nome: 'Ana Barros (demo)', faixa: '18-21', status: 'ativo', papeis: [], circulo_id: 'c-esp', circulo_nome: 'Círculo Esperança', vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true },
+    { id: 'd08', nome: 'Lucas Mendes (demo)', faixa: '18-21', status: 'ativo', papeis: [], circulo_id: 'c-cam', circulo_nome: 'Círculo Caminho', vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true },
+    { id: 'd09', nome: 'Bia Ramos (demo)', faixa: '15-17', status: 'ativo', papeis: [], circulo_id: 'c-ren', circulo_nome: 'Círculo Renovo', vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'aprovado', acolhido: true },
+    { id: 'd10', nome: 'Theo Nunes (demo)', faixa: '15-17', status: 'ativo', papeis: [], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'pendente', acolhido: true },
+    { id: 'd11', nome: 'Jonas Pereira (demo)', faixa: '18-21', status: 'pendente', papeis: [], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: false },
+    { id: 'd12', nome: 'Marina Costa (demo)', faixa: '22-25', status: 'pendente', papeis: [], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: false, consentimento: 'nao_exigido', acolhido: false },
+    { id: 'd13', nome: 'Pedro Henrique (demo)', faixa: '18-21', status: 'ativo', papeis: [], circulo_id: null, circulo_nome: null, vinculado: false, pre_cadastrado: true, regras_aceitas: false, consentimento: 'nao_exigido', acolhido: false },
+    { id: 'd14', nome: 'Sara Lopes (demo)', faixa: '18-21', status: 'suspenso', papeis: [], circulo_id: null, circulo_nome: null, vinculado: true, pre_cadastrado: false, regras_aceitas: true, consentimento: 'nao_exigido', acolhido: true }
+  ],
+
   lideranca: {
     kpis: [
       { rot: 'Tempo médio até o acolhimento', val: '41 h', meta: 'meta: até 72 h úteis' },

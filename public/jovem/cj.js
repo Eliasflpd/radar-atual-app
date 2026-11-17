@@ -196,14 +196,14 @@
   T['boas-vindas'] = function () {
     return { cab: 'nenhum', nav: false, titulo: 'Boas-vindas', html:
       '<section class="bv">' +
-        '<div class="bv-topo"><a class="btn btn-claro" href="/?capa" style="min-height:44px;padding:0 14px 0 10px">' + ic('left', 'ic-sm') + 'Capa</a><span class="demo-pill">Demonstração</span></div>' +
+        '<div class="bv-topo"><a class="btn btn-claro" href="/?capa" style="min-height:48px;padding:0 14px 0 10px">' + ic('left', 'ic-sm') + 'Capa</a>' + (real() ? '' : '<span class="demo-pill">Demonstração</span>') + '</div>' +
         '<div class="bv-arte">' + bvArte() + '</div>' +
         '<div class="bv-marca"><div class="logo">' + LOGO + '</div><h1>Conexão<b>Jovem</b></h1><p class="ass">Mais que uma igreja. Uma família em Cristo.</p></div>' +
         '<ul class="bv-lista">' +
           '<li><span>' + ic('home') + '</span>Pertencimento</li><li><span>' + ic('users') + '</span>Amizade verdadeira</li>' +
           '<li><span>' + ic('book') + '</span>Crescimento na fé</li><li><span>' + ic('heartHandshake') + '</span>Missão na prática</li></ul>' +
         '<p class="bv-texto">Um lugar para jovens de 15 a 25 anos encontrarem pessoas com quem caminhar, crescerem na fé e descobrirem formas concretas de servir. O app é ponte: o melhor acontece nos encontros.</p>' +
-        '<div class="bv-acoes"><a class="btn btn-ouro" href="#/entrar">Entrar ou criar cadastro</a>' +
+        '<div class="bv-acoes">' + (euAtivo() ? '<a class="btn btn-ouro" href="' + (precisaRegras() ? '#/consentimento' : '#/inicio') + '">Continuar como ' + esc(primeiroNome()) + '</a>' : '<a class="btn btn-ouro" href="#/entrar">' + (real() || R.modo === 'sem_cracha' ? 'Entrar com a conta do Radar' : 'Entrar ou criar cadastro') + '</a>') +
           '<button class="btn btn-claro" type="button" data-acao="explorar">Explorar sem cadastro</button>' +
           '<a class="btn btn-txt" href="/?radar" style="color:#DCE4F4">' + ic('radar', 'ic-sm') + 'Ir para o Radar Atual</a></div>' +
         '<p class="bv-rodape">FÉ QUE APROXIMA. AMIZADES QUE FORTALECEM.</p>' +
@@ -243,7 +243,7 @@
       '<div class="sec pt-l">' +
         '<div><h2 class="tit" style="font-size:22px">' + (aba.etapaCodigo ? 'Quase lá' : 'Que bom que você veio') + '</h2><p class="sub" style="margin-top:4px">' + (aba.etapaCodigo ? 'Digite o código para confirmar que o número é seu.' : 'Sem senha para decorar: você entra com um código pelo WhatsApp.') + '</p></div>' +
         '<div class="cartao">' + corpo + '</div>' +
-        aviso('<b>Fase 2:</b> o login será o mesmo do Radar Atual (código pelo WhatsApp), com uma única conta para os dois. Nesta demonstração nada é enviado e nenhum dado sai do seu aparelho.', '', 'info') +
+        aviso('<b>Demonstração:</b> quando o módulo estiver ligado, você entra com a mesma conta do Radar Atual (código pelo WhatsApp), sem refazer cadastro. Aqui nada é enviado e nenhum dado sai do seu aparelho.', '', 'info') +
         '<p class="peq" style="text-align:center"><button type="button" class="btn btn-txt" data-acao="politica">Como cuidamos dos seus dados</button></p>' +
       '</div>',
       depois: function () {
@@ -321,7 +321,7 @@
     var dv = D.devocionais[0], c = D.circulo, ev = D.eventos[0];
     var prox = proximoPasso();
     return { cab: 'marca', nav: 'inicio', titulo: 'Início', html:
-      '<div class="topo-inicio"><p class="data"><span>' + esc(D.hoje) + '</span><span class="demo-pill" title="Dados fictícios de demonstração">Demonstração</span></p><h2 class="saudacao">Que bom ter você aqui, <b>' + esc(E.perfil.nome) + '</b>.</h2><p>Vamos caminhar juntos na presença de Deus.</p></div>' +
+      '<div class="topo-inicio"><p class="data"><span>' + esc(D.hoje) + '</span><span class="demo-pill" title="Dados fictícios de demonstração">Demonstração</span></p><h2 class="saudacao">Que bom ter você aqui, <b>' + esc(primeiroNome()) + '</b>.</h2><p>Vamos caminhar juntos na presença de Deus.</p></div>' +
       '<div class="sec sobe">' +
         (menorPendente() ? aviso('<b>Cadastro de menor em análise.</b> Mural e conversas do círculo ficam bloqueados até a autorização do responsável e a aprovação da liderança. <a href="#/consentimento">Ver situação</a>', '', 'shield') : '') +
         '<a class="cartao cartao-navy cartao-link" href="#/palavra" style="display:block"><div class="selos"><span class="selo selo-navy">' + ic('sun') + 'Palavra do Dia</span></div>' +
@@ -633,7 +633,7 @@
     function it(h, i, b, s) { return '<li><a href="' + h + '"><span class="ic-caixa">' + ic(i) + '</span><span class="li-t"><b>' + b + '</b><span>' + s + '</span></span>' + ic('right', 'ic seta') + '</a></li>'; }
     return { cab: 'normal', nav: 'mais', titulo: 'Mais', html:
       '<div class="sec pt">' +
-        '<a class="cartao cartao-link" href="#/perfil">' + av(E.perfil.nome, '#2462D2') + '<div><h3>' + esc(E.perfil.nome) + '</h3><p>' + FAIXAS[E.perfil.faixa] + ' · ver perfil e preferências</p></div>' + ic('right', 'ic seta') + '</a>' +
+        '<a class="cartao cartao-link" href="#/perfil">' + av(nomeExib(), '#2462D2') + '<div><h3>' + esc(nomeExib()) + '</h3><p>' + esc(FAIXAS[euAtivo() ? euAtivo().faixa : E.perfil.faixa] || '') + ' · ver perfil e preferências</p></div>' + ic('right', 'ic seta') + '</a>' +
         '<div class="cartao"><ul class="lista lista-link">' +
           it('#/talentos', 'sparkles', 'Talentos e Serviço', 'Indique onde quer servir') +
           it('#/acolhimento', 'heart', 'Acolhimento', 'Pedido de oração e conversa') +
@@ -641,15 +641,16 @@
           it('#/missao', 'target', 'Missão da Semana', D.missao.titulo) +
           it('#/circulo', 'users', 'Meu Círculo', D.circulo.nome) + '</ul></div>' +
         '<div class="cartao"><ul class="lista lista-link">' +
-          it('#/lideranca', 'chart', 'Painel de liderança', 'Prévia com dados fictícios') +
+          (!real() || (euAtivo() && euAtivo().equipe) ? it('#/pessoas', 'users', 'Pessoas', real() ? 'Aprovar, cadastrar e dar papéis' : 'Gestão de pessoas (demonstração)') +
+            it('#/lideranca', 'chart', 'Painel de liderança', 'Prévia com dados fictícios') : '') +
           '<li><button type="button" data-acao="regras"><span class="ic-caixa">' + ic('shield') + '</span><span class="li-t"><b>Regras da comunidade</b><span>Respeito, cuidado e proteção</span></span>' + ic('right', 'ic seta') + '</button></li>' +
           '<li><button type="button" data-acao="politica"><span class="ic-caixa">' + ic('lock') + '</span><span class="li-t"><b>Privacidade</b><span>Como cuidamos dos seus dados</span></span>' + ic('right', 'ic seta') + '</button></li>' +
           it('#/boas-vindas', 'home', 'Rever boas-vindas', 'Tela de apresentação') + '</ul></div>' +
         '<div class="cartao"><ul class="lista lista-link">' +
           '<li><a href="/?radar"><span class="ic-caixa ouro">' + ic('radar') + '</span><span class="li-t"><b>Ir para o Radar Atual</b><span>Bíblia, pregações e mais</span></span>' + ic('right', 'ic seta') + '</a></li>' +
           '<li><a href="/?capa"><span class="ic-caixa ouro">' + ic('left') + '</span><span class="li-t"><b>Voltar à capa</b><span>Escolher entre Radar e Conexão Jovem</span></span>' + ic('right', 'ic seta') + '</a></li></ul></div>' +
-        AV_DEMO +
-        '<p class="peq" style="text-align:center;letter-spacing:.04em">CONEXÃO JOVEM · protótipo Fase 1</p>' +
+        (real() ? aviso('<b>Conectado com a sua conta do Radar.</b> Perfil, consentimento e Pessoas usam dados reais. As demais telas ainda mostram a demonstração.', 'aviso-azul', 'info') : AV_DEMO) +
+        '<p class="peq" style="text-align:center;letter-spacing:.04em">CONEXÃO JOVEM · ' + (real() ? 'Módulo 1' : 'demonstração') + '</p>' +
       '</div>' };
   };
 
@@ -658,7 +659,8 @@
     var L = D.lideranca;
     return { cab: 'normal', voltar: '#/mais', nav: 'mais', titulo: 'Painel de liderança', html:
       '<div class="sec pt">' +
-        aviso('<b>Prévia com números fictícios.</b> Na Fase 2, só papéis autorizados acessam, com registro de auditoria. O painel mostra dados agregados: nunca diário espiritual nem o conteúdo de pedidos de oração.', '', 'info') +
+        '<a class="cartao cartao-link" href="#/pessoas"><span class="ic-caixa">' + ic('users') + '</span><div><h3>Pessoas</h3><p>Aprovar pendentes, cadastrar pelo WhatsApp, dar e retirar papéis.</p></div>' + ic('right', 'ic seta') + '</a>' +
+        aviso('<b>Os números abaixo são fictícios.</b> Só papéis autorizados acessam, com registro de auditoria. O painel mostra dados agregados: nunca diário espiritual nem o conteúdo de pedidos de oração.', '', 'info') +
         '<h2 class="tit-sec" style="margin-top:8px">Integração · últimos 30 dias</h2>' +
         '<div class="kpis">' + L.kpis.map(function (k) { return '<div class="kpi"><small>' + esc(k.rot) + '</small><b>' + esc(k.val) + '</b><span>' + esc(k.meta) + '</span></div>'; }).join('') + '</div>' +
         '<div class="cartao"><h3>Continuidade por janela</h3><p>Participaram de ao menos uma experiência presencial (coorte de setembro). Interpretar o contexto, sem rotular ausentes.</p>' +
@@ -674,8 +676,8 @@
         '<div class="cartao"><h3>Gestão</h3><div class="btns">' +
           '<button class="btn btn-sec btn-cheio" type="button" disabled>' + ic('plus', 'ic-sm') + 'Criar evento</button>' +
           '<button class="btn btn-sec btn-cheio" type="button" disabled>' + ic('megaphone', 'ic-sm') + 'Novo comunicado</button>' +
-          '<button class="btn btn-sec btn-cheio" type="button" disabled>' + ic('shield', 'ic-sm') + 'Papéis e permissões</button></div>' +
-          fase2('Disponível na Fase 2, com login, papéis (líder, auxiliar, administrador, pastor, proteção), RLS no banco e registro de auditoria.') + '</div>' +
+          '<a class="btn btn-sec btn-cheio" href="#/pessoas">' + ic('shield', 'ic-sm') + 'Pessoas e papéis</a></div>' +
+          fase2('Eventos e comunicados chegam nos próximos módulos. Pessoas e papéis já funcionam (com o banco, quando o módulo estiver ligado).') + '</div>' +
       '</div>' };
   };
 
@@ -683,6 +685,452 @@
     return { cab: 'normal', voltar: '#/inicio', nav: 'inicio', titulo: 'Não encontrado', html:
       '<div class="sec pt-l"><div class="vazio">' + ic('compass') + '<b>Esta tela não existe</b><p>O link pode estar errado ou ter mudado.</p><a class="btn btn-pri" href="#/inicio" style="margin-top:14px">Voltar ao início</a></div></div>' };
   };
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     MÓDULO 1 · login pelo crachá do Radar e gestão de pessoas (17/11/2026)
+     Modo automático (ver cj-api.js): 'real' usa o banco; 'sem_cracha' orienta o cadastro
+     no Radar; 'demo' é a Fase 1 intacta. As telas deste módulo: Entrar, Consentimento,
+     Perfil e Pessoas (painel). As demais continuam em demonstração, com o selo.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  var API = window.CJAPI || null;
+  var R = { modo: API && API.cracha() ? 'verificando' : 'demo', motivo: '', eu: null };
+  var VERSAO_TERMOS = '2026-11';
+  var DOCS = ['termos_uso', 'privacidade', 'regras_comunidade'];
+  function real() { return R.modo === 'real'; }
+  function euAtivo() { return real() && R.eu && R.eu.id ? R.eu : null; }
+  function verificando() { return R.modo === 'verificando'; }
+  function nomeExib() { var e = euAtivo(); return e ? e.nome : E.perfil.nome; }
+  function primeiroNome() { return String(nomeExib() || '').trim().split(/\s+/)[0] || 'você'; }
+  var PAPEL = { member: 'Membro', circle_leader: 'Líder de círculo', assistant: 'Auxiliar', safeguarding_admin: 'Proteção', youth_admin: 'Coordenação', pastor: 'Pastor' };
+  var PAPEL_DICA = { circle_leader: 'Conduz um círculo da sua faixa (só adultos).', assistant: 'Ajuda o líder a cuidar do círculo.', safeguarding_admin: 'Recebe denúncias e casos de proteção.',
+    youth_admin: 'Aprova pessoas, cadastra e dá papéis de líder e auxiliar.', pastor: 'Responsável pastoral. Dá qualquer papel.' };
+  var ORDEM_PAPEIS = ['circle_leader', 'assistant', 'safeguarding_admin', 'youth_admin', 'pastor'];
+  var STATUS = { pendente: 'Pendente', ativo: 'Ativo', suspenso: 'Desativado', encerrado: 'Encerrado' };
+  var MSG = {
+    sem_permissao: 'Você não tem permissão para fazer isso.', ja_existe: 'Já existe uma pessoa com este WhatsApp.',
+    nao_encontrado: 'Não encontramos esta pessoa. Atualize a lista.', offline: 'Sem conexão agora. Confira a internet e tente de novo.',
+    perfil_suspenso: 'Seu acesso ao Conexão Jovem está desativado. Fale com a liderança de jovens.', sem_perfil: 'Você ainda não entrou no Conexão Jovem.',
+    cracha_invalido: 'Seu login do Radar não foi reconhecido. Abra o Radar e confirme seu WhatsApp.', nao_configurado: 'O módulo ainda não está ligado.',
+    dados_invalidos: 'Confira os dados e tente de novo.', erro_interno: 'Algo deu errado do nosso lado. Tente de novo em instantes.'
+  };
+  function msgErro(r) { r = r || {}; return r.mensagem || MSG[r.motivo] || (r.motivo && r.motivo.length > 12 && /\s/.test(r.motivo) ? r.motivo : 'Não foi possível concluir. Tente de novo.'); }
+  function api(acao, dados) { return API.chamar(acao, dados).then(function (r) { if (!r.ok) throw r; return r; }); }
+  function atualizarEu() { return API.atualizarEu().then(function (r) { R.eu = API.estado.eu; return r; }); }
+  function ocupado(btn, sim) { if (!btn) return; btn.disabled = !!sim; btn.classList.toggle('carregando', !!sim); if (sim) btn.setAttribute('aria-busy', 'true'); else btn.removeAttribute('aria-busy'); }
+  function caixaErro(id, msg) { var b = document.getElementById(id); if (b) b.innerHTML = msg ? aviso(esc(msg), 'aviso-erro', 'alert') : ''; }
+  function precisaRegras() { var e = euAtivo(); return !!e && (e.termos || []).indexOf('regras_comunidade') < 0; }
+  function telaCarregando(titulo, voltar) {
+    return { cab: 'normal', voltar: voltar || '#/boas-vindas', nav: false, titulo: titulo, real: true, html:
+      '<div class="sec pt-l"><div class="cartao carregando-cartao" aria-busy="true"><span class="gira-ic" aria-hidden="true"></span><div><h3>Conferindo seu cadastro</h3><p>Usamos o mesmo login do Radar Atual.</p></div></div></div>' };
+  }
+  function telaSemPerfil(titulo, voltar) {
+    return { cab: 'normal', voltar: voltar || '#/boas-vindas', nav: false, titulo: titulo, real: true, html:
+      '<div class="sec pt-l">' + (R.eu && !R.eu.id ? aviso('<b>Acesso desativado.</b> ' + esc(MSG.perfil_suspenso), 'aviso-erro', 'lock') :
+      '<div class="vazio">' + ic('user') + '<b>Você ainda não entrou</b><p>Leva menos de um minuto, com a mesma conta do Radar Atual.</p><a class="btn btn-pri" href="#/entrar" style="margin-top:14px">Entrar no Conexão Jovem</a></div>') + '</div>' };
+  }
+
+  /* 02 · Entrar — real (crachá do Radar) e "sem crachá" (orienta o cadastro do Radar) */
+  var entrarDemo = T.entrar;
+  T.entrar = function () {
+    if (verificando()) return telaCarregando('Entrar');
+    if (R.modo === 'sem_cracha') return entrarRadar();
+    if (!real()) return entrarDemo();
+    if (R.eu && !R.eu.id) return telaSemPerfil('Entrar');
+    if (R.eu) return { cab: 'normal', voltar: '#/boas-vindas', nav: false, titulo: 'Entrar', real: true, html:
+      '<div class="sec pt-l"><div class="cartao">' + aviso('Você já entrou como <b>' + esc(R.eu.nome) + '</b>, com a mesma conta do Radar Atual.', 'aviso-verde', 'checkCircle') +
+      '<a class="btn btn-pri btn-cheio" href="' + (precisaRegras() ? '#/consentimento' : '#/inicio') + '">Continuar</a></div></div>' };
+    var ur = API.usuarioRadar(), sug = ur && ur.nome ? ur.nome.trim().split(/\s+/).slice(0, 2).join(' ') : '';
+    return { cab: 'normal', voltar: '#/boas-vindas', nav: false, titulo: 'Entrar', real: true, html:
+      '<div class="sec pt-l">' +
+        '<div><h2 class="tit" style="font-size:22px">Que bom que você veio</h2><p class="sub" style="margin-top:4px">Você já tem cadastro no Radar Atual. Falta só isto para entrar no Conexão Jovem, sem refazer nada.</p></div>' +
+        '<div class="cartao"><form class="form" id="f-entrar-real" novalidate>' +
+          aviso('WhatsApp confirmado no Radar Atual. É ele que identifica você aqui.', 'aviso-verde', 'checkCircle') +
+          '<div class="campo"><label for="r-nome">Como quer ser chamado?</label><input class="entrada" id="r-nome" autocomplete="nickname" maxlength="60" value="' + esc(sug) + '" aria-describedby="r-d-nome r-e-nome"><span class="dica" id="r-d-nome">Seu círculo e a liderança verão este nome.</span><span class="erro-msg" id="r-e-nome" role="alert"></span></div>' +
+          '<fieldset style="border:0"><legend class="rot" style="margin-bottom:8px">Qual é a sua faixa etária?</legend><div class="opcoes opcoes-3">' + ['15-17', '18-21', '22-25'].map(function (v) {
+            return '<label class="opcao"><input type="radio" name="r-faixa" value="' + v + '" aria-describedby="r-e-faixa"><b>' + v.replace('-', '–') + '</b><span>anos</span></label>'; }).join('') + '</div>' +
+            '<span class="peq" style="display:block;margin-top:6px">Para separar os grupos por idade e proteger menores.</span><span class="erro-msg" id="r-e-faixa" role="alert"></span></fieldset>' +
+          '<label class="opcao"><input type="checkbox" id="r-aceite" aria-describedby="r-e-aceite"><div><b>Li e aceito</b><span>as <button type="button" class="btn-txt" style="min-height:0;padding:0;display:inline;font-weight:700" data-acao="regras">regras da comunidade</button> e a <button type="button" class="btn-txt" style="min-height:0;padding:0;display:inline;font-weight:700" data-acao="politica">política de privacidade</button>.</span><span class="erro-msg" id="r-e-aceite" role="alert"></span></div></label>' +
+          '<div id="r-erro"></div>' +
+          '<button class="btn btn-pri btn-cheio" type="submit">Entrar no Conexão Jovem</button></form></div>' +
+        '<p class="peq" style="text-align:center">Seu cadastro começa como "pendente" até alguém da liderança fazer o seu acolhimento.</p>' +
+      '</div>',
+      depois: function () {
+        var f = document.getElementById('f-entrar-real');
+        f.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var nome = document.getElementById('r-nome'), aceite = document.getElementById('r-aceite'), fx = f.querySelector('input[name=r-faixa]:checked');
+          var ok = erroCampo(nome, nome.value.trim().length < 2 ? 'Digite como quer ser chamado (pelo menos 2 letras).' : '');
+          var ef = document.getElementById('r-e-faixa'); ef.innerHTML = fx ? '' : ic('alert') + 'Escolha a sua faixa etária.'; ok = !!fx && ok;
+          ok = erroCampo(aceite, aceite.checked ? '' : 'Para continuar, aceite as regras e a política.') && ok;
+          if (!ok) return;
+          var bt = f.querySelector('[type=submit]'); ocupado(bt, true); caixaErro('r-erro', '');
+          api('entrar', { nome: nome.value.trim(), faixa: fx.value })
+            .then(function () { return api('aceitar_termos', { documentos: DOCS, versao: VERSAO_TERMOS }); })
+            .then(atualizarEu)
+            .then(function () {
+              ocupado(bt, false);
+              toast('Pronto, você entrou', 'Seu cadastro aguarda o acolhimento da liderança.');
+              location.hash = R.eu && R.eu.faixa === '15-17' ? '#/consentimento' : '#/inicio';
+            })['catch'](function (r) { ocupado(bt, false); caixaErro('r-erro', msgErro(r)); });
+        });
+      } };
+  };
+  function entrarRadar() {
+    var ur = API && API.usuarioRadar(), falta = R.motivo === 'cracha_invalido' || (ur && !ur.confirmado);
+    return { cab: 'normal', voltar: '#/boas-vindas', nav: false, titulo: 'Entrar', real: true, html:
+      '<div class="sec pt-l">' +
+        '<div><h2 class="tit" style="font-size:22px">Entre com a sua conta do Radar Atual</h2><p class="sub" style="margin-top:4px">O Conexão Jovem usa o mesmo cadastro do Radar: um código pelo WhatsApp, sem senha.</p></div>' +
+        (falta ? aviso('<b>Falta confirmar o seu WhatsApp no Radar.</b> Abra o Radar Atual, toque em "Confirmar" e digite o código que chegou no WhatsApp. Depois volte aqui.', '', 'alert') : '') +
+        '<div class="cartao"><h3>' + (falta ? 'Como confirmar' : 'Ainda não tem cadastro?') + '</h3><ol class="marcadores">' +
+          [falta ? 'Abra o Radar Atual neste mesmo aparelho.' : 'Abra o Radar Atual e faça o cadastro com nome e WhatsApp.', 'Digite o código que chega no seu WhatsApp.', 'Volte aqui: você entra sem refazer nada.'].map(function (t, k) {
+            return '<li><span class="selo selo-azul" style="min-width:26px;justify-content:center">' + (k + 1) + '</span><span>' + t + '</span></li>'; }).join('') + '</ol>' +
+          '<div class="btns"><a class="btn btn-pri btn-cheio" href="/?radar">' + ic('radar', 'ic-sm') + (falta ? 'Abrir o Radar Atual' : 'Fazer cadastro no Radar') + '</a>' +
+          '<button class="btn btn-sec btn-cheio" type="button" data-acao="reverificar">Já fiz, entrar agora</button></div></div>' +
+        '<div class="cartao"><h3>Só quer conhecer?</h3><p>Veja como o app funciona com dados fictícios. Nada sai deste aparelho.</p><button class="btn btn-sec btn-cheio" type="button" data-acao="explorar">Explorar a demonstração</button></div>' +
+      '</div>' };
+  }
+
+  /* 03 · Consentimento e faixa etária — real */
+  var consentDemo = T.consentimento;
+  T.consentimento = function () {
+    if (verificando()) return telaCarregando('Antes de começar', '#/entrar');
+    if (!real()) return consentDemo();
+    var e = euAtivo();
+    if (!e) return telaSemPerfil('Antes de começar', '#/entrar');
+    var n = e.notificacoes || {}, regras = (e.termos || []).indexOf('regras_comunidade') >= 0;
+    return { cab: 'normal', voltar: '#/inicio', nav: false, titulo: 'Antes de começar', real: true, html:
+      '<div class="sec pt-l">' +
+        '<div><h2 class="tit" style="font-size:22px">Seus dados, explicados</h2><p class="sub" style="margin-top:4px">Leva um minuto. Você pode mudar os avisos depois em Perfil.</p></div>' +
+        '<div class="cartao"><h3>O que guardamos e por quê</h3><ul class="lista">' +
+          li('user', 'Nome de exibição', 'Para o seu círculo saber quem você é.') +
+          li('calendar', 'Faixa etária', 'Para separar grupos por idade e proteger menores.') +
+          li('phoneDev', 'WhatsApp (pelo Radar)', 'Só para reconhecer você. O número não fica guardado no Conexão Jovem.') +
+          li('sparkles', 'Interesses', 'Para sugerir um círculo e formas de servir.') +
+        '</ul><p>Seu perfil não é público. Diário e pedidos de oração nunca aparecem no mural. Você pode baixar ou apagar seus dados em Perfil.</p></div>' +
+        '<div class="cartao"><h3>Sua faixa etária</h3><p style="font-size:18px;font-weight:800;color:var(--navy)">' + esc(FAIXAS[e.faixa] || e.faixa) + '</p><p>Informada no seu cadastro. Se estiver errada, fale com a liderança: ela corrige.</p></div>' +
+        (e.faixa === '15-17' ? '<div id="menor-box">' + caixaMenorReal(e) + '</div>' : '') +
+        '<div class="cartao"><h3>Avisos (você escolhe)</h3><p>Tudo começa desligado. Nada de lembretes insistentes.</p>' +
+          interruptor('rc-palavra', 'Palavra do Dia', 'Um aviso por dia, no horário que você quiser.', n.palavra) +
+          interruptor('rc-circulo', 'Avisos do meu círculo', 'Quando houver encontro marcado.', n.circulo) + '</div>' +
+        '<div class="cartao"><label class="opcao" style="border:0;padding:0;min-height:0"><input type="checkbox" id="c-regras" aria-describedby="e-regras"' + (regras ? ' checked' : '') + '><div><b>Concordo com as regras da comunidade</b><span>Respeito, cuidado e proteção para todos.</span><span class="erro-msg" id="e-regras" role="alert"></span></div></label>' +
+          '<div class="btns-2" style="margin-top:12px"><button class="btn btn-sec" type="button" data-acao="regras">Ler regras</button><button class="btn btn-sec" type="button" data-acao="politica">Privacidade</button></div></div>' +
+        '<div id="rc-erro"></div>' +
+        '<button class="btn btn-pri btn-cheio" type="button" data-acao="consentir-real">Salvar e continuar</button>' +
+      '</div>',
+      depois: function () { var f = document.getElementById('f-consent'); if (f) f.addEventListener('submit', enviarConsent); } };
+  };
+  function enviarConsent(ev) {
+    ev.preventDefault();
+    var f = ev.target, resp = document.getElementById('rc-resp'), cont = document.getElementById('rc-cont');
+    var ok = erroCampo(resp, resp.value.trim().length < 3 ? 'Digite o nome do responsável.' : '');
+    ok = erroCampo(cont, cont.value.trim().length < 8 ? 'Informe um telefone ou e-mail do responsável.' : '') && ok;
+    if (!ok) return;
+    var bt = f.querySelector('[type=submit]'); ocupado(bt, true); caixaErro('rc-c-erro', '');
+    api('pedir_consentimento', { responsavel: resp.value.trim(), parentesco: document.getElementById('rc-par').value, contato: cont.value.trim(),
+      social: document.getElementById('rc-social').checked, eventos: document.getElementById('rc-eventos').checked, imagem: document.getElementById('rc-imagem').checked, versao: VERSAO_TERMOS })
+      .then(atualizarEu).then(function () { var e = euAtivo(), box = document.getElementById('menor-box'); if (box && e) box.innerHTML = caixaMenorReal(e); toast('Pedido de autorização enviado', 'A equipe vai confirmar com o seu responsável.'); })
+      ['catch'](function (r) { ocupado(bt, false); caixaErro('rc-c-erro', msgErro(r)); });
+  }
+  function caixaMenorReal(e) {
+    var c = e.consentimento || null, st = c ? c.status : '';
+    if (st === 'aprovado' || st === 'pendente') {
+      return '<div class="cartao cartao-ouro"><div class="selos"><span class="selo ' + (st === 'aprovado' ? 'selo-verde' : 'selo-alerta') + '">' + ic(st === 'aprovado' ? 'checkCircle' : 'hourglass') +
+        (st === 'aprovado' ? 'Autorização aprovada' : 'Aguardando a equipe') + '</span></div><h3>Autorização do responsável</h3>' +
+        '<p style="color:#5E4A1C">' + (st === 'aprovado' ? 'A equipe confirmou a autorização com o seu responsável.' : 'Recebemos o pedido. Alguém da equipe vai confirmar com o seu responsável antes de liberar mural, comentários e círculo.') + '</p>' +
+        '<ul class="marcadores">' + [['social', 'Mural, comentários e círculo'], ['eventos', 'Inscrições em eventos'], ['imagem', 'Uso de imagem']].map(function (x) {
+          return '<li>' + ic(c[x[0]] ? 'check' : 'x') + '<span>' + x[1] + (c[x[0]] ? '' : ' (não autorizado)') + '</span></li>'; }).join('') + '</ul></div>';
+    }
+    return '<div class="cartao cartao-ouro"><div class="selos"><span class="selo selo-alerta">' + ic('shield') + 'Autorização necessária</span></div>' +
+      '<h3>Para quem tem 15 a 17 anos</h3>' + (st === 'recusado' || st === 'revogado' ? aviso('O pedido anterior não foi aprovado. Você pode enviar um novo.', 'aviso-erro', 'alert') : '') +
+      '<p style="color:#5E4A1C">Mural, comentários e círculo são liberados depois que a equipe confirmar a autorização com o seu responsável. Pedir oração, pedir conversa e denunciar já funcionam.</p>' +
+      '<form class="form" id="f-consent" novalidate>' +
+        '<div class="campo"><label for="rc-resp">Nome do responsável</label><input class="entrada" id="rc-resp" maxlength="120" placeholder="Mãe, pai ou responsável legal" aria-describedby="rc-e-resp"><span class="erro-msg" id="rc-e-resp" role="alert"></span></div>' +
+        '<div class="campo"><label for="rc-par">Parentesco</label><select class="entrada" id="rc-par"><option value="mae">Mãe</option><option value="pai">Pai</option><option value="responsavel_legal">Responsável legal</option><option value="outro">Outro</option></select></div>' +
+        '<div class="campo"><label for="rc-cont">Telefone ou e-mail do responsável</label><input class="entrada" id="rc-cont" maxlength="120" aria-describedby="rc-d-cont rc-e-cont"><span class="dica" id="rc-d-cont">A equipe usa só para confirmar a autorização.</span><span class="erro-msg" id="rc-e-cont" role="alert"></span></div>' +
+        '<fieldset style="border:0"><legend class="rot" style="margin-bottom:8px">O que o responsável autoriza</legend>' +
+          '<label class="marcar"><input type="checkbox" id="rc-social" checked><span>Mural, comentários e círculo</span></label>' +
+          '<label class="marcar"><input type="checkbox" id="rc-eventos" checked><span>Inscrições em eventos</span></label>' +
+          '<label class="marcar"><input type="checkbox" id="rc-imagem"><span>Uso de imagem (fotos em eventos)</span></label></fieldset>' +
+        '<div id="rc-c-erro"></div>' +
+        '<button class="btn btn-sec btn-cheio" type="submit">' + ic('send', 'ic-sm') + 'Enviar pedido de autorização</button></form>' +
+      fase2('Texto e forma de verificação do responsável ainda dependem de aprovação da liderança e revisão jurídica (ECA Digital, LGPD).') + '</div>';
+  }
+
+  /* 13 · Perfil — real */
+  var perfilDemo = T.perfil;
+  var INTERESSES = ['Louvor', 'Esporte', 'Amizade', 'Bíblia', 'Mídia', 'Missões', 'Ação social', 'Teatro'];
+  T.perfil = function () {
+    if (verificando()) return telaCarregando('Meu Perfil', '#/mais');
+    if (!real()) return perfilDemo();
+    var p = euAtivo();
+    if (!p) return telaSemPerfil('Meu Perfil', '#/mais');
+    var n = p.notificacoes || {}, ints = p.interesses || [];
+    return { cab: 'normal', voltar: '#/mais', nav: 'mais', titulo: 'Meu Perfil', real: true, direita: '<button class="cab-bt" type="button" data-acao="editar-perfil-real" aria-label="Editar perfil">' + ic('pencil') + '</button>', html:
+      '<div class="perfil-topo">' + av(p.nome, '#2462D2', 'av-lg') + '<h2>' + esc(p.nome) + '</h2><p>' + esc(FAIXAS[p.faixa] || p.faixa) + ' · ' + esc(p.circulo || 'ainda sem círculo') + '</p></div>' +
+      '<div class="sec sobe">' +
+        (p.status === 'pendente' ? aviso('<b>Cadastro aguardando acolhimento.</b> Alguém da liderança vai falar com você. Enquanto isso, você já pode ler a Palavra e pedir oração.', '', 'hourglass') : '') +
+        ((p.papeis || []).length ? '<div class="cartao"><h3>Meus papéis</h3><div class="selos">' + p.papeis.map(function (x) { return '<span class="selo selo-azul">' + esc(PAPEL[x] || x) + '</span>'; }).join('') + '</div>' +
+          (p.equipe ? '<a class="btn btn-sec btn-cheio" href="#/pessoas">' + ic('users', 'ic-sm') + 'Gerir pessoas</a>' : '') + '</div>' : '') +
+        '<div class="cartao"><h3>Sobre mim</h3><p>' + (p.sobre ? esc(p.sobre) : 'Conte um pouco sobre você (opcional).') + '</p><button class="btn btn-sec btn-cheio" type="button" data-acao="editar-perfil-real">' + ic('pencil', 'ic-sm') + 'Editar perfil</button></div>' +
+        '<div class="cartao"><h3>Meus interesses</h3><div class="chips chips-quebra" role="group" aria-label="Interesses">' + INTERESSES.map(function (i) { return '<button class="chip" type="button" aria-pressed="' + (ints.indexOf(i) >= 0) + '" data-acao="interesse-real" data-v="' + esc(i) + '">' + esc(i) + '</button>'; }).join('') + '</div></div>' +
+        '<div class="cartao"><h3>Notificações</h3>' +
+          interruptor('r-n-palavra', 'Palavra do Dia', 'Um aviso por dia. Pode pausar quando quiser.', n.palavra) +
+          (n.palavra ? '<div class="campo" style="padding:0 0 12px"><label for="r-hora">Horário</label><select class="entrada" id="r-hora">' + ['06:00', '07:00', '08:00', '12:00', '19:00', '21:00'].map(function (h) { return '<option' + (h === n.hora ? ' selected' : '') + '>' + h + '</option>'; }).join('') + '</select></div>' : '') +
+          interruptor('r-n-circulo', 'Avisos do meu círculo', 'Só encontros marcados do seu círculo.', n.circulo) +
+          interruptor('r-n-missao', 'Lembrete da missão', 'No máximo um por semana, sem cobrança.', n.missao) +
+          fase2('As preferências ficam salvas. O envio dos avisos ao celular chega em um próximo módulo.') + '</div>' +
+        '<div class="cartao"><h3>Privacidade</h3>' +
+          interruptor('r-p-nome', 'Mostrar meu nome completo ao círculo', 'Desligado: aparece o primeiro nome e a inicial.', p.nome_completo) +
+          '<ul class="lista" style="margin-top:4px">' + li('eyeOff', 'Perfil não público', 'Não aparece em buscas nem fora do app.') + '</ul>' +
+          '<a class="btn btn-sec btn-cheio" href="#/consentimento">Faixa etária e consentimento</a></div>' +
+        '<div class="cartao"><h3>Seus dados</h3><p>Ficam no banco do Conexão Jovem, protegidos por regras de acesso. O diário continua só neste aparelho.</p><div class="btns">' +
+          '<button class="btn btn-sec btn-cheio" type="button" data-acao="baixar-dados-real">' + ic('download', 'ic-sm') + 'Baixar meus dados</button>' +
+          '<button class="btn btn-perigo btn-cheio" type="button" data-acao="excluir-conta-real">' + ic('trash', 'ic-sm') + 'Excluir minha conta do Conexão Jovem</button></div></div>' +
+        '<div class="cartao"><h3>Conta</h3><p>Você entrou com a mesma conta do Radar Atual (WhatsApp confirmado). Para usar outra conta, saia do Radar neste aparelho.</p><a class="btn btn-sec btn-cheio" href="/?radar">' + ic('radar', 'ic-sm') + 'Ir para o Radar Atual</a></div>' +
+      '</div>' };
+  };
+  function salvarPerfil(dados, ok, falha) {
+    return api('atualizar_perfil', dados).then(atualizarEu).then(function () { if (ok) ok(); })['catch'](function (r) { if (falha) falha(r); toast('Não foi possível salvar', msgErro(r)); });
+  }
+
+  /* Painel · Pessoas (Módulo 1) ─────────────────────────────────────────────── */
+  var PS = { filtros: { status: 'todos', faixa: '', circulo: '', busca: '' }, dados: null, circulos: [], pode: [], carregando: false, erro: '', seq: 0 };
+  var FILTROS_STATUS = [['todos', 'Todos'], ['pendente', 'Pendentes'], ['ativo', 'Ativos'], ['suspenso', 'Desativados'], ['nao_vinculado', 'Ainda não entraram']];
+  function demoVerComo() { return E.demoVerComo === 'youth_admin' ? 'youth_admin' : 'pastor'; }
+  function demoPessoas() {
+    if (!Array.isArray(E.pessoasDemo)) { E.pessoasDemo = JSON.parse(JSON.stringify(D.pessoas || [])); salva(); }
+    var eu = demoVerComo() === 'pastor' ? 'd01' : 'd02';
+    E.pessoasDemo.forEach(function (p) { p.voce = p.id === eu; });
+    return E.pessoasDemo;
+  }
+  function podeConceder() { return real() ? PS.pode : (demoVerComo() === 'pastor' ? ['member', 'circle_leader', 'assistant', 'youth_admin', 'safeguarding_admin', 'pastor'] : ['member', 'circle_leader', 'assistant']); }
+  function souGestao() { return real() ? !!(euAtivo() && euAtivo().gestao) : true; }
+  function souPastor() { return real() ? !!(euAtivo() && (euAtivo().papeis || []).indexOf('pastor') >= 0) : demoVerComo() === 'pastor'; }
+  function telefoneCanon(v) { var d = soDigitos(v); if (d.length > 11 && d.indexOf('55') === 0 && (d.length === 12 || d.length === 13)) d = d.slice(2); return d; }
+  function hashCurto(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return 'h' + (h >>> 0).toString(36); }
+  function recusa(msg, motivo) { return Promise.reject({ ok: false, motivo: motivo || 'sem_permissao', mensagem: msg }); }
+
+  // Uma só porta para as operações: banco (modo real) ou simulação local (demonstração).
+  function obterPessoas() {
+    var f = PS.filtros;
+    if (real()) return api('pessoas', { filtros: { status: f.status, faixa: f.faixa || null, circulo: f.circulo || null, busca: f.busca || null } }).then(function (r) { return r.dados; });
+    return new Promise(function (ok) { setTimeout(function () {
+      var b = f.busca.trim().toLowerCase();
+      var lista = demoPessoas().filter(function (p) {
+        if (f.status === 'todos' ? p.status === 'encerrado' : f.status === 'nao_vinculado' ? p.vinculado : p.status !== f.status) return false;
+        if (f.faixa && p.faixa !== f.faixa) return false;
+        if (f.circulo && (f.circulo === 'nenhum' ? !!p.circulo_id : p.circulo_id !== f.circulo)) return false;
+        return !b || p.nome.toLowerCase().indexOf(b) >= 0;
+      }).sort(function (a, c) { return (a.status === 'pendente' ? 0 : 1) - (c.status === 'pendente' ? 0 : 1) || a.nome.localeCompare(c.nome, 'pt-BR'); });
+      ok({ pessoas: JSON.parse(JSON.stringify(lista)), circulos: D.pessoasCirculos || [], pode_conceder: podeConceder() });
+    }, 280); });
+  }
+  function opPessoa(acao, d) {
+    if (real()) return api(acao, d);
+    var lista = demoPessoas(), p = lista.filter(function (x) { return x.id === d.usuario; })[0];
+    var pastoresAtivos = lista.filter(function (x) { return x.status === 'ativo' && x.papeis.indexOf('pastor') >= 0; }).length;
+    var equipe = function (x) { return x.papeis.some(function (r) { return ['youth_admin', 'pastor', 'safeguarding_admin'].indexOf(r) >= 0; }); };
+    return new Promise(function (ok) { setTimeout(ok, 320); }).then(function () {
+      if (acao === 'pre_cadastrar') {
+        var fone = telefoneCanon(d.whatsapp);
+        if (fone.length < 10 || fone.length > 15) return recusa('WhatsApp inválido: use DDD + número (10 ou 11 dígitos)', 'dados_invalidos');
+        E.fonesDemo = E.fonesDemo || [];
+        if (E.fonesDemo.indexOf(hashCurto(fone)) >= 0) return recusa(MSG.ja_existe, 'ja_existe');
+        E.fonesDemo.push(hashCurto(fone));
+        lista.push({ id: 'n' + Date.now().toString(36), nome: d.nome, faixa: d.faixa, status: d.ativar === false ? 'pendente' : 'ativo', papeis: [], circulo_id: null, circulo_nome: null,
+          vinculado: false, pre_cadastrado: true, regras_aceitas: false, consentimento: d.faixa === '15-17' ? 'nao_pedido' : 'nao_exigido', acolhido: false });
+        salva(); return { ok: true };
+      }
+      if (!p) return recusa(MSG.nao_encontrado, 'nao_encontrado');
+      if (acao === 'ativar_perfil' || acao === 'desativar_pessoa') {
+        if (p.voce) return recusa('ninguém altera o próprio status');
+        if (equipe(p) && !souPastor()) return recusa('só o pastor altera o status de quem é da equipe');
+        if (acao === 'desativar_pessoa' && p.papeis.indexOf('pastor') >= 0 && p.status === 'ativo' && pastoresAtivos <= 1) return recusa('não dá para desativar o último pastor ativo', 'dados_invalidos');
+        p.status = acao === 'ativar_perfil' ? 'ativo' : 'suspenso';
+      } else if (acao === 'conceder_papel' || acao === 'revogar_papel') {
+        if (podeConceder().indexOf(d.papel) < 0) return recusa(acao === 'conceder_papel' ? 'sem permissão para conceder este papel' : 'sem permissão para revogar este papel');
+        if (acao === 'conceder_papel') {
+          if (p.voce && !souPastor()) return recusa('ninguém concede papel a si mesmo');
+          if (p.faixa === '15-17') return recusa('menor de idade não recebe papel de liderança', 'dados_invalidos');
+          if (p.papeis.indexOf(d.papel) < 0) p.papeis.push(d.papel);
+        } else {
+          if (d.papel === 'pastor' && p.status === 'ativo' && pastoresAtivos <= 1) return recusa('não dá para retirar o papel do último pastor ativo', 'dados_invalidos');
+          p.papeis = p.papeis.filter(function (r) { return r !== d.papel; });
+        }
+      } else if (acao === 'definir_faixa') {
+        if (p.faixa !== d.faixa) { p.circulo_id = null; p.circulo_nome = null; if (d.faixa === '15-17') { p.papeis = []; p.consentimento = 'nao_pedido'; } else p.consentimento = 'nao_exigido'; }
+        p.faixa = d.faixa;
+      } else if (acao === 'registrar_acolhimento') p.acolhido = true;
+      salva(); return { ok: true };
+    });
+  }
+
+  T.pessoas = function () {
+    var voltar = '#/lideranca';
+    if (verificando()) return telaCarregando('Pessoas', voltar);
+    if (real() && !(euAtivo() && euAtivo().equipe)) return { cab: 'normal', voltar: voltar, nav: 'mais', titulo: 'Pessoas', real: true, html:
+      '<div class="sec pt-l"><div class="vazio">' + ic('lock') + '<b>Área da equipe</b><p>A lista de pessoas é só para a coordenação de jovens, o pastor e a equipe de proteção.</p><a class="btn btn-sec" href="#/mais" style="margin-top:14px">Voltar</a></div></div>' };
+    var gestao = souGestao(), f = PS.filtros;
+    return { cab: 'normal', voltar: voltar, nav: 'mais', titulo: 'Pessoas', real: true,
+      direita: gestao ? '<button class="cab-bt" type="button" data-acao="cadastrar-pessoa" aria-label="Cadastrar pessoa">' + ic('plus') + '</button>' : '', html:
+      '<div class="sec pt">' +
+        (!real() ? aviso('<b>Demonstração.</b> Pessoas fictícias; o que você mudar fica só neste aparelho.', '', 'info') +
+          '<div class="cartao"><h3>Ver a tela como</h3><div class="btns-2" role="group" aria-label="Ver a tela como">' + [['pastor', 'Pastor'], ['youth_admin', 'Coordenação']].map(function (x) {
+            return '<button class="btn ' + (demoVerComo() === x[0] ? 'btn-pri' : 'btn-sec') + '" type="button" aria-pressed="' + (demoVerComo() === x[0]) + '" data-acao="ver-como" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+          '<p class="peq">A coordenação dá papéis de líder e auxiliar; proteção, coordenação e pastor só o pastor concede.</p></div>' : '') +
+        (real() && !gestao ? aviso('Você pode consultar a lista. Aprovar, cadastrar e dar papéis é com a coordenação de jovens e o pastor.', 'aviso-azul', 'info') : '') +
+        '<div class="campo"><label for="c-busca" class="sr">Buscar pelo nome</label><input class="entrada" id="c-busca" type="search" maxlength="60" autocomplete="off" placeholder="Buscar pelo nome" value="' + esc(f.busca) + '"></div>' +
+        '<div class="chips filtro-chips" role="group" aria-label="Filtrar por situação">' + FILTROS_STATUS.map(function (x) {
+          return '<button class="chip" type="button" aria-pressed="' + (f.status === x[0]) + '" data-acao="filtro-pessoas" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+        '<div class="filtros-2"><div class="campo"><label for="c-ffaixa">Faixa etária</label><select class="entrada" id="c-ffaixa"><option value="">Todas</option>' +
+          ['15-17', '18-21', '22-25'].map(function (v) { return '<option value="' + v + '"' + (f.faixa === v ? ' selected' : '') + '>' + v.replace('-', '–') + ' anos</option>'; }).join('') + '</select></div>' +
+          '<div class="campo"><label for="c-fcirc">Círculo</label><select class="entrada" id="c-fcirc">' + opcoesCirculo() + '</select></div></div>' +
+        (gestao ? '<button class="btn btn-pri btn-cheio" type="button" data-acao="cadastrar-pessoa">' + ic('plus', 'ic-sm') + 'Cadastrar pessoa pelo WhatsApp</button>' : '') +
+        '<div id="pessoas-lista"></div>' +
+      '</div>',
+      depois: function () {
+        var bx = document.getElementById('c-busca'), espera = null;
+        bx.addEventListener('input', function () { clearTimeout(espera); espera = setTimeout(function () { PS.filtros.busca = bx.value; carregarPessoas(); }, 350); });
+        document.getElementById('c-ffaixa').addEventListener('change', function (e) { PS.filtros.faixa = e.target.value; carregarPessoas(); });
+        document.getElementById('c-fcirc').addEventListener('change', function (e) { PS.filtros.circulo = e.target.value; carregarPessoas(); });
+        carregarPessoas();
+      } };
+  };
+  function opcoesCirculo() {
+    var f = PS.filtros.circulo;
+    return '<option value="">Todos</option><option value="nenhum"' + (f === 'nenhum' ? ' selected' : '') + '>Sem círculo</option>' +
+      PS.circulos.map(function (c) { return '<option value="' + esc(c.id) + '"' + (f === c.id ? ' selected' : '') + '>' + esc(c.nome) + '</option>'; }).join('');
+  }
+  function carregarPessoas() {
+    var s = ++PS.seq; PS.carregando = true; PS.erro = ''; pintarLista();
+    obterPessoas().then(function (d) {
+      if (s !== PS.seq) return;
+      var mudouCirc = JSON.stringify(PS.circulos) !== JSON.stringify(d.circulos || []);
+      PS.dados = d.pessoas || []; PS.circulos = d.circulos || []; PS.pode = d.pode_conceder || []; PS.carregando = false;
+      var sel = document.getElementById('c-fcirc'); if (sel && mudouCirc) sel.innerHTML = opcoesCirculo();
+      pintarLista();
+    })['catch'](function (r) { if (s !== PS.seq) return; PS.carregando = false; PS.erro = msgErro(r); pintarLista(); });
+  }
+  function selosPessoa(p) {
+    var s = [];
+    if (p.status === 'pendente') s.push('<span class="selo selo-alerta">' + ic('hourglass') + 'Pendente</span>');
+    if (p.status === 'suspenso') s.push('<span class="selo selo-cinza">' + ic('lock') + 'Desativado</span>');
+    if (!p.vinculado) s.push('<span class="selo selo-azul">' + ic('phoneDev') + 'Ainda não entrou</span>');
+    if (p.faixa === '15-17' && p.consentimento !== 'aprovado') s.push('<span class="selo selo-ouro">' + ic('shield') + 'Autorização ' + (p.consentimento === 'pendente' ? 'em análise' : 'pendente') + '</span>');
+    (p.papeis || []).forEach(function (r) { if (r !== 'member') s.push('<span class="selo selo-verde">' + esc(PAPEL[r] || r) + '</span>'); });
+    return s.length ? '<span class="selos">' + s.join('') + '</span>' : '';
+  }
+  function pintarLista() {
+    var box = document.getElementById('pessoas-lista'); if (!box) return;
+    if (PS.erro) { box.innerHTML = aviso('<b>Não foi possível carregar a lista.</b> ' + esc(PS.erro), 'aviso-erro', 'alert') + '<button class="btn btn-sec btn-cheio" type="button" data-acao="recarregar-pessoas" style="margin-top:10px">Tentar de novo</button>'; return; }
+    if (PS.carregando && !PS.dados) { box.innerHTML = '<div class="pessoas" aria-busy="true"><p class="sr">Carregando pessoas…</p><div class="esqueleto"></div><div class="esqueleto"></div><div class="esqueleto"></div></div>'; return; }
+    var lista = PS.dados || [], gestao = souGestao();
+    if (!lista.length) { box.innerHTML = '<div class="vazio">' + ic('users') + '<b>Ninguém encontrado</b><p>Mude a busca ou os filtros' + (gestao ? ', ou cadastre alguém pelo WhatsApp' : '') + '.</p><button class="btn btn-sec" type="button" data-acao="limpar-filtros" style="margin-top:12px">Limpar filtros</button></div>'; return; }
+    var pend = lista.filter(function (p) { return p.status === 'pendente'; }).length;
+    box.innerHTML = '<p class="peq" role="status">' + lista.length + (lista.length === 1 ? ' pessoa' : ' pessoas') + (pend ? ' · ' + pend + (pend === 1 ? ' pendente' : ' pendentes') : '') + (PS.carregando ? ' · atualizando…' : '') + '</p>' +
+      '<ul class="pessoas' + (PS.carregando ? ' lista-carregando' : '') + '"' + (PS.carregando ? ' aria-busy="true"' : '') + '>' + lista.map(function (p) {
+        return '<li><button type="button" class="pessoa-bt" data-acao="pessoa" data-v="' + esc(p.id) + '">' + av(p.nome, p.status === 'suspenso' ? '#8A93A6' : '#2462D2', 'av-sm') +
+          '<span class="li-t"><b>' + esc(p.nome) + (p.voce ? ' (você)' : '') + '</b><span>' + esc((FAIXAS[p.faixa] || p.faixa) + ' · ' + (p.circulo_nome || 'sem círculo')) + '</span>' + selosPessoa(p) + '</span></button>' +
+          (gestao && p.status === 'pendente' && !p.voce ? '<button type="button" class="btn btn-pri btn-mini" data-acao="aprovar-pessoa" data-v="' + esc(p.id) + '" aria-label="Aprovar ' + esc(p.nome) + '">Aprovar</button>' : '') + '</li>';
+      }).join('') + '</ul>';
+  }
+  function achaPessoa(id) { return (PS.dados || []).filter(function (p) { return p.id === id; })[0]; }
+  function abrirPessoa(id) {
+    var p = achaPessoa(id); if (!p) return;
+    var gestao = souGestao(), pode = podeConceder(), menor = p.faixa === '15-17';
+    var CONS = { aprovado: 'Aprovada pela equipe', pendente: 'Pedido em análise', nao_pedido: 'Ainda não pedida', recusado: 'Recusada', revogado: 'Revogada' };
+    var corpo = '<div class="info-linhas">' +
+      '<div class="info-linha">' + ic('calendar') + '<div><b>' + esc(FAIXAS[p.faixa] || p.faixa) + '</b><span>Faixa etária</span></div></div>' +
+      '<div class="info-linha">' + ic('users') + '<div><b>' + esc(p.circulo_nome || 'Sem círculo') + '</b><span>Círculo</span></div></div>' +
+      '<div class="info-linha">' + ic(p.status === 'ativo' ? 'checkCircle' : p.status === 'pendente' ? 'hourglass' : 'lock') + '<div><b>' + esc(STATUS[p.status] || p.status) + '</b><span>' + (p.status === 'pendente' ? 'Aguardando aprovação/acolhimento' : p.status === 'suspenso' ? 'Sem acesso até ser reativada. Nada foi apagado.' : 'Com acesso ao app') + '</span></div></div>' +
+      '<div class="info-linha">' + ic('phoneDev') + '<div><b>' + (p.vinculado ? 'Já entrou com o WhatsApp' : 'Ainda não entrou') + '</b><span>' + (p.pre_cadastrado && !p.vinculado ? 'Pré-cadastro: liga sozinho quando ela entrar no Radar com o número informado.' : p.pre_cadastrado ? 'Cadastrada pela liderança.' : 'Entrou pelo próprio Radar.') + '</span></div></div>' +
+      (menor ? '<div class="info-linha">' + ic('shield') + '<div><b>Autorização do responsável: ' + esc(CONS[p.consentimento] || p.consentimento) + '</b><span>Menores só usam mural e círculo com autorização aprovada.</span></div></div>' : '') +
+      '<div class="info-linha">' + ic('heartHandshake') + '<div><b>' + (p.acolhido ? 'Acolhimento registrado' : 'Sem acolhimento registrado') + '</b><span>' + (p.regras_aceitas ? 'Aceitou as regras da comunidade.' : 'Ainda não aceitou as regras.') + '</span></div></div></div>';
+    if (!gestao) corpo += aviso('Só consulta. Aprovar, desativar e dar papéis é com a coordenação de jovens e o pastor.', 'aviso-azul', 'info');
+    else if (p.voce) corpo += aviso('Este é o seu perfil. Ninguém altera o próprio status' + (souPastor() ? '.' : ' nem dá papel a si mesmo.'), 'aviso-azul', 'info');
+    if (gestao && !p.voce) {
+      corpo += '<h3 style="margin-top:6px">Acesso</h3><div class="btns">' +
+        (p.status === 'pendente' ? '<button class="btn btn-pri btn-cheio" type="button" data-op="ativar_perfil">' + ic('check', 'ic-sm') + 'Aprovar acesso</button>' : '') +
+        (p.status === 'suspenso' ? '<button class="btn btn-sec btn-cheio" type="button" data-op="ativar_perfil">Reativar</button>' : '') +
+        (p.status !== 'suspenso' ? '<button class="btn btn-perigo btn-cheio" type="button" data-op="desativar_pessoa">Desativar</button>' : '') +
+        (!p.acolhido ? '<button class="btn btn-sec btn-cheio" type="button" data-op="registrar_acolhimento">' + ic('heartHandshake', 'ic-sm') + 'Registrar 1º contato de acolhimento</button>' : '') + '</div>';
+    }
+    if (gestao && (!p.voce || souPastor())) {
+      var visiveis = ORDEM_PAPEIS.filter(function (r) { return pode.indexOf(r) >= 0; });
+      corpo += '<h3 style="margin-top:6px">Papéis</h3>' + (menor ? aviso('Menores de idade não recebem papel de liderança.', '', 'shield') : '') +
+        '<div>' + visiveis.map(function (r) {
+          var tem = (p.papeis || []).indexOf(r) >= 0;
+          return '<div class="interruptor"><span class="li-t"><b id="pp-' + r + '-l">' + esc(PAPEL[r]) + '</b><span>' + esc(PAPEL_DICA[r]) + '</span></span><span class="chave"><input type="checkbox" role="switch" data-papel="' + r + '" aria-labelledby="pp-' + r + '-l"' + (tem ? ' checked' : '') + (menor && !tem ? ' disabled' : '') + '><i></i></span></div>';
+        }).join('') + '</div>' +
+        (visiveis.length < ORDEM_PAPEIS.length ? '<p class="peq">Proteção, coordenação e pastor: só o pastor concede.</p>' : '');
+      if (!p.voce) corpo += '<h3 style="margin-top:6px">Corrigir faixa etária</h3><div class="filtros-2"><select class="entrada" id="m-faixa" aria-label="Nova faixa etária">' + ['15-17', '18-21', '22-25'].map(function (v) { return '<option value="' + v + '"' + (v === p.faixa ? ' selected' : '') + '>' + v.replace('-', '–') + ' anos</option>'; }).join('') + '</select>' +
+        '<button class="btn btn-sec" type="button" data-op="definir_faixa">Salvar faixa</button></div><p class="peq">Mudar a faixa tira a pessoa do círculo atual (círculos são por idade).</p>';
+    }
+    corpo += '<div id="m-erro" role="alert"></div>';
+    modal(p.nome, corpo, function (dlg) {
+      dlg.querySelectorAll('[data-op]').forEach(function (b) { b.addEventListener('click', function () {
+        var op = b.getAttribute('data-op');
+        if (op === 'desativar_pessoa') return confirmarDesativar(p);
+        var d = { usuario: p.id };
+        if (op === 'definir_faixa') { d.faixa = dlg.querySelector('#m-faixa').value; if (d.faixa === p.faixa) return; }
+        executar(op, d, b, p.id);
+      }); });
+      dlg.querySelectorAll('[data-papel]').forEach(function (cb) { cb.addEventListener('change', function () {
+        var papel = cb.getAttribute('data-papel'), on = cb.checked;
+        executar(on ? 'conceder_papel' : 'revogar_papel', { usuario: p.id, papel: papel }, cb, p.id, function () { cb.checked = !on; });
+      }); });
+    });
+  }
+  var OK_OP = { ativar_perfil: 'Acesso liberado', desativar_pessoa: 'Pessoa desativada', conceder_papel: 'Papel concedido', revogar_papel: 'Papel retirado', definir_faixa: 'Faixa corrigida', registrar_acolhimento: 'Acolhimento registrado' };
+  function executar(op, d, el, id, desfaz) {
+    ocupado(el, true); caixaErro('m-erro', '');
+    opPessoa(op, d).then(function () {
+      toast(OK_OP[op] || 'Feito', real() ? 'Registrado no histórico (auditoria).' : 'Demonstração: só neste aparelho.');
+      return obterPessoas().then(function (r) { PS.dados = r.pessoas; PS.pode = r.pode_conceder || PS.pode; pintarLista(); if (achaPessoa(id)) abrirPessoa(id); else fecha(); });
+    })['catch'](function (r) { ocupado(el, false); if (desfaz) desfaz(); caixaErro('m-erro', msgErro(r)); });
+  }
+  function confirmarDesativar(p) {
+    modal('Desativar ' + p.nome + '?', '<p>A pessoa perde o acesso ao Conexão Jovem até ser reativada. <b>Nada é apagado</b>: papéis e histórico ficam guardados.</p><div id="m-erro" role="alert"></div>' +
+      '<div class="btns-2"><button class="btn btn-sec" type="button" id="b-nao">Cancelar</button><button class="btn btn-perigo" type="button" id="b-sim">Desativar</button></div>', function (dlg) {
+      dlg.querySelector('#b-nao').addEventListener('click', function () { abrirPessoa(p.id); });
+      dlg.querySelector('#b-sim').addEventListener('click', function () { executar('desativar_pessoa', { usuario: p.id }, this, p.id); });
+    });
+  }
+  function abrirCadastro() {
+    modal('Cadastrar pessoa', '<form class="form" id="f-cad" novalidate>' +
+      '<p>Cadastre quem ainda não entrou. Quando a pessoa entrar no Radar Atual com este WhatsApp, o perfil dela se liga sozinho.</p>' +
+      '<div class="campo"><label for="m-nome">Nome</label><input class="entrada" id="m-nome" maxlength="60" autocomplete="off" aria-describedby="m-e-nome"><span class="erro-msg" id="m-e-nome" role="alert"></span></div>' +
+      '<div class="campo"><label for="m-fone">WhatsApp</label><input class="entrada" id="m-fone" type="tel" inputmode="tel" autocomplete="off" placeholder="(00) 90000-0000" aria-describedby="m-d-fone m-e-fone"><span class="dica" id="m-d-fone">Com DDD. O número não fica guardado no Conexão Jovem: vira um código que só serve para reconhecer a pessoa.</span><span class="erro-msg" id="m-e-fone" role="alert"></span></div>' +
+      '<fieldset style="border:0"><legend class="rot" style="margin-bottom:8px">Faixa etária</legend><div class="opcoes opcoes-3">' + ['15-17', '18-21', '22-25'].map(function (v) {
+        return '<label class="opcao"><input type="radio" name="m-faixa" value="' + v + '"><b>' + v.replace('-', '–') + '</b><span>anos</span></label>'; }).join('') + '</div><span class="erro-msg" id="m-e-faixa" role="alert"></span></fieldset>' +
+      '<label class="opcao"><input type="checkbox" id="m-ativar" checked><div><b>Já liberar o acesso</b><span>Desmarque para deixar como pendente até o acolhimento.</span></div></label>' +
+      '<div id="m-erro" role="alert"></div>' +
+      '<button class="btn btn-pri btn-cheio" type="submit">Cadastrar</button></form>', function (dlg) {
+      dlg.querySelector('form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var nome = dlg.querySelector('#m-nome'), fone = dlg.querySelector('#m-fone'), fx = dlg.querySelector('input[name=m-faixa]:checked'), d = telefoneCanon(fone.value);
+        var ok = erroCampo(nome, nome.value.trim().length < 2 ? 'Digite o nome (pelo menos 2 letras).' : '');
+        ok = erroCampo(fone, d.length < 10 || d.length > 13 ? 'Confira o número: DDD + celular, 10 ou 11 dígitos.' : '') && ok;
+        dlg.querySelector('#m-e-faixa').innerHTML = fx ? '' : ic('alert') + 'Escolha a faixa etária.'; ok = !!fx && ok;
+        if (!ok) return;
+        var bt = this.querySelector('[type=submit]'); ocupado(bt, true); caixaErro('m-erro', '');
+        opPessoa('pre_cadastrar', { nome: nome.value.trim(), whatsapp: fone.value, faixa: fx.value, ativar: dlg.querySelector('#m-ativar').checked }).then(function () {
+          fecha(); toast('Pessoa cadastrada', 'Quando ela entrar no Radar com esse WhatsApp, o perfil se liga sozinho.');
+          carregarPessoas();
+        })['catch'](function (r) { ocupado(bt, false); caixaErro('m-erro', msgErro(r)); });
+      });
+    });
+  }
+
+  // Depois que o modo é descoberto: ajusta a tela atual sem quebrar nada.
+  function aposModo(st) {
+    R.modo = st.modo; R.motivo = st.motivo; R.eu = st.eu || null;
+    if (st.vinculou) toast('Encontramos o seu cadastro', 'A liderança já tinha cadastrado você. Agora está tudo ligado.');
+    var r = rotaAtual().nome;
+    if (real() && euAtivo() && r === 'entrar') { location.hash = precisaRegras() ? '#/consentimento' : '#/inicio'; return; }
+    if (real() && !R.eu && r === 'inicio' && !E.entrou) { location.hash = '#/boas-vindas'; return; }
+    render(true);
+  }
 
   /* ═══ ações (clique delegado) ═══ */
   var A = {
@@ -839,6 +1287,84 @@
     sair: function () { E.entrou = false; salva(); location.hash = '#/boas-vindas'; toast('Você saiu', 'Seus dados continuam neste aparelho.'); },
     alerta: function (el) { var id = el.getAttribute('data-v'), s = E.alertasOk, i = s.indexOf(id); if (i < 0) s.push(id); else s.splice(i, 1); salva(); render(true); }
   };
+  /* ═══ ações do Módulo 1 ═══ */
+  A.reverificar = function () { if (!API) return; R.modo = 'verificando'; render(true); API.iniciar().then(aposModo); };
+  A['consentir-real'] = function (el) {
+    var cb = document.getElementById('c-regras'), e = euAtivo(); if (!e) return;
+    if (!erroCampo(cb, cb.checked ? '' : 'Para continuar, é preciso concordar com as regras.')) { cb.focus(); return; }
+    var n = e.notificacoes || {}, notif = { palavra: document.getElementById('rc-palavra').checked, circulo: document.getElementById('rc-circulo').checked, missao: !!n.missao, hora: n.hora || '07:00' };
+    ocupado(el, true); caixaErro('rc-erro', '');
+    var faltam = DOCS.filter(function (d) { return (e.termos || []).indexOf(d) < 0; });
+    (faltam.length ? api('aceitar_termos', { documentos: faltam, versao: VERSAO_TERMOS }) : Promise.resolve())
+      .then(function () { return api('atualizar_perfil', { notificacoes: notif }); })
+      .then(atualizarEu)
+      .then(function () { ocupado(el, false); E.entrou = true; E.consentiu = true; salva(); toast('Preferências salvas'); location.hash = '#/inicio'; })
+      ['catch'](function (r) { ocupado(el, false); caixaErro('rc-erro', msgErro(r)); });
+  };
+  A['editar-perfil-real'] = function () {
+    var e = euAtivo(); if (!e) return;
+    modal('Editar perfil', '<form class="form" id="f-perfil-real" novalidate><div class="campo"><label for="r-pnome">Nome de exibição</label><input class="entrada" id="r-pnome" maxlength="60" value="' + esc(e.nome) + '" aria-describedby="r-e-pnome"><span class="erro-msg" id="r-e-pnome" role="alert"></span></div>' +
+      '<div class="campo"><label for="r-psobre">Sobre mim</label><textarea class="entrada" id="r-psobre" maxlength="280">' + esc(e.sobre || '') + '</textarea></div><div id="m-erro" role="alert"></div><button class="btn btn-pri btn-cheio" type="submit">Salvar</button></form>', function (d) {
+      d.querySelector('form').addEventListener('submit', function (ev) {
+        ev.preventDefault(); var n = d.querySelector('#r-pnome'), bt = this.querySelector('[type=submit]');
+        if (!erroCampo(n, n.value.trim().length < 2 ? 'O nome precisa de pelo menos 2 letras.' : '')) return;
+        ocupado(bt, true);
+        api('atualizar_perfil', { nome: n.value.trim(), sobre: d.querySelector('#r-psobre').value.trim() }).then(atualizarEu)
+          .then(function () { fecha(); render(true); toast('Perfil atualizado'); })['catch'](function (r) { ocupado(bt, false); caixaErro('m-erro', msgErro(r)); });
+      });
+    });
+  };
+  A['interesse-real'] = function (el) {
+    var e = euAtivo(); if (!e) return;
+    var v = el.getAttribute('data-v'), s = (e.interesses || []).slice(), i = s.indexOf(v);
+    if (i < 0) s.push(v); else s.splice(i, 1);
+    el.setAttribute('aria-pressed', i < 0); el.disabled = true;
+    salvarPerfil({ interesses: s }, function () { el.disabled = false; }, function () { el.disabled = false; el.setAttribute('aria-pressed', i >= 0); });
+  };
+  A['baixar-dados-real'] = function (el) {
+    ocupado(el, true);
+    api('exportar').then(function (r) { ocupado(el, false); baixa('conexao-jovem-meus-dados.json', 'application/json', JSON.stringify({ exportado_em: new Date().toISOString(), dados: r.dados, diario_neste_aparelho: diario() }, null, 2)); toast('Arquivo baixado', 'Seus dados do Conexão Jovem e o diário deste aparelho.'); })
+      ['catch'](function (r) { ocupado(el, false); toast('Não foi possível baixar', msgErro(r)); });
+  };
+  A['excluir-conta-real'] = function () {
+    modal('Excluir sua conta do Conexão Jovem?', '<p>Apaga seu perfil, círculo, inscrições, pedidos e publicações do Conexão Jovem. Sua conta do Radar Atual continua. Não dá para desfazer.</p>' +
+      '<div class="campo"><label for="r-conf">Para confirmar, digite EXCLUIR</label><input class="entrada" id="r-conf" autocomplete="off" autocapitalize="characters" aria-describedby="r-e-conf"><span class="erro-msg" id="r-e-conf" role="alert"></span></div><div id="m-erro" role="alert"></div>' +
+      '<div class="btns-2"><button class="btn btn-sec" type="button" data-fechar>Cancelar</button><button class="btn btn-perigo" type="button" id="b-excluir">Excluir</button></div>', function (d) {
+      d.querySelector('#b-excluir').addEventListener('click', function () {
+        var c = d.querySelector('#r-conf'), bt = this;
+        if (!erroCampo(c, c.value.trim().toUpperCase() === 'EXCLUIR' ? '' : 'Digite EXCLUIR para confirmar.')) return;
+        ocupado(bt, true);
+        api('excluir_conta', { confirmo: 'EXCLUIR' }).then(function () { R.eu = null; API.estado.eu = null; fecha(); location.hash = '#/boas-vindas'; toast('Conta do Conexão Jovem excluída'); })
+          ['catch'](function (r) { ocupado(bt, false); caixaErro('m-erro', msgErro(r)); });
+      });
+    });
+  };
+  A['ver-como'] = function (el) { E.demoVerComo = el.getAttribute('data-v'); salva(); PS.dados = null; render(true); };
+  A['filtro-pessoas'] = function (el) {
+    PS.filtros.status = el.getAttribute('data-v');
+    document.querySelectorAll('[data-acao="filtro-pessoas"]').forEach(function (b) { b.setAttribute('aria-pressed', b === el); });
+    carregarPessoas();
+  };
+  A['recarregar-pessoas'] = function () { carregarPessoas(); };
+  A['limpar-filtros'] = function () { PS.filtros = { status: 'todos', faixa: '', circulo: '', busca: '' }; render(true); };
+  A.pessoa = function (el) { abrirPessoa(el.getAttribute('data-v')); };
+  A['aprovar-pessoa'] = function (el) {
+    var id = el.getAttribute('data-v');
+    ocupado(el, true);
+    opPessoa('ativar_perfil', { usuario: id }).then(function () { toast('Acesso liberado', real() ? 'Registrado no histórico (auditoria).' : 'Demonstração: só neste aparelho.'); carregarPessoas(); })
+      ['catch'](function (r) { ocupado(el, false); toast('Não foi possível aprovar', msgErro(r)); });
+  };
+  A['cadastrar-pessoa'] = function () { if (souGestao()) abrirCadastro(); };
+  function salvarPrefReal(k, on, input) {
+    var e = euAtivo(); if (!e) return;
+    var n = JSON.parse(JSON.stringify(e.notificacoes || {})), dados;
+    if (k === 'r-p-nome') dados = { nome_completo: on };
+    else { if (k === 'r-n-palavra') n.palavra = on; else if (k === 'r-n-circulo') n.circulo = on; else if (k === 'r-n-missao') n.missao = on; dados = { notificacoes: n }; }
+    input.disabled = true;
+    salvarPerfil(dados, function () { input.disabled = false; toast(on ? 'Ativado' : 'Desativado', 'Preferência salva na sua conta.'); if (k === 'r-n-palavra') render(true); },
+      function () { input.disabled = false; input.checked = !on; });
+  }
+
   document.addEventListener('click', function (e) {
     var el = e.target.closest('[data-acao]');
     if (!el || el.disabled) return;
@@ -847,6 +1373,9 @@
   });
   document.addEventListener('change', function (e) {
     var k = e.target.getAttribute && e.target.getAttribute('data-chave');
+    if (k && k.indexOf('rc-') === 0) return;   // consentimento real: lido ao salvar
+    if (k && k.indexOf('r-') === 0) { salvarPrefReal(k, e.target.checked, e.target); return; }
+    if (e.target.id === 'r-hora') { var eu = euAtivo(); if (eu) { var nn = JSON.parse(JSON.stringify(eu.notificacoes || {})); nn.hora = e.target.value; salvarPerfil({ notificacoes: nn }, function () { toast('Horário da Palavra do Dia: ' + e.target.value); }); } return; }
     if (k) {
       var on = e.target.checked, n = E.perfil.notif;
       if (k === 'n-palavra') n.palavra = on; else if (k === 'n-circulo') n.circulo = on; else if (k === 'n-missao') n.missao = on; else if (k === 'p-nome') E.perfil.nomeCompleto = on;
@@ -858,7 +1387,7 @@
 
   /* ═══ roteador ═══ */
   var NAV = [['inicio', 'Início', 'home'], ['comunidade', 'Comunidade', 'users'], ['palavra', 'Palavra', 'book'], ['eventos', 'Eventos', 'calendar'], ['mais', 'Mais', 'grid']];
-  var VITRINE = [['boas-vindas', 'Boas-vindas'], ['entrar', 'Entrar / cadastro'], ['consentimento', 'Consentimento e idade'], ['inicio', 'Início'], ['circulo', 'Meu Círculo'], ['jornada', 'Minha Jornada'], ['missao', 'Missão da Semana'], ['eventos', 'Eventos'], ['palavra', 'Palavra / Devocional'], ['comunidade', 'Comunidade'], ['talentos', 'Talentos e Serviço'], ['acolhimento', 'Acolhimento'], ['perfil', 'Perfil e preferências'], ['lideranca', 'Painel de liderança']];
+  var VITRINE = [['boas-vindas', 'Boas-vindas'], ['entrar', 'Entrar / cadastro'], ['consentimento', 'Consentimento e idade'], ['inicio', 'Início'], ['circulo', 'Meu Círculo'], ['jornada', 'Minha Jornada'], ['missao', 'Missão da Semana'], ['eventos', 'Eventos'], ['palavra', 'Palavra / Devocional'], ['comunidade', 'Comunidade'], ['talentos', 'Talentos e Serviço'], ['acolhimento', 'Acolhimento'], ['perfil', 'Perfil e preferências'], ['lideranca', 'Painel de liderança'], ['pessoas', 'Pessoas (liderança)']];
   function rotaAtual() {
     var h = location.hash.replace(/^#\/?/, ''), q = {}, partes = h.split('?');
     (partes[1] || '').split('&').forEach(function (kv) { if (kv) { var p = kv.split('='); q[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ''); } });
@@ -868,15 +1397,15 @@
   var app, tela, ultimaRota = '';
   function render(manterRolagem) {
     var r = rotaAtual();
-    if (!r.nome) { location.replace('#/' + (E.entrou ? 'inicio' : 'boas-vindas')); return; }
+    if (!r.nome) { location.replace('#/' + (E.entrou || euAtivo() ? 'inicio' : 'boas-vindas')); return; }
     var fn = T[r.nome] || T.erro, v;
     try { v = fn(r.param, r.q); } catch (err) { console.error(err); v = { cab: 'normal', voltar: '#/inicio', nav: 'inicio', titulo: 'Algo deu errado', html: '<div class="sec pt-l"><div class="vazio">' + ic('alert') + '<b>Não foi possível abrir esta tela</b><p>Tente novamente. Se continuar, volte ao início.</p><a class="btn btn-pri" href="#/inicio" style="margin-top:14px">Voltar ao início</a></div></div>' }; }
     var chaveRota = location.hash.split('?')[0], mudou = chaveRota !== ultimaRota; ultimaRota = chaveRota;
     var y = window.scrollY;
     var cab = '';
     if (v.cab === 'marca') cab = '<header class="cab"><div class="cab-marca"><span class="logo">' + LOGO + '</span><span class="logo-t">CONEXÃO<br><b>JOVEM</b></span></div>' +
-      '<button class="cab-bt" type="button" data-acao="avisos" aria-label="Avisos">' + ic('bell') + '</button><a class="avatar-bt" href="#/perfil" aria-label="Meu perfil">' + av(E.perfil.nome, '#2462D2', 'av-sm') + '</a></header>';
-    else if (v.cab === 'normal') cab = '<header class="cab">' + (v.voltar ? '<a class="cab-bt" href="' + v.voltar + '" aria-label="Voltar">' + ic('left') + '</a>' : '') + '<h1>' + esc(v.titulo) + '</h1><span class="demo-pill" title="Dados fictícios de demonstração">Demonstração</span>' + (v.direita || '') + '</header>';
+      '<button class="cab-bt" type="button" data-acao="avisos" aria-label="Avisos">' + ic('bell') + '</button><a class="avatar-bt" href="#/perfil" aria-label="Meu perfil">' + av(nomeExib(), '#2462D2', 'av-sm') + '</a></header>';
+    else if (v.cab === 'normal') cab = '<header class="cab">' + (v.voltar ? '<a class="cab-bt" href="' + v.voltar + '" aria-label="Voltar">' + ic('left') + '</a>' : '') + '<h1>' + esc(v.titulo) + '</h1>' + (v.real && (real() || R.modo === 'sem_cracha' || verificando()) ? '' : '<span class="demo-pill" title="Dados fictícios de demonstração">Demonstração</span>') + (v.direita || '') + '</header>';
     var nav = v.nav === false ? '' : '<nav class="nav-inf" aria-label="Navegação principal">' + NAV.map(function (n) { return '<a href="#/' + n[0] + '"' + (v.nav === n[0] ? ' aria-current="page"' : '') + '><span class="nav-ic">' + ic(n[2]) + '</span>' + n[1] + '</a>'; }).join('') + '</nav>';
     app.innerHTML = cab + '<main id="tela" tabindex="-1" class="' + (v.nav === false ? 'sem-nav' : '') + (mudou ? ' anima' : '') + '">' + v.html + '</main>' + nav;
     tela = document.getElementById('tela');
@@ -891,6 +1420,7 @@
     if (vit) vit.innerHTML = VITRINE.map(function (v, k) { return '<li><a href="#/' + v[0] + '" data-rota="' + v[0] + '"><small>' + ('0' + (k + 1)).slice(-2) + '</small>' + v[1] + '</a></li>'; }).join('');
     window.addEventListener('hashchange', function () { fecha(); if (rotaAtual().nome !== 'entrar') aba.etapaCodigo = false; render(); });
     render();
+    if (API) API.iniciar().then(aposModo)['catch'](function () { aposModo({ modo: 'demo', motivo: 'erro', eu: null }); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inicia); else inicia();
 })();

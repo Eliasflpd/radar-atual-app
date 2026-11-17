@@ -13,15 +13,18 @@
      FASE 1 (17/11/2026): design system + protótipo navegável das 14 telas do dossiê, SEM backend.
      Tudo que o jovem faz aqui fica só no localStorage deste aparelho (chaves cj-demo-v1 e cj-diario-v1).
      Arquivos: cj.css (tokens e componentes) · dados-demo.js (dados FICTÍCIOS) · cj.js (rotas por hash e telas).
+     MÓDULO 1 (17/11/2026): cj-api.js liga Entrar, Consentimento, Perfil e Pessoas ao backend (POST /api/dados?fn=jovem)
+     usando o crachá do Radar (localStorage radar_chave). Sem backend configurado ou sem crachá, tudo continua em
+     demonstração, como na Fase 1. Para forçar a demonstração: /jovem/?demo
      Capa do Radar: /?capa · Entrar no Radar: /?radar. Este módulo não altera nada fora de /jovem/. -->
-<link rel="stylesheet" href="cj.css?v=1">
+<link rel="stylesheet" href="cj.css?v=2">
 </head>
 <body>
 <a class="pular" href="#tela">Pular para o conteúdo</a>
 <aside class="vitrine" aria-label="Índice do protótipo">
   <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
   <h2>Conexão<b>Jovem</b></h2>
-  <p>Protótipo navegável · Fase 1. Comunhão, discipulado e pertencimento para jovens de 15 a 25 anos. Dados fictícios de demonstração.</p>
+  <p>Protótipo navegável · Fase 1 + Módulo 1 (login e pessoas). Comunhão, discipulado e pertencimento para jovens de 15 a 25 anos. Dados fictícios de demonstração.</p>
   <ol id="vitrine-lista"></ol>
   <p style="font-size:13px"><a href="/?capa">Voltar à capa</a> · <a href="/?radar">Ir para o Radar Atual</a></p>
 </aside>
@@ -29,7 +32,8 @@
   <noscript><div style="padding:24px;font-family:sans-serif">O Conexão Jovem precisa de JavaScript ligado. <a href="/?capa">Voltar à capa</a></div></noscript>
 </div>
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
-<script src="dados-demo.js?v=1"></script>
-<script src="cj.js?v=1"></script>
+<script src="dados-demo.js?v=2"></script>
+<script src="cj-api.js?v=1"></script>
+<script src="cj.js?v=2"></script>
 </body>
 </html>
