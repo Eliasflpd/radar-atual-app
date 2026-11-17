@@ -155,6 +155,7 @@
 <script>
   // ── CRM de Mensagens — pra postar uma nova, é só adicionar aqui em cima ──
   var MENSAGENS = [
+    {arquivo:"o-pastor-que-foi-buscar-o-pastor.html", data:"2026-11-17", titulo:"O Pastor que Foi Buscar o Pastor", ref:"Salmo 23 · Salmo 51 · 2 Samuel 11–12 · João 10:11", emoji:"🐑", fonte:"Mensagem curta · cerca de 20 a 25 minutos", desc:"O mesmo Davi que escreveu \"nada me faltará\" terminou na lama pedindo \"compadece-te de mim\". A cordeira do pobre, o hissopo que termina no Calvário, o coração criado do nada e a misericórdia que persegue. Fecho de fogo: faz-me voltar!"},
     {arquivo:"o-pregador-da-propria-alma.html", data:"2026-11-16", titulo:"O Pregador da Própria Alma", ref:"Salmos 42 e 43 · Mateus 26:38 · Atos 2:1-14 · Apocalipse 7:16-17", emoji:"🦌", fonte:"Mensagem curta · cerca de 20 minutos", desc:"Spurgeon conheceu a escuridão depois do desastre do Surrey Gardens. O cervo no rio seco, as lágrimas no prato, um abismo chamando outro abismo e o homem que parou de ouvir a alma para pregar para ela. Fecho de fogo: ainda o louvarei!"},
     {arquivo:"a-fonte-no-fundo-do-poco.html", data:"2026-11-16", titulo:"A Fonte no Fundo do Poço", ref:"João 4:1-42 · Jeremias 2:13 · João 7:38-39 · Apocalipse 22:17", emoji:"🏺", fonte:"Mensagem curta · cerca de 20 minutos", desc:"Ao meio-dia, sozinha, uma samaritana foi buscar água no Poço de Jacó e encontrou a Fonte. O grego que a tradução esconde, Agostinho, Crisóstomo e os samaritanos que ainda sacrificam no Gerizim: quem bebe de Jesus deixa o cântaro."},
     {arquivo:"o-silencio-da-cruz.html", data:"2026-11-03", titulo:"O Silêncio da Cruz", ref:"Isaías 53:7 · Mateus 27:12-14, 45-46 · Hebreus 12:24 · Atos 4:20", emoji:"✝️", fonte:"Mensagem da cruz", desc:"O Verbo ficou calado diante de Caifás, Pilatos e Herodes. Calou para não ser absolvido, calou no lugar do culpado — e o seu sangue fala melhor do que o de Abel. O silêncio da cruz virou o barulho do Pentecostes."},
@@ -450,5 +451,7 @@
 })();
 </script>
 <script src="/_pregado.js?v=2" defer></script>
+
+<script>/* selo NOVA da tela inicial: abriu a lista = viu as novas */try{var _mx=(window.MENSAGENS||[]).reduce(function(m,s){return s&&s.data&&s.data>m?s.data:m;},'');if(_mx)localStorage.setItem('mensagens.vistoAte',_mx);}catch(e){}</script>
 </body>
 </html>
