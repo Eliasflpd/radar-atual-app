@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pedras que Falam — achados que confirmam a Bíblia</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--cinza:#6b7280;--linha:#e3e6ee;--suave:#f6f4ef;--verde:#1f8a4c;--ambar:#b7791f}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;padding:0 0 calc(40px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  .topo{position:relative;min-height:300px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:16px;overflow:hidden;background:#2a1d10}
+  .topo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .topo::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.15) 0%,rgba(0,0,0,.25) 45%,rgba(20,14,6,.88) 100%)}
+  .topo > *{position:relative;z-index:1}
+  .voltar{position:absolute!important;top:14px;left:14px;background:rgba(15,20,30,.75);color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:.92rem;font-weight:700;z-index:2}
+  .topo .selo{font-size:.75rem;font-weight:800;letter-spacing:3px;color:#f0d9a0;text-transform:uppercase}
+  .topo h1{font-family:Georgia,serif;font-size:2.1rem;line-height:1.1;margin:4px 0 4px}
+  .topo p{margin:0;font-size:1rem;opacity:.95}
+  .filtros{display:flex;gap:8px;padding:14px 14px 4px;position:sticky;top:0;background:#fff;z-index:5;border-bottom:1px solid var(--linha)}
+  .filtro{flex:1;border:1px solid var(--linha);background:var(--suave);color:var(--navy);border-radius:999px;padding:9px 6px;font-weight:800;font-size:.9rem;min-height:42px}
+  .filtro.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .lista{padding:14px;display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:640px){.lista{grid-template-columns:1fr 1fr}}
+  .card{border:1px solid var(--linha);border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 4px 14px rgba(15,61,92,.08);cursor:pointer;display:flex;flex-direction:column;text-align:left;padding:0;color:inherit;font:inherit}
+  .card .foto{position:relative;aspect-ratio:3/2;background:linear-gradient(135deg,#5b4220,#1c2230)}
+  .card .foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .ano{position:absolute;left:10px;bottom:10px;background:rgba(15,20,30,.85);color:#f0d9a0;font-family:Georgia,serif;font-weight:800;font-size:1.25rem;border-radius:10px;padding:2px 10px}
+  .status{display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.5px;border-radius:999px;padding:4px 9px;color:#fff;text-transform:uppercase}
+  .status.comprovado{background:var(--verde)}
+  .status.debate{background:var(--ambar)}
+  .card .status{position:absolute;right:10px;top:10px}
+  .novo{position:absolute;left:10px;top:10px;background:#1f9d57;color:#fff;font-size:.72rem;font-weight:800;border-radius:999px;padding:4px 9px}
+  .card .corpo{padding:12px 14px 14px}
+  .card h2{font-family:Georgia,serif;font-size:1.2rem;line-height:1.25;color:var(--navy);margin:0 0 4px}
+  .card .lugar{color:var(--dourado);font-weight:700;font-size:.88rem;margin-bottom:6px}
+  .card p{margin:0;font-size:1rem;color:#374151}
+  .card .confirma{margin-top:8px;font-size:.88rem;color:var(--teal);font-weight:800}
+
+  /* detalhe */
+  .detalhe{display:none}
+  .detalhe.on{display:block}
+  .d-foto{position:relative;aspect-ratio:3/2;max-height:460px;width:100%;overflow:hidden;background:#2a1d10}
+  .d-foto img{width:100%;height:100%;object-fit:cover;display:block}
+  .d-foto::after{content:'';position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff)}
+  .ilustra{position:absolute;right:10px;top:10px;background:rgba(0,0,0,.6);color:#fff;font-size:.72rem;border-radius:8px;padding:3px 8px;z-index:1}
+  .d-corpo{padding:0 16px;margin-top:-30px;position:relative;z-index:1}
+  .d-corpo h1{font-family:Georgia,serif;color:var(--navy);font-size:1.75rem;line-height:1.2;margin:6px 0 6px}
+  .ficha{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;background:var(--suave);border-radius:14px;padding:12px 14px;margin:10px 0 16px;font-size:.98rem}
+  .ficha b{color:var(--dourado)}
+  .d-corpo p{font-size:1.1rem;margin:0 0 14px;text-align:justify;text-justify:inter-word}
+  .verso{border-left:5px solid var(--teal);background:#f2f7f8;border-radius:12px;padding:12px 14px;margin:18px 0}
+  .verso .vr{font-weight:800;color:var(--teal);font-size:.85rem;letter-spacing:1px;text-transform:uppercase}
+  .verso .vt{font-family:Georgia,serif;font-style:italic;font-size:1.15rem;color:var(--navy);margin-top:4px}
+  .importa{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:12px 14px;margin:18px 0;font-size:1.08rem}
+  .importa b{color:var(--vinho)}
+  .aviso{background:#fff7e6;border:1px solid #f1d39a;color:#7a5410;border-radius:12px;padding:10px 12px;margin:0 0 16px;font-size:.98rem}
+  .fontes{margin:18px 0}
+  .fontes h3{font-size:1rem;color:var(--navy);margin:0 0 6px}
+  .fontes a{display:block;color:var(--teal);font-weight:700;margin:0 0 6px;word-break:break-word}
+  .acoes{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+  .btn{border:none;border-radius:12px;padding:12px 16px;font-size:1rem;font-weight:800;min-height:46px}
+  .btn.navy{background:var(--navy);color:#fff}
+  .btn.claro{background:var(--suave);color:var(--navy);border:1px solid var(--linha)}
+  .rodape{color:var(--cinza);font-size:.85rem;text-align:center;padding:10px 16px}
+</style>
+</head>
+<body>
+  <section id="v-lista">
+    <div class="topo">
+      <img src="img/capa-modulo.jpg?v=1" alt="" onerror="this.remove()">
+      <button class="voltar" onclick="location.href='/?mod=manuais'">← Biblioteca</button>
+      <div class="selo">Arqueologia bíblica</div>
+      <h1>Pedras que Falam</h1>
+      <p>Achados que confirmam a Bíblia, dos mais recentes aos mais antigos.</p>
+    </div>
+    <div class="filtros">
+      <button class="filtro on" data-f="todos">Todos</button>
+      <button class="filtro" data-f="comprovado">✅ Comprovados</button>
+      <button class="filtro" data-f="debate">⚖️ Em debate</button>
+    </div>
+    <div class="lista" id="lista"></div>
+    <div class="rodape">As imagens são ilustrações. Cada achado traz a fonte para ver as fotos reais.</div>
+  </section>
+
+  <section class="detalhe" id="v-detalhe"></section>
+
+<script>
+(function(){
+  var DADOS = [], FILTRO = 'todos';
+  function el(t,c,x){ var e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; }
+  function novo(a){ return a.entrou && (Date.now() - new Date(a.entrou+'T12:00:00').getTime()) < 14*864e5; }
+  function selo(a){ var s=el('span','status '+a.status, a.status==='comprovado' ? '✓ Comprovado' : '⚖ Em debate'); return s; }
+
+  function desenharLista(){
+    var box=document.getElementById('lista'); box.innerHTML='';
+    DADOS.filter(function(a){ return FILTRO==='todos' || a.status===FILTRO; }).forEach(function(a){
+      var c=el('button','card'); c.type='button';
+      var f=el('div','foto');
+      var im=new Image(); im.alt=''; im.loading='lazy'; im.src='img/'+a.img+'?v=1'; im.onerror=function(){ im.remove(); }; f.appendChild(im);
+      f.appendChild(el('span','ano', String(a.ano)));
+      f.appendChild(selo(a));
+      if(novo(a)) f.appendChild(el('span','novo','NOVO'));
+      c.appendChild(f);
+      var b=el('div','corpo');
+      b.appendChild(el('h2',null,a.titulo));
+      b.appendChild(el('div','lugar','📍 '+a.lugar));
+      b.appendChild(el('p',null,a.resumo));
+      b.appendChild(el('div','confirma','📖 Confirma: '+a.versiculo.ref));
+      c.appendChild(b);
+      c.onclick=function(){ location.hash = a.id; };
+      box.appendChild(c);
+    });
+  }
+
+  function desenharDetalhe(a){
+    var d=document.getElementById('v-detalhe'); d.innerHTML='';
+    var f=el('div','d-foto');
+    var im=new Image(); im.alt=''; im.src='img/'+a.img+'?v=1'; im.onerror=function(){ im.remove(); }; f.appendChild(im);
+    f.appendChild(el('span','ilustra','Ilustração'));
+    var v=el('button','voltar','← Achados'); v.onclick=function(){ history.length>1 ? history.back() : (location.hash=''); }; f.appendChild(v);
+    d.appendChild(f);
+    var c=el('div','d-corpo');
+    c.appendChild(selo(a));
+    c.appendChild(el('h1',null,a.titulo));
+    var fi=el('div','ficha');
+    [['Ano',String(a.ano)],['Onde',a.lugar],['Quem achou',a.quem]].forEach(function(p){ fi.appendChild(el('b',null,p[0])); fi.appendChild(el('span',null,p[1])); });
+    c.appendChild(fi);
+    if(a.nota){ c.appendChild(el('div','aviso','⚖️ '+a.nota)); }
+    a.texto.forEach(function(t){ c.appendChild(el('p',null,t)); });
+    var vs=el('div','verso'); vs.appendChild(el('div','vr','📖 '+a.versiculo.ref)); vs.appendChild(el('div','vt','“'+a.versiculo.texto+'”')); c.appendChild(vs);
+    var imp=el('div','importa'); imp.appendChild(el('b',null,'Por que importa: ')); imp.appendChild(document.createTextNode(a.importa)); c.appendChild(imp);
+    var fo=el('div','fontes'); fo.appendChild(el('h3',null,'🔎 Fontes e fotos reais'));
+    a.fontes.forEach(function(x){ var l=el('a',null,x.nome+' ↗'); l.href=x.url; l.target='_blank'; l.rel='noopener'; fo.appendChild(l); });
+    c.appendChild(fo);
+    var ac=el('div','acoes');
+    var sh=el('button','btn navy','📤 Compartilhar este achado');
+    sh.onclick=function(){
+      var url=location.origin+'/biblioteca/achados/#'+a.id;
+      var txt='🏺 '+a.titulo+' ('+a.ano+')\n'+a.resumo+'\n📖 '+a.versiculo.ref+'\n';
+      if(navigator.share){ navigator.share({title:a.titulo, text:txt, url:url}).catch(function(){}); }
+      else { location.href='https://wa.me/?text='+encodeURIComponent(txt+url); }
+    };
+    ac.appendChild(sh);
+    var lv=el('button','btn claro','← Todos os achados'); lv.onclick=function(){ location.hash=''; }; ac.appendChild(lv);
+    c.appendChild(ac);
+    d.appendChild(c);
+  }
+
+  function rota(){
+    var id = location.hash.replace('#','');
+    var a = DADOS.filter(function(x){ return x.id===id; })[0];
+    document.getElementById('v-lista').style.display = a ? 'none' : '';
+    document.getElementById('v-detalhe').classList.toggle('on', !!a);
+    if(a){ desenharDetalhe(a); window.scrollTo(0,0); document.title = a.titulo + ' — Pedras que Falam'; }
+    else { document.title = 'Pedras que Falam — achados que confirmam a Bíblia'; }
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.filtro'), function(b){
+    b.onclick=function(){ FILTRO=b.dataset.f; Array.prototype.forEach.call(document.querySelectorAll('.filtro'), function(x){ x.classList.toggle('on', x===b); }); desenharLista(); };
+  });
+  window.addEventListener('hashchange', rota);
+
+  fetch('achados.json?v=1').then(function(r){ return r.json(); }).then(function(j){
+    DADOS = (j.achados||[]).slice().sort(function(a,b){ return b.ano - a.ano; });
+    desenharLista(); rota();
+  }).catch(function(){ document.getElementById('lista').textContent = 'Não foi possível carregar os achados. Verifique a internet.'; });
+})();
+</script>
+<script src="/_uso.js?v=1" defer></script>
+</body>
+</html>

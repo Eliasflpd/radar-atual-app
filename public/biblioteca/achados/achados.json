@@ -1,0 +1,280 @@
+{
+  "atualizado": "2026-11-17",
+  "achados": [
+    {
+      "id": "ebal-2022",
+      "ano": 2022,
+      "titulo": "A tabuleta de maldição do monte Ebal",
+      "lugar": "Monte Ebal, perto de Nablus (Siquém)",
+      "quem": "Scott Stripling e equipe, peneirando a terra retirada da escavação de Adam Zertal nos anos 1980",
+      "img": "03-ebal.jpg",
+      "status": "debate",
+      "resumo": "Uma plaquinha de chumbo dobrada, do tamanho de uma unha, que teria a palavra \"maldito\" e o nome de Deus.",
+      "texto": [
+        "Em março de 2022, a equipe de Scott Stripling anunciou uma pequena tabuleta de chumbo dobrada, achada na terra que sobrou da escavação do monte Ebal feita nos anos 1980. Ela nunca foi aberta: foi examinada por tomografia.",
+        "Segundo a equipe, dentro dela haveria uma maldição com o nome de Deus (YHW), escrita por volta de 1200 a.C. Seria o texto hebraico mais antigo com o nome de Deus, exatamente no monte em que Moisés mandou pronunciar as maldições.",
+        "O estudo saiu em 2023 numa revista científica, mas outros estudiosos contestaram com força: dizem que não dá para ler letra nenhuma nas imagens, e um deles propõe que o objeto seja apenas um peso de rede de pesca."
+      ],
+      "versiculo": { "ref": "Deuteronômio 11:29", "texto": "Ora, quando o Senhor teu Deus te introduzir na terra a que vais para possuí-la, pronunciarás a bênção sobre o monte Gerizim, e a maldição sobre o monte Ebal." },
+      "importa": "Se a leitura for confirmada, será um dos achados mais importantes da arqueologia bíblica. Por enquanto, não é prova: é uma pista em discussão.",
+      "nota": "Em debate: a leitura das letras e até o que o objeto é continuam contestados.",
+      "fontes": [
+        { "nome": "Artigo científico da equipe (Heritage Science, 2023)", "url": "https://link.springer.com/article/10.1186/s40494-023-01130-z" },
+        { "nome": "A crítica: seria um peso de pesca (Live Science)", "url": "https://www.livescience.com/archaeology/curse-tablet-with-oldest-hebrew-name-of-god-is-actually-a-fishing-weight-experts-argue" }
+      ]
+    },
+    {
+      "id": "rolos-2021",
+      "ano": 2021,
+      "titulo": "Novos pedaços dos Rolos do Mar Morto",
+      "lugar": "Caverna do Horror, num penhasco do deserto da Judeia",
+      "quem": "Autoridade de Antiguidades de Israel, numa operação para salvar as cavernas dos saqueadores",
+      "img": "01-rolos.jpg",
+      "status": "comprovado",
+      "resumo": "Dezenas de pedacinhos de um rolo dos Profetas, com trechos de Zacarias e Naum.",
+      "texto": [
+        "Em março de 2021, Israel anunciou dezenas de fragmentos de pergaminho achados na chamada Caverna do Horror, numa parede de penhasco quase inacessível do deserto da Judeia. Foram os primeiros textos bíblicos novos achados numa escavação em cerca de 60 anos.",
+        "São pedaços de um rolo dos Doze Profetas Menores, escrito em grego, com trechos de Zacarias 8 e Naum 1. Um detalhe chamou a atenção: no meio do texto grego, o nome de Deus foi escrito em letras hebraicas antigas, por reverência.",
+        "O rolo foi escondido ali por judeus que fugiam dos romanos durante a revolta de Bar Kochba, por volta de 135 d.C."
+      ],
+      "versiculo": { "ref": "Zacarias 8:16", "texto": "Eis as coisas que deveis fazer: Falai a verdade cada um com o seu próximo; executai juízo de verdade e de paz nas vossas portas;" },
+      "importa": "Mostra que o texto dos profetas que lemos hoje é o mesmo que era copiado e guardado há quase dois mil anos.",
+      "nota": "",
+      "fontes": [
+        { "nome": "Pesquisar: Cave of Horror (Wikipedia)", "url": "https://en.wikipedia.org/w/index.php?search=Cave+of+Horror+Dead+Sea+Scrolls+2021" }
+      ]
+    },
+    {
+      "id": "jerubaal-2021",
+      "ano": 2021,
+      "titulo": "O nome de Gideão num jarro do tempo dos Juízes",
+      "lugar": "Khirbet al-Ra'i, a 4 km de Laquis, no sul de Israel",
+      "quem": "Yosef Garfinkel e Saar Ganor; leitura de Christopher Rollston",
+      "img": "02-jerubaal.jpg",
+      "status": "debate",
+      "resumo": "Um caco de jarro com o nome Jerubaal, o outro nome de Gideão, escrito com tinta por volta de 1100 a.C.",
+      "texto": [
+        "Em 2019, arqueólogos acharam pedaços de um jarro com cinco letras escritas a tinta. A descoberta foi anunciada em julho de 2021. As letras formam o nome Yerubaal, que nós lemos como Jerubaal.",
+        "É o nome que o povo deu a Gideão depois que ele derrubou o altar de Baal. O jarro é do período dos Juízes, por volta de 1100 a.C., a época de Gideão.",
+        "Os próprios arqueólogos foram cuidadosos: o lugar fica longe do vale de Jezreel, onde Gideão viveu, e o jarro pode ser de outro homem com o mesmo nome."
+      ],
+      "versiculo": { "ref": "Juízes 6:32", "texto": "Pelo que naquele dia chamaram a Gideão Jerubaal, dizendo: Baal contenda contra ele, pois derribou o seu altar." },
+      "importa": "Mesmo que não seja o jarro do próprio Gideão, prova que o nome Jerubaal existia e era usado exatamente no tempo que a Bíblia descreve.",
+      "nota": "Em debate: o nome está certo; se o jarro era do próprio Gideão, ninguém sabe.",
+      "fontes": [
+        { "nome": "A inscrição de Jerubaal (Sci.News)", "url": "https://www.sci.news/archaeology/biblical-judge-inscription-09861.html" }
+      ]
+    },
+    {
+      "id": "rua-2019",
+      "ano": 2019,
+      "titulo": "A Rua dos Peregrinos",
+      "lugar": "Cidade de Davi, Jerusalém: do Tanque de Siloé até o Monte do Templo",
+      "quem": "Autoridade de Antiguidades de Israel e Fundação Cidade de Davi",
+      "img": "04-rua-peregrinos.jpg",
+      "status": "comprovado",
+      "resumo": "A rua de pedra, com 600 metros, por onde os peregrinos subiam ao templo no tempo de Jesus.",
+      "texto": [
+        "Debaixo das casas de Jerusalém, os arqueólogos escavaram em túnel uma rua larga de lajes de pedra, com cerca de 600 metros de comprimento e 8 de largura. Ela ligava o Tanque de Siloé ao Monte do Templo.",
+        "Em 2019, um estudo das cerca de 100 moedas achadas debaixo do piso mostrou que a rua foi construída por volta do ano 31 d.C., quando Pôncio Pilatos governava a Judeia. Por isso os pesquisadores acham provável que tenha sido obra dele.",
+        "Era o caminho dos peregrinos que subiam para as festas. É bem possível que Jesus e os discípulos tenham pisado nessas pedras."
+      ],
+      "versiculo": { "ref": "Salmo 122:1", "texto": "Alegrei-me quando me disseram: Vamos à casa do Senhor." },
+      "importa": "Liga num só caminho dois lugares dos Evangelhos: o Tanque de Siloé, onde o cego foi curado, e o templo.",
+      "nota": "A rua e a data são comprovadas; a autoria de Pilatos é considerada provável.",
+      "fontes": [
+        { "nome": "Pilatos construiu a Rua dos Peregrinos (Algemeiner, 2019)", "url": "https://www.algemeiner.com/2019/10/23/pontius-pilate-built-jerusalems-pilgrimage-road-say-israeli-archaeologists/" }
+      ]
+    },
+    {
+      "id": "ezequias-2015",
+      "ano": 2015,
+      "titulo": "O selo do rei Ezequias",
+      "lugar": "Ofel, junto ao Monte do Templo, em Jerusalém",
+      "quem": "Eilat Mazar, da Universidade Hebraica de Jerusalém",
+      "img": "05-ezequias.jpg",
+      "status": "comprovado",
+      "resumo": "A marca de barro do carimbo do próprio rei: \"de Ezequias, filho de Acaz, rei de Judá\".",
+      "texto": [
+        "Em dezembro de 2015, a arqueóloga Eilat Mazar anunciou uma impressão de selo em barro, com cerca de um centímetro, achada ao peneirar a terra de uma escavação ao lado do Monte do Templo.",
+        "Nela está escrito, em hebraico antigo: \"De Ezequias, filho de Acaz, rei de Judá\", com o desenho de um sol de duas asas. Era o barro que lacrava um documento oficial, carimbado pelo selo do rei.",
+        "Foi a primeira impressão de selo de um rei de Israel ou de Judá achada numa escavação científica."
+      ],
+      "versiculo": { "ref": "2 Reis 18:1", "texto": "Ora, sucedeu que, no terceiro ano de Oséias, filho de Elá, rei de Israel, começou a reinar Ezequias, filho de Acaz, rei de Judá." },
+      "importa": "O nome, o pai e o título batem exatamente com o que a Bíblia diz.",
+      "nota": "",
+      "fontes": [
+        { "nome": "Pesquisar: Hezekiah seal impression (Wikipedia)", "url": "https://en.wikipedia.org/w/index.php?search=Hezekiah+royal+seal+bulla+Ophel+2015" }
+      ]
+    },
+    {
+      "id": "belem-2012",
+      "ano": 2012,
+      "titulo": "O selo de Belém",
+      "lugar": "Cidade de Davi, Jerusalém",
+      "quem": "Eli Shukron, da Autoridade de Antiguidades de Israel",
+      "img": "06-belem.jpg",
+      "status": "comprovado",
+      "resumo": "A primeira vez que o nome Belém aparece fora da Bíblia, num selo de barro de uns 2.700 anos.",
+      "texto": [
+        "Em maio de 2012, foi anunciada uma pequena bula de barro, com 1,5 centímetro, achada ao peneirar a terra da Cidade de Davi. Ela tem três linhas de escrita em hebraico antigo, e a do meio diz Belém.",
+        "É do tempo dos reis de Judá (séculos VIII ou VII a.C.). Pelo jeito, lacrava um carregamento de impostos enviado de Belém para o rei em Jerusalém.",
+        "Foi a primeira vez que o nome Belém apareceu fora da Bíblia, numa peça daquela época."
+      ],
+      "versiculo": { "ref": "Miqueias 5:2", "texto": "Mas tu, Belém Efrata, posto que pequena para estar entre os milhares de Judá, de ti é que me sairá aquele que há de reinar em Israel, e cujas saídas são desde os tempos antigos, desde os dias da eternidade." },
+      "importa": "A pequena Belém da profecia de Miqueias, onde Jesus nasceria, já existia e pagava impostos ao rei de Judá.",
+      "nota": "",
+      "fontes": [
+        { "nome": "A bula de Belém (Biblical Archaeology Society)", "url": "https://www.biblicalarchaeology.org/daily/earliest-history-of-bethlehem-documented-by-first-temple-period-bulla-from-the-city-of-david/" }
+      ]
+    },
+    {
+      "id": "herodes-2007",
+      "ano": 2007,
+      "titulo": "O túmulo do rei Herodes",
+      "lugar": "Heródio, a cerca de 12 km ao sul de Jerusalém, perto de Belém",
+      "quem": "Ehud Netzer, da Universidade Hebraica de Jerusalém",
+      "img": "07-herodes.jpg",
+      "status": "comprovado",
+      "resumo": "Depois de 35 anos de busca, o arqueólogo achou o túmulo do rei que tentou matar o Menino Jesus.",
+      "texto": [
+        "Em maio de 2007, o arqueólogo Ehud Netzer anunciou que tinha achado o túmulo de Herodes, o Grande, na encosta do Heródio, a fortaleza-palácio em forma de vulcão que o próprio rei construiu. Ele procurava esse túmulo desde 1972.",
+        "Foram achados pedaços de um sarcófago luxuoso de pedra avermelhada, decorado com rosetas, quebrado em muitos pedaços. Josefo, o historiador do século I, conta que Herodes foi levado ali num cortejo com esquife de ouro, púrpura, coroa e cetro.",
+        "Netzer morreu em 2010, depois de cair de uma grade no próprio Heródio, onde continuava escavando."
+      ],
+      "versiculo": { "ref": "Mateus 2:19", "texto": "Mas tendo morrido Herodes, eis que um anjo do Senhor apareceu em sonho a José no Egito," },
+      "importa": "O rei de Mateus 2 deixou um túmulo de luxo que foi achado em pedaços. O Menino que ele quis matar não deixou túmulo nenhum: ressuscitou.",
+      "nota": "A maioria dos estudiosos aceita que o túmulo é de Herodes; alguns poucos questionam.",
+      "fontes": [
+        { "nome": "Pesquisar: Herodium, tumba de Herodes (Wikipedia)", "url": "https://en.wikipedia.org/w/index.php?search=Herodium+tomb+of+Herod+Ehud+Netzer" }
+      ]
+    },
+    {
+      "id": "megido-2005",
+      "ano": 2005,
+      "titulo": "O mosaico \"ao Deus Jesus Cristo\"",
+      "lugar": "Debaixo da prisão de Megido, no norte de Israel",
+      "quem": "Yotam Tepper, para a Autoridade de Antiguidades de Israel",
+      "img": "08-megido.jpg",
+      "status": "comprovado",
+      "resumo": "O piso de um dos salões de culto cristão mais antigos do mundo, que chama Jesus de Deus.",
+      "texto": [
+        "Em 2005, durante uma obra na prisão de Megido, arqueólogos acharam o chão de mosaico de um salão de culto cristão do século III, por volta do ano 230 d.C., antes de o cristianismo ser permitido em Roma.",
+        "Uma das inscrições, em grego, diz que uma mulher chamada Aketous \"ofereceu a mesa ao Deus Jesus Cristo, como memorial\". A mesa era a da ceia do Senhor. O mosaico tem também o desenho de peixes, o antigo símbolo dos cristãos.",
+        "É uma das provas mais antigas, em pedra, de que os primeiros cristãos adoravam Jesus como Deus."
+      ],
+      "versiculo": { "ref": "João 20:28", "texto": "Respondeu-lhe Tomé: Senhor meu, e Deus meu!" },
+      "importa": "Derruba a ideia de que a divindade de Jesus foi \"inventada\" séculos depois: os cristãos de Megido já o chamavam de Deus no ano 230.",
+      "nota": "",
+      "fontes": [
+        { "nome": "O mosaico de Megido (Christian Today)", "url": "https://www.christiantoday.com/article/ancient-mosaic-describing-jesus-christ-as-god-to-be-unveiled-in-israel/126745.htm" },
+        { "nome": "A inscrição no banco de inscrições de Israel", "url": "https://search.inscriptionsisraelpalestine.org/inscriptions/megi0001" }
+      ]
+    },
+    {
+      "id": "siloe-2004",
+      "ano": 2004,
+      "titulo": "O Tanque de Siloé",
+      "lugar": "Cidade de Davi, Jerusalém",
+      "quem": "Eli Shukron e Ronny Reich",
+      "img": "09-siloe.jpg",
+      "status": "comprovado",
+      "resumo": "O tanque onde Jesus mandou o cego se lavar apareceu numa obra de esgoto.",
+      "texto": [
+        "Em junho de 2004, operários consertavam um cano de esgoto em Jerusalém quando a máquina bateu em degraus de pedra antigos. Os arqueólogos Eli Shukron e Ronny Reich foram chamados e descobriram o Tanque de Siloé do tempo de Jesus.",
+        "Eram largos degraus que desciam até a água, usados pelos peregrinos que se purificavam antes de subir ao templo. Moedas achadas no lugar mostram que o tanque estava em uso no século I.",
+        "Por séculos, havia quem dissesse que o tanque de João 9 era só um símbolo. Ele estava ali, debaixo da terra."
+      ],
+      "versiculo": { "ref": "João 9:7", "texto": "e disse-lhe: Vai, lava-te no tanque de Siloé (que significa Enviado). E ele foi, lavou-se, e voltou vendo." },
+      "importa": "Mostra que João descreveu um lugar real, com o nome certo, no lugar certo.",
+      "nota": "",
+      "fontes": [
+        { "nome": "Pesquisar: Pool of Siloam (Wikipedia)", "url": "https://en.wikipedia.org/w/index.php?search=Pool+of+Siloam+2004" }
+      ]
+    },
+    {
+      "id": "tel-da-1993",
+      "ano": 1993,
+      "titulo": "A pedra da \"Casa de Davi\"",
+      "lugar": "Tel Dã, no extremo norte de Israel",
+      "quem": "Gila Cook, da equipe de Avraham Biran",
+      "img": "10-tel-da.jpg",
+      "status": "comprovado",
+      "resumo": "A primeira vez que o nome do rei Davi apareceu fora da Bíblia.",
+      "texto": [
+        "Num dia quente de julho de 1993, a agrimensora Gila Cook reparou numa pedra de basalto encaixada num muro antigo de Tel Dã. Havia letras aramaicas gravadas. No ano seguinte, apareceram mais dois pedaços.",
+        "A inscrição é de um rei inimigo de Israel, por volta de 840 a.C., que se gaba de ter vencido o \"rei de Israel\" e o \"rei da Casa de Davi\".",
+        "Antes dela, havia estudiosos que diziam que Davi era uma lenda. Hoje a pedra está no Museu de Israel, em Jerusalém."
+      ],
+      "versiculo": { "ref": "2 Samuel 7:16", "texto": "A tua casa, porém, e o teu reino serão firmados para sempre diante de ti; teu trono será estabelecido para sempre." },
+      "importa": "Um inimigo de Israel, sem querer, confirmou que a dinastia de Davi existia.",
+      "nota": "",
+      "fontes": [
+        { "nome": "A inscrição de Tel Dã (Biblical Archaeology Society)", "url": "https://www.biblicalarchaeology.org/daily/biblical-artifacts/the-tel-dan-inscription-the-first-historical-evidence-of-the-king-david-bible-story/" }
+      ]
+    },
+    {
+      "id": "caifas-1990",
+      "ano": 1990,
+      "titulo": "A urna de ossos de Caifás",
+      "lugar": "Floresta da Paz, ao sul da Cidade Velha de Jerusalém",
+      "quem": "Zvi Greenhut, da Autoridade de Antiguidades de Israel",
+      "img": "11-caifas.jpg",
+      "status": "comprovado",
+      "resumo": "A urna com o nome do sumo sacerdote que julgou Jesus.",
+      "texto": [
+        "Em 1990, operários que faziam uma obra num parque ao sul de Jerusalém abriram sem querer um túmulo do século I. Dentro havia urnas de ossos de calcário.",
+        "A mais bonita, toda decorada, tinha o nome gravado: \"José, filho de Caifás\". Josefo conta que o sumo sacerdote do tempo de Jesus se chamava José e era conhecido como Caifás.",
+        "Dentro da urna estavam os ossos de um homem de uns 60 anos. A peça está hoje no Museu de Israel."
+      ],
+      "versiculo": { "ref": "Mateus 26:57", "texto": "Aqueles que prenderam a Jesus levaram-no à presença do sumo sacerdote Caifás, onde os escribas e os anciãos estavam reunidos." },
+      "importa": "O homem que julgou Jesus deixou uma urna de luxo. O Réu que ele condenou deixou um túmulo vazio.",
+      "nota": "A ligação com o Caifás dos Evangelhos é muito provável e aceita pela maioria, mas não é absolutamente certa.",
+      "fontes": [
+        { "nome": "Pesquisar: Caiaphas ossuary (Wikipedia)", "url": "https://en.wikipedia.org/w/index.php?search=Caiaphas+ossuary" }
+      ]
+    },
+    {
+      "id": "ketef-1979",
+      "ano": 1979,
+      "titulo": "Os rolinhos de prata de Ketef Hinom",
+      "lugar": "Ketef Hinom, Jerusalém",
+      "quem": "Gabriel Barkay",
+      "img": "12-ketef-hinom.jpg",
+      "status": "comprovado",
+      "resumo": "O texto da Bíblia mais antigo já achado: a bênção sacerdotal, gravada em prata.",
+      "texto": [
+        "Em 1979, o arqueólogo Gabriel Barkay escavava antigos túmulos em Jerusalém quando achou dois rolinhos de prata do tamanho de um cigarro, enrolados como amuletos.",
+        "Desenrolados com muito cuidado, revelaram a bênção que Deus mandou os sacerdotes pronunciarem sobre o povo, a mesma de Números 6. Eles são de por volta de 600 a.C., antes do exílio na Babilônia.",
+        "Em 2004, com fotografias de alta tecnologia, os pesquisadores conseguiram ler o texto com mais clareza. São o trecho da Bíblia mais antigo já encontrado."
+      ],
+      "versiculo": { "ref": "Números 6:24-26", "texto": "O Senhor te abençoe e te guarde; o Senhor faça resplandecer o seu rosto sobre ti, e tenha misericórdia de ti; o Senhor levante sobre ti o seu rosto, e te dê a paz." },
+      "importa": "A mesma bênção que se pronuncia hoje nas igrejas já era carregada no pescoço por israelitas há 2.600 anos.",
+      "nota": "",
+      "fontes": [
+        { "nome": "Pesquisar: Ketef Hinnom scrolls (Wikipedia)", "url": "https://en.wikipedia.org/w/index.php?search=Ketef+Hinnom+scrolls" }
+      ]
+    },
+    {
+      "id": "pilatos-1961",
+      "ano": 1961,
+      "titulo": "A pedra de Pilatos",
+      "lugar": "Teatro romano de Cesareia Marítima, na costa de Israel",
+      "quem": "Equipe italiana de Antonio Frova",
+      "img": "13-pilatos.jpg",
+      "status": "comprovado",
+      "resumo": "A única pedra da época com o nome de Pôncio Pilatos e o título dele.",
+      "texto": [
+        "Em 1961, arqueólogos italianos escavavam o teatro romano de Cesareia quando acharam uma pedra de calcário reaproveitada como degrau. Nela havia uma inscrição em latim.",
+        "Dava para ler: \"Pôncio Pilatos, prefeito da Judeia\". A pedra fazia parte de um edifício que Pilatos dedicou ao imperador Tibério.",
+        "É a única inscrição da época com o nome de Pilatos. O original está no Museu de Israel; em Cesareia fica uma cópia."
+      ],
+      "versiculo": { "ref": "Lucas 3:1", "texto": "No décimo quinto ano do reinado de Tibério César, sendo Pôncio Pilatos governador da Judéia, Herodes tetrarca da Galiléia, seu irmão Filipe tetrarca da região da Ituréia e de Traconites, e Lisânias tetrarca de Abilene," },
+      "importa": "O governador que lavou as mãos no julgamento de Jesus deixou o nome gravado em pedra, com o cargo que os Evangelhos lhe dão.",
+      "nota": "",
+      "fontes": [
+        { "nome": "Pesquisar: Pilate stone (Wikipedia)", "url": "https://en.wikipedia.org/w/index.php?search=Pilate+stone" }
+      ]
+    }
+  ]
+}
