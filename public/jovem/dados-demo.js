@@ -209,6 +209,38 @@ window.CJ_DEMO = {
     ]
   },
 
+  // Módulo 3 · Eventos (painel da gestão e visão do líder na demonstração). Datas relativas a hoje.
+  eventosDemo: {
+    v: 1,
+    responsaveis: { 'p-bia': 'Mãe da Bia (fictícia)', 'p-theo': 'Pai do Theo (fictício)' },
+    eventos: [
+      { id: 'ev-quinta', titulo: 'Conexão de Quinta', categoria: 'culto', dias: 2, hora: '19:30', duracao: 2, local: 'Templo Sede · salão principal', faixas: ['15-17', '18-21', '22-25'], autorizacao: false, capacidade: null, status: 'publicado', circulo: null,
+        descricao: 'Culto dos jovens com louvor, Palavra e um tempo de comunhão no final.', acessibilidade: 'Entrada sem degraus pela lateral; intérprete de Libras na primeira fileira.', orientacoes: 'Não é preciso inscrição. Se for sua primeira vez, procure a recepção.', responsavel: 'Equipe de jovens', contato: 'Secretaria da igreja (fictício)', regras_menores: null },
+      { id: 'ev-futebol', titulo: 'Futebol da Juventude', categoria: 'esporte', dias: 4, hora: '08:00', duracao: 3, local: 'Quadra da igreja', faixas: ['15-17', '18-21', '22-25'], autorizacao: true, capacidade: 24, status: 'publicado', circulo: null,
+        descricao: 'Futebol misto, sem placar oficial, com oração no início e lanche no final.', acessibilidade: 'Arquibancada coberta acessível.', orientacoes: 'Leve água e roupa confortável.', responsavel: 'Pedro H. (demonstração)', contato: 'Secretaria da igreja (fictício)',
+        regras_menores: 'Transporte só com o responsável ou na van da igreja. Sem fotos de menores sem autorização de imagem. Retirada só pelo responsável cadastrado.' },
+      { id: 'ev-acamp', titulo: 'Acampa Conexão', categoria: 'acampamento', dias: 17, hora: '18:00', duracao: 48, local: 'Sítio parceiro (informado aos inscritos)', faixas: ['15-17', '18-21', '22-25'], autorizacao: true, capacidade: 3, status: 'publicado', circulo: null,
+        descricao: 'Fim de semana de comunhão, Palavra, esporte e descanso. Dormitórios separados por idade e sexo.', acessibilidade: 'Informe necessidades na inscrição.', orientacoes: 'Saída do Templo Sede. Leve roupa de cama e Bíblia.', responsavel: 'Liderança de jovens', contato: 'Secretaria da igreja (fictício)',
+        regras_menores: 'Autorização assinada, transporte só no ônibus da igreja, uso de imagem conforme a autorização e entrega/retirada só ao responsável.' },
+      { id: 'ev-circ', titulo: 'Noite de jogos do Círculo Esperança', categoria: 'circulo', dias: 6, hora: '19:00', duracao: 3, local: 'Casa de família (só integrantes)', faixas: ['18-21'], autorizacao: false, capacidade: 10, status: 'publicado', circulo: 'c-esp',
+        descricao: 'Jogos de tabuleiro, lanche e oração.', acessibilidade: 'Combine com o líder se precisar de apoio para chegar.', orientacoes: 'Endereço só para integrantes.', responsavel: 'Rafael T. e Camila S.', contato: null, regras_menores: null },
+      { id: 'ev-midia', titulo: 'Oficina de mídia', categoria: 'treinamento', dias: 20, hora: '14:00', duracao: 3, local: 'Sala de mídia', faixas: ['18-21', '22-25'], autorizacao: false, capacidade: 12, status: 'rascunho', circulo: null,
+        descricao: 'Fotografia e vídeo para o ministério, com cuidado de imagem.', acessibilidade: null, orientacoes: null, responsavel: 'Equipe de mídia', contato: null, regras_menores: null },
+      { id: 'ev-estudo', titulo: 'Estudo: Perguntas sinceras', categoria: 'estudo', dias: 0, hora: '-1', duracao: 3, local: 'Templo Sede · sala 3', faixas: ['15-17', '18-21', '22-25'], autorizacao: false, capacidade: 40, status: 'publicado', circulo: null,
+        descricao: 'Um espaço seguro para levar dúvidas sobre fé e vida.', acessibilidade: 'Sala no térreo.', orientacoes: 'Traga sua pergunta.', responsavel: 'Liderança de jovens', contato: null, regras_menores: 'Menores saem com o responsável ou com saída autorizada.' }
+    ],
+    inscricoes: [
+      { evento: 'ev-quinta', pessoa: 'p-davi', status: 'confirmada' }, { evento: 'ev-quinta', pessoa: 'p-lucas', status: 'confirmada' }, { evento: 'ev-quinta', pessoa: 'p-bia', status: 'confirmada' },
+      { evento: 'ev-futebol', pessoa: 'p-davi', status: 'confirmada' }, { evento: 'ev-futebol', pessoa: 'p-ana', status: 'confirmada' }, { evento: 'ev-futebol', pessoa: 'p-julia', status: 'confirmada' },
+      { evento: 'ev-futebol', pessoa: 'p-bia', status: 'aguardando_autorizacao', autorizacao: 'pendente' }, { evento: 'ev-futebol', pessoa: 'p-theo', status: 'aguardando_autorizacao', autorizacao: 'pendente' },
+      { evento: 'ev-acamp', pessoa: 'p-ana', status: 'confirmada' }, { evento: 'ev-acamp', pessoa: 'p-lucas', status: 'confirmada' }, { evento: 'ev-acamp', pessoa: 'p-bia', status: 'confirmada', autorizacao: 'aprovado' },
+      { evento: 'ev-acamp', pessoa: 'p-pedro', status: 'lista_espera' }, { evento: 'ev-acamp', pessoa: 'p-theo', status: 'lista_espera', autorizacao: 'pendente' },
+      { evento: 'ev-circ', pessoa: 'p-ana', status: 'confirmada' }, { evento: 'ev-circ', pessoa: 'p-julia', status: 'confirmada' }, { evento: 'ev-circ', pessoa: 'p-sara', status: 'confirmada' },
+      { evento: 'ev-estudo', pessoa: 'p-ana', status: 'confirmada', entrada: -50, saida: -5 }, { evento: 'ev-estudo', pessoa: 'p-davi', status: 'confirmada', entrada: -45 },
+      { evento: 'ev-estudo', pessoa: 'p-bia', status: 'confirmada', entrada: -40 }, { evento: 'ev-estudo', pessoa: 'p-tiago', status: 'confirmada' }
+    ]
+  },
+
   lideranca: {
     kpis: [
       { rot: 'Tempo médio até o acolhimento', val: '41 h', meta: 'meta: até 72 h úteis' },

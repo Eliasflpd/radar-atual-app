@@ -3,7 +3,8 @@
    no localStorage deste aparelho, sempre com aviso de demonstração. Dados fictícios em dados-demo.js.
    Fase 2: login igual ao do Radar (código pelo WhatsApp), banco com RLS, papéis e auditoria (ver dossiê).
    Módulo 1: login pelo crachá do Radar e Pessoas. Módulo 2: Círculos (Meu Círculo real, Encontrar um círculo,
-   Conduzir meu círculo e o painel Círculos), com simulador local na demonstração. */
+   Conduzir meu círculo e o painel Círculos), com simulador local na demonstração.
+   Módulo 3: Eventos (lista e detalhe ligados ao banco; gestão de eventos no Painel e visão do líder). */
 (function () {
   'use strict';
   var D = window.CJ_DEMO;
@@ -644,10 +645,12 @@
           it('#/jornada', 'compass', 'Minha Jornada', '90 dias, no seu ritmo') +
           it('#/missao', 'target', 'Missão da Semana', D.missao.titulo) +
           it('#/circulo', 'users', 'Meu Círculo', real() ? (euAtivo() && euAtivo().circulo) || 'Encontrar um círculo' : D.circulo.nome) +
-          (!real() || souLider() ? it('#/lider-circulo', 'shield', 'Conduzir meu círculo', real() ? 'Pedidos, encontros e presença' : 'Visão do líder (demonstração)') : '') + '</ul></div>' +
+          (!real() || souLider() ? it('#/lider-circulo', 'shield', 'Conduzir meu círculo', real() ? 'Pedidos, encontros e presença' : 'Visão do líder (demonstração)') : '') +
+          (real() && souLider() && !(euAtivo() && euAtivo().equipe) ? it('#/eventos-gestao', 'calendar', 'Eventos do meu círculo', 'Criar, inscritos e presença') : '') + '</ul></div>' +
         '<div class="cartao"><ul class="lista lista-link">' +
           (!real() || (euAtivo() && euAtivo().equipe) ? it('#/pessoas', 'users', 'Pessoas', real() ? 'Aprovar, cadastrar e dar papéis' : 'Gestão de pessoas (demonstração)') +
             it('#/circulos', 'heartHandshake', 'Círculos', real() ? 'Criar, líderes, integrantes e trocas' : 'Gestão de círculos (demonstração)') +
+            it('#/eventos-gestao', 'calendar', 'Gestão de eventos', real() ? 'Criar, publicar, inscritos, autorizações e presença' : 'Gestão de eventos (demonstração)') +
             it('#/lideranca', 'chart', 'Painel de liderança', 'Prévia com dados fictícios') : '') +
           '<li><button type="button" data-acao="regras"><span class="ic-caixa">' + ic('shield') + '</span><span class="li-t"><b>Regras da comunidade</b><span>Respeito, cuidado e proteção</span></span>' + ic('right', 'ic seta') + '</button></li>' +
           '<li><button type="button" data-acao="politica"><span class="ic-caixa">' + ic('lock') + '</span><span class="li-t"><b>Privacidade</b><span>Como cuidamos dos seus dados</span></span>' + ic('right', 'ic seta') + '</button></li>' +
@@ -655,8 +658,8 @@
         '<div class="cartao"><ul class="lista lista-link">' +
           '<li><a href="/?radar"><span class="ic-caixa ouro">' + ic('radar') + '</span><span class="li-t"><b>Ir para o Radar Atual</b><span>Bíblia, pregações e mais</span></span>' + ic('right', 'ic seta') + '</a></li>' +
           '<li><a href="/?capa"><span class="ic-caixa ouro">' + ic('left') + '</span><span class="li-t"><b>Voltar à capa</b><span>Escolher entre Radar e Conexão Jovem</span></span>' + ic('right', 'ic seta') + '</a></li></ul></div>' +
-        (real() ? aviso('<b>Conectado com a sua conta do Radar.</b> Perfil, consentimento, Pessoas e Círculos usam dados reais. As demais telas ainda mostram a demonstração.', 'aviso-azul', 'info') : AV_DEMO) +
-        '<p class="peq" style="text-align:center;letter-spacing:.04em">CONEXÃO JOVEM · ' + (real() ? 'Módulos 1 e 2' : 'demonstração') + '</p>' +
+        (real() ? aviso('<b>Conectado com a sua conta do Radar.</b> Perfil, consentimento, Pessoas, Círculos e Eventos usam dados reais. As demais telas ainda mostram a demonstração.', 'aviso-azul', 'info') : AV_DEMO) +
+        '<p class="peq" style="text-align:center;letter-spacing:.04em">CONEXÃO JOVEM · ' + (real() ? 'Módulos 1, 2 e 3' : 'demonstração') + '</p>' +
       '</div>' };
   };
 
@@ -667,6 +670,7 @@
       '<div class="sec pt">' +
         '<a class="cartao cartao-link" href="#/pessoas"><span class="ic-caixa">' + ic('users') + '</span><div><h3>Pessoas</h3><p>Aprovar pendentes, cadastrar pelo WhatsApp, dar e retirar papéis.</p></div>' + ic('right', 'ic seta') + '</a>' +
         '<a class="cartao cartao-link" href="#/circulos"><span class="ic-caixa">' + ic('heartHandshake') + '</span><div><h3>Círculos</h3><p>Criar e editar círculos, escolher líder e auxiliar, integrantes, pedidos e trocas.</p></div>' + ic('right', 'ic seta') + '</a>' +
+        '<a class="cartao cartao-link" href="#/eventos-gestao"><span class="ic-caixa">' + ic('calendar') + '</span><div><h3>Eventos</h3><p>Criar e publicar eventos, inscritos, autorizações de responsáveis e check-in/out.</p></div>' + ic('right', 'ic seta') + '</a>' +
         aviso('<b>Os números abaixo são fictícios.</b> Só papéis autorizados acessam, com registro de auditoria. O painel mostra dados agregados: nunca diário espiritual nem o conteúdo de pedidos de oração.', '', 'info') +
         '<h2 class="tit-sec" style="margin-top:8px">Integração · últimos 30 dias</h2>' +
         '<div class="kpis">' + L.kpis.map(function (k) { return '<div class="kpi"><small>' + esc(k.rot) + '</small><b>' + esc(k.val) + '</b><span>' + esc(k.meta) + '</span></div>'; }).join('') + '</div>' +
@@ -2017,6 +2021,525 @@
     moverPessoa(t.id, t.faixa, t.circulo_id, t.nome);
   };
 
+  /* ═══════════════════════════════════════════════════════════════════════════
+     MÓDULO 3 · Eventos (17/11/2026) — dossiê 6.7
+     Telas: Eventos e detalhe (jovem, ligados ao banco), Eventos no Painel (gestão: criar,
+     editar, publicar, cancelar, inscritos, autorizações, check-in/out) e a mesma tela para o
+     líder/auxiliar, só com os eventos do próprio círculo. Uma só porta: evx() usa o banco no
+     modo real e um simulador local (dados FICTÍCIOS de dados-demo.js) na demonstração.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  I.search = '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>';
+  var CAT = { culto: 'Culto', estudo: 'Estudo', esporte: 'Esporte', acao_social: 'Ação social', circulo: 'Círculo', acampamento: 'Acampamento', ensaio: 'Ensaio', treinamento: 'Treinamento' };
+  var CAT_ARTE = { culto: 'palco', estudo: 'estudo', esporte: 'campo', acao_social: 'maos', circulo: 'lar', acampamento: 'tenda', ensaio: 'musica', treinamento: 'talentos' };
+  var ST_EV = { rascunho: ['selo-cinza', 'Rascunho'], publicado: ['selo-verde', 'Publicado'], cancelado: ['selo-alerta', 'Cancelado'], encerrado: ['selo-cinza', 'Encerrado'] };
+  function catCodigo(rot) { for (var k in CAT) if (CAT[k] === rot) return k; return null; }
+  function faixasTxt(f) { f = f || []; return f.length >= 3 ? '15 a 25 anos (todas as faixas)' : f.map(function (x) { return FAIXAS[x] || x; }).join(' · '); }
+  function horaCurta(iso) { var d = new Date(iso); return d.getHours() + 'h' + (d.getMinutes() ? ('0' + d.getMinutes()).slice(-2) : ''); }
+  function periodo(e) {
+    if (!e.fim) return quando(e.inicio);
+    var a = new Date(e.inicio), b = new Date(e.fim);
+    return a.toDateString() === b.toDateString() ? quando(e.inicio) + ' às ' + horaCurta(e.fim) : quando(e.inicio, true) + ' até ' + quando(e.fim, true);
+  }
+  function seloInscricao(e) {
+    var s = e.minha_inscricao;
+    if (s === 'confirmada') return '<span class="selo selo-verde">' + ic('check') + 'Inscrito</span>';
+    if (s === 'aguardando_autorizacao') return '<span class="selo selo-alerta">' + ic('hourglass') + 'Aguardando autorização</span>';
+    if (s === 'lista_espera') return '<span class="selo selo-azul">Lista de espera' + (e.posicao_espera ? ' · ' + e.posicao_espera + 'º' : '') + '</span>';
+    return '';
+  }
+  function partesData(iso) { var d = new Date(iso); if (isNaN(d.getTime())) return ['', '']; return [d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2), ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2)]; }
+  function icsLocal(e) {   // demonstração: mesmo formato do servidor (api/_lib/jovem.js → icsEvento)
+    var t = function (v) { return String(v == null ? '' : v).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); };
+    var dt = function (v) { return new Date(v).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); };
+    var fim = e.fim || new Date(new Date(e.inicio).getTime() + 2 * 3600e3).toISOString();
+    return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Conexao Jovem//Eventos//PT-BR', 'BEGIN:VEVENT', 'UID:' + e.id + '@conexao-jovem-demo', 'DTSTAMP:' + dt(new Date()), 'DTSTART:' + dt(e.inicio), 'DTEND:' + dt(fim),
+      'SUMMARY:' + t(e.titulo + ' (demonstração)'), e.local ? 'LOCATION:' + t(e.local) : '', 'END:VEVENT', 'END:VCALENDAR'].filter(Boolean).join('\r\n') + '\r\n';
+  }
+
+  function evx(acao, d) { return real() ? api(acao, d || {}).then(function (r) { return r.dados; }) : simEv(acao, d || {}); }
+
+  /* ─── simulador da demonstração (só neste aparelho) ─────────────────────── */
+  function demoEv() {
+    var s = E.evDemo;
+    if (!s || s.v !== (D.eventosDemo || {}).v) {
+      var base = D.eventosDemo, agora = Date.now();
+      s = { v: base.v, responsaveis: base.responsaveis, eventos: [], inscricoes: [] };
+      base.eventos.forEach(function (e) {
+        var ini;
+        if (String(e.hora).charAt(0) === '-') ini = new Date(agora + Number(e.hora) * 3600e3);
+        else { ini = new Date(); ini.setDate(ini.getDate() + e.dias); var hm = e.hora.split(':'); ini.setHours(+hm[0], +hm[1], 0, 0); }
+        var x = JSON.parse(JSON.stringify(e)); delete x.dias; delete x.hora; delete x.duracao;
+        x.inicio = ini.toISOString(); x.fim = new Date(ini.getTime() + e.duracao * 3600e3).toISOString(); x.motivo_cancelamento = null;
+        s.eventos.push(x);
+      });
+      base.inscricoes.forEach(function (r, k) {
+        s.inscricoes.push({ evento: r.evento, pessoa: r.pessoa, status: r.status, autorizacao: r.autorizacao || 'nao_exigido', em: new Date(agora - (60 - k) * 3600e3).toISOString(),
+          entrada: r.entrada != null ? new Date(agora + r.entrada * 60e3).toISOString() : null, saida: r.saida != null ? new Date(agora + r.saida * 60e3).toISOString() : null, retirado: null });
+      });
+      E.evDemo = s; salva();
+    }
+    return s;
+  }
+  function demoEvVisao() { return E.demoEvVerComo === 'lider' ? 'lider' : 'gestao'; }
+  function simEv(acao, d) {
+    var s = demoEv(), cd = D.circulosDemo, lider = cd.lider, gestao = demoEvVisao() === 'gestao';
+    function P(id) { return cd.pessoas.filter(function (p) { return p.id === id; })[0] || { id: id, nome: '?', faixa: '18-21' }; }
+    function curto(id) { var n = P(id).nome.replace(/\s*\(.*\)$/, '').trim().split(/\s+/); return n[0] + (n[1] ? ' ' + n[1][0] + '.' : ''); }
+    function circ(id) { return cd.circulos.filter(function (c) { return c.id === id; })[0]; }
+    function meusCirc() { return cd.circulos.filter(function (c) { return c.status === 'ativo' && (c.lider_id === lider || c.auxiliar_id === lider); }); }
+    function EV(id) { return s.eventos.filter(function (e) { return e.id === id; })[0]; }
+    function gere(e) { return gestao || (e.circulo && meusCirc().some(function (c) { return c.id === e.circulo; })); }
+    function ins(e) { return s.inscricoes.filter(function (r) { return r.evento === e && r.status !== 'cancelada'; }); }
+    function ocup(e) { return ins(e).filter(function (r) { return r.status === 'confirmada' || r.status === 'aguardando_autorizacao'; }).length; }
+    function fila(e) { return ins(e).filter(function (r) { return r.status === 'lista_espera'; }); }
+    function promover(e) { var ev = EV(e); if (!ev || ev.status !== 'publicado') return; while (ev.capacidade == null || ocup(e) < ev.capacidade) { var f = fila(e)[0]; if (!f) break; f.status = f.autorizacao === 'pendente' ? 'aguardando_autorizacao' : 'confirmada'; } }
+    function ok(v) { salva(); return v; }
+    return new Promise(function (r) { setTimeout(r, 260); }).then(function () {
+      switch (acao) {
+        case 'eventos_gestao':
+          return {
+            gestao: gestao, equipe: gestao,
+            circulos: (gestao ? cd.circulos.filter(function (c) { return c.status === 'ativo'; }) : meusCirc()).map(function (c) { return { id: c.id, nome: c.nome, faixa: c.faixa }; }),
+            eventos: s.eventos.filter(function (e) { return gestao || (e.circulo && gere(e)); }).map(function (e) {
+              var l = ins(e.id), c = e.circulo ? circ(e.circulo) : null;
+              return { id: e.id, titulo: e.titulo, categoria: e.categoria, inicio: e.inicio, fim: e.fim, local: e.local, faixas: e.faixas, autorizacao: e.autorizacao, capacidade: e.capacidade, status: e.status,
+                circulo_id: e.circulo, circulo: c ? c.nome : null, pode_editar: gere(e), confirmados: l.filter(function (r) { return r.status === 'confirmada'; }).length,
+                aguardando: l.filter(function (r) { return r.status === 'aguardando_autorizacao'; }).length, espera: fila(e.id).length, presentes: l.filter(function (r) { return r.entrada; }).length };
+            }).sort(function (a, b) { var fa = a.status === 'cancelado' || a.status === 'encerrado', fb = b.status === 'cancelado' || b.status === 'encerrado'; return (fa - fb) || (new Date(a.inicio) - new Date(b.inicio)); })
+          };
+        case 'gerir_evento': {
+          var e = EV(d.evento); if (!e) return recusa('evento não encontrado', 'nao_encontrado');
+          if (!gestao && !gere(e)) return recusa(MSG.sem_permissao);
+          var c = e.circulo ? circ(e.circulo) : null, pos = 0;
+          return {
+            evento: Object.assign({}, e, { circulo_id: e.circulo, circulo: c ? c.nome : null, pode_editar: gere(e), decido_autorizacao: gestao }),
+            inscritos: ins(e.id).map(function (r) {
+              var p = P(r.pessoa), menor = p.faixa === '15-17';
+              return { id: r.pessoa, nome: gestao ? p.nome : curto(r.pessoa), faixa: p.faixa, menor: menor, status: r.status, autorizacao: r.autorizacao, autorizacao_geral: !menor || !!p.autorizacao,
+                responsavel: menor ? s.responsaveis[r.pessoa] || null : null, contato_responsavel: menor && gestao ? 'contato fictício 0000-0000' : null,
+                posicao_espera: r.status === 'lista_espera' ? ++pos : null, inscrito_em: r.em, entrada_em: r.entrada, saida_em: r.saida, retirado_por: r.retirado };
+            }).sort(function (a, b) { var o = { aguardando_autorizacao: 0, confirmada: 1, lista_espera: 2 }; return (o[a.status] - o[b.status]) || (a.status === 'lista_espera' ? 0 : a.nome.localeCompare(b.nome, 'pt-BR')); })
+          };
+        }
+        case 'salvar_evento': {
+          if (!gestao && !(d.circulo && meusCirc().some(function (c) { return c.id === d.circulo; }))) return recusa('Líder e auxiliar só criam eventos do próprio círculo');
+          if (!d.titulo || d.titulo.length < 3) return recusa('O título precisa ter entre 3 e 120 caracteres', 'dados_invalidos');
+          var alvo = d.id ? EV(d.id) : null;
+          if (new Date(d.inicio) < new Date() && (!alvo || alvo.inicio !== d.inicio)) return recusa('O início precisa ser no futuro', 'dados_invalidos');
+          if (d.fim && new Date(d.fim) <= new Date(d.inicio)) return recusa('O fim precisa ser depois do início', 'dados_invalidos');
+          var cc = d.circulo ? circ(d.circulo) : null, fx = cc ? [cc.faixa] : (d.faixas || []);
+          if (!fx.length) return recusa('Escolha pelo menos uma faixa etária', 'dados_invalidos');
+          if (alvo) {
+            if (alvo.status === 'cancelado' || alvo.status === 'encerrado') return recusa('Evento cancelado ou encerrado não pode ser editado', 'dados_invalidos');
+            if (d.capacidade != null && d.capacidade < ocup(alvo.id)) return recusa('A capacidade não pode ficar abaixo das ' + ocup(alvo.id) + ' inscrições que já ocupam vaga', 'dados_invalidos');
+            if (ins(alvo.id).some(function (r) { return fx.indexOf(P(r.pessoa).faixa) < 0; })) return recusa('Há inscritos de uma faixa que você está tirando. Cancele com eles antes', 'dados_invalidos');
+          } else { alvo = { id: 'ev-' + Date.now().toString(36), status: 'rascunho', motivo_cancelamento: null }; s.eventos.push(alvo); }
+          ['titulo', 'categoria', 'descricao', 'inicio', 'fim', 'local', 'capacidade', 'acessibilidade', 'orientacoes', 'responsavel', 'contato', 'regras_menores'].forEach(function (k) { alvo[k] = d[k] == null || d[k] === '' ? null : d[k]; });
+          alvo.faixas = fx; alvo.circulo = d.circulo || null; alvo.autorizacao = !!d.autorizacao || (d.categoria === 'acampamento' && fx.indexOf('15-17') >= 0);
+          promover(alvo.id);
+          return ok({ id: alvo.id });
+        }
+        case 'status_evento': {
+          var ev = EV(d.evento); if (!ev) return recusa('evento não encontrado', 'nao_encontrado');
+          if (!gere(ev)) return recusa(MSG.sem_permissao);
+          if (ev.status === 'cancelado' || ev.status === 'encerrado') return recusa('Evento cancelado ou encerrado não muda mais de situação', 'dados_invalidos');
+          if (d.status === 'publicado' && new Date(ev.inicio) < new Date()) return recusa('Para publicar, a data de início precisa ser no futuro', 'dados_invalidos');
+          if (d.status === 'rascunho' && ins(ev.id).length) return recusa('Já há inscrições: para tirar do ar, cancele o evento', 'dados_invalidos');
+          if (d.status === 'encerrado' && new Date(ev.inicio) > new Date()) return recusa('Só dá para encerrar depois que o evento começar', 'dados_invalidos');
+          ev.status = d.status; if (d.status === 'cancelado') ev.motivo_cancelamento = d.motivo || null;
+          return ok({ ok: true });
+        }
+        case 'autorizar_evento': {
+          if (!gestao) return recusa(MSG.sem_permissao);
+          var r = s.inscricoes.filter(function (x) { return x.evento === d.evento && x.pessoa === d.usuario && x.autorizacao === 'pendente' && x.status !== 'cancelada'; })[0];
+          if (!r) return recusa('não há autorização pendente', 'nao_encontrado');
+          r.autorizacao = d.aprovado ? 'aprovado' : 'recusado';
+          if (!d.aprovado) { r.status = 'cancelada'; promover(d.evento); } else if (r.status !== 'lista_espera') r.status = 'confirmada';
+          return ok({ ok: true });
+        }
+        case 'presenca_evento': {
+          var ee = EV(d.evento); if (!ee || !gere(ee)) return recusa(MSG.sem_permissao);
+          var q = s.inscricoes.filter(function (x) { return x.evento === d.evento && x.pessoa === d.usuario && x.status === 'confirmada'; })[0];
+          if (!q) return recusa('inscrição confirmada não encontrada', 'nao_encontrado');
+          if (d.tipo === 'entrada') { if (q.entrada) return recusa('Entrada já registrada', 'dados_invalidos'); q.entrada = new Date().toISOString(); }
+          else if (d.tipo === 'saida') {
+            if (!q.entrada) return recusa('Registre a entrada antes da saída', 'dados_invalidos');
+            if (P(q.pessoa).faixa === '15-17' && !d.obs) return recusa('Para menores, informe quem retirou (ou "saiu sozinho, autorizado")', 'dados_invalidos');
+            q.saida = new Date().toISOString(); q.retirado = d.obs || null;
+          } else { q.entrada = null; q.saida = null; q.retirado = null; }
+          return ok({ ok: true });
+        }
+      }
+      return recusa('Ação não disponível na demonstração', 'dados_invalidos');
+    });
+  }
+
+  /* ─── 08 · Eventos (jovem, real) ──────────────────────────────────────────── */
+  var EVJ = { lista: null, erro: '', seq: 0, filtro: null, det: null, detErro: '' };
+  var eventosDemoT = T.eventos, eventoDemoT = T.evento;
+  T.eventos = function () {
+    if (verificando()) return telaCarregando('Eventos', '#/inicio');
+    if (!real()) return eventosDemoT();
+    if (!euAtivo()) return telaSemPerfil('Eventos', '#/inicio');
+    var filtro = aba.evFiltro;
+    return { cab: 'normal', nav: 'eventos', titulo: 'Eventos', real: true, html:
+      '<div class="sec pt">' +
+        '<div class="chips" role="group" aria-label="Filtrar por categoria">' + ['Todos'].concat(D.categorias).map(function (c) { return '<button class="chip" type="button" aria-pressed="' + (c === filtro) + '" data-acao="filtro" data-v="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>' +
+        '<div id="evj-box">' + (EVJ.lista && EVJ.filtro === filtro ? '' : '<div aria-busy="true" aria-label="Carregando eventos"><div class="esq"></div><div class="esq"></div><div class="esq"></div></div>') + '</div>' +
+        '<div class="fim-lista">' + ic('calendar') + '<b>Esses são os próximos encontros.</b>Encontros presenciais são o coração do Conexão Jovem.</div>' +
+      '</div>',
+      depois: function () { if (EVJ.lista && EVJ.filtro === filtro) pintarEventosJovem(); carregarEventosJovem(); } };
+  };
+  function carregarEventosJovem() {
+    var s = ++EVJ.seq, filtro = aba.evFiltro, cat = filtro === 'Todos' ? null : catCodigo(filtro);
+    EVJ.erro = '';
+    evx('eventos', cat ? { categoria: cat } : {}).then(function (l) { if (s !== EVJ.seq) return; EVJ.lista = l || []; EVJ.filtro = filtro; pintarEventosJovem(); })
+      ['catch'](function (r) { if (s !== EVJ.seq) return; EVJ.erro = msgErro(r); pintarEventosJovem(); });
+  }
+  function cardEventoReal(e) {
+    var s = e.status === 'cancelado' ? '<span class="selo selo-alerta">' + ic('alert') + 'Evento cancelado</span>' : seloInscricao(e) || (e.vagas === 0 ? '<span class="selo selo-cinza">Lotado · lista de espera</span>' : '');
+    return '<a class="ev" href="#/evento/' + esc(e.id) + '"><span class="ev-arte">' + arte(CAT_ARTE[e.categoria]) + '</span><span class="ev-t"><small>' + esc(CAT[e.categoria] || e.categoria) + (e.circulo ? ' · ' + esc(e.circulo) : '') + '</small><b>' + esc(e.titulo) + '</b><span>' + ic('calendar') + esc(quando(e.inicio, true)) + '</span>' +
+      (s ? '<span style="margin-top:4px;display:inline-flex">' + s + '</span>' : '') + '</span>' + ic('right', 'ic seta') + '</a>';
+  }
+  function pintarEventosJovem() {
+    var box = document.getElementById('evj-box'); if (!box) return;
+    if (EVJ.erro) { box.innerHTML = caixaFalha(EVJ.erro, 'recarregar-evj'); return; }
+    var l = EVJ.lista || [], f = aba.evFiltro;
+    box.innerHTML = '<p class="peq" aria-live="polite">' + plural(l.length, 'evento', 'eventos') + (f === 'Todos' ? '' : ' de ' + esc(f)) + ' para a sua faixa</p>' +
+      (l.length ? '<div style="display:grid;gap:12px">' + l.map(cardEventoReal).join('') + '</div>' :
+        '<div class="vazio">' + ic('calendar') + '<b>' + (f === 'Todos' ? 'Nenhum evento marcado por enquanto' : 'Nenhum evento de ' + esc(f) + ' por enquanto') + '</b><p>Quando a liderança publicar, aparece aqui.</p>' +
+        (f === 'Todos' ? '' : '<button class="btn btn-sec" type="button" data-acao="filtro" data-v="Todos" style="margin-top:12px">Ver todos</button>') + '</div>');
+  }
+
+  T.evento = function (id) {
+    if (verificando()) return telaCarregando('Evento', '#/eventos');
+    if (!real()) return eventoDemoT(id);
+    if (!euAtivo()) return telaSemPerfil('Evento', '#/eventos');
+    var tem = EVJ.det && EVJ.det.id === id;
+    return { cab: 'normal', voltar: '#/eventos', nav: 'eventos', titulo: tem ? (CAT[EVJ.det.categoria] || 'Evento') : 'Evento', real: true,
+      html: '<div id="evd-box">' + (tem ? '' : '<div class="sec pt">' + caixaCarregando('Carregando o evento') + '</div>') + '</div>',
+      depois: function () { if (tem) pintarEventoJovem(); carregarEventoJovem(id); } };
+  };
+  function carregarEventoJovem(id) {
+    var s = ++EVJ.seq; EVJ.detErro = '';
+    evx('evento', { evento: id }).then(function (e) { if (s !== EVJ.seq) return; EVJ.det = e; pintarEventoJovem(); })
+      ['catch'](function (r) { if (s !== EVJ.seq) return; EVJ.det = null; EVJ.detErro = msgErro(r); pintarEventoJovem(); });
+  }
+  function pintarEventoJovem() {
+    var box = document.getElementById('evd-box'); if (!box) return;
+    if (EVJ.detErro) { box.innerHTML = '<div class="sec pt">' + caixaFalha(EVJ.detErro, 'recarregar-evd') + '</div>'; return; }
+    var e = EVJ.det; if (!e) return;
+    var eu = euAtivo() || {}, menor = eu.faixa === '15-17', insc = e.minha_inscricao && e.minha_inscricao !== 'cancelada' ? e.minha_inscricao : null;
+    var precisaAut = menor && (e.autorizacao || !e.autorizacao_geral);
+    var agenda = '<button class="btn btn-sec btn-cheio" type="button" data-acao="agenda-real" data-v="' + esc(e.id) + '">' + ic('download', 'ic-sm') + 'Adicionar à minha agenda (.ics)</button>';
+    var bloco;
+    if (e.status === 'cancelado') bloco = '<div class="cartao">' + aviso('<b>Este evento foi cancelado.</b>' + (e.motivo_cancelamento ? ' Motivo: ' + esc(e.motivo_cancelamento) : '') + ' Sua inscrição não vale mais.', 'aviso-erro', 'alert') + '</div>';
+    else if (insc === 'confirmada') bloco = '<div class="cartao">' + aviso('<b>Inscrição confirmada.</b> A equipe já tem o seu nome na lista.', 'aviso-verde', 'checkCircle') + agenda +
+      '<button class="btn btn-perigo btn-cheio" type="button" data-acao="cancelar-insc-real" data-v="' + esc(e.id) + '" style="margin-top:10px">Cancelar inscrição</button></div>';
+    else if (insc === 'aguardando_autorizacao') bloco = '<div class="cartao">' + aviso('<b>Aguardando a autorização do seu responsável.</b> A equipe confirma com ele e você vê aqui quando estiver liberado. Sua vaga está guardada.', '', 'hourglass') + agenda +
+      '<button class="btn btn-perigo btn-cheio" type="button" data-acao="cancelar-insc-real" data-v="' + esc(e.id) + '" style="margin-top:10px">Cancelar inscrição</button></div>';
+    else if (insc === 'lista_espera') bloco = '<div class="cartao">' + aviso('<b>Você está na lista de espera' + (e.posicao_espera ? ' (' + e.posicao_espera + 'º)' : '') + '.</b> Se alguém cancelar, você sobe automaticamente' + (precisaAut ? ' e a equipe pede a autorização do seu responsável' : '') + '.', 'aviso-azul', 'info') +
+      '<button class="btn btn-perigo btn-cheio" type="button" data-acao="cancelar-insc-real" data-v="' + esc(e.id) + '">Sair da lista de espera</button></div>';
+    else bloco = '<div class="cartao"><h3>Inscrição</h3><p>' + (e.capacidade == null ? 'Sem limite de vagas.' : e.vagas > 0 ? plural(e.vagas, 'vaga disponível', 'vagas disponíveis') + ' de ' + e.capacidade + '.' : '<b>Vagas esgotadas.</b> Você pode entrar na lista de espera.') + '</p>' +
+      (precisaAut ? aviso('Como você tem 15–17 anos, sua inscrição fica <b>aguardando a autorização do responsável</b>, confirmada pela equipe.', '', 'shield') : '') +
+      (e.orientacoes ? '<label class="marcar"><input type="checkbox" id="evd-orient" aria-describedby="evd-e-orient"><span>Li as orientações do evento<span class="erro-msg" id="evd-e-orient" role="alert"></span></span></label>' : '') +
+      '<div id="evd-erro" role="alert"></div><button class="btn btn-pri btn-cheio" type="button" data-acao="inscrever-real" data-v="' + esc(e.id) + '">' + (e.vagas === 0 ? 'Entrar na lista de espera' : 'Fazer inscrição') + '</button>' +
+      '<div style="margin-top:10px">' + agenda + '</div></div>';
+    box.innerHTML = '<div class="hero"><div class="hero-arte">' + arte(CAT_ARTE[e.categoria]) + '</div><div class="hero-txt"><p class="sobre">' + esc(CAT[e.categoria] || e.categoria) + (e.circulo ? ' · ' + esc(e.circulo) : '') + '</p><h2>' + esc(e.titulo) + '</h2><p>' + esc(quando(e.inicio)) + '</p></div></div>' +
+      '<div class="sec pt">' +
+        (e.status !== 'cancelado' && insc ? '<div class="selos">' + seloInscricao(e) + '</div>' : '') +
+        '<div class="cartao"><div class="info-linhas">' +
+          '<div class="info-linha">' + ic('calendar') + '<div><b>' + esc(periodo(e)) + '</b><span>Data e horário</span></div></div>' +
+          '<div class="info-linha">' + ic('pin') + '<div><b>' + esc(e.local || 'Local a confirmar') + '</b><span>Local</span></div></div>' +
+          '<div class="info-linha">' + ic('user') + '<div><b>' + esc(e.responsavel || 'Liderança de jovens') + '</b><span>Responsável' + (e.contato ? ' · contato: ' + esc(e.contato) : '') + '</span></div></div>' +
+          '<div class="info-linha">' + ic('users') + '<div><b>' + esc(faixasTxt(e.faixas)) + '</b><span>Faixa etária</span></div></div></div></div>' +
+        (e.descricao || e.orientacoes ? '<div class="cartao">' + (e.descricao ? '<h3>Sobre</h3><p>' + esc(e.descricao) + '</p>' : '') + (e.orientacoes ? '<h3>Orientações</h3><p>' + esc(e.orientacoes) + '</p>' : '') + '</div>' : '') +
+        (e.acessibilidade ? '<div class="cartao cartao-linha"><h3 style="display:flex;gap:8px;align-items:center">' + ic('access') + 'Acessibilidade</h3><p>' + esc(e.acessibilidade) + '</p></div>' : '') +
+        (e.autorizacao || e.regras_menores ? '<div class="cartao cartao-ouro"><h3 style="display:flex;gap:8px;align-items:center">' + ic('shield') + 'Para quem tem 15 a 17 anos</h3><p style="color:#5E4A1C">' +
+          esc(e.regras_menores || 'Autorização do responsável, regras de transporte, uso de imagem e entrega/retirada conforme a política da igreja.') + '</p>' +
+          (e.autorizacao ? '<p class="peq" style="color:#5E4A1C">Este evento pede a autorização do responsável, confirmada pela equipe.</p>' : '') + '</div>' : '') +
+        bloco +
+      '</div>';
+  }
+
+  /* ─── Painel · Eventos (gestão) e visão do líder ──────────────────────────── */
+  var EG = { dados: null, erro: '', seq: 0, aba: 'proximos' };
+  var GE = { id: null, dados: null, erro: '', seq: 0, busca: '' };
+  function podeVerEventosGestao() { return !real() || souEquipe() || souLider(); }
+  T['eventos-gestao'] = function (param) {
+    var voltar = param ? '#/eventos-gestao' : (real() && !souEquipe() ? '#/mais' : '#/lideranca');
+    if (verificando()) return telaCarregando('Eventos', voltar);
+    if (real() && !euAtivo()) return telaSemPerfil('Eventos', '#/mais');
+    if (!podeVerEventosGestao()) return { cab: 'normal', voltar: '#/mais', nav: 'mais', titulo: 'Gestão de eventos', real: true, html:
+      '<div class="sec pt-l"><div class="vazio">' + ic('lock') + '<b>Área da equipe e dos líderes</b><p>Criar eventos e ver inscritos é com a coordenação de jovens, o pastor e os líderes de círculo.</p><a class="btn btn-sec" href="#/eventos" style="margin-top:14px">Ver os eventos</a></div></div>' };
+    var demo = !real() ? aviso('<b>Demonstração.</b> Eventos e pessoas fictícios; o que você mudar fica só neste aparelho.', '', 'info') +
+      '<div class="cartao"><h3>Ver a tela como</h3><div class="btns-2" role="group" aria-label="Ver a tela como">' + [['gestao', 'Coordenação'], ['lider', 'Líder de círculo']].map(function (x) {
+        return '<button class="btn ' + (demoEvVisao() === x[0] ? 'btn-pri' : 'btn-sec') + '" type="button" aria-pressed="' + (demoEvVisao() === x[0]) + '" data-acao="ev-ver-como" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div></div>' : '';
+    if (param) return { cab: 'normal', voltar: voltar, nav: 'mais', titulo: 'Evento', real: true,
+      html: '<div class="sec pt">' + demo + '<div id="ge-box">' + caixaCarregando('Carregando o evento') + '</div></div>', depois: function () { abrirEventoGestao(param); } };
+    return { cab: 'normal', voltar: voltar, nav: 'mais', titulo: 'Eventos', real: true,
+      direita: '<button class="cab-bt" type="button" data-acao="novo-evento" aria-label="Novo evento">' + ic('plus') + '</button>',
+      html: '<div class="sec pt">' + demo + '<div id="eg-box">' + caixaCarregando('Carregando eventos') + '</div></div>', depois: carregarEventosGestao };
+  };
+  function carregarEventosGestao() {
+    var s = ++EG.seq; EG.erro = '';
+    evx('eventos_gestao').then(function (d) { if (s !== EG.seq) return; EG.dados = d; pintarEventosGestao(); })
+      ['catch'](function (r) { if (s !== EG.seq) return; EG.erro = msgErro(r); pintarEventosGestao(); });
+  }
+  function garantirEventosGestao() { return EG.dados ? Promise.resolve(EG.dados) : evx('eventos_gestao').then(function (d) { EG.dados = d; return d; }); }
+  function eventoFinal(e) { return e.status === 'cancelado' || e.status === 'encerrado' || (e.status === 'publicado' && new Date(e.fim || e.inicio) < new Date(Date.now() - 6 * 3600e3)); }
+  function pintarEventosGestao() {
+    var box = document.getElementById('eg-box'); if (!box) return;
+    if (EG.erro) { box.innerHTML = caixaFalha(EG.erro, 'recarregar-eg'); return; }
+    var d = EG.dados || { eventos: [], circulos: [] }, todos = d.eventos || [];
+    var abas = [['proximos', 'Próximos', function (e) { return !eventoFinal(e) && e.status !== 'rascunho'; }], ['rascunhos', 'Rascunhos', function (e) { return e.status === 'rascunho'; }], ['passados', 'Encerrados', eventoFinal]];
+    var filtro = abas.filter(function (a) { return a[0] === EG.aba; })[0] || abas[0], lista = todos.filter(filtro[2]);
+    var podeCriar = d.gestao || (d.circulos || []).length > 0;
+    var pend = todos.reduce(function (n, e) { return n + (e.aguardando || 0); }, 0);
+    var html = (!d.gestao ? aviso('Você vê e cria eventos só do círculo que conduz' + ((d.circulos || []).length ? ' (' + esc(d.circulos.map(function (c) { return c.nome; }).join(', ')) + ')' : '') + '. Eventos gerais são com a coordenação.', 'aviso-azul', 'info') : '') +
+      (podeCriar ? '<button class="btn btn-pri btn-cheio" type="button" data-acao="novo-evento">' + ic('plus', 'ic-sm') + 'Novo evento</button>' : '') +
+      (pend && d.equipe ? aviso('<b>' + plural(pend, 'autorização de responsável aguardando', 'autorizações de responsável aguardando') + '.</b> Abra o evento para confirmar.', '', 'shield') : '') +
+      '<div class="chips filtro-chips" role="group" aria-label="Filtrar eventos">' + abas.map(function (a) { var n = todos.filter(a[2]).length;
+        return '<button class="chip" type="button" aria-pressed="' + (a[0] === filtro[0]) + '" data-acao="eg-aba" data-v="' + a[0] + '">' + a[1] + ' (' + n + ')</button>'; }).join('') + '</div>';
+    if (!lista.length) html += '<div class="vazio">' + ic('calendar') + '<b>' + (filtro[0] === 'rascunhos' ? 'Nenhum rascunho' : filtro[0] === 'passados' ? 'Nada encerrado ainda' : 'Nenhum evento publicado à frente') + '</b><p>' + (podeCriar ? 'Crie um evento: ele nasce como rascunho e só aparece para os jovens depois de publicado.' : 'Quando houver eventos, eles aparecem aqui.') + '</p></div>';
+    html += lista.map(function (e) {
+      var al = [selo(ST_EV[e.status] || ['selo-cinza', e.status])];
+      if (e.autorizacao) al.push('<span class="selo selo-ouro">' + ic('shield') + 'Autorização</span>');
+      if (e.aguardando) al.push('<span class="selo selo-alerta">' + plural(e.aguardando, 'aguardando', 'aguardando') + '</span>');
+      if (e.espera) al.push('<span class="selo selo-azul">' + e.espera + ' na espera</span>');
+      return '<a class="cartao cartao-link" href="#/eventos-gestao/' + esc(e.id) + '"><span class="ic-caixa">' + ic('calendar') + '</span><div style="min-width:0"><h3>' + esc(e.titulo) + '</h3>' +
+        '<p>' + esc(quando(e.inicio, true)) + ' · ' + esc(CAT[e.categoria] || e.categoria) + '</p>' +
+        '<p class="peq">' + esc((e.capacidade ? e.confirmados + '/' + e.capacidade : e.confirmados) + ' confirmados' + (e.presentes ? ' · ' + e.presentes + ' presentes' : '')) + (e.circulo ? ' · ' + esc(e.circulo) : ' · ' + esc(faixasTxt(e.faixas))) + '</p>' +
+        '<span class="selos" style="margin-top:6px">' + al.join('') + '</span></div>' + ic('right', 'ic seta') + '</a>';
+    }).join('');
+    box.innerHTML = html;
+  }
+
+  function abrirEventoGestao(id) {
+    if (rotaAtual().nome !== 'eventos-gestao') return;
+    var s = ++GE.seq; GE.id = id; GE.erro = '';
+    evx('gerir_evento', { evento: id }).then(function (d) { if (s !== GE.seq) return; GE.dados = d; pintarEventoGestao(); })
+      ['catch'](function (r) { if (s !== GE.seq) return; GE.dados = null; GE.erro = msgErro(r); pintarEventoGestao(); });
+  }
+  function semAcento(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function pintarEventoGestao() {
+    var box = document.getElementById('ge-box'); if (!box) return;
+    if (GE.erro) { box.innerHTML = caixaFalha(GE.erro, 'recarregar-ge'); return; }
+    var d = GE.dados; if (!d || !d.evento) return;
+    var e = d.evento, ins = d.inscritos || [], agora = new Date(), comecou = new Date(e.inicio) <= agora;
+    var conf = ins.filter(function (x) { return x.status === 'confirmada'; }), agu = ins.filter(function (x) { return x.status === 'aguardando_autorizacao'; });
+    var esp = ins.filter(function (x) { return x.status === 'lista_espera'; }), pend = ins.filter(function (x) { return x.autorizacao === 'pendente'; });
+    var pres = conf.filter(function (x) { return x.entrada_em; }).length, aberto = e.status === 'publicado' || e.status === 'encerrado';
+    var pode = e.pode_editar && e.status !== 'cancelado' && e.status !== 'encerrado';
+    var botoes = '';
+    if (pode) {
+      botoes = '<div class="btns-2"><button class="btn btn-sec" type="button" data-acao="editar-evento">' + ic('pencil', 'ic-sm') + 'Editar</button>' +
+        (e.status === 'rascunho' ? '<button class="btn btn-pri" type="button" data-acao="status-evento" data-v="publicado">Publicar</button>' :
+          comecou ? '<button class="btn btn-sec" type="button" data-acao="status-evento" data-v="encerrado">Encerrar</button>' : '<button class="btn btn-sec" type="button" data-acao="status-evento" data-v="rascunho"' + (ins.length ? ' disabled' : '') + '>Tirar do ar</button>') + '</div>' +
+        '<button class="btn btn-perigo btn-cheio" type="button" data-acao="status-evento" data-v="cancelado" style="margin-top:10px">Cancelar evento</button>';
+    }
+    var html = '<div class="cartao"><div class="selos">' + selo(ST_EV[e.status] || ['selo-cinza', e.status]) + '<span class="selo selo-azul">' + esc(CAT[e.categoria] || e.categoria) + '</span>' +
+        (e.autorizacao ? '<span class="selo selo-ouro">' + ic('shield') + 'Pede autorização</span>' : '') + (e.circulo ? '<span class="selo selo-cinza">' + esc(e.circulo) + '</span>' : '') + '</div>' +
+      '<h3 style="margin-top:8px;font-size:19px">' + esc(e.titulo) + '</h3>' +
+      '<div class="info-linhas"><div class="info-linha">' + ic('calendar') + '<div><b>' + esc(periodo(e)) + '</b><span>Data e horário</span></div></div>' +
+        '<div class="info-linha">' + ic('pin') + '<div><b>' + esc(e.local || 'Local a confirmar') + '</b><span>' + esc(faixasTxt(e.faixas)) + '</span></div></div>' +
+        '<div class="info-linha">' + ic('users') + '<div><b>' + (e.capacidade ? conf.length + agu.length + ' de ' + e.capacidade + ' vagas ocupadas' : 'Sem limite de vagas') + '</b><span>' + esc(e.responsavel ? 'Responsável: ' + e.responsavel : 'Sem responsável definido') + (e.contato ? ' · ' + esc(e.contato) : '') + '</span></div></div></div>' +
+      (e.status === 'rascunho' ? aviso('Rascunho: os jovens ainda não veem este evento. Publique quando estiver pronto.', '', 'info') : '') +
+      (e.status === 'cancelado' ? aviso('<b>Evento cancelado.</b>' + (e.motivo_cancelamento ? ' Motivo: ' + esc(e.motivo_cancelamento) : '') + ' Os inscritos veem o aviso no app.', 'aviso-erro', 'alert') : '') +
+      botoes + '</div>';
+    html += '<div class="kpis"><div class="kpi"><small>Confirmados</small><b>' + conf.length + '</b><span>' + (e.capacidade ? 'de ' + e.capacidade + ' vagas' : 'sem limite') + '</span></div>' +
+      '<div class="kpi"><small>Aguardando autorização</small><b>' + agu.length + '</b><span>ocupam vaga</span></div>' +
+      '<div class="kpi"><small>Lista de espera</small><b>' + esp.length + '</b><span>sobe sozinha quando abre vaga</span></div>' +
+      '<div class="kpi"><small>Presentes</small><b>' + pres + '</b><span>entrada registrada</span></div></div>';
+
+    html += '<h2 class="tit-sec">Autorizações do responsável' + (pend.length ? ' (' + pend.length + ')' : '') + '</h2>';
+    html += !pend.length ? '<div class="cartao"><p>Nenhuma autorização aguardando.</p></div>' :
+      (!e.decido_autorizacao ? aviso('A equipe (coordenação, pastor ou proteção) confirma com o responsável e libera aqui.', 'aviso-azul', 'info') : '') +
+      '<ul class="pessoas">' + pend.map(function (x) {
+        return '<li style="flex-wrap:wrap;padding:10px 12px 12px"><div class="pessoa-bt" style="padding:4px 0;min-height:48px">' + av(x.nome, '#9A5B00', 'av-sm') + '<span class="li-t"><b>' + esc(x.nome) + '</b><span>' + esc(x.responsavel ? 'Responsável: ' + x.responsavel : 'Responsável ainda não informado') + (x.contato_responsavel ? ' · ' + esc(x.contato_responsavel) : '') + '</span>' +
+          '<span class="selos">' + (x.status === 'lista_espera' ? '<span class="selo selo-azul">Na lista de espera</span>' : '<span class="selo selo-alerta">' + ic('hourglass') + 'Vaga guardada</span>') + (!x.autorizacao_geral ? '<span class="selo selo-ouro">Sem autorização geral de eventos</span>' : '') + '</span></span></div>' +
+          (e.decido_autorizacao && e.status !== 'cancelado' ? '<div class="btns-2" style="width:100%"><button class="btn btn-sec" type="button" data-acao="autorizar-ev" data-u="' + esc(x.id) + '" data-v="nao">Recusar</button>' +
+            '<button class="btn btn-pri" type="button" data-acao="autorizar-ev" data-u="' + esc(x.id) + '" data-v="sim">' + ic('check', 'ic-sm') + 'Autorizado</button></div>' : '') + '</li>';
+      }).join('') + '</ul><p class="peq">Confirme com o responsável (presencial, ligação institucional ou documento) antes de liberar. Fica registrado no histórico.</p>';
+
+    html += '<h2 class="tit-sec">Inscritos e presença (' + conf.length + ')</h2>';
+    if (!conf.length) html += '<div class="vazio">' + ic('users') + '<b>Ninguém confirmado ainda</b><p>' + (e.status === 'rascunho' ? 'Publique o evento para abrir as inscrições.' : 'As inscrições aparecem aqui.') + '</p></div>';
+    else {
+      html += (aberto ? '' : aviso('Check-in e check-out ficam disponíveis com o evento publicado.', '', 'info')) +
+        '<div class="campo" style="padding:0"><label for="ge-busca">Buscar pelo nome</label><div style="position:relative"><input class="entrada" id="ge-busca" type="search" autocomplete="off" value="' + esc(GE.busca) + '" placeholder="Digite parte do nome" style="padding-left:42px">' +
+        '<span aria-hidden="true" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--texto-3);display:flex">' + ic('search', 'ic-sm') + '</span></div></div>' +
+        '<ul class="pessoas" id="ge-lista">' + conf.map(function (x) { return linhaPresenca(x, aberto && e.pode_editar !== false); }).join('') + '</ul>' +
+        '<p class="peq" id="ge-nada" hidden>Ninguém com esse nome na lista.</p>' +
+        '<p class="peq">Menores: a saída pede quem retirou (ou "saiu sozinho, autorizado"), conforme a política da igreja.</p>';
+    }
+    if (esp.length) html += '<h2 class="tit-sec">Lista de espera (' + esp.length + ')</h2><ul class="pessoas">' + esp.map(function (x) {
+      return '<li><div class="pessoa-bt">' + av(x.nome, '#56627A', 'av-sm') + '<span class="li-t"><b>' + (x.posicao_espera ? x.posicao_espera + 'º · ' : '') + esc(x.nome) + '</b><span>' + (x.menor ? 'Menor · ' : '') + 'Inscrito em ' + esc(quando(x.inscrito_em, true)) + '</span></span></div></li>'; }).join('') +
+      '</ul><p class="peq">Quando alguém cancela, a 1ª pessoa da fila sobe automaticamente.</p>';
+    html += '<div id="ge-erro" role="alert"></div>';
+    if (e.descricao || e.orientacoes || e.regras_menores || e.acessibilidade) html += '<div class="cartao">' + (e.descricao ? '<h3>Sobre</h3><p>' + esc(e.descricao) + '</p>' : '') + (e.orientacoes ? '<h3>Orientações</h3><p>' + esc(e.orientacoes) + '</p>' : '') +
+      (e.acessibilidade ? '<h3>Acessibilidade</h3><p>' + esc(e.acessibilidade) + '</p>' : '') + (e.regras_menores ? '<h3>Regras para menores</h3><p>' + esc(e.regras_menores) + '</p>' : '') + '</div>';
+    box.innerHTML = html;
+    var bx = document.getElementById('ge-busca');
+    if (bx) { bx.addEventListener('input', function () { GE.busca = bx.value; filtrarPresenca(); }); filtrarPresenca(); }
+  }
+  function linhaPresenca(x, pode) {
+    var st = x.saida_em ? '<span class="selo selo-cinza">Saiu ' + esc(horaCurta(x.saida_em)) + (x.retirado_por ? ' · ' + esc(x.retirado_por) : '') + '</span>' :
+      x.entrada_em ? '<span class="selo selo-verde">' + ic('check') + 'Entrou ' + esc(horaCurta(x.entrada_em)) + '</span>' : '<span class="selo selo-cinza">Ainda não chegou</span>';
+    var bt = !pode ? '' : !x.entrada_em ? '<button class="btn btn-pri btn-mini" type="button" data-acao="presenca-ev" data-u="' + esc(x.id) + '" data-v="entrada">Entrada</button>' :
+      !x.saida_em ? '<button class="btn btn-sec btn-mini" type="button" data-acao="presenca-ev" data-u="' + esc(x.id) + '" data-v="saida">Saída</button>' :
+      '<button class="btn btn-txt btn-mini" type="button" data-acao="presenca-ev" data-u="' + esc(x.id) + '" data-v="desfazer" aria-label="Desfazer presença de ' + esc(x.nome) + '">Desfazer</button>';
+    return '<li data-nome="' + esc(semAcento(x.nome)) + '"><div class="pessoa-bt">' + av(x.nome, x.entrada_em ? '#0F7B4B' : '#56627A', 'av-sm') + '<span class="li-t"><b>' + esc(x.nome) + '</b><span>' + esc(FAIXAS[x.faixa] || x.faixa) + (x.menor && x.responsavel ? ' · ' + esc(x.responsavel) : '') + '</span>' +
+      '<span class="selos">' + (x.menor ? '<span class="selo selo-ouro">' + ic('shield') + 'Menor</span>' : '') + st + '</span></span></div>' + bt + '</li>';
+  }
+  function filtrarPresenca() {
+    var q = semAcento(GE.busca).trim(), n = 0;
+    document.querySelectorAll('#ge-lista > li').forEach(function (li) { var v = !q || li.getAttribute('data-nome').indexOf(q) >= 0; li.hidden = !v; if (v) n++; });
+    var nada = document.getElementById('ge-nada'); if (nada) nada.hidden = n > 0;
+  }
+
+  function formEvento(ev) {
+    garantirEventosGestao().then(function (g) {
+      var circs = (g && g.circulos) || [], gest = !!(g && g.gestao);
+      if (!gest && !circs.length) { toast('Sem círculo ativo', 'Você precisa conduzir um círculo ativo para criar eventos.'); return; }
+      var ini = ev ? partesData(ev.inicio) : ['', '19:00'], fim = ev && ev.fim ? partesData(ev.fim) : ['', ''];
+      var fx = ev ? ev.faixas || [] : ['15-17', '18-21', '22-25'], circ = ev ? ev.circulo_id || '' : (gest ? '' : circs[0].id);
+      var campo = function (id, rot, val, max, extra, opc) { return '<div class="campo"><label for="' + id + '">' + rot + (opc ? ' <span class="peq">(opcional)</span>' : '') + '</label>' + (max > 200 ?
+        '<textarea class="entrada" id="' + id + '" maxlength="' + max + '" style="min-height:84px"' + (extra || '') + '>' + esc(val || '') + '</textarea>' : '<input class="entrada" id="' + id + '" maxlength="' + max + '" value="' + esc(val || '') + '"' + (extra || '') + '>') + '</div>'; };
+      modal(ev ? 'Editar evento' : 'Novo evento', '<form class="form" id="f-ev" novalidate>' +
+        '<div class="campo"><label for="fv-tit">Título</label><input class="entrada" id="fv-tit" maxlength="120" value="' + esc(ev ? ev.titulo : '') + '" placeholder="Ex.: Futebol da Juventude" aria-describedby="fv-e-tit"><span class="erro-msg" id="fv-e-tit" role="alert"></span></div>' +
+        '<div class="campo"><label for="fv-cat">Categoria</label><select class="entrada" id="fv-cat" aria-describedby="fv-e-cat"><option value="">Escolha</option>' + Object.keys(CAT).map(function (k) { return '<option value="' + k + '"' + (ev && ev.categoria === k ? ' selected' : '') + '>' + CAT[k] + '</option>'; }).join('') + '</select><span class="erro-msg" id="fv-e-cat" role="alert"></span></div>' +
+        '<div class="campo"><label for="fv-circ">Para quem</label><select class="entrada" id="fv-circ">' + (gest ? '<option value="">Evento geral (faixas abaixo)</option>' : '') +
+          circs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (circ === c.id ? ' selected' : '') + '>Só o ' + esc(c.nome) + ' (' + esc(FAIXAS[c.faixa] || c.faixa) + ')</option>'; }).join('') + '</select>' +
+          (!gest ? '<span class="dica">Líderes e auxiliares criam eventos só do círculo que conduzem.</span>' : '') + '</div>' +
+        '<fieldset id="fv-fx" style="border:0"' + (circ ? ' hidden' : '') + '><legend class="rot" style="margin-bottom:8px">Faixas etárias</legend><div class="opcoes opcoes-3">' + ['15-17', '18-21', '22-25'].map(function (v) {
+          return '<label class="opcao"><input type="checkbox" name="fv-faixa" value="' + v + '"' + (fx.indexOf(v) >= 0 ? ' checked' : '') + '><b>' + v.replace('-', '–') + '</b><span>anos</span></label>'; }).join('') + '</div><span class="erro-msg" id="fv-e-fx" role="alert"></span></fieldset>' +
+        '<div class="filtros-2"><div class="campo"><label for="fv-di">Início · data</label><input class="entrada" id="fv-di" type="date" value="' + ini[0] + '"' + (ev ? '' : ' min="' + hojeIso() + '"') + ' aria-describedby="fv-e-di"></div>' +
+          '<div class="campo"><label for="fv-hi">Horário</label><input class="entrada" id="fv-hi" type="time" value="' + ini[1] + '"></div></div><span class="erro-msg" id="fv-e-di" role="alert"></span>' +
+        '<div class="filtros-2"><div class="campo"><label for="fv-df">Fim · data <span class="peq">(opcional)</span></label><input class="entrada" id="fv-df" type="date" value="' + fim[0] + '" aria-describedby="fv-e-df"></div>' +
+          '<div class="campo"><label for="fv-hf">Horário</label><input class="entrada" id="fv-hf" type="time" value="' + fim[1] + '"></div></div><span class="erro-msg" id="fv-e-df" role="alert"></span>' +
+        campo('fv-loc', 'Local', ev && ev.local, 200, ' placeholder="Ex.: Templo Sede · salão principal"', true) +
+        '<div class="campo"><label for="fv-cap">Capacidade <span class="peq">(vazio = sem limite)</span></label><input class="entrada" id="fv-cap" type="number" inputmode="numeric" min="1" max="2000" value="' + (ev && ev.capacidade ? ev.capacidade : '') + '" aria-describedby="fv-d-cap fv-e-cap"><span class="dica" id="fv-d-cap">Lotou? Novas inscrições vão para a lista de espera, que anda sozinha.</span><span class="erro-msg" id="fv-e-cap" role="alert"></span></div>' +
+        '<label class="marcar"><input type="checkbox" id="fv-aut"' + (ev && ev.autorizacao ? ' checked' : '') + '><span><b>Exige autorização do responsável</b> para quem tem 15–17 anos (acampamento com menores sempre exige)</span></label>' +
+        campo('fv-desc', 'Descrição', ev && ev.descricao, 2000, '', true) +
+        campo('fv-ori', 'Orientações', ev && ev.orientacoes, 1000, ' placeholder="O que levar, horário de chegada, como participar"', true) +
+        campo('fv-ace', 'Acessibilidade', ev && ev.acessibilidade, 500, ' placeholder="Entrada sem degraus, Libras, tarefas sentadas"', true) +
+        campo('fv-men', 'Regras para menores', ev && ev.regras_menores, 1000, ' placeholder="Transporte, uso de imagem, acompanhamento, entrega/retirada"', true) +
+        campo('fv-res', 'Responsável', ev && ev.responsavel, 120, ' placeholder="Ex.: Equipe de esportes"', true) +
+        campo('fv-con', 'Contato', ev && ev.contato, 120, ' placeholder="Canal institucional (nunca telefone de menor)"', true) +
+        '<div id="m-erro" role="alert"></div><button class="btn btn-pri btn-cheio" type="submit">' + (ev ? 'Salvar alterações' : 'Criar como rascunho') + '</button></form>', function (dlg) {
+        var sel = dlg.querySelector('#fv-circ');
+        sel.addEventListener('change', function () { dlg.querySelector('#fv-fx').hidden = !!sel.value; });
+        dlg.querySelector('form').addEventListener('submit', function (x) {
+          x.preventDefault();
+          var tit = dlg.querySelector('#fv-tit'), cat = dlg.querySelector('#fv-cat'), di = dlg.querySelector('#fv-di'), df = dlg.querySelector('#fv-df'), cap = dlg.querySelector('#fv-cap');
+          var iIso = dataHoraIso(di.value, dlg.querySelector('#fv-hi').value || '19:00'), fIso = df.value ? dataHoraIso(df.value, dlg.querySelector('#fv-hf').value || '23:00') : null;
+          var faixas = [].map.call(dlg.querySelectorAll('input[name=fv-faixa]:checked'), function (c) { return c.value; }), n = cap.value === '' ? null : parseInt(cap.value, 10);
+          var mudouData = !ev || iIso !== new Date(ev.inicio).toISOString();
+          var ok = erroCampo(tit, tit.value.trim().length < 3 ? 'Dê um título (pelo menos 3 letras).' : '');
+          ok = erroCampo(cat, cat.value ? '' : 'Escolha a categoria.') && ok;
+          ok = erroCampo(di, !iIso ? 'Escolha a data de início.' : mudouData && new Date(iIso) < new Date() ? 'O início precisa ser no futuro.' : '') && ok;
+          ok = erroCampo(df, fIso && iIso && new Date(fIso) <= new Date(iIso) ? 'O fim precisa ser depois do início.' : '') && ok;
+          ok = erroCampo(cap, n !== null && !(n >= 1 && n <= 2000) ? 'Use um número entre 1 e 2000, ou deixe vazio.' : '') && ok;
+          var efx = dlg.querySelector('#fv-e-fx'); efx.innerHTML = !sel.value && !faixas.length ? ic('alert') + 'Escolha pelo menos uma faixa.' : ''; ok = (sel.value || faixas.length > 0) && ok;
+          if (!ok) { var inv = dlg.querySelector('[aria-invalid="true"]'); if (inv) inv.focus(); return; }
+          var v = function (id) { return dlg.querySelector(id).value.trim() || null; };
+          var bt = this.querySelector('[type=submit]'); ocupado(bt, true); caixaErro('m-erro', '');
+          evx('salvar_evento', { id: ev ? ev.id : null, titulo: tit.value.trim(), categoria: cat.value, circulo: sel.value || null, faixas: faixas, inicio: iIso, fim: fIso, capacidade: n,
+            autorizacao: dlg.querySelector('#fv-aut').checked, local: v('#fv-loc'), descricao: v('#fv-desc'), orientacoes: v('#fv-ori'), acessibilidade: v('#fv-ace'),
+            regras_menores: v('#fv-men'), responsavel: v('#fv-res'), contato: v('#fv-con') }).then(function (r) {
+            fecha(); EG.dados = null;
+            toast(ev ? 'Evento atualizado' : 'Rascunho criado', ev ? (real() ? 'Registrado no histórico (auditoria).' : 'Demonstração: só neste aparelho.') : 'Publique quando estiver pronto: só então os jovens veem.');
+            if (ev) abrirEventoGestao(ev.id); else location.hash = '#/eventos-gestao/' + r.id;
+          })['catch'](function (r) { ocupado(bt, false); caixaErro('m-erro', msgErro(r)); });
+        });
+      });
+    })['catch'](function (r) { toast('Não foi possível abrir o formulário', msgErro(r)); });
+  }
+
+  /* ─── ações do Módulo 3 ─────────────────────────────────────────────────── */
+  A['recarregar-evj'] = function () { carregarEventosJovem(); };
+  A['recarregar-evd'] = function () { render(true); };
+  A['recarregar-eg'] = function () { carregarEventosGestao(); };
+  A['recarregar-ge'] = function () { render(true); };
+  A['eg-aba'] = function (el) { EG.aba = el.getAttribute('data-v'); pintarEventosGestao(); };
+  A['ev-ver-como'] = function (el) { E.demoEvVerComo = el.getAttribute('data-v'); salva(); EG.dados = null; GE.dados = null; if (rotaAtual().param) location.hash = '#/eventos-gestao'; else render(true); };
+  A['inscrever-real'] = function (el) {
+    var e = EVJ.det; if (!e) return;
+    var o = document.getElementById('evd-orient');
+    if (o && !erroCampo(o, o.checked ? '' : 'Confirme que leu as orientações.')) { o.focus(); return; }
+    ocupado(el, true); caixaErro('evd-erro', '');
+    evx('inscrever', { evento: e.id }).then(function (r) {
+      var st = r && r.status;
+      toast(st === 'confirmada' ? 'Inscrição confirmada' : st === 'aguardando_autorizacao' ? 'Inscrição aguardando autorização' : st === 'lista_espera' ? 'Você entrou na lista de espera' : 'Inscrição enviada',
+        st === 'aguardando_autorizacao' ? 'A equipe confirma com o seu responsável.' : st === 'lista_espera' ? 'Se abrir vaga, você sobe automaticamente.' : 'Te esperamos lá!');
+      EVJ.lista = null; carregarEventoJovem(e.id);
+    })['catch'](function (r) { ocupado(el, false); caixaErro('evd-erro', msgErro(r)); });
+  };
+  A['cancelar-insc-real'] = function (el) {
+    var e = EVJ.det; if (!e) return;
+    var espera = e.minha_inscricao === 'lista_espera';
+    modal(espera ? 'Sair da lista de espera?' : 'Cancelar sua inscrição?', '<p>' + (espera ? 'Você deixa a fila deste evento.' : 'Sua vaga é liberada e a próxima pessoa da lista de espera sobe automaticamente.') + ' Se mudar de ideia, pode se inscrever de novo enquanto houver vaga.</p>' +
+      '<div id="m-erro" role="alert"></div><div class="btns-2"><button class="btn btn-sec" type="button" data-fechar>Voltar</button><button class="btn btn-perigo" type="button" id="b-canc-insc">' + (espera ? 'Sair da fila' : 'Cancelar inscrição') + '</button></div>', function (dlg) {
+      dlg.querySelector('#b-canc-insc').addEventListener('click', function () {
+        var b = this; ocupado(b, true);
+        evx('cancelar_inscricao', { evento: e.id }).then(function () { fecha(); toast(espera ? 'Você saiu da lista de espera' : 'Inscrição cancelada', 'Obrigado por avisar: a vaga fica para outra pessoa.'); EVJ.lista = null; carregarEventoJovem(e.id); })
+          ['catch'](function (r) { ocupado(b, false); caixaErro('m-erro', msgErro(r)); });
+      });
+    });
+  };
+  A['agenda-real'] = function (el) {
+    var id = el.getAttribute('data-v'); ocupado(el, true);
+    var feito = function (nome, txt) { ocupado(el, false); baixa(nome, 'text/calendar', txt); toast('Arquivo de agenda baixado', 'Abra o arquivo .ics para adicionar ao seu calendário.'); };
+    if (!real()) { var e = EVJ.det; feito('evento.ics', icsLocal(e)); return; }
+    api('evento_ics', { evento: id }).then(function (r) { feito(r.dados.nome, r.dados.conteudo); })['catch'](function (r) { ocupado(el, false); toast('Não foi possível gerar o arquivo', msgErro(r)); });
+  };
+  A['novo-evento'] = function () { formEvento(null); };
+  A['editar-evento'] = function () { var e = GE.dados && GE.dados.evento; if (e) formEvento(e); };
+  A['status-evento'] = function (el) {
+    var e = GE.dados && GE.dados.evento, v = el.getAttribute('data-v'); if (!e) return;
+    var fazer = function (b, motivo) { ocupado(b, true);
+      evx('status_evento', { evento: e.id, status: v, motivo: motivo || null }).then(function () {
+        fecha(); EG.dados = null;
+        toast({ publicado: 'Evento publicado', cancelado: 'Evento cancelado', encerrado: 'Evento encerrado', rascunho: 'Evento voltou a rascunho' }[v], v === 'publicado' ? 'Os jovens da faixa já veem e podem se inscrever.' : real() ? 'Registrado no histórico (auditoria).' : 'Demonstração: só neste aparelho.');
+        abrirEventoGestao(e.id);
+      })['catch'](function (r) { ocupado(b, false); toast('Não foi possível concluir', msgErro(r)); caixaErro('m-erro', msgErro(r)); caixaErro('ge-erro', msgErro(r)); }); };
+    if (v !== 'cancelado') return fazer(el);
+    modal('Cancelar ' + e.titulo + '?', '<p>Os inscritos veem no app que o evento foi cancelado. <b>Não dá para reabrir:</b> se mudar a data, edite em vez de cancelar.</p>' +
+      '<div class="campo"><label for="c-mot-ev">Motivo para os inscritos <span class="peq">(opcional)</span></label><input class="entrada" id="c-mot-ev" maxlength="300" placeholder="Ex.: previsão de chuva forte"></div>' +
+      '<div id="m-erro" role="alert"></div><div class="btns-2"><button class="btn btn-sec" type="button" data-fechar>Voltar</button><button class="btn btn-perigo" type="button" id="b-canc-ev">Cancelar evento</button></div>', function (dlg) {
+      dlg.querySelector('#b-canc-ev').addEventListener('click', function () { fazer(this, dlg.querySelector('#c-mot-ev').value.trim()); });
+    });
+  };
+  A['autorizar-ev'] = function (el) {
+    var u = el.getAttribute('data-u'), sim = el.getAttribute('data-v') === 'sim', x = ((GE.dados && GE.dados.inscritos) || []).filter(function (p) { return p.id === u; })[0];
+    var fazer = function (b) { ocupado(b, true);
+      evx('autorizar_evento', { evento: GE.id, usuario: u, aprovado: sim }).then(function () {
+        fecha(); EG.dados = null; toast(sim ? 'Autorização registrada' : 'Inscrição recusada', sim ? (x && x.status === 'lista_espera' ? 'Continua na lista de espera, já autorizado.' : 'Inscrição confirmada.') : 'A vaga foi liberada para a lista de espera.'); abrirEventoGestao(GE.id);
+      })['catch'](function (r) { ocupado(b, false); toast('Não foi possível concluir', msgErro(r)); caixaErro('m-erro', msgErro(r)); }); };
+    if (sim) return fazer(el);
+    modal('Recusar a inscrição de ' + (x ? x.nome : '') + '?', '<p>Use quando o responsável não autorizou. A inscrição é cancelada e a vaga vai para a lista de espera.</p><div id="m-erro" role="alert"></div>' +
+      '<div class="btns-2"><button class="btn btn-sec" type="button" data-fechar>Voltar</button><button class="btn btn-perigo" type="button" id="b-rec-aut">Recusar</button></div>', function (dlg) {
+      dlg.querySelector('#b-rec-aut').addEventListener('click', function () { fazer(this); });
+    });
+  };
+  A['presenca-ev'] = function (el) {
+    var u = el.getAttribute('data-u'), tipo = el.getAttribute('data-v'), x = ((GE.dados && GE.dados.inscritos) || []).filter(function (p) { return p.id === u; })[0]; if (!x) return;
+    var fazer = function (b, obs) { ocupado(b, true); caixaErro('ge-erro', '');
+      evx('presenca_evento', { evento: GE.id, usuario: u, tipo: tipo, obs: obs || null }).then(function () {
+        fecha(); toast(tipo === 'entrada' ? 'Entrada de ' + x.nome : tipo === 'saida' ? 'Saída de ' + x.nome : 'Presença desfeita', tipo === 'desfazer' ? '' : 'Horário registrado.'); abrirEventoGestao(GE.id);
+      })['catch'](function (r) { ocupado(b, false); toast('Não foi possível registrar', msgErro(r)); caixaErro('m-erro', msgErro(r)); }); };
+    if (tipo === 'saida' && x.menor) {
+      return modal('Saída de ' + x.nome, aviso('Menor de idade: registre quem retirou, conforme a política da igreja.' + (x.responsavel ? ' Responsável cadastrado: <b>' + esc(x.responsavel) + '</b>.' : ''), '', 'shield') +
+        '<div class="campo"><label for="c-ret">Quem retirou</label><input class="entrada" id="c-ret" maxlength="120" placeholder="Ex.: a mãe, Maria" aria-describedby="e-ret"><span class="erro-msg" id="e-ret" role="alert"></span></div>' +
+        '<button class="btn btn-sec btn-cheio" type="button" id="b-sozinho">Saiu sozinho, autorizado pelo responsável</button>' +
+        '<div id="m-erro" role="alert"></div><button class="btn btn-pri btn-cheio" type="button" id="b-ret" style="margin-top:10px">Registrar saída</button>', function (dlg) {
+        dlg.querySelector('#b-sozinho').addEventListener('click', function () { fazer(this, 'Saiu sozinho, autorizado pelo responsável'); });
+        dlg.querySelector('#b-ret').addEventListener('click', function () { var c = dlg.querySelector('#c-ret'); if (!erroCampo(c, c.value.trim().length < 2 ? 'Informe quem retirou.' : '')) { c.focus(); return; } fazer(this, c.value.trim()); });
+      });
+    }
+    fazer(el);
+  };
+
   function salvarPrefReal(k, on, input) {
     var e = euAtivo(); if (!e) return;
     var n = JSON.parse(JSON.stringify(e.notificacoes || {})), dados;
@@ -2049,7 +2572,7 @@
 
   /* ═══ roteador ═══ */
   var NAV = [['inicio', 'Início', 'home'], ['comunidade', 'Comunidade', 'users'], ['palavra', 'Palavra', 'book'], ['eventos', 'Eventos', 'calendar'], ['mais', 'Mais', 'grid']];
-  var VITRINE = [['boas-vindas', 'Boas-vindas'], ['entrar', 'Entrar / cadastro'], ['consentimento', 'Consentimento e idade'], ['inicio', 'Início'], ['circulo', 'Meu Círculo'], ['jornada', 'Minha Jornada'], ['missao', 'Missão da Semana'], ['eventos', 'Eventos'], ['palavra', 'Palavra / Devocional'], ['comunidade', 'Comunidade'], ['talentos', 'Talentos e Serviço'], ['acolhimento', 'Acolhimento'], ['perfil', 'Perfil e preferências'], ['lideranca', 'Painel de liderança'], ['pessoas', 'Pessoas (liderança)'], ['encontrar-circulo', 'Encontrar um círculo'], ['lider-circulo', 'Conduzir meu círculo (líder)'], ['circulos', 'Círculos (liderança)']];
+  var VITRINE = [['boas-vindas', 'Boas-vindas'], ['entrar', 'Entrar / cadastro'], ['consentimento', 'Consentimento e idade'], ['inicio', 'Início'], ['circulo', 'Meu Círculo'], ['jornada', 'Minha Jornada'], ['missao', 'Missão da Semana'], ['eventos', 'Eventos'], ['palavra', 'Palavra / Devocional'], ['comunidade', 'Comunidade'], ['talentos', 'Talentos e Serviço'], ['acolhimento', 'Acolhimento'], ['perfil', 'Perfil e preferências'], ['lideranca', 'Painel de liderança'], ['pessoas', 'Pessoas (liderança)'], ['encontrar-circulo', 'Encontrar um círculo'], ['lider-circulo', 'Conduzir meu círculo (líder)'], ['circulos', 'Círculos (liderança)'], ['eventos-gestao', 'Eventos (liderança)']];
   function rotaAtual() {
     var h = location.hash.replace(/^#\/?/, ''), q = {}, partes = h.split('?');
     (partes[1] || '').split('&').forEach(function (kv) { if (kv) { var p = kv.split('='); q[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ''); } });

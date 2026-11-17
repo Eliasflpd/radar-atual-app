@@ -443,3 +443,10 @@ a.cartao-navy{color:var(--branco)}
 #cg-box>*+*,#gc-box>*+*,#enc-box>*+*{margin-top:14px}
 #cg-box>.tit-sec,#gc-box>.tit-sec{margin-top:22px}
 .pessoas>li>.pessoa-bt:not(button):not(a){cursor:default}
+
+/* ── Módulo 3 · Eventos (17/11/2026) ── */
+#eg-box>*+*,#ge-box>*+*{margin-top:14px}
+#eg-box>.tit-sec,#ge-box>.tit-sec{margin-top:22px}
+#evd-box .sec>*+*{margin-top:14px}
+#ge-lista>li[hidden]{display:none}
+#ge-box .pessoas>li>.btn-mini{margin-left:auto}

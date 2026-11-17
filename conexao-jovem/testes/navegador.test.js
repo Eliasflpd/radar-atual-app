@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// MÓDULO 1 — TESTE DE NAVEGADOR DE PONTA A PONTA (MODO REAL)
+// MÓDULOS 1, 2 e 3 — TESTE DE NAVEGADOR DE PONTA A PONTA (MODO REAL)
 // Rodado por testes/navegador.sh. Sobe aqui mesmo um servidor local que serve public/
 // e encaminha POST /api/dados?fn=jovem para a função de verdade (api/_lib/jovem.js),
-// ligada ao Postgres local descartável com as migrações 001 + 002 e o seed fictício.
+// ligada ao Postgres local descartável com as migrações 001 a 004 e o seed fictício.
 // O "crachá do Radar" é posto no localStorage do Chromium, como o Radar faz.
 // ═══════════════════════════════════════════════════════════════════════════════
 'use strict';
@@ -52,6 +52,7 @@ async function prepararBanco() {
   await db.query(ler('supabase/migrations/001_conexao_jovem.sql'));
   await db.query(ler('supabase/migrations/002_gestao_pessoas.sql'));
   await db.query(ler('supabase/migrations/003_circulos.sql'));
+  await db.query(ler('supabase/migrations/004_eventos.sql'));
   await db.query("set cj.permitir_seed_demo = 'sim'"); await db.query(ler('supabase/seed_demo.sql'));
   await db.query('create table radar_chaves(id bigserial primary key, user_key text not null, chave_hash text not null unique)');
   const tel = { coord: '99900000002', davi: '99900000007', novo: '99900000099', pre: '21998765432', pastor: '99900000001', rafael: '99900000004', lucas: '99900000009' };
@@ -100,7 +101,7 @@ function servidor() {
     pg.on('pageerror', (e) => erros.push('pageerror: ' + e.message));
     return { ctx, pg };
   }
-  const foto = (pg, nome, cheia = true) => pg.screenshot({ path: path.join(TELAS, 'real-' + nome + '.png'), fullPage: cheia });
+  const foto = async (pg, nome, cheia = true) => { await espera(450); return pg.screenshot({ path: path.join(TELAS, 'real-' + nome + '.png'), fullPage: cheia }); };   // espera a animação de entrada (.28 s)
   const q = async (sql, p) => (await db.query(sql, p)).rows;
 
   console.log('\n1) Coordenação (youth_admin) na tela Pessoas, com o banco');
@@ -284,8 +285,121 @@ function servidor() {
     await ctx.close();
   }
 
+  console.log('\n7) Módulo 3 · Eventos com o banco');
+  const FUT = id(202), VAGA = id(204);
+  for (const vp of [{ width: 360, height: 800 }, { width: 390, height: 844 }]) {
+    const tag = vp.width + 'x' + vp.height;
+    const { ctx, pg } = await abrir(K.davi, vp);
+    await pg.goto(BASE + '/jovem/#/eventos'); await pg.waitForSelector('#evj-box .ev', { timeout: 8000 });
+    const titulos = await pg.locator('#evj-box .ev b').allTextContents();
+    confere(titulos.some((t) => t.includes('Futebol da Juventude')) && !titulos.some((t) => t.includes('Planejamento interno')), `[${tag}] lista real de eventos (sem rascunho)`);
+    confere(await pg.locator('.cab .demo-pill').count() === 0, `[${tag}] Eventos sem selo "Demonstração"`);
+    await foto(pg, `eventos-${tag}`);
+    await pg.click('[data-acao="filtro"][data-v="Esporte"]'); await espera(1200);
+    confere(await pg.locator('#evj-box .ev').count() === 1, `[${tag}] filtro por categoria (Esporte) no servidor`);
+    await pg.goto(BASE + '/jovem/#/evento/' + FUT); await pg.waitForSelector('#evd-box .hero', { timeout: 8000 });
+    if (vp.width === 360) confere(await pg.isVisible('text=24 vagas disponíveis'), `[${tag}] detalhe com vagas reais`);
+    else confere(await pg.isVisible('text=Inscrição confirmada.'), `[${tag}] detalhe mostra a inscrição feita`);
+    await foto(pg, `evento-detalhe-${tag}`);
+    if (vp.width === 360) {
+      await pg.click('[data-acao="inscrever-real"]'); await espera(300);
+      confere(await pg.locator('#evd-orient[aria-invalid="true"]').count() === 1, 'pede para confirmar as orientações');
+      await pg.check('#evd-orient'); await pg.click('[data-acao="inscrever-real"]'); await pg.waitForSelector('text=Inscrição confirmada.', { timeout: 8000 });
+      confere((await q('select status from cj.event_registrations where event_id = $1 and user_id = $2', [FUT, id(7)]))[0].status === 'confirmada', 'inscrição gravada (status decidido pelo servidor)');
+      const [dl] = await Promise.all([pg.waitForEvent('download', { timeout: 8000 }), pg.click('[data-acao="agenda-real"]')]);
+      const ics = fs.readFileSync(await dl.path(), 'utf8');
+      confere(/\.ics$/.test(dl.suggestedFilename()) && /BEGIN:VCALENDAR/.test(ics) && /SUMMARY:Futebol da Juventude/.test(ics), 'baixa o .ics do servidor');
+      await foto(pg, 'evento-inscrito-360x800');
+    }
+    await ctx.close();
+  }
+  {
+    const lucas = await abrir(K.lucas);
+    await lucas.pg.goto(BASE + '/jovem/#/evento/' + VAGA); await lucas.pg.waitForSelector('[data-acao="inscrever-real"]');
+    await lucas.pg.click('[data-acao="inscrever-real"]'); await lucas.pg.waitForSelector('text=Inscrição confirmada.', { timeout: 8000 });
+    const davi = await abrir(K.davi);
+    await davi.pg.goto(BASE + '/jovem/#/evento/' + VAGA); await davi.pg.waitForSelector('[data-acao="inscrever-real"]');
+    confere(await davi.pg.isVisible('text=Entrar na lista de espera'), 'evento lotado oferece a lista de espera');
+    await davi.pg.click('[data-acao="inscrever-real"]'); await davi.pg.waitForSelector('text=Você está na lista de espera (1º)', { timeout: 8000 });
+    confere(true, 'Davi entra na lista de espera (1º)');
+    await foto(davi.pg, 'evento-lista-espera-360x800');
+    await lucas.pg.reload(); await lucas.pg.waitForSelector('[data-acao="cancelar-insc-real"]');
+    await lucas.pg.click('[data-acao="cancelar-insc-real"]'); await lucas.pg.click('#b-canc-insc'); await espera(1500);
+    confere((await q('select status from cj.event_registrations where event_id = $1 and user_id = $2', [VAGA, id(7)]))[0].status === 'confirmada', 'Lucas cancela → Davi sobe da lista de espera');
+    await davi.pg.reload(); await davi.pg.waitForSelector('#evd-box .hero');
+    confere(await davi.pg.isVisible('text=Inscrição confirmada.'), 'Davi vê que foi confirmado');
+    await lucas.ctx.close(); await davi.ctx.close();
+  }
+  // Bia (menor, sem crachá aqui) inscrita aguardando autorização — preparado pelo dono do banco.
+  await q(`insert into cj.event_registrations(event_id, user_id, status, consent_status) values ($1, $2, 'aguardando_autorizacao', 'pendente')`, [FUT, id(11)]);
+  for (const vp of [{ width: 360, height: 800 }, { width: 390, height: 844 }]) {
+    const tag = vp.width + 'x' + vp.height;
+    const { ctx, pg } = await abrir(K.coord, vp);
+    await pg.goto(BASE + '/jovem/#/eventos-gestao'); await pg.waitForSelector('#eg-box .cartao-link', { timeout: 8000 });
+    confere(await pg.isVisible('#eg-box >> text=Futebol da Juventude (demo)'), `[${tag}] gestão lista os eventos do banco`);
+    if (vp.width === 360) confere(await pg.isVisible('#eg-box >> text=autorização de responsável aguardando'), `[${tag}] alerta de autorização pendente`);
+    await foto(pg, `gestao-eventos-${tag}`);
+    await pg.goto(BASE + '/jovem/#/eventos-gestao/' + FUT); await pg.waitForSelector('#ge-box .kpis', { timeout: 8000 });
+    await foto(pg, `gestao-evento-${tag}`);
+    if (vp.width === 360) {
+      await pg.click('[data-acao="autorizar-ev"][data-v="sim"]'); await espera(1500);
+      confere((await q('select status, consent_status from cj.event_registrations where event_id = $1 and user_id = $2', [FUT, id(11)]))[0].status === 'confirmada', 'equipe aprova a autorização do responsável');
+      await pg.fill('#ge-busca', 'bia'); await espera(200);
+      confere(await pg.locator('#ge-lista > li:not([hidden])').count() === 1, 'busca no check-in filtra pelo nome (sem acento/caixa)');
+      await pg.click('#ge-lista li:not([hidden]) [data-acao="presenca-ev"][data-v="entrada"]'); await espera(1500);
+      confere((await q('select check_in_at from cj.event_registrations where event_id = $1 and user_id = $2', [FUT, id(11)]))[0].check_in_at !== null, 'check-in gravado');
+      await pg.click('#ge-lista li:not([hidden]) [data-acao="presenca-ev"][data-v="saida"]'); await pg.waitForSelector('#b-ret');
+      await pg.click('#b-ret'); await espera(200);
+      confere(await pg.locator('#c-ret[aria-invalid="true"]').count() === 1, 'saída de menor pede quem retirou');
+      await foto(pg, 'gestao-saida-menor-360x800', false);
+      await pg.fill('#c-ret', 'Mãe (navegador)'); await pg.click('#b-ret'); await espera(1500);
+      const r = (await q('select check_out_at, pickup_note from cj.event_registrations where event_id = $1 and user_id = $2', [FUT, id(11)]))[0];
+      confere(r.check_out_at !== null && r.pickup_note === 'Mãe (navegador)', 'check-out com "retirado por" gravado');
+      await foto(pg, 'gestao-checkin-360x800');
+      // Novo evento: validação e criação
+      await pg.goto(BASE + '/jovem/#/eventos-gestao'); await pg.waitForSelector('#eg-box [data-acao="novo-evento"]');
+      await pg.click('#eg-box [data-acao="novo-evento"]'); await pg.waitForSelector('#f-ev');
+      await pg.fill('#fv-di', ''); await pg.click('dialog [type=submit]'); await espera(200);
+      confere(await pg.locator('#f-ev [aria-invalid="true"]').count() >= 3, 'validação do formulário de evento');
+      await foto(pg, 'gestao-form-evento-360x800', false);
+      const dia = new Date(Date.now() + 15 * 864e5).toISOString().slice(0, 10);
+      await pg.fill('#fv-tit', 'Noite de louvor (navegador)'); await pg.selectOption('#fv-cat', 'culto'); await pg.fill('#fv-di', dia); await pg.fill('#fv-hi', '19:30');
+      await pg.fill('#fv-cap', '30'); await pg.fill('#fv-loc', 'Templo (fictício)'); await pg.fill('#fv-men', 'Retirada só com o responsável.');
+      await pg.click('dialog [type=submit]'); await pg.waitForURL(/#\/eventos-gestao\/[0-9a-f-]{36}/, { timeout: 8000 }); await pg.waitForSelector('#ge-box .kpis');
+      const nv = (await q(`select id, status, capacity, age_bands::text[] as f, minor_rules from cj.events where title = 'Noite de louvor (navegador)'`))[0];
+      confere(nv && nv.status === 'rascunho' && nv.capacity === 30 && nv.f.length === 3 && nv.minor_rules, 'gestão cria evento (rascunho, gravado)');
+      await pg.click('[data-acao="status-evento"][data-v="publicado"]'); await espera(1500);
+      confere((await q('select status from cj.events where id = $1', [nv.id]))[0].status === 'publicado', 'gestão publica o evento');
+    }
+    await ctx.close();
+  }
+  for (const vp of [{ width: 360, height: 800 }, { width: 390, height: 844 }]) {
+    const tag = vp.width + 'x' + vp.height;
+    const { ctx, pg } = await abrir(K.rafael, vp);
+    await pg.goto(BASE + '/jovem/#/eventos-gestao'); await pg.waitForSelector('#eg-box .cartao-link', { timeout: 8000 });
+    const t = await pg.locator('#eg-box .cartao-link h3').allTextContents();
+    confere(t.length === 1 && t[0].includes('Encontro do Círculo Esperança'), `[${tag}] líder vê só os eventos do próprio círculo`);
+    await foto(pg, `lider-eventos-${tag}`);
+    if (vp.width === 360) {
+      await pg.click('#eg-box [data-acao="novo-evento"]'); await pg.waitForSelector('#f-ev');
+      confere(await pg.locator('#fv-circ option').count() === 1 && await pg.isHidden('#fv-fx'), 'formulário do líder: só o próprio círculo (faixa do círculo)');
+      const dia = new Date(Date.now() + 9 * 864e5).toISOString().slice(0, 10);
+      await pg.fill('#fv-tit', 'Lanche do círculo (navegador)'); await pg.selectOption('#fv-cat', 'circulo'); await pg.fill('#fv-di', dia);
+      await pg.click('dialog [type=submit]'); await pg.waitForURL(/#\/eventos-gestao\/[0-9a-f-]{36}/, { timeout: 8000 });
+      const lv = (await q(`select circle_id, age_bands::text[] as f from cj.events where title = 'Lanche do círculo (navegador)'`))[0];
+      confere(lv && lv.circle_id === id(101) && lv.f.join() === '18-21', 'líder cria evento do próprio círculo (gravado)');
+    }
+    await ctx.close();
+  }
+  {
+    const { ctx, pg } = await abrir(K.davi);
+    await pg.goto(BASE + '/jovem/#/eventos-gestao'); await espera(1500);
+    confere(await pg.isVisible('text=Área da equipe e dos líderes'), 'membro não abre a gestão de eventos');
+    await ctx.close();
+  }
+
   const aud = (await q(`select distinct action from cj.audit_logs`)).map((x) => x.action);
-  for (const a of ['consultar', 'ativar_perfil', 'conceder_papel', 'pre_cadastrar', 'vincular', 'criar_perfil', 'pedir_troca', 'pedir_entrada', 'decidir_membro', 'criar_circulo', 'adicionar_ao_circulo', 'pausar_circulo']) confere(aud.includes(a), 'auditoria registrou: ' + a);
+  for (const a of ['consultar', 'ativar_perfil', 'conceder_papel', 'pre_cadastrar', 'vincular', 'criar_perfil', 'pedir_troca', 'pedir_entrada', 'decidir_membro', 'criar_circulo', 'adicionar_ao_circulo', 'pausar_circulo', 'criar_evento', 'publicar_evento', 'aprovar_autorizacao_evento', 'presenca_entrada', 'presenca_saida', 'promover_lista_espera']) confere(aud.includes(a), 'auditoria registrou: ' + a);
   confere(erros.filter((e) => !/Failed to load resource/.test(e)).length === 0, 'sem erros de JavaScript no console (' + erros.join(' | ') + ')');
 
   await browser.close(); srv.close(); await db.end();

@@ -2,6 +2,8 @@
 // CONEXÃO JOVEM — função do módulo (fn=jovem no roteador api/dados.js)
 // Módulo 1 (17/11/2026): identidade, login pelo crachá do Radar e gestão de pessoas.
 // Módulo 2 (17/11/2026): Círculos (gestão, líder/auxiliar e jovem) — migração 003.
+// Módulo 3 (17/11/2026): Eventos (gestão, líder do círculo, inscrição, autorização,
+//                        lista de espera, check-in/out e .ics) — migração 004.
 // Origem: conexao-jovem/api-proposta/jovem.js (Fase 2), revisada e testada em
 // conexao-jovem/testes/ (Postgres local descartável).
 //
@@ -91,6 +93,29 @@ function whatsapp(v) {
   const d = telefoneCanonico(v);
   if (d.length < 10 || d.length > 15) throw new ErroEntrada('WhatsApp inválido: use DDD + número (10 ou 11 dígitos)');
   return d;
+}
+// ─── Eventos (Módulo 3) ───────────────────────────────────────────────────────
+const CATEGORIAS = ['culto', 'estudo', 'esporte', 'acao_social', 'circulo', 'acampamento', 'ensaio', 'treinamento'];
+const CAMPOS_EVENTO = `id, titulo, categoria, descricao, inicio, fim, local, faixas::text[] as faixas, autorizacao, capacidade, vagas,
+  acessibilidade, orientacoes, responsavel, contato, regras_menores, circulo, status, motivo_cancelamento, minha_inscricao,
+  minha_autorizacao, posicao_espera, autorizacao_geral`;
+// iCalendar (RFC 5545): texto escapado, linhas dobradas em 75 octetos, horários em UTC.
+function icsTexto(v) { return String(v == null ? '' : v).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+function icsData(d) { return new Date(d).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+function icsDobra(l) {
+  const out = []; let atual = '', tam = 0;
+  for (const ch of l) { const n = Buffer.byteLength(ch, 'utf8'); if (tam + n > 74) { out.push(atual); atual = ' '; tam = 1; } atual += ch; tam += n; }
+  out.push(atual); return out.join('\r\n');
+}
+function icsEvento(ev) {
+  const fim = ev.fim || new Date(new Date(ev.inicio).getTime() + 2 * 3600e3).toISOString();
+  const desc = [ev.descricao, ev.orientacoes ? 'Orientações: ' + ev.orientacoes : '', ev.responsavel ? 'Responsável: ' + ev.responsavel : '',
+                ev.contato ? 'Contato: ' + ev.contato : ''].filter(Boolean).join('\n');
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Conexao Jovem//Eventos//PT-BR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+    'UID:' + ev.id + '@conexao-jovem', 'DTSTAMP:' + icsData(new Date()), 'DTSTART:' + icsData(ev.inicio), 'DTEND:' + icsData(fim),
+    'SUMMARY:' + icsTexto(ev.titulo), ev.local ? 'LOCATION:' + icsTexto(ev.local) : '', desc ? 'DESCRIPTION:' + icsTexto(desc) : '',
+    ev.status === 'cancelado' ? 'STATUS:CANCELLED' : 'STATUS:CONFIRMED', 'END:VEVENT', 'END:VCALENDAR']
+    .filter(Boolean).map(icsDobra).join('\r\n') + '\r\n';
 }
 const PAPEIS = ['member', 'circle_leader', 'assistant', 'youth_admin', 'pastor', 'safeguarding_admin'];
 
@@ -338,19 +363,95 @@ const ACOES = {
     [uuid(b.missao, 'missão'), umDe(b.status || 'aceita', 'status', ['aceita', 'concluida', 'desistiu']), indices(b.feitos || [], 10),
      opcional(b.reflexao, 'reflexão', 1000)]),
 
-  // Eventos (tela 08)
-  eventos: async (c) => linhas(c,
-    `select e.id, e.title, e.category, e.description, e.start_at, e.end_at, e.location, e.age_bands, e.requires_guardian_auth,
-            e.capacity, e.accessibility, e.guidance, e.responsible, r.status as minha_inscricao, r.consent_status
-       from cj.events e left join cj.event_registrations r on r.event_id = e.id and r.user_id = auth.uid()
-      where e.status = 'publicado' and e.start_at > now() - interval '6 hours' order by e.start_at limit 30`),
-  inscrever: async (c, b) => linha(c,
-    `insert into cj.event_registrations(event_id, user_id) values ($1, auth.uid())
-     on conflict (event_id, user_id) do update
-       set status = case when cj.event_registrations.status = 'cancelada' then 'confirmada' else cj.event_registrations.status end
-     returning status, consent_status`, [uuid(b.evento, 'evento')]),
-  cancelar_inscricao: async (c, b) => linha(c, `update cj.event_registrations set status = 'cancelada'
-                                                 where event_id = $1 and user_id = auth.uid() returning status`, [uuid(b.evento, 'evento')]),
+  // ─── MÓDULO 3 · Eventos (dossiê 6.7) ─────────────────────────────────────────
+  // Eventos (tela 08): publicados da minha faixa (e do meu círculo), com vagas e a minha
+  // inscrição; também os cancelados em que eu estava inscrito. Filtro opcional por categoria.
+  eventos: async (c, b) => linhas(c, `select ${CAMPOS_EVENTO} from cj.meus_eventos($1)`,
+    [b.categoria ? umDe(b.categoria, 'categoria', CATEGORIAS) : null]),
+  evento: async (c, b) => {
+    const ev = await linha(c, `select ${CAMPOS_EVENTO} from cj.meus_eventos(null) where id = $1`, [uuid(b.evento, 'evento')]);
+    if (!ev) throw Object.assign(new Error('Evento não encontrado ou não disponível para você'), { code: 'P0002' });
+    return ev;
+  },
+  // O servidor decide o status (confirmada · aguardando_autorizacao · lista_espera): gatilho cj.trg_inscricao.
+  inscrever: async (c, b) => {
+    const id = uuid(b.evento, 'evento');
+    await c.query(`insert into cj.event_registrations(event_id, user_id) values ($1, auth.uid())
+                   on conflict (event_id, user_id) do update
+                     set status = case when cj.event_registrations.status = 'cancelada' then 'confirmada' else cj.event_registrations.status end`, [id]);
+    return linha(c, 'select minha_inscricao as status, minha_autorizacao as consent_status, posicao_espera, vagas from cj.meus_eventos(null) where id = $1', [id]);
+  },
+  // Cancelar abre a vaga: o gatilho t_espera promove a 1ª pessoa da lista de espera.
+  cancelar_inscricao: async (c, b) => {
+    const r = await linha(c, `update cj.event_registrations set status = 'cancelada'
+                               where event_id = $1 and user_id = auth.uid() and status <> 'cancelada' returning status`, [uuid(b.evento, 'evento')]);
+    if (!r) throw Object.assign(new Error('Inscrição não encontrada'), { code: 'P0002' });
+    return r;
+  },
+  // Arquivo .ics (agenda do celular) de um evento que eu posso ver.
+  evento_ics: async (c, b) => {
+    const ev = await ACOES.evento(c, b);
+    return { nome: 'evento-' + ev.id.slice(0, 8) + '.ics', conteudo: icsEvento(ev) };
+  },
+
+  // Painel · Eventos: equipe vê todos; líder/auxiliar, os do círculo que conduz (o banco decide).
+  eventos_gestao: async (c) => {
+    const eventos = await linhas(c, `select id, titulo, categoria, inicio, fim, local, faixas::text[] as faixas, autorizacao, capacidade, status,
+                                            circulo_id, circulo, pode_editar, confirmados, aguardando, espera, presentes
+                                       from cj.eventos_gestao()`);
+    const eq = await linha(c, 'select cj.eh_equipe() as e, cj.eh_gestao() as g');
+    return {
+      gestao: eq.g, equipe: eq.e, eventos,
+      // Círculos em que posso criar evento: gestão = todos os ativos; líder = os que conduz.
+      circulos: await linhas(c, `select id, name as nome, age_band as faixa from cj.circles
+                                  where status = 'ativo' and (cj.eh_gestao() or cj.lidera_circulo(id)) order by name`)
+    };
+  },
+  // Um evento visto pela gestão/líder: todos os campos + inscritos (consulta auditada).
+  gerir_evento: async (c, b) => {
+    const id = uuid(b.evento, 'evento');
+    const inscritos = await linhas(c, `select user_id as id, nome, faixa, menor, status, autorizacao, autorizacao_geral, responsavel,
+                                              contato_responsavel, posicao_espera, inscrito_em, entrada_em, saida_em, retirado_por
+                                         from cj.inscritos_evento($1)`, [id]);
+    const evento = await linha(c, `select e.id, e.title as titulo, e.category as categoria, e.description as descricao, e.start_at as inicio,
+                                          e.end_at as fim, e.location as local, e.age_bands::text[] as faixas, e.requires_guardian_auth as autorizacao,
+                                          e.capacity as capacidade, e.accessibility as acessibilidade, e.guidance as orientacoes,
+                                          e.responsible as responsavel, e.contact as contato, e.minor_rules as regras_menores,
+                                          e.circle_id as circulo_id, ci.name as circulo, e.status, e.cancel_reason as motivo_cancelamento,
+                                          cj.gere_evento(e.id) as pode_editar, cj.eh_equipe() as decido_autorizacao
+                                     from cj.events e left join cj.circles ci on ci.id = e.circle_id where e.id = $1`, [id]);
+    if (!evento) throw Object.assign(new Error('evento não encontrado'), { code: 'P0002' });
+    return { evento, inscritos };
+  },
+  salvar_evento: async (c, b) => {
+    const cap = b.capacidade == null || b.capacidade === '' ? null : Number(b.capacidade);
+    if (cap !== null && !Number.isInteger(cap)) throw new ErroEntrada('capacidade inválida');
+    const dados = {
+      titulo: texto(b.titulo, 'título', 3, 120), categoria: umDe(b.categoria, 'categoria', CATEGORIAS),
+      descricao: opcional(b.descricao, 'descrição', 2000), inicio: dataHora(b.inicio, 'data de início'),
+      fim: b.fim ? dataHora(b.fim, 'data de fim') : null, local: opcional(b.local, 'local', 200),
+      faixas: b.circulo ? [] : lista(b.faixas || [], 'faixas etárias', FAIXAS, 3), autorizacao: b.autorizacao === true, capacidade: cap,
+      acessibilidade: opcional(b.acessibilidade, 'acessibilidade', 500), orientacoes: opcional(b.orientacoes, 'orientações', 1000),
+      responsavel: opcional(b.responsavel, 'responsável', 120), contato: opcional(b.contato, 'contato', 120),
+      regras_menores: opcional(b.regras_menores, 'regras para menores', 1000), circulo: b.circulo ? uuid(b.circulo, 'círculo') : null
+    };
+    const r = await linha(c, 'select cj.salvar_evento($1, $2) as id', [b.id ? uuid(b.id, 'evento') : null, JSON.stringify(dados)]);
+    return { id: r.id };
+  },
+  status_evento: async (c, b) => {
+    await c.query('select cj.definir_status_evento($1, $2, $3)', [uuid(b.evento, 'evento'),
+      umDe(b.status, 'situação', ['rascunho', 'publicado', 'cancelado', 'encerrado']), opcional(b.motivo, 'motivo', 300)]);
+    return { ok: true };
+  },
+  autorizar_evento: async (c, b) => {
+    await c.query('select cj.decidir_autorizacao_evento($1, $2, $3)', [uuid(b.evento, 'evento'), uuid(b.usuario, 'usuário'), b.aprovado === true]);
+    return { ok: true };
+  },
+  presenca_evento: async (c, b) => {
+    await c.query('select cj.registrar_presenca_evento($1, $2, $3, $4)', [uuid(b.evento, 'evento'), uuid(b.usuario, 'usuário'),
+      umDe(b.tipo, 'tipo', ['entrada', 'saida', 'desfazer']), opcional(b.obs, 'retirado por', 120)]);
+    return { ok: true };
+  },
 
   // Palavra (tela 09). O DIÁRIO NÃO VEM PARA CÁ: continua só no aparelho.
   devocionais: async (c) => linhas(c, `select id, publish_date, title, scripture_reference, verse_text, reflection, question, prayer, readings
@@ -643,3 +744,4 @@ module.exports.comoUsuario = comoUsuario;
 module.exports.hashVinculo = hashVinculo;
 module.exports.telefoneCanonico = telefoneCanonico;
 module.exports.traduzErro = traduzErro;
+module.exports.icsEvento = icsEvento;

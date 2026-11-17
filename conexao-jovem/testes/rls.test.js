@@ -14,6 +14,7 @@ const RAIZ = path.resolve(__dirname, '..');
 const MIGRACAO = path.join(RAIZ, 'supabase/migrations/001_conexao_jovem.sql');
 const MIGRACAO_2 = path.join(RAIZ, 'supabase/migrations/002_gestao_pessoas.sql');
 const MIGRACAO_3 = path.join(RAIZ, 'supabase/migrations/003_circulos.sql');
+const MIGRACAO_4 = path.join(RAIZ, 'supabase/migrations/004_eventos.sql');
 const SEED = path.join(RAIZ, 'supabase/seed_demo.sql');
 const MINIMO = path.join(__dirname, '00_supabase_minimo.sql');
 
@@ -1136,6 +1137,216 @@ testeHandler('M1 handler: o arquivo carrega sem o pacote pg e sem variáveis (n�
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// MÓDULO 3 · EVENTOS (migração 004) — banco
+// ═══════════════════════════════════════════════════════════════════════════════
+const DIA = 864e5;
+const futuro = (d) => new Date(Date.now() + d * DIA).toISOString();
+const evDados = (extra) => JSON.stringify(Object.assign({ titulo: 'Evento de teste', categoria: 'estudo', inicio: futuro(10), faixas: ['18-21', '22-25'] }, extra || {}));
+teste('M3: faixa errada não inscreve (nem aparece na lista do jovem)', async (t) => {
+  await t.como(P.bia);
+  await t.falha('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.vagaUnica, P.bia], null, 'Bia (15–17) em evento 18–25');
+  igual(await t.n('select count(*) from cj.meus_eventos(null) where id = $1', [E.vagaUnica]), 0, 'evento de outra faixa fora da lista');
+  espera((await t.q('select id from cj.meus_eventos(null)')).some((x) => x.id === E.futebol), 'Bia vê o futebol (todas as faixas)');
+});
+teste('M3: evento em rascunho é invisível ao jovem (lista, detalhe e inscrição)', async (t) => {
+  await t.como(P.coord);
+  await t.q(`update cj.events set age_bands = '{18-21,22-25}' where id = $1`, [E.rascunho]);
+  await t.como(P.davi);
+  igual(await t.n('select count(*) from cj.meus_eventos(null) where id = $1', [E.rascunho]), 0, 'rascunho fora da lista');
+  await t.falha('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.rascunho, P.davi], null, 'inscrição em rascunho');
+});
+teste('M3: menor sem autorização geral de eventos fica aguardando até em evento sem autorização própria', async (t) => {
+  await t.como(P.theo);
+  const r = await t.um('insert into cj.event_registrations(event_id, user_id) values ($1, $2) returning status, consent_status', [E.quinta, P.theo]);
+  igual([r.status, r.consent_status], ['aguardando_autorizacao', 'pendente'], 'Theo (consentimento geral pendente)');
+  await t.como(P.bia);
+  const b = await t.um('insert into cj.event_registrations(event_id, user_id) values ($1, $2) returning status', [E.quinta, P.bia]);
+  igual(b.status, 'confirmada', 'Bia (autorização geral aprovada) em evento sem autorização própria');
+});
+teste('M3: capacidade → lista de espera; cancelar promove a 1ª da fila (e registra na auditoria)', async (t) => {
+  await t.como(P.davi); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.vagaUnica, P.davi]);
+  await t.como(P.ana); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.vagaUnica, P.ana]);
+  await t.como(P.lucas); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.vagaUnica, P.lucas]);
+  const l = await t.um('select minha_inscricao, posicao_espera, vagas from cj.meus_eventos(null) where id = $1', [E.vagaUnica]);
+  igual([l.minha_inscricao, l.posicao_espera, l.vagas], ['lista_espera', 2, 0], 'Lucas é o 2º da fila');
+  await t.como(P.davi);
+  await t.q(`update cj.event_registrations set status = 'cancelada' where event_id = $1 and user_id = auth.uid()`, [E.vagaUnica]);
+  await t.comoDono();
+  const st = await t.q('select user_id, status from cj.event_registrations where event_id = $1 order by user_id', [E.vagaUnica]);
+  igual(st.map((x) => x.status), ['cancelada', 'confirmada', 'lista_espera'], 'Ana subiu; Lucas continua na fila');
+  igual(await t.n(`select count(*) from cj.audit_logs where action = 'promover_lista_espera' and entity_id = $1`, [E.vagaUnica + ':' + P.ana]), 1, 'promoção auditada');
+  await t.como(P.lucas);
+  igual((await t.um('select posicao_espera from cj.meus_eventos(null) where id = $1', [E.vagaUnica])).posicao_espera, 1, 'Lucas agora é o 1º');
+});
+teste('M3: autorização aprovada não fura a fila; menor promovido sem autorização ocupa a vaga "aguardando"; recusa abre a vaga', async (t) => {
+  await t.como(P.coord);
+  const ev = (await t.um(`select cj.salvar_evento(null, $1) as id`, [evDados({ titulo: 'Passeio com vaga única', categoria: 'acao_social', faixas: ['15-17', '18-21'], autorizacao: true, capacidade: 1 })])).id;
+  await t.q(`select cj.definir_status_evento($1, 'publicado')`, [ev]);
+  await t.como(P.davi); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [ev, P.davi]);
+  await t.como(P.bia);
+  igual((await t.um('insert into cj.event_registrations(event_id, user_id) values ($1, $2) returning status, consent_status', [ev, P.bia])).status, 'lista_espera', 'Bia na fila');
+  await t.como(P.theo);
+  igual((await t.um('insert into cj.event_registrations(event_id, user_id) values ($1, $2) returning status', [ev, P.theo])).status, 'lista_espera', 'Theo na fila');
+  await t.como(P.coord);
+  await t.q('select cj.decidir_autorizacao_evento($1, $2, true)', [ev, P.bia]);
+  await t.comoDono();
+  igual((await t.um('select status, consent_status from cj.event_registrations where event_id = $1 and user_id = $2', [ev, P.bia])), { status: 'lista_espera', consent_status: 'aprovado' }, 'aprovada, mas continua na fila');
+  await t.como(P.davi); await t.q(`update cj.event_registrations set status = 'cancelada' where event_id = $1 and user_id = auth.uid()`, [ev]);
+  await t.comoDono();
+  igual((await t.um('select status from cj.event_registrations where event_id = $1 and user_id = $2', [ev, P.bia])).status, 'confirmada', 'Bia sobe confirmada');
+  await t.como(P.bia); await t.q(`update cj.event_registrations set status = 'cancelada' where event_id = $1 and user_id = auth.uid()`, [ev]);
+  await t.comoDono();
+  igual((await t.um('select status from cj.event_registrations where event_id = $1 and user_id = $2', [ev, P.theo])).status, 'aguardando_autorizacao', 'Theo sobe aguardando autorização');
+  await t.como(P.ana); igual((await t.um('insert into cj.event_registrations(event_id, user_id) values ($1, $2) returning status', [ev, P.ana])).status, 'lista_espera', 'Ana na fila');
+  await t.como(P.coord); await t.q('select cj.decidir_autorizacao_evento($1, $2, false)', [ev, P.theo]);
+  await t.comoDono();
+  igual((await t.q('select user_id, status from cj.event_registrations where event_id = $1 and user_id in ($2, $3) order by user_id', [ev, P.ana, P.theo])).map((x) => x.status), ['confirmada', 'cancelada'], 'recusa do Theo → Ana sobe');
+});
+teste('M3: membro não cria evento (nem pela função, nem direto na tabela)', async (t) => {
+  await t.como(P.davi);
+  await t.falha('select cj.salvar_evento(null, $1)', [evDados()], '42501', 'Davi pela função');
+  await t.falha(`insert into cj.events(title, category, start_at) values ('Forjado', 'culto', now() + interval '3 days')`, [], '42501', 'Davi direto');
+  await t.falha(`select cj.definir_status_evento($1, 'cancelado')`, [E.quinta], '42501', 'Davi cancelando');
+  await t.falha('select * from cj.eventos_gestao()', [], '42501', 'Davi na lista da gestão');
+});
+teste('M3: líder só cria evento no próprio círculo (faixa do círculo; publica e cancela só os dele)', async (t) => {
+  await t.como(P.rafael);
+  await t.falha('select cj.salvar_evento(null, $1)', [evDados({ circulo: C.caminho })], '42501', 'Rafael no Caminho');
+  await t.falha('select cj.salvar_evento(null, $1)', [evDados()], '42501', 'Rafael sem círculo (evento geral)');
+  await t.falha(`insert into cj.events(title, category, start_at, circle_id) values ('Forjado', 'circulo', now() + interval '3 days', $1)`, [C.caminho], '42501', 'Rafael direto no Caminho');
+  const id = (await t.um('select cj.salvar_evento(null, $1) as id', [evDados({ categoria: 'circulo', circulo: C.esperanca, faixas: ['22-25'] })])).id;
+  igual(await t.um('select status, age_bands::text[] as f, created_by from cj.events where id = $1', [id]), { status: 'rascunho', f: ['18-21'], created_by: P.rafael }, 'nasce rascunho na faixa do círculo');
+  await t.q(`select cj.definir_status_evento($1, 'publicado')`, [id]);
+  await t.falha(`select cj.definir_status_evento($1, 'cancelado')`, [E.quinta], '42501', 'Rafael cancelando evento geral');
+  await t.falha('select cj.salvar_evento($1, $2)', [id, evDados({ categoria: 'circulo', circulo: C.caminho })], '42501', 'Rafael levando o evento para o Caminho');
+  const g = await t.q('select id from cj.eventos_gestao()');
+  espera(g.every((x) => [E.encontroEsp, id].includes(x.id)) && g.length === 2, 'líder vê só os eventos do seu círculo: ' + JSON.stringify(g));
+  await t.como(P.ana);
+  espera((await t.q('select id from cj.meus_eventos(null)')).some((x) => x.id === id), 'integrante vê o evento do círculo publicado');
+  await t.como(P.lucas);
+  igual(await t.n('select count(*) from cj.meus_eventos(null) where id = $1', [id]), 0, 'quem é de outro círculo não vê');
+});
+teste('M3: check-in/check-out só pela equipe ou pelo líder do evento do círculo; saída de menor pede "retirado por"', async (t) => {
+  await t.como(P.davi); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.quinta, P.davi]);
+  await t.como(P.bia); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.quinta, P.bia]);
+  await t.como(P.ana); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.encontroEsp, P.ana]);
+  await t.como(P.davi);
+  await t.falha(`select cj.registrar_presenca_evento($1, $2, 'entrada', null)`, [E.quinta, P.davi], '42501', 'Davi fazendo o próprio check-in');
+  await t.falha(`update cj.event_registrations set check_in_at = now() where event_id = $1 and user_id = $2`, [E.quinta, P.davi], '42501', 'Davi direto na coluna');
+  await t.como(P.rafael);
+  await t.falha(`select cj.registrar_presenca_evento($1, $2, 'entrada', null)`, [E.quinta, P.davi], '42501', 'líder em evento geral');
+  await t.q(`select cj.registrar_presenca_evento($1, $2, 'entrada', null)`, [E.encontroEsp, P.ana]);
+  await t.como(P.coord);
+  await t.falha(`select cj.registrar_presenca_evento($1, $2, 'saida', null)`, [E.quinta, P.bia], '23514', 'saída antes da entrada');
+  await t.q(`select cj.registrar_presenca_evento($1, $2, 'entrada', null)`, [E.quinta, P.bia]);
+  await t.falha(`select cj.registrar_presenca_evento($1, $2, 'saida', null)`, [E.quinta, P.bia], '22023', 'saída de menor sem "retirado por"');
+  await t.q(`select cj.registrar_presenca_evento($1, $2, 'saida', 'Mãe (demo)')`, [E.quinta, P.bia]);
+  const i = (await t.q('select user_id, entrada_em, saida_em, retirado_por, contato_responsavel from cj.inscritos_evento($1) where user_id = $2', [E.quinta, P.bia]))[0];
+  espera(i.entrada_em && i.saida_em && i.retirado_por === 'Mãe (demo)' && /fictício/.test(i.contato_responsavel), 'entrada, saída, retirado por e contato do responsável (equipe)');
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where action in ('presenca_entrada','presenca_saida') and actor_id = $1`, [P.coord]), 2, 'presença auditada');
+});
+teste('M3: lista de inscritos só para equipe e líder do evento; consulta auditada; líder vê nome curto e sem contato', async (t) => {
+  await t.como(P.ana); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.encontroEsp, P.ana]);
+  await t.como(P.davi);
+  await t.falha('select * from cj.inscritos_evento($1)', [E.encontroEsp], '42501', 'membro');
+  await t.como(P.bruno);
+  await t.falha('select * from cj.inscritos_evento($1)', [E.encontroEsp], '42501', 'líder de outro círculo');
+  await t.como(P.rafael);
+  igual((await t.q('select nome, contato_responsavel from cj.inscritos_evento($1)', [E.encontroEsp])), [{ nome: 'Ana B.', contato_responsavel: null }], 'líder do Esperança');
+  await t.comoDono();
+  igual(await t.n(`select count(*) from cj.audit_logs where actor_id = $1 and action = 'consultar' and entity_type = 'event_registrations'`, [P.rafael]), 1, 'consulta auditada');
+});
+teste('M3: gestão cria (rascunho) → publica → jovem vê; cancelado aparece só para quem estava inscrito, com o motivo', async (t) => {
+  await t.como(P.coord);
+  const id = (await t.um('select cj.salvar_evento(null, $1) as id', [evDados({ titulo: 'Noite de louvor (teste)', categoria: 'culto', capacidade: 50, contato: 'Secretaria (fictício)', regras_menores: 'Retirada só com responsável.' })])).id;
+  await t.como(P.davi);
+  igual(await t.n('select count(*) from cj.meus_eventos(null) where id = $1', [id]), 0, 'rascunho invisível');
+  await t.como(P.coord); await t.q(`select cj.definir_status_evento($1, 'publicado')`, [id]);
+  await t.como(P.davi);
+  igual((await t.um('select vagas, contato from cj.meus_eventos($1) where id = $2', ['culto', id])), { vagas: 50, contato: 'Secretaria (fictício)' }, 'publicado, filtrado por categoria, com vagas');
+  igual(await t.n(`select count(*) from cj.meus_eventos('esporte') where id = $1`, [id]), 0, 'filtro de categoria');
+  await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [id, P.davi]);
+  await t.como(P.coord);
+  await t.falha(`select cj.definir_status_evento($1, 'rascunho')`, [id], '23514', 'despublicar com inscritos');
+  await t.q(`select cj.definir_status_evento($1, 'cancelado', 'Chuva forte (teste)')`, [id]);
+  await t.falha(`select cj.definir_status_evento($1, 'publicado')`, [id], '22023', 'cancelado é final');
+  await t.como(P.davi);
+  igual(await t.um('select status, motivo_cancelamento, minha_inscricao from cj.meus_eventos(null) where id = $1', [id]),
+        { status: 'cancelado', motivo_cancelamento: 'Chuva forte (teste)', minha_inscricao: 'confirmada' }, 'inscrito vê o cancelamento');
+  await t.como(P.ana);
+  igual(await t.n('select count(*) from cj.meus_eventos(null) where id = $1', [id]), 0, 'não inscrito não vê o cancelado');
+  await t.comoDono();
+  const acoes = (await t.q('select action from cj.audit_logs where entity_id = $1 order by id', [id])).map((x) => x.action);
+  espera(['criar_evento', 'publicar_evento', 'cancelar_evento'].every((a) => acoes.includes(a)), 'auditoria: ' + acoes.join(','));
+});
+teste('M3: validações do evento (datas, capacidade abaixo das inscrições, acampamento com menor exige autorização)', async (t) => {
+  await t.como(P.coord);
+  await t.falha('select cj.salvar_evento(null, $1)', [evDados({ inicio: futuro(-1) })], '22023', 'início no passado');
+  await t.falha('select cj.salvar_evento(null, $1)', [evDados({ fim: futuro(9) })], '22023', 'fim antes do início');
+  await t.falha('select cj.salvar_evento(null, $1)', [evDados({ faixas: [] })], '22023', 'sem faixa');
+  await t.falha('select cj.salvar_evento(null, $1)', [evDados({ titulo: 'ab' })], '22023', 'título curto');
+  const ac = (await t.um('select cj.salvar_evento(null, $1) as id', [evDados({ categoria: 'acampamento', faixas: ['15-17', '18-21'], autorizacao: false })])).id;
+  igual((await t.um('select requires_guardian_auth from cj.events where id = $1', [ac])).requires_guardian_auth, true, 'acampamento com menores pede autorização');
+  await t.como(P.davi); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.futebol, P.davi]);
+  await t.como(P.ana); await t.q('insert into cj.event_registrations(event_id, user_id) values ($1, $2)', [E.futebol, P.ana]);
+  await t.como(P.coord);
+  const e = await t.falha('select cj.salvar_evento($1, $2)', [E.futebol, evDados({ titulo: 'Futebol da Juventude (demo)', categoria: 'esporte', inicio: futuro(4), faixas: ['15-17', '18-21', '22-25'], autorizacao: true, capacidade: 1 })], '23514', 'capacidade abaixo');
+  espera(/2 inscrições/.test(e.message), 'mensagem com o número: ' + e.message);
+});
+
+// ─── MÓDULO 3 · Eventos pela função (ponta a ponta) ─────────────────────────────
+testeHandler('M3 handler: Davi lista e filtra eventos, vê detalhe, inscreve-se, baixa .ics e cancela', async () => {
+  const l = await chamar(CRACHA_DAVI, { acao: 'eventos' });
+  igual(l.code, 200, 'lista');
+  espera(!l.body.dados.some((x) => x.id === E.rascunho), 'sem rascunho');
+  const f = await chamar(CRACHA_DAVI, { acao: 'eventos', categoria: 'esporte' });
+  igual(f.body.dados.map((x) => x.id), [E.futebol], 'filtro esporte');
+  igual((await chamar(CRACHA_DAVI, { acao: 'eventos', categoria: 'festa' })).code, 400, 'categoria inválida');
+  const d = await chamar(CRACHA_DAVI, { acao: 'evento', evento: E.futebol });
+  igual([d.code, d.body.dados.titulo, d.body.dados.vagas], [200, 'Futebol da Juventude (demo)', 24], 'detalhe com vagas');
+  igual((await chamar(CRACHA_DAVI, { acao: 'evento', evento: E.rascunho })).code, 404, 'detalhe de rascunho');
+  const i = await chamar(CRACHA_DAVI, { acao: 'inscrever', evento: E.futebol, status: 'confirmada' });
+  igual([i.code, i.body.dados.status, i.body.dados.vagas], [200, 'confirmada', 23], 'inscrição (status decidido pelo servidor)');
+  const ics = await chamar(CRACHA_DAVI, { acao: 'evento_ics', evento: E.futebol });
+  espera(ics.code === 200 && /^BEGIN:VCALENDAR\r\n/.test(ics.body.dados.conteudo) && /SUMMARY:Futebol da Juventude \(demo\)/.test(ics.body.dados.conteudo) &&
+         /DTSTART:\d{8}T\d{6}Z/.test(ics.body.dados.conteudo) && /\.ics$/.test(ics.body.dados.nome), 'arquivo .ics válido');
+  igual((await chamar(CRACHA_DAVI, { acao: 'cancelar_inscricao', evento: E.futebol })).body.dados.status, 'cancelada', 'cancelou');
+  igual((await chamar(CRACHA_DAVI, { acao: 'cancelar_inscricao', evento: E.futebol })).code, 404, 'cancelar de novo');
+});
+testeHandler('M3 handler: membro recebe 403 na gestão de eventos; coordenação cria, publica e o jovem vê', async () => {
+  igual((await chamar(CRACHA_DAVI, { acao: 'eventos_gestao' })).code, 403, 'membro na gestão');
+  igual((await chamar(CRACHA_DAVI, { acao: 'salvar_evento', titulo: 'Do Davi', categoria: 'culto', inicio: futuro(5), faixas: ['18-21'] })).code, 403, 'membro criando');
+  igual((await chamar(CRACHA_DAVI, { acao: 'gerir_evento', evento: E.quinta })).code, 403, 'membro vendo inscritos');
+  const inv = await chamar(CRACHA_COORD, { acao: 'salvar_evento', titulo: 'Sem data', categoria: 'culto', faixas: ['18-21'] });
+  igual(inv.code, 400, 'validação de entrada');
+  const n = await chamar(CRACHA_COORD, { acao: 'salvar_evento', titulo: 'Vigília jovem (teste)', categoria: 'culto', inicio: futuro(12), fim: futuro(12.2),
+    local: 'Templo (fictício)', faixas: ['18-21', '22-25'], capacidade: 2, contato: 'Secretaria (fictício)', autorizacao: false });
+  igual(n.code, 200, 'cria');
+  igual((await chamar(CRACHA_DAVI, { acao: 'evento', evento: n.body.dados.id })).code, 404, 'rascunho invisível ao jovem');
+  igual((await chamar(CRACHA_COORD, { acao: 'status_evento', evento: n.body.dados.id, status: 'publicado' })).code, 200, 'publica');
+  igual((await chamar(CRACHA_DAVI, { acao: 'inscrever', evento: n.body.dados.id })).body.dados.status, 'confirmada', 'Davi inscrito');
+  igual((await chamar(CRACHA_LUCAS, { acao: 'inscrever', evento: n.body.dados.id })).body.dados.status, 'confirmada', 'Lucas inscrito');
+  const g = await chamar(CRACHA_COORD, { acao: 'eventos_gestao' });
+  const ev = g.body.dados.eventos.find((x) => x.id === n.body.dados.id);
+  igual([g.code, ev.status, ev.confirmados, g.body.dados.gestao], [200, 'publicado', 2, true], 'gestão vê contagens');
+  const gi = await chamar(CRACHA_COORD, { acao: 'gerir_evento', evento: n.body.dados.id });
+  igual(gi.body.dados.inscritos.map((x) => x.nome).sort(), ['Davi Andrade (demo)', 'Lucas Mendes (demo)'], 'inscritos (nome completo para a equipe)');
+  igual((await chamar(CRACHA_COORD, { acao: 'presenca_evento', evento: n.body.dados.id, usuario: P.davi, tipo: 'entrada' })).code, 200, 'check-in');
+  igual((await chamar(CRACHA_COORD, { acao: 'presenca_evento', evento: n.body.dados.id, usuario: P.davi, tipo: 'entrada' })).code, 400, 'check-in duplicado');
+  igual((await chamar(CRACHA_DAVI, { acao: 'presenca_evento', evento: n.body.dados.id, usuario: P.davi, tipo: 'saida' })).code, 403, 'membro fazendo check-out');
+});
+testeHandler('M3 handler: líder vê e cria só eventos do próprio círculo', async () => {
+  const g = await chamar(CRACHA_RAFAEL, { acao: 'eventos_gestao' });
+  igual([g.code, g.body.dados.gestao, g.body.dados.eventos.map((x) => x.id), g.body.dados.circulos.map((x) => x.id)], [200, false, [E.encontroEsp], [C.esperanca]], 'só o Esperança');
+  const r = await chamar(CRACHA_RAFAEL, { acao: 'salvar_evento', titulo: 'Lanche do círculo (teste)', categoria: 'circulo', inicio: futuro(8), circulo: C.caminho });
+  igual(r.code, 403, 'Rafael no Caminho');
+  const ok = await chamar(CRACHA_RAFAEL, { acao: 'salvar_evento', titulo: 'Lanche do círculo (teste)', categoria: 'circulo', inicio: futuro(8), circulo: C.esperanca });
+  igual(ok.code, 200, 'Rafael no Esperança');
+  igual((await chamar(CRACHA_RAFAEL, { acao: 'gerir_evento', evento: E.quinta })).code, 403, 'Rafael vendo inscritos de evento geral');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 async function principal() {
   // banco limpo
   const adm = new Client({ ...CONEXAO, database: 'postgres' });
@@ -1158,8 +1369,11 @@ async function principal() {
   try { await db.query(ler(MIGRACAO)); marcar(true, 'migração aplicada (1ª vez)'); } catch (e) { marcar(false, 'migração aplicada (1ª vez)', e.message); throw e; }
   try { await db.query(ler(MIGRACAO_2)); marcar(true, 'migração 002 (gestão de pessoas) aplicada'); } catch (e) { marcar(false, 'migração 002 aplicada', e.message); throw e; }
   try { await db.query(ler(MIGRACAO_3)); marcar(true, 'migração 003 (círculos) aplicada'); } catch (e) { marcar(false, 'migração 003 aplicada', e.message); throw e; }
-  try { await db.query(ler(MIGRACAO)); await db.query(ler(MIGRACAO_2)); await db.query(ler(MIGRACAO_3)); marcar(true, 'migrações 001 + 002 + 003 reaplicadas sem erro (idempotentes)'); } catch (e) { marcar(false, 'migração idempotente', e.message); }
+  try { await db.query(ler(MIGRACAO_4)); marcar(true, 'migração 004 (eventos) aplicada'); } catch (e) { marcar(false, 'migração 004 aplicada', e.message); throw e; }
+  try { await db.query(ler(MIGRACAO)); await db.query(ler(MIGRACAO_2)); await db.query(ler(MIGRACAO_3)); await db.query(ler(MIGRACAO_4)); marcar(true, 'migrações 001 + 002 + 003 + 004 reaplicadas sem erro (idempotentes)'); } catch (e) { marcar(false, 'migração idempotente', e.message); }
   marcar(!/\b(drop\s+\w+|delete\s+from|truncate)\b/i.test(ler(MIGRACAO_3).replace(/--[^\n]*/g, '')), '003 não tem drop/delete/truncate (roda no Supabase sem confirmação manual)', 'achou comando destrutivo');
+  marcar(!/\b(drop|delete|truncate)\b/i.test(ler(MIGRACAO_4)), '004 não tem drop/delete/truncate em lugar nenhum (nem em comentário)', 'achou comando destrutivo');
+  marcar((await db.query(`select count(*)::int n from pg_trigger where tgname = 't_espera' and tgrelid = 'cj.event_registrations'::regclass`)).rows[0].n === 1, '004 reaplicada não duplica o gatilho da lista de espera', 'gatilho duplicado');
   try { await db.query(ler(SEED)); marcar(false, 'seed recusa rodar sem a trava', 'rodou sem a trava'); } catch (e) { marcar(/recusado/.test(e.message), 'seed recusa rodar sem a trava', e.message); }
   await db.query("set cj.permitir_seed_demo = 'sim'");
   await db.query(ler(SEED));
