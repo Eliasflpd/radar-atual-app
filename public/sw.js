@@ -39,7 +39,7 @@ const SHELL=[
 self.addEventListener('install',e=>{
   e.waitUntil(
     caches.open(V)
-      .then(c=>Promise.all(SHELL.map(u=>c.add(new Request(u,{cache:'reload'})).catch(()=>{}))))
+      .then(c=>Promise.all(SHELL.map(u=>c.add(new Request(u,{cache:'no-cache'}))  /* no-cache = pergunta ao servidor e só baixa se mudou (antes 'reload' baixava tudo de novo a cada versão) */.catch(()=>{}))))
       .then(()=>self.skipWaiting())
   );
 });
