@@ -15,7 +15,11 @@
   var css = ''
   // a home nova (radar.css: #home{display:flex}) fica sempre ligada e cobria a capa; enquanto a capa está ativa, ela vem por cima
   + '#splash.ativa{z-index:60}'
-  + '#sv-palco{position:absolute;left:0;top:0;width:'+W0+'px;height:'+H0+'px;transform-origin:0 0;z-index:2;pointer-events:none}'
+  + '#sv-palco{position:absolute;left:0;top:0;width:'+W0+'px;height:'+H0+'px;transform-origin:0 0;z-index:2;pointer-events:none;opacity:0;transition:opacity .35s ease}'
+  + '#sv-palco.sv-pronto{opacity:1}'
+  // a arte também entra com fade, em vez de "pipocar" por partes enquanto baixa
+  + '#splash img{opacity:0;transition:opacity .3s ease}'
+  + '#splash img.sv-carregada{opacity:1}'
   + '#sv-palco *{position:absolute;pointer-events:none}'
   + '.sv-feixe{border-radius:50%;mix-blend-mode:screen;'
   +   'background:conic-gradient(from 0deg,rgba(255,196,70,0) 0deg,rgba(255,196,70,0) 260deg,rgba(255,200,80,.03) 285deg,rgba(255,200,80,.08) 310deg,rgba(255,205,90,.16) 330deg,rgba(255,212,105,.27) 345deg,rgba(255,222,130,.42) 354deg,rgba(255,240,190,.95) 359.3deg,rgba(255,240,190,0) 360deg);-webkit-mask:radial-gradient(circle closest-side,#000 82%,transparent 100%);mask:radial-gradient(circle closest-side,#000 82%,transparent 100%);'
@@ -73,5 +77,13 @@
   }
   encaixar();
   window.addEventListener('resize', encaixar);
-  if(img && !img.complete){ img.addEventListener('load', encaixar); }
+  // 18/11/2026 (bug do 1º segundo, achado pelo Elias): a animação aparecia solta na tela preta antes da arte carregar.
+  // Agora o palco nasce invisível e só aparece, com um fade curto, quando a imagem da capa já está desenhada.
+  function mostrar(){ encaixar(); img.classList.add('sv-carregada'); palco.classList.add('sv-pronto'); }
+  if(img.complete && img.naturalWidth){ mostrar(); }
+  else {
+    img.addEventListener('load', mostrar);
+    img.addEventListener('error', function(){ img.classList.add('sv-carregada'); palco.remove(); });
+    setTimeout(function(){ img.classList.add('sv-carregada'); }, 2500);   // nunca deixa a capa invisível
+  }
 })();
