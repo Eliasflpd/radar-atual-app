@@ -8,9 +8,9 @@
 <style>
   :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--linha:#e4e7ec;--verde:#14804a;--fundo:#f6f4ee}
   *{box-sizing:border-box;-webkit-text-size-adjust:100%}
-  html{font-size:17px}
+  html{font-size:17px;overflow-x:hidden}
   body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;
-    line-height:1.6;padding:14px 16px calc(56px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+    line-height:1.6;padding:14px 16px calc(56px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased;overflow-x:hidden}
   .voltar{background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer}
   .selo{text-align:center;color:var(--teal);font-size:.78rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin-top:12px}
   h1{font-family:Georgia,serif;text-align:center;color:var(--navy);font-size:2rem;font-weight:800;margin:2px 0 2px}
@@ -24,54 +24,94 @@
   input:focus,textarea:focus,select:focus{outline:none;border-color:var(--dourado)}
   .dica{color:#6b7280;font-size:.82rem;margin-top:3px}
   .criar{display:block;width:100%;margin-top:16px;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;border:none;border-radius:14px;
-    padding:15px;font-size:1.06rem;font-weight:800;font-family:inherit;cursor:pointer}
+    padding:15px;font-size:1.06rem;font-weight:800;font-family:inherit;cursor:pointer;min-height:48px}
   .criar:disabled{opacity:.6}
-  .etapas{margin:18px 0 0;padding:0;list-style:none}
-  .etapas li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed #e7dfca;color:#6b7280;font-size:.95rem}
-  .etapas li.ativa{color:var(--navy);font-weight:700}
-  .etapas li.ok{color:var(--verde)}
-  .etapas li .ic{width:24px;text-align:center;flex-shrink:0}
-  .joeira{margin:10px 0 0;background:#fffaf0;border:1px solid #ecd9ad;border-radius:14px;padding:12px 14px}
-  .joeira b{color:#7a5a14}
-  .joeira ul{margin:6px 0 0;padding-left:18px;font-size:.9rem}
-  .joeira li{margin:2px 0}
-  .camadas{margin:12px 0 0;background:#f2f8f8;border:1px solid #bfdcdc;border-radius:14px;padding:4px 14px 10px}
-  .camadas h2{font-family:Georgia,serif;color:var(--teal);font-size:1.12rem;margin:10px 0 4px}
-  .camadas h3,#saida h3{font-family:Georgia,serif;color:var(--navy);font-size:1rem;margin:12px 0 4px}
-  .camadas ul{margin:0;padding-left:18px;font-size:.95rem} .camadas li{margin:0 0 8px}
   .avisos{margin:16px 0 0;background:#fff4f2;border:1px solid #f1c9c2;border-radius:14px;padding:12px 14px;font-size:.92rem}
   .avisos b{color:#a3341f}
-  #saida{margin-top:22px}
-  #saida h1.t{font-size:1.7rem;text-align:left;margin:0 0 4px}
-  #saida h2{font-family:Georgia,serif;color:var(--navy);font-size:1.22rem;margin:26px 0 6px}
-  #saida p{margin:0 0 12px}
-  #saida blockquote{margin:14px 0;padding:10px 14px;border-left:4px solid var(--dourado);background:#fbf7ec;font-family:Georgia,serif;font-size:1.06rem}
-  #saida ul{padding-left:20px}
-  #saida .refs{color:#8a6a1e;font-style:italic;margin-bottom:10px}
-  .acoes{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 0}
-  .acoes button{flex:1 1 140px;border:none;border-radius:12px;padding:12px;font:700 .95rem inherit;font-family:inherit;cursor:pointer;color:#fff;background:var(--navy)}
-  .acoes button.d{background:var(--dourado)} .acoes button.t{background:var(--teal)}
+  .avisos ul{margin:6px 0 0;padding-left:18px}
+
+  /* ── A ANIMAÇÃO DA GERAÇÃO (palco noturno, dourado) ── */
+  .palco{background:radial-gradient(120% 90% at 50% 0%,#1d4a6b 0%,#0f3d5c 48%,#0a2a40 100%);color:#fff8e6;border-radius:18px;
+    padding:22px 16px 18px;text-align:center;margin-top:4px}
+  .cena{display:block;width:100%;max-width:250px;height:auto;margin:0 auto}
+  .legenda{font-family:Georgia,serif;font-size:1.2rem;color:#f4e4b5;margin:12px 0 4px;min-height:1.6em;transition:opacity .35s}
+  .legenda.sai{opacity:0}
+  .palco .nota{color:#b8c7d4;font-size:.86rem;margin:0 0 12px}
+  .etapas{margin:10px auto 0;padding:0;list-style:none;max-width:320px;text-align:left}
+  .etapas li{display:flex;gap:10px;align-items:center;padding:6px 2px;color:#7f97aa;font-size:.92rem;border-bottom:1px dashed rgba(244,228,181,.18)}
+  .etapas li:last-child{border-bottom:none}
+  .etapas li.ativa{color:#fff8e6;font-weight:700}
+  .etapas li.ok{color:#9fd8b7}
+  .etapas li .ic{width:20px;text-align:center;flex-shrink:0}
+  .halo{transform-box:fill-box;transform-origin:center;animation:halo 3.8s ease-in-out infinite}
+  .halo2{transform-box:fill-box;transform-origin:center;animation:halo 2.6s ease-in-out infinite;animation-delay:-1.2s}
+  .folha{transform-box:view-box;transform-origin:110px 80px;animation:folha 4.4s ease-in-out infinite}
+  .poeira{transform-box:fill-box;transform-origin:center;animation:sobe 5.4s linear infinite;opacity:0}
+  @keyframes halo{0%,100%{opacity:.5;transform:scale(.92)}50%{opacity:1;transform:scale(1.06)}}
+  @keyframes folha{0%,100%{transform:scaleX(.04);opacity:0}15%{opacity:1}55%{transform:scaleX(1);opacity:1}75%{opacity:0}}
+  @keyframes sobe{0%{transform:translateY(0);opacity:0}15%{opacity:.95}100%{transform:translateY(-64px);opacity:0}}
+  @media (prefers-reduced-motion: reduce){
+    .halo,.halo2,.folha,.poeira{animation:none}
+    .folha{opacity:0}
+    .poeira{opacity:.5}
+    .legenda{transition:none}
+  }
+
+  /* ── AS PREGAÇÕES SALVAS (no aparelho) ── */
   .salvas{margin-top:26px}
   .salvas h3{font-family:Georgia,serif;color:var(--navy);margin:0 0 8px;font-size:1.1rem}
-  .salvas a{display:block;padding:10px 12px;border:1px solid var(--linha);border-radius:12px;margin-bottom:8px;color:var(--texto);text-decoration:none}
-  .salvas a small{color:#6b7280}
+  .salva{display:flex;gap:8px;align-items:stretch;margin-bottom:8px}
+  .salva .abrir{flex:1;min-width:0;text-align:left;padding:10px 12px;border:1px solid var(--linha);border-radius:12px;background:#fff;
+    color:var(--texto);font:inherit;font-weight:700;cursor:pointer}
+  .salva .abrir small{display:block;color:#6b7280;font-weight:400;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .salva .x{border:1px solid #f1c9c2;background:#fff;color:#a3341f;border-radius:12px;padding:0 12px;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer;white-space:nowrap}
+  .salva .x.perigo{background:#a3341f;color:#fff}
+
+  /* ── A LEITURA (tela cheia, só a pregação) ── */
+  #leitura{position:fixed;inset:0;z-index:60;background:#fffdf8;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+  .lei-topo{position:sticky;top:0;z-index:2;background:rgba(255,253,248,.97);border-bottom:1px solid #ece4d0;display:flex;align-items:center;gap:10px;padding:10px 16px}
+  .lei-topo .tit{flex:1;min-width:0;font-weight:700;font-size:.9rem;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lei-corpo{max-width:680px;margin:0 auto;padding:18px 16px 150px;font-family:Georgia,'Times New Roman',serif;font-size:1.12rem;line-height:1.75;color:#24272f;overflow-wrap:break-word}
+  .lei-corpo h1.t{font-size:1.65rem;line-height:1.25;text-align:left;margin:4px 0 6px;color:var(--navy)}
+  .lei-corpo h2{font-size:1.25rem;line-height:1.3;color:var(--navy);margin:1.7em 0 .45em}
+  .lei-corpo h3{font-size:1.02rem;color:var(--navy);margin:1.2em 0 .3em}
+  .lei-corpo p{margin:0 0 .95em}
+  .lei-corpo ul{padding-left:20px;margin:0 0 1em}
+  .lei-corpo li{margin:0 0 .4em}
+  .lei-corpo blockquote{margin:1.1em 0;padding:10px 14px;border-left:4px solid var(--dourado);background:#fbf7ec;font-size:1.08rem;border-radius:0 10px 10px 0}
+  .lei-corpo .refs{color:#8a6a1e;font-style:italic;margin-bottom:12px;font-size:1rem}
+  .lei-corpo .marca{font-family:'Segoe UI',system-ui,sans-serif;font-size:.86rem;font-style:italic;color:#8a6a1e;text-align:center;margin:12px 0;letter-spacing:.02em}
+  .lei-corpo .fala{font-family:'Segoe UI',system-ui,sans-serif;font-size:1rem;background:#f6f4ee;border-radius:10px;padding:7px 11px;margin:0 0 6px}
+  .lei-aviso{margin:18px 0 0;background:#fff4f2;border:1px solid #f1c9c2;border-radius:14px;padding:12px 14px;font-family:'Segoe UI',system-ui,sans-serif;font-size:.9rem}
+  .lei-aviso b{color:#a3341f}
+  .lei-aviso ul{margin:6px 0 0;padding-left:18px}
+  .lei-fundo{position:fixed;left:0;right:0;bottom:0;z-index:3;background:rgba(255,253,248,.98);border-top:1px solid #ece4d0;
+    padding:10px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center}
+  .lei-fundo button{flex:1 1 0;max-width:260px;min-height:48px;padding:12px;border-radius:14px;font:800 1rem 'Segoe UI',system-ui,sans-serif;cursor:pointer;border:none}
+  .lei-fundo .salvar{background:var(--navy);color:#fff}
+  .lei-fundo .salvar:disabled{background:#5b7d93;cursor:default}
+  .lei-fundo .excluir{background:#fff;color:#a3341f;border:1.5px solid #f1c9c2}
+  .lei-fundo .excluir.perigo{background:#a3341f;color:#fff;border-color:#a3341f}
+  .lei-topo .btn-voltar{background:#1c2230;color:#fff;border:none;border-radius:999px;padding:9px 15px;font:700 .9rem 'Segoe UI',system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+
   .pin{background:#fff;border:1px solid var(--linha);border-radius:16px;padding:26px 20px;text-align:center;max-width:360px;margin:26px auto}
   .pin input{font-size:1.7rem;letter-spacing:.5em;text-align:center;margin:10px 0 12px}
   .pin button{width:100%;background:var(--dourado);color:#1d1606;border:none;border-radius:12px;padding:13px;font-weight:800;font-size:1rem;cursor:pointer}
-  .toast{position:fixed;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f3d5c;color:#fff;padding:10px 16px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none}
+  .toast{position:fixed;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0f3d5c;color:#fff;padding:10px 16px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:80;max-width:90vw;text-align:center}
   .toast.on{opacity:1}
+  [hidden]{display:none !important}
 </style>
 </head>
 <body>
-<button class="voltar" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
+<button class="voltar" id="btnBiblioteca" onclick="if(history.length>1){history.back()}else{location.href='/?mod=manuais'}">← Biblioteca</button>
 <div class="selo">✦ Ajudante de pregação ✦</div>
 <h1>Bereia</h1>
 <div class="sub">Examina as Escrituras e a Biblioteca, e monta a pregação com você</div>
 <div class="verso">“…examinando cada dia nas Escrituras se estas coisas eram assim.” (Atos 17:11)</div>
 <div class="divisor"></div>
 
-<div id="wrap">
-  <div class="cx" id="form">
+<div id="form">
+  <div class="cx">
     <label for="texto">Texto bíblico</label>
     <input id="texto" placeholder="Ex.: Gênesis 40:14-23">
     <label for="tema">Tema</label>
@@ -84,40 +124,80 @@
       <option>Culto de jovens</option><option>Culto de oração / avivamento</option><option>Culto fúnebre</option>
       <option>Santa Ceia</option><option>Culto de família</option>
     </select>
+    <label for="tamanho">Tamanho</label>
+    <select id="tamanho">
+      <option value="Curta">Curta (cerca de 20 min)</option>
+      <option value="Longa">Longa (35 a 40 min)</option>
+    </select>
     <div class="dica">Preencha o texto, o tema ou os dois. Quanto mais clara a ideia, mais certeira a pregação.</div>
     <button class="criar" id="criar">📖 Examinar e montar a pregação</button>
   </div>
-
-  <ul class="etapas" id="etapas" hidden>
-    <li id="e-plano"><span class="ic">🧭</span><span>Planejar a pesquisa</span></li>
-    <li id="e-biblioteca"><span class="ic">📚</span><span>Bereia: examinar a Biblioteca · 🌾 Joeira: separar o trigo da palha</span></li>
-    <li id="e-camadas"><span class="ic">🔎</span><span>Cavar as 4 camadas: o original, os ecos do AT, a estrutura do livro, o contexto</span></li>
-    <li id="e-escrita"><span class="ic">✍️</span><span>Escrever a pregação</span></li>
-  </ul>
-  <div class="joeira" id="joeira" hidden></div>
-  <div class="camadas" id="camadas" hidden></div>
-  <div id="saida"></div>
   <div class="avisos" id="avisos" hidden></div>
-  <div class="acoes" id="acoes" hidden>
-    <button onclick="copiar()">📋 Copiar</button>
-    <button class="t" onclick="compartilhar()">📤 Compartilhar</button>
-    <button class="d" onclick="salvar()">💾 Salvar no aparelho</button>
-  </div>
   <div class="salvas" id="salvas"></div>
 </div>
+
+<div class="palco" id="palco" hidden>
+  <svg class="cena" viewBox="0 0 220 150" aria-hidden="true">
+    <defs>
+      <radialGradient id="gl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd978" stop-opacity=".85"/><stop offset="1" stop-color="#ffd978" stop-opacity="0"/></radialGradient>
+      <linearGradient id="pg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#ead9ae"/></linearGradient>
+    </defs>
+    <circle class="halo" cx="110" cy="78" r="92" fill="url(#gl)"/>
+    <path d="M110 52 C92 40 62 40 30 48 L30 112 C62 104 92 104 110 116 Z" fill="url(#pg)" stroke="#c99a3c" stroke-width="1.5"/>
+    <path d="M110 52 C128 40 158 40 190 48 L190 112 C158 104 128 104 110 116 Z" fill="url(#pg)" stroke="#c99a3c" stroke-width="1.5"/>
+    <g stroke="#b88a3e" stroke-width="2" stroke-linecap="round" opacity=".6">
+      <line x1="40" y1="62" x2="92" y2="66"/><line x1="40" y1="72" x2="92" y2="76"/><line x1="40" y1="82" x2="86" y2="86"/><line x1="40" y1="92" x2="92" y2="96"/>
+      <line x1="128" y1="66" x2="180" y2="62"/><line x1="128" y1="76" x2="180" y2="72"/><line x1="128" y1="86" x2="174" y2="82"/><line x1="128" y1="96" x2="180" y2="92"/>
+    </g>
+    <path class="folha" d="M110 52 C128 40 158 40 190 48 L190 112 C158 104 128 104 110 116 Z" fill="#fffdf6" stroke="#c99a3c" stroke-width="1.2"/>
+    <path d="M110 118 L110 40" stroke="#e7c46a" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+    <circle class="halo2" cx="110" cy="30" r="5" fill="#ffe9a8"/>
+    <circle class="poeira" cx="66" cy="60" r="2" fill="#ffe08a" style="animation-delay:0s"/>
+    <circle class="poeira" cx="160" cy="58" r="2.2" fill="#ffe08a" style="animation-delay:-1.4s"/>
+    <circle class="poeira" cx="84" cy="30" r="1.6" fill="#fff3c4" style="animation-delay:-2.6s"/>
+    <circle class="poeira" cx="140" cy="24" r="1.8" fill="#fff3c4" style="animation-delay:-3.8s"/>
+    <circle class="poeira" cx="46" cy="96" r="1.6" fill="#ffe08a" style="animation-delay:-4.6s"/>
+    <circle class="poeira" cx="176" cy="100" r="1.8" fill="#ffe08a" style="animation-delay:-0.7s"/>
+  </svg>
+  <p class="legenda" id="legenda">Examinando as Escrituras…</p>
+  <p class="nota">Pode deixar esta tela aberta. Leva alguns minutos.</p>
+  <ul class="etapas" id="etapas"></ul>
+</div>
+
+<div id="leitura" hidden>
+  <div class="lei-topo">
+    <button class="btn-voltar" id="btnVoltar">← Voltar</button>
+    <div class="tit" id="tituloTopo"></div>
+  </div>
+  <div class="lei-corpo">
+    <div id="saida"></div>
+    <div class="lei-aviso" id="avisoLeitura" hidden></div>
+  </div>
+  <div class="lei-fundo">
+    <button class="salvar" id="btnSalvar">💾 Salvar</button>
+    <button class="excluir" id="btnExcluir">🗑️ Excluir</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// BEREIA (01/11/2026). O servidor (api/_lib/bereia.js) manda uma linha JSON por evento: etapa, plano, joeira,
-// noticias, txt (pedaços da pregação), fim (avisos da conferência) e erro. Os textos dos livros comprados NUNCA
-// chegam aqui: a tela recebe só os nomes das fontes que a Joeira escolheu e a pregação já escrita.
+// BEREIA (01/11/2026; tela nova 16/11/2026). O servidor (api/_lib/bereia.js) manda uma linha JSON por evento:
+// etapa, plano, joeira, noticias, txt (pedaços da pregação), final (texto corrigido pela conferência), fim e erro.
+// Os textos dos livros comprados NUNCA chegam aqui: a tela recebe só a pregação já escrita.
 var $=function(id){return document.getElementById(id);};
 function ler(k){ try{ return localStorage.getItem(k)||''; }catch(_){ return ''; } }
 function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function toast(t){ var e=$('toast'); e.textContent=t; e.classList.add('on'); setTimeout(function(){ e.classList.remove('on'); },2200); }
-var MD='', TITULO='', CAM='';   // CAM = as descobertas das 4 camadas (vão junto ao copiar e salvar)
-var ETAPAS=['plano','biblioteca','camadas','escrita'];
-function completo(){ return MD+(CAM&&MD.indexOf('Descobertas — as 4 camadas')<0?'\n\n'+CAM:''); }
+function toast(t){ var e=$('toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(function(){ e.classList.remove('on'); },2200); }
+
+var MD='', TITULO='', REF='', SALVA_ID=null, AVISOS=[], ERRO='';
+var ETAPAS=[
+  ['plano','Examinando as Escrituras…'],
+  ['biblioteca','Consultando a Biblioteca…'],
+  ['camadas','Cavando as camadas do texto…'],
+  ['escrita','Escrevendo a pregação…'],
+  ['conferencia','Conferindo os fatos e as citações…']
+];
 
 function inline(s){
   return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<i>$2</i>');
@@ -134,16 +214,36 @@ function render(md){
     if(/^##\s/.test(t)){ out.push('<h2>'+inline(t.slice(3))+'</h2>'); return; }
     if(/^>\s?/.test(t)){ out.push('<blockquote>'+inline(t.replace(/^>\s?/,''))+'</blockquote>'); return; }
     if(/^\*[^*].*\*$/.test(t) && out.length<=2){ out.push('<div class="refs">'+inline(t.replace(/^\*|\*$/g,''))+'</div>'); return; }
+    if(/^\[.*\]$/.test(t)){ out.push('<p class="marca">'+inline(t.slice(1,-1))+'</p>'); return; }
+    if(/^\*\*(Pregador|Igreja):\*\*/.test(t)){ out.push('<p class="fala">'+inline(t)+'</p>'); return; }
     out.push('<p>'+inline(t)+'</p>');
   });
   if(lista) out.push('</ul>');
   return out.join('');
 }
-function etapa(id, estado){
-  ETAPAS.forEach(function(k){
-    var li=$('e-'+k); if(k===id){ li.className=estado||'ativa'; }
-  });
+
+// ── A ANIMAÇÃO: as etapas aparecem em texto curto, uma de cada vez ──
+function montarEtapas(){
+  $('etapas').innerHTML=ETAPAS.map(function(e){ return '<li id="e-'+e[0]+'"><span class="ic">•</span><span>'+esc(e[1])+'</span></li>'; }).join('');
 }
+function mostrarEtapa(id){
+  var idx=-1; ETAPAS.forEach(function(e,i){ if(e[0]===id) idx=i; });
+  if(idx<0) return;
+  ETAPAS.forEach(function(e,i){
+    var li=$('e-'+e[0]); if(!li) return;
+    li.className = i<idx ? 'ok' : (i===idx ? 'ativa' : '');
+    li.firstChild.textContent = i<idx ? '✓' : (i===idx ? '✦' : '•');
+  });
+  var leg=$('legenda'), txt=ETAPAS[idx][1];
+  if(leg.textContent===txt) return;
+  leg.classList.add('sai');
+  setTimeout(function(){ leg.textContent=txt; leg.classList.remove('sai'); }, 350);
+}
+
+function mostrarPalco(){ $('form').hidden=true; $('salvas').hidden=true; $('avisos').hidden=true; $('palco').hidden=false; $('leitura').hidden=true; }
+function mostrarForm(){ $('palco').hidden=true; $('leitura').hidden=true; $('form').hidden=false; $('salvas').hidden=false; mostrarSalvas(); }
+function mostrarAviso(t){ $('avisos').hidden=false; $('avisos').innerHTML='<b>Não deu certo:</b> '+esc(t); }
+
 function pedirPin(depois,msg){
   $('form').insertAdjacentHTML('beforebegin','<div class="pin" id="pinbox"><div style="font-size:2.2rem">🔒</div><p>'+esc(msg||'O Bereia usa a Biblioteca particular. Digite a sua senha para abrir.')+'</p>'
     +'<input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••"><button id="entrar">Abrir</button></div>');
@@ -161,92 +261,136 @@ function pedirPin(depois,msg){
   $('entrar').onclick=entrar; campo.onkeydown=function(e){ if(e.key==='Enter') entrar(); };
 }
 
+// ── A GERAÇÃO ──
 function criar(){
   var corpo={ texto:$('texto').value.trim(), tema:$('tema').value.trim(), ideia:$('ideia').value.trim(), tipo:$('tipo').value,
-    cracha:ler('radar_chave'), token:ler('lp_token') };
+    tamanho:$('tamanho').value, cracha:ler('radar_chave'), token:ler('lp_token') };
   if(!corpo.texto && !corpo.tema){ toast('Escreva o texto bíblico ou o tema'); return; }
-  MD=''; TITULO=''; CAM='';
-  $('saida').innerHTML=''; $('avisos').hidden=true; $('acoes').hidden=true; $('joeira').hidden=true; $('camadas').hidden=true;
-  $('etapas').hidden=false; ETAPAS.forEach(function(k){ $('e-'+k).className=''; });
-  $('criar').disabled=true; $('criar').textContent='Examinando…';
+  MD=''; TITULO=''; REF=''; SALVA_ID=null; AVISOS=[]; ERRO='';
+  $('criar').disabled=true;
+  mostrarPalco(); montarEtapas(); mostrarEtapa('plano');
   fetch('/api/bereia',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(corpo),cache:'no-store'})
     .then(function(r){
-      if(r.status===403){ fim(); pedirPin(criar); return; }
+      if(r.status===403){ $('criar').disabled=false; mostrarForm(); pedirPin(criar); return; }
       if(!r.ok||!r.body){ return r.json().then(function(d){ throw new Error(d.err||('servidor '+r.status)); }); }
-      var leitor=r.body.getReader(), dec=new TextDecoder(), buf='', ultimo=0;
+      var leitor=r.body.getReader(), dec=new TextDecoder(), buf='';
       function passo(){
         return leitor.read().then(function(x){
-          if(x.done){ if(buf.trim()) evento(buf); fim(); return; }
+          if(x.done){ if(buf.trim()) evento(buf); return terminou(); }
           buf+=dec.decode(x.value,{stream:true});
           var i; while((i=buf.indexOf('\n'))>=0){ var l=buf.slice(0,i); buf=buf.slice(i+1); if(l.trim()) evento(l); }
-          var agora=Date.now(); if(agora-ultimo>250){ ultimo=agora; $('saida').innerHTML=render(MD); }
           return passo();
         });
       }
       return passo();
     })
-    .catch(function(e){ fim(); $('avisos').hidden=false; $('avisos').innerHTML='<b>Não deu certo:</b> '+esc(e.message||e); });
+    .catch(function(e){ $('criar').disabled=false; mostrarForm(); mostrarAviso(e.message||String(e)); });
+}
+function terminou(){
+  $('criar').disabled=false;
+  if(ERRO){ mostrarForm(); mostrarAviso(ERRO); return; }
+  if(!$('leitura').hidden) return;
+  if(MD){ abrirLeitura(); return; }
+  mostrarForm(); mostrarAviso('A pregação não chegou. Tente de novo.');
 }
 function evento(linha){
   var o; try{ o=JSON.parse(linha); }catch(_){ return; }
-  if(o.t==='etapa'){
-    if(o.id==='biblioteca') etapa('plano','ok');
-    if(o.id==='camadas') etapa('biblioteca','ok');
-    if(o.id==='escrita'){ etapa('biblioteca','ok'); etapa('camadas','ok'); }
-    etapa(o.id,'ativa');
-  } else if(o.t==='camadas'){
-    CAM=o.md||'';
-    var c=$('camadas'); c.hidden=false;
-    c.innerHTML=CAM ? render(CAM) : '<h2>🔎 As 4 camadas</h2><p>Não achei descoberta sólida que passasse na conferência. A pregação sai da Escritura e da Biblioteca.</p>';
-  } else if(o.t==='joeira'){
-    var j=$('joeira'); j.hidden=false;
-    j.innerHTML=o.fontes.length
-      ? '<b>🌾 A Joeira escolheu '+o.fontes.length+' fonte'+(o.fontes.length>1?'s':'')+' na Biblioteca:</b><ul>'
-        +o.fontes.map(function(f){ return '<li>'+esc(f.autor)+(f.onde?' — '+esc(f.onde):'')+'</li>'; }).join('')+'</ul>'
-      : '<b>🌾 A Joeira não achou fonte forte na Biblioteca para este tema.</b> A pregação sai só da Escritura.';
-  } else if(o.t==='noticias' && o.itens && o.itens.length){
-    $('joeira').insertAdjacentHTML('beforeend','<div style="margin-top:8px"><b>📰 Notícias de fontes fiéis consideradas:</b><ul>'
-      +o.itens.map(function(n){ return '<li>'+esc(n.titulo)+' <small>('+esc(n.fonte)+')</small></li>'; }).join('')+'</ul></div>');
-  } else if(o.t==='txt'){
-    MD+=o.d;
-  } else if(o.t==='fim'){
-    etapa('escrita','ok');
-    $('saida').innerHTML=render(MD);
-    var m=MD.match(/^#\s+(.+)$/m); TITULO=m?m[1].trim():'Pregação';
-    $('acoes').hidden=false;
-    if(o.avisos && o.avisos.length){ $('avisos').hidden=false; $('avisos').innerHTML='<b>⚠️ Conferir antes de pregar:</b><ul>'+o.avisos.map(function(a){ return '<li>'+esc(a)+'</li>'; }).join('')+'</ul>'; }
-  } else if(o.t==='erro'){
-    $('avisos').hidden=false; $('avisos').innerHTML='<b>Não deu certo:</b> '+esc(o.msg);
+  if(o.t==='etapa'){ mostrarEtapa(o.id); }
+  else if(o.t==='txt'){ MD+=o.d; }
+  else if(o.t==='final'){ MD=o.md; }
+  else if(o.t==='fim'){ AVISOS=o.avisos||[]; if(!$('leitura').hidden) return; abrirLeitura(); }
+  else if(o.t==='erro'){ ERRO=o.msg||'algo deu errado'; }
+}
+
+// ── A LEITURA: só a pregação, Voltar, Salvar e Excluir ──
+function abrirLeitura(){
+  var linhas=MD.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+  var m=MD.match(/^#\s+(.+)$/m); TITULO=m?m[1].trim():'Pregação';
+  REF=(linhas.length>1 && linhas[1].charAt(0)==='*') ? linhas[1].replace(/^\*+|\*+$/g,'').trim() : $('texto').value.trim();
+  $('tituloTopo').textContent=TITULO;
+  $('saida').innerHTML=render(MD);
+  if(AVISOS.length){
+    $('avisoLeitura').hidden=false;
+    $('avisoLeitura').innerHTML='<b>⚠️ Conferir antes de pregar:</b><ul>'+AVISOS.map(function(a){ return '<li>'+esc(a)+'</li>'; }).join('')+'</ul>';
+  } else { $('avisoLeitura').hidden=true; }
+  zerarExcluir();
+  atualizarSalvar();
+  $('leitura').hidden=false; $('leitura').scrollTop=0;
+  $('criar').disabled=false;
+}
+function atualizarSalvar(){
+  $('btnSalvar').disabled=!!SALVA_ID;
+  $('btnSalvar').textContent=SALVA_ID?'Salva ✓':'💾 Salvar';
+}
+function fecharLeitura(){ zerarExcluir(); $('leitura').hidden=true; mostrarForm(); }
+
+var EXCLUIR_T=null;
+function excluir(btn, depois){
+  if(btn.dataset.ok!=='1'){
+    btn.dataset.ok='1'; btn.textContent='Toque de novo para excluir'; btn.classList.add('perigo');
+    clearTimeout(EXCLUIR_T); EXCLUIR_T=setTimeout(zerarExcluir,4000); return;
   }
+  depois();
 }
-function fim(){ $('criar').disabled=false; $('criar').textContent='📖 Examinar e montar a pregação'; }
-function textoPuro(){ return completo().replace(/\*\*/g,'').replace(/^#+\s*/gm,'').replace(/^>\s?/gm,''); }
-function copiar(){ navigator.clipboard.writeText(textoPuro()).then(function(){ toast('Copiado'); },function(){ toast('Não consegui copiar'); }); }
-function compartilhar(){
-  var t=textoPuro();
-  if(navigator.share){ navigator.share({title:TITULO,text:t}).catch(function(){}); return; }
-  window.open('https://wa.me/?text='+encodeURIComponent(t.slice(0,6000)),'_blank');
+function zerarExcluir(){
+  var b=$('btnExcluir'); b.dataset.ok=''; b.textContent='🗑️ Excluir'; b.classList.remove('perigo');
+  clearTimeout(EXCLUIR_T);
 }
-function lista(){ try{ return JSON.parse(ler('bereia_pregacoes')||'[]'); }catch(_){ return []; } }
+
+// ── AS PREGAÇÕES SALVAS (só neste aparelho; chave própria bereia.salvas) ──
+function lista(){
+  try{
+    var s=localStorage.getItem('bereia.salvas');
+    if(s===null){ // migra a versão anterior (bereia_pregacoes), se existir
+      var antiga=localStorage.getItem('bereia_pregacoes');
+      if(antiga){ localStorage.setItem('bereia.salvas', antiga); s=antiga; }
+    }
+    var l=JSON.parse(s||'[]');
+    return (Array.isArray(l)?l:[]).map(function(p,i){ p.id=p.id||('antiga'+i); return p; });
+  }catch(_){ return []; }
+}
+function gravar(l){ try{ localStorage.setItem('bereia.salvas', JSON.stringify(l.slice(0,40))); return true; }catch(_){ return false; } }
 function salvar(){
-  var l=lista(); l.unshift({titulo:TITULO, data:new Date().toISOString(), md:completo()});
-  try{ localStorage.setItem('bereia_pregacoes',JSON.stringify(l.slice(0,40))); toast('Salva neste aparelho'); }catch(_){ toast('Sem espaço para salvar'); }
-  mostrarSalvas();
+  if(SALVA_ID) return;
+  var l=lista(), id='p'+Date.now().toString(36);
+  l.unshift({ id:id, titulo:TITULO||'Pregação', ref:REF||'', data:new Date().toISOString(), md:MD });
+  if(!gravar(l)){ toast('Sem espaço para salvar neste aparelho'); return; }
+  SALVA_ID=id; atualizarSalvar(); toast('Salva neste aparelho');
 }
-function abrirSalva(i){
-  var p=lista()[i]; if(!p) return;
-  MD=p.md; CAM=''; TITULO=p.titulo; $('saida').innerHTML=render(MD); $('acoes').hidden=false; $('avisos').hidden=true; $('joeira').hidden=true; $('camadas').hidden=true; $('etapas').hidden=true;
-  $('saida').scrollIntoView({behavior:'smooth'});
+function removerSalva(id){ gravar(lista().filter(function(p){ return p.id!==id; })); }
+function abrirSalva(id){
+  var p=lista().filter(function(q){ return q.id===id; })[0]; if(!p) return;
+  MD=p.md; SALVA_ID=p.id; AVISOS=[]; ERRO='';
+  abrirLeitura();
 }
 function mostrarSalvas(){
-  var l=lista();
-  $('salvas').innerHTML=l.length?'<h3>💾 Pregações salvas neste aparelho</h3>'+l.map(function(p,i){
+  var box=$('salvas'), l=lista();
+  box.innerHTML='';
+  if(!l.length) return;
+  var h=document.createElement('h3'); h.textContent='💾 Minhas pregações salvas'; box.appendChild(h);
+  l.forEach(function(p){
+    var row=document.createElement('div'); row.className='salva';
+    var ab=document.createElement('button'); ab.className='abrir';
     var d=''; try{ d=new Date(p.data).toLocaleDateString('pt-BR'); }catch(_){}
-    return '<a href="#" onclick="abrirSalva('+i+');return false">'+esc(p.titulo)+' <small>· '+esc(d)+'</small></a>';
-  }).join(''):'';
+    ab.textContent=p.titulo||'Pregação';
+    var sm=document.createElement('small'); sm.textContent=[p.ref,d].filter(Boolean).join(' · '); ab.appendChild(sm);
+    ab.onclick=function(){ abrirSalva(p.id); };
+    var x=document.createElement('button'); x.className='x'; x.textContent='Excluir';
+    x.onclick=function(){ excluir(x, function(){ removerSalva(p.id); mostrarSalvas(); toast('Pregação excluída'); }); };
+    row.appendChild(ab); row.appendChild(x); box.appendChild(row);
+  });
 }
+
 $('criar').onclick=criar;
-mostrarSalvas();
+$('btnSalvar').onclick=salvar;
+$('btnVoltar').onclick=fecharLeitura;
+$('btnExcluir').onclick=function(){ excluir(this, function(){
+  if(SALVA_ID) removerSalva(SALVA_ID);
+  MD=''; TITULO=''; REF=''; SALVA_ID=null; AVISOS=[];
+  fecharLeitura(); toast('Pregação excluída');
+}); };
+montarEtapas();
+mostrarForm();
 </script>
 </body>
 </html>
