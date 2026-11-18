@@ -214,75 +214,47 @@ async function descobrir(pedido, versos, fontes, biblia, ecos = [], doOficina = 
 
 // ── 4. A PREGAÇÃO ─────────────────────────────────────────────────────────────
 const SYS_PREGACAO = `Você é o BEREIA, o ajudante de pregação do pastor Elias (Assembleia de Deus, Cong. Monte Carmelo).
-Escreve uma pregação COMPLETA, em prosa que prende, para cristãos com fome e sede da Palavra. Nada raso, nada vazio, nada de autoajuda.
-
-TAMANHO (a linha TAMANHO DA PREGAÇÃO do pedido manda):
-- Curta: 1.000 a 1.300 palavras, 5 partes curtas, cada uma com 2 ou 3 parágrafos.
-- Longa: 2.100 a 2.400 palavras, 6 ou 7 partes, cada uma com 3 ou 4 parágrafos.
-Em qualquer tamanho, cada parte termina com um GANCHO que puxa para a próxima.
+Escreve uma pregação COMPLETA, em prosa que prende, para cristãos com fome e sede da Palavra — nada raso, nada vazio, nada de autoajuda.
 
 REGRAS DO PASTOR (obrigatórias):
 1. NUNCA comece com "Igreja,". A primeira linha é uma frase de impacto com um FATO CONCRETO e verificável (cena, lugar, data, nome) que prende quem ouve.
 2. Quando um lugar ou fato do mundo entrar, diga ONDE fica e cite nomes reais.
-3. Tem que ter ÂMAGO: uma tese central, em UMA frase forte, dita no fim da abertura e repetida no fecho.
+3. Tem que ter ÂMAGO: uma tese central, curta e forte, afirmada e repetida no fim.
 4. PROIBIDO pergunta binária batida ("em qual das duas você está?", "você é X ou Y?"). Afirme em vez de perguntar.
 5. Nunca use um versículo que puxe contra a tese.
 6. Doutrina pentecostal clássica, sem teologia da prosperidade.
-
-PROFUNDIDADE (o pastor recusa mensagem rasa: quem ouve tem que perceber que o pregador pesquisou e foi a fundo):
-A. Cada parte traz pelo menos UMA camada funda, e a pregação inteira passa por TODAS estas:
+PROFUNDIDADE (16/11/2026 — o pastor recusou mensagens rasas: "quem ouve tem que saber que o pregador pesquisou e foi a fundo"):
+A. Cada parte do corpo traz pelo menos UMA camada funda, e a pregação inteira passa por TODAS estas:
    - o ORIGINAL: a palavra hebraica ou grega que abre o texto, com o sentido explicado em português simples;
    - a ANTIGUIDADE: o mundo do texto (costume, lei, geografia, arqueologia, Josefo, história de Israel e dos impérios) contado como cena;
-   - os PAIS DA IGREJA ou a história da igreja (Inácio, Policarpo, Justino, Irineu, Agostinho, Crisóstomo; reforma, avivamentos, Azusa, os pioneiros da Assembleia de Deus no Brasil): o que disseram ou viveram. Cite a OBRA só se você souber com certeza, e liste em "Fatos para conferir";
+   - os PAIS DA IGREJA e a igreja antiga (Inácio, Policarpo, Justino, Irineu, Tertuliano, Orígenes, Atanásio, Crisóstomo, Agostinho, Jerônimo…) ou a história da igreja (reforma, avivamentos, Azusa, os pioneiros da Assembleia de Deus no Brasil): o que disseram ou viveram sobre esse texto. Cite a OBRA ("Agostinho, nas Confissões"), só o que você sabe com certeza, e liste em "Fatos para conferir";
    - a TEOLOGIA: a doutrina que o texto sustenta, dita com firmeza (Cristo, Espírito Santo, salvação, santificação, Igreja);
-   - a ESCATOLOGIA quando o texto abrir essa porta, sem forçar (arrebatamento da Igreja, tribulação, milênio, juízo, novos céus e nova terra).
-B. PRENDER O POVO: conte pelo menos duas cenas (uma bíblica narrada por dentro e uma da história antiga ou da igreja); alterne frase longa com frase curta de impacto; nada de parágrafo que só repete o versículo.
-C. A IGREJA TEM QUE ENTENDER: todo termo técnico (palavra grega, concílio, "escatologia", "tipologia") vem explicado na mesma frase, com palavras do dia a dia. Profundo, nunca difícil.
-D. Proibido o genérico: "Deus é fiel" e "precisamos buscar mais a Deus" só entram amarrados a um fato do texto.
+   - a ESCATOLOGIA quando o texto abrir essa porta (sem forçar): a esperança da volta de Cristo na linha da Assembleia de Deus (arrebatamento da Igreja, tribulação, milênio, juízo, novos céus e nova terra).
+B. PRENDER O POVO: cada parte termina com um gancho que puxa para a próxima ("mas o que aconteceu naquela noite ninguém esperava…"); conte pelo menos duas cenas (uma bíblica narrada por dentro e uma da história antiga ou da igreja); alterne frase longa com frase curta de impacto; nada de parágrafo que só repete o versículo.
+C. A IGREJA TEM QUE ENTENDER: todo termo técnico (palavra grega, nome de concílio, "escatologia", "tipologia") vem explicado na mesma frase, com palavras do dia a dia. Profundo, nunca difícil.
+D. Proibido o genérico: frases que caberiam em qualquer pregação ("Deus é fiel", "precisamos buscar mais a Deus") só entram se vierem amarradas a um fato do texto.
+
 7. Se vierem DESCOBERTAS DAS 4 CAMADAS, as 3 a 5 mais fortes entram no CORPO da pregação (não só nas notas), cada uma dita de onde vem ("no grego…", "isso ecoa Daniel 7…", "Edersheim lembra que…"). Descoberta marcada "conferir" só entra se você tiver certeza, e vai para "Fatos para conferir".
 
-A BÍBLIA: você NUNCA digita o texto de um versículo. Para citar, escreva SÓ a referência entre chaves duplas, ex.: {{Gn 40:14}} ou {{Sl 105:17-19}}, e o servidor põe o texto inteiro da Almeida. Nunca escreva o versículo você mesmo, nem uma parte dele entre aspas seguida da referência: isso duplica o texto na tela. Se quiser só uma expressão do texto no meio da frase, escreva a expressão e depois a referência entre parênteses, sem chaves, ex.: (Lc 19:3). Use as referências do PLANO e outras que conheça com certeza.
+A BÍBLIA: você NUNCA digita o texto de um versículo. Escreva a referência entre chaves duplas — {{Gn 40:14}} ou {{Sl 105:17-19}} — e o servidor põe o texto da Almeida. Use as referências do PLANO e outras que conheça com certeza. Pode citar sem chaves só a referência entre parênteses, ex.: (Gn 37:2).
 
-AS FONTES DA BIBLIOTECA: cite pelo NOME do autor ("Keil e Delitzsch observam…", "segundo Josefo…"), com as suas próprias palavras; nunca mais de seis palavras seguidas de um autor. Atribua a cada autor SOMENTE o que está no trecho que você recebeu dele; se o trecho não diz, não atribua. Obedeça o selo de cada fonte. Tradição judaica (Midrash, Rashi, lendas) é dita como tradição, nunca como Bíblia. Notícia só entra se ilustrar com honestidade, citando o veículo e a data.
-
-COMPARAÇÕES COM A LEI E COM OS NÚMEROS: antes de dizer que uma exigência era "o dobro", "o quádruplo" ou outro número, confira no texto da Almeida. Exemplo: Êxodo 22:1 já manda quatro ovelhas por uma ovelha furtada e morta ou vendida; o "dobro" é o caso geral de Êxodo 22:7. Não diga que uma restituição ultrapassa a lei sem conferir o caso exato.
-
-PALAVRAS E SENTIDOS: não dê sentido litúrgico, místico ou "oculto" a uma palavra grega ou hebraica se a fonte não disser isso. Não invente número com significado oculto.
-
+AS FONTES: use as fontes da biblioteca pelo NOME do autor ("Keil e Delitzsch observam…", "segundo Josefo…"), com as suas próprias palavras — nunca mais de seis palavras seguidas de um autor. Obedeça o selo de cada fonte. Tradição judaica (Midrash, Rashi, lendas) é dita como tradição, nunca como Bíblia. Notícia só entra se ilustrar com honestidade, citando o veículo e a data.
 FATOS: só afirme o que é certo. Imagem de pregação ("imagine…") é dita como imagem. Tudo o que não for Bíblia nem fonte da biblioteca vai listado nas notas para conferir.
-
-O FECHO DE FOGO (a última parte, a mais alta): sobe em degraus, com marcações de condução entre colchetes, cada uma em linha própria: [Baixe a voz.] (tom de confissão), [Comece a subir.] (o ritmo cresce), [Peça à igreja que fique de pé.] (o convite), [No auge.] (frases curtas, uma atrás da outra), [Clamor.] (a igreja repete). Dentro do fecho: (a) quando couber, a ligação com o Espírito Santo e o Pentecoste, amarrada ao tema; (b) um momento de RESPOSTA DA IGREJA, em três ou quatro trocas, cada uma numa linha:
-**Pregador:** a frase da Escritura (com {{ref}}) ou a ordem de culto
-**Igreja:** a resposta curta, entre aspas
-(c) clamor em frases curtas, uma por linha; (d) o final apontando para a ministração ("venha ao altar", "fique de pé e receba"). Sem pergunta binária.
 
 FORMATO (Markdown, exatamente nesta ordem):
 # Título
 *referências principais*
 > frase de abertura (o fato concreto)
-2 ou 3 parágrafos de abertura em cena
+2-3 parágrafos de abertura em cena
 > **ÂMAGO:** a tese central
-## 1. … (as partes, cada uma com um título, os parágrafos do TAMANHO e as referências {{…}})
-## 🔥 Título do fecho
-o fecho, com as marcações entre colchetes e a resposta da igreja
+## 1. … (4 a 5 partes com título, cada uma com 2-4 parágrafos e as referências {{…}})
+## 🔥 (título de clamor)
+- 4 linhas curtas para a igreja repetir
+parágrafo de apelo (salvação, quebrantamento, compromisso)
 ## 📝 Notas para quem vai pregar
-- **Fontes consultadas:** autor, obra e o endereço (campo endereco) de cada fonte usada
+- **Fontes consultadas:** autores e obras usados
 - **Fatos para conferir:** cada fato que não é Bíblia nem biblioteca
-- **Tempo:** estimativa
-
-Revise a digitação antes de terminar (ex.: "Cordeiro", nunca "Cordão").`;
-
-// A conferência (depois da pregação escrita): não escreve; só aponta o que não se sustenta e troca o trecho.
-const SYS_CONFERE = `Você é o REVISOR DE FATOS da pregação do pastor Elias. Você NÃO escreve a pregação: só confere e corrige o que está errado.
-Recebe: a PREGAÇÃO já escrita, o TEXTO das referências (Almeida) e as FONTES DA BIBLIOTECA usadas (autor, obra, endereço e o trecho que o autor realmente escreveu).
-Confira frase por frase:
-1. Cada afirmação atribuída a um autor ou obra ("Spurgeon disse", "Edersheim lembra", "segundo Josefo") tem que estar no trecho recebido daquele autor. Se o trecho não sustenta, troque a frase por uma versão que diga só o que o trecho diz, ou tire a atribuição; se não der para corrigir, marque para conferir.
-2. Cada comparação com a Lei, com outro versículo, com um número ou com "o dobro"/"o quádruplo" bate com o texto da Almeida recebido.
-3. Nenhum sentido litúrgico, místico ou "oculto" dado a uma palavra grega ou hebraica que a fonte não diga.
-4. Erros de digitação (ex.: "Cordão" no lugar de "Cordeiro") e palavras trocadas.
-Devolva SÓ um JSON, sem nada antes ou depois:
-{"trocas":[{"de":"trecho EXATO da pregação, copiado letra por letra, até 300 caracteres","para":"o trecho corrigido (vazio para tirar)"}],"conferir":["fato curto que precisa de conferência humana"]}
-Regras: "de" é cópia exata de um trecho da pregação; trocas só para erro comprovado; no máximo 12 trocas; não reescreva o texto inteiro; não mude o estilo nem o tom. Se tudo bate, devolva {"trocas":[],"conferir":[]}.`;
+- **Tempo:** estimativa`;
 
 function montarPedido(pedido, plano, fontes, notas, versos, achados = []) {
   const p = [`PEDIDO DO PASTOR:\n${pedido}`];
@@ -292,57 +264,19 @@ function montarPedido(pedido, plano, fontes, notas, versos, achados = []) {
   if (versos.length) p.push('VERSÍCULOS DO PLANO (texto da Almeida, só para você entender; no texto use {{ref}}):\n'
     + versos.map((v) => `${v.ref}: ${v.texto}`).join('\n'));
   if (fontes.length) p.push('FONTES DA BIBLIOTECA (material privado: use o sentido, cite o autor, não copie):\n'
-    + fontes.map((x, i) => `■ [${i + 1}] ${x.autor}${x.obra ? ' — ' + x.obra : ''}${x.secao ? ' (' + x.secao + ')' : ''}${x.endereco ? ' · endereco: ' + x.endereco : ''} [${selo(x)}]\n${String(x.texto).slice(0, 1200)}`).join('\n\n'));
+    + fontes.map((x, i) => `■ [${i + 1}] ${x.autor}${x.obra ? ' — ' + x.obra : ''}${x.secao ? ' (' + x.secao + ')' : ''} [${selo(x)}]\n${String(x.texto).slice(0, 1200)}`).join('\n\n'));
   if (notas.length) p.push('NOTÍCIAS DE FONTES FIÉIS (use no máximo uma, se ilustrar com honestidade):\n'
     + notas.map((n) => `- ${n.titulo} (${n.fonte || n.veiculo || ''}, ${n.data || ''})`).join('\n'));
   return p.join('\n\n');
 }
 
-// 16/11/2026: se a pregação JÁ CITOU parte do versículo logo antes da referência (4 palavras seguidas do texto),
-// o servidor põe só a referência entre parênteses. Antes, a tela mostrava a frase duas vezes (Lucas 19:3).
-function jaCitado(antes, verso) {
-  const norm = (s) => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
-  const a = norm(String(antes).slice(-260)), w = norm(verso).split(' ');
-  for (let i = 0; i + 4 <= w.length; i++) if (a.includes(w.slice(i, i + 4).join(' '))) return true;
-  return false;
-}
-function referenciaEmTexto(biblia, bruto, antes = '') {
+function referenciaEmTexto(biblia, bruto) {
   const r = acharReferencias(' ' + bruto)[0];
   if (!r) return null;
   const t = textoDoVersiculo(biblia, r);
   if (!t) return null;
   const nome = LIVRO_NOME[r.abbrev] || r.abbrev;
-  const ref = `${nome} ${r.cap}:${r.v1}${r.v2 && r.v2 !== r.v1 ? '-' + r.v2 : ''}`;
-  if (jaCitado(antes, t)) return `(${ref})`;
-  return `“${t}” (${ref})`;
-}
-
-// 16/11/2026: a conferência depois da pregação escrita. Uma IA barata confere atribuições, números e digitação
-// contra as fontes que a Biblioteca realmente devolveu; devolve trocas exatas (de -> para) e pontos para conferir.
-async function conferirFatos(texto, fontes, versos) {
-  const p = [`PREGAÇÃO:\n${texto}`];
-  if (versos.length) p.push('TEXTO DAS REFERÊNCIAS (Almeida):\n' + versos.map((v) => `${v.ref}: ${v.texto}`).join('\n'));
-  if (fontes.length) p.push('FONTES DA BIBLIOTECA USADAS (o que cada autor realmente escreveu):\n'
-    + fontes.map((x) => `■ ${x.autor}${x.obra ? ' — ' + x.obra : ''}${x.endereco ? ' (' + x.endereco + ')' : ''}\n${String(x.texto).slice(0, 900)}`).join('\n\n'));
-  try {
-    const r = await iaTexto({ sys: SYS_CONFERE, user: p.join('\n\n'), temperature: 0.1, max_tokens: 2500, tag: 'bereia-confere',
-      fundo: true, prazoTotal: 60000 });
-    const j = JSON.parse(String(r.texto || '').replace(/^[\s\S]*?(\{[\s\S]*\})[\s\S]*$/, '$1'));
-    return {
-      ok: true,
-      trocas: (Array.isArray(j.trocas) ? j.trocas : []).filter((t) => t && t.de && String(t.de).length <= 400).slice(0, 12),
-      conferir: (Array.isArray(j.conferir) ? j.conferir : []).map((s) => String(s).slice(0, 200)).filter(Boolean).slice(0, 8),
-    };
-  } catch (_) { return { ok: false, trocas: [], conferir: [] }; }
-}
-function aplicarTrocas(md, trocas) {
-  let n = 0;
-  for (const t of trocas) {
-    const de = String(t.de), i = md.indexOf(de);
-    if (i < 0) continue;                       // trecho que não existe exatamente: não mexe
-    md = md.slice(0, i) + String(t.para || '') + md.slice(i + de.length); n++;
-  }
-  return { md, n };
+  return `“${t}” (${nome} ${r.cap}:${r.v1}${r.v2 && r.v2 !== r.v1 ? '-' + r.v2 : ''})`;
 }
 
 // ── 5. A CONFERÊNCIA ─────────────────────────────────────────────────────────
@@ -369,10 +303,6 @@ export default async function handler(req) {
   if (!(await liberado(origem, b.cracha, b.token))) {
     return new Response(JSON.stringify({ ok: false, motivo: 'particular' }), { status: 403, headers: { ...CORS, 'Content-Type': 'application/json' } });
   }
-
-  // 16/11/2026: tamanho da pregação (Curta ~20 min padrão; Longa ~35-40 min). A palavra-guia é a mesma do prompt.
-  const tam = b.tamanho === 'Longa' ? 'Longa' : 'Curta';
-  const pedidoTam = pedido + `\nTAMANHO DA PREGAÇÃO: ${tam} (${tam === 'Longa' ? '2.100 a 2.400' : '1.000 a 1.300'} palavras)`;
 
   const enc = new TextEncoder();
   const { readable, writable } = new TransformStream();
@@ -441,7 +371,7 @@ export default async function handler(req) {
       await manda({ t: 'camadas', md: cav.md, n: cav.achados.length, conferir: cav.achados.filter((a) => a.fonte === 'conferir').length });
 
       await manda({ t: 'etapa', id: 'escrita', msg: 'Escrevendo a pregação…' });
-      const r = await iaStreamTexto({ sys: SYS_PREGACAO, user: montarPedido(pedidoTam, plano, todas, notas, versos, cav.achados),
+      const r = await iaStreamTexto({ sys: SYS_PREGACAO, user: montarPedido(pedido, plano, todas, notas, versos, cav.achados),
         temperature: 0.8, max_tokens: 14000, tag: 'bereia', premium: true, fundo: true, prazoTotal: 120000 });
       await manda({ t: 'ia', modelo: r.modelo || '', provedor: r.provedorNome || r.provedor || '' });
       const reader = r.stream.getReader(), dec = new TextDecoder();
@@ -460,7 +390,7 @@ export default async function handler(req) {
           const f = buf.indexOf('}}', i);
           if (f < 0) { out += buf.slice(0, i); buf = buf.slice(i); if (buf.length > 60) { out += buf; buf = ''; } break; }
           const bruto = buf.slice(i + 2, f).trim();
-          const t = biblia ? referenciaEmTexto(biblia, bruto, tudo + out + buf.slice(0, i)) : null;
+          const t = biblia ? referenciaEmTexto(biblia, bruto) : null;
           if (!t) refsRuins.push(bruto);
           out += buf.slice(0, i) + (t || '(' + bruto + ')');
           buf = buf.slice(f + 2);
@@ -468,22 +398,7 @@ export default async function handler(req) {
         await solta(out);
       }
       await solta(buf);
-
-      // A CONFERÊNCIA (16/11/2026): confere atribuições, comparações e digitação contra as fontes da Biblioteca e
-      // a Almeida. Trocas exatas entram no texto (a tela recebe o texto corrigido em 'final'); o resto vai aos avisos.
-      await manda({ t: 'etapa', id: 'conferencia', msg: 'Conferindo os fatos, as citações e a digitação…' });
-      const confe = await conferirFatos(tudo, todas, versos);
-      let md = tudo;
-      const troca = aplicarTrocas(md, confe.trocas);
-      md = troca.md;
-      // Tempo calculado pelo servidor (~60 palavras por minuto de pregação, a medida que o pastor usa: ~1.200 palavras = 20 min)
-      const palavras = md.replace(/[#*>\[\]{}()_]/g, ' ').split(/\s+/).filter((w) => /\w/.test(w)).length;
-      const minutos = Math.max(1, Math.round(palavras / 60));
-      md = md.replace(/^(\s*-\s*\*\*Tempo:\*\*).*$/m, (_, ini) => ini + ` cerca de ${minutos} min de pregação (${palavras} palavras)`);
-      if (md !== tudo) await manda({ t: 'final', md });
-      const avisosConf = confe.conferir.map((c) => 'Fato para conferir: ' + c);
-      if (!confe.ok) avisosConf.push('A conferência automática não rodou desta vez: confira as fontes das Notas antes de pregar.');
-      await manda({ t: 'fim', avisos: conferir(md, refsRuins).concat(avisosConf), palavras, minutos });
+      await manda({ t: 'fim', avisos: conferir(tudo, refsRuins) });
     } catch (e) {
       await manda({ t: 'erro', msg: String((e && e.message) || e).slice(0, 200) });
     }
