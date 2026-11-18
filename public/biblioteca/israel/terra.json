@@ -1,0 +1,328 @@
+[
+  {
+    "id": "jerusalem",
+    "nome": "Jerusalém",
+    "lat": 31.7683,
+    "lon": 35.2137,
+    "importa": "Deus escolheu Jerusalém para pôr ali o seu nome (2 Crônicas 6:6). É o centro das festas de Israel e o lugar onde Jesus morreu e ressuscitou.",
+    "achados": [
+      "caifas-1990",
+      "ezequias-2015"
+    ],
+    "passagens": [
+      {
+        "ref": "2 Samuel 5:6-7",
+        "texto": "Depois partiu o rei com os seus homens para Jerusalém, contra os jebuseus, que habitavam naquela terra, os quais disseram a Davi: Não entrarás aqui; os cegos e es coxos te repelirão; querendo dizer: Davi de maneira alguma entrará aqui. Todavia Davi tomou a fortaleza de Sião; esta é a cidade de Davi."
+      },
+      {
+        "ref": "Atos 1:8",
+        "texto": "Mas recebereis poder, ao descer sobre vós o Espírito Santo, e ser-me-eis testemunhas, tanto em Jerusalém, como em toda a Judéia e Samária, e até os confins da terra."
+      },
+      {
+        "ref": "Mateus 26:57",
+        "texto": "Aqueles que prenderam a Jesus levaram-no à presença do sumo sacerdote Caifás, onde os escribas e os anciãos estavam reunidos."
+      }
+    ]
+  },
+  {
+    "id": "belem",
+    "nome": "Belém",
+    "lat": 31.7054,
+    "lon": 35.2024,
+    "importa": "A cidade de Davi (1 Samuel 16:1) foi o lugar que o profeta Miqueias anunciou para o nascimento do governante de Israel. Jesus nasceu ali.",
+    "achados": [
+      "belem-2012"
+    ],
+    "passagens": [
+      {
+        "ref": "Miqueias 5:2",
+        "texto": "Mas tu, Belém Efrata, posto que pequena para estar entre os milhares de Judá, de ti é que me sairá aquele que há de reinar em Israel, e cujas saídas são desde os tempos antigos, desde os dias da eternidade."
+      },
+      {
+        "ref": "Lucas 2:4-7",
+        "texto": "Subiu também José, da Galiléia, da cidade de Nazaré, à cidade de Davi, chamada Belém, porque era da casa e família de Davi, a fim de alistar-se com Maria, sua esposa, que estava grávida. Enquanto estavam ali, chegou o tempo em que ela havia de dar à luz, e teve a seu filho primogênito; envolveu-o em faixas e o deitou em uma manjedoura, porque não havia lugar para eles na estalagem."
+      }
+    ]
+  },
+  {
+    "id": "nazare",
+    "nome": "Nazaré",
+    "lat": 32.6996,
+    "lon": 35.3035,
+    "importa": "Foi onde Jesus cresceu. Por isso o chamam \"Nazareno\" (Mateus 2:23). Uma aldeia pequena, sem menção no Antigo Testamento, mas com um papel central no Novo.",
+    "achados": [],
+    "passagens": [
+      {
+        "ref": "Lucas 1:26-27",
+        "texto": "Ora, no sexto mês, foi o anjo Gabriel enviado por Deus a uma cidade da Galiléia, chamada Nazaré, a uma virgem desposada com um varão cujo nome era José, da casa de Davi; e o nome da virgem era Maria."
+      },
+      {
+        "ref": "Lucas 4:16",
+        "texto": "Chegando a Nazaré, onde fora criado; entrou na sinagoga no dia de sábado, segundo o seu costume, e levantou-se para ler."
+      }
+    ]
+  },
+  {
+    "id": "cafarnaum",
+    "nome": "Cafarnaum e o Mar da Galileia",
+    "lat": 32.8806,
+    "lon": 35.5755,
+    "importa": "Jesus fez de Cafarnaum a sua base de ministério. Vários discípulos eram pescadores do lago, e ali ele chamou alguns deles para segui-lo.",
+    "achados": [],
+    "passagens": [
+      {
+        "ref": "Mateus 4:13",
+        "texto": "e, deixando Nazaré, foi habitar em Cafarnaum, cidade marítima, nos confins de Zabulom e Naftali;"
+      },
+      {
+        "ref": "Mateus 4:18-20",
+        "texto": "E Jesus, andando ao longo do mar da Galiléia, viu dois irmãos - Simão, chamado Pedro, e seu irmão André, os quais lançavam a rede ao mar, porque eram pescadores. Disse-lhes: Vinde após mim, e eu vos farei pescadores de homens. Eles, pois, deixando imediatamente as redes, o seguiram."
+      },
+      {
+        "ref": "Lucas 5:1",
+        "texto": "Certa vez, quando a multidão apertava Jesus para ouvir a palavra de Deus, ele estava junto ao lago de Genezaré;"
+      }
+    ]
+  },
+  {
+    "id": "jerico",
+    "nome": "Jericó",
+    "lat": 31.8611,
+    "lon": 35.4602,
+    "importa": "A primeira cidade conquistada em Canaã. O muro caiu depois que o povo marchou e deu o grito (Josué 6:20). Hebreus lembra que foi pela fé (Hebreus 11:30).",
+    "achados": [],
+    "passagens": [
+      {
+        "ref": "Josué 6:20",
+        "texto": "Gritou, pois, o povo, e os sacerdotes tocaram as trombetas; ouvindo o povo o sonido da trombeta, deu um grande brado, e o muro caiu rente com o chão, e o povo subiu à cidade, cada qual para o lugar que lhe ficava defronte, e tomaram a cidade:"
+      },
+      {
+        "ref": "Lucas 19:1-5",
+        "texto": "Tendo Jesus entrado em Jericó, ia atravessando a cidade. Havia ali um homem chamado Zaqueu, o qual era chefe de publicanos e era rico. Este procurava ver quem era Jesus, e não podia, por causa da multidão, porque era de pequena estatura. E correndo adiante, subiu a um sicômoro a fim de vê-lo, porque havia de passar por ali. Quando Jesus chegou àquele lugar, olhou para cima e disse-lhe: Zaqueu, desce depressa; porque importa que eu fique hoje em tua casa."
+      }
+    ]
+  },
+  {
+    "id": "siloe",
+    "nome": "Tanque de Siloé",
+    "lat": 31.769,
+    "lon": 35.2377,
+    "importa": "Jesus mandou o cego lavar-se no tanque e ele voltou enxergando (João 9:7). Na festa dos tabernáculos, a água buscada em Siloé era tradição posterior, e João relaciona a festa com a sede que Jesus oferece.",
+    "achados": [
+      "siloe-2004"
+    ],
+    "passagens": [
+      {
+        "ref": "João 9:7",
+        "texto": "e disse-lhe: Vai, lava-te no tanque de Siloé {que significa Enviado}. E ele foi, lavou-se, e voltou vendo."
+      },
+      {
+        "ref": "Isaías 8:6",
+        "texto": "Porquanto este povo rejeitou as águas de Siloé, que correm brandamente, e se alegrou com Rezim e com o filho de Remalias,"
+      }
+    ]
+  },
+  {
+    "id": "oliveiras",
+    "nome": "Monte das Oliveiras",
+    "lat": 31.7789,
+    "lon": 35.244,
+    "importa": "De lá Jesus subiu aos céus (Atos 1:9-12). Zacarias 14:4 fala dos pés de Deus sobre esse monte, e muitos intérpretes leem ali o lugar da volta de Cristo.",
+    "achados": [],
+    "passagens": [
+      {
+        "ref": "Atos 1:9-12",
+        "texto": "Tendo ele dito estas coisas, foi levado para cima, enquanto eles olhavam, e uma nuvem o recebeu, ocultando-o a seus olhos. Estando eles com os olhos fitos no céu, enquanto ele subia, eis que junto deles apareceram dois varões vestidos de branco, os quais lhes disseram: Varões galileus, por que ficais aí olhando para o céu? Esse Jesus, que dentre vós foi elevado para o céu, há de vir assim como para o céu o vistes ir. Então voltaram para Jerusalém, do monte chamado das Oliveiras, que está perto de Jerusalém, à distância da jornada de um sábado."
+      },
+      {
+        "ref": "Zacarias 14:4",
+        "texto": "Naquele dia estarão os seus pés sobre o monte das Oliveiras, que está defronte de Jerusalém para o oriente; se o monte das Oliveiras será fendido pelo meio, do oriente para o ocidente e haverá um vale muito grande; e metade do monte se removerá para o norte, e a outra metade dele para o sul."
+      }
+    ]
+  },
+  {
+    "id": "megido",
+    "nome": "Megido",
+    "lat": 32.5858,
+    "lon": 35.1848,
+    "importa": "Cidade na planície de Jezreel, palco de batalhas desde os tempos de Débora (Juízes 5:19). O nome Armagedom (Apocalipse 16:16) vem de \"monte de Megido\". Muitos intérpretes leem ali a batalha final.",
+    "achados": [
+      "megido-2005"
+    ],
+    "passagens": [
+      {
+        "ref": "Juízes 5:19",
+        "texto": "Vieram reis e pelejaram; pelejaram os reis de Canaã, em Taanaque junto às águas de Megido; não tomaram despojo de prata."
+      },
+      {
+        "ref": "2 Reis 23:29",
+        "texto": "Nos seus dias subiu Faraó-Neco, rei do Egito, contra o rei da Assíria, ao rio Eufrates. E o rei Josias lhe foi ao encontro; e Faraó-Neco o matou em Megido, logo que o viu."
+      },
+      {
+        "ref": "Apocalipse 16:16",
+        "texto": "E eles os congregaram no lugar que em hebraico se chama Armagedom."
+      }
+    ]
+  },
+  {
+    "id": "cesareia",
+    "nome": "Cesareia Marítima",
+    "lat": 32.5004,
+    "lon": 34.8919,
+    "importa": "Porto construído por Herodes e sede do governo romano na Judeia. Foi em Cesareia que Cornélio, um gentio, recebeu o Espírito Santo, e o evangelho se abriu para as nações (Atos 10).",
+    "achados": [
+      "pilatos-1961"
+    ],
+    "passagens": [
+      {
+        "ref": "Atos 10:1",
+        "texto": "Um homem em Cesaréia, por nome Cornélio, centurião da corte chamada italiana,"
+      },
+      {
+        "ref": "Atos 10:44-45",
+        "texto": "Enquanto Pedro ainda dizia estas coisas, desceu o Espírito Santo sobre todos os que ouviam a palavra. Os crentes que eram de circuncisão, todos quantos tinham vindo com Pedro, maravilharam-se de que também sobre os gentios se derramasse o dom do Espírito Santo;"
+      },
+      {
+        "ref": "Atos 23:33",
+        "texto": "os quais, logo que chegaram a Cesaréia e entregaram a carta ao governador, apresentaram-lhe também Paulo."
+      }
+    ]
+  },
+  {
+    "id": "hebrom",
+    "nome": "Hebrom",
+    "lat": 31.5326,
+    "lon": 35.0998,
+    "importa": "Abraão comprou ali a caverna de Macpela para sepultar Sara (Gênesis 23:19), a primeira terra que a família possuiu em Canaã. Davi reinou em Hebrom antes de Jerusalém (2 Samuel 2:4).",
+    "achados": [],
+    "passagens": [
+      {
+        "ref": "Gênesis 13:18",
+        "texto": "Então mudou Abrão as suas tendas, e foi habitar junto dos carvalhos de Manre, em Hebrom; e ali edificou um altar ao Senhor."
+      },
+      {
+        "ref": "Gênesis 23:19",
+        "texto": "Depois sepultou Abraão a Sara sua mulher na cova do campo de Macpela, em frente de Manre, que é Hebrom, na terra de Canaã."
+      },
+      {
+        "ref": "2 Samuel 2:1-4",
+        "texto": "Sucedeu depois disto que Davi consultou ao Senhor, dizendo: Subirei a alguma das cidades de Judá? Respondeu-lhe o Senhor: Sobe. Ainda perguntou Davi: Para onde subirei? Respondeu o Senhor: Para Hebrom. Subiu, pois, Davi para lá, e também as suas duas mulheres, Ainoã, a jizreelita, e Abigail, que fora mulher de Nabal, e carmelita. Davi fez subir também os homens que estavam com ele, cada um com sua família; e habitaram nas cidades de Hebrom. Então vieram os homens de Judá, e ali ungiram Davi rei sobre a casa de Judá. Depois informaram a Davi, dizendo: Foram os homens de Jabes-Gileade que sepultaram a Saul."
+      }
+    ]
+  },
+  {
+    "id": "berseba",
+    "nome": "Berseba",
+    "lat": 31.247,
+    "lon": 34.795,
+    "importa": "Era o extremo sul da terra de Israel: \"de Dã até Berseba\" (1 Samuel 3:20). Abraão fez ali um juramento com Abimeleque (Gênesis 21:31).",
+    "achados": [],
+    "passagens": [
+      {
+        "ref": "Gênesis 21:31",
+        "texto": "Pelo que chamou aquele lugar Beer-Seba, porque ali os dois juraram."
+      },
+      {
+        "ref": "Amós 5:5",
+        "texto": "Mas não busqueis a Betel, nem entreis em Gilgal, nem passeis a Berseba; porque Gilgal certamente irá ao cativeiro, e Betel será desfeita em nada."
+      },
+      {
+        "ref": "1 Samuel 3:20",
+        "texto": "E todo o Israel, desde Dã até Berseba, conheceu que Samuel estava confirmado como profeta do Senhor."
+      }
+    ]
+  },
+  {
+    "id": "da",
+    "nome": "Dã",
+    "lat": 33.2477,
+    "lon": 35.6524,
+    "importa": "Era a fronteira norte da terra: \"de Dã até Berseba\" (1 Samuel 3:20). Em Dã, Jeroboão colocou um bezerro de ouro (1 Reis 12:29). Em 1993 foi achada ali a inscrição da \"Casa de Davi\".",
+    "achados": [
+      "tel-da-1993"
+    ],
+    "passagens": [
+      {
+        "ref": "Josué 19:47",
+        "texto": "Saiu, porém, pequena o território dos filhos de Dã; pelo que os filhos de Dã subiram, pelejaram contra Lesem e a tomaram; feriram-na ao fio da espada, tomaram posse dela e habitaram-na; e a Lesem chamaram Dã, conforme o nome de Dã, seu pai."
+      },
+      {
+        "ref": "1 Reis 12:29",
+        "texto": "E pôs um em Betel, e o outro em Dã."
+      },
+      {
+        "ref": "1 Samuel 3:20",
+        "texto": "E todo o Israel, desde Dã até Berseba, conheceu que Samuel estava confirmado como profeta do Senhor."
+      }
+    ]
+  },
+  {
+    "id": "siquem",
+    "nome": "Siquém (Ebal e Gerizim)",
+    "lat": 32.2211,
+    "lon": 35.2544,
+    "importa": "Josué leu a Lei entre os montes Gerizim (bênçãos) e Ebal (maldições) (Josué 8:33-34). Foi também ali que a samaritana conversou com Jesus.",
+    "achados": [
+      "ebal-2022"
+    ],
+    "passagens": [
+      {
+        "ref": "Gênesis 12:6",
+        "texto": "Passou Abrão pela terra até o lugar de Siquém, até o carvalho de Moré. Nesse tempo estavam os cananeus na terra."
+      },
+      {
+        "ref": "Josué 8:33",
+        "texto": "E todo o Israel, tanto o estrangeiro como o natural, com os seus anciãos, oficiais e juízes, estava de um e de outro lado da arca, perante os levitas sacerdotes que levavam a arca do pacto do Senhor; metade deles em frente do monte Gerizim, e a outra metade em frente do monte Ebal, como Moisés, servo do Senhor, dantes ordenara, para que abençoassem o povo de Israel."
+      },
+      {
+        "ref": "João 4:20",
+        "texto": "Nossos pais adoraram neste monte, e vós dizeis que em Jerusalém é o lugar onde se deve adorar."
+      }
+    ]
+  },
+  {
+    "id": "herodio",
+    "nome": "Heródio",
+    "lat": 31.667,
+    "lon": 35.233,
+    "importa": "A Bíblia não cita este lugar. É a fortaleza-palácio de Herodes, o Grande, o rei que mandou matar as crianças de Belém (Mateus 2:16). Os achados confirmam o túmulo do rei nesse lugar.",
+    "achados": [
+      "herodes-2007"
+    ],
+    "passagens": [
+      {
+        "ref": "Mateus 2:1-3",
+        "texto": "Tendo, pois, nascido Jesus em Belém da Judéia, no tempo do rei Herodes, eis que vieram do oriente a Jerusalém uns magos que perguntavam: Onde está aquele que é nascido rei dos judeus? pois do oriente vimos a sua estrela e viemos adorá-lo. O rei Herodes, ouvindo isso, perturbou-se, e com ele toda a Jerusalém;"
+      },
+      {
+        "ref": "Mateus 2:16",
+        "texto": "Então Herodes, vendo que fora iludido pelos magos, irou-se grandemente e mandou matar todos os meninos de dois anos para baixo que havia em Belém e em todos os seus arredores, segundo o tempo que com precisão inquirira dos magos."
+      }
+    ]
+  },
+  {
+    "id": "qumran",
+    "nome": "Mar Morto e Qumran",
+    "lat": 31.7296,
+    "lon": 35.4593,
+    "importa": "O Mar Morto, chamado \"mar Salgado\" (Gênesis 14:3). Em Ezequiel 47:8, as águas que saem do Templo vão ao mar e o tornam saudável. Em Qumran, os rolos do Mar Morto guardaram cópias antigas da Escritura.",
+    "achados": [
+      "rolos-2021",
+      "daniel-ia-2025"
+    ],
+    "passagens": [
+      {
+        "ref": "Gênesis 14:3",
+        "texto": "Todos estes se ajuntaram no vale de Sidim {que é o Mar Salgado}."
+      },
+      {
+        "ref": "Ezequiel 47:8",
+        "texto": "Então me disse: Estas águas saem para a região oriental e, descendo pela Arabá, entrarão no Mar Morto, e ao entrarem nas águas salgadas, estas se tornarão saudáveis."
+      },
+      {
+        "ref": "João 1:28",
+        "texto": "Estas coisas aconteceram em Betânia, além do Jordão, onde João estava batizando."
+      }
+    ]
+  }
+]

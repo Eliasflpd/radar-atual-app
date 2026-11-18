@@ -1,0 +1,432 @@
+{
+  "principio": "As festas do Senhor são sombra das coisas que haviam de vir, e o corpo é de Cristo (Colossenses 2:16-17). O crente não é obrigado a guardá-las como exigência para ser salvo. Mas aprender com elas abre a Bíblia: cada festa aponta para um pedaço do plano de Deus que se cumpre em Jesus.",
+  "festas": [
+    {
+      "id": "pessach",
+      "nome": "Páscoa",
+      "alt": "Pessach",
+      "hebraico": "פֶּסַח",
+      "tipo": "festa",
+      "dataKey": "pessach",
+      "quando": "14 de Nisan, à tardinha (março ou abril). A festa começa ao pôr do sol da véspera.",
+      "gancho": "Quando Deus passasse pelo Egito, o sangue na porta protegeria a casa. A casa protegida pelo sangue é a imagem central da festa.",
+      "instituicao": [
+        {
+          "ref": "Levítico 23:4-5",
+          "texto": "São estas as festas fixas do Senhor, santas convocações, que proclamareis no seu tempo determinado: No mês primeiro, aos catorze do mês, à tardinha, é a páscoa do Senhor."
+        },
+        {
+          "ref": "Êxodo 12:11-13",
+          "texto": "Assim pois o comereis: Os vossos lombos cingidos, os vossos sapatos nos pés, e o vosso cajado na mão; e o comereis apressadamente; esta é a páscoa do Senhor. Porque naquela noite passarei pela terra do Egito, e ferirei todos os primogênitos na terra do Egito, tanto dos homens como dos animais; e sobre todos os deuses do Egito executarei juízos; eu sou o Senhor. Mas o sangue vos será por sinal nas casas em que estiverdes; vendo eu o sangue, passarei por cima de vós, e não haverá entre vós praga para vos destruir, quando eu ferir a terra do Egito. :"
+        }
+      ],
+      "era": [
+        {
+          "tipo": "lei",
+          "t": "Cada família escolhia um cordeiro sem defeito, sacrificava à tardinha e comia a carne assada, com pães sem fermento e ervas amargas. Não se comia cru nem cozido com água (Êxodo 12:5-9)."
+        },
+        {
+          "tipo": "lei",
+          "t": "O sacrifício seria feito \"no lugar que o Senhor escolher\" (Deuteronômio 16:2). Desde o tempo de Davi e Salomão, esse lugar foi entendido como Jerusalém (2 Crônicas 6:6)."
+        },
+        {
+          "tipo": "tradicao",
+          "t": "A ceia do Seder, com as quatro taças de vinho e a Hagadá lida em família, é costume posterior. A Lei não ordena essa liturgia."
+        }
+      ],
+      "cristo": "Paulo chama Cristo de \"nossa páscoa\" que já foi sacrificada (1 Coríntios 5:7). João Batista apontou para Jesus com a imagem do cordeiro (João 1:29), e Pedro lembra o \"cordeiro sem defeito e sem mancha\" (1 Pedro 1:18-19). Quem crê é protegido pelo sangue dele.",
+      "cristoVersos": [
+        {
+          "ref": "1 Coríntios 5:7",
+          "texto": "Expurgai o fermento velho, para que sejais massa nova, assim como sois sem fermento. Porque Cristo, nossa páscoa, já foi sacrificado."
+        },
+        {
+          "ref": "João 1:29",
+          "texto": "No dia seguinte João viu a Jesus, que vinha para ele, e disse: Eis o Cordeiro de Deus, que tira o pecado do mundo."
+        },
+        {
+          "ref": "1 Pedro 1:18-19",
+          "texto": "sabendo que não foi com coisas corruptíveis, como prata ou ouro, que fostes resgatados da vossa vã maneira de viver, que por tradição recebestes dos vossos pais, mas com precioso sangue, como de um cordeiro sem defeito e sem mancha, o sangue de Cristo,"
+        }
+      ],
+      "futuro": null
+    },
+    {
+      "id": "matsot",
+      "nome": "Pães Asmos",
+      "alt": "Matsot",
+      "hebraico": "חַג הַמַּצּוֹת",
+      "tipo": "festa",
+      "dataKey": "pessach",
+      "quando": "15 a 21 de Nisan, logo depois da Páscoa, na mesma semana.",
+      "gancho": "Israel saiu do Egito com tanta pressa que o pão não teve tempo de levedar. Por isso a festa fala de pressa e de deixar o velho para trás.",
+      "instituicao": [
+        {
+          "ref": "Levítico 23:6-8",
+          "texto": "E aos quinze dias desse mês é a festa dos pães ázimos do Senhor; sete dias comereis pães ázimos. No primeiro dia tereis santa convocação; nenhum trabalho servil fareis. Mas por sete dias oferecereis oferta queimada ao Senhor; ao sétimo dia haverá santa convocação; nenhum trabalho servil fareis."
+        },
+        {
+          "ref": "Êxodo 12:15",
+          "texto": "Por sete dias comereis pães ázimos; logo ao primeiro dia tirareis o fermento das vossas casas, porque qualquer que comer pão levedado, entre o primeiro e o sétimo dia, esse será cortado de Israel."
+        }
+      ],
+      "era": [
+        {
+          "tipo": "lei",
+          "t": "Sete dias comendo pão sem fermento. No primeiro dia, tirava-se o fermento das casas, e quem comesse pão levedado nesses dias seria cortado do povo (Êxodo 12:15)."
+        },
+        {
+          "tipo": "lei",
+          "t": "O primeiro e o sétimo dia são dias de santa convocação, sem trabalho servil (Levítico 23:7-8)."
+        },
+        {
+          "tipo": "tradicao",
+          "t": "A busca do fermento pela casa na véspera, com vela e pena, e a queima do fermento são costumes rabínicos posteriores."
+        }
+      ],
+      "cristo": "Fermento, na Bíblia, muitas vezes representa maldade e falsa doutrina. Paulo manda tirar o fermento velho e celebrar \"com os ázimos da sinceridade e da verdade\" (1 Coríntios 5:7-8). Jesus também alertou contra \"o fermento dos fariseus\" (Mateus 16:6).",
+      "cristoVersos": [
+        {
+          "ref": "1 Coríntios 5:7-8",
+          "texto": "Expurgai o fermento velho, para que sejais massa nova, assim como sois sem fermento. Porque Cristo, nossa páscoa, já foi sacrificado. Pelo que celebremos a festa, não com o fermento velho, nem com o fermento da malícia e da corrupção, mas com os ázimos da sinceridade e da verdade."
+        },
+        {
+          "ref": "Mateus 16:6",
+          "texto": "E Jesus lhes disse: Olhai, e acautelai-vos do fermento dos fariseus e dos saduceus."
+        }
+      ],
+      "futuro": null
+    },
+    {
+      "id": "bikkurim",
+      "nome": "Primícias",
+      "alt": "Bikkurim",
+      "hebraico": "בִּכּוּרִים",
+      "tipo": "festa",
+      "dataKey": "bikkurim",
+      "quando": "16 de Nisan, no \"dia seguinte ao sábado\" da semana de Pães Asmos. A data de 16 de Nisan vem da tradição rabínica, que lê o texto assim.",
+      "gancho": "Antes de comer o pão novo da colheita, Israel devolvia a Deus a primeira parte. Deus era reconhecido como dono da terra antes de qualquer fruto ser consumido.",
+      "instituicao": [
+        {
+          "ref": "Levítico 23:9-14",
+          "texto": "Disse mais o Senhor a Moisés: Fala aos filhos de Israel, e dize-lhes: Quando houverdes entrado na terra que eu vos dou, e segardes a sua sega, então trareis ao sacerdote um molho das primícias da vossa sega; e ele moverá o molho perante o Senhor, para que sejais aceitos. No dia seguinte ao sábado o sacerdote o moverá. E no dia em que moverdes o molho, oferecereis um cordeiro sem defeito, de um ano, em holocausto ao Senhor. Sua oferta de cereais será dois décimos de efa de flor de farinha, amassada com azeite, para oferta queimada em cheiro suave ao Senhor; e a sua oferta de libação será de vinho, um quarto de him. E não comereis pão, nem trigo torrado, nem espigas verdes, até aquele mesmo dia, em que trouxerdes a oferta do vosso Deus; é estatuto perpétuo pelas vossas gerações, em todas as vossas habitações."
+        }
+      ],
+      "era": [
+        {
+          "tipo": "lei",
+          "t": "O sacerdote movia diante do Senhor um molho da primeira colheita de cevada, com um cordeiro em holocausto. Só depois do molho era permitido comer do novo (Levítico 23:10-14)."
+        },
+        {
+          "tipo": "tradicao",
+          "t": "Os fariseus entendiam o \"dia seguinte ao sábado\" como o dia 16 de Nisan, e essa leitura se tornou a regra do judaísmo rabínico. O texto admite outras leituras."
+        }
+      ],
+      "cristo": "Cristo ressuscitou \"como primícias dos que dormem\". A colheita começou com ele, e os que são dele virão depois, cada um na sua ordem (1 Coríntios 15:20-23). Muitos leem a ressurreição de Jesus como cumprimento desta festa, mas o texto de Paulo não diz o dia.",
+      "cristoVersos": [
+        {
+          "ref": "1 Coríntios 15:20-23",
+          "texto": "Mas na realidade Cristo foi ressuscitado dentre os mortos, sendo ele as primícias dos que dormem. Porque, assim como por um homem veio a morte, também por um homem veio a ressurreição dos mortos. Pois como em Adão todos morrem, do mesmo modo em Cristo todos serão vivificados. Cada um, porém, na sua ordem: Cristo as primícias, depois os que são de Cristo, na sua vinda."
+        }
+      ],
+      "futuro": null
+    },
+    {
+      "id": "shavuot",
+      "nome": "Pentecostes",
+      "alt": "Shavuot",
+      "hebraico": "שָׁבוּעוֹת",
+      "tipo": "festa",
+      "dataKey": "shavuot",
+      "quando": "6 de Sivan (maio ou junho), contados 50 dias depois da festa das primícias. Shavuot quer dizer \"semanas\".",
+      "gancho": "A festa vem depois de sete semanas de contagem. A espera é parte do ritual: Deus pede que o povo conte os dias até a colheita chegar.",
+      "instituicao": [
+        {
+          "ref": "Levítico 23:15-16",
+          "texto": "Contareis para vós, desde o dia depois do sábado, isto é, desde o dia em que houverdes trazido o molho da oferta de movimento, sete semanas inteiras; até o dia seguinte ao sétimo sábado, contareis cinqüenta dias; então oferecereis nova oferta de cereais ao Senhor."
+        },
+        {
+          "ref": "Levítico 23:17",
+          "texto": "Das vossas habitações trareis, para oferta de movimento, dois pães de dois décimos de efa; serão de flor de farinha, e levedados se cozerão; são primícias ao Senhor."
+        }
+      ],
+      "era": [
+        {
+          "tipo": "lei",
+          "t": "Contavam-se sete semanas completas, e no dia 50 o povo trazia dois pães feitos de farinha fina, \"levedados\", como primícias do trigo, com cordeiros e outras ofertas (Levítico 23:15-20)."
+        },
+        {
+          "tipo": "lei",
+          "t": "A colheita não deveria ser feita até as bordas do campo. O que caísse deveria ser deixado para o pobre e o estrangeiro (Levítico 23:22)."
+        },
+        {
+          "tipo": "tradicao",
+          "t": "A associação de Shavuot com a entrega da Lei no Sinai é tradição judaica posterior. A Bíblia não dá a data da entrega da Lei nesta festa."
+        }
+      ],
+      "cristo": "Em Pentecostes, em Jerusalém, o Espírito Santo desceu sobre os discípulos. Havia judeus de muitas nações na cidade, e Pedro pregou; cerca de três mil foram batizados naquele dia (Atos 2:1-4; 2:41). Muitos veem nessa data o começo da Igreja.",
+      "cristoVersos": [
+        {
+          "ref": "Atos 2:1-4",
+          "texto": "Ao cumprir-se o dia de Pentecostes, estavam todos reunidos no mesmo lugar. De repente veio do céu um ruído, como que de um vento impetuoso, e encheu toda a casa onde estavam sentados. E lhes apareceram umas línguas como que de fogo, que se distribuíam, e sobre cada um deles pousou uma. E todos ficaram cheios do Espírito Santo, e começaram a falar noutras línguas, conforme o Espírito lhes concedia que falassem."
+        },
+        {
+          "ref": "Atos 2:41",
+          "texto": "De sorte que foram batizados os que receberam a sua palavra; e naquele dia agregaram-se quase três mil almas;"
+        }
+      ],
+      "futuro": null
+    },
+    {
+      "id": "trombetas",
+      "nome": "Trombetas",
+      "alt": "Yom Teruá / Rosh Hashaná",
+      "hebraico": "יוֹם תְּרוּעָה",
+      "tipo": "festa",
+      "dataKey": "trombetas",
+      "quando": "1 de Tishri (setembro ou outubro). É o começo do ano civil judaico.",
+      "gancho": "O povo era chamado pelo som do chifre. A festa começava com um alarme que pedia atenção.",
+      "instituicao": [
+        {
+          "ref": "Levítico 23:23-25",
+          "texto": "Disse mais o Senhor a Moisés: Fala aos filhos de Israel: No sétimo mês, no primeiro dia do mês, haverá para vós descanso solene, em memorial, com sonido de trombetas, uma santa convocação. Nenhum trabalho servil fareis, e oferecereis oferta queimada ao Senhor."
+        },
+        {
+          "ref": "Números 29:1",
+          "texto": "No sétimo mês, no primeiro dia do mês, tereis uma santa convocação; nenhum trabalho servil fareis; será para vós dia de sonido de trombetas."
+        }
+      ],
+      "era": [
+        {
+          "tipo": "lei",
+          "t": "Um \"descanso solene, em memorial, com sonido de trombetas\" e uma santa convocação, sem trabalho servil (Levítico 23:24-25)."
+        },
+        {
+          "tipo": "tradicao",
+          "t": "O toque do shofar (chifre de carneiro), com séries de toques, e a festa como \"dia do juízo\" são costumes posteriores. A Bíblia não dá o nome Rosh Hashaná para esta festa."
+        }
+      ],
+      "cristo": "A trombeta de Deus chama os mortos em Cristo. Paulo diz que o Senhor descerá \"ao som da trombeta de Deus\", e que os mortos ressuscitarão incorruptíveis \"ao som da última trombeta\" (1 Tessalonicenses 4:16; 1 Coríntios 15:52).",
+      "cristoVersos": [
+        {
+          "ref": "1 Tessalonicenses 4:16",
+          "texto": "Porque o Senhor mesmo descerá do céu com grande brado, à voz do arcanjo, ao som da trombeta de Deus, e os que morreram em Cristo ressuscitarão primeiro."
+        },
+        {
+          "ref": "1 Coríntios 15:52",
+          "texto": "num momento, num abrir e fechar de olhos, ao som da última trombeta; porque a trombeta soará, e os mortos serão ressuscitados incorruptíveis, e nós seremos transformados."
+        }
+      ],
+      "futuro": {
+        "nota": "Leitura de muitos intérpretes, da linha pré-tribulacionista da Assembleia de Deus. Não é data marcada.",
+        "t": "Muitos intérpretes veem nesta festa a figura do arrebatamento da Igreja, quando a trombeta de Deus chamar os que são de Cristo. Ninguém sabe o dia nem a hora, e a orientação de Jesus é vigiar.",
+        "versos": [
+          {
+            "ref": "1 Tessalonicenses 4:16-17",
+            "texto": "Porque o Senhor mesmo descerá do céu com grande brado, à voz do arcanjo, ao som da trombeta de Deus, e os que morreram em Cristo ressuscitarão primeiro. Depois nós, os que ficarmos vivos seremos arrebatados juntamente com eles, nas nuvens, ao encontro do Senhor nos ares, e assim estaremos para sempre com o Senhor."
+          },
+          {
+            "ref": "Mateus 24:36",
+            "texto": "Daquele dia e hora, porém, ninguém sabe, nem os anjos do céu, nem o Filho, senão só o Pai."
+          }
+        ]
+      }
+    },
+    {
+      "id": "expiacao",
+      "nome": "Dia da Expiação",
+      "alt": "Yom Kipur",
+      "hebraico": "יוֹם הַכִּפֻּרִים",
+      "tipo": "festa",
+      "dataKey": "expiacao",
+      "quando": "10 de Tishri (setembro ou outubro), dez dias depois do Ano Novo.",
+      "gancho": "Era o único dia do ano em que o sumo sacerdote entrava no lugar mais santo do Templo. Tudo na festa girava em torno de um pecado coberto pelo sangue.",
+      "instituicao": [
+        {
+          "ref": "Levítico 23:26-28",
+          "texto": "Disse mais o Senhor a Moisés: Ora, o décimo dia desse sétimo mês será o dia da expiação; tereis santa convocação, e afligireis as vossas almas; e oferecereis oferta queimada ao Senhor. Nesse dia não fareis trabalho algum; porque é o dia da expiação, para nele fazer-se expiação por vós perante o Senhor vosso Deus."
+        },
+        {
+          "ref": "Levítico 16:30",
+          "texto": "porque nesse dia se fará expiação por vós, para purificar-vos; de todos os vossos pecados sereis purificados perante o Senhor."
+        }
+      ],
+      "era": [
+        {
+          "tipo": "lei",
+          "t": "Afligir a alma e não fazer nenhum trabalho. Quem não se afligisse seria extirpado do povo (Levítico 23:27-29). O texto não diz quanto tempo, nem como, era a aflição."
+        },
+        {
+          "tipo": "lei",
+          "t": "O sumo sacerdote levava o sangue ao véu do santuário e sobre o propiciatório (Levítico 16:15). Sobre o bode vivo, confessava os pecados do povo, e o bode era enviado para o deserto (Levítico 16:21)."
+        },
+        {
+          "tipo": "tradicao",
+          "t": "O jejum de cerca de 25 horas, as orações de Kol Nidrei e os longos cultos de Yom Kipur são costumes posteriores à Lei."
+        }
+      ],
+      "cristo": "O autor de Hebreus mostra que Cristo entrou \"uma vez por todas\" no santuário, não com sangue de bodes e novilhos, mas com o próprio sangue (Hebreus 9:11-12). Ele apareceu \"para aniquilar o pecado pelo sacrifício de si mesmo\" (Hebreus 9:24-28). Na morte de Jesus, o véu do santuário se rasgou de alto a baixo (Mateus 27:51).",
+      "cristoVersos": [
+        {
+          "ref": "Hebreus 9:11-12",
+          "texto": "Mas Cristo, tendo vindo como sumo sacerdote dos bens já realizados, por meio do maior e mais perfeito tabernáculo {não feito por mãos, isto é, não desta criação}, e não pelo sangue de bodes e novilhos, mas por seu próprio sangue, entrou uma vez por todas no santo lugar, havendo obtido uma eterna redenção."
+        },
+        {
+          "ref": "Hebreus 9:24-28",
+          "texto": "Pois Cristo não entrou num santuário feito por mãos, figura do verdadeiro, mas no próprio céu, para agora comparecer por nós perante a face de Deus; nem também para se oferecer muitas vezes, como o sumo sacerdote de ano em ano entra no santo lugar com sangue alheio; doutra forma, necessário lhe fora padecer muitas vezes desde a fundação do mundo; mas agora, na consumação dos séculos, uma vez por todas se manifestou, para aniquilar o pecado pelo sacrifício de si mesmo. E, como aos homens está ordenado morrerem uma só vez, vindo depois o juízo, assim também Cristo, oferecendo-se uma só vez para levar os pecados de muitos, aparecerá segunda vez, sem pecado, aos que o esperam para salvação."
+        },
+        {
+          "ref": "Mateus 27:51",
+          "texto": "E eis que o véu do santuário se rasgou em dois, de alto a baixo; a terra tremeu, as pedras se fenderam,"
+        }
+      ],
+      "futuro": {
+        "nota": "Leitura de muitos intérpretes, da linha pré-tribulacionista da Assembleia de Deus. Não é data marcada.",
+        "t": "Zacarias fala de um dia em que a casa de Davi e os moradores de Jerusalém olharão para aquele a quem traspassaram e chorarão por ele. Paulo escreve que \"todo o Israel será salvo\" (Romanos 11:26). Muitos leem essas passagens como a restauração de Israel diante de Cristo.",
+        "versos": [
+          {
+            "ref": "Zacarias 12:10",
+            "texto": "Mas sobre a casa de Davi, e sobre os habitantes de Jerusalém, derramarei o espírito de graça e de súplicas; e olharão para aquele a quem traspassaram, e o prantearão como quem pranteia por seu filho único; e chorarão amargamente por ele, como se chora pelo primogênito."
+          },
+          {
+            "ref": "Romanos 11:26",
+            "texto": "e assim todo o Israel será salvo, como está escrito: Virá de Sião o Libertador, e desviará de Jacó as impiedades;"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sucot",
+      "nome": "Tabernáculos",
+      "alt": "Sucot",
+      "hebraico": "סֻכּוֹת",
+      "tipo": "festa",
+      "dataKey": "sucot",
+      "quando": "15 a 21 de Tishri (setembro ou outubro), cinco dias depois do Dia da Expiação. O oitavo dia (Shemini Atzeret) é santa convocação.",
+      "gancho": "Por uma semana, a família deixava a casa e morava numa cabana de ramos. A festa fazia Israel lembrar que vivia de passagem, como no deserto.",
+      "instituicao": [
+        {
+          "ref": "Levítico 23:33-36",
+          "texto": "Disse mais o Senhor a Moisés: Fala aos filhos de Israel, dizendo: Desde o dia quinze desse sétimo mês haverá a festa dos tabernáculos ao Senhor por sete dias. No primeiro dia haverá santa convocação; nenhum trabalho servil fareis. Por sete dias oferecereis ofertas queimadas ao Senhor; ao oitavo dia tereis santa convocação, e oferecereis oferta queimada ao Senhor; será uma assembléia solene; nenhum trabalho servil fareis."
+        },
+        {
+          "ref": "Levítico 23:42-43",
+          "texto": "Por sete dias habitareis em tendas de ramos; todos os naturais em Israel habitarão em tendas de ramos, para que as vossas gerações saibam que eu fiz habitar em tendas de ramos os filhos de Israel, quando os tirei da terra do Egito. Eu sou o Senhor vosso Deus."
+        }
+      ],
+      "era": [
+        {
+          "tipo": "lei",
+          "t": "Sete dias habitando em tendas de ramos, para que as gerações saibam que Deus fez habitar em tendas os filhos de Israel quando os tirou do Egito (Levítico 23:42-43). Também havia alegria diante do Senhor (Levítico 23:40)."
+        },
+        {
+          "tipo": "tradicao",
+          "t": "As \"quatro espécies\" (lulav, etrog, mirto e salgueiro) e o rito da água, tirada da fonte de Siloé e derramada no altar, são costumes posteriores. Levítico 23:40 cita frutos, palmeiras e ramos de árvores, mas não essas quatro plantas."
+        }
+      ],
+      "cristo": "João diz que o Verbo \"se fez carne e habitou entre nós\" (João 1:14). O verbo grego traduz a ideia de armar uma tenda. Numa festa das tendas, Jesus se levanta \"no último dia, o grande dia da festa\" e diz: \"Se alguém tem sede, venha a mim e beba\" (João 7:37). Ele é a presença de Deus que a festa lembrava.",
+      "cristoVersos": [
+        {
+          "ref": "João 1:14",
+          "texto": "E o Verbo se fez carne, e habitou entre nós, cheio de graça e de verdade; e vimos a sua glória, como a glória do unigênito do Pai."
+        },
+        {
+          "ref": "João 7:37",
+          "texto": "Ora, no seu último dia, o grande dia da festa, Jesus pôs-se em pé e clamou, dizendo: Se alguém tem sede, venha a mim e beba."
+        }
+      ],
+      "futuro": {
+        "nota": "Leitura de muitos intérpretes, da linha pré-tribulacionista da Assembleia de Deus. Não é data marcada.",
+        "t": "Zacarias diz que as nações subirão a Jerusalém para celebrar a festa dos tabernáculos. João, no fim da Bíblia, vê o tabernáculo de Deus com os homens, e Deus habitando com o seu povo (Apocalipse 21:3).",
+        "versos": [
+          {
+            "ref": "Zacarias 14:16",
+            "texto": "Então todos os que restarem de todas as nações que vieram contra Jerusalém, subirão de ano em ano para adorarem o Rei, o Senhor dos exércitos, e para celebrarem a festa dos tabernáculos."
+          },
+          {
+            "ref": "Apocalipse 21:3",
+            "texto": "E ouvi uma grande voz, vinda do trono, que dizia: Eis que o tabernáculo de Deus está com os homens, pois com eles habitará, e eles serão o seu povo, e Deus mesmo estará com eles."
+          }
+        ]
+      }
+    }
+  ],
+  "posteriores": [
+    {
+      "id": "chanukah",
+      "nome": "Dedicação",
+      "alt": "Chanucá",
+      "hebraico": "חֲנֻכָּה",
+      "tipo": "posterior",
+      "dataKey": "chanukah",
+      "quando": "25 de Kislev a 2 de Tevet (dezembro). São 8 dias.",
+      "gancho": "João conta que Jesus andava no Templo, na festa da dedicação, e era inverno. Ele estava no mesmo lugar onde o povo celebrava a restauração do santuário.",
+      "instituicao": [
+        {
+          "ref": "João 10:22-23",
+          "texto": "Celebrava-se então em Jerusalém a festa da dedicação. E era inverno. Andava Jesus passeando no templo, no pórtico de Salomão."
+        }
+      ],
+      "era": [
+        {
+          "tipo": "tradicao",
+          "t": "Não é ordenada na Lei de Moisés. Celebra a re-dedicação do Templo depois da vitória dos macabeus sobre o rei sírio Antíoco IV, por volta de 164 a.C. A história está no livro de 1 Macabeus, que não faz parte do cânon protestante."
+        },
+        {
+          "tipo": "tradicao",
+          "t": "As velas acesas uma a uma durante os oito dias são costume posterior."
+        }
+      ],
+      "cristo": "Na festa da dedicação, Jesus se apresenta como aquele que o Pai \"santificou e enviou ao mundo\" (João 10:36). O verdadeiro santuário, dizia ele, era o seu próprio corpo (João 2:19-21).",
+      "cristoVersos": [
+        {
+          "ref": "João 10:36",
+          "texto": "àquele a quem o Pai santificou, e enviou ao mundo, dizeis vós: Blasfemas; porque eu disse: Sou Filho de Deus?"
+        },
+        {
+          "ref": "João 2:19-21",
+          "texto": "Respondeu-lhes Jesus: Derribai este santuário, e em três dias o levantarei. Disseram, pois, os judeus: Em quarenta e seis anos foi edificado este santuário, e tu o levantarás em três dias? Mas ele falava do santuário do seu corpo."
+        }
+      ],
+      "futuro": null
+    },
+    {
+      "id": "purim",
+      "nome": "Purim",
+      "alt": "Ester",
+      "hebraico": "פּוּרִים",
+      "tipo": "posterior",
+      "dataKey": "purim",
+      "quando": "14 de Adar (fevereiro ou março). Em anos com dois Adares, usa-se o segundo. Em cidades muradas como Jerusalém, a tradição celebra no dia 15.",
+      "gancho": "O livro de Ester não cita o nome de Deus, e mesmo assim a providência age. \"Quem sabe se não chegaste ao reino para um tempo como este?\" (Ester 4:14).",
+      "instituicao": [
+        {
+          "ref": "Ester 9:20-22",
+          "texto": "Mordecai escreveu estas coisas, e enviou cartas a todos os judeus que se achavam em todas as províncias do rei Assuero, aos de perto e aos de longe, ordenando-lhes que guardassem o dia catorze do mês de adar e o dia quinze do mesmo, todos os anos, como os dias em que os judeus tiveram repouso dos seus inimigos, e o mês em que se lhes mudou a tristeza em alegria, e o pranto em dia de festa, a fim de que os fizessem dias de banquetes e de alegria, e de mandarem porções escolhidas uns aos outros, e dádivas aos pobres."
+        },
+        {
+          "ref": "Ester 9:26-28",
+          "texto": "Por isso aqueles dias se chamaram Purim, segundo o nome Pur. portanto, por causa de todas as palavras daquela carta, e do que tinham testemunhado nesse sentido, e do que lhes havia sucedido, os judeus concordaram e se comprometeram por si, sua descendência, e por todos os que haviam de unir-se com eles, a não deixarem de guardar estes dois dias, conforme o que se escreveras a respeito deles, e segundo o seu tempo determinado, todos os anos; e a fazerem com que esses dias fossem lembrados e guardados por toda geração, família, província e cidade; e que esses dias de Purim não fossem revogados entre os judeus, e que a memória deles nunca perecesse dentre a sua descendência."
+        }
+      ],
+      "era": [
+        {
+          "tipo": "lei",
+          "t": "A festa foi instituída no próprio livro de Ester, pelos judeus e por Mordecai, para lembrar o dia em que os inimigos do povo foram vencidos (Ester 9:20-22). O nome vem de \"Pur\", a sorte lançada por Hamã (Ester 3:7)."
+        },
+        {
+          "tipo": "tradicao",
+          "t": "A leitura do rolo de Ester (Meguilá), as fantasias, os presentes de comida e a alegria pública são costumes posteriores."
+        }
+      ],
+      "cristo": "Ester arriscou a própria vida pelo povo. Ela é lembrada como figura de intercessão. O paralelo com Cristo é de leitura, não de texto: quem intercede arrisca-se pelo outro.",
+      "cristoVersos": [
+        {
+          "ref": "Ester 4:14",
+          "texto": "Pois, se de todo te calares agora, de outra parte se levantarão socorro e livramento para os judeus, mas tu e a casa de teu pai perecereis; e quem sabe se não foi para tal tempo como este que chegaste ao reino?"
+        }
+      ],
+      "futuro": null
+    }
+  ]
+}

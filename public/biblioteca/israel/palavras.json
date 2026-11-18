@@ -1,0 +1,660 @@
+[
+  {
+    "pt": "shalom",
+    "he": "שָׁלוֹם",
+    "sentido": "paz, inteireza, bem-estar; estar inteiro e em paz",
+    "passagens": [
+      {
+        "ref": "Números 6:26",
+        "texto": "o Senhor levante sobre ti o seu rosto, e te dê a paz."
+      },
+      {
+        "ref": "Salmos 122:6",
+        "texto": "Orai pela paz de Jerusalém; prosperem aqueles que te amam."
+      }
+    ]
+  },
+  {
+    "pt": "chesed",
+    "he": "חֶסֶד",
+    "sentido": "bondade fiel, amor leal que cumpre a aliança",
+    "passagens": [
+      {
+        "ref": "Êxodo 34:6",
+        "texto": "Tendo o Senhor passado perante Moisés, proclamou: Jeová, Jeová, Deus misericordioso e compassivo, tardio em irar-se e grande em beneficência e verdade;"
+      }
+    ]
+  },
+  {
+    "pt": "emet",
+    "he": "אֱמֶת",
+    "sentido": "verdade, firmeza, aquilo que se sustenta",
+    "passagens": [
+      {
+        "ref": "Êxodo 34:6",
+        "texto": "Tendo o Senhor passado perante Moisés, proclamou: Jeová, Jeová, Deus misericordioso e compassivo, tardio em irar-se e grande em beneficência e verdade;"
+      }
+    ]
+  },
+  {
+    "pt": "emunah",
+    "he": "אֱמוּנָה",
+    "sentido": "fidelidade, firmeza; a fé que se apoia em Deus",
+    "passagens": [
+      {
+        "ref": "Habacuque 2:4",
+        "texto": "Eis o soberbo! A sua alma não é reta nele; mas o justo pela sua fé viverá."
+      }
+    ]
+  },
+  {
+    "pt": "shuv",
+    "he": "שׁוּב",
+    "sentido": "voltar, converter-se; voltar para Deus",
+    "passagens": [
+      {
+        "ref": "Zacarias 1:3",
+        "texto": "Portanto dize-lhes: Assim diz o Senhor dos exércitos: Tornai-vos para mim, diz o Senhor dos exércitos, e eu me tornarei para vós, diz o Senhor dos exércitos."
+      }
+    ]
+  },
+  {
+    "pt": "ruach",
+    "he": "רוּחַ",
+    "sentido": "espírito, vento, fôlego",
+    "passagens": [
+      {
+        "ref": "Gênesis 1:2",
+        "texto": "A terra era sem forma e vazia; e havia trevas sobre a face do abismo, mas o Espírito de Deus pairava sobre a face das águas."
+      }
+    ]
+  },
+  {
+    "pt": "kavod",
+    "he": "כָּבוֹד",
+    "sentido": "glória, peso, honra que se reconhece",
+    "passagens": [
+      {
+        "ref": "Êxodo 33:18",
+        "texto": "Moisés disse ainda: Rogo-te que me mostres a tua glória."
+      }
+    ]
+  },
+  {
+    "pt": "tov",
+    "he": "טוֹב",
+    "sentido": "bom, bem, agradável",
+    "passagens": [
+      {
+        "ref": "Gênesis 1:31",
+        "texto": "E viu Deus tudo quanto fizera, e eis que era muito bom. E foi a tarde e a manhã, o dia sexto."
+      },
+      {
+        "ref": "Salmos 34:8",
+        "texto": "Provai, e vede que o Senhor é bom; bem-aventurado o homem que nele se refugia."
+      }
+    ]
+  },
+  {
+    "pt": "berit",
+    "he": "בְּרִית",
+    "sentido": "aliança, pacto",
+    "passagens": [
+      {
+        "ref": "Gênesis 17:7",
+        "texto": "estabelecerei o meu pacto contigo e com a tua descendência depois de ti em suas gerações, como pacto perpétuo, para te ser por Deus a ti e à tua descendência depois de ti."
+      },
+      {
+        "ref": "Jeremias 31:31",
+        "texto": "Eis que os dias vêm, diz o Senhor, em que farei um pacto novo com a casa de Israel e com a casa de Judá,"
+      }
+    ]
+  },
+  {
+    "pt": "yeshuah",
+    "he": "יְשׁוּעָה",
+    "sentido": "salvação, livramento; a raiz do nome Jesus (Yeshua)",
+    "passagens": [
+      {
+        "ref": "Isaías 12:2",
+        "texto": "Eis que Deus é a minha salvação; eu confiarei e não temerei porque o Senhor, sim o Senhor é a minha força e o meu cântico; e se tornou a minha salvação."
+      }
+    ]
+  },
+  {
+    "pt": "qadosh",
+    "he": "קָדוֹשׁ",
+    "sentido": "santo, separado para Deus",
+    "passagens": [
+      {
+        "ref": "Levítico 11:44",
+        "texto": "Porque eu sou o Senhor vosso Deus; portanto santificai-vos, e sede santos, porque eu sou santo; e não vos contaminareis com nenhum animal rasteiro que se move sobre a terra;"
+      },
+      {
+        "ref": "Isaías 6:3",
+        "texto": "E clamavam uns para os outros, dizendo: Santo, santo, santo é o Senhor dos exércitos; a terra toda está cheia da sua glória."
+      }
+    ]
+  },
+  {
+    "pt": "halelu-yah",
+    "he": "הַלְלוּ־יָהּ",
+    "sentido": "louvai a Yah (Jah), louvai ao SENHOR",
+    "passagens": [
+      {
+        "ref": "Apocalipse 19:1",
+        "texto": "Depois destas coisas, ouvi no céu como que uma grande voz de uma imensa multidão, que dizia: Aleluia! A salvação e a glória e o poder pertencem ao nosso Deus;"
+      }
+    ]
+  },
+  {
+    "pt": "amen",
+    "he": "אָמֵן",
+    "sentido": "firme, verdadeiro; \"assim seja\"",
+    "passagens": [
+      {
+        "ref": "Deuteronômio 27:15",
+        "texto": "Maldito o homem que fizer imagem esculpida, ou fundida, abominação ao Senhor, obra da mão do artífice, e a puser em um lugar escondido. E todo o povo, respondendo, dirá: Amém."
+      }
+    ]
+  },
+  {
+    "pt": "nefesh",
+    "he": "נֶפֶשׁ",
+    "sentido": "alma, vida, pessoa inteira",
+    "passagens": [
+      {
+        "ref": "Gênesis 2:7",
+        "texto": "E formou o Senhor Deus o homem do pó da terra, e soprou-lhe nas narinas o fôlego da vida; e o homem tornou-se alma vivente."
+      }
+    ]
+  },
+  {
+    "pt": "lev",
+    "he": "לֵב",
+    "sentido": "coração, mente, vontade",
+    "passagens": [
+      {
+        "ref": "Deuteronômio 6:5",
+        "texto": "Amarás, pois, ao Senhor teu Deus de todo o teu coração, de toda a tua alma e de todas as tuas forças."
+      }
+    ]
+  },
+  {
+    "pt": "torah",
+    "he": "תּוֹרָה",
+    "sentido": "instrução, ensino, lei de Deus",
+    "passagens": [
+      {
+        "ref": "Salmos 1:2",
+        "texto": "antes tem seu prazer na lei do Senhor, e na sua lei medita de dia e noite."
+      }
+    ]
+  },
+  {
+    "pt": "mashiach",
+    "he": "מָשִׁיחַ",
+    "sentido": "ungido; o Messias (Cristo, em grego)",
+    "passagens": [
+      {
+        "ref": "Daniel 9:25",
+        "texto": "Sabe e entende: desde a saída da ordem para restaurar e para edificar Jerusalém até o ungido, o príncipe, haverá sete semanas, e sessenta e duas semanas; com praças e tranqueiras se reedificará, mas em tempos angustiosos."
+      },
+      {
+        "ref": "Salmos 2:2",
+        "texto": "Os reis da terra se levantam, e os príncipes juntos conspiram contra o Senhor e contra o seu ungido, dizendo:"
+      }
+    ]
+  },
+  {
+    "pt": "elohim",
+    "he": "אֱלֹהִים",
+    "sentido": "Deus, o Criador e Senhor de tudo",
+    "passagens": [
+      {
+        "ref": "Gênesis 1:1",
+        "texto": "No princípio criou Deus os céus e a terra."
+      }
+    ]
+  },
+  {
+    "pt": "adonai",
+    "he": "אֲדֹנָי",
+    "sentido": "meu Senhor (usado no lugar do nome sagrado)",
+    "passagens": [
+      {
+        "ref": "Salmos 110:1",
+        "texto": "Disse o Senhor ao meu Senhor: Assenta-te à minha direita, até que eu ponha os teus inimigos por escabelo dos teus pés."
+      }
+    ]
+  },
+  {
+    "pt": "YHWH",
+    "he": "יְהוָה",
+    "sentido": "o nome sagrado de Deus (o SENHOR, em maiúsculas)",
+    "passagens": [
+      {
+        "ref": "Êxodo 3:14",
+        "texto": "Respondeu Deus a Moisés: EU SOU O QUE SOU. Disse mais: Assim dirás aos olhos de Israel: EU SOU me enviou a vós."
+      }
+    ]
+  },
+  {
+    "pt": "or",
+    "he": "אוֹר",
+    "sentido": "luz",
+    "passagens": [
+      {
+        "ref": "Gênesis 1:3",
+        "texto": "Disse Deus: haja luz. E houve luz."
+      }
+    ]
+  },
+  {
+    "pt": "erets",
+    "he": "אֶרֶץ",
+    "sentido": "terra, chão, região",
+    "passagens": [
+      {
+        "ref": "Gênesis 1:1",
+        "texto": "No princípio criou Deus os céus e a terra."
+      }
+    ]
+  },
+  {
+    "pt": "bara",
+    "he": "בָּרָא",
+    "sentido": "criar, fazer do nada (só Deus é o sujeito)",
+    "passagens": [
+      {
+        "ref": "Gênesis 1:1",
+        "texto": "No princípio criou Deus os céus e a terra."
+      }
+    ]
+  },
+  {
+    "pt": "melech",
+    "he": "מֶלֶךְ",
+    "sentido": "rei",
+    "passagens": [
+      {
+        "ref": "Salmos 24:10",
+        "texto": "Quem é esse Rei da Glória? O Senhor dos exércitos; ele é o Rei da Glória."
+      }
+    ]
+  },
+  {
+    "pt": "goel",
+    "he": "גּוֹאֵל",
+    "sentido": "resgatador, redentor, parente que paga a dívida",
+    "passagens": [
+      {
+        "ref": "Isaías 41:14",
+        "texto": "Não temas, ó bichinho de Jacó, nem vós, povozinho de Israel; eu te ajudo, diz o Senhor, e o teu redentor é o Santo de Israel."
+      }
+    ]
+  },
+  {
+    "pt": "ger",
+    "he": "גֵּר",
+    "sentido": "estrangeiro que vive entre o povo",
+    "passagens": [
+      {
+        "ref": "Levítico 19:34",
+        "texto": "Como um natural entre vós será o estrangeiro que peregrinar convosco; amá-lo-eis como a vós mesmos; pois estrangeiros fostes na terra do Egito. Eu sou o Senhor vosso Deus."
+      }
+    ]
+  },
+  {
+    "pt": "ahavah",
+    "he": "אַהֲבָה",
+    "sentido": "amor",
+    "passagens": [
+      {
+        "ref": "Jeremias 31:3",
+        "texto": "De longe o Senhor me apareceu, dizendo: Pois que com amor eterno te amei, também com benignidade te atraí."
+      }
+    ]
+  },
+  {
+    "pt": "yirah",
+    "he": "יִרְאָה",
+    "sentido": "temor, reverência a Deus",
+    "passagens": [
+      {
+        "ref": "Provérbios 1:7",
+        "texto": "O temor do Senhor é o princípio do conhecimento; mas os insensatos desprezam a sabedoria e a instrução."
+      }
+    ]
+  },
+  {
+    "pt": "chokhmah",
+    "he": "חָכְמָה",
+    "sentido": "sabedoria, habilidade de viver bem",
+    "passagens": [
+      {
+        "ref": "Provérbios 9:10",
+        "texto": "O temor do Senhor é o princípio sabedoria; e o conhecimento do Santo é o entendimento."
+      }
+    ]
+  },
+  {
+    "pt": "binah",
+    "he": "בִּינָה",
+    "sentido": "entendimento, discernimento",
+    "passagens": [
+      {
+        "ref": "Provérbios 9:10",
+        "texto": "O temor do Senhor é o princípio sabedoria; e o conhecimento do Santo é o entendimento."
+      }
+    ]
+  },
+  {
+    "pt": "da'at",
+    "he": "דַּעַת",
+    "sentido": "conhecimento, intimidade com o que se conhece",
+    "passagens": [
+      {
+        "ref": "Oseias 4:6",
+        "texto": "O meu povo está sendo destruído, porque lhe falta o conhecimento. Porquanto rejeitaste o conhecimento, também eu te rejeitarei, para que não sejas sacerdote diante de mim; visto que te esqueceste da lei do teu Deus, também eu me esquecerei de teus filhos."
+      }
+    ]
+  },
+  {
+    "pt": "tzedaqah",
+    "he": "צְדָקָה",
+    "sentido": "justiça, retidão, ação justa",
+    "passagens": [
+      {
+        "ref": "Gênesis 15:6",
+        "texto": "E creu Abrão no Senhor, e o Senhor imputou-lhe isto como justiça."
+      }
+    ]
+  },
+  {
+    "pt": "todah",
+    "he": "תּוֹדָה",
+    "sentido": "ação de graças, louvor com gratidão",
+    "passagens": [
+      {
+        "ref": "Salmos 100:4",
+        "texto": "Entrai pelas suas portas com ação de graças, e em seus átrios com louvor; dai-lhe graças e bendizei o seu nome."
+      }
+    ]
+  },
+  {
+    "pt": "tehillah",
+    "he": "תְּהִלָּה",
+    "sentido": "louvor, a canção de louvor",
+    "passagens": [
+      {
+        "ref": "Salmos 22:3",
+        "texto": "Contudo tu és santo, entronizado sobre os louvores de Israel."
+      }
+    ]
+  },
+  {
+    "pt": "tefillah",
+    "he": "תְּפִלָּה",
+    "sentido": "oração, súplica",
+    "passagens": [
+      {
+        "ref": "Isaías 56:7",
+        "texto": "sim, a esses os levarei ao meu santo monte, e os alegrarei na minha casa de oração; os seus holocaustos e os seus sacrifícios serão aceitos no meu altar; porque a minha casa será chamada casa de oração para todos os povos."
+      }
+    ]
+  },
+  {
+    "pt": "simchah",
+    "he": "שִׂמְחָה",
+    "sentido": "alegria, júbilo",
+    "passagens": [
+      {
+        "ref": "Neemias 8:10",
+        "texto": "Disse-lhes mais: Ide, comei as gorduras, e bebei as doçuras, e enviai porções aos que não têm nada preparado para si; porque este dia é consagrado ao nosso Senhor. Portanto não vos entristeçais, pois a alegria do Senhor é a vossa força."
+      }
+    ]
+  },
+  {
+    "pt": "kol",
+    "he": "קוֹל",
+    "sentido": "voz, som",
+    "passagens": [
+      {
+        "ref": "Gênesis 3:10",
+        "texto": "Respondeu-lhe o homem: Ouvi a tua voz no jardim e tive medo, porque estava nu; e escondi-me."
+      }
+    ]
+  },
+  {
+    "pt": "shem",
+    "he": "שֵׁם",
+    "sentido": "nome, reputação, identidade",
+    "passagens": [
+      {
+        "ref": "Êxodo 3:15",
+        "texto": "E Deus disse mais a Moisés: Assim dirás aos filhos de Israel: O Senhor, o Deus de vossos pais, o Deus de Abraão, o Deus de Isaque, e o Deus de Jacó, me enviou a vós; este é o meu nome eternamente, e este é o meu memorial de geração em geração."
+      }
+    ]
+  },
+  {
+    "pt": "panim",
+    "he": "פָּנִים",
+    "sentido": "face, rosto, presença",
+    "passagens": [
+      {
+        "ref": "Números 6:25",
+        "texto": "o Senhor faça resplandecer o seu rosto sobre ti, e tenha misericórdia de ti;"
+      }
+    ]
+  },
+  {
+    "pt": "barak",
+    "he": "בָּרַךְ",
+    "sentido": "abençoar, dar o bem de Deus",
+    "passagens": [
+      {
+        "ref": "Números 6:24",
+        "texto": "O Senhor te abençoe e te guarde;"
+      }
+    ]
+  },
+  {
+    "pt": "shamar",
+    "he": "שָׁמַר",
+    "sentido": "guardar, vigiar, cuidar",
+    "passagens": [
+      {
+        "ref": "Números 6:24",
+        "texto": "O Senhor te abençoe e te guarde;"
+      }
+    ]
+  },
+  {
+    "pt": "shabbat",
+    "he": "שַׁבָּת",
+    "sentido": "sábado, descanso",
+    "passagens": [
+      {
+        "ref": "Êxodo 20:8",
+        "texto": "Lembra-te do dia do sábado, para o santificar."
+      }
+    ]
+  },
+  {
+    "pt": "mitzvah",
+    "he": "מִצְוָה",
+    "sentido": "mandamento, ordem de Deus",
+    "passagens": [
+      {
+        "ref": "Deuteronômio 6:1",
+        "texto": "Estes, pois, são os mandamentos, os estatutos e os preceitos que o Senhor teu Deus mandou ensinar-te, a fim de que os cumprisses na terra a que estás passando: para a possuíres;"
+      }
+    ]
+  },
+  {
+    "pt": "kohen",
+    "he": "כֹּהֵן",
+    "sentido": "sacerdote",
+    "passagens": [
+      {
+        "ref": "Êxodo 28:1",
+        "texto": "Depois farás chegar a ti teu irmão Arão, e seus filhos com ele, dentre os filhos de Israel, para me administrarem o ofício sacerdotal; a saber: Arão, Nadabe e Abiú, Eleazar e Itamar, os filhos de Arão."
+      }
+    ]
+  },
+  {
+    "pt": "olah",
+    "he": "עוֹלָה",
+    "sentido": "holocausto, oferta que sobe por inteiro",
+    "passagens": [
+      {
+        "ref": "Levítico 1:4",
+        "texto": "Porá a sua mão sobre a cabeça do holocausto, e este será aceito a favor dele, para a sua expiação."
+      }
+    ]
+  },
+  {
+    "pt": "kapparah",
+    "he": "כַּפָּרָה",
+    "sentido": "expiação, cobertura do pecado",
+    "passagens": [
+      {
+        "ref": "Levítico 17:11",
+        "texto": "Porque a vida da carne está no sangue; pelo que vo-lo tenho dado sobre o altar, para fazer expiação pelas vossas almas; porquanto é o sangue que faz expiação, em virtude da vida."
+      }
+    ]
+  },
+  {
+    "pt": "pesach",
+    "he": "פֶּסַח",
+    "sentido": "Páscoa; passagem",
+    "passagens": [
+      {
+        "ref": "Êxodo 12:11",
+        "texto": "Assim pois o comereis: Os vossos lombos cingidos, os vossos sapatos nos pés, e o vosso cajado na mão; e o comereis apressadamente; esta é a páscoa do Senhor."
+      }
+    ]
+  },
+  {
+    "pt": "matzah",
+    "he": "מַצָּה",
+    "sentido": "pão sem fermento (ázimo)",
+    "passagens": [
+      {
+        "ref": "Êxodo 12:15",
+        "texto": "Por sete dias comereis pães ázimos; logo ao primeiro dia tirareis o fermento das vossas casas, porque qualquer que comer pão levedado, entre o primeiro e o sétimo dia, esse será cortado de Israel."
+      }
+    ]
+  },
+  {
+    "pt": "bikkurim",
+    "he": "בִּכּוּרִים",
+    "sentido": "primícias, primeiros frutos",
+    "passagens": [
+      {
+        "ref": "Êxodo 23:19",
+        "texto": "As primícias dos primeiros frutos da tua terra trarás à casa do Senhor teu Deus. Não cozerás o cabrito no leite de sua mãe."
+      }
+    ]
+  },
+  {
+    "pt": "shofar",
+    "he": "שׁוֹפָר",
+    "sentido": "chifre de carneiro, trombeta",
+    "passagens": [
+      {
+        "ref": "Levítico 25:9",
+        "texto": "Então, no décimo dia do sétimo mês, farás soar fortemente a trombeta; no dia da expiação fareis soar a trombeta por toda a vossa terra."
+      }
+    ]
+  },
+  {
+    "pt": "sukkah",
+    "he": "סֻכָּה",
+    "sentido": "cabana, tenda de ramos",
+    "passagens": [
+      {
+        "ref": "Levítico 23:42",
+        "texto": "Por sete dias habitareis em tendas de ramos; todos os naturais em Israel habitarão em tendas de ramos,"
+      }
+    ]
+  },
+  {
+    "pt": "tziyon",
+    "he": "צִיּוֹן",
+    "sentido": "Sião, a colina de Jerusalém",
+    "passagens": [
+      {
+        "ref": "Salmos 48:2",
+        "texto": "De bela e alta situação, alegria de toda terra é o monte Sião aos lados do norte, a cidade do grande Rei."
+      }
+    ]
+  },
+  {
+    "pt": "navi",
+    "he": "נָבִיא",
+    "sentido": "profeta, aquele que fala por Deus",
+    "passagens": [
+      {
+        "ref": "Deuteronômio 18:15",
+        "texto": "O Senhor teu Deus te suscitará do meio de ti, dentre teus irmãos, um profeta semelhante a mim; a ele ouvirás;"
+      }
+    ]
+  },
+  {
+    "pt": "mizbeach",
+    "he": "מִזְבֵּחַ",
+    "sentido": "altar",
+    "passagens": [
+      {
+        "ref": "Êxodo 20:24",
+        "texto": "um altar de terra me farás, e sobre ele sacrificarás os teus holocaustos, e as tuas ofertas pacíficas, as tuas ovelhas e os teus bois. Em todo lugar em que eu fizer recordar o meu nome, virei a ti e te abençoarei."
+      }
+    ]
+  },
+  {
+    "pt": "yerushalayim",
+    "he": "יְרוּשָׁלַיִם",
+    "sentido": "Jerusalém",
+    "passagens": [
+      {
+        "ref": "Salmos 122:6",
+        "texto": "Orai pela paz de Jerusalém; prosperem aqueles que te amam."
+      }
+    ]
+  },
+  {
+    "pt": "bayit",
+    "he": "בַּיִת",
+    "sentido": "casa, família, o Templo (\"a casa de Deus\")",
+    "passagens": [
+      {
+        "ref": "Gênesis 28:17",
+        "texto": "E temeu, e disse: Quão terrível é este lugar! Este não é outro lugar senão a casa de Deus; e esta é a porta dos céus."
+      }
+    ]
+  },
+  {
+    "pt": "chai",
+    "he": "חַי",
+    "sentido": "vivo, vivente",
+    "passagens": [
+      {
+        "ref": "Jeremias 10:10",
+        "texto": "Mas o Senhor é o verdadeiro Deus; ele é o Deus vivo e o Rei eterno, ao seu furor estremece a terra, e as nações não podem suportar a sua indignação."
+      }
+    ]
+  },
+  {
+    "pt": "rachum",
+    "he": "רַחוּם",
+    "sentido": "misericordioso, compassivo",
+    "passagens": [
+      {
+        "ref": "Êxodo 34:6",
+        "texto": "Tendo o Senhor passado perante Moisés, proclamou: Jeová, Jeová, Deus misericordioso e compassivo, tardio em irar-se e grande em beneficência e verdade;"
+      }
+    ]
+  }
+]

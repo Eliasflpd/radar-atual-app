@@ -3575,6 +3575,8 @@ function renderManuais(){
   itens.push({onclick:"location.href='/biblioteca/mensagens/'", titulo:'Mensagens', autor:'Sermões em prosa', img:IMG+'mensagens.jpg'});
   // Pedras que Falam (17/11/2026, ideia do Elias): achados da arqueologia que confirmam a Bíblia, com selo comprovado/em debate.
   itens.push({onclick:"location.href='/biblioteca/achados/'", titulo:'Pedras que Falam', autor:'Achados que confirmam a Bíblia', img:IMG+'pedras-que-falam.jpg', novo:(Date.now()-new Date('2026-11-17T12:00:00').getTime())<14*864e5});
+  // Israel (18/11/2026, pedido do Elias): festas do Senhor, a terra da Bíblia e a palavra hebraica do dia.
+  itens.push({onclick:"location.href='/biblioteca/israel/'", titulo:'Israel', autor:'Festas, terra e palavra', img:IMG+'israel.jpg', novo:(Date.now()-new Date('2026-11-18T12:00:00').getTime())<14*864e5});
   itens.push({onclick:"location.href='/biblioteca/concilio/'", titulo:'Concílio', autor:'42 expositores + Lupa', img:IMG+'concilio.jpg'});
   itens.push({onclick:"location.href='/biblioteca/escola-pregacao/'", titulo:'Escola de Pregação', autor:'Curso + unção', img:IMG+'escola-de-pregacao.jpg'});
   // Bereia (02/11/2026): o ajudante de pregação — examina a Escritura e a Biblioteca (com a Joeira) e monta a pregação.

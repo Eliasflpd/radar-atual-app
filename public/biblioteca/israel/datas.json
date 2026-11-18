@@ -1,0 +1,271 @@
+{
+  "fonte": "Calendário hebraico convertido pelo motor Intl (ICU) e conferido com a API pública e gratuita do Hebcal (hebcal.com, sem chave), 2026-2031.",
+  "gerado": "2026-11-18",
+  "obs": "As festas começam ao pôr do sol da véspera (o \"erev\"). Cada data abaixo é o dia civil do Gregoriano em que o dia judaico se conta.",
+  "anos": {
+    "2026": {
+      "pessach": {
+        "erev": "2026-04-01",
+        "dia": "2026-04-02",
+        "fim": "2026-04-08",
+        "hebraico": "15 de Nisan"
+      },
+      "bikkurim": {
+        "dia": "2026-04-03",
+        "hebraico": "16 de Nisan"
+      },
+      "shavuot": {
+        "erev": "2026-05-21",
+        "dia": "2026-05-22",
+        "hebraico": "6 de Sivan"
+      },
+      "trombetas": {
+        "erev": "2026-09-11",
+        "dia": "2026-09-12",
+        "hebraico": "1 de Tishri"
+      },
+      "expiacao": {
+        "erev": "2026-09-20",
+        "dia": "2026-09-21",
+        "hebraico": "10 de Tishri"
+      },
+      "sucot": {
+        "erev": "2026-09-25",
+        "dia": "2026-09-26",
+        "fim": "2026-10-02",
+        "hebraico": "15 a 21 de Tishri"
+      },
+      "chanukah": {
+        "erev": "2026-12-04",
+        "dia": "2026-12-05",
+        "fim": "2026-12-12",
+        "hebraico": "25 de Kislev a 2 de Tevet"
+      },
+      "purim": {
+        "erev": "2026-03-02",
+        "dia": "2026-03-03",
+        "hebraico": "14 de Adar"
+      }
+    },
+    "2027": {
+      "pessach": {
+        "erev": "2027-04-21",
+        "dia": "2027-04-22",
+        "fim": "2027-04-28",
+        "hebraico": "15 de Nisan"
+      },
+      "bikkurim": {
+        "dia": "2027-04-23",
+        "hebraico": "16 de Nisan"
+      },
+      "shavuot": {
+        "erev": "2027-06-10",
+        "dia": "2027-06-11",
+        "hebraico": "6 de Sivan"
+      },
+      "trombetas": {
+        "erev": "2027-10-01",
+        "dia": "2027-10-02",
+        "hebraico": "1 de Tishri"
+      },
+      "expiacao": {
+        "erev": "2027-10-10",
+        "dia": "2027-10-11",
+        "hebraico": "10 de Tishri"
+      },
+      "sucot": {
+        "erev": "2027-10-15",
+        "dia": "2027-10-16",
+        "fim": "2027-10-22",
+        "hebraico": "15 a 21 de Tishri"
+      },
+      "chanukah": {
+        "erev": "2027-12-24",
+        "dia": "2027-12-25",
+        "fim": "2028-01-01",
+        "hebraico": "25 de Kislev a 2 de Tevet"
+      },
+      "purim": {
+        "erev": "2027-03-22",
+        "dia": "2027-03-23",
+        "hebraico": "14 de Adar II"
+      }
+    },
+    "2028": {
+      "pessach": {
+        "erev": "2028-04-10",
+        "dia": "2028-04-11",
+        "fim": "2028-04-17",
+        "hebraico": "15 de Nisan"
+      },
+      "bikkurim": {
+        "dia": "2028-04-12",
+        "hebraico": "16 de Nisan"
+      },
+      "shavuot": {
+        "erev": "2028-05-30",
+        "dia": "2028-05-31",
+        "hebraico": "6 de Sivan"
+      },
+      "trombetas": {
+        "erev": "2028-09-20",
+        "dia": "2028-09-21",
+        "hebraico": "1 de Tishri"
+      },
+      "expiacao": {
+        "erev": "2028-09-29",
+        "dia": "2028-09-30",
+        "hebraico": "10 de Tishri"
+      },
+      "sucot": {
+        "erev": "2028-10-04",
+        "dia": "2028-10-05",
+        "fim": "2028-10-11",
+        "hebraico": "15 a 21 de Tishri"
+      },
+      "chanukah": {
+        "erev": "2028-12-12",
+        "dia": "2028-12-13",
+        "fim": "2028-12-20",
+        "hebraico": "25 de Kislev a 2 de Tevet"
+      },
+      "purim": {
+        "erev": "2028-03-11",
+        "dia": "2028-03-12",
+        "hebraico": "14 de Adar"
+      }
+    },
+    "2029": {
+      "pessach": {
+        "erev": "2029-03-30",
+        "dia": "2029-03-31",
+        "fim": "2029-04-06",
+        "hebraico": "15 de Nisan"
+      },
+      "bikkurim": {
+        "dia": "2029-04-01",
+        "hebraico": "16 de Nisan"
+      },
+      "shavuot": {
+        "erev": "2029-05-19",
+        "dia": "2029-05-20",
+        "hebraico": "6 de Sivan"
+      },
+      "trombetas": {
+        "erev": "2029-09-09",
+        "dia": "2029-09-10",
+        "hebraico": "1 de Tishri"
+      },
+      "expiacao": {
+        "erev": "2029-09-18",
+        "dia": "2029-09-19",
+        "hebraico": "10 de Tishri"
+      },
+      "sucot": {
+        "erev": "2029-09-23",
+        "dia": "2029-09-24",
+        "fim": "2029-09-30",
+        "hebraico": "15 a 21 de Tishri"
+      },
+      "chanukah": {
+        "erev": "2029-12-01",
+        "dia": "2029-12-02",
+        "fim": "2029-12-09",
+        "hebraico": "25 de Kislev a 2 de Tevet"
+      },
+      "purim": {
+        "erev": "2029-02-28",
+        "dia": "2029-03-01",
+        "hebraico": "14 de Adar"
+      }
+    },
+    "2030": {
+      "pessach": {
+        "erev": "2030-04-17",
+        "dia": "2030-04-18",
+        "fim": "2030-04-24",
+        "hebraico": "15 de Nisan"
+      },
+      "bikkurim": {
+        "dia": "2030-04-19",
+        "hebraico": "16 de Nisan"
+      },
+      "shavuot": {
+        "erev": "2030-06-06",
+        "dia": "2030-06-07",
+        "hebraico": "6 de Sivan"
+      },
+      "trombetas": {
+        "erev": "2030-09-27",
+        "dia": "2030-09-28",
+        "hebraico": "1 de Tishri"
+      },
+      "expiacao": {
+        "erev": "2030-10-06",
+        "dia": "2030-10-07",
+        "hebraico": "10 de Tishri"
+      },
+      "sucot": {
+        "erev": "2030-10-11",
+        "dia": "2030-10-12",
+        "fim": "2030-10-18",
+        "hebraico": "15 a 21 de Tishri"
+      },
+      "chanukah": {
+        "erev": "2030-12-20",
+        "dia": "2030-12-21",
+        "fim": "2030-12-28",
+        "hebraico": "25 de Kislev a 2 de Tevet"
+      },
+      "purim": {
+        "erev": "2030-03-18",
+        "dia": "2030-03-19",
+        "hebraico": "14 de Adar II"
+      }
+    },
+    "2031": {
+      "pessach": {
+        "erev": "2031-04-07",
+        "dia": "2031-04-08",
+        "fim": "2031-04-14",
+        "hebraico": "15 de Nisan"
+      },
+      "bikkurim": {
+        "dia": "2031-04-09",
+        "hebraico": "16 de Nisan"
+      },
+      "shavuot": {
+        "erev": "2031-05-27",
+        "dia": "2031-05-28",
+        "hebraico": "6 de Sivan"
+      },
+      "trombetas": {
+        "erev": "2031-09-17",
+        "dia": "2031-09-18",
+        "hebraico": "1 de Tishri"
+      },
+      "expiacao": {
+        "erev": "2031-09-26",
+        "dia": "2031-09-27",
+        "hebraico": "10 de Tishri"
+      },
+      "sucot": {
+        "erev": "2031-10-01",
+        "dia": "2031-10-02",
+        "fim": "2031-10-08",
+        "hebraico": "15 a 21 de Tishri"
+      },
+      "chanukah": {
+        "erev": "2031-12-09",
+        "dia": "2031-12-10",
+        "fim": "2031-12-17",
+        "hebraico": "25 de Kislev a 2 de Tevet"
+      },
+      "purim": {
+        "erev": "2031-03-08",
+        "dia": "2031-03-09",
+        "hebraico": "14 de Adar"
+      }
+    }
+  }
+}

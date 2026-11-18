@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Israel — festas, terra e palavra</title>
+<style>
+  :root{--branco:#fff;--texto:#1c2230;--navy:#0f3d5c;--teal:#0f6d78;--dourado:#a9791c;--vinho:#8a1c1c;--cinza:#6b7280;--linha:#e3e6ee;--suave:#f6f4ef;--verde:#1f8a4c}
+  *{box-sizing:border-box;-webkit-text-size-adjust:100%}
+  html{font-size:17px}
+  body{margin:0 auto;max-width:860px;background:var(--branco);color:var(--texto);font-family:'Segoe UI',system-ui,Arial,sans-serif;line-height:1.6;padding:0 0 calc(40px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  button{font-family:inherit;cursor:pointer}
+  .topo{position:relative;min-height:260px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:16px;overflow:hidden;background:#2a1d10}
+  .topo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .topo::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.15) 0%,rgba(0,0,0,.25) 45%,rgba(20,14,6,.88) 100%)}
+  .topo > *{position:relative;z-index:1}
+  .voltar{position:absolute!important;top:14px;left:14px;background:rgba(15,20,30,.75);color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:.92rem;font-weight:700;z-index:2;min-height:40px}
+  .selo{font-size:.75rem;font-weight:800;letter-spacing:3px;color:#f0d9a0;text-transform:uppercase}
+  .topo h1{font-family:Georgia,serif;font-size:2.1rem;line-height:1.1;margin:4px 0 4px}
+  .topo p{margin:0;font-size:1rem;opacity:.95}
+  .abas{display:flex;gap:6px;padding:12px 12px 8px;position:sticky;top:0;background:#fff;z-index:5;border-bottom:1px solid var(--linha)}
+  .aba{flex:1;border:1px solid var(--linha);background:var(--suave);color:var(--navy);border-radius:999px;padding:8px 4px;font-weight:800;font-size:.86rem;min-height:42px;white-space:nowrap}
+  .aba.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .pane{padding:14px}
+  .pane[hidden]{display:none}
+  h2.sec{font-family:Georgia,serif;color:var(--navy);font-size:1.3rem;margin:22px 0 8px}
+  .painel{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:16px;padding:14px 16px;margin:0 0 14px}
+  .painel .rot{font-size:.78rem;font-weight:800;letter-spacing:1px;color:var(--dourado);text-transform:uppercase}
+  .painel .big{font-family:Georgia,serif;font-size:1.25rem;color:var(--navy);margin:4px 0 2px;line-height:1.3}
+  .painel .peq{font-size:.9rem;color:#4b5563;margin:2px 0 0}
+  .principio{border-left:5px solid var(--teal);background:#f2f7f8;border-radius:12px;padding:12px 14px;margin:0 0 16px;font-size:1rem}
+  .grade{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:640px){.grade{grid-template-columns:1fr 1fr}}
+  .card{border:1px solid var(--linha);border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 4px 14px rgba(15,61,92,.08);cursor:pointer;display:flex;flex-direction:row;text-align:left;padding:0;color:inherit;font:inherit;width:100%}
+  .card .foto{position:relative;width:112px;min-width:112px;background:linear-gradient(135deg,#5b4220,#1c2230);display:flex;align-items:center;justify-content:center}
+  .card .foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .card .letras{position:relative;color:#f0d9a0;font-size:1.5rem;font-family:Georgia,serif;direction:rtl}
+  .card .corpo{padding:10px 12px;flex:1;min-width:0}
+  .card h3{font-family:Georgia,serif;font-size:1.12rem;line-height:1.2;color:var(--navy);margin:0 0 2px}
+  .card .he{font-size:.95rem;color:var(--dourado);font-weight:700;margin-bottom:2px}
+  .card p{margin:0;font-size:.9rem;color:#374151;line-height:1.4}
+  .tag{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.5px;border-radius:999px;padding:2px 8px;background:#e8eef6;color:var(--navy);text-transform:uppercase;margin-top:4px}
+  .tag.post{background:#f3ead7;color:#7a5410}
+  .detalhe{display:none;padding:0 0 10px}
+  .detalhe.on{display:block}
+  .d-foto{position:relative;aspect-ratio:3/2;max-height:420px;width:100%;overflow:hidden;background:linear-gradient(135deg,#5b4220,#1c2230);display:flex;align-items:center;justify-content:center}
+  .d-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .d-foto::after{content:'';position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff)}
+  .ilustra{position:absolute;right:10px;top:10px;background:rgba(0,0,0,.6);color:#fff;font-size:.72rem;border-radius:8px;padding:3px 8px;z-index:1}
+  .d-voltar{position:absolute;left:12px;top:12px;z-index:2;background:rgba(15,20,30,.75);color:#fff;border:none;border-radius:999px;padding:9px 16px;font-size:.92rem;font-weight:700;min-height:40px}
+  .d-corpo{padding:0 16px;margin-top:-26px;position:relative;z-index:1}
+  .d-corpo h1{font-family:Georgia,serif;color:var(--navy);font-size:1.7rem;line-height:1.2;margin:6px 0 4px}
+  .d-corpo .he{font-size:1.5rem;color:var(--dourado);font-weight:700;margin:0 0 6px;direction:rtl;text-align:left}
+  .ficha{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;background:var(--suave);border-radius:14px;padding:12px 14px;margin:10px 0 14px;font-size:.96rem}
+  .ficha b{color:var(--dourado)}
+  .bloco{margin:16px 0}
+  .bloco h2{font-size:1.08rem;color:var(--navy);margin:0 0 6px;font-family:Georgia,serif}
+  .bloco p{margin:0 0 8px;font-size:1.02rem}
+  .verso{border-left:5px solid var(--teal);background:#f2f7f8;border-radius:12px;padding:10px 12px;margin:8px 0}
+  .verso .vr{font-weight:800;color:var(--teal);font-size:.8rem;letter-spacing:.8px;text-transform:uppercase}
+  .verso .vt{font-family:Georgia,serif;font-style:italic;font-size:1rem;color:var(--navy);margin-top:3px;line-height:1.5}
+  .lista-era{list-style:none;padding:0;margin:0}
+  .lista-era li{background:#fff;border:1px solid var(--linha);border-radius:12px;padding:9px 12px;margin:0 0 8px;font-size:.98rem}
+  .lista-era .t{display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;border-radius:999px;padding:2px 8px;margin-bottom:4px}
+  .lista-era .t.lei{background:#e3f1e8;color:var(--verde)}
+  .lista-era .t.tradicao{background:#f6ecd9;color:#7a5410}
+  .futuro{background:#f5f1fb;border:1px solid #d9cdef;border-radius:14px;padding:12px 14px;margin:16px 0}
+  .futuro h2{color:#4b2c7a}
+  .futuro .nota{font-size:.82rem;color:#5b4880;font-weight:700;margin:0 0 6px}
+  .importa{background:#fbf6ea;border:2px solid #ecd9ad;border-radius:14px;padding:12px 14px;margin:16px 0;font-size:1.02rem}
+  .importa b{color:var(--vinho)}
+  .aviso{background:#fff7e6;border:1px solid #f1d39a;color:#7a5410;border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:.92rem}
+  .acoes{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+  .btn{border:none;border-radius:12px;padding:12px 16px;font-size:1rem;font-weight:800;min-height:46px}
+  .btn.navy{background:var(--navy);color:#fff}
+  .btn.claro{background:var(--suave);color:var(--navy);border:1px solid var(--linha)}
+  .links a{display:block;color:var(--teal);font-weight:700;margin:0 0 6px;word-break:break-word}
+  .mapa-box{display:flex;gap:10px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin:6px 0 10px}
+  .mapa-box svg{display:block;max-width:100%;height:auto}
+  .zoom{border:1px solid var(--linha);border-radius:12px;background:#fbf8f1;padding:6px}
+  .zoom .cap{font-size:.78rem;color:var(--cinza);text-align:center;margin-top:2px}
+  .pin{cursor:pointer}
+  .pin circle.bola{fill:var(--vinho);stroke:#fff;stroke-width:2}
+  .pin text{fill:#fff;font-size:10px;font-weight:800;text-anchor:middle;pointer-events:none;font-family:'Segoe UI',Arial,sans-serif}
+  .pin:focus circle.bola{stroke:#f0d9a0;stroke-width:3}
+  .legenda{font-size:.82rem;color:var(--cinza);margin:0 0 10px;text-align:center}
+  .lugares{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr;gap:6px}
+  @media(min-width:640px){.lugares{grid-template-columns:1fr 1fr}}
+  .lugares button{width:100%;display:flex;gap:10px;align-items:center;text-align:left;background:#fff;border:1px solid var(--linha);border-radius:12px;padding:9px 10px;min-height:44px;font-size:.96rem;color:var(--texto)}
+  .lugares .n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--vinho);color:#fff;font-weight:800;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+  .lugares small{display:block;color:var(--cinza);font-size:.8rem}
+  .rodape{color:var(--cinza);font-size:.85rem;text-align:center;padding:10px 16px}
+  .pal-dia{background:linear-gradient(135deg,#fbf6ea,#f3ead7);border:2px solid #ecd9ad;border-radius:18px;padding:18px 16px;text-align:center}
+  .pal-dia .he{font-size:3rem;color:var(--navy);line-height:1.4;font-family:'Segoe UI',Arial,'Noto Sans Hebrew',sans-serif}
+  .pal-dia .tr{font-family:Georgia,serif;font-size:1.5rem;color:var(--vinho);font-weight:700;margin-top:2px}
+  .pal-dia .sent{font-size:1.05rem;margin:8px 0 0}
+  .pal-dia .verso{text-align:left;margin-top:12px}
+  .btn-todas{width:100%;margin:14px 0 6px;background:var(--navy);color:#fff}
+  .pal-lista{display:grid;grid-template-columns:1fr;gap:8px;margin:8px 0}
+  @media(min-width:640px){.pal-lista{grid-template-columns:1fr 1fr}}
+  .pal-item{border:1px solid var(--linha);border-radius:12px;padding:8px 12px;background:#fff}
+  .pal-item .he{font-size:1.35rem;color:var(--navy);text-align:right;font-family:'Segoe UI',Arial,'Noto Sans Hebrew',sans-serif}
+  .pal-item .tr{font-weight:800;color:var(--vinho)}
+  .pal-item .sent{font-size:.92rem;color:#374151}
+  .pal-item summary{cursor:pointer;color:var(--teal);font-weight:700;font-size:.9rem;margin-top:4px}
+  .nov{border-bottom:1px solid var(--linha);padding:12px 2px}
+  .nov a{color:var(--texto);text-decoration:none;display:block}
+  .nov .tt{font-family:Georgia,serif;font-size:1.02rem;color:var(--navy);line-height:1.3}
+  .nov .meta{font-size:.8rem;color:var(--cinza);margin-top:4px}
+  .vazio{color:var(--cinza);padding:12px 2px;font-size:.96rem}
+  .aviso-fundo{font-size:.82rem;color:var(--cinza);margin:0 0 6px}
+</style>
+</head>
+<body>
+  <section id="v-inicio">
+    <div class="topo">
+      <img src="img/capa-modulo.jpg?v=1" alt="" onerror="this.remove()">
+      <button class="voltar" onclick="location.href='/?mod=manuais'">← Biblioteca</button>
+      <div class="selo">Bíblia e história</div>
+      <h1>Israel</h1>
+      <p>As festas do Senhor, a terra da Bíblia e a palavra hebraica do dia.</p>
+    </div>
+    <nav class="abas" role="tablist">
+      <button class="aba on" data-aba="festas" role="tab">📅 Festas</button>
+      <button class="aba" data-aba="terra" role="tab">🗺️ Terra</button>
+      <button class="aba" data-aba="palavra" role="tab">🔤 Palavra</button>
+      <button class="aba" data-aba="hoje" role="tab">📰 Hoje</button>
+    </nav>
+
+    <div class="pane" id="aba-festas">
+      <div class="painel" id="painel-datas"><div class="vazio">Carregando o calendário...</div></div>
+      <div class="principio" id="principio"></div>
+      <h2 class="sec">As sete festas fixas (Levítico 23)</h2>
+      <div class="grade" id="grade-festas"></div>
+      <h2 class="sec">Festas posteriores à Lei</h2>
+      <div class="aviso-fundo">Não estão em Levítico 23. São festas de Israel registradas em outros livros.</div>
+      <div class="grade" id="grade-posteriores"></div>
+    </div>
+
+    <div class="pane" id="aba-terra" hidden>
+      <h2 class="sec" style="margin-top:4px">Os lugares da Bíblia</h2>
+      <p class="legenda">Mapa esquemático, com posições aproximadas por latitude e longitude. Toque em um ponto ou no nome para abrir o lugar.</p>
+      <div class="mapa-box" id="mapa-box"></div>
+      <p class="legenda">Belém, Hebrom, Siquém, Jericó e Heródio ficam hoje na Cisjordânia. O nome é o da Bíblia.</p>
+      <ul class="lugares" id="lista-lugares"></ul>
+    </div>
+
+    <div class="pane" id="aba-palavra" hidden>
+      <h2 class="sec" style="margin-top:4px">Palavra hebraica do dia</h2>
+      <div class="pal-dia" id="pal-dia"></div>
+      <button class="btn btn-todas" id="btn-todas">Ver todas as palavras</button>
+      <div class="pal-lista" id="pal-lista" hidden></div>
+    </div>
+
+    <div class="pane" id="aba-hoje" hidden>
+      <h2 class="sec" style="margin-top:4px">Israel nas notícias</h2>
+      <div class="aviso-fundo">Só manchetes de fontes em português (Agência Brasil e BBC News Brasil), sem política partidária. Abra a matéria no site da fonte.</div>
+      <div id="lista-hoje"><div class="vazio">Carregando as manchetes...</div></div>
+    </div>
+    <div class="rodape">As imagens são ilustrações. Datas conferidas com o calendário hebraico e a API do Hebcal (2026 a 2031).</div>
+  </section>
+
+  <section class="detalhe" id="v-detalhe"></section>
+
+<script>
+(function(){
+  var FESTAS = null, TERRA = null, PALAVRAS = null, DATAS = null, ACHADOS = {}, PAL_TODAS = false;
+  function el(t,c,x){ var e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; }
+  function p2(n){ return (n<10?'0':'')+n; }
+  function hojeISO(){ var d=new Date(); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
+  function dataBR(iso){ var m=iso.split('-'); return m[2]+'/'+m[1]+'/'+m[0]; }
+  function diasEntre(a,b){ var x=a.split('-'), y=b.split('-'); return Math.round((Date.UTC(+y[0],+y[1]-1,+y[2])-Date.UTC(+x[0],+x[1]-1,+x[2]))/864e5); }
+  function versos(lista){ var box=el('div');
+    (lista||[]).forEach(function(v){ var d=el('div','verso'); d.appendChild(el('div','vr','📖 '+v.ref)); d.appendChild(el('div','vt','“'+v.texto+'”')); box.appendChild(d); });
+    return box; }
+  function ler(url){ return fetch(url).then(function(r){ if(!r.ok) throw new Error(url); return r.json(); }); }
+
+  function listaFestas(){
+    var l=[];
+    Object.keys(DATAS.anos).sort().forEach(function(ano){
+      var a=DATAS.anos[ano];
+      l.push({id:'pessach', nome:'Páscoa e Pães Asmos', ini:a.pessach.erev, fim:a.pessach.fim});
+      l.push({id:'shavuot', nome:'Pentecostes', ini:a.shavuot.erev, fim:a.shavuot.dia});
+      l.push({id:'trombetas', nome:'Trombetas', ini:a.trombetas.erev, fim:a.trombetas.dia});
+      l.push({id:'expiacao', nome:'Dia da Expiação', ini:a.expiacao.erev, fim:a.expiacao.dia});
+      l.push({id:'sucot', nome:'Tabernáculos', ini:a.sucot.erev, fim:a.sucot.fim});
+      l.push({id:'chanukah', nome:'Dedicação (Chanucá)', ini:a.chanukah.erev, fim:a.chanukah.fim});
+      l.push({id:'purim', nome:'Purim', ini:a.purim.erev, fim:a.purim.dia});
+    });
+    return l.sort(function(x,y){ return x.ini<y.ini?-1:(x.ini>y.ini?1:0); });
+  }
+  function hebraicoHoje(){
+    try {
+      var s=new Intl.DateTimeFormat('pt-BR-u-ca-hebrew',{day:'numeric',month:'long',year:'numeric'}).format(new Date());
+      s=s.replace(/\s*(AM|A\.M\.)\s*$/,'');
+      return /5[78]\d\d/.test(s) ? s : '';
+    } catch(e){ return ''; }
+  }
+  function desenharDatas(){
+    var box=document.getElementById('painel-datas'); box.innerHTML='';
+    var hoje=hojeISO(), lista=listaFestas(), atual=null, prox=null, i, j;
+    for(i=0;i<lista.length;i++){ if(hoje>=lista[i].ini && hoje<=lista[i].fim){ atual=lista[i]; break; } }
+    if(!atual){ for(j=0;j<lista.length;j++){ if(lista[j].ini>hoje){ prox=lista[j]; break; } } }
+    var hb=hebraicoHoje();
+    box.appendChild(el('div','rot','Hoje no calendário judaico'));
+    box.appendChild(el('div','big', hb ? hb : 'Calendário judaico indisponível neste aparelho'));
+    box.appendChild(el('div','peq','Hoje é '+dataBR(hoje)+' no calendário civil. O dia judaico muda ao pôr do sol.'));
+    if(atual){
+      box.appendChild(el('div','rot','Acontecendo agora'));
+      box.appendChild(el('div','big', atual.nome));
+      box.appendChild(el('div','peq','Começou ao pôr do sol de '+dataBR(atual.ini)+'. Vai até '+dataBR(atual.fim)+'.'));
+    } else if(prox){
+      var n=diasEntre(hoje,prox.ini);
+      box.appendChild(el('div','rot','Próxima festa'));
+      box.appendChild(el('div','big', prox.nome));
+      box.appendChild(el('div','peq', n===0 ? 'Começa hoje, ao pôr do sol.' : (n===1 ? 'Começa amanhã, ao pôr do sol ('+dataBR(prox.ini)+'). Falta 1 dia.' : 'Começa ao pôr do sol de '+dataBR(prox.ini)+'. Faltam '+n+' dias.')));
+    }
+    box.appendChild(el('div','peq','As festas começam ao pôr do sol da véspera.'));
+  }
+
+  function cartaFesta(f){
+    var c=el('button','card'); c.type='button';
+    var foto=el('div','foto');
+    if(f.tipo!=='posterior'){
+      var im=new Image(); im.alt=''; im.loading='lazy'; im.src='img/'+f.id+'.jpg?v=1';
+      im.onerror=function(){ im.remove(); };
+      foto.appendChild(im);
+    }
+    foto.appendChild(el('span','letras', f.hebraico));
+    var b=el('div','corpo');
+    b.appendChild(el('h3',null,f.nome));
+    b.appendChild(el('div','he', f.alt));
+    b.appendChild(el('p',null,f.quando.split('. ')[0]+'.'));
+    b.appendChild(el('span', 'tag'+(f.tipo==='posterior'?' post':''), f.tipo==='posterior'?'Posterior à Lei':'Levítico 23'));
+    c.appendChild(foto); c.appendChild(b);
+    c.onclick=function(){ location.hash='festa/'+f.id; };
+    return c;
+  }
+  function desenharFestas(){
+    var g=document.getElementById('grade-festas'); g.innerHTML='';
+    FESTAS.festas.forEach(function(f){ g.appendChild(cartaFesta(f)); });
+    var h=document.getElementById('grade-posteriores'); h.innerHTML='';
+    FESTAS.posteriores.forEach(function(f){ h.appendChild(cartaFesta(f)); });
+    document.getElementById('principio').textContent=FESTAS.principio;
+  }
+  function achadosDe(ids){
+    var box=el('div','links');
+    (ids||[]).forEach(function(id){ var a=ACHADOS[id]; if(!a) return; var l=el('a',null,'🏺 '+a.titulo+' ('+a.ano+') ↗'); l.href='/biblioteca/achados/#'+id; box.appendChild(l); });
+    return box;
+  }
+  function mostrarDetalhe(){ document.getElementById('v-inicio').style.display='none'; document.getElementById('v-detalhe').classList.add('on'); window.scrollTo(0,0); }
+  function fecharDetalhe(){ document.getElementById('v-detalhe').classList.remove('on'); document.getElementById('v-detalhe').innerHTML=''; document.getElementById('v-inicio').style.display=''; }
+  function voltarRota(){ if(history.length>1){ history.back(); } else { location.hash=''; } }
+
+  function acharFesta(id){
+    var all=FESTAS.festas.concat(FESTAS.posteriores);
+    for(var i=0;i<all.length;i++) if(all[i].id===id) return all[i];
+    return null;
+  }
+  function detalheFesta(f){
+    var d=document.getElementById('v-detalhe'); d.innerHTML='';
+    var foto=el('div','d-foto');
+    var im=new Image(); im.alt=''; im.src='img/'+f.id+'.jpg?v=1'; im.onerror=function(){ im.remove(); };
+    foto.appendChild(im);
+    if(f.tipo!=='posterior'){ foto.appendChild(el('span','ilustra','Ilustração')); }
+    var v=el('button','d-voltar','← Festas'); v.onclick=voltarRota; foto.appendChild(v);
+    d.appendChild(foto);
+    var c=el('div','d-corpo');
+    c.appendChild(el('div','he', f.hebraico));
+    c.appendChild(el('h1',null,f.nome+' ('+f.alt+')'));
+    var fi=el('div','ficha');
+    fi.appendChild(el('b',null,'Quando')); fi.appendChild(el('span',null,f.quando));
+    fi.appendChild(el('b',null,'Tipo')); fi.appendChild(el('span',null, f.tipo==='posterior'?'Festa posterior à Lei de Moisés':'Festa fixa de Levítico 23'));
+    c.appendChild(fi);
+    var b1=el('div','bloco'); b1.appendChild(el('h2',null,'📖 O texto que a institui')); b1.appendChild(versos(f.instituicao)); c.appendChild(b1);
+    if(f.gancho){ var g=el('div','importa'); g.appendChild(el('b',null,'Para pensar: ')); g.appendChild(document.createTextNode(f.gancho)); c.appendChild(g); }
+    var b2=el('div','bloco'); b2.appendChild(el('h2',null,'🏛️ O que era em Israel'));
+    var ul=el('ul','lista-era');
+    f.era.forEach(function(e){ var li=el('li'); li.appendChild(el('span','t '+e.tipo, e.tipo==='lei'?'Na Lei':'Tradição judaica')); li.appendChild(document.createElement('br')); li.appendChild(document.createTextNode(e.t)); ul.appendChild(li); });
+    b2.appendChild(ul); c.appendChild(b2);
+    var b3=el('div','bloco'); b3.appendChild(el('h2',null,'✝️ Como se cumpre em Cristo')); b3.appendChild(el('p',null,f.cristo)); b3.appendChild(versos(f.cristoVersos)); c.appendChild(b3);
+    if(f.futuro){
+      var fu=el('div','futuro'); fu.appendChild(el('h2',null,'🔭 O que ainda aponta para o futuro'));
+      fu.appendChild(el('p','nota', f.futuro.nota)); fu.appendChild(el('p',null,f.futuro.t)); fu.appendChild(versos(f.futuro.versos)); c.appendChild(fu);
+    }
+    c.appendChild(el('div','aviso','Não somos obrigados a guardar estas festas (Colossenses 2:16-17): elas são sombra, e o corpo é de Cristo. Aprender com elas é que abre a Bíblia.'));
+    var ac=el('div','acoes');
+    var lv=el('button','btn claro','← Todas as festas'); lv.onclick=function(){ location.hash=''; }; ac.appendChild(lv);
+    c.appendChild(ac);
+    d.appendChild(c);
+  }
+
+  // mapa: projeção simples. x = (lon - 34,0) * 102,3 ; y = (33,6 - lat) * 120 (proporção cos 31,5°)
+  var MX=34.0, MY=33.6, KX=102.3, KY=120;
+  function P(lat,lon){ return [ (lon-MX)*KX, (MY-lat)*KY ]; }
+  function pts(lista){ return lista.map(function(q){ var p=P(q[0],q[1]); return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' '); }
+  var COSTA=[[33.10,35.12],[32.95,35.07],[32.83,34.97],[32.50,34.90],[32.08,34.77],[31.80,34.63],[31.67,34.55],[31.40,34.32],[31.25,34.22],[30.60,34.52],[29.55,34.92],[29.55,35.00],[30.40,35.15],[31.00,35.38],[31.50,35.50],[31.78,35.55],[32.50,35.55],[32.82,35.58],[33.10,35.62],[33.28,35.68],[33.28,35.60]];
+  var MORTO=[[31.80,35.55],[31.60,35.58],[31.40,35.55],[31.20,35.50],[31.00,35.45],[31.10,35.38],[31.35,35.36],[31.60,35.40],[31.80,35.48]];
+  var GALILEIA=[[32.88,35.58],[32.85,35.61],[32.78,35.61],[32.72,35.59],[32.70,35.58],[32.75,35.56],[32.82,35.56]];
+  var JORDAO=[[33.25,35.62],[32.85,35.57],[32.70,35.58],[32.45,35.55],[31.85,35.55],[31.78,35.55]];
+  var SVGNS='http://www.w3.org/2000/svg';
+  function svgEl(t,attrs){ var e=document.createElementNS(SVGNS,t); Object.keys(attrs).forEach(function(k){ e.setAttribute(k,attrs[k]); }); return e; }
+  function rotulo(svg,x,y,s,extra){ var a={x:x,y:y,'font-size':'11','fill':'#6b5a3a','font-family':'Segoe UI,Arial,sans-serif'}; Object.keys(extra||{}).forEach(function(k){ a[k]=extra[k]; }); var t=svgEl('text',a); t.textContent=s; svg.appendChild(t); }
+  function pino(svg,lugar,n,x,y){
+    var g=svgEl('g',{'class':'pin',tabindex:'0',role:'button','aria-label':lugar.nome});
+    g.appendChild(svgEl('circle',{'class':'bola',cx:x,cy:y,r:'10'}));
+    var t=svgEl('text',{x:x,y:y+4,'font-size':'10'}); t.textContent=String(n); g.appendChild(t);
+    g.onclick=function(){ location.hash='lugar/'+lugar.id; };
+    g.onkeydown=function(e){ if(e.key==='Enter'){ location.hash='lugar/'+lugar.id; } };
+    svg.appendChild(g);
+  }
+  function desenharMapa(){
+    var box=document.getElementById('mapa-box'); box.innerHTML='';
+    var W=236, H=500;
+    var svg=svgEl('svg',{viewBox:'-4 -4 '+W+' '+H, width:'236', height:'500', role:'img','aria-label':'Mapa esquemático de Israel com os lugares da Bíblia'});
+    svg.appendChild(svgEl('rect',{x:-4,y:-4,width:W,height:H,fill:'#e6f3fb'}));
+    rotulo(svg,6,22,'MAR MEDITERRÂNEO',{'font-style':'italic','fill':'#2f6f99','font-size':'10'});
+    svg.appendChild(svgEl('polygon',{points:pts(COSTA),fill:'#f1e3c0',stroke:'#b58b4a','stroke-width':'1.2'}));
+    svg.appendChild(svgEl('polygon',{points:pts(MORTO),fill:'#bfe3f5',stroke:'#6aa9cf','stroke-width':'1'}));
+    svg.appendChild(svgEl('polygon',{points:pts(GALILEIA),fill:'#bfe3f5',stroke:'#6aa9cf','stroke-width':'1'}));
+    svg.appendChild(svgEl('polyline',{points:pts(JORDAO),fill:'none',stroke:'#6aa9cf','stroke-width':'1.6'}));
+    rotulo(svg,150,300,'JORDÂNIA',{'fill':'#8a7b5c','font-size':'10'});
+    rotulo(svg,6,455,'EGITO',{'fill':'#8a7b5c','font-size':'10'});
+    rotulo(svg,130,176,'MAR MORTO',{'fill':'#2f6f99','font-size':'9','font-style':'italic'});
+    rotulo(svg,120,88,'MAR DA GALILEIA',{'fill':'#2f6f99','font-size':'9','font-style':'italic'});
+    var z1=P(31.90,35.05), z2=P(31.55,35.35);
+    svg.appendChild(svgEl('rect',{x:z1[0],y:z1[1],width:z2[0]-z1[0],height:z2[1]-z1[1],fill:'none',stroke:'#8a1c1c','stroke-width':'1','stroke-dasharray':'3 2'}));
+    TERRA.forEach(function(l,i){ var p=P(l.lat,l.lon); pino(svg,l,i+1,p[0],p[1]); });
+    box.appendChild(svg);
+
+    var ZX=35.05, ZY=31.90, ZK=597, ZKY=700, ZW=190, ZH=250;
+    var zoom=el('div','zoom');
+    var sz=svgEl('svg',{viewBox:'0 0 '+ZW+' '+ZH, width:String(ZW), height:String(ZH), role:'img','aria-label':'Zoom em Jerusalém e arredores'});
+    sz.appendChild(svgEl('rect',{x:0,y:0,width:ZW,height:ZH,fill:'#fbf8f1'}));
+    rotulo(sz,6,14,'Jerusalém e arredores',{'fill':'#8a1c1c','font-size':'10','font-weight':'700'});
+    TERRA.forEach(function(l,i){
+      if(l.lat>=31.55 && l.lat<=31.90 && l.lon>=35.05 && l.lon<=35.35){
+        pino(sz,l,i+1,(l.lon-ZX)*ZK,(ZY-l.lat)*ZKY+10);
+      }
+    });
+    zoom.appendChild(sz);
+    zoom.appendChild(el('div','cap','Zoom de Jerusalém (toque nos números)'));
+    box.appendChild(zoom);
+  }
+  function desenharLista(){
+    var ul=document.getElementById('lista-lugares'); ul.innerHTML='';
+    TERRA.forEach(function(l,i){
+      var li=el('li'); var b=el('button'); b.type='button';
+      b.appendChild(el('span','n',String(i+1)));
+      var t=el('span'); t.appendChild(document.createTextNode(l.nome)); t.appendChild(el('small',null, l.passagens[0] ? l.passagens[0].ref : ''));
+      b.appendChild(t);
+      b.onclick=function(){ location.hash='lugar/'+l.id; };
+      li.appendChild(b); ul.appendChild(li);
+    });
+  }
+  function acharLugar(id){ for(var i=0;i<TERRA.length;i++) if(TERRA[i].id===id) return TERRA[i]; return null; }
+  function detalheLugar(l){
+    var d=document.getElementById('v-detalhe'); d.innerHTML='';
+    var c=el('div','d-corpo'); c.style.marginTop='14px';
+    var v=el('button','btn claro','← Voltar ao mapa'); v.onclick=voltarRota;
+    c.appendChild(v);
+    c.appendChild(el('h1',null,l.nome));
+    c.appendChild(el('p','legenda', 'Posição aproximada: '+l.lat.toFixed(2)+'° N, '+l.lon.toFixed(2)+'° E'));
+    var b=el('div','bloco'); b.appendChild(el('h2',null,'📖 O que aconteceu ali'));
+    l.passagens.forEach(function(p){ var x=el('div','verso'); x.appendChild(el('div','vr','📖 '+p.ref)); x.appendChild(el('div','vt','“'+p.texto+'”')); b.appendChild(x); });
+    c.appendChild(b);
+    var im=el('div','importa'); im.appendChild(el('b',null,'Por que importa: ')); im.appendChild(document.createTextNode(l.importa)); c.appendChild(im);
+    if(l.achados && l.achados.length){ var ba=el('div','bloco'); ba.appendChild(el('h2',null,'🏺 Pedras que Falam')); ba.appendChild(achadosDe(l.achados)); c.appendChild(ba); }
+    d.appendChild(c);
+  }
+
+  function diaDoAno(){ var d=new Date(); return Math.floor((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())-Date.UTC(d.getFullYear(),0,0))/864e5); }
+  function desenharPalavra(){
+    var p=PALAVRAS[diaDoAno() % PALAVRAS.length];
+    var box=document.getElementById('pal-dia'); box.innerHTML='';
+    box.appendChild(el('div','he', p.he));
+    box.appendChild(el('div','tr', p.pt));
+    box.appendChild(el('div','sent', p.sentido));
+    p.passagens.forEach(function(v){ var x=el('div','verso'); x.appendChild(el('div','vr','📖 '+v.ref)); x.appendChild(el('div','vt','“'+v.texto+'”')); box.appendChild(x); });
+  }
+  function desenharTodasPalavras(){
+    var box=document.getElementById('pal-lista'); box.innerHTML='';
+    PALAVRAS.forEach(function(p){
+      var it=el('div','pal-item');
+      it.appendChild(el('div','he', p.he));
+      it.appendChild(el('div','tr', p.pt));
+      it.appendChild(el('div','sent', p.sentido));
+      var det=el('details'); det.appendChild(el('summary',null,'Ver versículos'));
+      p.passagens.forEach(function(v){ var x=el('div','verso'); x.appendChild(el('div','vr','📖 '+v.ref)); x.appendChild(el('div','vt','“'+v.texto+'”')); det.appendChild(x); });
+      it.appendChild(det);
+      box.appendChild(it);
+    });
+  }
+
+  var PARTIDARIO=/partido|eleiç|eleitor|candidat|congresso|senado|senador|deputad|vereador|prefeit|\bSTF\b|planalto|lula|bolsonaro|tarc[ií]sio|haddad|moraes|gleisi|\bPT\b|\bPL\b|\bPSOL\b|\bMDB\b|\bPSDB\b/i;
+  var GOVBR=/governo|ministro|presidente/i, BRASIL=/brasil|brasileir/i, ISRAEL=/isra|jerusal|judeu|judai|hebreu|tel aviv|templo|sinagoga|mar morto|galileia|muro das lamenta/i;
+  function desenharHoje(itens){
+    var box=document.getElementById('lista-hoje'); box.innerHTML='';
+    if(!itens.length){ box.appendChild(el('div','vazio','Sem manchetes de Israel agora.')); return; }
+    itens.forEach(function(x){
+      var n=el('div','nov'); var a=el('a'); a.href=x.link; a.target='_blank'; a.rel='noopener';
+      a.appendChild(el('div','tt',x.titulo));
+      a.appendChild(el('div','meta', x.fonte + (x.data ? ' · '+new Date(x.data).toLocaleDateString('pt-BR') : '')));
+      n.appendChild(a); box.appendChild(n);
+    });
+  }
+  function carregarHoje(){
+    var ctl=(typeof AbortController!=='undefined') ? new AbortController() : null;
+    var t=setTimeout(function(){ if(ctl) ctl.abort(); },6000);
+    fetch('/api/noticias-fieis', ctl ? {signal:ctl.signal} : {}).then(function(r){ return r.json(); }).then(function(d){
+      clearTimeout(t);
+      var sec=(d && d.ok && d.secoes) ? d.secoes.filter(function(s){ return s.id==='mundo'; })[0] : null;
+      var itens=(sec ? sec.itens : []).filter(function(x){
+        if(x.idioma!=='pt') return false;
+        var s=x.titulo||'';
+        if(!ISRAEL.test(s)) return false;
+        if(PARTIDARIO.test(s)) return false;
+        if(GOVBR.test(s) && BRASIL.test(s)) return false;
+        return true;
+      }).slice(0,8);
+      desenharHoje(itens);
+    }).catch(function(){ clearTimeout(t); desenharHoje([]); });
+  }
+
+  function mostrarAba(a){
+    Array.prototype.forEach.call(document.querySelectorAll('.aba'), function(b){ var on=b.getAttribute('data-aba')===a; b.classList.toggle('on',on); b.setAttribute('aria-selected',on?'true':'false'); });
+    ['festas','terra','palavra','hoje'].forEach(function(x){ document.getElementById('aba-'+x).hidden = (x!==a); });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.aba'), function(b){
+    b.onclick=function(){ mostrarAba(b.getAttribute('data-aba')); fecharDetalhe(); if(location.hash) history.replaceState(null,'',location.pathname); window.scrollTo(0,0); };
+  });
+  function rota(){
+    var h=location.hash.replace('#','');
+    if(h.indexOf('festa/')===0){ var f=acharFesta(h.slice(6)); if(f){ detalheFesta(f); mostrarDetalhe(); document.title=f.nome+' — Israel'; return; } }
+    if(h.indexOf('lugar/')===0){ var l=acharLugar(h.slice(6)); if(l){ detalheLugar(l); mostrarAba('terra'); mostrarDetalhe(); document.title=l.nome+' — Israel'; return; } }
+    fecharDetalhe(); document.title='Israel — festas, terra e palavra';
+  }
+  window.addEventListener('hashchange', rota);
+  document.getElementById('btn-todas').onclick=function(){
+    var box=document.getElementById('pal-lista'); PAL_TODAS=!PAL_TODAS;
+    if(PAL_TODAS && !box.childNodes.length) desenharTodasPalavras();
+    box.hidden=!PAL_TODAS; this.textContent=PAL_TODAS?'Fechar a lista':'Ver todas as palavras';
+  };
+
+  Promise.all([
+    ler('festas.json?v=1'), ler('terra.json?v=1'), ler('palavras.json?v=1'), ler('datas.json?v=1'),
+    ler('../achados/achados.json?v=2').catch(function(){ return {achados:[]}; })
+  ]).then(function(r){
+    FESTAS=r[0]; TERRA=r[1]; PALAVRAS=r[2]; DATAS=r[3];
+    (r[4].achados||[]).forEach(function(a){ ACHADOS[a.id]=a; });
+    desenharDatas(); desenharFestas(); desenharMapa(); desenharLista(); desenharPalavra();
+    rota();
+  }).catch(function(){
+    document.getElementById('grade-festas').textContent='Não foi possível carregar os dados agora. Verifique a internet.';
+  });
+  carregarHoje();
+})();
+</script>
+<script src="/_uso.js?v=1" defer></script>
+</body>
+</html>
