@@ -217,7 +217,7 @@ const SYS_PREGACAO = `Você é o BEREIA, o ajudante de pregação do pastor Elia
 Escreve uma pregação COMPLETA, em prosa que prende, para cristãos com fome e sede da Palavra. Nada raso, nada vazio, nada de autoajuda.
 
 TAMANHO (a linha TAMANHO DA PREGAÇÃO do pedido manda):
-- Curta: 1.200 a 1.500 palavras, 5 partes, cada uma com 2 ou 3 parágrafos.
+- Curta: 1.000 a 1.300 palavras, 5 partes curtas, cada uma com 2 ou 3 parágrafos.
 - Longa: 2.100 a 2.400 palavras, 6 ou 7 partes, cada uma com 3 ou 4 parágrafos.
 Em qualquer tamanho, cada parte termina com um GANCHO que puxa para a próxima.
 
@@ -240,7 +240,6 @@ B. PRENDER O POVO: conte pelo menos duas cenas (uma bíblica narrada por dentro 
 C. A IGREJA TEM QUE ENTENDER: todo termo técnico (palavra grega, concílio, "escatologia", "tipologia") vem explicado na mesma frase, com palavras do dia a dia. Profundo, nunca difícil.
 D. Proibido o genérico: "Deus é fiel" e "precisamos buscar mais a Deus" só entram amarrados a um fato do texto.
 7. Se vierem DESCOBERTAS DAS 4 CAMADAS, as 3 a 5 mais fortes entram no CORPO da pregação (não só nas notas), cada uma dita de onde vem ("no grego…", "isso ecoa Daniel 7…", "Edersheim lembra que…"). Descoberta marcada "conferir" só entra se você tiver certeza, e vai para "Fatos para conferir".
-7b. DESCOBERTAS (obrigatório): a pregação traz PELO MENOS 3 descobertas concretas tiradas dos trechos da Biblioteca ou das DESCOBERTAS DAS 4 CAMADAS, cada uma com o nome do autor ("Edersheim lembra que…"), explicada em linguagem simples e ligada ao texto. Corte enchimento e repetição, nunca descoberta.
 
 A BÍBLIA: você NUNCA digita o texto de um versículo. Para citar, escreva SÓ a referência entre chaves duplas, ex.: {{Gn 40:14}} ou {{Sl 105:17-19}}, e o servidor põe o texto inteiro da Almeida. Nunca escreva o versículo você mesmo, nem uma parte dele entre aspas seguida da referência: isso duplica o texto na tela. Se quiser só uma expressão do texto no meio da frase, escreva a expressão e depois a referência entre parênteses, sem chaves, ex.: (Lc 19:3). Use as referências do PLANO e outras que conheça com certeza.
 
@@ -250,20 +249,12 @@ COMPARAÇÕES COM A LEI E COM OS NÚMEROS: antes de dizer que uma exigência era
 
 PALAVRAS E SENTIDOS: não dê sentido litúrgico, místico ou "oculto" a uma palavra grega ou hebraica se a fonte não disser isso. Não invente número com significado oculto.
 
-PALAVRA ORIGINAL (regra de ferro): só cite uma palavra grega ou hebraica se o verbete (Thayer/Kittel) devolvido pela Biblioteca ou o próprio versículo confirmar a palavra e o sentido. Sem confirmação, a palavra SAI. Erro real a evitar: "ergueu os olhos" em Lucas 19:5 é anablépō (olhar para cima, recobrar a vista), não anabaínō (que é subir).
-LIGAÇÃO BÍBLICA: não force eco. Uma referência só entra se o texto dela tratar do mesmo assunto de forma clara (ex.: 2Rs 2 não serve para "chamar pelo nome").
 FATOS: só afirme o que é certo. Imagem de pregação ("imagine…") é dita como imagem. Tudo o que não for Bíblia nem fonte da biblioteca vai listado nas notas para conferir.
 
-O FECHO DE FOGO (a última parte, a mais alta): sobe em degraus, com marcações de condução SEMPRE entre colchetes, cada uma em linha própria, exatamente assim: [Baixe a voz.] (tom de confissão), [Comece a subir.] (o ritmo cresce), [Peça à igreja que fique de pé.] (o convite), [No auge.] (frases curtas, uma atrás da outra), [Clamor.] (a igreja repete). Dentro do fecho: (a) quando couber, a ligação com o Espírito Santo e o Pentecoste, amarrada ao tema; (b) um momento de RESPOSTA DA IGREJA, em três ou quatro trocas, cada uma numa linha:
+O FECHO DE FOGO (a última parte, a mais alta): sobe em degraus, com marcações de condução entre colchetes, cada uma em linha própria: [Baixe a voz.] (tom de confissão), [Comece a subir.] (o ritmo cresce), [Peça à igreja que fique de pé.] (o convite), [No auge.] (frases curtas, uma atrás da outra), [Clamor.] (a igreja repete). Dentro do fecho: (a) quando couber, a ligação com o Espírito Santo e o Pentecoste, amarrada ao tema; (b) um momento de RESPOSTA DA IGREJA, em três ou quatro trocas, cada uma numa linha:
 **Pregador:** a frase da Escritura (com {{ref}}) ou a ordem de culto
 **Igreja:** a resposta curta, entre aspas
 (c) clamor em frases curtas, uma por linha; (d) o final apontando para a ministração ("venha ao altar", "fique de pé e receba"). Sem pergunta binária.
-
-MODELO DE ESTILO (é só o JEITO de escrever do pastor: ritmo, frase de impacto, gancho, marcação de condução. NÃO copie frases, conteúdo nem referências deste modelo):
-- Abertura: "Em Nablus, na Cisjordânia, existe uma igreja construída em cima de um poço. Embaixo do altar, numa cripta de pedra, os peregrinos ainda baixam um balde preso a uma corda." Depois, uma frase que puxa: "Essa ferida ainda estava aberta quando um judeu cansado pediu água a uma mulher samaritana."
-- Âmago: "> **ÂMAGO:** O poço de Jacó mata a sede de um dia. A fonte que Jesus dá nunca seca."
-- Parte: frase longa com a cena, depois frase curta de impacto: "Três muros caíram numa frase só." E o gancho no fim: "Mas o que Jesus pediu a ela ninguém esperava ouvir."
-- Fecho: "[Baixe a voz. Fale devagar.]" em linha própria, parágrafos curtos, "**Pregador:** …" e "**Igreja:** …", "[No auge.]", frases de uma linha, "[Clamor.]".
 
 FORMATO (Markdown, exatamente nesta ordem):
 # Título
@@ -275,7 +266,7 @@ FORMATO (Markdown, exatamente nesta ordem):
 ## 🔥 Título do fecho
 o fecho, com as marcações entre colchetes e a resposta da igreja
 ## 📝 Notas para quem vai pregar
-- **Fontes consultadas:** SÓ as obras que entraram no texto, cada uma com o endereço do campo endereco que a Biblioteca devolveu (quando houver). Obra que não foi citada no corpo não entra.
+- **Fontes consultadas:** autor, obra e o endereço (campo endereco) de cada fonte usada
 - **Fatos para conferir:** cada fato que não é Bíblia nem biblioteca
 - **Tempo:** estimativa
 
@@ -289,9 +280,6 @@ Confira frase por frase:
 2. Cada comparação com a Lei, com outro versículo, com um número ou com "o dobro"/"o quádruplo" bate com o texto da Almeida recebido.
 3. Nenhum sentido litúrgico, místico ou "oculto" dado a uma palavra grega ou hebraica que a fonte não diga.
 4. Erros de digitação (ex.: "Cordão" no lugar de "Cordeiro") e palavras trocadas.
-5. Cada palavra grega ou hebraica citada tem que estar confirmada no verbete (Thayer/Kittel) ou no texto do versículo que você recebeu. Sem confirmação, troque a frase por uma sem a palavra (ou tire a palavra).
-6. Ligação bíblica forçada (referência que não trata do mesmo assunto) sai.
-7. Na seção "Fontes consultadas", deixe só as obras que aparecem no corpo; use o endereço que veio com a fonte.
 Devolva SÓ um JSON, sem nada antes ou depois:
 {"trocas":[{"de":"trecho EXATO da pregação, copiado letra por letra, até 300 caracteres","para":"o trecho corrigido (vazio para tirar)"}],"conferir":["fato curto que precisa de conferência humana"]}
 Regras: "de" é cópia exata de um trecho da pregação; trocas só para erro comprovado; no máximo 12 trocas; não reescreva o texto inteiro; não mude o estilo nem o tom. Se tudo bate, devolva {"trocas":[],"conferir":[]}.`;
@@ -369,15 +357,6 @@ function conferir(texto, refsRuins) {
   return avisos;
 }
 
-// 18/11/2026: o modelo às vezes esquece os colchetes. As instruções de condução conhecidas viram [..] em linha própria.
-function normalizarMarcas(md) {
-  return md.split('\n').map((l) => {
-    const m = l.match(/^\s*(Baixe a voz|Fale devagar|Comece a subir|Peça à igreja que fique de pé|No auge|Clamor)\.?\s*$/i);
-    if (!m) return l;
-    return '[' + m[1][0].toUpperCase() + m[1].slice(1).toLowerCase() + '.]';
-  }).join('\n');
-}
-
 export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
   if (req.method !== 'POST') return new Response('{"ok":false}', { status: 405, headers: CORS });
@@ -393,7 +372,7 @@ export default async function handler(req) {
 
   // 16/11/2026: tamanho da pregação (Curta ~20 min padrão; Longa ~35-40 min). A palavra-guia é a mesma do prompt.
   const tam = b.tamanho === 'Longa' ? 'Longa' : 'Curta';
-  const pedidoTam = pedido + `\nTAMANHO DA PREGAÇÃO: ${tam} (${tam === 'Longa' ? '2.100 a 2.400' : '1.200 a 1.500'} palavras)`;
+  const pedidoTam = pedido + `\nTAMANHO DA PREGAÇÃO: ${tam} (${tam === 'Longa' ? '2.100 a 2.400' : '1.000 a 1.300'} palavras)`;
 
   const enc = new TextEncoder();
   const { readable, writable } = new TransformStream();
@@ -499,7 +478,7 @@ export default async function handler(req) {
       const confe = await conferirFatos(tudo, todas, versos);
       let md = tudo;
       const troca = aplicarTrocas(md, confe.trocas);
-      md = normalizarMarcas(troca.md);
+      md = troca.md;
       // Tempo calculado pelo servidor (~60 palavras por minuto de pregação, a medida que o pastor usa: ~1.200 palavras = 20 min)
       const palavras = md.replace(/[#*>\[\]{}()_]/g, ' ').split(/\s+/).filter((w) => /\w/.test(w)).length;
       const minutos = Math.max(1, Math.round(palavras / 60));
