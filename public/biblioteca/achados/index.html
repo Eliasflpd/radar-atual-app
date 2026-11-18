@@ -163,7 +163,7 @@
   });
   window.addEventListener('hashchange', rota);
 
-  fetch('achados.json?v=1').then(function(r){ return r.json(); }).then(function(j){
+  fetch('achados.json?v=2').then(function(r){ return r.json(); }).then(function(j){
     DADOS = (j.achados||[]).slice().sort(function(a,b){ return b.ano - a.ano; });
     desenharLista(); rota();
   }).catch(function(){ document.getElementById('lista').textContent = 'Não foi possível carregar os achados. Verifique a internet.'; });

@@ -1,6 +1,30 @@
 {
-  "atualizado": "2026-11-17",
+  "atualizado": "2026-11-18",
   "achados": [
+    {
+      "id": "daniel-ia-2025",
+      "ano": 2025,
+      "entrou": "2026-11-18",
+      "titulo": "Os Rolos do Mar Morto são mais antigos — e Daniel também",
+      "lugar": "Universidade de Groningen (Holanda), com os rolos de Qumran",
+      "quem": "Mladen Popović e equipe, com a inteligência artificial \"Enoch\"",
+      "img": "14-daniel-ia.jpg",
+      "status": "debate",
+      "resumo": "Carbono-14 refeito e uma IA que lê a letra dos escribas: um fragmento de Daniel saiu datado entre cerca de 230 e 160 a.C.",
+      "texto": [
+        "Em junho de 2025, uma equipe liderada por Mladen Popović publicou um estudo na revista PLOS ONE. Primeiro, refizeram a datação por carbono-14 de 30 rolos — os testes antigos tinham sido atrapalhados pelo óleo de rícino que os primeiros pesquisadores passaram nos pergaminhos para lê-los melhor, o que fazia os rolos parecerem mais novos.",
+        "Com essas datas novas, treinaram uma inteligência artificial chamada Enoch para reconhecer, pela forma da letra de cada escriba, a época em que um manuscrito foi copiado. Aplicada a 135 manuscritos sem data, ela indicou que muitos são de 50 a 100 anos mais antigos do que se pensava.",
+        "O caso mais comentado é um fragmento do livro de Daniel (4Q114, com trechos dos capítulos 10 e 11), datado entre cerca de 230 e 160 a.C. Os críticos costumam dizer que Daniel foi escrito por volta de 165 a.C., depois dos fatos que ele 'profetiza'. Uma cópia já circulando nessa época fica difícil de encaixar nessa teoria — e um fragmento de Eclesiastes também recuou, para cerca de 300 a 240 a.C."
+      ],
+      "versiculo": { "ref": "Daniel 11:2", "texto": "E agora te declararei a verdade: Eis que ainda se levantarão três reis na Pérsia, e o quarto será muito mais rico do que todos eles; e tendo-se tornado forte por meio das suas riquezas, agitará todos contra o reino da Grécia." },
+      "importa": "Se as datas se confirmarem, o livro de Daniel já era copiado e lido muito cedo — um golpe na ideia de que ele foi escrito depois dos acontecimentos.",
+      "nota": "Em debate: a datação por inteligência artificial é nova; vários especialistas a aceitam só como complemento do carbono-14, e as faixas de data variam entre as reportagens.",
+      "fontes": [
+        { "nome": "IA indica que os Rolos do Mar Morto são mais antigos (Ynet)", "url": "https://www.ynetnews.com/environment/article/bkck9rvqge" },
+        { "nome": "Nem todos os especialistas estão convencidos (Live Science)", "url": "https://www.livescience.com/archaeology/ai-analysis-suggests-dead-sea-scrolls-are-older-than-scientists-thought-but-not-all-experts-are-convinced" },
+        { "nome": "Rolos mais antigos do que se pensava (Artnet)", "url": "https://news.artnet.com/art-world/dead-sea-scrolls-older-than-we-thought-ai-2655129?amp=1" }
+      ]
+    },
     {
       "id": "ebal-2022",
       "ano": 2022,
