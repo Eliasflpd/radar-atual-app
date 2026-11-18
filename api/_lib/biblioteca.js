@@ -27,6 +27,7 @@
 // aqui, na hora, pelo MESMO modelo — se um mudar, o outro tem que mudar junto.
 // ═══════════════════════════════════════════════════════════════════════════════
 const { Client } = require('pg');
+const G = require('./biblioteca-guia');
 
 const MODELO = '@cf/baai/bge-m3';
 const DIMS = 1024;
@@ -189,6 +190,51 @@ async function emCadaBanco(bancos, fn) {
   return res.map((x) => (x.status === 'fulfilled' ? x.value : null));
 }
 
+// 18/11/2026: GUIA DA PASSAGEM e PALAVRA EXATA. Camada por cima da busca de sempre: só roda quando a pergunta tem
+// referência bíblica ou termo que precisa aparecer literalmente. Sem isso, a resposta é a de antes.
+async function camadaExtra(bancos, refe, termos, reTermos) {
+  if (!refe && !reTermos) return [];
+  const sg = refe ? G.sqlGuia(refe) : null;
+  return emCadaBanco(bancos, async (c) => {
+    await c.query('set statement_timeout = 8000');
+    const out = { guia: [], palavra: [] };
+    if (sg) { try { out.guia = (await c.query(sg.sql, sg.params)).rows; } catch (_) { out.guia = []; } }
+    if (reTermos && !refe) {
+      try {
+        out.palavra = (await c.query(
+          `select autor, obra, livro, secao, tipo, texto, peso, aprovado from biblioteca_trechos where texto ~* $1 limit 200`,
+          [reTermos])).rows;
+      } catch (_) { out.palavra = []; }
+    }
+    return out;
+  });
+}
+// Um trecho por AUTOR, na ordem de força: primeiro quem diz o versículo (tier 1 melhor), depois quem usa o termo
+// exato (mais termos achados no trecho), com o peso de autoridade como desempate.
+function prefixoDe(extras, refe, termos, quantos) {
+  const ex = extras.filter(Boolean);
+  const guia = ex.flatMap((e) => e.guia || []).sort((x, y) => x.tier - y.tier || x.peso - y.peso);
+  // Verbete (Thayer/Kittel) só entra pela palavra se o termo estiver no TÍTULO dele; no corpo ele só cita a palavra
+  // e empurrava para fora o comentário de fato (medido em 18/11: Abilene, onoma, Moldenke/Josefo perdidos).
+  const pal = ex.flatMap((e) => e.palavra || []).map((x) => {
+    const alvo = G.norm(x.texto + ' ' + (x.secao || ''));
+    const noTitulo = termos.some((t) => G.norm(x.secao || '').includes(t));
+    return { ...x, hits: termos.filter((t) => alvo.includes(t)).length, noTitulo };
+  }).filter((x) => x.hits > 0 && (x.tipo !== 'verbete' || x.noTitulo))
+    .sort((x, y) => y.hits - x.hits || (y.noTitulo - x.noTitulo) || x.peso - y.peso);
+  const vistos = new Set(), pref = [];
+  const pegar = (lista, via, score, max = quantos) => {
+    for (const x of lista) {
+      if (pref.length >= max) break;
+      if (vistos.has(x.autor)) continue;
+      vistos.add(x.autor); pref.push({ ...x, via, score: score(x) });
+    }
+  };
+  if (refe) pegar(guia, 'referencia', (x) => [0.99, 0.97, 0.94, 0.9][x.tier - 1] || 0.9, quantos);
+  else pegar(pal, 'palavra', (x) => Math.min(0.97, 0.85 + 0.04 * x.hits), Math.min(quantos, 2));
+  return pref;
+}
+
 module.exports = async (req, res) => {
   // Sem CORS de propósito: NINGUÉM deve chamar isto do navegador. Quem chama é o
   // /api/voz, servidor-pra-servidor. Deixar CORS aberto seria convidar o download.
@@ -231,6 +277,10 @@ module.exports = async (req, res) => {
   const quantos = Math.min(parseInt(b.n || q.n || '6', 10) || 6, 12);
   // 21/10/2026: busca SÓ num autor (a voz abre "as aulas do Dr. Wagner" sem misturar comentarista).
   const soAutor = String(b.autor || '').trim().slice(0, 80);
+  // 18/11/2026: a pergunta tem referência bíblica ("João 4:6")? nome que precisa aparecer LITERALMENTE ("Heródio")?
+  const refe = G.lerReferencia(pergunta);
+  const termosExatos = G.palavrasExatas(pergunta, refe);
+  const reTermos = G.regexPalavras(termosExatos);
 
   const bancos = bancosDaBiblioteca();
   if (!bancos.length) { res.status(200).json({ ok: false, off: true, err: 'db não configurado' }); return; }
@@ -238,10 +288,13 @@ module.exports = async (req, res) => {
   // 25/10/2026: sem o vetor da pergunta (a cota grátis diária da Cloudflare acabou, ou ela caiu), a busca NÃO
   // morre: cai na BUSCA POR TERMO, direto no banco, sem acento e sem serviço de fora. É mais pobre que a busca por
   // sentido (só acha a palavra escrita), por isso o resultado diz `modo: 'termo'` e quem chama pode avisar.
+  // 18/11/2026 (rodada 2): a camada extra roda EM PARALELO com o vetor da pergunta e com a busca por sentido.
+  const pExtra = camadaExtra(bancos, refe, termosExatos, reTermos).catch(() => []);
+  const pPref = pExtra.then((ex) => prefixoDe(ex, refe, termosExatos, quantos));
   const v = await embutirPergunta(pergunta);
   const vec = v ? '[' + v.map((x) => x.toFixed(6)).join(',') + ']' : null;
   const termosBusca = termosDaPergunta(pergunta).termos.filter((t) => /^[a-z]{4,}$/.test(t)).slice(0, 8);
-  if (!vec && !termosBusca.length) { res.status(200).json({ ok: false, err: 'não consegui transformar a pergunta em busca' }); return; }
+  if (!vec && !termosBusca.length && !refe && !termosExatos.length) { res.status(200).json({ ok: false, err: 'não consegui transformar a pergunta em busca' }); return; }
 
   try {
     if (!vec) {
@@ -277,13 +330,19 @@ module.exports = async (req, res) => {
          ) select autor, obra, livro, secao, tipo, texto, peso, aprovado, hits from c where hits > 0 order by hits desc, peso limit 60`,
         [usar, soAutor, DE, PARA, autoresPedidos])).rows;
       });
+      const pref = await pPref;
       const linhasT = partesT.filter(Boolean).flat().sort((x, y) => y.hits - x.hits || x.peso - y.peso).slice(0, 60);
       const vistosT = new Set(), melhores = [], resto = [];
-      for (const x of linhasT) { (vistosT.has(x.autor) ? resto : melhores).push(x); vistosT.add(x.autor); }
+      for (const x of pref) { melhores.push(x); vistosT.add(x.autor); }
+      for (const x of linhasT) {
+        if (pref.some((p) => p.autor === x.autor && p.texto === x.texto)) continue;
+        (vistosT.has(x.autor) ? resto : melhores).push(x); vistosT.add(x.autor);
+      }
       const maxHits = usar.length * 3 + 3;
       const itensT = [...melhores, ...resto].slice(0, quantos).map((x) => ({ autor: x.autor, obra: x.obra, livro: rotuloLimpo(x.livro),
         secao: secaoLimpa(x.secao, x.livro), tipo: x.tipo, texto: x.texto, peso: x.peso, aprovado: x.aprovado !== false,
-        score: Math.round((0.46 + 0.4 * Math.min(1, x.hits / maxHits)) * 1000) / 1000 }));
+        score: x.via ? Math.round(x.score * 1000) / 1000 : Math.round((0.46 + 0.4 * Math.min(1, x.hits / maxHits)) * 1000) / 1000,
+        via: x.via || 'termo', endereco: G.enderecoDe(x) }));
       res.status(200).json({ ok: true, total: itensT.length, itens: itensT, modo: 'termo', termos: usar, autores_pedidos: autoresPedidos });
       return;
     }
@@ -353,6 +412,7 @@ module.exports = async (req, res) => {
     });
 
     // Junta os dois bancos pela MESMA pontuação (posto = parecença + empurrão do peso), como se fosse um banco só.
+    const pref = await pPref;
     const deCada = partes.filter(Boolean);
     const juntas = deCada.flatMap((p) => p.linhas).sort((x, y) => y.posto - x.posto);
     const achados0 = deCada.flatMap((p) => p.achados).sort((x, y) => x.peso - y.peso).slice(0, 3);
@@ -369,7 +429,7 @@ module.exports = async (req, res) => {
     // de filtro ocupavam metade das vagas e Waltke/Kidner nem chegavam ao redator.
     const vistos = new Set(), itens = [];
     let comFiltro = 0, historicos = 0;
-    for (const x of [...achados, ...linhas]) {
+    for (const x of [...pref, ...achados, ...linhas]) {
       const k = x.autor + '|' + x.texto.slice(0, 60);
       if (vistos.has(k)) continue;
       // 27/10/2026: o jornal (tipo 'historico') tem o próprio teto, 2: não disputa a vaga do Champlin nem enche a resposta.
@@ -379,7 +439,7 @@ module.exports = async (req, res) => {
       itens.push({ autor: x.autor, obra: x.obra, livro: rotuloLimpo(x.livro),
         secao: secaoLimpa(x.secao, x.livro), tipo: x.tipo, texto: x.texto,
         peso: x.peso, aprovado: x.aprovado !== false,
-        score: Math.round(x.score * 1000) / 1000 });
+        score: Math.round(x.score * 1000) / 1000, via: x.via || (x.achado ? 'lexico' : 'sentido'), endereco: G.enderecoDe(x) });
       if (itens.length >= quantos) break;
     }
     // DIAGNÓSTICO (só quando pedido): números e contagens, nunca texto de livro. Serve para comparar o que a
@@ -392,7 +452,7 @@ module.exports = async (req, res) => {
         lex: { termos: lex.termos, strongs: lex.strongs, achados: achados.length, erro: partes[0].erroLex },
         emb: { dims: v.length, norma: Math.round(norma * 1000) / 1000, primeiros: v.slice(0, 4).map((x) => Math.round(x * 10000) / 10000) } };
     }
-    res.status(200).json({ ok: true, total: itens.length, itens, diag });
+    res.status(200).json({ ok: true, total: itens.length, itens, diag, referencia: refe ? refe.rotulo : null });
   } catch (e) {
     res.status(200).json({ ok: false, err: String((e && e.message) || e).slice(0, 160) });
   }
