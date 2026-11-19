@@ -1488,6 +1488,17 @@ html body #home.nh .home-scroll{background:transparent;display:block;overflow-y:
 .nh-vtxt{font-family:'Lora',Georgia,serif;font-style:italic;font-size:15.5px;line-height:1.35;color:var(--nh-txt)}
 .nh-vref{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--nh-ouro);margin-top:6px}
 
+/* NEXUS BÍBLICO (19/11/2026) */
+.nh-nexus{display:flex;align-items:center;gap:14px;margin-top:14px;min-height:76px;padding:12px 16px;border-radius:12px;
+  background:radial-gradient(circle at 12% 50%,rgba(233,181,76,.16),rgba(233,181,76,0) 46%),var(--nh-card);border:1px solid rgba(233,181,76,.45);transition:transform .12s,border-color .12s}
+.nh-nexus:active{transform:scale(.98);border-color:rgba(233,181,76,.8)}
+.nh-nexus-ico{width:48px;height:48px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;background:rgba(233,181,76,.12);border:1px solid rgba(233,181,76,.35)}
+.nh-nexus-ico svg{width:28px;height:28px;color:var(--nh-ouro);fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nh-nexus-txt{flex:1;min-width:0}
+.nh-nexus-txt b{display:block;font-size:16px;font-weight:700;letter-spacing:1.5px;color:var(--nh-txt)}
+.nh-nexus-txt span{display:block;font-size:12.5px;color:var(--nh-sub);margin-top:3px}
+.nh-nexus .nh-seta{width:22px;height:22px;color:var(--nh-ouro);fill:none;stroke:currentColor;stroke-width:2}
+
 /* barra de baixo */
 html body #home.nh .nav-bottom{background:rgba(8,18,33,.97);border-top:1px solid var(--nh-borda);box-shadow:0 -4px 18px rgba(0,0,0,.35);padding:8px 0 max(env(safe-area-inset-bottom),8px)}
 html body #home.nh .nav-btn .ni{filter:none;color:var(--nh-txt);display:grid;place-items:center;font-size:0}
@@ -1550,6 +1561,12 @@ html body #home.nh .nav-btn.on .nl::after{content:"";position:absolute;left:-14p
   .nh-aspas{font-size:calc(var(--u)*72);padding-top:calc(var(--u)*22)}
   .nh-vtxt{font-size:calc(var(--u)*28)}
   .nh-vref{font-size:calc(var(--u)*18);margin-top:calc(var(--u)*8)}
+  .nh-nexus{margin-top:calc(var(--u)*26);min-height:calc(var(--u)*120);padding:calc(var(--u)*20) calc(var(--u)*34);gap:calc(var(--u)*28);border-radius:calc(var(--u)*12)}
+  .nh-nexus-ico{width:calc(var(--u)*76);height:calc(var(--u)*76)}
+  .nh-nexus-ico svg{width:calc(var(--u)*44);height:calc(var(--u)*44)}
+  .nh-nexus-txt b{font-size:calc(var(--u)*32)}
+  .nh-nexus-txt span{font-size:calc(var(--u)*21);margin-top:calc(var(--u)*5)}
+  .nh-nexus .nh-seta{width:calc(var(--u)*34);height:calc(var(--u)*34)}
   html body #home.nh .nav-bottom{padding:calc(var(--u)*22) 0 max(env(safe-area-inset-bottom),calc(var(--u)*22))}
   html body #home.nh .nav-btn{gap:calc(var(--u)*8)}
   html body #home.nh .nav-btn .ni svg{width:calc(var(--u)*42);height:calc(var(--u)*42)}
