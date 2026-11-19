@@ -172,6 +172,29 @@ textarea.notas{width:100%;min-height:160px;border:1px solid var(--linha);border-
 /* v3: estados epistemológicos (cores dos traços) */
 .nat-direta{background:#14284B} .nat-corroboracao{background:#3D6B9E}
 
+/* Céu Infinito */
+.ceu{position:absolute;inset:0;overflow:hidden;background:
+  radial-gradient(ellipse at 68% 30%,rgba(69,47,110,.42),transparent 49%),
+  radial-gradient(ellipse at 22% 73%,rgba(30,73,119,.40),transparent 52%),
+  radial-gradient(ellipse at 50% 50%,#101a33,#050814 75%)}
+.ceu canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.ceu .ceu-rotulos{pointer-events:none}
+.ceu-ajuda{position:absolute;z-index:1;pointer-events:none;margin:0;top:13px;right:16px;
+  padding:5px 9px;border-radius:8px;background:rgba(5,9,24,.74);color:#d6e0fa;font-size:12px}
+#bt-ceu[aria-pressed="true"]{background:var(--marinho);color:white}
+.modo-ceu .bt-modo{display:inline-block}
+body.modo-lista .bt-modo{display:inline-block}
+.modo-ceu .vazio,.modo-ceu .vazio h2{color:#eef3ff}
+@media (min-width:761px){
+  .modo-ceu .palco:has(.painel:not([hidden])) .zoom{right:calc(min(420px,44vw) + 24px)}
+}
+@media (min-width:761px) and (max-width:1024px){
+  .modo-ceu .palco:has(.painel:not([hidden])) .zoom{right:calc(min(400px,56vw) + 24px)}
+}
+@media (max-width:760px){
+  .ceu-ajuda{max-width:calc(100% - 110px);text-align:right;font-size:11px}
+}
+
 /* legenda e grupos clicáveis (tudo leva a algum lugar, sem sair da página) */
 .legenda .leg{display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;background:none;border-radius:999px;padding:2px 8px;font:inherit;font-size:12px;color:var(--texto-2);cursor:pointer}
 .legenda .leg:hover{border-color:var(--linha);background:var(--marfim)}

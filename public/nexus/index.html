@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/nexus/nexus.css?v=8">
+<link rel="stylesheet" href="/nexus/nexus.css?v=9">
 </head>
 <body>
 <!-- NEXUS BÍBLICO — mapa de conhecimento (19/11/2026). O motor está em api/_lib/nexus.js. -->
@@ -30,6 +30,7 @@
     <button class="bt" id="bt-descobrir" title="Motor de descoberta">Descobrir</button>
     <button class="bt" id="bt-salvar" title="Salvar investigação">Salvar</button>
     <button class="bt" id="bt-investigacoes" title="Investigações salvas">Investigações</button>
+    <button class="bt" id="bt-ceu" type="button" aria-controls="ceu" aria-pressed="false">Céu Infinito</button>
     <button class="bt bt-modo" id="bt-modo" title="Alternar mapa e trilha">Trilha</button>
     <button class="chip-acesso" id="acesso" title="Acesso à biblioteca"></button>
   </div>
@@ -39,6 +40,9 @@
 
 <main class="palco">
   <div id="mapa" class="mapa" aria-label="Mapa de conhecimento"></div>
+  <div id="ceu" class="ceu" role="region" aria-label="Céu Infinito, mapa de conhecimento em 3D" hidden>
+    <p class="ceu-ajuda">Arraste para girar · Role ou faça pinça para aproximar</p>
+  </div>
   <div id="rotulos-grupos" class="rotulos-grupos" aria-hidden="true"></div>
   <div id="lista" class="lista" hidden></div>
 
@@ -72,6 +76,7 @@
   </div>
 </div>
 
-<script type="module" src="/nexus/nexus.js?v=8"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
+<script type="module" src="/nexus/nexus.js?v=9"></script>
 </body>
 </html>
