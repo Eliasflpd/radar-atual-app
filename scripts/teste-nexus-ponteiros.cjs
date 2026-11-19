@@ -69,6 +69,20 @@ const ok = (cond, nome, extra) => { console.log(`${cond ? 'OK  ' : 'FALHOU'}  ${
   try { await PG.query('begin transaction read only'); await PG.query('create table x_teste (a int)'); } catch (_) { escreveu = false; } finally { await PG.query('rollback'); }
   ok(!escreveu, 'transação READ ONLY recusa escrita (garantia usada na simulação)');
 
+  // 2b) gravar ANTES da migração: para sem escrever nada; migrar cria a estrutura vazia; repetir é seguro
+  r = await chamar({ acao: 'ponteiros-obra', modo: 'gravar', lote: P.lote }, true);
+  ok(r.ok === false && /migrar/.test(r.erros.join(' ')), 'gravar antes de migrar: recusado, indica o modo migrar', r.erros && r.erros[0]);
+  ok(!(await existe('public.nexus_ponteiros_obra')) && !(await existe('public.nexus_obras_externas')) && !(await existe('public.nexus_ponteiros_lotes')), 'gravar antes de migrar: nenhuma tabela criada');
+  r = await chamar({ acao: 'ponteiros-obra', modo: 'migrar' }, false);
+  ok(r.ok === false && r.motivo === 'particular', 'migrar sem crachá/PIN: recusado');
+  const pedM = JSON.parse(execFileSync(process.execPath, [path.join(RAIZ, 'scripts/nexus-ponteiros-obra.cjs'), '--modo', 'migrar']).toString());
+  ok(pedM.acao === 'ponteiros-obra' && pedM.modo === 'migrar' && !pedM.lote, 'pedido de migrar montado sem o arquivo do lote');
+  r = await chamar(pedM, true);
+  ok(r.ok && Object.values(r.tabelas).every((n) => n === 0) && Object.keys(r.tabelas).length === 4, 'migrar: 4 tabelas criadas e vazias', JSON.stringify(r.tabelas));
+  ok(!(await existe('public.nexus_refs')), 'migrar não cria nem toca nexus_refs');
+  r = await chamar({ acao: 'ponteiros-obra', modo: 'simular', lote: P.lote }, true);
+  ok(r.ok && r.inseridos === 30 && r.tabelas_existem === true, 'simular depois de migrar (tabela vazia): 30 previstos');
+
   // 3) gravar: 30 inserções; repetir: zero
   r = await chamar({ acao: 'ponteiros-obra', modo: 'gravar', lote: P.lote }, true);
   ok(r.ok && r.inseridos === 30 && r.linhas_do_lote === 30, 'gravar: 30 inseridos e 30 linhas registradas no lote', JSON.stringify({ i: r.inseridos, l: r.linhas_do_lote }));
@@ -79,6 +93,8 @@ const ok = (cond, nome, extra) => { console.log(`${cond ? 'OK  ' : 'FALHOU'}  ${
   ok(a1.inseridos + a2.inseridos === 0 && (await conta('select count(*)::int n from nexus_ponteiros_obra')) === 30, 'duas gravações ao mesmo tempo: nada duplicado');
   r = await chamar({ acao: 'ponteiros-obra', modo: 'simular', lote: P.lote }, true);
   ok(r.ok && r.inseridos === 0 && r.ignorados === 30, 'simular depois de gravar: 0 inseridos, 30 ignorados');
+  r = await chamar({ acao: 'ponteiros-obra', modo: 'migrar' }, true);
+  ok(r.ok && r.tabelas.nexus_ponteiros_obra === 30 && r.tabelas.nexus_ponteiros_lote_linhas === 30 && (await conta('select count(*)::int n from nexus_ponteiros_obra')) === 30, 'repetir migrar com dados: os 30 registros preservados', JSON.stringify(r.tabelas));
   let dup = true;
   try { await PG.query(`insert into nexus_ponteiros_obra (obra, pagina_pdf, marca, ini, fim) select obra, pagina_pdf, marca, ini, fim from nexus_ponteiros_obra limit 1`); } catch (_) { dup = false; }
   ok(!dup, 'o banco recusa ponteiro repetido mesmo fora do fluxo (unicidade canônica)');

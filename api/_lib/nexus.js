@@ -12,7 +12,8 @@
 //   descobrir { id }              -> { blocos }               os 6 algoritmos do motor de descoberta para uma passagem
 //   explicar  { id }              -> { texto, evidencias }    a IA explica o resultado de `descobrir`, citando [E1], [E2]…
 //   salvar    { titulo, estado, investigacao? } / listar / abrir { investigacao } / apagar { investigacao }
-//   ponteiros-obra { modo: simular|gravar|reverter|estado, lote? , lote_id? }  (administrativo, com a porta)
+//   conversar { mensagens:[{papel,texto}], contexto? } -> { texto }  barra lateral 'Pergunte ao Claude' (com a porta)
+//   ponteiros-obra { modo: migrar|simular|gravar|reverter|estado, lote? , lote_id? }  (administrativo, com a porta)
 //             ponteiros de obras externas (só localizadores; ver api/_lib/nexus-ponteiros.js)
 //
 // A PORTA (a mesma da Oficina): sem crachá do aparelho ou token do PIN, só sai o que é público —
@@ -1234,6 +1235,9 @@ async function explicar(db, ini, fim, bib, quem) {
     evidencias: evid, descartados, modelo: rr.modelo || '', provedor: rr.provedor || '', nivel: rr.nivel, custo_usd: rr.custo || 0, reaproveitado: !!rr.reaproveitado, motivo: rr.motivo || '' };
 }
 
+// ═══ BARRA LATERAL 'PERGUNTE AO CLAUDE' ═══
+const SYS_CONVERSA = "Você é o Claude dentro do NEXUS BÍBLICO, conversando com um pastor estudioso como um professor experiente, caloroso e paciente. Escreva em português do Brasil, em prosa natural e acolhedora, de 1 a 4 parágrafos curtos (use lista só quando ele pedir um roteiro ou passos). Você ajuda de dois jeitos: (1) explicando como usar o NEXUS; (2) ajudando nos estudos bíblicos (roteiros, perguntas para meditar, contexto, línguas originais, caminhos de investigação). COMO O NEXUS FUNCIONA: a busca no alto abre uma passagem (ex.: João 1:1); tocar num ponto mostra o painel com as ligações e as fontes; tocar de novo ou usar Expandir traz os vizinhos; a legenda embaixo é clicável e destaca um tipo de elemento ou um estado de evidência; os nomes dos grupos de assuntos abrem a lista dos membros; o botão Céu Infinito alterna entre o mapa 2D e o céu 3D; Descobrir roda os algoritmos do motor (referências cruzadas, citações literais, apoio patrístico, temas, relações lexicais, descobertas da Oficina); Explicar pede à IA um texto ancorado nas evidências numeradas [E1], [E2]; Entidades mostra pessoas, lugares e conceitos citados nas obras; Caminho liga dois elementos; a Trilha guarda o percurso; Salvar e Investigações guardam o mapa no banco do NEXUS; Filtros escondem estados, naturezas e métodos; o acesso à biblioteca é pelo PIN. Estados da evidência: direta (a fonte cita ou define), corroboração (3+ autores independentes), interpretação (comentaristas, curadoria), hipótese (vínculo calculado) e inferência (texto de IA). RIGOR INEGOCIÁVEL: nunca invente citações, páginas, autores ou referências bibliográficas; separe com clareza o que é texto bíblico, o que é consenso acadêmico, o que é interpretação de uma tradição e o que é hipótese; quando não souber ou houver controvérsia, diga com honestidade; lembre que esta conversa NÃO consulta a biblioteca do NEXUS e que, para evidências conferíveis, ele deve usar Descobrir e Explicar.";
+
 // ═══ INVESTIGAÇÕES SALVAS (banco próprio do NEXUS) ═══════════════════════════════════════
 let TABELA_OK = false;
 async function garantirTabela(db) {
@@ -1406,12 +1410,26 @@ module.exports = async (req, res) => {
       const modo = String(b.modo || 'simular');
       if (!db.temNexus()) { res.json({ ok: false, err: 'banco do NEXUS não ligado' }); return; }
       if (modo === 'estado') { res.json(await PONT.estado(db, b.lote_id || null)); return; }
+      if (modo === 'migrar') { res.json(await PONT.migrar(db)); return; }
       if (modo === 'reverter') { res.json(await PONT.reverter(db, b.lote_id)); MEMORIA.clear(); return; }
       const bib = await carregarBiblia(proto + '://' + host);
       if (!bib) { res.json({ ok: false, err: 'a Almeida não carregou agora' }); return; }
       if (modo === 'simular') { res.json(await PONT.simular(db, b.lote, bib)); return; }
       if (modo === 'gravar') { res.json(await PONT.gravar(db, b.lote, bib)); MEMORIA.clear(); return; }
       res.json({ ok: false, err: 'modo desconhecido' });
+      return;
+    }
+    if (acao === 'conversar') {   // barra lateral: dúvidas de uso e ajuda nos estudos (não consulta a biblioteca)
+      const NL = String.fromCharCode(10);
+      const msgs = (Array.isArray(b.mensagens) ? b.mensagens : []).slice(-10).map((m) => ({ papel: m && m.papel === 'eu' ? 'eu' : 'claude', texto: String((m && m.texto) || '').slice(0, 1500) })).filter((m) => m.texto.trim());
+      if (!msgs.length || msgs[msgs.length - 1].papel !== 'eu') { res.json({ ok: false, err: 'escreva uma pergunta' }); return; }
+      const ctx = b.contexto || {};
+      const nome = (x) => (/^x:/.test(String((x && x.id) || '')) ? '' : String((x && x.rotulo) || '').slice(0, 80));   // obras externas nunca vão para a IA
+      const foco = nome(ctx.foco), sel = nome(ctx.sel);
+      const user = (foco || sel ? '[Na tela agora' + (foco ? ': passagem em foco ' + foco : '') + (sel ? '; elemento selecionado ' + sel : '') + ']' + NL + NL : '') +
+        msgs.map((m) => (m.papel === 'eu' ? 'PASTOR: ' : 'CLAUDE: ') + m.texto).join(NL + NL) + NL + NL + 'CLAUDE:';
+      const rr = await IA.executar(db, { tarefa: 'conversar', sys: SYS_CONVERSA, user, dono: donoDe(b), investigacao: null });
+      res.json({ ok: !!rr.texto, texto: String(rr.texto || '').trim() || 'Não consegui responder agora.', modelo: rr.modelo || '', custo_usd: rr.custo || 0, reaproveitado: !!rr.reaproveitado, motivo: rr.motivo || '' });
       return;
     }
     if (acao === 'ia-consumo') { res.json({ ok: true, ...(await IA.consumo(db, b.investigacao || null)) }); return; }

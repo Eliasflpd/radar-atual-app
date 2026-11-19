@@ -32,6 +32,7 @@ const DESCIDA = { profundo: ['profundo', 'padrao', 'leve'], padrao: ['padrao', '
 const TAREFAS = {
   explicar: { nivel: 'padrao', max: 1400, effort: 'medium', nome: 'Explicar as evidências' },
   resumir: { nivel: 'leve', max: 500, effort: 'low', nome: 'Resumo da investigação' },
+  conversar: { nivel: 'padrao', max: 1100, effort: 'low', nome: 'Conversa com o Claude (barra lateral)' },
 };
 const PADRAO = {
   ligado: true,

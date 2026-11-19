@@ -93,6 +93,9 @@ function definirAcesso(aberto) {
   c.classList.toggle('aberto', aberto);
 }
 // Remissões de obras externas (nós "x:") só existem com a porta aberta: sem ela, saem do mapa e das investigações restauradas.
+// contexto para a barra lateral 'Pergunte ao Claude' (só os nomes; nós de obra externa ficam de fora)
+window.NEXUS_CONTEXTO = () => { const no = (id) => (id && S.graph && S.graph.hasNode(id) && !String(id).startsWith('x:') ? { id, rotulo: lab(id) } : null); return { foco: no(S.foco), sel: no(S.sel) }; };
+import('/nexus/conversa.js?v=1').then((m) => m.iniciarConversa()).catch(() => {});
 function tirarExternos() {
   const g = S.graph; if (!g || !g.order) return;
   const fora = g.filterNodes((id) => String(id).startsWith('x:'));
@@ -464,8 +467,11 @@ async function abrirCeu() {
   carregandoCeu = botao.disabled = true;
   try {
     if (!ceu) {
-      const { criarCeu } = await import('/nexus/ceu.js?v=9');
+      // PRÉVIA do novo Céu: só em desenvolvimento local (localhost/127.x) e com ?ceu=previa; o publicado segue em ceu.js v9
+      const previaCeu = /^(localhost|127\.)/.test(location.hostname) && new URLSearchParams(location.search).get('ceu') === 'previa';
+      const { criarCeu } = await import(previaCeu ? '/nexus/ceu-previa.js?v=1' : '/nexus/ceu.js?v=9');
       ceu = criarCeu($('ceu'), S, { visivelNo, visivelAresta, selecionar, expandir, painelAresta, abrirGrupo, indisponivel: ceuIndisponivel });
+      if (previaCeu) window.__ceuPrevia = ceu;
     }
     if (versao === versaoModo) definirModo('ceu');
   } catch (erro) {

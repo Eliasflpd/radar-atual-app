@@ -85,7 +85,8 @@ async function existe(db, tabela) {
   return !!(r[0] && r[0].ok);
 }
 
-// Criação das tabelas: SÓ no caminho de gravação (fluxo administrativo, com a porta). Ler e simular não criam nada.
+// Criação das tabelas: SÓ pelo modo `migrar` (fluxo administrativo, com a porta). Ler, simular e gravar não criam nada.
+const TABELAS = ['public.nexus_obras_externas', 'public.nexus_ponteiros_obra', 'public.nexus_ponteiros_lotes', 'public.nexus_ponteiros_lote_linhas'];
 async function criarTabelas(db) {
   await db.q('n', `create table if not exists nexus_obras_externas (
       obra text primary key, titulo text not null, autor text, revisao text, traducao text, editora text not null,
@@ -111,6 +112,19 @@ async function criarTabelas(db) {
       lote text not null references nexus_ponteiros_lotes (lote),
       ponteiro bigint primary key references nexus_ponteiros_obra (id) on delete cascade)`);
   await db.q('n', 'create index if not exists nexus_ponteiros_lote_linhas_lote on nexus_ponteiros_lote_linhas (lote)');
+}
+
+// MIGRAR — cria só a estrutura vazia (idempotente: repetir não apaga nem altera registros). Não recebe lote.
+async function migrar(db) {
+  await criarTabelas(db);
+  const contagens = {};
+  for (const t of TABELAS) contagens[t.replace('public.', '')] = (await db.q('n', `select count(*)::int n from ${t}`))[0].n;
+  return { ok: true, modo: 'migrar', tabelas: contagens };
+}
+async function faltando(db) {
+  const out = [];
+  for (const t of TABELAS) if (!(await existe(db, t))) out.push(t.replace('public.', ''));
+  return out;
 }
 
 // SIMULAR — somente leitura. Conta quantos seriam inseridos, ignorados (já existem) e rejeitados.
@@ -142,7 +156,8 @@ async function gravar(db, lote, bib) {
   const v = validarLote(lote, bib);
   if (!v.ok) return { ok: false, erros: v.erros };
   if (v.rejeitados.length) return { ok: false, erros: ['o lote tem itens rejeitados; corrija antes de gravar'], detalhe_rejeitados: v.rejeitados };
-  await criarTabelas(db);
+  const ausentes = await faltando(db);   // a gravação nunca cria estrutura: sem migração, para antes de qualquer escrita
+  if (ausentes.length) return { ok: false, erros: ['tabelas ausentes (' + ausentes.join(', ') + '): rode antes o modo migrar (node scripts/nexus-ponteiros-obra.cjs --modo migrar)'] };
   const o = v.obra;
   await db.q('n', `insert into nexus_obras_externas (obra, titulo, autor, revisao, traducao, editora, original, ano_edicao, situacao_juridica)
       values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
@@ -220,4 +235,4 @@ function arestaRemissao(p, passagemId, rotuloPassagem) {
     evidencias: [{ autor: p.autor || '', obra: `${p.titulo} (${edicaoTexto(p)})`, secao: local, modo: 'remissão de léxico', marca: p.marca, trecho: '', aviso: AVISO, externa: true }] };
 }
 
-module.exports = { validarLote, simular, gravar, reverter, estado, ponteirosDaPassagem, ponteirosDaPagina, noPagina, arestaRemissao, idPagina, criarTabelas, _teste: { RE_MARCA, CAMPOS_ITEM } };
+module.exports = { validarLote, migrar, simular, gravar, reverter, estado, ponteirosDaPassagem, ponteirosDaPagina, noPagina, arestaRemissao, idPagina, criarTabelas, _teste: { RE_MARCA, CAMPOS_ITEM } };
