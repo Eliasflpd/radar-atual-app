@@ -219,7 +219,7 @@ function desenharGrupos() {
       const v = R.graphToViewport({ x: a.x, y: a.y }); x += v.x; y += v.y; n++; minY = Math.min(minY, v.y);
     }
     if (!n) return '';
-    return `<div class="rotulo-grupo" style="left:${(x / n).toFixed(0)}px;top:${(minY - 22).toFixed(0)}px">${esc(gr.nome)} · ${n}</div>`;
+    return `<button class="rotulo-grupo" data-grupo="${S.grupoInfo.indexOf(gr)}" style="left:${(x / n).toFixed(0)}px;top:${(minY - 22).toFixed(0)}px" title="Ver os elementos deste grupo">${esc(gr.nome)} · ${n}</button>`;
   }).join('');
 }
 
@@ -266,7 +266,7 @@ async function explorar(texto) {
 function selecionar(id, centralizar) {
   if (!S.graph.hasNode(id)) return;
   if (S.graph.getNodeAttribute(id, 'tipo') === 'mais') { trazerMais(id); return; }
-  S.sel = id; S.selAresta = null; S.caminho = null;
+  S.sel = id; S.selAresta = null; S.caminho = null; if (S.realce) { S.realce = null; montarLegenda(); }
   if (S.trilha[S.trilha.length - 1] !== id) { S.trilha.push(id); if (S.trilha.length > 40) S.trilha.shift(); }
   desenharTrilha();
   if (S.modo === 'lista') desenharLista(); else painelNo(id);
@@ -469,8 +469,33 @@ function aplicarFiltros() {
   desenharGrupos();
 }
 function montarLegenda() {
-  $('legenda').innerHTML = Object.entries(TIPOS).filter(([k]) => k !== 'mais').map(([, t]) => `<span><i class="amostra" style="background:${t.cor}"></i>${t.nome}</span>`).join('') +
-    Object.values(CLASSES).map((t) => `<span title="${esc(t.ajuda)}"><i class="amostra linha" style="background:${t.cor}"></i>${t.nome}</span>`).join('');
+  const ativo = (k, v) => S.realce && S.realce.k === k && S.realce.v === v ? ' ativo' : '';
+  $('legenda').innerHTML = Object.entries(TIPOS).filter(([k]) => k !== 'mais').map(([k, tp]) => `<button class="leg${ativo('tipo', k)}" data-realce="tipo:${k}" title="Destacar e listar: ${esc(tp.nome)}"><i class="amostra" style="background:${tp.cor}"></i>${tp.nome}</button>`).join('') +
+    Object.entries(CLASSES).map(([k, tp]) => `<button class="leg${ativo('estado', k)}" data-realce="estado:${k}" title="${esc(tp.ajuda)} Toque para destacar e listar."><i class="amostra linha" style="background:${tp.cor}"></i>${tp.nome}</button>`).join('');
+}
+// Realce pela legenda: o mapa destaca só aquele tipo de elemento (ou aquele estado de evidência) e o painel lista tudo
+// o que há dele, cada item levando ao seu lugar no mapa. Tocar de novo desfaz.
+function realcar(k, v) {
+  if (S.realce && S.realce.k === k && S.realce.v === v) { S.realce = null; montarLegenda(); S.renderer.refresh(); if (S.sel) painelNo(S.sel); return; }
+  S.realce = { k, v }; S.caminho = null;
+  montarLegenda(); S.renderer.refresh();
+  const g = S.graph;
+  let html;
+  if (k === 'tipo') {
+    const ids = g.filterNodes((id, a) => a.tipo === v && visivelNo(id, a)).sort((a, b) => g.degree(b) - g.degree(a));
+    html = `<span class="etq">Legenda · ${esc((TIPOS[v] || {}).nome || v)}</span><h2>${ids.length} no mapa</h2>` +
+      (ids.length ? ids.slice(0, 120).map((id) => `<div class="lig"><div class="lig-topo"><span class="amostra" style="background:${g.getNodeAttribute(id, 'color')}"></span><button class="lig-alvo" data-ir="${esc(id)}">${esc(lab(id))}</button><span class="etq">${g.degree(id)} ligação(ões)</span></div></div>`).join('')
+        : '<p class="nota">Nenhum elemento deste tipo no mapa agora. Expanda passagens, use Descobrir ou Entidades.</p>');
+  } else {
+    const ks = g.filterEdges((e, a) => a.dados && a.dados.classe === v && visivelAresta(e));
+    html = `<span class="etq">Legenda · ${esc((CLASSES[v] || {}).nome || v)}</span><h2>${ks.length} ligação(ões)</h2><p class="nota">${esc((CLASSES[v] || {}).ajuda || '')}</p>` +
+      (ks.length ? ks.slice(0, 120).map((e) => { const s = g.source(e), d = g.target(e), a = g.getEdgeAttribute(e, 'dados');
+        return `<div class="lig"><div class="lig-topo"><button class="lig-alvo" data-ir="${esc(s)}">${esc(lab(s))}</button><span class="etq">${esc(TIPO_LIG[a.tipo] || a.tipo)} →</span><button class="lig-alvo" data-ir="${esc(d)}">${esc(lab(d))}</button></div><p>${esc(a.explica || '')}</p>${evidenciasHtml(a.evidencias)}</div>`; }).join('')
+        : '<p class="nota">Nenhuma ligação neste estado no mapa agora.</p>');
+  }
+  html += '<div class="botoes"><button class="bt" data-realce="limpar">Tirar o destaque</button></div>';
+  if (S.modo === 'lista') $('lista').innerHTML = `<div class="cartao">${html}</div>`;
+  else { $('painel-corpo').innerHTML = html; $('painel').hidden = false; }
 }
 
 // ── controle do pesquisador ────────────────────────────────────────────────
@@ -715,7 +740,12 @@ function iniciarSigma() {
       const r = { ...a };
       if (!visivelNo(id, a)) { r.hidden = true; return r; }
       if (a.oculto) r.color = '#E5E1D6';
-      const cam = S.caminho, foco = S.hover || S.sel;
+      const cam = S.caminho, foco = S.hover || S.sel, rc = S.realce;
+      if (rc && !S.hover) {
+        const dentro = rc.k === 'tipo' ? a.tipo === rc.v : S.graph.someEdge(id, (e, ad) => ad.dados && ad.dados.classe === rc.v);
+        if (!dentro) { r.color = '#E3DED2'; r.label = ''; r.zIndex = 0; } else { r.zIndex = 2; if (rc.k === 'tipo') r.forceLabel = true; }
+        return r;
+      }
       if (cam) { if (!cam.nos.has(id)) { r.color = '#E3DED2'; r.label = ''; r.zIndex = 0; } else { r.zIndex = 2; r.forceLabel = true; r.highlighted = true; } }
       else if (foco && foco !== id && !S.graph.areNeighbors(foco, id)) { r.color = '#D9D4C7'; r.label = a.destaque ? a.label : ''; r.zIndex = 0; }
       else r.zIndex = 1;
@@ -728,7 +758,12 @@ function iniciarSigma() {
     edgeReducer: (k, a) => {
       const r = { ...a };
       if (!visivelAresta(k)) { r.hidden = true; return r; }
-      const cam = S.caminho, foco = S.hover || S.sel;
+      const cam = S.caminho, foco = S.hover || S.sel, rc = S.realce;
+      if (rc && !S.hover) {
+        const dentro = rc.k === 'estado' ? a.dados && a.dados.classe === rc.v : S.graph.getNodeAttribute(S.graph.source(k), 'tipo') === rc.v || S.graph.getNodeAttribute(S.graph.target(k), 'tipo') === rc.v;
+        if (!dentro) { r.color = '#EEE9DE'; r.size = 0.5; } else if (rc.k === 'estado') r.size = a.size * 2;
+        return r;
+      }
       if (cam) { if (!cam.arestas.has(k)) { r.color = '#EEE9DE'; r.size = 0.5; } else { r.size = 4; } }
       else if (foco && !S.graph.hasExtremity(k, foco)) { r.color = '#ECE7DB'; r.size = 0.6; }
       if (k === S.selAresta) r.size = a.size * 2.2;
@@ -802,8 +837,18 @@ function ligarEventos() {
 
   // delegação: painel, lista, trilha, modal, sugestões
   document.body.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-acao],[data-ir],[data-id].passo,[data-bloco],[data-ev],[data-ref],[data-inv],[data-apagar],[data-aba]');
+    const t = e.target.closest('[data-acao],[data-ir],[data-id].passo,[data-bloco],[data-ev],[data-ref],[data-inv],[data-apagar],[data-aba],[data-realce],[data-grupo]');
     if (!t) return;
+    if (t.dataset.realce) { if (t.dataset.realce === 'limpar') { S.realce = null; montarLegenda(); S.renderer.refresh(); if (S.sel) painelNo(S.sel); else $('painel').hidden = true; return; } const [k, v] = t.dataset.realce.split(':'); realcar(k, v); return; }
+    if (t.dataset.grupo != null) {
+      const gr = S.grupoInfo[+t.dataset.grupo]; if (!gr) return;
+      const g = S.graph, ids = gr.ids.filter((id) => g.hasNode(id)).sort((a, b) => g.degree(b) - g.degree(a));
+      S.caminho = { nos: new Set(ids), arestas: new Set(g.filterEdges((k, a, s, d) => ids.includes(s) && ids.includes(d))) }; S.renderer.refresh();
+      $('painel-corpo').innerHTML = `<span class="etq">Grupo de assuntos</span><h2>${esc(gr.nome)}</h2><p class="nota">${ids.length} elementos que se ligam mais entre si do que com o resto do mapa (agrupamento automático).</p>` +
+        ids.map((id) => `<div class="lig"><div class="lig-topo"><span class="amostra" style="background:${g.getNodeAttribute(id, 'color')}"></span><button class="lig-alvo" data-ir="${esc(id)}">${esc(lab(id))}</button><span class="etq">${esc((TIPOS[g.getNodeAttribute(id, 'tipo')] || {}).nome || '')}</span></div></div>`).join('') +
+        '<div class="botoes"><button class="bt" data-acao="limpar-caminho">Tirar o destaque</button></div>';
+      $('painel').hidden = false; return;
+    }
     if (t.dataset.aba) { S.aba = t.dataset.aba; if (S.sel) (S.modo === 'lista' ? desenharLista : painelNo)(S.sel); return; }
     if (t.dataset.ref) { $('ref').value = t.dataset.ref; explorar(t.dataset.ref); return; }
     if (t.classList.contains('passo')) { selecionar(t.dataset.id, true); return; }
