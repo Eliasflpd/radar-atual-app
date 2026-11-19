@@ -842,6 +842,18 @@ function ligarEventos() {
 }
 
 // ── início ────────────────────────────────────────────────────────────────
+// O aplicativo do RADAR guarda as páginas para abrir rápido e avisa quando chega versão nova. A página do NEXUS
+// passa a ouvir esse aviso e se recarrega uma vez, para nunca ficar uma versão atrasada.
+try {
+  navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', (e) => {
+    const d = e.data || {};
+    if (d.type !== 'VERSAO_NOVA' || !/\/nexus\//.test(String(d.url || ''))) return;
+    const ultima = +(sessionStorage.getItem('nx_recarregou') || 0);
+    if (Date.now() - ultima < 60000) return;
+    sessionStorage.setItem('nx_recarregou', String(Date.now()));
+    location.reload();
+  });
+} catch (_) { /* sem service worker */ }
 iniciarSigma();
 ligarEventos();
 montarLegenda();

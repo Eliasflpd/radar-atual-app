@@ -614,6 +614,106 @@ async function entidadesDaPassagem(db, ini, fim, bib) {
   return { ...g.saida(), ambiguas: r.ambiguas.slice(0, 30), candidatos: r.candidatos, resumo: { trechos: trechos.length, entidades: r.entidades.length, mencoes: r.mencoes.length, ms: Date.now() - t0 } };
 }
 
+// ═══ EXTRAÇÃO EM MASSA DE ENTIDADES (última etapa; autorizada após validar o piloto) ═══════════════════
+// Grava SÓ no banco do NEXUS: entidades, nomes, menções (banco + trecho + posição; o texto não é copiado), ambíguas e
+// candidatas. Lotes por id, com progresso em nexus_lotes_estado: se cair, continua de onde parou. Chave única nas
+// menções impede duplicidade. VERSAO_ENT muda quando o extrator muda: aí as menções antigas são refeitas.
+const VERSAO_ENT = 1;
+async function tabelasEntidades(db) {
+  if (!db.temNexus()) return false;
+  await db.q('n', `create table if not exists nexus_entidades (id text primary key, nome text not null, categoria text not null, status text not null default 'catalogo',
+      mencoes int not null default 0, criado_em timestamptz not null default now())`);
+  await db.q('n', `create table if not exists nexus_nomes (entidade text not null, forma text not null, primary key (entidade, forma))`);
+  await db.q('n', `create table if not exists nexus_mencoes (id bigserial primary key, entidade text not null, banco smallint not null, trecho bigint not null, pos int not null,
+      forma text not null, metodo text not null, confianca real not null, camada text not null, versao int not null, unique (entidade, banco, trecho, pos))`);
+  await db.q('n', 'create index if not exists nexus_mencoes_ent on nexus_mencoes (entidade)');
+  await db.q('n', 'create index if not exists nexus_mencoes_trecho on nexus_mencoes (banco, trecho)');
+  await db.q('n', `create table if not exists nexus_ambiguas (id bigserial primary key, forma text not null, opcoes text[] not null, banco smallint not null, trecho bigint not null, pos int not null,
+      decisao text, unique (banco, trecho, pos))`);
+  await db.q('n', `create table if not exists nexus_candidatas (forma text primary key, ocorrencias int not null default 0, trechos int not null default 0, exemplo text, status text not null default 'pendente')`);
+  await db.q('n', `create table if not exists nexus_lotes_estado (nome text primary key, banco smallint not null default 1, ultimo_id bigint not null default 0, lidos int not null default 0,
+      mencoes int not null default 0, ambiguas int not null default 0, versao int not null, feito boolean not null default false, iniciado_em timestamptz not null default now(), atualizado_em timestamptz not null default now())`);
+  return true;
+}
+async function backupNexus(db) {
+  if (!db.temNexus()) return { ok: false, err: 'banco do NEXUS não ligado' };
+  const sufixo = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const tabelas = (await db.q('n', `select table_name from information_schema.tables where table_schema = 'public' and table_name like 'nexus_%'`)).map((r) => r.table_name);
+  const feitas = [];
+  for (const t of tabelas) {
+    const nome = `bkp_${sufixo}_${t}`.slice(0, 60);
+    await db.q('n', `create table if not exists ${nome} as table ${t}`);
+    const n = (await db.q('n', `select count(*)::int n from ${nome}`))[0].n;
+    feitas.push({ tabela: t, copia: nome, linhas: n });
+  }
+  return { ok: true, backup: feitas };
+}
+async function extrairEmMassa(db, lote) {
+  if (!(await tabelasEntidades(db))) return { ok: false, err: 'banco do NEXUS não ligado' };
+  let est = (await db.q('n', `select * from nexus_lotes_estado where nome = 'entidades'`))[0];
+  if (!est) { await db.q('n', `insert into nexus_lotes_estado (nome, versao) values ('entidades', $1) on conflict do nothing`, [VERSAO_ENT]); est = (await db.q('n', `select * from nexus_lotes_estado where nome = 'entidades'`))[0]; }
+  if (est.versao < VERSAO_ENT) {
+    await db.q('n', 'delete from nexus_mencoes where versao < $1', [VERSAO_ENT]);
+    await db.q('n', `update nexus_lotes_estado set banco = 1, ultimo_id = 0, lidos = 0, mencoes = 0, ambiguas = 0, feito = false, versao = $1 where nome = 'entidades'`, [VERSAO_ENT]);
+    est = (await db.q('n', `select * from nexus_lotes_estado where nome = 'entidades'`))[0];
+  }
+  if (est.feito) return { ok: true, ...est };
+  const cat = await catalogo(db);
+  const linhas = await db.q(est.banco, `select id, fonte, autor, obra, secao, texto from biblioteca_trechos where id > $1 order by id limit $2`, [est.ultimo_id, lote]);
+  const trechos = linhas.map((x) => ({ chave: est.banco + ':' + x.id, fonte: x.fonte, autor: x.autor, obra: obraNo(x.fonte, cat, x).rotulo, secao: x.secao, texto: x.texto,
+    camadaFonte: /^pat-|eusebio/.test(x.fonte) ? 'antiga' : 'moderna' }));
+  const r = ENT.extrair(trechos, CONCEITOS, { todosCandidatos: true });
+  const lotear = async (linhasIns, colunas, sql) => {
+    for (let i = 0; i < linhasIns.length; i += 400) {
+      const parte = linhasIns.slice(i, i + 400);
+      const ph = parte.map((_, k) => '(' + colunas.map((_, j) => '$' + (k * colunas.length + j + 1)).join(',') + ')').join(',');
+      await db.q('n', sql.replace('%V', ph), parte.flat());
+    }
+  };
+  await lotear(r.entidades.map((e) => [e.id, String(e.nome).slice(0, 200), e.categoria, e.categoria === 'termo_original' ? 'termo' : e.categoria === 'conceito' ? 'conceito' : 'catalogo', e.mencoes]),
+    [1, 2, 3, 4, 5], `insert into nexus_entidades (id, nome, categoria, status, mencoes) values %V on conflict (id) do update set mencoes = nexus_entidades.mencoes + excluded.mencoes`);
+  const nomes = []; for (const e of r.entidades) for (const v of e.variantes) nomes.push([e.id, String(v).slice(0, 120)]);
+  await lotear(nomes, [1, 2], `insert into nexus_nomes (entidade, forma) values %V on conflict do nothing`);
+  await lotear(r.mencoes.map((m) => { const [bn, id] = m.trecho.split(':'); return [m.entidade, +bn, +id, m.pos, String(m.forma).slice(0, 120), m.metodo, m.confianca, m.camada, VERSAO_ENT]; }),
+    [1, 2, 3, 4, 5, 6, 7, 8, 9], `insert into nexus_mencoes (entidade, banco, trecho, pos, forma, metodo, confianca, camada, versao) values %V on conflict do nothing`);
+  await lotear(r.ambiguas.map((a) => { const [bn, id] = a.trecho.split(':'); return [a.forma, a.opcoes, +bn, +id, a.pos]; }),
+    [1, 2, 3, 4, 5], `insert into nexus_ambiguas (forma, opcoes, banco, trecho, pos) values %V on conflict do nothing`);
+  const cand = new Map(); for (const c of r.candidatosTodos || []) cand.set(c.forma, c);
+  await lotear([...cand.values()].map((c) => [String(c.forma).slice(0, 80), c.ocorrencias, c.trechos, String(c.exemplo || '').slice(0, 200)]),
+    [1, 2, 3, 4], `insert into nexus_candidatas (forma, ocorrencias, trechos, exemplo) values %V on conflict (forma) do update set ocorrencias = nexus_candidatas.ocorrencias + excluded.ocorrencias, trechos = nexus_candidatas.trechos + excluded.trechos`);
+  const ultimo = linhas.length ? linhas[linhas.length - 1].id : est.ultimo_id;
+  let banco = est.banco, ultimoId = ultimo, feito = false;
+  if (linhas.length < lote) { if (est.banco === 1) { banco = 2; ultimoId = 0; } else feito = true; }
+  await db.q('n', `update nexus_lotes_estado set banco = $1, ultimo_id = $2, lidos = lidos + $3, mencoes = mencoes + $4, ambiguas = ambiguas + $5, feito = $6, atualizado_em = now() where nome = 'entidades'`,
+    [banco, ultimoId, linhas.length, r.mencoes.length, r.ambiguas.length, feito]);
+  // regra validada no piloto: forma grega/hebraica que aparece uma vez só (e não é Strong) fica marcada como rara,
+  // sem apagar nada — continua consultável, mas não entra nas listas principais
+  if (feito) await db.q('n', `update nexus_entidades set status = 'termo_raro' where status = 'termo' and mencoes < 2 and id not like 'strong:%'`);
+  return { ok: true, ...(await db.q('n', `select * from nexus_lotes_estado where nome = 'entidades'`))[0], lote: linhas.length };
+}
+// Validação por amostragem: relê o trecho e confere se, na posição gravada, está exatamente a forma gravada.
+async function validarEntidades(db, n) {
+  if (!(await tabelasEntidades(db))) return { ok: false, err: 'banco do NEXUS não ligado' };
+  const amostra = await db.q('n', `select m.entidade, e.nome, e.categoria, m.banco, m.trecho, m.pos, m.forma, m.camada, m.metodo from nexus_mencoes m join nexus_entidades e on e.id = m.entidade
+      where m.entidade not like 'termo:%' order by random() limit $1`, [n]);
+  let ok = 0; const falhas = [], exemplos = [];
+  for (const bn of [1, 2]) {
+    const ids = amostra.filter((m) => m.banco === bn).map((m) => m.trecho);
+    if (!ids.length) continue;
+    const textos = new Map((await db.q(bn, 'select id, texto from biblioteca_trechos where id = any($1)', [ids])).map((x) => [String(x.id), x.texto]));
+    for (const m of amostra.filter((x) => x.banco === bn)) {
+      const t = textos.get(String(m.trecho)) || '';
+      const confere = t.slice(m.pos, m.pos + m.forma.length) === m.forma;
+      if (confere) ok++; else if (falhas.length < 10) falhas.push(m);
+      if (exemplos.length < 25) exemplos.push({ entidade: m.nome, categoria: m.categoria, camada: m.camada, metodo: m.metodo, contexto: t.slice(Math.max(0, m.pos - 90), m.pos + 90).replace(/\s+/g, ' ') });
+    }
+  }
+  const tot = await db.q('n', `select (select count(*)::int from nexus_entidades) entidades, (select count(*)::int from nexus_mencoes) mencoes, (select count(*)::int from nexus_ambiguas) ambiguas,
+      (select count(*)::int from nexus_candidatas where ocorrencias >= 3) candidatas, (select pg_size_pretty(pg_database_size(current_database()))) tamanho`);
+  const porCat = await db.q('n', `select categoria, count(*)::int n, sum(mencoes)::int mencoes from nexus_entidades group by 1 order by 3 desc`);
+  return { ok: true, amostra: amostra.length, posicao_confere: ok, falhas, exemplos, totais: tot[0], por_categoria: porCat };
+}
+
 // ═══ EXPANDIR ═══════════════════════════════════════════════════════════════
 async function expandirPassagem(db, g, ini, fim, bib, aberto) {
   const foco = g.no(passagemNo(ini, fim, bib));
@@ -1256,6 +1356,9 @@ module.exports = async (req, res) => {
       res.json({ ok: true, ...r });
       return;
     }
+    if (acao === 'backup') { res.json(await backupNexus(db)); return; }
+    if (acao === 'extrair-entidades') { res.json(await extrairEmMassa(db, Math.min(1500, Math.max(200, +b.lote || 800)))); return; }
+    if (acao === 'validar-entidades') { res.json(await validarEntidades(db, Math.min(200, Math.max(10, +b.amostra || 60)))); return; }
     if (acao === 'entidades') {
       const bib = await carregarBiblia(proto + '://' + host);
       const p = lerPassagemId(b.id);
