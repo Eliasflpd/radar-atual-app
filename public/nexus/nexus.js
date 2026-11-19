@@ -621,6 +621,27 @@ async function investigacoesDialogo() {
       };
     }
   }
+  if (S.aberto) {
+    const ix = await api({ acao: 'indice-patristico' });
+    const caixa = `<h3>Índice patrístico</h3><div id="ix-estado"></div><div class="botoes"><button class="bt" id="ix-montar">Montar índice patrístico</button></div>`;
+    $('modal-corpo').insertAdjacentHTML('beforeend', caixa);
+    const mostrar = (e) => {
+      if (!e.ok) { $('ix-estado').innerHTML = `<p class="nota">${esc(e.err || 'indisponível')}</p>`; $('ix-montar').hidden = true; return; }
+      const cam = (e.por_camada || []).map((x) => `${x.camada === 'editor_provavel' ? 'provável texto do editor' : 'não classificado'}: ${x.n}`).join(' · ');
+      $('ix-estado').innerHTML = `<p class="nota">${e.feito ? 'Pronto' : 'Em montagem'}: ${e.lidos || 0} de ${e.total || '?'} trechos lidos · ${e.refs || 0} citações indexadas${e.fora_canon ? ` · ${e.fora_canon} de livros fora do cânon protestante (não indexados)` : ''}${e.invalidas ? ` · ${e.invalidas} com capítulo/versículo inexistente (descartadas)` : ''}${cam ? ' · ' + cam : ''}. Grava só ponteiros no banco do NEXUS; o texto continua na biblioteca.</p>`;
+      $('ix-montar').hidden = !!e.feito;
+    };
+    mostrar(ix);
+    $('ix-montar').onclick = async () => {
+      $('ix-montar').disabled = true;
+      for (let i = 0; i < 40; i++) {
+        const e = await api({ acao: 'indice-patristico', montar: true });
+        mostrar(e);
+        if (!e.ok || e.feito) break;
+      }
+      $('ix-montar').disabled = false;
+    };
+  }
   $('inv-lista').innerHTML = (msg ? `<div class="aviso">${esc(msg)}</div>` : '') + (srv.map((x) => linha(x, false)).join('') + loc.map((x) => linha(x, true)).join('') || '<p class="nota">Nenhuma investigação salva ainda.</p>');
 }
 
