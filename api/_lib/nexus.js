@@ -29,6 +29,7 @@ const crypto = require('crypto');
 const R = require('./oficina-refs.js');
 const { liberado } = require('./livro-particular.js');
 const IA = require('./nexus-ia.js');
+const ENT = require('./nexus-entidades.js');
 
 const CREDITO_OB = 'OpenBible.info, CC-BY (referências cruzadas)';
 const LIM_TRECHO = 300;
@@ -390,8 +391,12 @@ async function citacoesPatristicas(db, ini, excluir) {
   const avisoSl = ab === 'sl' ? `Salmos: as edições patrísticas costumam usar a numeração da LXX/Vulgata${lxxCap ? ` (Sl ${a.c} hebraico = Sl ${lxxCap} LXX)` : ''}. Citações achadas pela numeração LXX ficam como hipótese.` : '';
   // 1) o índice do NEXUS (montado uma vez; ponteiros com camada autor/editor)
   if (await indicePronto(db)) {
-    const refs = await db.q('n', `select banco, trecho, marca, pagina, camada, (ini_lxx is not null and ini_lxx <= $1 and fim_lxx >= $1 and not (ini <= $1 and fim >= $1)) as por_lxx
-        from nexus_refs where (ini <= $1 and fim >= $1) or (ini_lxx <= $1 and fim_lxx >= $1) limit 80`, [ini]).catch(() => null);
+    const refs = await db.q('n', `select banco, trecho, marca, pagina, camada, salmo_num, salmo_base, salmo_nota,
+          case when salmo_num = 'lxx' then (ini_lxx <= $1 and fim_lxx >= $1)
+               when salmo_num = 'hebraica' then (ini <= $1 and fim >= $1)
+               else (ini <= $1 and fim >= $1) end as confirmado,
+          (coalesce(salmo_num,'') not in ('lxx','hebraica') and ini_lxx <= $1 and fim_lxx >= $1 and not (ini <= $1 and fim >= $1)) as por_lxx
+        from nexus_refs where ((ini <= $1 and fim >= $1) and coalesce(salmo_num,'') <> 'lxx') or (ini_lxx <= $1 and fim_lxx >= $1 and coalesce(salmo_num,'') <> 'hebraica') limit 80`, [ini]).catch(() => null);
     if (refs) {
       const ids = [...new Set(refs.map((r) => r.trecho))];
       const textos = ids.length ? await db.q(2, 'select id, fonte, autor, obra, secao, tipo, texto from biblioteca_trechos where id = any($1)', [ids]).catch(() => []) : [];
@@ -402,7 +407,7 @@ async function citacoesPatristicas(db, ini, excluir) {
         if (!x || vistos.has(chave) || (excluir && excluir.has(chave))) continue;
         vistos.add(chave);
         const re = new RegExp(r.marca.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s?'));
-        achados.push({ ...x, chave, marca: r.marca, re, lxx: !!r.por_lxx, camada: r.camada,
+        achados.push({ ...x, chave, marca: r.marca, re, lxx: !!r.por_lxx, camada: r.camada, salmo: r.salmo_num ? { num: r.salmo_num, base: r.salmo_base, nota: r.salmo_nota } : null,
           avisoEd: r.camada === 'editor_provavel' ? 'Provável texto do EDITOR moderno (introdução/notas), não do próprio autor antigo. Conferir no livro antes de atribuir.' : 'Edição moderna: o trecho pode conter texto do editor junto com o do autor antigo. Conferir no livro antes de atribuir.' });
       }
       return { achados, aviso: avisoSl, pelo: 'indice' };
@@ -448,12 +453,17 @@ async function tabelasIndice(db) {
   await db.q('n', `create table if not exists nexus_refs (
       id bigserial primary key, banco smallint not null, trecho bigint not null, fonte text not null, autor text,
       ini int not null, fim int not null, ini_lxx int, fim_lxx int, marca text not null, pagina int,
-      camada text not null default 'nao_classificado', criado_em timestamptz not null default now(),
+      camada text not null default 'nao_classificado', salmo_num text, salmo_base text, salmo_nota text, criado_em timestamptz not null default now(),
       unique (banco, trecho, ini, fim, marca))`);
+  await db.q('n', `alter table nexus_refs add column if not exists salmo_num text`);
+  await db.q('n', `alter table nexus_refs add column if not exists salmo_base text`);
+  await db.q('n', `alter table nexus_refs add column if not exists salmo_nota text`);
   await db.q('n', 'create index if not exists nexus_refs_ini on nexus_refs (ini)');
   await db.q('n', 'create index if not exists nexus_refs_lxx on nexus_refs (ini_lxx)');
   await db.q('n', `create table if not exists nexus_indice_estado (nome text primary key, ultimo_id bigint not null default 0, lidos int not null default 0,
       refs int not null default 0, fora_canon int not null default 0, invalidas int not null default 0, total int, feito boolean not null default false, atualizado_em timestamptz not null default now())`);
+  await db.q('n', `alter table nexus_indice_estado add column if not exists versao int not null default 1`);
+  await db.q('n', `create table if not exists nexus_edicoes (fonte text primary key, numeracao_salmos text not null, decididas int not null, lxx int not null, hebraica int not null, metodo text not null, atualizado_em timestamptz not null default now())`);
   return true;
 }
 async function indicePronto(db) {
@@ -463,6 +473,27 @@ async function indicePronto(db) {
   if (e && e.feito) INDICE_OK = true;
   return INDICE_OK;
 }
+// NUMERAÇÃO DOS SALMOS DECIDIDA PELO CONTEXTO (ciclo 3). Para cada "Sl c,v" compara as palavras em volta da citação
+// com o texto da Almeida do Salmo como escrito (numeração hebraica) e do Salmo convertido da LXX/Vulgata (c+1, com
+// tolerância de 1 versículo pelo título). Só decide com folga de 2 palavras; senão fica "indefinida". Depois, cada obra
+// recebe um perfil (≥ 80% de decisões iguais, mínimo 10) que vale para as indefinidas, marcado como "perfil da obra".
+const VERSAO_INDICE = 2;
+const sem = (t) => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const PARADAS_SL = new Set('para pois porque como quando entao assim sobre entre pelos pelas este esta isto esse essa isso aquele aquela todos todas tudo nada mais menos muito muita seus suas teus tuas meus minhas nosso nossa vosso vossa seja sejam sera serao estar sido tendo dele dela deles delas nele nela onde qual quais quem cujo cuja ainda tambem mesmo mesma outro outra outros outras sempre senhor deus'.split(' '));
+const palavrasDe = (t) => new Set((sem(t).match(/[a-z]{4,}/g) || []).filter((w) => !PARADAS_SL.has(w)));
+function lxxParaHebraico(c) { return (c >= 10 && c <= 112) || (c >= 116 && c <= 145) ? c + 1 : null; }
+function decidirSalmo(bib, texto, pos, c, v) {
+  const ctx = palavrasDe(texto.slice(Math.max(0, pos - 260), pos + 40));
+  const nota = (cc, vv) => { const t = bib.sl && bib.sl[cc - 1] && bib.sl[cc - 1][vv - 1]; if (!t) return -1; let n = 0; for (const w of palavrasDe(t)) if (ctx.has(w)) n++; return n; };
+  const h = nota(c, v);
+  const hc = lxxParaHebraico(c);
+  const l = hc ? Math.max(nota(hc, v), nota(hc, v - 1)) : -1;
+  const lv = hc ? (nota(hc, v) >= nota(hc, v - 1) ? v : v - 1) : null;
+  if (l >= 2 && l >= h + 2) return { num: 'lxx', cap: hc, vers: lv, nota: `contexto: ${l} palavras do Sl ${hc}:${lv} (Almeida) contra ${Math.max(h, 0)} do Sl ${c}:${v}` };
+  if (h >= 2 && h >= l + 2) return { num: 'hebraica', cap: c, vers: v, nota: `contexto: ${h} palavras do Sl ${c}:${v} (Almeida) contra ${Math.max(l, 0)} da conversão LXX` };
+  return { num: 'indefinida', cap: c, vers: v, nota: 'contexto insuficiente para decidir a numeração' };
+}
+
 function extrairRefsPatristicas(texto, bib) {
   const out = [];
   let fora = 0, invalidas = 0;
@@ -479,9 +510,14 @@ function extrairRefsPatristicas(texto, bib) {
       if (!(lx && R.existe(bib, b, lx, v1))) { invalidas++; continue; }
     }
     const fimV = v2 >= v1 && R.existe(bib, b, c, v2) ? v2 : v1;
-    let iniL = null, fimL = null;
-    if (ab === 'sl') { const h = (c >= 10 && c <= 112) || (c >= 116 && c <= 145) ? c + 1 : null; if (h && R.existe(bib, b, h, v1)) { iniL = R.chave(b, h, v1); fimL = R.chave(b, h, R.existe(bib, b, h, fimV) ? fimV : v1); } }
-    out.push({ ini: R.chave(b, c, v1), fim: R.chave(b, c, fimV), iniL, fimL, marca: m[0].trim() });
+    let iniL = null, fimL = null, sl = null;
+    if (ab === 'sl') {
+      const h = lxxParaHebraico(c);
+      if (h && R.existe(bib, b, h, v1)) { iniL = R.chave(b, h, v1); fimL = R.chave(b, h, R.existe(bib, b, h, fimV) ? fimV : v1); }
+      sl = decidirSalmo(bib, texto, m.index, c, v1);
+      if (sl.num === 'lxx' && sl.vers !== v1 && R.existe(bib, b, sl.cap, sl.vers)) { iniL = R.chave(b, sl.cap, sl.vers); fimL = iniL; }
+    }
+    out.push({ ini: R.chave(b, c, v1), fim: R.chave(b, c, fimV), iniL, fimL, marca: m[0].trim(), sl });
   }
   return { refs: out, fora, invalidas };
 }
@@ -493,6 +529,13 @@ async function indexarPatristica(db, bib, lote) {
     await db.q('n', `insert into nexus_indice_estado (nome, total) values ('patristica', $1) on conflict do nothing`, [tot]);
     est = (await db.q('n', `select * from nexus_indice_estado where nome = 'patristica'`))[0];
   }
+  if ((est.versao || 1) < VERSAO_INDICE) {
+    // índice de versão antiga: refaz do zero (são dados derivados do próprio NEXUS; a biblioteca não é tocada)
+    await db.q('n', 'delete from nexus_refs');
+    await db.q('n', `update nexus_indice_estado set ultimo_id = 0, lidos = 0, refs = 0, fora_canon = 0, invalidas = 0, feito = false, versao = $1, atualizado_em = now() where nome = 'patristica'`, [VERSAO_INDICE]);
+    INDICE_OK = false;
+    est = (await db.q('n', `select * from nexus_indice_estado where nome = 'patristica'`))[0];
+  }
   if (est.feito) return { ok: true, ...est };
   const linhas = await db.q(2, `select id, fonte, autor, secao, texto from biblioteca_trechos where ${FONTES_PATRISTICAS} and id > $1 order by id limit $2`, [est.ultimo_id, lote]);
   let refs = 0, fora = 0, invalidas = 0;
@@ -502,19 +545,73 @@ async function indexarPatristica(db, bib, lote) {
     fora += r.fora; invalidas += r.invalidas;
     const pag = /\bp\.\s?(\d{1,4})/.exec(String(x.secao || ''));
     const camada = SINAIS_EDITOR.test(String(x.texto || '') + ' ' + String(x.secao || '')) ? 'editor_provavel' : 'nao_classificado';
-    for (const f of r.refs) { valores.push([2, x.id, x.fonte, x.autor, f.ini, f.fim, f.iniL, f.fimL, f.marca.slice(0, 40), pag ? +pag[1] : null, camada]); refs++; }
+    for (const f of r.refs) { valores.push([2, x.id, x.fonte, x.autor, f.ini, f.fim, f.iniL, f.fimL, f.marca.slice(0, 40), pag ? +pag[1] : null, camada, f.sl ? f.sl.num : null, f.sl && f.sl.num !== 'indefinida' ? 'contexto' : null, f.sl ? f.sl.nota : null]); refs++; }
   }
   for (let i = 0; i < valores.length; i += 400) {
     const parte = valores.slice(i, i + 400);
-    const ph = parte.map((_, k) => '(' + Array.from({ length: 11 }, (_, j) => '$' + (k * 11 + j + 1)).join(',') + ')').join(',');
-    await db.q('n', `insert into nexus_refs (banco, trecho, fonte, autor, ini, fim, ini_lxx, fim_lxx, marca, pagina, camada) values ${ph} on conflict do nothing`, parte.flat());
+    const ph = parte.map((_, k) => '(' + Array.from({ length: 14 }, (_, j) => '$' + (k * 14 + j + 1)).join(',') + ')').join(',');
+    await db.q('n', `insert into nexus_refs (banco, trecho, fonte, autor, ini, fim, ini_lxx, fim_lxx, marca, pagina, camada, salmo_num, salmo_base, salmo_nota) values ${ph} on conflict do nothing`, parte.flat());
   }
   const ultimo = linhas.length ? linhas[linhas.length - 1].id : est.ultimo_id;
   const feito = linhas.length < lote;
   await db.q('n', `update nexus_indice_estado set ultimo_id = $1, lidos = lidos + $2, refs = refs + $3, fora_canon = fora_canon + $4, invalidas = invalidas + $5, feito = $6, atualizado_em = now() where nome = 'patristica'`,
     [ultimo, linhas.length, refs, fora, invalidas, feito]);
-  if (feito) INDICE_OK = true;
+  if (feito) {
+    // perfil de numeração dos Salmos por obra (só onde a evidência é forte) e aplicação às indefinidas
+    const perf = await db.q('n', `select fonte, sum((salmo_num='lxx')::int)::int lxx, sum((salmo_num='hebraica')::int)::int heb from nexus_refs where salmo_num in ('lxx','hebraica') group by 1`);
+    for (const f of perf) {
+      const tot = f.lxx + f.heb;
+      const num = tot >= 10 && f.lxx / tot >= 0.8 ? 'lxx' : tot >= 10 && f.heb / tot >= 0.8 ? 'hebraica' : 'mista_ou_incerta';
+      await db.q('n', `insert into nexus_edicoes (fonte, numeracao_salmos, decididas, lxx, hebraica, metodo) values ($1,$2,$3,$4,$5,'contexto das citações (palavras do versículo)')
+        on conflict (fonte) do update set numeracao_salmos = excluded.numeracao_salmos, decididas = excluded.decididas, lxx = excluded.lxx, hebraica = excluded.hebraica, atualizado_em = now()`, [f.fonte, num, tot, f.lxx, f.heb]);
+      if (num === 'lxx' || num === 'hebraica') await db.q('n', `update nexus_refs set salmo_num = $2, salmo_base = 'perfil_da_obra', salmo_nota = $3 where fonte = $1 and salmo_num = 'indefinida'`, [f.fonte, num, `perfil da obra: ${num === 'lxx' ? f.lxx : f.heb} de ${tot} citações decididas pelo contexto usam a numeração ${num === 'lxx' ? 'LXX/Vulgata' : 'hebraica'}`]);
+    }
+    INDICE_OK = true;
+  }
   return { ok: true, ...(await db.q('n', `select * from nexus_indice_estado where nome = 'patristica'`))[0] };
+}
+
+// ═══ ENTIDADES (piloto do ciclo 3): extração NA HORA sobre os trechos ligados a uma passagem; nada é gravado ═══
+const TIPO_ENT = { pessoa_biblica: 'pessoa', pessoa_historica: 'pessoa', autor_antigo: 'pessoa', autor_moderno: 'pessoa', lugar: 'lugar', evento: 'evento',
+  documento: 'documento', instituicao: 'instituicao', tradicao: 'tradicao', termo_original: 'termo' };
+const NOME_CAT = { pessoa_biblica: 'pessoa bíblica', pessoa_historica: 'pessoa histórica', autor_antigo: 'autor antigo', autor_moderno: 'autor moderno', lugar: 'lugar',
+  evento: 'acontecimento', documento: 'obra/documento', instituicao: 'instituição/comunidade', tradicao: 'tradição interpretativa', termo_original: 'termo original', conceito: 'conceito' };
+async function entidadesDaPassagem(db, ini, fim, bib) {
+  const cat = await catalogo(db);
+  const ponteiros = await ponteirosDe(db, ini, fim, 400);
+  const textos = await trechosPorPonteiros(db, ponteiros.slice(0, 220));
+  const vistos = new Set([...textos.keys()]);
+  const pat = await citacoesPatristicas(db, ini, vistos);
+  const lit = await citacoesLiterais(db, bib, ini, vistos);
+  const trechos = [...textos.entries()].map(([chave, x]) => ({ ...x, chave }))
+    .concat(pat.achados.map((x) => ({ ...x })), lit.achados.map((x) => ({ ...x })))
+    .filter((x, i, a) => a.findIndex((y) => y.chave === x.chave) === i)
+    .map((x) => ({ chave: x.chave, fonte: x.fonte, autor: x.autor, obra: obraNo(x.fonte, cat, x).rotulo, secao: x.secao, texto: x.texto, camadaFonte: /^pat-|eusebio/.test(x.fonte) ? 'antiga' : 'moderna' }));
+  const t0 = Date.now();
+  const r = ENT.extrair(trechos, CONCEITOS);
+  const g = grafo();
+  const foco = g.no(passagemNo(ini, fim, bib));
+  const escolhidas = r.entidades.filter((e) => e.categoria !== 'termo_original').slice(0, 24)
+    .concat(r.entidades.filter((e) => e.categoria === 'termo_original' && e.trechos >= 2).slice(0, 8));
+  const idNo = (e) => (e.categoria === 'conceito' ? 'c:' + e.id.slice(9) : 'e:' + e.id);
+  for (const e of escolhidas) {
+    const men = r.mencoes.filter((m) => m.entidade === e.id);
+    const fam = new Set(men.map((m) => familiaDe({ fonte: m.fonte, autor: (trechos.find((t) => t.chave === m.trecho) || {}).autor })));
+    const nid = g.no(e.categoria === 'conceito' ? conceitoNo(CONCEITOS.find((c) => 'conceito:' + c.id === e.id) || { id: e.id.slice(9), rotulo: e.nome, re: '' })
+      : { id: idNo(e), tipo: TIPO_ENT[e.categoria] || 'pessoa', rotulo: e.nome, categoria: e.categoria, catNome: NOME_CAT[e.categoria], variantes: e.variantes, camadas: e.camadas,
+          confianca: Math.max(...men.map((m) => m.confianca)) });
+    const evid = men.slice(0, 3).map((m) => ({ autor: (trechos.find((t) => t.chave === m.trecho) || {}).autor || '', obra: m.obra, secao: m.secao, modo: `menciona "${m.forma}" · ${m.camada.replace('_', ' ')} · ${m.metodo}`, trecho: m.contexto, fonte: m.fonte, local: { fonte: m.fonte, trechoId: m.trecho, posicao: m.pos } }));
+    g.aresta({ de: nid, para: foco, tipo: 'mencao', natRel: e.categoria === 'conceito' ? 'tematica' : ['lugar', 'evento', 'instituicao', 'pessoa_historica'].includes(e.categoria) ? 'historica' : e.categoria === 'termo_original' ? 'lexical' : 'documental',
+      estado: fam.size >= 3 ? 'corroboracao' : 'interpretacao', metodo: e.categoria === 'conceito' ? 'associacao_tematica' : 'identificacao_entidade', peso: e.mencoes, familias: [...fam],
+      explica: `${NOME_CAT[e.categoria] || ''} "${e.nome}" aparece ${e.mencoes} vez(es) em ${e.trechos} trecho(s) de ${e.fontes.length} obra(s) que tratam desta passagem (formas: ${e.variantes.slice(0, 4).join(', ')}). Camadas: ${Object.entries(e.camadas).map(([k, v]) => k.replace('_', ' ') + ' ' + v).join(', ')}.`, evidencias: evid });
+  }
+  const noIds = new Map(escolhidas.map((e) => [e.id, idNo(e)]));
+  for (const rel of r.relacoes) {
+    if (!noIds.has(rel.de) || !noIds.has(rel.para)) continue;
+    g.aresta({ de: noIds.get(rel.de), para: noIds.get(rel.para), tipo: 'co-citacao', natRel: 'interpretativa', estado: 'hipotese', metodo: 'co_citacao', peso: rel.trechos,
+      explica: `Aparecem juntos em ${rel.trechos} trecho(s) sobre a passagem. Co-ocorrência não prova relação: é hipótese a examinar.` });
+  }
+  return { ...g.saida(), ambiguas: r.ambiguas.slice(0, 30), candidatos: r.candidatos, resumo: { trechos: trechos.length, entidades: r.entidades.length, mencoes: r.mencoes.length, ms: Date.now() - t0 } };
 }
 
 // ═══ EXPANDIR ═══════════════════════════════════════════════════════════════
@@ -590,7 +687,7 @@ async function expandirPassagem(db, g, ini, fim, bib, aberto) {
     const ev = { autor: x.autor, obra: ob.rotulo, secao: x.secao || '', modo: 'cita “' + x.marca + '”', trecho: trechoCurto(x.texto, x.re, LIM_TRECHO), ref: x.chave, fonte: x.fonte, local: localDe(x, x.chave), aviso: x.avisoEd };
     g.aresta({ de: oid, para: foco, tipo: x.lxx ? 'cita-lxx' : 'cita', natureza: 'documental', metodo: 'identificacao_documental', catObra: ob.categoria, peso: 1,
       estado: x.lxx ? 'hipotese' : undefined, natRel: x.lxx ? 'textual' : undefined,
-      explica: `${ob.rotulo} cita "${x.marca}" (forma de citar das edições patrísticas).${x.lxx ? ' Achado pela numeração da LXX/Vulgata: correspondência provável, não confirmada.' : ''} ${x.avisoEd}`, evidencias: [ev] });
+      explica: `${ob.rotulo} cita "${x.marca}" (forma de citar das edições patrísticas).${x.salmo && x.salmo.num !== 'indefinida' ? ` Numeração do Salmo: ${x.salmo.num === 'lxx' ? 'LXX/Vulgata' : 'hebraica'} (${x.salmo.nota}).` : ''}${x.lxx ? ' Achado pela numeração da LXX/Vulgata: correspondência provável, não confirmada.' : ''} ${x.avisoEd}`, evidencias: [ev] });
     if (ob.autor) g.aresta({ de: g.no({ id: idAutor(ob.autor), tipo: 'autor', rotulo: ob.autor }), para: oid, tipo: 'escreveu', natureza: 'estabelecido', peso: 1, explica: 'Autoria registrada no catálogo da biblioteca.' });
     for (const c of CONCEITOS) {
       if (!RE_CONC[c.id].test(String(x.texto || ''))) continue;
@@ -1159,6 +1256,14 @@ module.exports = async (req, res) => {
       res.json({ ok: true, ...r });
       return;
     }
+    if (acao === 'entidades') {
+      const bib = await carregarBiblia(proto + '://' + host);
+      const p = lerPassagemId(b.id);
+      if (!p) { res.json({ ok: false, err: 'escolha uma passagem' }); return; }
+      const chaveE = 'entidades|' + b.id;
+      res.json({ ok: true, ...(lembrar(chaveE) || guardar(chaveE, await entidadesDaPassagem(db, p.ini, p.fim, bib))) });
+      return;
+    }
     if (acao === 'indice-patristico') {
       const bib = await carregarBiblia(proto + '://' + host);
       if (!bib) { res.json({ ok: false, err: 'a Almeida não carregou agora' }); return; }
@@ -1205,4 +1310,4 @@ module.exports = async (req, res) => {
 };
 
 module.exports.CONCEITOS = CONCEITOS;
-module.exports._teste = { extrairRefsPatristicas, SINAIS_EDITOR };
+module.exports._teste = { extrairRefsPatristicas, SINAIS_EDITOR, decidirSalmo };
