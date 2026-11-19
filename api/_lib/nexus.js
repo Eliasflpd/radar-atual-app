@@ -156,6 +156,10 @@ function lerPassagemId(id) {
 // Normaliza uma passagem para o nível de versículo do destino (as referências do OpenBible às vezes são intervalos).
 const idP = (ini, fim) => 'p:' + ini + '-' + (fim || ini);
 
+function localDe(x, chave) {
+  const pag = /\bp\.\s?(\d{1,4})/.exec(String(x.secao || ''));
+  return { fonte: x.fonte, pagina: pag ? +pag[1] : null, trechoId: chave || null };
+}
 function trechoCurto(texto, alvo, limite) {
   const t = String(texto || '').replace(/\s+/g, ' ');
   if (!alvo) return t.length <= limite ? t : t.slice(0, limite).trim() + '…';
@@ -177,15 +181,46 @@ const modoRotulo = (modo, passagem) => modo === 3 ? 'comenta o capítulo' : modo
 //   interpretacao — referência cruzada da curadoria OpenBible (interpretação com votos)
 //   hipotese      — vínculo calculado pelo NEXUS (co-citação, caminho)
 //   inferencia    — descoberta escrita por IA, ainda não verificada por pessoa
-function classeDe(a) {
-  if (a.classe) return a.classe;
-  if (a.tipo === 'cita' || a.tipo === 'lexical') return 'textual';
-  if (a.tipo === 'comenta' || a.tipo === 'escreveu' || a.tipo === 'contem') return 'documental';
-  if (a.tipo === 'mencao') return 'tematica';
-  if (a.tipo === 'refcruz') return 'interpretacao';
-  if (a.tipo === 'co-citacao' || a.tipo === 'caminho') return 'hipotese';
-  if (a.tipo === 'descoberta') return 'inferencia';
-  return 'documental';
+function classeDe(a) {   // compatibilidade com a V2 (cor/filtro antigos)
+  return a.classe || ({ cita: 'textual', lexical: 'textual', comenta: 'documental', escreveu: 'documental', contem: 'documental', mencao: 'tematica', refcruz: 'interpretacao', 'co-citacao': 'hipotese', caminho: 'hipotese', descoberta: 'inferencia' }[a.tipo]) || 'documental';
+}
+
+// ── MODELO DE EVIDÊNCIAS EM 3 DIMENSÕES (diretriz do arquiteto, 19/11/2026) ───────────────────
+// Uma relação NÃO tem uma "classe" só. Ela tem:
+//   natRel  — NATUREZA da relação: textual · documental · tematica · historica · lexical · interpretativa
+//   estado  — ESTADO epistemológico: direta · corroboracao · interpretacao · hipotese · inferencia
+//   metodo  — MÉTODO de identificação: referencia_cruzada · citacao_literal · co_citacao · correspondencia_lexical ·
+//             associacao_tematica · caminho_grafo · identificacao_documental · analise_ia
+// Quantidade de fontes ≠ independência: contam-se AUTORES independentes (a série Cambridge vale 1; o mesmo autor
+// em duas obras vale 1). Pontuação algorítmica (votos, pesos) nunca promove o estado epistemológico.
+const HISTORICAS = new Set(['historia', 'contexto-judaico', 'judaica']);
+function familiaDe(e) {
+  const f = String(e.fonte || ''), au = String(e.autor || '').trim().toLowerCase();
+  if (f === 'al-cambridge' || /cambridge/.test(au)) return 'serie:cambridge';
+  return au || ('fonte:' + f);
+}
+function classificar(a, independentes) {
+  const t = a.tipo;
+  const metodo = a.metodo || ({ refcruz: 'referencia_cruzada', 'co-citacao': 'co_citacao', caminho: 'caminho_grafo', lexical: 'correspondencia_lexical', mencao: 'associacao_tematica', descoberta: 'analise_ia' }[t]) || 'identificacao_documental';
+  let natRel = a.natRel;
+  if (!natRel) {
+    if (t === 'refcruz' || t === 'caminho' || t === 'co-citacao') natRel = 'interpretativa';
+    else if (t === 'lexical') natRel = 'lexical';
+    else if (t === 'mencao') natRel = 'tematica';
+    else if (t === 'descoberta') natRel = ({ original: 'lexical', ecos: 'textual', estrutura: 'textual', contexto: 'historica' })[a.camada] || 'interpretativa';
+    else if ((t === 'cita' || t === 'comenta') && HISTORICAS.has(a.catObra)) natRel = 'historica';
+    else if (t === 'cita' || t === 'cita-lxx') natRel = 'textual';
+    else natRel = 'documental';
+  }
+  let estado = a.estado;
+  if (!estado) {
+    if (t === 'refcruz') estado = 'interpretacao';
+    else if (t === 'caminho' || t === 'co-citacao') estado = 'hipotese';
+    else if (t === 'descoberta') estado = 'inferencia';
+    else if (t === 'mencao') estado = independentes >= 3 ? 'corroboracao' : 'interpretacao';
+    else estado = 'direta';
+  }
+  return { natRel, estado, metodo };
 }
 
 // ── memória de respostas (por processo; 10 minutos) ──────────────────────────────
@@ -222,14 +257,20 @@ function grafo() {
       const id = a.tipo + '|' + a.de + '|' + a.para;
       const ja = arestas.get(id);
       if (ja) {
+        for (const f of (a.familias || []).concat((a.evidencias || []).map(familiaDe))) ja._fam.add(f);
         ja.peso = (ja.peso || 1) + (a.peso || 1);
         if (a.evidencias) ja.evidencias = (ja.evidencias || []).concat(a.evidencias).slice(0, 4);
         return id;
       }
-      arestas.set(id, { id, ...a, classe: classeDe(a) });
+      arestas.set(id, { id, ...a, classe: classeDe(a), _fam: new Set((a.familias || []).concat((a.evidencias || []).map(familiaDe))) });
       return id;
     },
-    saida() { return { nos: [...nos.values()], arestas: [...arestas.values()] }; },
+    saida() {
+      return { nos: [...nos.values()], arestas: [...arestas.values()].map(({ _fam, familias, ...a }) => {
+        const independentes = _fam ? _fam.size : 0;
+        return { ...a, ...classificar(a, independentes), independentes, direcao: a.tipo === 'refcruz' ? 'dirigida (curadoria)' : (a.tipo === 'caminho' || a.tipo === 'co-citacao') ? 'não dirigida' : 'dirigida' };
+      }) };
+    },
   };
 }
 
@@ -316,6 +357,53 @@ const reFrase = (frase) => new RegExp(frase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&
 // Seção que é só nome de arquivo ("Trench - Sinônimos … - PT 1:23") não é verbete.
 const verbeteValido = (secao) => secao && !/ - PT\b|\.md$|^\s*\d+\s*$/.test(String(secao));
 
+// Citação patrística: as edições da Paulus escrevem "Jo 1,1" (vírgula). A Oficina só lê "Jo 1:1"/"Jo 1.1", por isso
+// a patrística e Eusébio têm 0 ponteiros lá. Aqui a busca é feita na hora, só nessas obras, e conferida em JS
+// (para "Jo 1,1" não casar com "1Jo 1,1"). Salmos: as edições patrísticas costumam seguir a numeração da LXX/Vulgata.
+const PAULUS = { gn: 'Gn', ex: 'Ex', lv: 'Lv', nm: 'Nm', dt: 'Dt', js: 'Js', jz: 'Jz', rt: 'Rt', '1sm': '1 ?Sm', '2sm': '2 ?Sm', '1rs': '1 ?Rs', '2rs': '2 ?Rs',
+  '1cr': '1 ?Cr', '2cr': '2 ?Cr', ed: 'Esd', ne: 'Ne', et: 'Est', 'jó': 'J[óo]', sl: 'Sl', pv: 'Pr|Pv', ec: 'Ecl?', ct: 'Ct', is: 'Is', jr: 'Jr', lm: 'Lm',
+  ez: 'Ez', dn: 'Dn', os: 'Os', jl: 'Jl', am: 'Am', ob: 'Ab|Ob', jn: 'Jn', mq: 'Mq', na: 'Na', hc: 'Hab|Hc', sf: 'Sf', ag: 'Ag', zc: 'Zc', ml: 'Ml',
+  mt: 'Mt', mc: 'Mc', lc: 'Lc', jo: 'Jo', atos: 'At', rm: 'Rm', '1co': '1 ?Cor?', '2co': '2 ?Cor?', gl: 'Gl', ef: 'Ef', fp: 'Fl|Fp', cl: 'Cl',
+  '1ts': '1 ?Ts', '2ts': '2 ?Ts', '1tm': '1 ?Tm', '2tm': '2 ?Tm', tt: 'Tt', fm: 'Fm', hb: 'Hb', tg: 'Tg', '1pe': '1 ?Pd|1 ?Pe', '2pe': '2 ?Pd|2 ?Pe',
+  '1jo': '1 ?Jo', '2jo': '2 ?Jo', '3jo': '3 ?Jo', jd: 'Jd', ap: 'Ap' };
+const FONTES_PATRISTICAS = "(fonte like 'pat-%' or fonte = 'eusebio-historia')";
+// Os volumes da patrística são EDIÇÕES MODERNAS: trazem introdução, notas e comentários do editor junto com o texto
+// do Padre. Até a indexação separar as duas camadas, toda evidência desses volumes leva aviso; quando o trecho tem
+// sinais claros de aparato editorial (nota numerada, data "d.C.", estudioso moderno, título de introdução), o aviso
+// diz que provavelmente é o editor, e não o Padre.
+const SINAIS_EDITOR = /\[\d{1,3}\]|\bd\.\s?C\.|\bIntrodu[çc][ãa]o\b|\bApresenta[çc][ãa]o\b|\bNotas?\b|\bcf\.\s|\bDodd\b|\bHarnack\b|\bQuasten\b|\bséc(ulo)?\.?\s?[IVX]+\b/;
+function avisoPatristico(x) {
+  const t = String(x.texto || '') + ' ' + String(x.secao || '');
+  return SINAIS_EDITOR.test(t)
+    ? 'Provável texto do EDITOR moderno (introdução/notas), não do próprio autor antigo. Conferir no livro antes de atribuir.'
+    : 'Edição moderna: o trecho pode conter texto do editor junto com o do autor antigo. Conferir no livro antes de atribuir.';
+}
+// Salmos: a numeração da LXX/Vulgata é um a menos que a hebraica em Sl 10–113 e 117–146 (hebraico).
+function salmoLXX(cap) { return (cap >= 11 && cap <= 113) || (cap >= 117 && cap <= 146) ? cap - 1 : null; }
+
+async function citacoesPatristicas(db, ini, excluir) {
+  const a = R.decompor(ini), ab = R.AB[a.b - 1], abr = PAULUS[ab];
+  if (!abr) return { achados: [] };
+  const caps = [{ cap: a.c, lxx: false }];
+  const lxx = ab === 'sl' ? salmoLXX(a.c) : null;
+  if (lxx) caps.push({ cap: lxx, lxx: true });
+  const achados = [], vistos = new Set();
+  for (const { cap, lxx: ehLxx } of caps) {
+    const pg = `(^|[^0-9A-Za-zÀ-ÿ])(${abr}) ?${cap}, ?${a.v}([^0-9]|$)`;
+    const re = new RegExp(`(?<![0-9]\\s?)(?<![0-9A-Za-zÀ-ÿ])(?:${abr}) ?${cap}, ?${a.v}(?![0-9])`);
+    const linhas = await db.q(2, `select id, fonte, autor, obra, secao, tipo, texto from biblioteca_trechos where ${FONTES_PATRISTICAS} and texto ~ $1 limit 60`, [pg]).catch(() => []);
+    for (const x of linhas) {
+      const chave = '2:' + x.id;
+      if ((excluir && excluir.has(chave)) || vistos.has(chave)) continue;
+      const m = re.exec(String(x.texto || ''));
+      if (!m) continue;                       // "1Jo 1,1" não vale como "Jo 1,1"
+      vistos.add(chave);
+      achados.push({ ...x, chave, marca: m[0].trim(), re, lxx: ehLxx, avisoEd: avisoPatristico(x) });
+    }
+  }
+  return { achados, aviso: ab === 'sl' ? `Salmos: as edições patrísticas costumam usar a numeração da LXX/Vulgata${lxx ? ` (Sl ${a.c} hebraico = Sl ${lxx} LXX)` : ''}. Citações achadas pela numeração LXX ficam como hipótese.` : '' };
+}
+
 // ═══ EXPANDIR ═══════════════════════════════════════════════════════════════
 async function expandirPassagem(db, g, ini, fim, bib, aberto) {
   const foco = g.no(passagemNo(ini, fim, bib));
@@ -351,7 +439,7 @@ async function expandirPassagem(db, g, ini, fim, bib, aberto) {
     if (!x) continue;
     const ob = obraNo(p.fonte, cat, x);
     const ev = { autor: x.autor, obra: ob.rotulo, secao: x.secao || x.livro || '', modo: modoRotulo(p.modo, passagem),
-      trecho: trechoCurto(x.texto, alvo, LIM_TRECHO), ref: p.banco + ':' + p.trecho };
+      trecho: trechoCurto(x.texto, alvo, LIM_TRECHO), ref: p.banco + ':' + p.trecho, fonte: p.fonte, local: localDe(x, p.banco + ':' + p.trecho) };
 
     if (ob.categoria === 'lexico' && verbeteValido(x.secao)) {
       // o verbete do léxico vira nó próprio: relação lexical documentada
@@ -362,7 +450,7 @@ async function expandirPassagem(db, g, ini, fim, bib, aberto) {
       g.aresta({ de: g.no(ob), para: lid, tipo: 'contem', natureza: 'estabelecido', peso: 1, explica: `Verbete de ${ob.rotulo}.` });
     } else {
       const oid = g.no(ob);
-      g.aresta({ de: oid, para: foco, tipo: p.modo === 2 ? 'cita' : 'comenta', natureza: 'documental', peso: 1,
+      g.aresta({ de: oid, para: foco, tipo: p.modo === 2 ? 'cita' : 'comenta', natureza: 'documental', peso: 1, catObra: ob.categoria,
         explica: `${ob.rotulo} ${modoRotulo(p.modo, passagem)}.`, evidencias: [ev] });
       if (ob.autor) {
         const aid = g.no({ id: idAutor(ob.autor), tipo: 'autor', rotulo: ob.autor });
@@ -373,26 +461,44 @@ async function expandirPassagem(db, g, ini, fim, bib, aberto) {
     for (const c of CONCEITOS) {
       const m = RE_CONC[c.id].exec(String(x.texto || ''));
       if (!m) continue;
-      const acc = conceitosAchados.get(c.id) || { trechos: 0, obras: new Set(), evid: [] };
-      acc.trechos++; acc.obras.add(ob.rotulo);
+      const acc = conceitosAchados.get(c.id) || { trechos: 0, obras: new Set(), fam: new Set(), evid: [] };
+      acc.trechos++; acc.obras.add(ob.rotulo); acc.fam.add(familiaDe(x));
       if (acc.evid.length < 3) acc.evid.push({ ...ev, trecho: trechoCurto(x.texto, RE_CONC[c.id], LIM_TRECHO) });
       conceitosAchados.set(c.id, acc);
     }
   }
   // citações literais da frase do versículo (obras sem ponteiros: patrística, Eusébio…)
   const jaVistos = new Set(escolhidos.map((p) => p.banco + ':' + p.trecho));
+  const pat = await citacoesPatristicas(db, ini, jaVistos);
+  for (const x of pat.achados) {
+    jaVistos.add(x.chave);
+    const ob = obraNo(x.fonte, cat, x);
+    const oid = g.no(ob);
+    const ev = { autor: x.autor, obra: ob.rotulo, secao: x.secao || '', modo: 'cita “' + x.marca + '”', trecho: trechoCurto(x.texto, x.re, LIM_TRECHO), ref: x.chave, fonte: x.fonte, local: localDe(x, x.chave), aviso: x.avisoEd };
+    g.aresta({ de: oid, para: foco, tipo: x.lxx ? 'cita-lxx' : 'cita', natureza: 'documental', metodo: 'identificacao_documental', catObra: ob.categoria, peso: 1,
+      estado: x.lxx ? 'hipotese' : undefined, natRel: x.lxx ? 'textual' : undefined,
+      explica: `${ob.rotulo} cita "${x.marca}" (forma de citar das edições patrísticas).${x.lxx ? ' Achado pela numeração da LXX/Vulgata: correspondência provável, não confirmada.' : ''} ${x.avisoEd}`, evidencias: [ev] });
+    if (ob.autor) g.aresta({ de: g.no({ id: idAutor(ob.autor), tipo: 'autor', rotulo: ob.autor }), para: oid, tipo: 'escreveu', natureza: 'estabelecido', peso: 1, explica: 'Autoria registrada no catálogo da biblioteca.' });
+    for (const c of CONCEITOS) {
+      if (!RE_CONC[c.id].test(String(x.texto || ''))) continue;
+      const acc = conceitosAchados.get(c.id) || { trechos: 0, obras: new Set(), fam: new Set(), evid: [] };
+      acc.trechos++; acc.obras.add(ob.rotulo); acc.fam.add(familiaDe(x));
+      if (acc.evid.length < 3) acc.evid.push({ ...ev, trecho: trechoCurto(x.texto, RE_CONC[c.id], LIM_TRECHO) });
+      conceitosAchados.set(c.id, acc);
+    }
+  }
   const lit = await citacoesLiterais(db, bib, ini, jaVistos);
   for (const x of lit.achados) {
     const ob = obraNo(x.fonte, cat, x);
     const oid = g.no(ob);
-    const ev = { autor: x.autor, obra: ob.rotulo, secao: x.secao || x.livro || '', modo: 'cita literalmente', trecho: trechoCurto(x.texto, reFrase(lit.frase), LIM_TRECHO), ref: x.chave };
-    g.aresta({ de: oid, para: foco, tipo: 'cita', natureza: 'documental', peso: 1,
+    const ev = { autor: x.autor, obra: ob.rotulo, secao: x.secao || x.livro || '', modo: 'cita literalmente', trecho: trechoCurto(x.texto, reFrase(lit.frase), LIM_TRECHO), ref: x.chave, fonte: x.fonte, local: localDe(x, x.chave), aviso: /^pat-|eusebio/.test(x.fonte) ? avisoPatristico(x) : undefined };
+    g.aresta({ de: oid, para: foco, tipo: 'cita', natureza: 'documental', metodo: 'citacao_literal', catObra: ob.categoria, peso: 1,
       explica: `${ob.rotulo} cita literalmente a frase "${lit.frase}".`, evidencias: [ev] });
     if (ob.autor) g.aresta({ de: g.no({ id: idAutor(ob.autor), tipo: 'autor', rotulo: ob.autor }), para: oid, tipo: 'escreveu', natureza: 'estabelecido', peso: 1, explica: 'Autoria registrada no catálogo da biblioteca.' });
     for (const c of CONCEITOS) {
       if (!RE_CONC[c.id].test(String(x.texto || ''))) continue;
-      const acc = conceitosAchados.get(c.id) || { trechos: 0, obras: new Set(), evid: [] };
-      acc.trechos++; acc.obras.add(ob.rotulo);
+      const acc = conceitosAchados.get(c.id) || { trechos: 0, obras: new Set(), fam: new Set(), evid: [] };
+      acc.trechos++; acc.obras.add(ob.rotulo); acc.fam.add(familiaDe(x));
       if (acc.evid.length < 3) acc.evid.push({ ...ev, trecho: trechoCurto(x.texto, RE_CONC[c.id], LIM_TRECHO) });
       conceitosAchados.set(c.id, acc);
     }
@@ -400,7 +506,7 @@ async function expandirPassagem(db, g, ini, fim, bib, aberto) {
   for (const [cid, acc] of conceitosAchados) {
     const c = CONCEITOS.find((k) => k.id === cid);
     const id = g.no(conceitoNo(c));
-    g.aresta({ de: id, para: foco, tipo: 'mencao', natureza: 'documental', peso: acc.trechos,
+    g.aresta({ de: id, para: foco, tipo: 'mencao', natureza: 'documental', peso: acc.trechos, familias: [...acc.fam],
       explica: `"${c.rotulo}" aparece em ${acc.trechos} trecho(s) de ${acc.obras.size} obra(s) que tratam desta passagem: ${[...acc.obras].slice(0, 4).join('; ')}.`,
       evidencias: acc.evid });
   }
@@ -643,6 +749,20 @@ async function descobrir(db, ini, fim, bib) {
     como: 'Ponteiros da Oficina (trecho → versículo): quem comenta (seção dedicada) ou cita no texto.',
     itens: autores.map(([f, e]) => { const ob = obraNo(f, cat, null); return { alvo: 'o:' + f, rotulo: ob.rotulo, detalhe: `${ob.autor ? ob.autor + ' · ' : ''}${e.n} trecho(s) · ${[...e.modos].map((m) => m === 2 ? 'cita' : 'comenta').filter((v, i, a) => a.indexOf(v) === i).join(' e ')} · ${ob.categoria}`, evidencias: e.ev }; }) });
 
+  // 2a) Apoio patrístico: citações no formato das edições patrísticas ("Jo 1,1")
+  const pat = await citacoesPatristicas(db, ini, new Set(chavesFoco));
+  const patPorFonte = new Map();
+  for (const x of pat.achados) {
+    const e = patPorFonte.get(x.fonte) || { n: 0, ev: [] };
+    e.n++;
+    if (e.ev.length < 2) e.ev.push({ autor: x.autor, obra: obraNo(x.fonte, cat, x).rotulo, secao: x.secao || '', modo: 'cita “' + x.marca + '”' + (x.lxx ? ' (numeração LXX)' : ''), trecho: trechoCurto(x.texto, x.re, LIM_TRECHO), fonte: x.fonte, local: localDe(x, x.chave), aviso: x.avisoEd });
+    patPorFonte.set(x.fonte, e);
+    textos.set(x.chave, x); chavesFoco.push(x.chave);
+  }
+  blocos.push({ algoritmo: 'apoio-patristico', classe: 'textual', natRel: 'textual', estado: 'direta', metodo: 'identificacao_documental', titulo: 'Apoio patrístico (citações explícitas)', natureza: 'documental',
+    como: `Referências escritas no formato das edições patrísticas (ex.: "Jo 1,1"), procuradas nas obras da patrística e em Eusébio e conferidas uma a uma.${pat.aviso ? ' ' + pat.aviso : ''}`,
+    itens: [...patPorFonte.entries()].sort((a, b) => b[1].n - a[1].n).map(([f, e]) => { const ob = obraNo(f, cat, null); return { alvo: 'o:' + f, rotulo: ob.rotulo, detalhe: `${ob.autor ? ob.autor + ' · ' : ''}${e.n} citação(ões) explícita(s)`, evidencias: e.ev }; }) });
+
   // 2b) Citações literais (obras que a Oficina ainda não indexou: patrística, Eusébio…)
   const lit = await citacoesLiterais(db, bib, ini, new Set(chavesFoco));
   const litPorFonte = new Map();
@@ -668,8 +788,8 @@ async function descobrir(db, ini, fim, bib) {
     if (!x) continue;
     for (const c of CONCEITOS) {
       if (!RE_CONC[c.id].test(String(x.texto || ''))) continue;
-      const e = temas.get(c.id) || { obras: new Set(), n: 0, ev: [] };
-      e.obras.add(obraNo(p.fonte, cat, x).rotulo); e.n++;
+      const e = temas.get(c.id) || { obras: new Set(), fam: new Set(), n: 0, ev: [] };
+      e.obras.add(obraNo(p.fonte, cat, x).rotulo); e.fam.add(familiaDe(x)); e.n++;
       if (e.ev.length < 3) e.ev.push({ autor: x.autor, obra: obraNo(p.fonte, cat, x).rotulo, secao: x.secao || '', modo: 'menciona', trecho: trechoCurto(x.texto, RE_CONC[c.id], LIM_TRECHO) });
       temas.set(c.id, e);
     }
@@ -677,7 +797,7 @@ async function descobrir(db, ini, fim, bib) {
   const temasOrd = [...temas.entries()].sort((a, b) => (b[1].obras.size - a[1].obras.size) || (b[1].n - a[1].n));
   blocos.push({ algoritmo: 'temas-recorrentes', classe: 'tematica', titulo: 'Temas recorrentes em diferentes obras', natureza: 'documental',
     como: 'Conceitos do dicionário do NEXUS encontrados no texto dos trechos que tratam da passagem, contados por obra distinta.',
-    itens: temasOrd.map(([cid, e]) => { const c = CONCEITOS.find((k) => k.id === cid); return { alvo: 'c:' + cid, rotulo: c.rotulo, detalhe: `${e.obras.size} obra(s) · ${e.n} trecho(s): ${[...e.obras].slice(0, 3).join('; ')}`, evidencias: e.ev }; }) });
+    itens: temasOrd.map(([cid, e]) => { const c = CONCEITOS.find((k) => k.id === cid); return { alvo: 'c:' + cid, rotulo: c.rotulo, estado: e.fam.size >= 3 ? 'corroboracao' : 'interpretacao', independentes: e.fam.size, detalhe: `${e.obras.size} obra(s), ${e.fam.size} autor(es) independente(s) · ${e.n} trecho(s): ${[...e.obras].slice(0, 3).join('; ')}`, evidencias: e.ev }; }) });
 
   // 4) Relações lexicais: verbetes que citam a passagem e as passagens irmãs (citadas pelo mesmo verbete)
   const verb = new Map();
@@ -730,7 +850,7 @@ async function descobrir(db, ini, fim, bib) {
     if (c && c.length > 2) caminhos.push({ alvo: it.alvo, rotulo: c.map((k) => passagemNo(k, k, null).rotulo).join(' → '), detalhe: `${c.length - 1} passo(s) por referências cruzadas`, passos: c.map((k) => idP(k, k)) });
   }
   blocos.push({ algoritmo: 'caminhos', classe: 'hipotese', titulo: 'Caminhos entre passagens', natureza: 'interpretacao',
-    como: 'Busca em largura nos dois sentidos sobre as referências cruzadas (até 3 níveis, 25 melhores por passagem), ligando o foco às conexões pouco evidentes.', itens: caminhos });
+    como: 'Caminhos INDIRETOS: busca em largura nos dois sentidos sobre as referências cruzadas (até 3 níveis, 25 melhores por passagem). Mostram por onde as passagens se ligam na curadoria; não demonstram dependência literária direta.', itens: caminhos });
 
   // descobertas já registradas na Oficina
   const a = R.decompor(ini), z = R.decompor(fim);
@@ -739,6 +859,18 @@ async function descobrir(db, ini, fim, bib) {
     como: 'Tabela oficina_descobertas (4 camadas). Escritas por IA; a fonte declarada vai junto. "conferir" = não verificada.',
     itens: desc.map((d) => ({ alvo: 'd:' + d.id, rotulo: d.titulo, detalhe: `camada ${d.camada} · fonte: ${d.fonte || '—'}`, natureza: naturezaDescoberta(d), evidencias: [{ autor: 'Oficina do RADAR', obra: 'descoberta', secao: d.fonte || '', modo: d.camada, trecho: String(d.explica || '').slice(0, LIM_TRECHO) }] })) });
 
+  const DIM = {
+    'refcruz-relevantes': ['interpretativa', 'interpretacao', 'referencia_cruzada'],
+    'autores-mesma-passagem': ['documental', 'direta', 'identificacao_documental'],
+    'apoio-patristico': ['textual', 'direta', 'identificacao_documental'],
+    'citacoes-literais': ['textual', 'direta', 'citacao_literal'],
+    'temas-recorrentes': ['tematica', 'interpretacao', 'associacao_tematica'],
+    'relacoes-lexicais': ['lexical', 'direta', 'correspondencia_lexical'],
+    'conexoes-pouco-evidentes': ['interpretativa', 'hipotese', 'co_citacao'],
+    'caminhos': ['interpretativa', 'hipotese', 'caminho_grafo'],
+    'descobertas-oficina': ['interpretativa', 'inferencia', 'analise_ia'],
+  };
+  for (const b of blocos) { const d = DIM[b.algoritmo]; if (d) { b.natRel = d[0]; b.estado = d[1]; b.metodo = d[2]; } }
   return { foco, blocos };
 }
 
@@ -783,6 +915,24 @@ async function garantirTabela(db) {
       criado_em timestamptz not null default now(),
       atualizado_em timestamptz not null default now())`);
   await db.q('n', 'create index if not exists nexus_investigacoes_dono on nexus_investigacoes (dono, atualizado_em desc)');
+  // ESTRUTURA PARA IMAGENS (ainda sem imagens): toda imagem precisa de autoria, procedência, licença e identificação.
+  // Ilustração, reconstrução e imagem gerada por IA NUNCA contam como evidência (a regra está no próprio banco).
+  await db.q('n', `create table if not exists nexus_imagens (
+      id bigserial primary key,
+      titulo text not null,
+      tipo text not null check (tipo in ('fotografia','manuscrito','artefato','mapa_historico','lugar','reconstrucao','ilustracao','documento')),
+      url text not null,
+      autoria text not null,
+      procedencia text not null,
+      licenca text not null,
+      data_origem text,
+      contexto_historico text,
+      identificacao text,
+      gerada_por_ia boolean not null default false,
+      conta_como_evidencia boolean not null default false,
+      ligada_a text[] not null default '{}',
+      criado_em timestamptz not null default now(),
+      check (not conta_como_evidencia or (tipo not in ('reconstrucao','ilustracao') and not gerada_por_ia)))`);
   TABELA_OK = true;
   return true;
 }
@@ -871,7 +1021,7 @@ module.exports = async (req, res) => {
       const g = grafo();
       for (let i = 0; i < c.length; i++) {
         g.no(passagemNo(c[i], c[i], bib));
-        if (i) g.aresta({ de: idP(c[i - 1], c[i - 1]), para: idP(c[i], c[i]), tipo: 'caminho', natureza: 'interpretacao', classe: 'interpretacao', peso: 1, explica: 'Passo do caminho: referência cruzada OpenBible (em qualquer sentido).', credito: CREDITO_OB });
+        if (i) g.aresta({ de: idP(c[i - 1], c[i - 1]), para: idP(c[i], c[i]), tipo: 'caminho', natureza: 'interpretacao', classe: 'interpretacao', peso: 1, explica: 'Passo de um caminho INDIRETO: referência cruzada OpenBible (em qualquer sentido). Um caminho não demonstra dependência literária entre as pontas.', credito: CREDITO_OB });
       }
       const passos = c.map((k) => idP(k, k));
       const pontaAresta = (id, k, ida, lig) => {

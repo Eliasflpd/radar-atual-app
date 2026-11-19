@@ -169,3 +169,5 @@ textarea.notas{width:100%;min-height:160px;border:1px solid var(--linha);border-
 .busca-mapa{width:100%;height:36px;border:1px solid var(--linha);border-radius:8px;padding:0 10px;font:inherit;margin:2px 0 8px}
 .caminho-lista{margin:8px 0;padding-left:18px}
 .caminho-lista li{margin:4px 0}
+/* v3: estados epistemológicos (cores dos traços) */
+.nat-direta{background:#14284B} .nat-corroboracao{background:#3D6B9E}

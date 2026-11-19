@@ -18,22 +18,26 @@ const TIPOS = {
   descoberta: { nome: 'Descoberta', cor: '#8C3B3B', tam: 6 },
   mais:       { nome: 'Mais elementos', cor: '#B9BEC6', tam: 6 },
 };
-// As 6 classes de relação (a ordem é a força da evidência).
-const CLASSES = {
-  textual:       { nome: 'Textual comprovada',  cor: '#14284B', tam: 2.4, ajuda: 'O texto da obra cita a passagem (referência escrita ou citação literal).' },
-  documental:    { nome: 'Documental',          cor: '#3D6B9E', tam: 2,   ajuda: 'A obra comenta a passagem numa seção dedicada; autoria registrada.' },
-  tematica:      { nome: 'Temática',            cor: '#2F6F73', tam: 1.6, ajuda: 'O conceito aparece no texto que trata da passagem.' },
-  interpretacao: { nome: 'Interpretação',       cor: '#C9A43F', tam: 1.5, ajuda: 'Referência cruzada da curadoria OpenBible (com votos).' },
-  hipotese:      { nome: 'Hipótese',            cor: '#C46A12', tam: 1.6, ajuda: 'Vínculo calculado pelo NEXUS a partir de dados documentados (co-citação, caminho).' },
-  inferencia:    { nome: 'Inferência não verificada', cor: '#8C3B3B', tam: 1.3, ajuda: 'Descoberta escrita por IA, ainda não verificada por pessoa.' },
+// MODELO DE EVIDÊNCIAS EM 3 DIMENSÕES. A cor do traço é o ESTADO epistemológico (o quanto a relação está provada);
+// natureza e método aparecem como etiquetas e têm filtros próprios. Votos e pesos nunca mudam o estado.
+const CLASSES = {   // = estados epistemológicos (o nome CLASSES ficou da V2)
+  direta:        { nome: 'Evidência direta',  cor: '#14284B', tam: 2.4, ajuda: 'A própria fonte cita, comenta ou define a passagem; dá para conferir no trecho.' },
+  corroboracao:  { nome: 'Corroboração',      cor: '#3D6B9E', tam: 2,   ajuda: 'Três ou mais autores INDEPENDENTES sustentam a mesma associação (a série Cambridge conta como um só).' },
+  interpretacao: { nome: 'Interpretação',     cor: '#C9A43F', tam: 1.5, ajuda: 'Leitura de comentaristas ou curadoria (ex.: referências cruzadas do OpenBible). Não é prova textual.' },
+  hipotese:      { nome: 'Hipótese',          cor: '#C46A12', tam: 1.6, ajuda: 'Vínculo calculado pelo NEXUS (co-citação, caminho). Precisa ser examinado; não demonstra dependência literária.' },
+  inferencia:    { nome: 'Inferência não verificada', cor: '#8C3B3B', tam: 1.3, ajuda: 'Escrita por IA (descobertas da Oficina, explicações). Ainda não verificada por pessoa.' },
 };
+const NATRELS = { textual: 'Textual', documental: 'Documental', tematica: 'Temática', historica: 'Histórica', lexical: 'Lexical', interpretativa: 'Interpretativa' };
+const METODOS = { referencia_cruzada: 'Referência cruzada', citacao_literal: 'Citação literal', co_citacao: 'Co-citação', correspondencia_lexical: 'Correspondência lexical',
+  associacao_tematica: 'Associação temática', caminho_grafo: 'Caminho de grafo', identificacao_documental: 'Identificação documental', analise_ia: 'Análise por IA' };
+const ESTADO_ANTIGO = { textual: 'direta', documental: 'direta', tematica: 'interpretacao', interpretacao: 'interpretacao', hipotese: 'hipotese', inferencia: 'inferencia' };
 const AREAS = {
   passagens: 'Passagens bíblicas', autores: 'Autores', obras: 'Obras', conceitos: 'Conceitos', idiomas: 'Idiomas originais',
   historia: 'História', arqueologia: 'Arqueologia', patristica: 'Patrística', judaica: 'Tradição judaica', interpretacoes: 'Interpretações teológicas', descobertas: 'Descobertas da Oficina',
 };
 const CATEGORIA_AREA = { lexico: 'idiomas', patristica: 'patristica', judaica: 'judaica', 'contexto-judaico': 'historia', historia: 'historia', comentario: 'interpretacoes', pregacao: 'interpretacoes' };
 const CATEGORIAS = { comentario: 'Comentário', lexico: 'Léxico', patristica: 'Patrística', judaica: 'Fonte judaica', 'contexto-judaico': 'Contexto judaico', historia: 'História', pregacao: 'Pregação' };
-const TIPO_LIG = { refcruz: 'referência cruzada', cita: 'cita', comenta: 'comenta', lexical: 'termo original', mencao: 'menciona',
+const TIPO_LIG = { refcruz: 'referência cruzada', cita: 'cita', 'cita-lxx': 'cita (numeração LXX)', comenta: 'comenta', lexical: 'termo original', mencao: 'menciona',
   escreveu: 'escreveu', contem: 'contém', descoberta: 'descoberta', caminho: 'caminho', 'co-citacao': 'co-citação', mais: 'mais' };
 
 // ── aparelho: quantos elementos mostrar sem travar ──────────────────────────
@@ -50,7 +54,7 @@ const S = {
   foco: null, trilha: [], expandidos: new Set(), notas: {},
   aberto: false, investigacao: null, origemCaminho: null, caminho: null,
   aba: 'geral', grupos: true, grupoInfo: [],
-  filtros: { areas: new Set(Object.keys(AREAS)), classes: new Set(Object.keys(CLASSES)), testamento: 'todos', votos: 0, ocultos: false },
+  filtros: { areas: new Set(Object.keys(AREAS)), classes: new Set(Object.keys(CLASSES)), naturezas: new Set(Object.keys(NATRELS)), metodos: new Set(Object.keys(METODOS)), testamento: 'todos', votos: 0, ocultos: false },
   modo: 'mapa', cache: new Map(),
 };
 window.__nexus = S;   // inspeção nos testes
@@ -83,7 +87,9 @@ let toastT = null;
 function aviso(t, ms) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, ms || 4200); }
 
 // ── classificação e áreas ───────────────────────────────────────────────────
-const classeDe = (a) => a.classe || ({ cita: 'textual', lexical: 'textual', comenta: 'documental', escreveu: 'documental', contem: 'documental', mencao: 'tematica', refcruz: 'interpretacao', 'co-citacao': 'hipotese', caminho: 'hipotese', descoberta: 'inferencia' }[a.tipo]) || 'documental';
+const classeDe = (a) => a.estado || ESTADO_ANTIGO[a.classe] || ({ cita: 'direta', lexical: 'direta', comenta: 'direta', escreveu: 'direta', contem: 'direta', mencao: 'interpretacao', refcruz: 'interpretacao', 'co-citacao': 'hipotese', caminho: 'hipotese', descoberta: 'inferencia' }[a.tipo]) || 'direta';
+const natRelDe = (a) => a.natRel || ({ refcruz: 'interpretativa', caminho: 'interpretativa', 'co-citacao': 'interpretativa', lexical: 'lexical', mencao: 'tematica', cita: 'textual' }[a.tipo]) || 'documental';
+const metodoDe = (a) => a.metodo || ({ refcruz: 'referencia_cruzada', 'co-citacao': 'co_citacao', caminho: 'caminho_grafo', lexical: 'correspondencia_lexical', mencao: 'associacao_tematica', descoberta: 'analise_ia' }[a.tipo]) || 'identificacao_documental';
 function areasDoNo(a) {
   const d = a.dados || {};
   switch (a.tipo) {
@@ -122,7 +128,7 @@ function mesclar(resp, origem) {
   for (const a of resp.arestas || []) {
     if (!g.hasNode(a.de) || !g.hasNode(a.para) || a.de === a.para) continue;
     const cl = classeDe(a), c = CLASSES[cl];
-    const dados = { ...a, classe: cl };
+    const dados = { ...a, classe: cl, estado: cl, natRel: natRelDe(a), metodo: metodoDe(a) };
     if (g.hasEdge(a.id)) {
       const atual = g.getEdgeAttribute(a.id, 'dados');
       g.setEdgeAttribute(a.id, 'dados', { ...atual, evidencias: (atual.evidencias || []).concat(a.evidencias || []).slice(0, 4) });
@@ -278,11 +284,12 @@ function desenharTrilha() {
 
 // ── painel de inteligência (4 abas) ────────────────────────────────────────
 const etiqueta = (cl) => `<span class="nat nat-${esc(cl)}" title="${esc((CLASSES[cl] || {}).ajuda || '')}">${esc((CLASSES[cl] || {}).nome || cl)}</span>`;
+const dimensoes = (d) => `${etiqueta(d.classe)}<span class="etq" title="Natureza da relação">${esc(NATRELS[d.natRel] || d.natRel || '')}</span><span class="etq" title="Método de identificação">${esc(METODOS[d.metodo] || d.metodo || '')}</span>${d.independentes ? `<span class="etq" title="Autores independentes (a mesma série ou o mesmo autor contam uma vez)">${d.independentes} autor(es) indep.</span>` : ''}${d.direcao ? `<span class="etq" title="Direção">${esc(d.direcao)}</span>` : ''}`;
 function evidenciasHtml(lista, aberto) {
   if (!lista || !lista.length) return '';
   return `<details class="ev"${aberto ? ' open' : ''}><summary>Ver fonte (${lista.length})</summary>${lista.map(evItem).join('')}</details>`;
 }
-const evItem = (e) => `<div class="ev-item"><b>${esc(e.autor || '')}</b>${e.obra ? ' · ' + esc(e.obra) : ''}${e.secao ? ' · ' + esc(e.secao) : ''}${e.modo ? ` <span class="etq">${esc(e.modo)}</span>` : ''}${e.trecho ? `<q>${esc(e.trecho)}</q>` : ''}</div>`;
+const evItem = (e) => `<div class="ev-item"><b>${esc(e.autor || '')}</b>${e.obra ? ' · ' + esc(e.obra) : ''}${e.secao ? ' · ' + esc(e.secao) : ''}${e.local && e.local.pagina ? ' · p. ' + e.local.pagina : ''}${e.modo ? ` <span class="etq">${esc(e.modo)}</span>` : ''}${e.trecho ? `<q>${esc(e.trecho)}</q>` : ''}${e.local && e.local.trechoId ? `<div class="nota">Localização: ${esc(e.local.fonte || '')} · trecho ${esc(e.local.trechoId)}</div>` : ''}${e.aviso ? `<div class="aviso">${esc(e.aviso)}</div>` : ''}</div>`;
 function ligacoesDe(id) {
   const g = S.graph, out = [];
   g.forEachEdge(id, (k, a, src, dst) => {
@@ -369,7 +376,7 @@ function abaConexoes(id) {
 function abaConexoesLista(id) {
   const ligs = ligacoesDe(id).filter((l) => visivelAresta(l.k));
   if (!ligs.length) return '<p class="nota">Sem ligações visíveis. Toque em "Expandir conexões" ou revise os filtros.</p>';
-  return ligs.slice(0, 90).map((l) => `<div class="lig"><div class="lig-topo">${etiqueta(l.a.classe)}<span class="etq">${esc(TIPO_LIG[l.a.tipo] || l.a.tipo)}${l.sentido === 'entrada' ? ' ←' : ' →'}</span><button class="lig-alvo" data-ir="${esc(l.outro)}">${esc(lab(l.outro))}</button></div><p>${esc(l.a.explica || '')}</p>${l.a.credito ? `<p class="nota">${esc(l.a.credito)}</p>` : ''}${evidenciasHtml(l.a.evidencias)}</div>`).join('')
+  return ligs.slice(0, 90).map((l) => `<div class="lig"><div class="lig-topo">${dimensoes(l.a)}<span class="etq">${esc(TIPO_LIG[l.a.tipo] || l.a.tipo)}${l.sentido === 'entrada' ? ' ←' : ' →'}</span><button class="lig-alvo" data-ir="${esc(l.outro)}">${esc(lab(l.outro))}</button></div><p>${esc(l.a.explica || '')}</p>${l.a.credito ? `<p class="nota">${esc(l.a.credito)}</p>` : ''}${evidenciasHtml(l.a.evidencias)}</div>`).join('')
     + (ligs.length > 90 ? `<p class="nota">+${ligs.length - 90} ligações (use os filtros).</p>` : '');
 }
 function abaNotas(id) {
@@ -385,7 +392,7 @@ function painelAresta(k) {
   S.selAresta = k;
   const s = g.source(k), t = g.target(k);
   $('painel-corpo').innerHTML = `<span class="etq">Relação</span><h2>${esc(lab(s))} → ${esc(lab(t))}</h2>` +
-    [a].concat(extras).map((d) => `<div class="lig"><div class="lig-topo">${etiqueta(d.classe)}<span class="etq">${esc(TIPO_LIG[d.tipo] || d.tipo)}</span></div><p>${esc(d.explica || '')}</p><p class="nota">${esc((CLASSES[d.classe] || {}).ajuda || '')}</p>${d.credito ? `<p class="nota">${esc(d.credito)}</p>` : ''}${evidenciasHtml(d.evidencias, true)}</div>`).join('') +
+    [a].concat(extras).map((d) => `<div class="lig"><div class="lig-topo">${dimensoes(d)}<span class="etq">${esc(TIPO_LIG[d.tipo] || d.tipo)}</span></div><p>${esc(d.explica || '')}</p><p class="nota">${esc((CLASSES[d.classe] || {}).ajuda || '')}</p>${d.credito ? `<p class="nota">${esc(d.credito)}</p>` : ''}${evidenciasHtml(d.evidencias, true)}</div>`).join('') +
     `<div class="botoes"><button class="bt" data-ir="${esc(s)}">Ir para ${esc(lab(s))}</button><button class="bt" data-ir="${esc(t)}">Ir para ${esc(lab(t))}</button></div>`;
   $('painel').hidden = false;
   S.renderer && S.renderer.refresh();
@@ -420,7 +427,7 @@ function visivelNo(id, a) {
 }
 function visivelAresta(k) {
   const g = S.graph, a = g.getEdgeAttribute(k, 'dados'), f = S.filtros;
-  if (a.tipo !== 'mais' && !f.classes.has(a.classe)) return false;
+  if (a.tipo !== 'mais' && (!f.classes.has(a.classe) || (f.naturezas && !f.naturezas.has(a.natRel)) || (f.metodos && !f.metodos.has(a.metodo)))) return false;
   if (a.tipo === 'refcruz' && f.votos && (a.peso || 0) < f.votos) return false;
   return visivelNo(g.source(k)) && visivelNo(g.target(k));
 }
@@ -435,7 +442,9 @@ function montarFiltros() {
       return `<label class="${k === 'arqueologia' && !n ? 'desab' : ''}"><input type="checkbox" data-f="areas" value="${k}" ${f.areas.has(k) ? 'checked' : ''}>${esc(nome)} <small style="color:#8A909A">(${n})</small></label>`;
     }).join('') +
     `<p class="nota" style="margin:2px 0 6px">Arqueologia: ainda não há fontes de arqueologia na biblioteca.</p>` +
-    '<h4>Classe da relação</h4>' + Object.entries(CLASSES).map(([k, c]) => `<label title="${esc(c.ajuda)}"><input type="checkbox" data-f="classes" value="${k}" ${f.classes.has(k) ? 'checked' : ''}><span class="amostra linha" style="background:${c.cor}"></span>${esc(c.nome)} <small style="color:#8A909A">(${g.filterEdges((e, a) => a.dados.classe === k).length})</small></label>`).join('') +
+    '<h4>Estado da evidência</h4>' + Object.entries(CLASSES).map(([k, c]) => `<label title="${esc(c.ajuda)}"><input type="checkbox" data-f="classes" value="${k}" ${f.classes.has(k) ? 'checked' : ''}><span class="amostra linha" style="background:${c.cor}"></span>${esc(c.nome)} <small style="color:#8A909A">(${g.filterEdges((e, a) => a.dados.classe === k).length})</small></label>`).join('') +
+    '<h4>Natureza da relação</h4>' + Object.entries(NATRELS).map(([k, n]) => `<label><input type="checkbox" data-f="naturezas" value="${k}" ${f.naturezas.has(k) ? 'checked' : ''}>${esc(n)} <small style="color:#8A909A">(${g.filterEdges((e, a) => a.dados.natRel === k).length})</small></label>`).join('') +
+    '<h4>Método de identificação</h4>' + Object.entries(METODOS).map(([k, n]) => `<label><input type="checkbox" data-f="metodos" value="${k}" ${f.metodos.has(k) ? 'checked' : ''}>${esc(n)} <small style="color:#8A909A">(${g.filterEdges((e, a) => a.dados.metodo === k).length})</small></label>`).join('') +
     `<h4>Testamento</h4>${[['todos', 'Todos'], ['AT', 'Antigo'], ['NT', 'Novo']].map(([v, n]) => `<label><input type="radio" name="test" value="${v}" ${f.testamento === v ? 'checked' : ''}> ${n}</label>`).join('')}` +
     `<h4>Referências cruzadas: votos mínimos <b id="votos-v">${f.votos}</b></h4><input type="range" id="votos" min="0" max="300" step="10" value="${f.votos}">` +
     `<h4>Ocultos</h4><label><input type="checkbox" id="ver-ocultos" ${f.ocultos ? 'checked' : ''}> Mostrar elementos ocultados (${ocultos})</label>` +
@@ -492,7 +501,7 @@ function mostrarCaminho(passos, origemTxt) {
 async function caminhoEntre(de, para, forcarFontes) {
   if (!forcarFontes) {
     const local = caminhoLocal(de, para);
-    if (local && local.length > 1) { mostrarCaminho(local, 'Caminho pelas ligações já abertas no mapa atual.'); S.origemCaminho = null; return; }
+    if (local && local.length > 1) { mostrarCaminho(local, 'Caminho INDIRETO pelas ligações já abertas no mapa atual. Cada passo tem sua própria evidência; o caminho em si não prova dependência entre as pontas.'); S.origemCaminho = null; return; }
   }
   ocupado(true);
   try {
@@ -501,7 +510,7 @@ async function caminhoEntre(de, para, forcarFontes) {
     if (!j.passos.length) { aviso(j.aviso || 'Sem caminho curto nas fontes atuais.'); return; }
     mesclar(j, de);
     S.origemCaminho = null;
-    mostrarCaminho(j.passos.filter((p) => S.graph.hasNode(p)), 'Caminho encontrado nas fontes (referências cruzadas e ligações documentadas das pontas).');
+    mostrarCaminho(j.passos.filter((p) => S.graph.hasNode(p)), 'Caminho INDIRETO encontrado nas fontes (referências cruzadas e ligações documentadas das pontas). Não demonstra dependência literária direta.');
   } finally { ocupado(false); }
 }
 
@@ -513,7 +522,7 @@ async function descobrir(id) {
     const j = await api({ acao: 'descobrir', id }, true);
     if (!j.ok) { if (j.motivo === 'particular') pedirPin(); else aviso(j.err || 'Falhou.'); return; }
     S.ultimaDescoberta = j;
-    const blocos = j.blocos.map((b, bi) => `<div class="bloco"><div class="bloco-topo"><h4>${esc(b.titulo)}</h4>${etiqueta(b.classe)}</div><div class="como">${esc(b.como)}</div>${
+    const blocos = j.blocos.map((b, bi) => `<div class="bloco"><div class="bloco-topo"><h4>${esc(b.titulo)}</h4>${etiqueta(b.estado || ESTADO_ANTIGO[b.classe] || b.classe)}</div><div class="grau"><span class="etq">${esc(NATRELS[b.natRel] || '')}</span><span class="etq">${esc(METODOS[b.metodo] || '')}</span></div><div class="como">${esc(b.como)}</div>${
       b.itens.length ? b.itens.slice(0, 10).map((it, ii) => `<button class="item" data-bloco="${bi}" data-item="${ii}"><b>${esc(it.rotulo)}</b><small>${esc(it.detalhe || '')}</small></button>`).join('') : '<p class="nota">Nada encontrado nas fontes atuais.</p>'
     }</div>`).join('');
     const html = `<span class="etq">Motor de descoberta</span><h2>${esc(j.foco.rotulo)}</h2>
@@ -530,16 +539,16 @@ function trazerItem(bi, ii) {
   if (b.algoritmo === 'caminhos' && it.passos) {
     const rot = it.rotulo.split(' → ');
     mesclar({ nos: it.passos.map((p, i) => ({ id: p, tipo: 'passagem', rotulo: rot[i] || p })),
-      arestas: it.passos.slice(1).map((p, i) => ({ id: 'caminho|' + it.passos[i] + '|' + p, de: it.passos[i], para: p, tipo: 'caminho', classe: 'hipotese', explica: 'Passo do caminho por referências cruzadas (OpenBible).' })) }, foco);
-    mostrarCaminho(it.passos, 'Caminho calculado pelo motor de descoberta.');
+      arestas: it.passos.slice(1).map((p, i) => ({ id: 'caminho|' + it.passos[i] + '|' + p, de: it.passos[i], para: p, tipo: 'caminho', estado: 'hipotese', natRel: 'interpretativa', metodo: 'caminho_grafo', explica: 'Passo de um caminho INDIRETO por referências cruzadas (OpenBible). Não demonstra dependência literária.' })) }, foco);
+    mostrarCaminho(it.passos, 'Caminho INDIRETO calculado pelo motor de descoberta. Mostra por onde as passagens se ligam; não demonstra dependência literária direta.');
     return;
   }
   const pref = it.alvo.split(':')[0];
   const tipo = { p: 'passagem', o: 'obra', c: 'conceito', l: 'verbete', d: 'descoberta' }[pref] || 'passagem';
-  const tipoLig = { 'conexoes-pouco-evidentes': 'co-citacao', 'refcruz-relevantes': 'refcruz', 'autores-mesma-passagem': 'comenta', 'citacoes-literais': 'cita', 'temas-recorrentes': 'mencao', 'relacoes-lexicais': 'lexical', 'descobertas-oficina': 'descoberta' }[b.algoritmo] || 'descoberta';
+  const tipoLig = { 'conexoes-pouco-evidentes': 'co-citacao', 'refcruz-relevantes': 'refcruz', 'autores-mesma-passagem': 'comenta', 'citacoes-literais': 'cita', 'apoio-patristico': 'cita', 'temas-recorrentes': 'mencao', 'relacoes-lexicais': 'lexical', 'descobertas-oficina': 'descoberta' }[b.algoritmo] || 'descoberta';
   const de = tipo === 'passagem' ? foco : it.alvo, para = de === foco ? it.alvo : foco;
   mesclar({ nos: [{ id: it.alvo, tipo, rotulo: it.rotulo.replace(/ \(.*\)$/, ''), texto: it.texto || null }],
-    arestas: [{ id: tipoLig + '|' + de + '|' + para, de, para, tipo: tipoLig, classe: b.classe, peso: 1, explica: `${b.titulo}: ${it.detalhe || ''}`, evidencias: it.evidencias || [] }] }, foco);
+    arestas: [{ id: tipoLig + '|' + de + '|' + para, de, para, tipo: tipoLig, estado: it.estado || b.estado, natRel: b.natRel, metodo: b.metodo, independentes: it.independentes, peso: 1, explica: `${b.titulo}: ${it.detalhe || ''}`, evidencias: it.evidencias || [] }] }, foco);
   selecionar(it.alvo, true);
 }
 async function explicar(id) {
@@ -559,13 +568,13 @@ function mostrarEvidenciaNumero(n) {
 // ── investigações (banco do NEXUS; reserva no aparelho se o banco não responder) ─
 function estadoAtual() {
   return { versao: 2, grafo: S.graph.export(), trilha: S.trilha, foco: S.foco, sel: S.sel, expandidos: [...S.expandidos], notas: S.notas,
-    filtros: { ...S.filtros, areas: [...S.filtros.areas], classes: [...S.filtros.classes] } };
+    filtros: { ...S.filtros, areas: [...S.filtros.areas], classes: [...S.filtros.classes], naturezas: [...S.filtros.naturezas], metodos: [...S.filtros.metodos] } };
 }
 function restaurar(est) {
   S.graph.clear();
   S.graph.import(est.grafo);
   S.trilha = est.trilha || []; S.foco = est.foco || null; S.expandidos = new Set(est.expandidos || []); S.notas = est.notas || {};
-  if (est.filtros && est.filtros.areas) S.filtros = { ...est.filtros, areas: new Set(est.filtros.areas), classes: new Set(est.filtros.classes) };
+  if (est.filtros && est.filtros.areas) S.filtros = { ...est.filtros, areas: new Set(est.filtros.areas), classes: new Set((est.filtros.classes || []).map((c) => ESTADO_ANTIGO[c] || c)), naturezas: new Set(est.filtros.naturezas || Object.keys(NATRELS)), metodos: new Set(est.filtros.metodos || Object.keys(METODOS)) };
   montarFiltros(); atualizarVazio(); calcularGrupos();
   if (est.sel && S.graph.hasNode(est.sel)) selecionar(est.sel, true); else desenharTrilha();
   enquadrar();
