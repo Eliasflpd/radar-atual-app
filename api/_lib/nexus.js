@@ -170,6 +170,49 @@ function alvoVersiculo(ini) {
 }
 const modoRotulo = (modo, passagem) => modo === 3 ? 'comenta o capítulo' : modo === 1 ? (passagem ? 'comenta a passagem' : 'comenta o versículo') : (passagem ? 'cita a passagem' : 'cita o versículo');
 
+// ── as 6 CLASSES de relação (pedido do Elias, 19/11/2026) ─────────────────────────
+//   textual       — o texto da obra cita a passagem (referência escrita, citação literal, verbete que cita)
+//   documental    — a obra comenta a passagem numa seção dedicada; autoria registrada
+//   tematica      — o conceito aparece no texto que trata da passagem
+//   interpretacao — referência cruzada da curadoria OpenBible (interpretação com votos)
+//   hipotese      — vínculo calculado pelo NEXUS (co-citação, caminho)
+//   inferencia    — descoberta escrita por IA, ainda não verificada por pessoa
+function classeDe(a) {
+  if (a.classe) return a.classe;
+  if (a.tipo === 'cita' || a.tipo === 'lexical') return 'textual';
+  if (a.tipo === 'comenta' || a.tipo === 'escreveu' || a.tipo === 'contem') return 'documental';
+  if (a.tipo === 'mencao') return 'tematica';
+  if (a.tipo === 'refcruz') return 'interpretacao';
+  if (a.tipo === 'co-citacao' || a.tipo === 'caminho') return 'hipotese';
+  if (a.tipo === 'descoberta') return 'inferencia';
+  return 'documental';
+}
+
+// ── memória de respostas (por processo; 10 minutos) ──────────────────────────────
+const MEMORIA = new Map();
+function lembrar(chave) { const x = MEMORIA.get(chave); if (x && Date.now() - x.t < 600e3) return x.v; MEMORIA.delete(chave); return null; }
+function guardar(chave, v) { MEMORIA.set(chave, { t: Date.now(), v }); if (MEMORIA.size > 150) MEMORIA.delete(MEMORIA.keys().next().value); return v; }
+
+// Corta a vizinhança para o aparelho não receber mais elementos do que consegue mostrar bem.
+// Fica o foco e os mais ligados (soma dos pesos); o resto vira contagem por tipo ("mais N").
+function aparar(saida, foco, limite, so) {
+  let nos = saida.nos, arestas = saida.arestas;
+  if (so) { nos = nos.filter((n) => n.id === foco || n.tipo === so); }
+  const ids = new Set(nos.map((n) => n.id));
+  arestas = arestas.filter((a) => ids.has(a.de) && ids.has(a.para));
+  if (!limite || nos.length <= limite) return { nos, arestas, restantes: {} };
+  const nota = new Map();
+  for (const a of arestas) {
+    const p = Math.log2(2 + (a.peso || 1)) * (a.de === foco || a.para === foco ? 2 : 1);
+    nota.set(a.de, (nota.get(a.de) || 0) + p); nota.set(a.para, (nota.get(a.para) || 0) + p);
+  }
+  const ordem = nos.filter((n) => n.id !== foco).sort((x, y) => (nota.get(y.id) || 0) - (nota.get(x.id) || 0));
+  const ficam = new Set([foco, ...ordem.slice(0, limite - 1).map((n) => n.id)]);
+  const restantes = {};
+  for (const n of ordem.slice(limite - 1)) restantes[n.tipo] = (restantes[n.tipo] || 0) + 1;
+  return { nos: nos.filter((n) => ficam.has(n.id)), arestas: arestas.filter((a) => ficam.has(a.de) && ficam.has(a.para)), restantes };
+}
+
 // ── acumulador de grafo (nós e arestas sem repetição) ──────────────────────────
 function grafo() {
   const nos = new Map(), arestas = new Map();
@@ -183,7 +226,7 @@ function grafo() {
         if (a.evidencias) ja.evidencias = (ja.evidencias || []).concat(a.evidencias).slice(0, 4);
         return id;
       }
-      arestas.set(id, { id, ...a });
+      arestas.set(id, { id, ...a, classe: classeDe(a) });
       return id;
     },
     saida() { return { nos: [...nos.values()], arestas: [...arestas.values()] }; },
@@ -518,10 +561,14 @@ async function vizinhosRefcruz(db, chaves) {
       select de, para_ini, votos, row_number() over (partition by para_ini order by votos desc) rn
         from oficina_refcruz where para_ini = any($1::int[])) t2 where rn <= 25`, [chaves]).catch(() => []);
 }
+// `de` e `para` podem ser uma passagem (número) ou um CONJUNTO de passagens (as que um conceito, verbete ou obra
+// documenta): a busca parte de todas ao mesmo tempo e para no primeiro encontro.
 async function caminho(db, de, para) {
-  if (de === para) return [de];
-  const paiA = new Map([[de, null]]), paiB = new Map([[para, null]]);
-  let fronteiraA = [de], fronteiraB = [para];
+  const A = [].concat(de), B = [].concat(para);
+  const comum = A.find((k) => B.includes(k));
+  if (comum != null) return [comum];
+  const paiA = new Map(A.map((k) => [k, null])), paiB = new Map(B.map((k) => [k, null]));
+  let fronteiraA = [...A], fronteiraB = [...B];
   for (let nivel = 0; nivel < 3; nivel++) {
     // expande o lado menor
     const ladoA = fronteiraA.length <= fronteiraB.length;
@@ -576,7 +623,7 @@ async function descobrir(db, ini, fim, bib) {
     const nota = x.votos * (reciproca ? 1.3 : 1) + nApoio * 25;
     return { x, reciproca, nApoio, nota };
   }).sort((a, b) => b.nota - a.nota).slice(0, 8);
-  blocos.push({ algoritmo: 'refcruz-relevantes', titulo: 'Referências cruzadas mais relevantes', natureza: 'interpretacao',
+  blocos.push({ algoritmo: 'refcruz-relevantes', classe: 'interpretacao', titulo: 'Referências cruzadas mais relevantes', natureza: 'interpretacao',
     como: 'Votos do OpenBible, com bônus quando a ligação existe nos dois sentidos e quando obras da biblioteca citam as duas passagens no mesmo trecho.',
     itens: rel.map((r) => ({ alvo: idP(r.x.para_ini, r.x.para_fim), rotulo: passagemNo(r.x.para_ini, r.x.para_fim, bib).rotulo,
       detalhe: `${r.x.votos} votos${r.reciproca ? ' · recíproca' : ''}${r.nApoio ? ` · ${r.nApoio} obra(s) citam as duas juntas` : ''}`,
@@ -592,7 +639,7 @@ async function descobrir(db, ini, fim, bib) {
     porFonte.set(p.fonte, e);
   }
   const autores = [...porFonte.entries()].filter(([f]) => !LEXICOS.has(f)).sort((a, b) => b[1].n - a[1].n).slice(0, 12);
-  blocos.push({ algoritmo: 'autores-mesma-passagem', titulo: 'Obras e autores que tratam desta passagem', natureza: 'documental',
+  blocos.push({ algoritmo: 'autores-mesma-passagem', classe: 'documental', titulo: 'Obras e autores que tratam desta passagem', natureza: 'documental',
     como: 'Ponteiros da Oficina (trecho → versículo): quem comenta (seção dedicada) ou cita no texto.',
     itens: autores.map(([f, e]) => { const ob = obraNo(f, cat, null); return { alvo: 'o:' + f, rotulo: ob.rotulo, detalhe: `${ob.autor ? ob.autor + ' · ' : ''}${e.n} trecho(s) · ${[...e.modos].map((m) => m === 2 ? 'cita' : 'comenta').filter((v, i, a) => a.indexOf(v) === i).join(' e ')} · ${ob.categoria}`, evidencias: e.ev }; }) });
 
@@ -606,7 +653,7 @@ async function descobrir(db, ini, fim, bib) {
     litPorFonte.set(x.fonte, e);
     textos.set(x.chave, x);
   }
-  blocos.push({ algoritmo: 'citacoes-literais', titulo: 'Citações literais do versículo', natureza: 'documental',
+  blocos.push({ algoritmo: 'citacoes-literais', classe: 'textual', titulo: 'Citações literais do versículo', natureza: 'documental',
     como: lit.frase ? `A frase "${lit.frase}" (Almeida) procurada palavra por palavra no texto de todos os trechos. Alcança obras que a Oficina ainda não indexou.` : 'Versículo curto demais para busca literal segura.',
     itens: [...litPorFonte.entries()].sort((a, b) => b[1].n - a[1].n).map(([f, e]) => { const ob = obraNo(f, cat, null); return { alvo: 'o:' + f, rotulo: ob.rotulo, detalhe: `${ob.autor ? ob.autor + ' · ' : ''}${e.n} citação(ões) literal(is) · ${ob.categoria}`, evidencias: e.ev }; }) });
 
@@ -628,7 +675,7 @@ async function descobrir(db, ini, fim, bib) {
     }
   }
   const temasOrd = [...temas.entries()].sort((a, b) => (b[1].obras.size - a[1].obras.size) || (b[1].n - a[1].n));
-  blocos.push({ algoritmo: 'temas-recorrentes', titulo: 'Temas recorrentes em diferentes obras', natureza: 'documental',
+  blocos.push({ algoritmo: 'temas-recorrentes', classe: 'tematica', titulo: 'Temas recorrentes em diferentes obras', natureza: 'documental',
     como: 'Conceitos do dicionário do NEXUS encontrados no texto dos trechos que tratam da passagem, contados por obra distinta.',
     itens: temasOrd.map(([cid, e]) => { const c = CONCEITOS.find((k) => k.id === cid); return { alvo: 'c:' + cid, rotulo: c.rotulo, detalhe: `${e.obras.size} obra(s) · ${e.n} trecho(s): ${[...e.obras].slice(0, 3).join('; ')}`, evidencias: e.ev }; }) });
 
@@ -656,7 +703,7 @@ async function descobrir(db, ini, fim, bib) {
     lexItens.push({ alvo: 'l:' + e.fonte + ':' + e.secao, rotulo: `${String(e.secao).slice(0, 50)} (${obraNo(e.fonte, cat, null).rotulo})`,
       detalhe: lista.length ? 'o mesmo verbete cita também: ' + lista.join(', ') : 'verbete que cita a passagem', evidencias: e.ev });
   }
-  blocos.push({ algoritmo: 'relacoes-lexicais', titulo: 'Relações lexicais (léxicos e dicionários)', natureza: 'documental',
+  blocos.push({ algoritmo: 'relacoes-lexicais', classe: 'textual', titulo: 'Relações lexicais (léxicos e dicionários)', natureza: 'documental',
     como: 'Verbetes de Thayer, Kittel e Trench que citam a passagem, e as outras passagens citadas pelo mesmo verbete.', itens: lexItens });
 
   // 5) Conexões pouco evidentes, mas documentadas: co-citadas em ≥ 2 obras e AUSENTES das referências cruzadas
@@ -672,7 +719,7 @@ async function descobrir(db, ini, fim, bib) {
     }
     ocultasItens.push({ alvo: idP(k, k), rotulo: passagemNo(k, k, bib).rotulo, detalhe: `citadas juntas em ${e.trechos.size} trecho(s) de ${e.fontes.size} obra(s); não consta nas referências cruzadas`, texto: R.textoIntervalo(bib, k, k, 1), evidencias: ev });
   }
-  blocos.push({ algoritmo: 'conexoes-pouco-evidentes', titulo: 'Conexões pouco evidentes, mas documentadas', natureza: 'hipotese',
+  blocos.push({ algoritmo: 'conexoes-pouco-evidentes', classe: 'hipotese', titulo: 'Conexões pouco evidentes, mas documentadas', natureza: 'hipotese',
     como: 'Passagens citadas no MESMO trecho que esta, por pelo menos 2 obras diferentes, e que NÃO estão nas referências cruzadas. O vínculo é documental; o sentido dele é hipótese a examinar.', itens: ocultasItens });
 
   // 6) Caminhos: da passagem até as que aparecem nas descobertas ou nas conexões ocultas, por referências cruzadas
@@ -682,13 +729,13 @@ async function descobrir(db, ini, fim, bib) {
     const c = await caminho(db, ini, alvoK);
     if (c && c.length > 2) caminhos.push({ alvo: it.alvo, rotulo: c.map((k) => passagemNo(k, k, null).rotulo).join(' → '), detalhe: `${c.length - 1} passo(s) por referências cruzadas`, passos: c.map((k) => idP(k, k)) });
   }
-  blocos.push({ algoritmo: 'caminhos', titulo: 'Caminhos entre passagens', natureza: 'interpretacao',
+  blocos.push({ algoritmo: 'caminhos', classe: 'hipotese', titulo: 'Caminhos entre passagens', natureza: 'interpretacao',
     como: 'Busca em largura nos dois sentidos sobre as referências cruzadas (até 3 níveis, 25 melhores por passagem), ligando o foco às conexões pouco evidentes.', itens: caminhos });
 
   // descobertas já registradas na Oficina
   const a = R.decompor(ini), z = R.decompor(fim);
   const desc = await descobertasQueCruzam(db, R.AB[a.b - 1], a.c, a.v, a.c === z.c ? z.v : 176);
-  blocos.push({ algoritmo: 'descobertas-oficina', titulo: 'Descobertas já registradas na Oficina', natureza: 'inferencia_ia',
+  blocos.push({ algoritmo: 'descobertas-oficina', classe: 'inferencia', titulo: 'Descobertas já registradas na Oficina', natureza: 'inferencia_ia',
     como: 'Tabela oficina_descobertas (4 camadas). Escritas por IA; a fonte declarada vai junto. "conferir" = não verificada.',
     itens: desc.map((d) => ({ alvo: 'd:' + d.id, rotulo: d.titulo, detalhe: `camada ${d.camada} · fonte: ${d.fonte || '—'}`, natureza: naturezaDescoberta(d), evidencias: [{ autor: 'Oficina do RADAR', obra: 'descoberta', secao: d.fonte || '', modo: d.camada, trecho: String(d.explica || '').slice(0, LIM_TRECHO) }] })) });
 
@@ -703,13 +750,13 @@ async function explicar(db, ini, fim, bib) {
     for (const it of b.itens.slice(0, 5)) {
       for (const e of (it.evidencias || []).slice(0, 1)) {
         if (evid.length >= 24) break;
-        evid.push({ n: evid.length + 1, bloco: b.titulo, natureza: it.natureza || b.natureza, item: it.rotulo, detalhe: it.detalhe,
+        evid.push({ n: evid.length + 1, bloco: b.titulo, natureza: b.classe || it.natureza || b.natureza, item: it.rotulo, detalhe: it.detalhe,
           autor: e.autor, obra: e.obra, secao: e.secao, trecho: String(e.trecho || '').slice(0, 260) });
       }
     }
   }
   if (!evid.length) return { texto: 'Não há evidências suficientes na biblioteca para esta passagem.', evidencias: [] };
-  const sys = 'Você é o motor de descoberta do NEXUS BÍBLICO. Explique em português do Brasil, para um pesquisador, o que as evidências abaixo mostram sobre a passagem. REGRAS INEGOCIÁVEIS: (1) use SOMENTE as evidências fornecidas; não acrescente fatos, autores, datas ou citações de memória; (2) toda frase com afirmação deve terminar com a marca da evidência entre colchetes, por exemplo [E3] ou [E2][E7]; (3) diga a natureza: "documental", "curadoria", "hipótese", "inferência da IA" ou "não verificada", conforme o campo natureza; (4) trate co-citação como hipótese a examinar, nunca como fato; (5) se algo não tem evidência suficiente, diga isso; (6) no máximo 5 parágrafos curtos, sem títulos, sem listas.';
+  const sys = 'Você é o motor de descoberta do NEXUS BÍBLICO. Explique em português do Brasil, para um pesquisador, o que as evidências abaixo mostram sobre a passagem. REGRAS INEGOCIÁVEIS: (1) use SOMENTE as evidências fornecidas; não acrescente fatos, autores, datas ou citações de memória; (2) toda frase com afirmação deve terminar com a marca da evidência entre colchetes, por exemplo [E3] ou [E2][E7]; (3) diga a classe da relação conforme o campo entre parênteses: textual (citação comprovada no texto), documental (comentário dedicado), temática, interpretação (curadoria OpenBible), hipótese (cálculo do sistema) ou inferência (IA, não verificada); (4) trate co-citação como hipótese a examinar, nunca como fato; (5) se algo não tem evidência suficiente, diga isso; (6) no máximo 5 parágrafos curtos, sem títulos, sem listas.';
   const user = `Passagem: ${r.foco.rotulo} — "${r.foco.texto || ''}"\n\nEVIDÊNCIAS:\n` + evid.map((e) =>
     `[E${e.n}] (${e.natureza}) ${e.bloco} — ${e.item}${e.detalhe ? ' (' + e.detalhe + ')' : ''}. Fonte: ${e.autor || ''}, ${e.obra || ''}${e.secao ? ', ' + e.secao : ''}. Trecho: "${e.trecho}"`).join('\n');
   const { iaTexto } = await import('./ia.js');
@@ -772,32 +819,70 @@ module.exports = async (req, res) => {
     }
     if (acao === 'expandir') {
       const bib = await carregarBiblia(proto + '://' + host);
-      const g = grafo();
       const id = String(b.id || '');
       const p = lerPassagemId(id);
-      if (p) await expandirPassagem(db, g, p.ini, p.fim, bib, aberto);
-      else if (!aberto) { res.json({ ok: false, motivo: 'particular', err: 'Esta parte do mapa usa os livros da biblioteca: entre com o PIN.' }); return; }
-      else if (id.startsWith('o:')) await expandirObra(db, g, id.slice(2), Array.isArray(b.contexto) ? b.contexto : [], bib);
-      else if (id.startsWith('a:')) await expandirAutor(db, g, String(b.rotulo || id.slice(2)));
-      else if (id.startsWith('c:')) await expandirConceito(db, g, id.slice(2), bib);
-      else if (id.startsWith('l:')) { const [, fonte, ...resto] = id.split(':'); await expandirVerbete(db, g, fonte, resto.join(':'), bib); }
-      else if (id.startsWith('d:')) await expandirDescoberta(db, g, +id.slice(2), bib);
-      else { res.json({ ok: false, err: 'nó desconhecido' }); return; }
-      res.json({ ok: true, aberto, ...g.saida(), credito: CREDITO_OB });
+      if (!p && !aberto) { res.json({ ok: false, motivo: 'particular', err: 'Esta parte do mapa usa os livros da biblioteca: entre com o PIN.' }); return; }
+      const ctx = id.startsWith('o:') && Array.isArray(b.contexto) ? b.contexto.slice(0, 12) : [];
+      const chave = ['expandir', id, aberto ? 1 : 0, ctx.join(',')].join('|');
+      let saida = lembrar(chave);
+      if (!saida) {
+        const g = grafo();
+        if (p) await expandirPassagem(db, g, p.ini, p.fim, bib, aberto);
+        else if (id.startsWith('o:')) await expandirObra(db, g, id.slice(2), ctx, bib);
+        else if (id.startsWith('a:')) await expandirAutor(db, g, String(b.rotulo || id.slice(2)));
+        else if (id.startsWith('c:')) await expandirConceito(db, g, id.slice(2), bib);
+        else if (id.startsWith('l:')) { const [, fonte, ...resto] = id.split(':'); await expandirVerbete(db, g, fonte, resto.join(':'), bib); }
+        else if (id.startsWith('d:')) await expandirDescoberta(db, g, +id.slice(2), bib);
+        else { res.json({ ok: false, err: 'nó desconhecido' }); return; }
+        saida = guardar(chave, g.saida());
+      }
+      const limite = Math.max(10, Math.min(400, +b.limite || 0)) || 0;
+      const cortado = aparar(saida, id, b.limite ? limite : 0, b.so ? String(b.so) : '');
+      res.json({ ok: true, aberto, ...cortado, total: saida.nos.length, credito: CREDITO_OB });
       return;
     }
     if (acao === 'caminho') {
+      // Caminho entre QUAISQUER dois elementos: cada ponta vira o conjunto de passagens que ela documenta
+      // (conceito -> passagens onde aparece; obra -> passagens que comenta; verbete -> passagens que cita).
       const bib = await carregarBiblia(proto + '://' + host);
-      const a = lerPassagemId(b.de), z = lerPassagemId(b.para);
-      if (!a || !z) { res.json({ ok: false, err: 'informe duas passagens' }); return; }
-      const c = await caminho(db, a.ini, z.ini);
-      if (!c) { res.json({ ok: true, passos: [], nos: [], arestas: [], aviso: 'Nenhum caminho curto (até 4 passos) pelas referências cruzadas.' }); return; }
+      const deId = String(b.de || ''), paraId = String(b.para || '');
+      if ((!lerPassagemId(deId) || !lerPassagemId(paraId)) && !aberto) { res.json({ ok: false, motivo: 'particular', err: 'Caminhos com conceitos, obras e verbetes usam a biblioteca: entre com o PIN.' }); return; }
+      const ponta = async (id) => {
+        const p = lerPassagemId(id);
+        if (p) return { chaves: [p.ini], ligacoes: new Map() };
+        const g = grafo();
+        if (id.startsWith('c:')) await expandirConceito(db, g, id.slice(2), bib);
+        else if (id.startsWith('o:')) await expandirObra(db, g, id.slice(2), [], bib);
+        else if (id.startsWith('l:')) { const [, fonte, ...resto] = id.split(':'); await expandirVerbete(db, g, fonte, resto.join(':'), bib); }
+        else if (id.startsWith('d:')) await expandirDescoberta(db, g, +id.slice(2), bib);
+        const s = g.saida();
+        const ligacoes = new Map();
+        for (const a of s.arestas) {
+          const outro = a.de === id ? a.para : a.para === id ? a.de : null;
+          const pp = outro && lerPassagemId(outro);
+          if (pp && !ligacoes.has(pp.ini)) ligacoes.set(pp.ini, a);
+        }
+        return { chaves: [...ligacoes.keys()].slice(0, 12), ligacoes };
+      };
+      const [A, Z] = await Promise.all([ponta(deId), ponta(paraId)]);
+      if (!A.chaves.length || !Z.chaves.length) { res.json({ ok: true, passos: [], nos: [], arestas: [], aviso: 'Uma das pontas não tem passagens documentadas para começar o caminho.' }); return; }
+      const c = await caminho(db, A.chaves, Z.chaves);
+      if (!c) { res.json({ ok: true, passos: [], nos: [], arestas: [], aviso: 'Nenhum caminho curto (até 4 passos) pelas fontes atuais.' }); return; }
       const g = grafo();
       for (let i = 0; i < c.length; i++) {
         g.no(passagemNo(c[i], c[i], bib));
-        if (i) g.aresta({ de: idP(c[i - 1], c[i - 1]), para: idP(c[i], c[i]), tipo: 'caminho', natureza: 'interpretacao', peso: 1, explica: 'Passo do caminho (referência cruzada OpenBible, em qualquer sentido).', credito: CREDITO_OB });
+        if (i) g.aresta({ de: idP(c[i - 1], c[i - 1]), para: idP(c[i], c[i]), tipo: 'caminho', natureza: 'interpretacao', classe: 'interpretacao', peso: 1, explica: 'Passo do caminho: referência cruzada OpenBible (em qualquer sentido).', credito: CREDITO_OB });
       }
-      res.json({ ok: true, passos: c.map((k) => idP(k, k)), ...g.saida() });
+      const passos = c.map((k) => idP(k, k));
+      const pontaAresta = (id, k, ida, lig) => {
+        if (lerPassagemId(id)) return;
+        const a = lig.get(k);
+        g.aresta({ de: ida ? id : idP(k, k), para: ida ? idP(k, k) : id, tipo: a ? a.tipo : 'mencao', natureza: a ? a.natureza : 'documental', classe: a ? a.classe : 'tematica', peso: 1,
+          explica: (a && a.explica) || 'Ligação documentada da ponta do caminho.', evidencias: a && a.evidencias });
+      };
+      pontaAresta(deId, c[0], true, A.ligacoes);
+      pontaAresta(paraId, c[c.length - 1], false, Z.ligacoes);
+      res.json({ ok: true, passos: [lerPassagemId(deId) ? null : deId, ...passos, lerPassagemId(paraId) ? null : paraId].filter(Boolean), ...g.saida() });
       return;
     }
     if (!aberto) { res.json({ ok: false, motivo: 'particular', err: 'Entre com o PIN para usar esta parte do NEXUS.' }); return; }
@@ -805,7 +890,8 @@ module.exports = async (req, res) => {
       const bib = await carregarBiblia(proto + '://' + host);
       const p = lerPassagemId(b.id);
       if (!p) { res.json({ ok: false, err: 'escolha uma passagem' }); return; }
-      const r = acao === 'descobrir' ? await descobrir(db, p.ini, p.fim, bib) : await explicar(db, p.ini, p.fim, bib);
+      const chaveD = acao + '|' + b.id;
+      const r = lembrar(chaveD) || guardar(chaveD, acao === 'descobrir' ? await descobrir(db, p.ini, p.fim, bib) : await explicar(db, p.ini, p.fim, bib));
       res.json({ ok: true, ...r });
       return;
     }

@@ -145,3 +145,27 @@ details.ev summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--o
   .legenda{display:none}
   .filtros{max-width:calc(100% - 24px)}
 }
+
+/* ═══ versão 2 (19/11/2026): classes de relação, abas, grupos, controle do pesquisador ═══ */
+:root{ --c-textual:#14284B; --c-documental:#3D6B9E; --c-tematica:#2F6F73; --c-interpretacao:#B8912F; --c-hipotese:#C46A12; --c-inferencia:#8C3B3B; }
+.nat-textual{background:var(--c-textual)} .nat-documental{background:var(--c-documental)} .nat-tematica{background:var(--c-tematica)}
+.nat-interpretacao{background:var(--c-interpretacao)} .nat-hipotese{background:var(--c-hipotese)} .nat-inferencia{background:var(--c-inferencia)}
+.toast{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:9;background:var(--marinho);color:#fff;border-radius:12px;padding:10px 16px;font-size:13.5px;max-width:min(560px,calc(100% - 32px));box-shadow:var(--sombra)}
+.rotulos-grupos{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.rotulo-grupo{position:absolute;transform:translate(-50%,-50%);font:600 12px/1.2 Inter,system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:rgba(20,40,75,.55);background:rgba(251,248,241,.78);border:1px solid rgba(168,132,63,.35);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.bt-ico[aria-pressed="true"]{background:var(--marinho);color:#fff;border-color:var(--marinho)}
+.abas{display:flex;gap:4px;border-bottom:1px solid var(--linha);margin:14px 0 10px;overflow-x:auto}
+.aba{border:none;background:none;padding:8px 12px;font-weight:600;font-size:13.5px;color:var(--mineral);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;min-height:40px}
+.aba.ativa{color:var(--marinho);border-bottom-color:var(--ouro)}
+.controles{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.controles .bt{height:34px;font-size:12.5px;padding:0 10px}
+.controles .bt.ligado{background:var(--ouro-claro);border-color:var(--ouro)}
+.grau{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.grau .nat{font-size:11.5px}
+.sugestao{display:block;width:100%;text-align:left;border:1px dashed var(--linha);background:var(--marfim);border-radius:10px;padding:8px 10px;margin:6px 0;cursor:pointer;font-size:13.5px;color:var(--marinho)}
+.sugestao:hover{border-color:var(--ouro)}
+textarea.notas{width:100%;min-height:160px;border:1px solid var(--linha);border-radius:10px;padding:10px;font:inherit;background:#FFFDF9;resize:vertical}
+.filtros .desab{opacity:.5}
+.busca-mapa{width:100%;height:36px;border:1px solid var(--linha);border-radius:8px;padding:0 10px;font:inherit;margin:2px 0 8px}
+.caminho-lista{margin:8px 0;padding-left:18px}
+.caminho-lista li{margin:4px 0}
