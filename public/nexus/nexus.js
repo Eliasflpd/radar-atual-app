@@ -16,6 +16,13 @@ const TIPOS = {
   conceito:   { nome: 'Conceito',   cor: '#2F6F73', tam: 8 },
   verbete:    { nome: 'Termo original (léxico)', cor: '#4F7A5A', tam: 6 },
   descoberta: { nome: 'Descoberta', cor: '#8C3B3B', tam: 6 },
+  pessoa:     { nome: 'Pessoa', cor: '#7A4E2D', tam: 6 },
+  lugar:      { nome: 'Lugar', cor: '#6E8B3D', tam: 6 },
+  evento:     { nome: 'Acontecimento', cor: '#B5651D', tam: 6 },
+  documento:  { nome: 'Obra/documento citado', cor: '#5E6E8C', tam: 6 },
+  instituicao:{ nome: 'Instituição/comunidade', cor: '#8A6D3B', tam: 5 },
+  tradicao:   { nome: 'Tradição interpretativa', cor: '#3F6E8C', tam: 6 },
+  termo:      { nome: 'Termo grego/hebraico', cor: '#2E7D6E', tam: 5 },
   mais:       { nome: 'Mais elementos', cor: '#B9BEC6', tam: 6 },
 };
 // MODELO DE EVIDÊNCIAS EM 3 DIMENSÕES. A cor do traço é o ESTADO epistemológico (o quanto a relação está provada);
@@ -29,10 +36,10 @@ const CLASSES = {   // = estados epistemológicos (o nome CLASSES ficou da V2)
 };
 const NATRELS = { textual: 'Textual', documental: 'Documental', tematica: 'Temática', historica: 'Histórica', lexical: 'Lexical', interpretativa: 'Interpretativa' };
 const METODOS = { referencia_cruzada: 'Referência cruzada', citacao_literal: 'Citação literal', co_citacao: 'Co-citação', correspondencia_lexical: 'Correspondência lexical',
-  associacao_tematica: 'Associação temática', caminho_grafo: 'Caminho de grafo', identificacao_documental: 'Identificação documental', analise_ia: 'Análise por IA' };
+  associacao_tematica: 'Associação temática', identificacao_entidade: 'Identificação de entidade', caminho_grafo: 'Caminho de grafo', identificacao_documental: 'Identificação documental', analise_ia: 'Análise por IA' };
 const ESTADO_ANTIGO = { textual: 'direta', documental: 'direta', tematica: 'interpretacao', interpretacao: 'interpretacao', hipotese: 'hipotese', inferencia: 'inferencia' };
 const AREAS = {
-  passagens: 'Passagens bíblicas', autores: 'Autores', obras: 'Obras', conceitos: 'Conceitos', idiomas: 'Idiomas originais',
+  passagens: 'Passagens bíblicas', autores: 'Autores', pessoas: 'Pessoas (bíblicas e históricas)', lugares: 'Lugares', obras: 'Obras', conceitos: 'Conceitos', idiomas: 'Idiomas originais',
   historia: 'História', arqueologia: 'Arqueologia', patristica: 'Patrística', judaica: 'Tradição judaica', interpretacoes: 'Interpretações teológicas', descobertas: 'Descobertas da Oficina',
 };
 const CATEGORIA_AREA = { lexico: 'idiomas', patristica: 'patristica', judaica: 'judaica', 'contexto-judaico': 'historia', historia: 'historia', comentario: 'interpretacoes', pregacao: 'interpretacoes' };
@@ -99,6 +106,12 @@ function areasDoNo(a) {
     case 'verbete': return ['idiomas'];
     case 'descoberta': return ['descobertas'];
     case 'obra': return ['obras', CATEGORIA_AREA[d.categoria] || 'interpretacoes'];
+    case 'pessoa': return ['pessoas'];
+    case 'lugar': return ['lugares'];
+    case 'evento': case 'instituicao': return ['historia'];
+    case 'documento': return ['obras'];
+    case 'tradicao': return ['interpretacoes'];
+    case 'termo': return ['idiomas'];
     default: return [];
   }
 }
@@ -309,7 +322,7 @@ function cabecalhoNo(id) {
   const t = TIPOS[a.tipo] || {};
   const controles = [
     `<button class="bt bt-ouro" data-acao="expandir" data-id="${esc(id)}">${S.expandidos.has(id) ? 'Expandir de novo' : 'Expandir conexões'}</button>`,
-    a.tipo === 'passagem' ? `<button class="bt" data-acao="descobrir" data-id="${esc(id)}">Descobrir</button>` : '',
+    a.tipo === 'passagem' ? `<button class="bt" data-acao="descobrir" data-id="${esc(id)}">Descobrir</button><button class="bt" data-acao="entidades" data-id="${esc(id)}">Entidades</button>` : '',
     S.origemCaminho && S.origemCaminho !== id ? `<button class="bt" data-acao="caminho" data-id="${esc(id)}">Caminho desde ${esc(lab(S.origemCaminho))}</button>` : `<button class="bt" data-acao="origem" data-id="${esc(id)}">Origem de caminho</button>`,
   ].join('');
   const extras = S.modo === 'mapa' ? `<div class="controles">
@@ -511,6 +524,25 @@ async function caminhoEntre(de, para, forcarFontes) {
     mesclar(j, de);
     S.origemCaminho = null;
     mostrarCaminho(j.passos.filter((p) => S.graph.hasNode(p)), 'Caminho INDIRETO encontrado nas fontes (referências cruzadas e ligações documentadas das pontas). Não demonstra dependência literária direta.');
+  } finally { ocupado(false); }
+}
+
+// ── entidades (piloto): pessoas, lugares, acontecimentos, obras, tradições e termos nas fontes da passagem ──
+async function entidades(id) {
+  if (!S.aberto) { pedirPin(); return; }
+  ocupado(true);
+  try {
+    const j = await api({ acao: 'entidades', id }, true);
+    if (!j.ok) { if (j.motivo === 'particular') pedirPin(); else aviso(j.err || 'Falhou.'); return; }
+    mesclar(j, id);
+    const amb = (j.ambiguas || []).slice(0, 12).map((a) => `<div class="ev-item"><b>${esc(a.forma)}</b> pode ser: ${esc(a.opcoes.join(' · '))}<q>${esc(a.contexto)}</q><div class="nota">${esc(a.fonte)} · trecho ${esc(a.trecho)} · posição ${a.pos}</div></div>`).join('');
+    const cand = (j.candidatos || []).map((c) => `<span class="etq" title="${esc(c.exemplo)}">${esc(c.forma)} (${c.ocorrencias})</span>`).join(' ');
+    const html = `<span class="etq">Entidades (piloto)</span><h2>${esc(lab(id))}</h2>
+      <p class="nota">${j.resumo.entidades} entidades e ${j.resumo.mencoes} menções em ${j.resumo.trechos} trechos (${j.resumo.ms} ms). As principais entraram no mapa; cada uma mostra as menções com obra, camada (texto antigo, provável editor, obra moderna) e posição no trecho.</p>
+      <h3>Ambíguas (não atribuídas)</h3>${amb || '<p class="nota">Nenhuma.</p>'}
+      <h3>Candidatas para revisão (fora do catálogo; não unidas a nada)</h3><p>${cand || '<span class="nota">Nenhuma.</span>'}</p>`;
+    if (S.modo === 'lista') $('lista').innerHTML = `<div class="cartao">${html}</div>`;
+    else { $('painel-corpo').innerHTML = html; $('painel').hidden = false; }
   } finally { ocupado(false); }
 }
 
@@ -793,6 +825,7 @@ function ligarEventos() {
     switch (t.dataset.acao) {
       case 'expandir': expandir(id).then(() => selecionar(id)); break;
       case 'descobrir': descobrir(id); break;
+      case 'entidades': entidades(id); break;
       case 'explicar': explicar(id); break;
       case 'origem': S.origemCaminho = id; aviso('Origem marcada. Agora escolha outro elemento e toque em "Caminho desde…".'); selecionar(id); break;
       case 'caminho': caminhoEntre(S.origemCaminho, id); break;
