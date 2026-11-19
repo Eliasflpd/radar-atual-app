@@ -1,0 +1,147 @@
+/* NEXUS BÍBLICO — identidade própria (marfim, azul-marinho, dourado discreto, cinza mineral).
+   Não depende de assets/radar.css: o NEXUS tem visual próprio dentro do RADAR. */
+:root{
+  --marfim:#FBF8F1; --papel:#FFFFFF; --marinho:#14284B; --marinho-2:#24406E; --ouro:#A8843F; --ouro-claro:#E9DCC0;
+  --mineral:#5F6672; --mineral-2:#8A909A; --linha:#E5DFD2; --texto:#1B2333; --texto-2:#4A5262;
+  --doc:#14284B; --est:#9AA1AB; --int:#B8912F; --hip:#C46A12; --ia:#8C3B3B; --nv:#B4475B;
+  --sombra:0 10px 30px rgba(20,40,75,.10), 0 2px 6px rgba(20,40,75,.06);
+  --raio:14px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--marfim);color:var(--texto);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+body{display:flex;flex-direction:column;overflow:hidden}
+
+/* ── topo ─────────────────────────────────────────────── */
+.topo{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--papel);border-bottom:1px solid var(--linha);flex-wrap:wrap}
+.voltar{display:flex;align-items:center;gap:2px;color:var(--mineral);text-decoration:none;font-weight:600;font-size:13px;min-height:40px;padding:0 6px 0 0}
+.voltar svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2}
+.marca{display:flex;align-items:center;gap:10px;min-width:0}
+.marca-ico{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--marinho);flex-shrink:0}
+.marca-ico svg{width:22px;height:22px;fill:none;stroke:#E9DCC0;stroke-width:1.7;stroke-linecap:round}
+.marca b{display:block;font:700 19px/1.1 "Cormorant Garamond",Georgia,serif;letter-spacing:2px;color:var(--marinho)}
+.marca small{display:block;font-size:11.5px;color:var(--mineral-2);letter-spacing:.3px}
+.busca{display:flex;gap:8px;flex:1;min-width:240px;max-width:460px}
+.busca input{flex:1;min-width:0;height:40px;border:1px solid var(--linha);border-radius:10px;padding:0 12px;font:inherit;background:var(--marfim);color:var(--texto)}
+.busca input:focus{outline:2px solid var(--ouro-claro);border-color:var(--ouro)}
+.acoes{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.bt{height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--linha);background:var(--papel);font-weight:600;font-size:14px;cursor:pointer;color:var(--marinho)}
+.bt:hover{border-color:var(--ouro)}
+.bt-ouro{background:var(--marinho);border-color:var(--marinho);color:#fff}
+.bt-ouro:hover{background:var(--marinho-2)}
+.bt-modo{display:none}
+.chip-acesso{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--linha);background:var(--marfim);font-size:12.5px;font-weight:600;cursor:pointer;color:var(--mineral)}
+.chip-acesso.aberto{background:#EEF3EC;border-color:#BFD3BC;color:#2F5A35}
+
+/* ── trilha ───────────────────────────────────────────── */
+.trilha{display:flex;gap:6px;align-items:center;padding:8px 16px;overflow-x:auto;background:var(--marfim);border-bottom:1px solid var(--linha);min-height:44px;scrollbar-width:thin}
+.trilha:empty{display:none}
+.trilha .passo{white-space:nowrap;border:1px solid var(--linha);background:var(--papel);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;color:var(--texto-2)}
+.trilha .passo.atual{border-color:var(--marinho);color:var(--marinho);font-weight:600}
+.trilha .seta{color:var(--mineral-2);font-size:12px}
+.trilha .rot{font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--mineral-2);margin-right:4px}
+
+/* ── palco ────────────────────────────────────────────── */
+.palco{position:relative;flex:1;min-height:0}
+.mapa{position:absolute;inset:0;background:radial-gradient(1200px 700px at 50% 45%,#FFFFFF 0%,var(--marfim) 70%)}
+.lista{position:absolute;inset:0;overflow-y:auto;padding:14px 16px 90px;background:var(--marfim)}
+
+.filtros{position:absolute;top:12px;left:12px;z-index:5;max-width:280px}
+.filtros-alca{height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--linha);background:var(--papel);font-weight:600;font-size:13px;color:var(--marinho);cursor:pointer;box-shadow:var(--sombra)}
+.filtros-corpo{display:none;margin-top:8px;background:var(--papel);border:1px solid var(--linha);border-radius:var(--raio);padding:12px 14px;box-shadow:var(--sombra);max-height:calc(100vh - 220px);overflow-y:auto}
+.filtros.aberto .filtros-corpo{display:block}
+.filtros h4{margin:10px 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--mineral-2)}
+.filtros h4:first-child{margin-top:0}
+.filtros label{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:3px 0;cursor:pointer}
+.filtros input[type=checkbox]{width:18px;height:18px;accent-color:var(--marinho)}
+.filtros input[type=range]{width:100%;accent-color:var(--ouro)}
+.amostra{width:12px;height:12px;border-radius:50%;display:inline-block;flex-shrink:0}
+.amostra.linha{width:18px;height:3px;border-radius:2px}
+
+.legenda{position:absolute;left:12px;bottom:12px;z-index:4;background:rgba(255,255,255,.92);border:1px solid var(--linha);border-radius:12px;padding:8px 12px;font-size:12px;color:var(--texto-2);display:flex;flex-wrap:wrap;gap:4px 12px;max-width:min(560px,calc(100% - 90px))}
+.legenda span{display:inline-flex;align-items:center;gap:6px}
+.zoom{position:absolute;right:12px;bottom:12px;z-index:4;display:flex;flex-direction:column;gap:6px}
+.bt-ico{width:40px;height:40px;border-radius:10px;border:1px solid var(--linha);background:var(--papel);font-size:20px;color:var(--marinho);cursor:pointer;box-shadow:var(--sombra)}
+.carregando{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:6;background:var(--marinho);color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;display:flex;gap:10px;align-items:center;box-shadow:var(--sombra)}
+.carregando span{width:12px;height:12px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:gira .8s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+.vazio{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--texto-2);z-index:2}
+.vazio h2{font:600 30px/1.2 "Cormorant Garamond",Georgia,serif;color:var(--marinho);margin:0 0 8px}
+.sugestoes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.sugestoes button{border:1px solid var(--linha);background:var(--papel);border-radius:999px;padding:8px 14px;cursor:pointer;color:var(--marinho);font-weight:600}
+
+/* ── painel de detalhes / evidências ─────────────────── */
+.painel{position:absolute;top:12px;right:12px;bottom:12px;width:min(420px,44vw);z-index:7;background:var(--papel);border:1px solid var(--linha);border-radius:var(--raio);box-shadow:var(--sombra);overflow-y:auto;padding:18px 18px 24px}
+.painel-fechar{position:absolute;top:8px;right:8px;width:36px;height:36px;border:none;background:transparent;font-size:24px;color:var(--mineral);cursor:pointer;border-radius:8px}
+.painel h2,.cartao h2{font:600 24px/1.2 "Cormorant Garamond",Georgia,serif;color:var(--marinho);margin:2px 34px 6px 0}
+body.modo-lista .zoom,body.modo-lista .legenda{display:none}
+body.modo-lista .filtros{position:fixed;top:auto;bottom:16px;left:16px}
+body.modo-lista .filtros-corpo{position:absolute;bottom:46px;left:0;width:min(300px,calc(100vw - 32px));max-height:60vh}
+.painel h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--mineral-2);margin:18px 0 8px}
+.etq{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--marfim);border:1px solid var(--linha);color:var(--texto-2)}
+.verso{font:500 17px/1.5 "Cormorant Garamond",Georgia,serif;color:var(--texto);background:var(--marfim);border-left:3px solid var(--ouro);padding:10px 12px;border-radius:0 10px 10px 0;margin:10px 0}
+.botoes{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.botoes .bt{height:38px;font-size:13.5px}
+.lig{border:1px solid var(--linha);border-radius:12px;padding:10px 12px;margin:8px 0;background:#FFFDF9}
+.lig-topo{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lig-alvo{font-weight:600;color:var(--marinho);cursor:pointer;background:none;border:none;padding:0;text-align:left;font-size:14.5px}
+.lig-alvo:hover{text-decoration:underline}
+.lig p{margin:6px 0 0;font-size:13.5px;color:var(--texto-2)}
+.nat{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;color:#fff;white-space:nowrap}
+.nat-documental{background:var(--doc)} .nat-estabelecido{background:var(--est)} .nat-interpretacao{background:var(--int)}
+.nat-hipotese{background:var(--hip)} .nat-inferencia_ia{background:var(--ia)} .nat-nao_verificada{background:var(--nv)}
+details.ev{margin-top:8px}
+details.ev summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ouro)}
+.ev-item{margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--marfim);font-size:13px}
+.ev-item b{color:var(--marinho)}
+.ev-item q{display:block;margin-top:4px;color:var(--texto);font-style:italic;quotes:"“" "”"}
+.nota{font-size:12.5px;color:var(--mineral);margin-top:10px}
+.aviso{font-size:13px;background:#FFF7E8;border:1px solid #F0DDB5;color:#7A5A16;border-radius:10px;padding:8px 10px;margin:10px 0}
+
+/* blocos do motor de descoberta */
+.bloco{border-top:1px solid var(--linha);padding-top:12px;margin-top:12px}
+.bloco-topo{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.bloco h4{margin:0;font-size:15px;color:var(--marinho)}
+.bloco .como{font-size:12.5px;color:var(--mineral);margin:4px 0 6px}
+.item{display:block;width:100%;text-align:left;border:1px solid var(--linha);background:#FFFDF9;border-radius:10px;padding:8px 10px;margin:6px 0;cursor:pointer}
+.item:hover{border-color:var(--ouro)}
+.item b{color:var(--marinho);font-size:14px}
+.item small{display:block;color:var(--texto-2);font-size:12.5px;margin-top:2px}
+.explicacao{background:var(--marfim);border:1px solid var(--linha);border-radius:12px;padding:12px 14px;font-size:14.5px;line-height:1.6}
+.explicacao p{margin:0 0 10px}
+.marca-ev{border:none;background:var(--marinho);color:#fff;font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 5px;margin:0 1px;cursor:pointer;vertical-align:1px}
+
+/* ── modal ───────────────────────────────────────────── */
+.modal{position:fixed;inset:0;z-index:20;background:rgba(20,40,75,.28);display:grid;place-items:center;padding:16px}
+.modal-caixa{position:relative;background:var(--papel);border-radius:18px;box-shadow:var(--sombra);width:min(520px,100%);max-height:86vh;overflow-y:auto;padding:22px 20px}
+.modal h2{font:600 26px/1.2 "Cormorant Garamond",Georgia,serif;color:var(--marinho);margin:0 30px 8px 0}
+.modal input[type=text],.modal input[type=password]{width:100%;height:44px;border:1px solid var(--linha);border-radius:10px;padding:0 12px;font:inherit;margin:8px 0}
+.modal .pin{letter-spacing:.5em;text-align:center;font-size:22px}
+.inv{display:flex;align-items:center;gap:8px;border:1px solid var(--linha);border-radius:10px;padding:8px 10px;margin:6px 0}
+.inv button.abrir{flex:1;text-align:left;border:none;background:none;cursor:pointer;color:var(--marinho);font-weight:600}
+.inv small{color:var(--mineral-2)}
+
+/* ── modo trilha (lista) ─────────────────────────────── */
+.lista .cartao{background:var(--papel);border:1px solid var(--linha);border-radius:var(--raio);padding:16px;box-shadow:var(--sombra);margin-bottom:14px}
+.lista .grupo h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--mineral-2);margin:18px 2px 6px}
+
+/* ── tablet em pé e celular ─────────────────────────── */
+@media (max-width:1024px){
+  .marca small{display:none}
+  .painel{width:min(400px,56vw)}
+}
+@media (max-width:760px){
+  body{font-size:15px}
+  .topo{gap:8px;padding:8px 12px}
+  .marca b{font-size:16px;letter-spacing:1.4px}
+  .marca-ico{width:32px;height:32px}
+  .busca{order:3;max-width:none;flex-basis:100%}
+  .acoes{margin-left:auto}
+  .acoes .bt{height:36px;padding:0 10px;font-size:13px}
+  #bt-investigacoes{display:none}
+  .bt-modo{display:inline-block}
+  .painel{top:auto;left:0;right:0;bottom:0;width:auto;max-height:72vh;border-radius:18px 18px 0 0}
+  .legenda{display:none}
+  .filtros{max-width:calc(100% - 24px)}
+}

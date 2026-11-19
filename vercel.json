@@ -163,6 +163,10 @@
       "destination": "/api/dados?fn=oficina"
     },
     {
+      "source": "/api/nexus",
+      "destination": "/api/dados?fn=nexus"
+    },
+    {
       "source": "/api/fontes",
       "destination": "/api/dados?fn=fontes"
     },

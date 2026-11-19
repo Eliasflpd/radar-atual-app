@@ -4565,13 +4565,8 @@ function nhAbrirProxima(){
   var p=nhProxima();
   try{ abrirEbdTurma(p.turma); if(p.idx>=0) abrirLicaoDetalhe(p.idx); }catch(e){ abrirEbd(); }
 }
-// NEXUS BÍBLICO (19/11/2026): o bloco já está na tela inicial; o conteúdo entra depois (prompt do Elias)
-function nhNexus(){
-  var t=document.createElement('div');
-  t.textContent='NEXUS BÍBLICO: em breve';
-  t.style.cssText='position:fixed;left:50%;bottom:110px;transform:translateX(-50%);z-index:9500;background:#0E1F36;color:#F1F4F8;border:1px solid rgba(233,181,76,.5);border-radius:12px;padding:12px 20px;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.4)';
-  document.body.appendChild(t); setTimeout(function(){t.remove();},2200);
-}
+// NEXUS BÍBLICO (19/11/2026): o bloco da tela inicial abre o mapa de conhecimento (public/nexus/, motor em api/_lib/nexus.js)
+function nhNexus(){ location.href='/nexus/'; }
 function nhOuvir(){
   var f=document.createElement('div'); f.className='nh-folha';
   f.innerHTML='<div><button data-v="m">🎵 Músicas</button><button data-v="p">🎙️ Pregações</button><button class="x" data-v="x">Fechar</button></div>';
