@@ -28,6 +28,7 @@ const { Client } = require('pg');
 const crypto = require('crypto');
 const R = require('./oficina-refs.js');
 const { liberado } = require('./livro-particular.js');
+const IA = require('./nexus-ia.js');
 
 const CREDITO_OB = 'OpenBible.info, CC-BY (referências cruzadas)';
 const LIM_TRECHO = 300;
@@ -54,6 +55,7 @@ function bancos() {
     return abertos[qual];
   }
   return {
+    temNexus() { return !!csN(); },
     async q(qual, sql, args) {
       const c = await abrir(qual);
       if (!c) return [];
@@ -875,7 +877,7 @@ async function descobrir(db, ini, fim, bib) {
 }
 
 // ═══ EXPLICAR (a IA interpreta, citando as evidências por número) ══════════════════════════
-async function explicar(db, ini, fim, bib) {
+async function explicar(db, ini, fim, bib, quem) {
   const r = await descobrir(db, ini, fim, bib);
   const evid = [];
   for (const b of r.blocos) {
@@ -891,14 +893,14 @@ async function explicar(db, ini, fim, bib) {
   const sys = 'Você é o motor de descoberta do NEXUS BÍBLICO. Explique em português do Brasil, para um pesquisador, o que as evidências abaixo mostram sobre a passagem. REGRAS INEGOCIÁVEIS: (1) use SOMENTE as evidências fornecidas; não acrescente fatos, autores, datas ou citações de memória; (2) toda frase com afirmação deve terminar com a marca da evidência entre colchetes, por exemplo [E3] ou [E2][E7]; (3) diga a classe da relação conforme o campo entre parênteses: textual (citação comprovada no texto), documental (comentário dedicado), temática, interpretação (curadoria OpenBible), hipótese (cálculo do sistema) ou inferência (IA, não verificada); (4) trate co-citação como hipótese a examinar, nunca como fato; (5) se algo não tem evidência suficiente, diga isso; (6) no máximo 5 parágrafos curtos, sem títulos, sem listas.';
   const user = `Passagem: ${r.foco.rotulo} — "${r.foco.texto || ''}"\n\nEVIDÊNCIAS:\n` + evid.map((e) =>
     `[E${e.n}] (${e.natureza}) ${e.bloco} — ${e.item}${e.detalhe ? ' (' + e.detalhe + ')' : ''}. Fonte: ${e.autor || ''}, ${e.obra || ''}${e.secao ? ', ' + e.secao : ''}. Trecho: "${e.trecho}"`).join('\n');
-  const { iaTexto } = await import('./ia.js');
-  const rr = await iaTexto({ sys, user, temperature: 0.2, max_tokens: 1100, tag: 'nexus' });
+  // A IA passa pela camada do NEXUS (modelo por tarefa, orçamento, registro de custo, reaproveitamento).
+  const rr = await IA.executar(db, { tarefa: 'explicar', sys, user, dono: quem && quem.dono, investigacao: quem && quem.investigacao });
   // Conferência: só ficam marcas que existem; parágrafo sem nenhuma marca válida é descartado.
   const validos = new Set(evid.map((e) => 'E' + e.n));
   const paragrafos = String(rr.texto || '').split(/\n\s*\n/).map((p) => p.replace(/\[(E\d+)\]/g, (m, k) => (validos.has(k) ? m : ''))).filter((p) => /\[E\d+\]/.test(p));
   const descartados = String(rr.texto || '').split(/\n\s*\n/).filter((p) => p.trim()).length - paragrafos.length;
   return { texto: paragrafos.join('\n\n') || 'A IA não conseguiu produzir uma explicação ancorada nas evidências. Veja os blocos do motor de descoberta.',
-    evidencias: evid, descartados, modelo: rr.modelo || '', provedor: rr.provedorNome || rr.provedor || '' };
+    evidencias: evid, descartados, modelo: rr.modelo || '', provedor: rr.provedor || '', nivel: rr.nivel, custo_usd: rr.custo || 0, reaproveitado: !!rr.reaproveitado, motivo: rr.motivo || '' };
 }
 
 // ═══ INVESTIGAÇÕES SALVAS (banco próprio do NEXUS) ═══════════════════════════════════════
@@ -1040,11 +1042,14 @@ module.exports = async (req, res) => {
       const bib = await carregarBiblia(proto + '://' + host);
       const p = lerPassagemId(b.id);
       if (!p) { res.json({ ok: false, err: 'escolha uma passagem' }); return; }
-      const chaveD = acao + '|' + b.id;
-      const r = lembrar(chaveD) || guardar(chaveD, acao === 'descobrir' ? await descobrir(db, p.ini, p.fim, bib) : await explicar(db, p.ini, p.fim, bib));
+      const chaveD = 'descobrir|' + b.id;
+      const r = acao === 'descobrir' ? (lembrar(chaveD) || guardar(chaveD, await descobrir(db, p.ini, p.fim, bib)))
+        : await explicar(db, p.ini, p.fim, bib, { dono: donoDe(b), investigacao: b.investigacao || null });
       res.json({ ok: true, ...r });
       return;
     }
+    if (acao === 'ia-consumo') { res.json({ ok: true, ...(await IA.consumo(db, b.investigacao || null)) }); return; }
+    if (acao === 'ia-config') { res.json(await IA.salvarConfig(db, b.config || {})); return; }
     if (['salvar', 'listar', 'abrir', 'apagar'].includes(acao)) {
       if (!(await garantirTabela(db).catch(() => false))) { res.json({ ok: false, motivo: 'sem-banco', err: 'O banco do NEXUS ainda não está ligado; a investigação fica salva só neste aparelho.' }); return; }
       const dono = donoDe(b);

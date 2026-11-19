@@ -554,11 +554,11 @@ function trazerItem(bi, ii) {
 async function explicar(id) {
   const caixa = $('explicacao'); if (!caixa) return;
   caixa.innerHTML = '<p class="nota">A IA está lendo as fontes…</p>';
-  const j = await api({ acao: 'explicar', id }, true).catch((e) => ({ ok: false, err: e.message }));
+  const j = await api({ acao: 'explicar', id, investigacao: S.investigacao && S.investigacao.id }).catch((e) => ({ ok: false, err: e.message }));
   if (!j.ok) { caixa.innerHTML = `<div class="aviso">${esc(j.err || 'A IA não respondeu agora.')}</div>`; return; }
   S.evidExp = j.evidencias || [];
   const html = esc(j.texto).split(/\n\s*\n/).map((p) => '<p>' + p.replace(/\[E(\d+)\]/g, (m, n) => `<button class="marca-ev" data-ev="${n}">E${n}</button>`) + '</p>').join('');
-  caixa.innerHTML = `<h3>Interpretação</h3>${etiqueta('inferencia')}<div class="explicacao">${html}</div><p class="nota">Gerado por IA${j.provedor ? ' (' + esc(j.provedor) + ')' : ''} somente a partir das fontes numeradas; parágrafos sem fonte válida foram descartados (${j.descartados || 0}). Toque em E1, E2… para ver a fonte.</p><div id="ev-aberta"></div>`;
+  caixa.innerHTML = `<h3>Interpretação</h3>${etiqueta('inferencia')}<div class="explicacao">${html}</div><p class="nota">Gerado por IA${j.provedor ? ' (' + esc(j.provedor) + (j.modelo ? ' · ' + esc(j.modelo) : '') + ')' : ''} · ${j.reaproveitado ? 'resposta reaproveitada, sem custo' : 'custo US$ ' + Number(j.custo_usd || 0).toFixed(4)}${j.motivo ? ' · ' + esc(j.motivo) : ''} · somente a partir das fontes numeradas; parágrafos sem fonte válida foram descartados (${j.descartados || 0}). Toque em E1, E2… para ver a fonte.</p><div id="ev-aberta"></div>`;
 }
 function mostrarEvidenciaNumero(n) {
   const e = (S.evidExp || []).find((x) => String(x.n) === String(n)); if (!e) return;
@@ -605,6 +605,22 @@ async function investigacoesDialogo() {
   else msg = 'Entre com o PIN para ver as investigações salvas no servidor.';
   const loc = locais();
   const linha = (x, local) => `<div class="inv"><button class="abrir" data-inv="${esc(x.id)}" data-local="${local ? 1 : 0}">${esc(x.titulo)}<br><small>${new Date(x.atualizado_em).toLocaleString('pt-BR')}${local ? ' · só neste aparelho' : ''}</small></button><button class="bt" data-apagar="${esc(x.id)}" data-local="${local ? 1 : 0}">Apagar</button></div>`;
+  if (S.aberto) {
+    const c = await api({ acao: 'ia-consumo', investigacao: S.investigacao && S.investigacao.id });
+    if (c.ok) {
+      const cfg = c.config || {};
+      $('modal-corpo').insertAdjacentHTML('beforeend', `<h3>IA paga (Claude) neste mês</h3><p>US$ ${Number(c.gasto_mes_usd || 0).toFixed(2)} de US$ ${Number(cfg.orcamento_mensal_usd).toFixed(2)} · ${c.chamadas_mes || 0} chamada(s)${S.investigacao ? ` · esta investigação: US$ ${Number(c.gasto_investigacao_usd || 0).toFixed(3)}` : ''}</p>
+        <p class="nota">Modelos: leve ${esc(c.modelos.leve)} · padrão ${esc(c.modelos.padrao)} · profundo ${esc(c.modelos.profundo)}. Quando o limite acaba, o NEXUS desce de modelo e por fim usa a IA gratuita do RADAR.${c.banco ? '' : ' O banco do NEXUS não está ligado aqui: o controle de gasto só vale no site.'}</p>
+        <label class="nota">Limite por mês (US$) <input type="text" id="ia-orc" value="${esc(cfg.orcamento_mensal_usd)}" style="width:90px"></label>
+        <label class="nota">Limite por investigação (US$) <input type="text" id="ia-lim" value="${esc(cfg.limite_investigacao_usd)}" style="width:90px"></label>
+        <label class="nota"><input type="checkbox" id="ia-lig" ${cfg.ligado ? 'checked' : ''}> IA paga ligada</label>
+        <div class="botoes"><button class="bt" id="ia-salvar">Salvar limites</button></div><div id="ia-msg"></div>`);
+      $('ia-salvar').onclick = async () => {
+        const r = await api({ acao: 'ia-config', config: { orcamento_mensal_usd: Number(String($('ia-orc').value).replace(',', '.')), limite_investigacao_usd: Number(String($('ia-lim').value).replace(',', '.')), ligado: $('ia-lig').checked } });
+        $('ia-msg').innerHTML = `<div class="aviso">${r.ok ? 'Limites salvos.' : esc(r.err || 'Não salvou.')}</div>`;
+      };
+    }
+  }
   $('inv-lista').innerHTML = (msg ? `<div class="aviso">${esc(msg)}</div>` : '') + (srv.map((x) => linha(x, false)).join('') + loc.map((x) => linha(x, true)).join('') || '<p class="nota">Nenhuma investigação salva ainda.</p>');
 }
 
