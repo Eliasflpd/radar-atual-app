@@ -425,7 +425,9 @@ function corpoGemini(degrau, modelo, p, stream) {
 function corpoAnthropic(degrau, modelo, p, stream) {
   const { sys, conversa } = normalizarMensagens(p);
   const b = {
-    model: modelo.id,
+    // 19/11/2026 (NEXUS, autorizado pelo Elias): quem chama pode escolher o modelo do Claude em cada chamada
+    // (p.modeloClaude). Sem isso, segue o modelo do degrau, como sempre foi.
+    model: p.modeloClaude || modelo.id,
     max_tokens: p.max_tokens || 2200,
     messages: conversa.map((m) => ({
       role: (m.role === 'assistant' || m.role === 'model') ? 'assistant' : 'user',
@@ -530,7 +532,8 @@ async function tentar(degrau, modelo, chave, p, stream) {
   // Resposta 200 com texto vazio (acontece no Gemini quando o "pensamento" comeu
   // o orçamento) conta como falha — senão o pastor recebia uma tela em branco.
   if (!texto || !texto.trim()) return { ok: false, status: 0, corpo: 'resposta vazia' };
-  return { ok: true, texto };
+  // 19/11/2026 (NEXUS): devolve também os tokens gastos, quando o provedor informa (Claude: usage; Gemini: usageMetadata).
+  return { ok: true, texto, usos: j.usage || j.usageMetadata || null };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -726,7 +729,7 @@ async function cascata(p, stream) {
           if (degrau.pago) {
             console.warn(`[IA:${tag}] ⚠️ CAINDO NO PAGO — ${degrau.nome}/${modelo.id}. Os provedores grátis não atenderam: ${tentativas.join(' | ') || '(nenhum configurado)'}`);
           }
-          return { ...r, provedor: degrau.id, provedorNome: degrau.nome, modelo: modelo.id, pago: !!degrau.pago, ms, tentativas };
+          return { ...r, provedor: degrau.id, provedorNome: degrau.nome, modelo: (degrau.dialeto === 'anthropic' && p.modeloClaude) || modelo.id, pago: !!degrau.pago, ms, tentativas };
         }
 
         const c = classificar(r.status, r.corpo);

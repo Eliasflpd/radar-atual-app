@@ -6,10 +6,11 @@
 <title>NEXUS BÍBLICO</title>
 <meta name="theme-color" content="#FBF8F1">
 <meta name="robots" content="noindex">
+<link rel="icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/nexus/nexus.css?v=1">
+<link rel="stylesheet" href="/nexus/nexus.css?v=4">
 </head>
 <body>
 <!-- NEXUS BÍBLICO — mapa de conhecimento (19/11/2026). O motor está em api/_lib/nexus.js. -->
@@ -38,6 +39,7 @@
 
 <main class="palco">
   <div id="mapa" class="mapa" aria-label="Mapa de conhecimento"></div>
+  <div id="rotulos-grupos" class="rotulos-grupos" aria-hidden="true"></div>
   <div id="lista" class="lista" hidden></div>
 
   <aside class="filtros" id="filtros">
@@ -49,9 +51,12 @@
   <div class="zoom">
     <button class="bt-ico" id="z-mais" aria-label="Aproximar">+</button>
     <button class="bt-ico" id="z-menos" aria-label="Afastar">−</button>
-    <button class="bt-ico" id="z-centro" aria-label="Centralizar">⌖</button>
+    <button class="bt-ico" id="z-centro" aria-label="Enquadrar o mapa" title="Enquadrar o mapa">⌖</button>
+    <button class="bt-ico" id="z-grupos" aria-label="Mostrar grupos de assuntos" title="Grupos de assuntos" aria-pressed="true">◎</button>
+    <button class="bt-ico" id="z-reorganizar" aria-label="Reorganizar" title="Reorganizar (mantém os fixados)">↻</button>
   </div>
   <div class="carregando" id="carregando" hidden><span></span>Buscando nas fontes…</div>
+  <div class="toast" id="toast" hidden></div>
   <div class="vazio" id="vazio" hidden></div>
 
   <aside class="painel" id="painel" aria-live="polite" hidden>
@@ -67,6 +72,6 @@
   </div>
 </div>
 
-<script type="module" src="/nexus/nexus.js?v=1"></script>
+<script type="module" src="/nexus/nexus.js?v=4"></script>
 </body>
 </html>
