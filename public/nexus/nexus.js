@@ -93,6 +93,9 @@ function definirAcesso(aberto) {
   c.classList.toggle('aberto', aberto);
 }
 // Remissões de obras externas (nós "x:") só existem com a porta aberta: sem ela, saem do mapa e das investigações restauradas.
+// contexto para a barra lateral 'Pergunte ao Claude' (só os nomes; nós de obra externa ficam de fora)
+window.NEXUS_CONTEXTO = () => { const no = (id) => (id && S.graph && S.graph.hasNode(id) && !String(id).startsWith('x:') ? { id, rotulo: lab(id) } : null); return { foco: no(S.foco), sel: no(S.sel) }; };
+import('/nexus/conversa.js?v=1').then((m) => m.iniciarConversa()).catch(() => {});
 function tirarExternos() {
   const g = S.graph; if (!g || !g.order) return;
   const fora = g.filterNodes((id) => String(id).startsWith('x:'));

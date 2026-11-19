@@ -202,3 +202,24 @@ body.modo-lista .bt-modo{display:inline-block}
 .rotulo-grupo{pointer-events:auto;cursor:pointer;font-family:inherit}
 .rotulo-grupo:hover{border-color:var(--ouro);color:var(--marinho);background:#fff}
 body.modo-lista .legenda{display:flex;position:static;margin:0 0 12px;max-width:none}
+
+/* barra lateral "Pergunte ao Claude" */
+.conversa{position:absolute;top:12px;left:12px;bottom:12px;width:min(380px,42vw);z-index:8;background:var(--papel);border:1px solid var(--linha);border-radius:var(--raio);box-shadow:var(--sombra);display:flex;flex-direction:column;overflow:hidden}
+.conversa-topo{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:14px 16px 10px;border-bottom:1px solid var(--linha);background:var(--marfim)}
+.conversa-topo b{font-family:"Cormorant Garamond",Georgia,serif;font-size:20px;color:var(--marinho)}
+.conversa-topo small{display:block;color:var(--mineral);font-size:12px}
+.conversa-topo .painel-fechar{position:static}
+.conversa-msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.conversa-boas{color:var(--texto-2);font-size:14px;margin-bottom:4px}
+.conversa-sug{align-self:flex-start;border:1px solid var(--ouro-claro);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;color:var(--marinho);cursor:pointer;text-align:left}
+.conversa-sug:hover{border-color:var(--ouro);background:var(--marfim)}
+.msg{max-width:92%;border-radius:12px;padding:9px 12px;font-size:14px;line-height:1.55}
+.msg p{margin:0 0 8px}.msg p:last-child{margin:0}
+.msg small{display:block;margin-top:6px;color:var(--mineral-2);font-size:11.5px}
+.msg-eu{align-self:flex-end;background:var(--marinho);color:#fff}
+.msg-claude{align-self:flex-start;background:var(--marfim);border:1px solid var(--linha)}
+.conversa-form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--linha)}
+.conversa-form textarea{flex:1;resize:none;border:1px solid var(--linha);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px}
+.conversa-nota{margin:0;padding:0 14px 10px;font-size:11.5px;color:var(--mineral)}
+#bt-conversa[aria-pressed="true"]{border-color:var(--marinho);background:var(--ouro-claro)}
+@media (max-width:760px){.conversa{top:auto;left:0;right:0;bottom:0;width:auto;height:78vh;border-radius:18px 18px 0 0}}
