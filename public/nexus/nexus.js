@@ -69,6 +69,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ler = (k) => { try { return localStorage.getItem(k) || ''; } catch (_) { return ''; } };
 const gravar = (k, v) => { try { localStorage.setItem(k, v); } catch (_) { /* sem armazenamento */ } };
+let ceu = null, carregandoCeu = false, versaoModo = 0;
 const lab = (id) => (S.graph.hasNode(id) ? S.graph.getNodeAttribute(id, 'label') : id);
 
 // ── API (com memória curta no aparelho) ─────────────────────────────────────
@@ -219,7 +220,7 @@ function desenharGrupos() {
       const v = R.graphToViewport({ x: a.x, y: a.y }); x += v.x; y += v.y; n++; minY = Math.min(minY, v.y);
     }
     if (!n) return '';
-    return `<div class="rotulo-grupo" style="left:${(x / n).toFixed(0)}px;top:${(minY - 22).toFixed(0)}px">${esc(gr.nome)} · ${n}</div>`;
+    return `<button class="rotulo-grupo" data-grupo="${S.grupoInfo.indexOf(gr)}" style="left:${(x / n).toFixed(0)}px;top:${(minY - 22).toFixed(0)}px" title="Ver os elementos deste grupo">${esc(gr.nome)} · ${n}</button>`;
   }).join('');
 }
 
@@ -246,7 +247,7 @@ async function trazerMais(idMais) {
   g.dropNode(idMais);
   await expandir(d.alvo, { so: d.so, limite: Math.min(120, d.n + 5) });
 }
-async function explorar(texto) {
+async function explorar(texto, inicial = false) {
   const t = String(texto || '').trim();
   if (!t) return;
   ocupado(true);
@@ -257,28 +258,30 @@ async function explorar(texto) {
     try { history.replaceState(null, '', '?ref=' + encodeURIComponent(t)); } catch (_) {}
     if (!S.graph.hasNode(r.id) || !S.expandidos.has(r.id)) await expandir(r.id);
     if (S.graph.hasNode(r.id)) { S.graph.mergeNodeAttributes(r.id, { fixado: true, fixed: true, x: 0, y: 0 }); }
-    selecionar(r.id, false);
+    selecionar(r.id, false, !inicial || (!carregandoCeu && S.modo !== 'ceu'));
     enquadrar(); setTimeout(enquadrar, 2600);
   } finally { ocupado(false); }
 }
 
 // ── seleção, trilha ────────────────────────────────────────────────────────
-function selecionar(id, centralizar) {
+function selecionar(id, centralizar, mostrarPainel = true) {
   if (!S.graph.hasNode(id)) return;
   if (S.graph.getNodeAttribute(id, 'tipo') === 'mais') { trazerMais(id); return; }
-  S.sel = id; S.selAresta = null; S.caminho = null;
+  S.sel = id; S.selAresta = null; S.caminho = null; if (S.realce) { S.realce = null; montarLegenda(); }
   if (S.trilha[S.trilha.length - 1] !== id) { S.trilha.push(id); if (S.trilha.length > 40) S.trilha.shift(); }
   desenharTrilha();
-  if (S.modo === 'lista') desenharLista(); else painelNo(id);
-  S.renderer && S.renderer.refresh();
-  if (centralizar && S.renderer) centralizarEm(id);
+  if (S.modo === 'lista') desenharLista(); else if (mostrarPainel) painelNo(id);
+  S.renderer?.refresh();
+  if (centralizar) centralizarEm(id);
 }
 function enquadrar() {
+  if (S.modo === 'ceu') { ceu.enquadrar(); return; }
   if (!S.renderer) return;
   const lateral = !$('painel').hidden && !pequeno();
   S.renderer.getCamera().animate({ x: lateral ? 0.66 : 0.5, y: 0.5, ratio: lateral ? 1.25 : 1.05, angle: 0 }, { duration: 400 });
 }
 function centralizarEm(id) {
+  if (S.modo === 'ceu') { ceu.centralizar(id); return; }
   const R = S.renderer;
   if (!R || !S.graph.hasNode(id)) return;
   R.refresh();
@@ -408,7 +411,7 @@ function painelAresta(k) {
     [a].concat(extras).map((d) => `<div class="lig"><div class="lig-topo">${dimensoes(d)}<span class="etq">${esc(TIPO_LIG[d.tipo] || d.tipo)}</span></div><p>${esc(d.explica || '')}</p><p class="nota">${esc((CLASSES[d.classe] || {}).ajuda || '')}</p>${d.credito ? `<p class="nota">${esc(d.credito)}</p>` : ''}${evidenciasHtml(d.evidencias, true)}</div>`).join('') +
     `<div class="botoes"><button class="bt" data-ir="${esc(s)}">Ir para ${esc(lab(s))}</button><button class="bt" data-ir="${esc(t)}">Ir para ${esc(lab(t))}</button></div>`;
   $('painel').hidden = false;
-  S.renderer && S.renderer.refresh();
+  S.renderer?.refresh();
 }
 
 // ── modo trilha (lista; padrão no celular) ──────────────────────────────────
@@ -418,14 +421,56 @@ function desenharLista() {
   el.innerHTML = `<div class="cartao">${cabecalhoNo(S.sel)}<div id="aba-corpo">${conteudoAba(S.sel)}</div></div>`;
 }
 function definirModo(m) {
+  versaoModo++;
+  if (m === 'mapa' && !S.renderer) m = 'lista';
   S.modo = m;
+  document.body.classList.toggle('modo-ceu', m === 'ceu');
+  $('ceu').hidden = m !== 'ceu';
+  $('bt-ceu').setAttribute('aria-pressed', m === 'ceu');
+  $('bt-ceu').textContent = m === 'ceu' && S.renderer ? 'Mapa 2D' : 'Céu Infinito';
+  ceu?.ativar(m === 'ceu');
   document.body.classList.toggle('modo-lista', m === 'lista');
   $('lista').hidden = m !== 'lista';
-  $('mapa').style.visibility = m === 'lista' ? 'hidden' : 'visible';
+  $('mapa').style.visibility = m === 'mapa' ? 'visible' : 'hidden';
   $('bt-modo').textContent = m === 'lista' ? 'Mapa' : 'Trilha';
+  $('bt-modo').hidden = m === 'lista' && !S.renderer && !ceu;
   if (m === 'lista') { $('painel').hidden = true; if (S.aba === 'geral' && pequeno()) S.aba = 'conexoes'; desenharLista(); }
-  else if (S.sel) painelNo(S.sel);
+  else if (S.sel && m === 'mapa') painelNo(S.sel);
   desenharGrupos();
+}
+
+function ceuIndisponivel() {
+  if (S.modo === 'ceu') definirModo('mapa');
+  ceu?.descartar();
+  ceu = null;
+  if (!S.renderer) $('bt-modo').hidden = true;
+  aviso('Céu Infinito indisponível neste navegador.');
+}
+
+async function abrirCeu() {
+  if (carregandoCeu || S.modo === 'ceu') return;
+  const versao = versaoModo;
+  const botao = $('bt-ceu');
+  carregandoCeu = botao.disabled = true;
+  try {
+    if (!ceu) {
+      const { criarCeu } = await import('/nexus/ceu.js?v=9');
+      ceu = criarCeu($('ceu'), S, { visivelNo, visivelAresta, selecionar, expandir, painelAresta, abrirGrupo, indisponivel: ceuIndisponivel });
+    }
+    if (versao === versaoModo) definirModo('ceu');
+  } catch (erro) {
+    console.warn('Céu Infinito:', erro);
+    ceuIndisponivel();
+  } finally {
+    carregandoCeu = botao.disabled = false;
+  }
+}
+
+function previaDoControle(elemento) {
+  const botao = elemento?.closest('button');
+  if (!botao) return null;
+  const id = botao.dataset.ir || botao.dataset.id || (botao.id === 'bt-descobrir' ? S.sel || S.foco : null);
+  return id && S.graph.hasNode(id) && visivelNo(id) ? id : null;
 }
 
 // ── filtros ─────────────────────────────────────────────────────────────────
@@ -464,13 +509,49 @@ function montarFiltros() {
     `<p class="nota">Limite deste aparelho: ${LIMITE} por expansão, ${TETO} no mapa.</p>`;
 }
 function aplicarFiltros() {
-  S.renderer && S.renderer.refresh();
+  S.renderer?.refresh();
   if (S.modo === 'lista') desenharLista(); else if (S.sel && !$('painel').hidden && !S.selAresta) painelNo(S.sel);
   desenharGrupos();
 }
 function montarLegenda() {
-  $('legenda').innerHTML = Object.entries(TIPOS).filter(([k]) => k !== 'mais').map(([, t]) => `<span><i class="amostra" style="background:${t.cor}"></i>${t.nome}</span>`).join('') +
-    Object.values(CLASSES).map((t) => `<span title="${esc(t.ajuda)}"><i class="amostra linha" style="background:${t.cor}"></i>${t.nome}</span>`).join('');
+  const ativo = (k, v) => S.realce && S.realce.k === k && S.realce.v === v ? ' ativo' : '';
+  $('legenda').innerHTML = Object.entries(TIPOS).filter(([k]) => k !== 'mais').map(([k, tp]) => `<button class="leg${ativo('tipo', k)}" data-realce="tipo:${k}" title="Destacar e listar: ${esc(tp.nome)}"><i class="amostra" style="background:${tp.cor}"></i>${tp.nome}</button>`).join('') +
+    Object.entries(CLASSES).map(([k, tp]) => `<button class="leg${ativo('estado', k)}" data-realce="estado:${k}" title="${esc(tp.ajuda)} Toque para destacar e listar."><i class="amostra linha" style="background:${tp.cor}"></i>${tp.nome}</button>`).join('');
+}
+// Realce pela legenda: o mapa destaca só aquele tipo de elemento (ou aquele estado de evidência) e o painel lista tudo
+// o que há dele, cada item levando ao seu lugar no mapa. Tocar de novo desfaz.
+function abrirGrupo(i) {
+  const gr = S.grupoInfo[i]; if (!gr) return;
+  const g = S.graph, ids = gr.ids.filter((id) => g.hasNode(id)).sort((a, b) => g.degree(b) - g.degree(a));
+  S.caminho = { nos: new Set(ids), arestas: new Set(g.filterEdges((k, a, s, d) => ids.includes(s) && ids.includes(d))) };
+  S.renderer && S.renderer.refresh();
+  const html = `<span class="etq">Grupo de assuntos</span><h2>${esc(gr.nome)}</h2><p class="nota">${ids.length} elementos que se ligam mais entre si do que com o resto do mapa (agrupamento automático).</p>` +
+    ids.map((id) => `<div class="lig"><div class="lig-topo"><span class="amostra" style="background:${g.getNodeAttribute(id, 'color')}"></span><button class="lig-alvo" data-ir="${esc(id)}">${esc(lab(id))}</button><span class="etq">${esc((TIPOS[g.getNodeAttribute(id, 'tipo')] || {}).nome || '')}</span></div></div>`).join('') +
+    '<div class="botoes"><button class="bt" data-acao="limpar-caminho">Tirar o destaque</button></div>';
+  if (S.modo === 'lista') $('lista').innerHTML = `<div class="cartao">${html}</div>`;
+  else { $('painel-corpo').innerHTML = html; $('painel').hidden = false; }
+}
+function realcar(k, v) {
+  if (S.realce && S.realce.k === k && S.realce.v === v) { S.realce = null; montarLegenda(); S.renderer && S.renderer.refresh(); if (S.sel) painelNo(S.sel); return; }
+  S.realce = { k, v }; S.caminho = null;
+  montarLegenda(); S.renderer && S.renderer.refresh();
+  const g = S.graph;
+  let html;
+  if (k === 'tipo') {
+    const ids = g.filterNodes((id, a) => a.tipo === v && visivelNo(id, a)).sort((a, b) => g.degree(b) - g.degree(a));
+    html = `<span class="etq">Legenda · ${esc((TIPOS[v] || {}).nome || v)}</span><h2>${ids.length} no mapa</h2>` +
+      (ids.length ? ids.slice(0, 120).map((id) => `<div class="lig"><div class="lig-topo"><span class="amostra" style="background:${g.getNodeAttribute(id, 'color')}"></span><button class="lig-alvo" data-ir="${esc(id)}">${esc(lab(id))}</button><span class="etq">${g.degree(id)} ligação(ões)</span></div></div>`).join('')
+        : '<p class="nota">Nenhum elemento deste tipo no mapa agora. Expanda passagens, use Descobrir ou Entidades.</p>');
+  } else {
+    const ks = g.filterEdges((e, a) => a.dados && a.dados.classe === v && visivelAresta(e));
+    html = `<span class="etq">Legenda · ${esc((CLASSES[v] || {}).nome || v)}</span><h2>${ks.length} ligação(ões)</h2><p class="nota">${esc((CLASSES[v] || {}).ajuda || '')}</p>` +
+      (ks.length ? ks.slice(0, 120).map((e) => { const s = g.source(e), d = g.target(e), a = g.getEdgeAttribute(e, 'dados');
+        return `<div class="lig"><div class="lig-topo"><button class="lig-alvo" data-ir="${esc(s)}">${esc(lab(s))}</button><span class="etq">${esc(TIPO_LIG[a.tipo] || a.tipo)} →</span><button class="lig-alvo" data-ir="${esc(d)}">${esc(lab(d))}</button></div><p>${esc(a.explica || '')}</p>${evidenciasHtml(a.evidencias)}</div>`; }).join('')
+        : '<p class="nota">Nenhuma ligação neste estado no mapa agora.</p>');
+  }
+  html += '<div class="botoes"><button class="bt" data-realce="limpar">Tirar o destaque</button></div>';
+  if (S.modo === 'lista') $('lista').innerHTML = `<div class="cartao">${html}</div>`;
+  else { $('painel-corpo').innerHTML = html; $('painel').hidden = false; }
 }
 
 // ── controle do pesquisador ────────────────────────────────────────────────
@@ -480,7 +561,7 @@ function alternar(id, attr) {
   g.setNodeAttribute(id, attr, v);
   if (attr === 'fixado') g.setNodeAttribute(id, 'fixed', v);
   if (attr === 'oculto') { S.caminho = null; if (v && S.sel === id) { S.sel = null; $('painel').hidden = true; } montarFiltros(); calcularGrupos(); aviso(`"${lab(id)}" ocultado. Para ver de novo: Filtros › Mostrar elementos ocultados.`); }
-  S.renderer.refresh();
+  S.renderer?.refresh();
   if (S.sel === id) (S.modo === 'lista' ? desenharLista : painelNo)(id);
 }
 
@@ -500,7 +581,7 @@ function mostrarCaminho(passos, origemTxt) {
   const g = S.graph, nos = new Set(passos), arestas = new Set();
   for (let i = 1; i < passos.length; i++) { const k = g.edge(passos[i - 1], passos[i]) || g.edge(passos[i], passos[i - 1]); if (k) arestas.add(k); }
   S.caminho = { nos, arestas };
-  S.renderer.refresh();
+  S.renderer?.refresh();
   const linhas = passos.map((p, i) => {
     let rel = '';
     if (i) { const k = g.edge(passos[i - 1], p) || g.edge(p, passos[i - 1]); const d = k && g.getEdgeAttribute(k, 'dados'); if (d) rel = ` ${etiqueta(d.classe)} <span class="nota">${esc(d.explica || '')}</span>`; }
@@ -715,7 +796,12 @@ function iniciarSigma() {
       const r = { ...a };
       if (!visivelNo(id, a)) { r.hidden = true; return r; }
       if (a.oculto) r.color = '#E5E1D6';
-      const cam = S.caminho, foco = S.hover || S.sel;
+      const cam = S.caminho, foco = S.hover || S.sel, rc = S.realce;
+      if (rc && !S.hover) {
+        const dentro = rc.k === 'tipo' ? a.tipo === rc.v : S.graph.someEdge(id, (e, ad) => ad.dados && ad.dados.classe === rc.v);
+        if (!dentro) { r.color = '#E3DED2'; r.label = ''; r.zIndex = 0; } else { r.zIndex = 2; if (rc.k === 'tipo') r.forceLabel = true; }
+        return r;
+      }
       if (cam) { if (!cam.nos.has(id)) { r.color = '#E3DED2'; r.label = ''; r.zIndex = 0; } else { r.zIndex = 2; r.forceLabel = true; r.highlighted = true; } }
       else if (foco && foco !== id && !S.graph.areNeighbors(foco, id)) { r.color = '#D9D4C7'; r.label = a.destaque ? a.label : ''; r.zIndex = 0; }
       else r.zIndex = 1;
@@ -728,7 +814,12 @@ function iniciarSigma() {
     edgeReducer: (k, a) => {
       const r = { ...a };
       if (!visivelAresta(k)) { r.hidden = true; return r; }
-      const cam = S.caminho, foco = S.hover || S.sel;
+      const cam = S.caminho, foco = S.hover || S.sel, rc = S.realce;
+      if (rc && !S.hover) {
+        const dentro = rc.k === 'estado' ? a.dados && a.dados.classe === rc.v : S.graph.getNodeAttribute(S.graph.source(k), 'tipo') === rc.v || S.graph.getNodeAttribute(S.graph.target(k), 'tipo') === rc.v;
+        if (!dentro) { r.color = '#EEE9DE'; r.size = 0.5; } else if (rc.k === 'estado') r.size = a.size * 2;
+        return r;
+      }
       if (cam) { if (!cam.arestas.has(k)) { r.color = '#EEE9DE'; r.size = 0.5; } else { r.size = 4; } }
       else if (foco && !S.graph.hasExtremity(k, foco)) { r.color = '#ECE7DB'; r.size = 0.6; }
       if (k === S.selAresta) r.size = a.size * 2.2;
@@ -771,14 +862,32 @@ function ligarEventos() {
   $('bt-descobrir').onclick = () => { const id = S.sel && S.graph.getNodeAttribute(S.sel, 'tipo') === 'passagem' ? S.sel : S.foco; if (id) descobrir(id); else aviso('Escolha uma passagem primeiro.'); };
   $('bt-salvar').onclick = salvarDialogo;
   $('bt-investigacoes').onclick = investigacoesDialogo;
-  $('bt-modo').onclick = () => { S.trocouModo = true; definirModo(S.modo === 'lista' ? 'mapa' : 'lista'); };
+  $('bt-ceu').onclick = () => {
+    S.trocouModo = true;
+    if (S.modo === 'ceu') definirModo('mapa');
+    else abrirCeu();
+  };
+  $('bt-modo').onclick = () => {
+    S.trocouModo = true;
+    if (S.modo !== 'lista') definirModo('lista');
+    else if (S.renderer) definirModo('mapa');
+    else abrirCeu();
+  };
+  document.body.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'touch') ceu?.prever(previaDoControle(e.target));
+  });
+  document.body.addEventListener('pointerout', (e) => {
+    if (e.pointerType !== 'touch') ceu?.prever(previaDoControle(e.relatedTarget instanceof Element ? e.relatedTarget : null));
+  });
+  document.body.addEventListener('focusin', (e) => ceu?.prever(previaDoControle(e.target)));
+  document.body.addEventListener('focusout', () => ceu?.prever(null));
   $('acesso').onclick = () => { if (!S.aberto) pedirPin(); else investigacoesDialogo(); };
-  $('painel-fechar').onclick = () => { $('painel').hidden = true; S.selAresta = null; S.renderer && S.renderer.refresh(); };
+  $('painel-fechar').onclick = () => { $('painel').hidden = true; S.selAresta = null; S.renderer?.refresh(); };
   $('modal-fechar').onclick = fecharModal;
   $('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') fecharModal(); });
   $('filtros-alca').onclick = () => { const f = $('filtros'); f.classList.toggle('aberto'); $('filtros-alca').setAttribute('aria-expanded', f.classList.contains('aberto')); };
-  $('z-mais').onclick = () => S.renderer.getCamera().animatedZoom({ duration: 250 });
-  $('z-menos').onclick = () => S.renderer.getCamera().animatedUnzoom({ duration: 250 });
+  $('z-mais').onclick = () => S.modo === 'ceu' ? ceu.zoom(0.8) : S.renderer?.getCamera().animatedZoom({ duration: 250 });
+  $('z-menos').onclick = () => S.modo === 'ceu' ? ceu.zoom(1.25) : S.renderer?.getCamera().animatedUnzoom({ duration: 250 });
   $('z-centro').onclick = enquadrar;
   $('z-grupos').onclick = () => { S.grupos = !S.grupos; $('z-grupos').setAttribute('aria-pressed', S.grupos); calcularGrupos(); };
   $('z-reorganizar').onclick = () => rodarLayout(3000);
@@ -802,8 +911,10 @@ function ligarEventos() {
 
   // delegação: painel, lista, trilha, modal, sugestões
   document.body.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-acao],[data-ir],[data-id].passo,[data-bloco],[data-ev],[data-ref],[data-inv],[data-apagar],[data-aba]');
+    const t = e.target.closest('[data-acao],[data-ir],[data-id].passo,[data-bloco],[data-ev],[data-ref],[data-inv],[data-apagar],[data-aba],[data-realce],[data-grupo]');
     if (!t) return;
+    if (t.dataset.realce) { if (t.dataset.realce === 'limpar') { S.realce = null; montarLegenda(); S.renderer && S.renderer.refresh(); if (S.sel) painelNo(S.sel); else $('painel').hidden = true; return; } const [k, v] = t.dataset.realce.split(':'); realcar(k, v); return; }
+    if (t.dataset.grupo != null) { abrirGrupo(+t.dataset.grupo); return; }
     if (t.dataset.aba) { S.aba = t.dataset.aba; if (S.sel) (S.modo === 'lista' ? desenharLista : painelNo)(S.sel); return; }
     if (t.dataset.ref) { $('ref').value = t.dataset.ref; explorar(t.dataset.ref); return; }
     if (t.classList.contains('passo')) { selecionar(t.dataset.id, true); return; }
@@ -831,7 +942,7 @@ function ligarEventos() {
       case 'caminho': caminhoEntre(S.origemCaminho, id); break;
       case 'caminho-foco': caminhoEntre(S.foco, id); break;
       case 'caminho-fontes': caminhoEntre(t.dataset.de, t.dataset.para, true); break;
-      case 'limpar-caminho': S.caminho = null; S.renderer.refresh(); if (S.sel) painelNo(S.sel); break;
+      case 'limpar-caminho': S.caminho = null; S.renderer?.refresh(); if (S.sel) painelNo(S.sel); break;
       case 'centralizar': selecionar(id, true); break;
       case 'fixar': alternar(id, 'fixado'); break;
       case 'destacar': alternar(id, 'destaque'); break;
@@ -854,11 +965,15 @@ try {
     location.reload();
   });
 } catch (_) { /* sem service worker */ }
-iniciarSigma();
+try { iniciarSigma(); } catch (erro) {
+  S.renderer = null;
+  console.warn('Mapa 2D:', erro);
+}
 ligarEventos();
 montarLegenda();
 montarFiltros();
 definirAcesso(false);
 atualizarVazio();
-if (pequeno()) definirModo('lista');
-explorar(new URLSearchParams(location.search).get('ref') || 'João 1:1');
+if (pequeno() || !S.renderer) definirModo('lista');
+abrirCeu();
+explorar(new URLSearchParams(location.search).get('ref') || 'João 1:1', true);
