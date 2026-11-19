@@ -44,7 +44,7 @@ const AREAS = {
 };
 const CATEGORIA_AREA = { lexico: 'idiomas', patristica: 'patristica', judaica: 'judaica', 'contexto-judaico': 'historia', historia: 'historia', comentario: 'interpretacoes', pregacao: 'interpretacoes' };
 const CATEGORIAS = { comentario: 'Comentário', lexico: 'Léxico', patristica: 'Patrística', judaica: 'Fonte judaica', 'contexto-judaico': 'Contexto judaico', historia: 'História', pregacao: 'Pregação' };
-const TIPO_LIG = { refcruz: 'referência cruzada', cita: 'cita', 'cita-lxx': 'cita (numeração LXX)', comenta: 'comenta', lexical: 'termo original', mencao: 'menciona',
+const TIPO_LIG = { refcruz: 'referência cruzada', cita: 'cita', 'cita-lxx': 'cita (numeração LXX)', comenta: 'comenta', lexical: 'termo original', 'remissao-lexico': 'remissão de léxico', mencao: 'menciona',
   escreveu: 'escreveu', contem: 'contém', descoberta: 'descoberta', caminho: 'caminho', 'co-citacao': 'co-citação', mais: 'mais' };
 
 // ── aparelho: quantos elementos mostrar sem travar ──────────────────────────
@@ -87,9 +87,19 @@ let carregando = 0;
 function ocupado(on) { carregando = Math.max(0, carregando + (on ? 1 : -1)); $('carregando').hidden = carregando <= 0; }
 function definirAcesso(aberto) {
   S.aberto = aberto;
+  if (!aberto) tirarExternos();
   const c = $('acesso');
   c.textContent = aberto ? 'Biblioteca aberta' : 'Só público · entrar';
   c.classList.toggle('aberto', aberto);
+}
+// Remissões de obras externas (nós "x:") só existem com a porta aberta: sem ela, saem do mapa e das investigações restauradas.
+function tirarExternos() {
+  const g = S.graph; if (!g || !g.order) return;
+  const fora = g.filterNodes((id) => String(id).startsWith('x:'));
+  if (!fora.length) return;
+  fora.forEach((id) => g.dropNode(id));
+  if (S.sel && !g.hasNode(S.sel)) S.sel = null;
+  S.renderer && S.renderer.refresh();
 }
 let toastT = null;
 function aviso(t, ms) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, ms || 4200); }
@@ -305,7 +315,7 @@ function evidenciasHtml(lista, aberto) {
   if (!lista || !lista.length) return '';
   return `<details class="ev"${aberto ? ' open' : ''}><summary>Ver fonte (${lista.length})</summary>${lista.map(evItem).join('')}</details>`;
 }
-const evItem = (e) => `<div class="ev-item"><b>${esc(e.autor || '')}</b>${e.obra ? ' · ' + esc(e.obra) : ''}${e.secao ? ' · ' + esc(e.secao) : ''}${e.local && e.local.pagina ? ' · p. ' + e.local.pagina : ''}${e.modo ? ` <span class="etq">${esc(e.modo)}</span>` : ''}${e.trecho ? `<q>${esc(e.trecho)}</q>` : ''}${e.local && e.local.trechoId ? `<div class="nota">Localização: ${esc(e.local.fonte || '')} · trecho ${esc(e.local.trechoId)}</div>` : ''}${e.aviso ? `<div class="aviso">${esc(e.aviso)}</div>` : ''}</div>`;
+const evItem = (e) => `<div class="ev-item"><b>${esc(e.autor || '')}</b>${e.obra ? ' · ' + esc(e.obra) : ''}${e.secao ? ' · ' + esc(e.secao) : ''}${e.local && e.local.pagina ? ' · p. ' + e.local.pagina : ''}${e.marca ? ' · referência impressa "' + esc(e.marca) + '"' : ''}${e.modo ? ` <span class="etq">${esc(e.modo)}</span>` : ''}${e.trecho ? `<q>${esc(e.trecho)}</q>` : ''}${e.local && e.local.trechoId ? `<div class="nota">Localização: ${esc(e.local.fonte || '')} · trecho ${esc(e.local.trechoId)}</div>` : ''}${e.aviso ? `<div class="aviso">${esc(e.aviso)}</div>` : ''}</div>`;
 function ligacoesDe(id) {
   const g = S.graph, out = [];
   g.forEachEdge(id, (k, a, src, dst) => {
@@ -686,6 +696,7 @@ function estadoAtual() {
 function restaurar(est) {
   S.graph.clear();
   S.graph.import(est.grafo);
+  if (!S.aberto) tirarExternos();
   S.trilha = est.trilha || []; S.foco = est.foco || null; S.expandidos = new Set(est.expandidos || []); S.notas = est.notas || {};
   if (est.filtros && est.filtros.areas) S.filtros = { ...est.filtros, areas: new Set(est.filtros.areas), classes: new Set((est.filtros.classes || []).map((c) => ESTADO_ANTIGO[c] || c)), naturezas: new Set(est.filtros.naturezas || Object.keys(NATRELS)), metodos: new Set(est.filtros.metodos || Object.keys(METODOS)) };
   montarFiltros(); atualizarVazio(); calcularGrupos();
