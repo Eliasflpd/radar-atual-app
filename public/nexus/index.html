@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NEXUS BÍBLICO</title>
+<meta name="theme-color" content="#FBF8F1">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/nexus/nexus.css?v=1">
+</head>
+<body>
+<!-- NEXUS BÍBLICO — mapa de conhecimento (19/11/2026). O motor está em api/_lib/nexus.js. -->
+<header class="topo">
+  <a class="voltar" href="/" aria-label="Voltar ao RADAR">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg><span>RADAR</span>
+  </a>
+  <div class="marca">
+    <span class="marca-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.4"/><circle cx="5" cy="18" r="2.4"/><circle cx="19" cy="18" r="2.4"/><circle cx="12" cy="13" r="1.8"/><path d="M12 7.4v3.8M10.6 14.3l-3.7 2.4M13.4 14.3l3.7 2.4M7.4 18h9.2"/></svg></span>
+    <div><b>NEXUS BÍBLICO</b><small>A descoberta é apenas o começo</small></div>
+  </div>
+  <form class="busca" id="busca" autocomplete="off">
+    <input id="ref" type="search" placeholder="Passagem (ex.: João 1:1)" aria-label="Passagem bíblica" enterkeyhint="go">
+    <button type="submit" class="bt bt-ouro">Explorar</button>
+  </form>
+  <div class="acoes">
+    <button class="bt" id="bt-descobrir" title="Motor de descoberta">Descobrir</button>
+    <button class="bt" id="bt-salvar" title="Salvar investigação">Salvar</button>
+    <button class="bt" id="bt-investigacoes" title="Investigações salvas">Investigações</button>
+    <button class="bt bt-modo" id="bt-modo" title="Alternar mapa e trilha">Trilha</button>
+    <button class="chip-acesso" id="acesso" title="Acesso à biblioteca"></button>
+  </div>
+</header>
+
+<nav class="trilha" id="trilha" aria-label="Trilha da investigação"></nav>
+
+<main class="palco">
+  <div id="mapa" class="mapa" aria-label="Mapa de conhecimento"></div>
+  <div id="lista" class="lista" hidden></div>
+
+  <aside class="filtros" id="filtros">
+    <button class="filtros-alca" id="filtros-alca" aria-expanded="false">Filtros</button>
+    <div class="filtros-corpo" id="filtros-corpo"></div>
+  </aside>
+
+  <div class="legenda" id="legenda"></div>
+  <div class="zoom">
+    <button class="bt-ico" id="z-mais" aria-label="Aproximar">+</button>
+    <button class="bt-ico" id="z-menos" aria-label="Afastar">−</button>
+    <button class="bt-ico" id="z-centro" aria-label="Centralizar">⌖</button>
+  </div>
+  <div class="carregando" id="carregando" hidden><span></span>Buscando nas fontes…</div>
+  <div class="vazio" id="vazio" hidden></div>
+
+  <aside class="painel" id="painel" aria-live="polite" hidden>
+    <button class="painel-fechar" id="painel-fechar" aria-label="Fechar">×</button>
+    <div id="painel-corpo"></div>
+  </aside>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-caixa" role="dialog" aria-modal="true">
+    <button class="painel-fechar" id="modal-fechar" aria-label="Fechar">×</button>
+    <div id="modal-corpo"></div>
+  </div>
+</div>
+
+<script type="module" src="/nexus/nexus.js?v=1"></script>
+</body>
+</html>

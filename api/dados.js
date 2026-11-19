@@ -620,6 +620,10 @@ const HANDLERS = {
   // OFICINA (03/11/2026): o versículo com a Almeida, as referências cruzadas (OpenBible, CC-BY) e o que os
   // autores dizem (porta dos livros particulares). Ver api/_lib/oficina.js.
   oficina: require('./_lib/oficina.js'),
+  // NEXUS BÍBLICO (19/11/2026): o mapa de conhecimento e o motor de descoberta. Só LÊ a biblioteca e a Oficina
+  // (bancos 1 e 2, em modo somente leitura); grava apenas as investigações, no banco próprio (NEXUS_DATABASE_URL).
+  // Mesma porta da Oficina. Ver api/_lib/nexus.js.
+  nexus: require('./_lib/nexus.js'),
   // FONTES DE PESQUISA (03/11/2026): o catálogo das obras escondidas, com as capas (porta dos livros particulares).
   // Ver api/_lib/fontes.js.
   fontes: require('./_lib/fontes.js'),
