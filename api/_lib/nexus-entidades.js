@@ -131,7 +131,7 @@ function camadaDe(t) {
 function janela(texto, i, n) { return texto.slice(Math.max(0, i - n), i + n); }
 
 // extrair: trechos = [{ chave, fonte, autor, obra, secao, texto, camadaFonte: 'antiga'|'moderna' }]
-function extrair(trechos, conceitos) {
+function extrair(trechos, conceitos, opcoes) {
   const entidades = new Map(), mencoes = [], ambiguas = [], candidatosConta = new Map();
   const toca = (id, base) => { if (!entidades.has(id)) entidades.set(id, { id, nome: base.nome, categoria: base.cat, variantes: new Set(), mencoes: 0, trechos: new Set(), fontes: new Set(), camadas: {} }); return entidades.get(id); };
   for (const t of trechos) {
@@ -216,7 +216,9 @@ function extrair(trechos, conceitos) {
     .map((p) => ({ de: p.a, para: p.b, tipo: 'coocorrencia', estado: 'hipotese', trechos: p.trechos.size, exemplos: [...p.trechos].slice(0, 3) }));
   const lista = [...entidades.values()].map((e) => ({ ...e, variantes: [...e.variantes], trechos: e.trechos.size, fontes: [...e.fontes] }))
     .sort((a, b) => b.mencoes - a.mencoes);
-  return { entidades: lista, mencoes, ambiguas, candidatos, relacoes };
+  // na extração em massa, os candidatos vão TODOS (contagem por lote), e a soma é feita no banco
+  const candidatosTodos = opcoes && opcoes.todosCandidatos ? [...candidatosConta.values()].map((c) => ({ forma: c.forma, ocorrencias: c.n, trechos: c.trechos.size, fontes: [...c.fontes], exemplo: c.exemplo })) : null;
+  return { entidades: lista, mencoes, ambiguas, candidatos, relacoes, candidatosTodos };
 }
 
 module.exports = { extrair, CATALOGO, AMBIGUOS };
