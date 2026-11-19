@@ -7,7 +7,7 @@
 // caixas do PDF NÃO saem do PC.
 //
 // Uso:
-//   node scripts/nexus-ponteiros-obra.cjs <lote.json> --lote-id <id> --modo simular|gravar|reverter|estado [--paginas N] [--saida pedido.json]
+//   node scripts/nexus-ponteiros-obra.cjs <lote.json> --lote-id <id> --modo migrar|simular|gravar|reverter|estado [--paginas N] [--saida pedido.json]
 // O pedido é enviado pelo Chrome do PC (aparelho com crachá), no console de https://radar-atual.vercel.app/nexus/ :
 //   fetch('/api/nexus',{method:'POST',headers:{'Content-Type':'application/json'},
 //     body:JSON.stringify({...PEDIDO, cracha:localStorage.getItem('radar_chave'), token:localStorage.getItem('lp_token')})}).then(r=>r.json()).then(console.log)
@@ -18,8 +18,8 @@ const opc = (k, padrao) => { const i = args.indexOf('--' + k); return i >= 0 ? a
 const arquivo = args[0] && !args[0].startsWith('--') ? args[0] : null;
 const modo = opc('modo', 'simular');
 const loteId = opc('lote-id', '');
-if (!['simular', 'gravar', 'reverter', 'estado'].includes(modo)) { console.error('modo inválido'); process.exit(2); }
-if (!loteId && modo !== 'estado') { console.error('informe --lote-id'); process.exit(2); }
+if (!['migrar', 'simular', 'gravar', 'reverter', 'estado'].includes(modo)) { console.error('modo inválido'); process.exit(2); }
+if (!loteId && !['estado', 'migrar'].includes(modo)) { console.error('informe --lote-id'); process.exit(2); }
 
 function montarLote(caminho) {
   const l = JSON.parse(fs.readFileSync(caminho, 'utf8').replace(/^﻿/, ''));
@@ -42,7 +42,8 @@ let pedido;
 if (modo === 'simular' || modo === 'gravar') {
   if (!arquivo) { console.error('informe o arquivo do lote'); process.exit(2); }
   pedido = { acao: 'ponteiros-obra', modo, lote: montarLote(arquivo) };
-} else pedido = { acao: 'ponteiros-obra', modo, lote_id: loteId || undefined };
+} else if (modo === 'migrar') pedido = { acao: 'ponteiros-obra', modo };
+else pedido = { acao: 'ponteiros-obra', modo, lote_id: loteId || undefined };
 
 const saida = opc('saida', '');
 const json = JSON.stringify(pedido);

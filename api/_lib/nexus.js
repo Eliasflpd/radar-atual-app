@@ -12,7 +12,7 @@
 //   descobrir { id }              -> { blocos }               os 6 algoritmos do motor de descoberta para uma passagem
 //   explicar  { id }              -> { texto, evidencias }    a IA explica o resultado de `descobrir`, citando [E1], [E2]…
 //   salvar    { titulo, estado, investigacao? } / listar / abrir { investigacao } / apagar { investigacao }
-//   ponteiros-obra { modo: simular|gravar|reverter|estado, lote? , lote_id? }  (administrativo, com a porta)
+//   ponteiros-obra { modo: migrar|simular|gravar|reverter|estado, lote? , lote_id? }  (administrativo, com a porta)
 //             ponteiros de obras externas (só localizadores; ver api/_lib/nexus-ponteiros.js)
 //
 // A PORTA (a mesma da Oficina): sem crachá do aparelho ou token do PIN, só sai o que é público —
@@ -1406,6 +1406,7 @@ module.exports = async (req, res) => {
       const modo = String(b.modo || 'simular');
       if (!db.temNexus()) { res.json({ ok: false, err: 'banco do NEXUS não ligado' }); return; }
       if (modo === 'estado') { res.json(await PONT.estado(db, b.lote_id || null)); return; }
+      if (modo === 'migrar') { res.json(await PONT.migrar(db)); return; }
       if (modo === 'reverter') { res.json(await PONT.reverter(db, b.lote_id)); MEMORIA.clear(); return; }
       const bib = await carregarBiblia(proto + '://' + host);
       if (!bib) { res.json({ ok: false, err: 'a Almeida não carregou agora' }); return; }
