@@ -12,6 +12,8 @@
 //   descobrir { id }              -> { blocos }               os 6 algoritmos do motor de descoberta para uma passagem
 //   explicar  { id }              -> { texto, evidencias }    a IA explica o resultado de `descobrir`, citando [E1], [E2]…
 //   salvar    { titulo, estado, investigacao? } / listar / abrir { investigacao } / apagar { investigacao }
+//   ponteiros-obra { modo: simular|gravar|reverter|estado, lote? , lote_id? }  (administrativo, com a porta)
+//             ponteiros de obras externas (só localizadores; ver api/_lib/nexus-ponteiros.js)
 //
 // A PORTA (a mesma da Oficina): sem crachá do aparelho ou token do PIN, só sai o que é público —
 // texto da Almeida e referências cruzadas do OpenBible (CC-BY). Autores, obras, verbetes, conceitos,
@@ -30,6 +32,7 @@ const R = require('./oficina-refs.js');
 const { liberado } = require('./livro-particular.js');
 const IA = require('./nexus-ia.js');
 const ENT = require('./nexus-entidades.js');
+const PONT = require('./nexus-ponteiros.js');
 
 const CREDITO_OB = 'OpenBible.info, CC-BY (referências cruzadas)';
 const LIM_TRECHO = 300;
@@ -270,7 +273,7 @@ function grafo() {
     },
     saida() {
       return { nos: [...nos.values()], arestas: [...arestas.values()].map(({ _fam, familias, ...a }) => {
-        const independentes = _fam ? _fam.size : 0;
+        const independentes = a.semGrau ? 0 : (_fam ? _fam.size : 0);   // remissão de léxico não conta como autor independente
         return { ...a, ...classificar(a, independentes), independentes, direcao: a.tipo === 'refcruz' ? 'dirigida (curadoria)' : (a.tipo === 'caminho' || a.tipo === 'co-citacao') ? 'não dirigida' : 'dirigida' };
       }) };
     },
@@ -735,6 +738,13 @@ async function expandirPassagem(db, g, ini, fim, bib, aberto) {
   }
   if (!aberto) return;
 
+  // 1b) remissões de léxico de obras externas (só localizadores: obra, edição, página, referência; nunca texto)
+  for (const p of await PONT.ponteirosDaPassagem(db, ini, fim, 40)) {
+    const rot = passagemNo(p.ini, p.fim, bib).rotulo;
+    g.no(PONT.noPagina(p));
+    g.aresta(PONT.arestaRemissao(p, foco, rot));
+  }
+
   // 2) obras, autores, verbetes e conceitos ligados por ponteiros da Oficina
   const cat = await catalogo(db);
   const ponteiros = await ponteirosDe(db, ini, fim, 400);
@@ -886,6 +896,19 @@ async function expandirObra(db, g, fonte, contexto, bib) {
   }
 }
 
+// Página de obra externa: as remissões que ela faz (só com a porta; ver nexus-ponteiros.js).
+async function expandirPaginaExterna(db, g, id, bib) {
+  const m = /^x:([a-z0-9-]+):(\d+)$/.exec(id);
+  if (!m) return;
+  const linhas = await PONT.ponteirosDaPagina(db, m[1], +m[2]);
+  if (!linhas.length) return;
+  g.no(PONT.noPagina(linhas[0]));
+  for (const p of linhas) {
+    const pn = passagemNo(p.ini, p.fim, bib);
+    g.no(pn);
+    g.aresta(PONT.arestaRemissao(p, pn.id, pn.rotulo));
+  }
+}
 async function expandirAutor(db, g, nome) {
   const cat = await catalogo(db);
   const real = Object.values(cat).find((c) => idAutor(c.autor) === idAutor(nome));
@@ -1190,7 +1213,7 @@ async function explicar(db, ini, fim, bib, quem) {
   const evid = [];
   for (const b of r.blocos) {
     for (const it of b.itens.slice(0, 5)) {
-      for (const e of (it.evidencias || []).slice(0, 1)) {
+      for (const e of (it.evidencias || []).filter((x) => !x.externa).slice(0, 1)) {   // obras externas nunca vão para a IA
         if (evid.length >= 24) break;
         evid.push({ n: evid.length + 1, bloco: b.titulo, natureza: b.classe || it.natureza || b.natureza, item: it.rotulo, detalhe: it.detalhe,
           autor: e.autor, obra: e.obra, secao: e.secao, trecho: String(e.trecho || '').slice(0, 260) });
@@ -1293,6 +1316,7 @@ module.exports = async (req, res) => {
         else if (id.startsWith('c:')) await expandirConceito(db, g, id.slice(2), bib);
         else if (id.startsWith('l:')) { const [, fonte, ...resto] = id.split(':'); await expandirVerbete(db, g, fonte, resto.join(':'), bib); }
         else if (id.startsWith('d:')) await expandirDescoberta(db, g, +id.slice(2), bib);
+        else if (id.startsWith('x:')) await expandirPaginaExterna(db, g, id, bib);
         else { res.json({ ok: false, err: 'nó desconhecido' }); return; }
         saida = guardar(chave, g.saida());
       }
@@ -1315,6 +1339,7 @@ module.exports = async (req, res) => {
         else if (id.startsWith('o:')) await expandirObra(db, g, id.slice(2), [], bib);
         else if (id.startsWith('l:')) { const [, fonte, ...resto] = id.split(':'); await expandirVerbete(db, g, fonte, resto.join(':'), bib); }
         else if (id.startsWith('d:')) await expandirDescoberta(db, g, +id.slice(2), bib);
+        else if (id.startsWith('x:')) await expandirPaginaExterna(db, g, id, bib);
         const s = g.saida();
         const ligacoes = new Map();
         for (const a of s.arestas) {
@@ -1377,6 +1402,18 @@ module.exports = async (req, res) => {
       res.json({ ok: true, ...(e || { lidos: 0, refs: 0, feito: false }), por_camada: porCamada });
       return;
     }
+    if (acao === 'ponteiros-obra') {   // administrativo: simular (só leitura), gravar, reverter ou ver o estado de um lote
+      const modo = String(b.modo || 'simular');
+      if (!db.temNexus()) { res.json({ ok: false, err: 'banco do NEXUS não ligado' }); return; }
+      if (modo === 'estado') { res.json(await PONT.estado(db, b.lote_id || null)); return; }
+      if (modo === 'reverter') { res.json(await PONT.reverter(db, b.lote_id)); MEMORIA.clear(); return; }
+      const bib = await carregarBiblia(proto + '://' + host);
+      if (!bib) { res.json({ ok: false, err: 'a Almeida não carregou agora' }); return; }
+      if (modo === 'simular') { res.json(await PONT.simular(db, b.lote, bib)); return; }
+      if (modo === 'gravar') { res.json(await PONT.gravar(db, b.lote, bib)); MEMORIA.clear(); return; }
+      res.json({ ok: false, err: 'modo desconhecido' });
+      return;
+    }
     if (acao === 'ia-consumo') { res.json({ ok: true, ...(await IA.consumo(db, b.investigacao || null)) }); return; }
     if (acao === 'ia-config') { res.json(await IA.salvarConfig(db, b.config || {})); return; }
     if (['salvar', 'listar', 'abrir', 'apagar'].includes(acao)) {
@@ -1413,4 +1450,4 @@ module.exports = async (req, res) => {
 };
 
 module.exports.CONCEITOS = CONCEITOS;
-module.exports._teste = { extrairRefsPatristicas, SINAIS_EDITOR, decidirSalmo };
+module.exports._teste = { extrairRefsPatristicas, SINAIS_EDITOR, decidirSalmo, tabelasIndice };
