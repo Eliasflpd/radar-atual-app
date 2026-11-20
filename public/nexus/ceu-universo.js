@@ -140,7 +140,7 @@ export function criarCeu(container, estado, acoes) {
   const CAMADAS = [
     { id: 'universo', nome: 'Universo', cor: '#7EA6E6', grupo: new THREE.Group(), visivel: true, opacidade: 1, z: 0, animada: true },
     { id: 'biblia', nome: 'Bíblia', cor: '#F2D28B', grupo: new THREE.Group(), visivel: true, opacidade: 1, z: 0, animada: true },
-    { id: 'atlas', nome: 'Atlas', cor: '#E9C878', grupo: new THREE.Group(), visivel: true, opacidade: 0.7, z: 0, propria: true },
+    { id: 'atlas', nome: 'Atlas', cor: '#E9C878', grupo: new THREE.Group(), visivel: true, opacidade: 0.28, z: 0, propria: true },
   ];
   // camadas 4 a 10: reservadas no motor (nome, cor e altura); o conteúdo de cada uma será construído depois, uma por vez
   [['tempo', 'Tempo · cronologia', '#9FD3C7'], ['personagens', 'Personagens · genealogias', '#E8A87C'], ['linguas', 'Línguas originais', '#B5C7F2'],
