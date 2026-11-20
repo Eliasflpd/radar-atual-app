@@ -66,7 +66,7 @@ export function criarCeu(container, estado, acoes) {
   container.append(canvas, rot, ui);
   const estilo = document.createElement('style');
   estilo.textContent = `
-    body.ceu-universo.modo-ceu .legenda, body.ceu-universo.modo-ceu .filtros, body.ceu-universo.modo-ceu .rotulos-grupos, body.ceu-universo.modo-ceu .zoom, body.ceu-universo.modo-ceu .ceu-ajuda{display:none!important}
+    body.ceu-universo.modo-ceu .legenda, body.ceu-universo.modo-ceu .filtros, body.ceu-universo.modo-ceu .rotulos-grupos, body.ceu-universo.modo-ceu .zoom, body.ceu-universo.modo-ceu .ceu-ajuda, body.ceu-universo.modo-ceu .vazio{display:none!important}
     .ceu{background:#03050B}
     .cu-canvas,.cu-rotulos{position:absolute;inset:0;width:100%;height:100%;display:block}
     .cu-canvas{touch-action:none;cursor:grab}.cu-canvas.arrastando{cursor:grabbing}
@@ -198,6 +198,7 @@ export function criarCeu(container, estado, acoes) {
         sp.scale.set(t, t, 1); sp.material.rotation = a; nebulosas.add(sp);
       }
     });
+    montarViaLactea();
     pronto = true;
     restaurarVista();
   }
@@ -219,7 +220,7 @@ export function criarCeu(container, estado, acoes) {
 
   // ── camadas de fundo infinitas (paralaxe) ──────────────────────────────────────
   const fundoCamadas = [];
-  [[fraco ? 1800 : 3500, 0.35, 14000, -1200], [fraco ? 1400 : 2600, 0.6, 9000, -400], [fraco ? 800 : 1500, 0.85, 6000, -120]].forEach(([n, fator, T, z], ci) => {
+  [[fraco ? 3500 : 8000, 0.35, 14000, -1200], [fraco ? 2200 : 5000, 0.6, 9000, -400], [fraco ? 900 : 2000, 0.85, 6000, -120]].forEach(([n, fator, T, z], ci) => {
     const p = new Float32Array(n * 3), c = new Float32Array(n * 3), t = new Float32Array(n);
     for (let i = 0; i < n; i++) {
       p[i * 3] = Math.random() * T; p[i * 3 + 1] = Math.random() * T; p[i * 3 + 2] = z;
@@ -230,21 +231,63 @@ export function criarCeu(container, estado, acoes) {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('color', new THREE.BufferAttribute(c, 3)); g.setAttribute('tam', new THREE.BufferAttribute(t, 1));
     const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true,
-      uniforms: { cam: { value: new THREE.Vector2() }, T: { value: T }, fator: { value: fator }, px: { value: escala } },
-      vertexShader: `attribute float tam; uniform vec2 cam; uniform float T; uniform float fator; uniform float px; varying vec3 c;
-        void main(){ c = color; vec3 q = position; vec2 o = cam * fator; q.xy = cam + mod(q.xy - o, T) - T * 0.5; gl_PointSize = tam * px; gl_Position = projectionMatrix * modelViewMatrix * vec4(q, 1.0); }`,
-      fragmentShader: 'varying vec3 c; void main(){ float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, d); gl_FragColor = vec4(c * a, a); }' });
+      uniforms: { cam: { value: new THREE.Vector2() }, T: { value: T }, fator: { value: fator }, px: { value: escala }, tempo: { value: 0 }, deriva: { value: new THREE.Vector2(ci === 2 ? 9 : 3 + ci * 2, ci === 2 ? -4 : -1.2) } },
+      vertexShader: `attribute float tam; uniform vec2 cam; uniform float T; uniform float fator; uniform float px; uniform float tempo; uniform vec2 deriva; varying vec3 c; varying float tw;
+        void main(){ c = color; vec3 q = position; vec2 o = cam * fator - deriva * tempo; q.xy = cam + mod(q.xy - o, T) - T * 0.5;
+          float fase = fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453) * 6.2831;
+          float vel = 0.6 + fract(fase * 7.13) * 2.2;
+          tw = 0.55 + 0.45 * sin(tempo * vel + fase) * sin(tempo * vel * 0.37 + fase * 1.7);
+          gl_PointSize = tam * px * (0.85 + 0.3 * tw); gl_Position = projectionMatrix * modelViewMatrix * vec4(q, 1.0); }`,
+      fragmentShader: 'varying vec3 c; varying float tw; void main(){ float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, d) * (0.45 + 0.55 * tw); gl_FragColor = vec4(c * a, a); }' });
     const pts = new THREE.Points(g, m); pts.frustumCulled = false; cena.add(pts); fundoCamadas.push(m);
   });
-  const nebulosas = new THREE.Group(), galaxias = new THREE.Group(); cena.add(nebulosas, galaxias);
+  const nebulosas = new THREE.Group(), galaxias = new THREE.Group(), viaLactea = new THREE.Group(); cena.add(viaLactea, nebulosas, galaxias);
+  // estrela cadente (decorativa): um risco de luz de vez em quando
+  const gCad = new THREE.BufferGeometry();
+  gCad.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3).setUsage(THREE.DynamicDrawUsage));
+  gCad.setAttribute('alfa', new THREE.BufferAttribute(new Float32Array([0, 0]), 1).setUsage(THREE.DynamicDrawUsage));
+  const cadente = new THREE.LineSegments(gCad, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: 'attribute float alfa; varying float a; void main(){ a = alfa; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: 'varying float a; void main(){ gl_FragColor = vec4(vec3(1.0, 0.96, 0.85) * a, a); }' }));
+  cadente.frustumCulled = false; cena.add(cadente);
+  let cad = null, proxCad = performance.now() + 4000;
+  function montarViaLactea() {
+    const x0 = Math.min(...secoes.map((q) => q.cx)) - 9000, x1 = Math.max(...secoes.map((q) => q.cx)) + 9000;
+    const y0 = Math.min(...secoes.map((q) => q.cy)) - 9000, y1 = Math.max(...secoes.map((q) => q.cy)) + 9000;
+    const ax = x0, ay = y1, bx = x1, by = y0, comp = Math.hypot(bx - ax, by - ay), ang = Math.atan2(by - ay, bx - ax);
+    const n = fraco ? 9000 : 22000, pos = new Float32Array(n * 3), cor = new Float32Array(n * 3), tam = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const t = Math.random(), g = (Math.random() + Math.random() + Math.random() - 1.5) * 2600 * (0.6 + 0.4 * Math.sin(t * 9));
+      const x = ax + (bx - ax) * t - Math.sin(ang) * g, y = ay + (by - ay) * t + Math.cos(ang) * g;
+      pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = -260;
+      const quente = Math.random() < 0.35, br = 0.12 + Math.pow(Math.random(), 3) * 0.5;
+      cor[i * 3] = (quente ? 1 : 0.82) * br; cor[i * 3 + 1] = (quente ? 0.9 : 0.88) * br; cor[i * 3 + 2] = (quente ? 0.75 : 1) * br;
+      tam[i] = 0.7 + Math.pow(Math.random(), 6) * 2;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(cor, 3)); g.setAttribute('tam', new THREE.BufferAttribute(tam, 1));
+    const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true, uniforms: { px: { value: escala }, tempo: { value: 0 } },
+      vertexShader: 'attribute float tam; uniform float px; uniform float tempo; varying vec3 c; varying float tw; void main(){ c = color; float f = fract(sin(dot(position.xy, vec2(7.13, 3.71))) * 9137.5) * 6.28; tw = 0.6 + 0.4 * sin(tempo * (1.0 + fract(f) * 2.0) + f); gl_PointSize = tam * px; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+      fragmentShader: 'varying vec3 c; varying float tw; void main(){ float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, d) * tw; gl_FragColor = vec4(c * a, a); }' });
+    const pts = new THREE.Points(g, m); pts.frustumCulled = false; viaLactea.add(pts); matVia = m;
+    for (let k = 0; k < 16; k++) {   // a névoa clara da faixa
+      const t = (k + 0.5) / 16, sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texNebulosa[k % 3], color: k % 3 ? '#BFD0F5' : '#F2E2C2', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.2 }));
+      sp.position.set(ax + (bx - ax) * t, ay + (by - ay) * t, -300); sp.scale.set(comp / 7, comp / 18, 1); sp.material.rotation = ang + (hash('v' + k) - 0.5) * 0.3; viaLactea.add(sp);
+    }
+  }
+  let matVia = null;
 
   // ── versículos (as estrelas reais) ─────────────────────────────────────────────
   const gVers = new THREE.BufferGeometry();
   let vBase = null, vBriBase = null;
   const matVers = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true,
-    uniforms: { px: { value: escala }, k: { value: 1 } },
-    vertexShader: `attribute float tam; attribute float brilho; uniform float px; uniform float k; varying vec3 c; varying float b;
-      void main(){ c = color; b = brilho; vec4 mv = modelViewMatrix * vec4(position, 1.0); float s = tam * k * 900.0 / -mv.z; gl_PointSize = clamp(s, 0.9, 26.0) * px * (0.65 + 0.35 * brilho); gl_Position = projectionMatrix * mv; }`,
+    uniforms: { px: { value: escala }, k: { value: 1 }, tempo: { value: 0 } },
+    vertexShader: `attribute float tam; attribute float brilho; uniform float px; uniform float k; uniform float tempo; varying vec3 c; varying float b;
+      void main(){ c = color;
+        float fase = fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453) * 6.2831;
+        float tw = 0.8 + 0.2 * sin(tempo * (0.8 + fract(fase * 3.7) * 2.4) + fase);
+        b = brilho * (brilho > 1.1 ? 1.0 : tw);
+        vec4 mv = modelViewMatrix * vec4(position, 1.0); float s = tam * k * 900.0 / -mv.z; gl_PointSize = clamp(s, 0.9, 26.0) * px * (0.65 + 0.35 * b); gl_Position = projectionMatrix * mv; }`,
     fragmentShader: 'varying vec3 c; varying float b; void main(){ float d = length(gl_PointCoord - 0.5); float nucleo = smoothstep(0.18, 0.0, d); float halo = smoothstep(0.5, 0.0, d) * 0.5; float a = (nucleo + halo) * b; gl_FragColor = vec4(c * a + vec3(nucleo * b * 0.35), a); }' });
   const versos = new THREE.Points(gVers, matVers); versos.frustumCulled = false; cena.add(versos);
 
@@ -498,40 +541,46 @@ export function criarCeu(container, estado, acoes) {
     g2.setTransform(escala, 0, 0, escala, 0, 0); g2.clearRect(0, 0, W, H);
     const ocup = [];
     const cabe = (b) => !ocup.some((o) => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0);
+    // LEITURA: de bem perto, o capítulo inteiro aparece num painel (a Bíblia toda pode ser lida no universo); os rótulos desviam dele
+    const caixaLeitura = leitura(t); if (caixaLeitura) ocup.push(caixaLeitura);
     const texto = (txt, x, y, fonte, cor, fundo, alfa = 1, centro = true) => {
       g2.font = fonte; const w = g2.measureText(txt).width; const x0 = centro ? x - w / 2 : x;
-      const b = { x0: x0 - 6, x1: x0 + w + 6, y0: y - 10, y1: y + 10 }; if (!cabe(b)) return false; ocup.push(b);
-      g2.globalAlpha = alfa; if (fundo) { g2.fillStyle = fundo; g2.fillRect(b.x0, b.y0, b.x1 - b.x0, 20); }
-      g2.fillStyle = cor; g2.textAlign = 'left'; g2.textBaseline = 'middle'; g2.fillText(txt, x0, y); g2.globalAlpha = 1; return true;
+      const tam = parseFloat(fonte.split('px')[0].split(' ').pop()) || 12, alt = tam + 9;
+      const b = { x0: x0 - 7, x1: x0 + w + 7, y0: y - alt / 2, y1: y + alt / 2 }; if (!cabe(b)) return false; ocup.push(b);
+      g2.globalAlpha = alfa;
+      g2.fillStyle = fundo || 'rgba(2,5,14,.62)'; g2.beginPath(); if (g2.roundRect) g2.roundRect(b.x0, b.y0, b.x1 - b.x0, alt, alt / 2); else g2.rect(b.x0, b.y0, b.x1 - b.x0, alt); g2.fill();
+      g2.textAlign = 'left'; g2.textBaseline = 'middle';
+      g2.lineWidth = 3; g2.strokeStyle = 'rgba(0,0,0,.85)'; g2.lineJoin = 'round'; g2.strokeText(txt, x0, y);
+      g2.fillStyle = cor; g2.fillText(txt, x0, y); g2.globalAlpha = 1; return true;
     };
     // destaques primeiro: a constelação ativa
     if (constel) {
       const fade = constel.soltoEm ? Math.max(0, 1 - (t - constel.soltoEm) / 2600) : 1;
       const p0 = tela(vPos[constel.idx * 3], vPos[constel.idx * 3 + 1]);
-      if (p0) texto(nomeRef(constel.origem), p0.x + 10, p0.y - 12, '600 13px Inter, system-ui, sans-serif', '#FFF2CF', 'rgba(4,8,20,.6)', fade, false);
-      constel.alvos.forEach((a) => { if (t < a.inicio + 300) return; const p = tela(vPos[a.idx * 3], vPos[a.idx * 3 + 1]); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H) texto(nomeRef(a.k), p.x + 8, p.y, '12px Inter, system-ui, sans-serif', '#F4E3B5', 'rgba(4,8,20,.55)', fade * 0.95, false); });
+      if (p0) texto(nomeRef(constel.origem), p0.x + 10, p0.y - 12, '700 14px Inter, system-ui, sans-serif', '#FFF6DC', 'rgba(2,5,14,.78)', fade, false);
+      constel.alvos.forEach((a) => { if (t < a.inicio + 300) return; const p = tela(vPos[a.idx * 3], vPos[a.idx * 3 + 1]); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H) texto(nomeRef(a.k), p.x + 8, p.y, '600 13px Inter, system-ui, sans-serif', '#FFE8B0', null, fade, false); });
     }
     // satélites (com PIN) quando perto
     const kAtivo = constel && !constel.soltoEm ? constel.origem : selecionado;
     let nSat = 0;
-    if (dist < 900) sats.forEach((s) => { if (nSat >= 36 || (s.k !== kAtivo && dist > 260)) return; const p = tela(s.x, s.y, 1); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H) { nSat++; const r = String(s.rotulo); texto(r.length > 30 ? r.slice(0, 28) + '…' : r, p.x + 9, p.y, '11.5px Inter, system-ui, sans-serif', '#CFE7E4', 'rgba(4,8,20,.5)', 0.9, false); } });
+    if (dist < 900) sats.forEach((s) => { if (nSat >= 36 || (s.k !== kAtivo && dist > 260)) return; const p = tela(s.x, s.y, 1); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H) { nSat++; const r = String(s.rotulo); texto(r.length > 30 ? r.slice(0, 28) + '…' : r, p.x + 9, p.y, '600 12.5px Inter, system-ui, sans-serif', '#DDF7F3', null, 1, false); } });
     let nivel;
     if (dist > 9000) {   // REGIÕES
       nivel = 'Universo · regiões do cânon';
-      const a = Math.min(1, (dist - 9000) / 4000) * 0.85 + 0.15;
-      secoes.forEach((s) => { const p = tela(s.cx, s.cy - s.raio * 0.95); if (p) texto(s.nome.toUpperCase(), p.x, p.y, '600 15px "Cormorant Garamond", Georgia, serif', '#F2DFAE', null, a); });
-      if (dist < 16000) livros.forEach((lv) => { const p = tela(lv.cx, lv.cy); if (p) texto(lv.nome, p.x, p.y + 4, '11px Inter, system-ui, sans-serif', 'rgba(220,228,245,.7)', null, Math.min(1, (16000 - dist) / 5000)); });
+      const a = Math.min(1, (dist - 9000) / 4000) * 0.55 + 0.25;
+      secoes.forEach((s) => { const p = tela(s.cx, s.cy - s.raio * 0.95); if (p) texto(s.nome.toUpperCase(), p.x, p.y, '700 19px "Cormorant Garamond", Georgia, serif', '#FFE8B0', 'rgba(2,5,14,.55)', a); });
+      if (dist < 16000) livros.forEach((lv) => { const p = tela(lv.cx, lv.cy); if (p) texto(lv.nome, p.x, p.y + 4, '600 12.5px Inter, system-ui, sans-serif', '#F2F5FF', null, Math.min(1, (16000 - dist) / 5000)); });
     } else if (dist > 2200) {   // GALÁXIAS (livros)
       nivel = 'Galáxias · livros';
-      livros.forEach((lv) => { const p = tela(lv.cx, lv.cy - lv.raio * 1.05); if (p && p.x > -80 && p.x < W + 80 && p.y > -30 && p.y < H + 30) texto(lv.nome, p.x, p.y, '600 14px "Cormorant Garamond", Georgia, serif', '#F2DFAE', 'rgba(4,8,20,.45)', 1); });
-      secoes.forEach((s) => { const p = tela(s.cx, s.cy - s.raio * 1.05); if (p) texto(s.nome.toUpperCase(), p.x, p.y, '600 12px "Cormorant Garamond", Georgia, serif', 'rgba(242,223,174,.55)', null, 1); });
+      livros.forEach((lv) => { const p = tela(lv.cx, lv.cy - lv.raio * 1.05); if (p && p.x > -80 && p.x < W + 80 && p.y > -30 && p.y < H + 30) texto(lv.nome, p.x, p.y, '700 17px "Cormorant Garamond", Georgia, serif', '#FFE8B0', 'rgba(2,5,14,.7)', 1); });
+      secoes.forEach((s) => { const p = tela(s.cx, s.cy - s.raio * 1.05); if (p) texto(s.nome.toUpperCase(), p.x, p.y, '700 14px "Cormorant Garamond", Georgia, serif', '#E9D6A6', 'rgba(2,5,14,.5)', 0.9); });
     } else if (dist > 520) {   // CONSTELAÇÕES (capítulos)
       nivel = 'Constelações · capítulos';
       let n = 0;
       for (const lv of livros) {
         if (Math.hypot(lv.cx - alvo.x, lv.cy - alvo.y) > dist * 1.6 + lv.raio) continue;
-        const p = tela(lv.cx, lv.cy - lv.raio * 1.05); if (p) texto(lv.nome, p.x, p.y, '600 14px "Cormorant Garamond", Georgia, serif', 'rgba(242,223,174,.75)', null, 1);
-        for (const c of lv.capPos) { if (n > 90) break; const q = tela(c.x, c.y); if (q && q.x > 0 && q.x < W && q.y > 0 && q.y < H && texto(lv.abbrev.toUpperCase() + ' ' + c.c, q.x, q.y - 16, '11.5px Inter, system-ui, sans-serif', 'rgba(225,230,245,.82)', 'rgba(4,8,20,.4)', 1)) n++; }
+        const p = tela(lv.cx, lv.cy - lv.raio * 1.05); if (p) texto(lv.nome, p.x, p.y, '700 17px "Cormorant Garamond", Georgia, serif', '#FFE8B0', 'rgba(2,5,14,.7)', 1);
+        for (const c of lv.capPos) { if (n > 90) break; const q = tela(c.x, c.y); if (q && q.x > 0 && q.x < W && q.y > 0 && q.y < H && texto(lv.abbrev.toUpperCase() + ' ' + c.c, q.x, q.y - 16, '600 12.5px Inter, system-ui, sans-serif', '#FFFFFF', null, 1)) n++; }
       }
     } else {   // ESTRELAS (versículos)
       nivel = 'Estrelas · versículos';
@@ -541,7 +590,9 @@ export function criarCeu(container, estado, acoes) {
         const inicio = vIdx.get(chave(lv.num, 1, 1));
         for (let j = inicio; j < inicio + lv.versos && n < 70; j++) {
           const p = tela(vPos[j * 3], vPos[j * 3 + 1]); if (!p || p.x < 0 || p.x > W || p.y < 0 || p.y > H) continue;
-          const d = decompor(vChave[j]); if (texto(`${lv.abbrev.toUpperCase()} ${d.c}:${d.v}`, p.x + 7, p.y, '11px Inter, system-ui, sans-serif', 'rgba(230,234,246,.78)', null, 1, false)) n++;
+          const d = decompor(vChave[j]); const tv = dist < 300 ? textoDe(vChave[j]) : '';
+          const rotuloV = `${lv.abbrev.toUpperCase()} ${d.c}:${d.v}` + (tv ? '  ' + (tv.length > 46 ? tv.slice(0, 44) + '…' : tv) : '');
+          if (texto(rotuloV, p.x + 8, p.y, '600 12.5px Inter, system-ui, sans-serif', '#FFFFFF', null, 1, false)) n++;
         }
       }
     }
@@ -549,10 +600,46 @@ export function criarCeu(container, estado, acoes) {
     const qf = lerId(estado.foco);
     if (qf && vIdx.has(qf.ini)) {
       const j = vIdx.get(qf.ini), p = tela(vPos[j * 3], vPos[j * 3 + 1]);
-      if (p) { const pulso = 9 + Math.sin(t / 380) * 3; g2.strokeStyle = 'rgba(242,214,140,.75)'; g2.lineWidth = 1.2; g2.beginPath(); g2.arc(p.x, p.y, pulso, 0, 6.29); g2.stroke(); if (dist > 520) texto(nomeRef(qf.ini), p.x + 14, p.y - 10, '600 12px Inter, system-ui, sans-serif', '#F7E4B0', 'rgba(4,8,20,.6)', 1, false); }
+      if (p) { const pulso = 9 + Math.sin(t / 380) * 3; g2.strokeStyle = 'rgba(242,214,140,.75)'; g2.lineWidth = 1.2; g2.beginPath(); g2.arc(p.x, p.y, pulso, 0, 6.29); g2.stroke(); if (dist > 520) texto(nomeRef(qf.ini), p.x + 14, p.y - 10, '700 13px Inter, system-ui, sans-serif', '#FFE8B0', 'rgba(2,5,14,.78)', 1, false); }
     }
     if (nivelEl.textContent !== nivel) nivelEl.textContent = nivel;
   }
+
+  // ── leitura do capítulo (perto) ───────────────────────────────────────────────
+  function quebrar(txt, largura) { const out = []; let linha = ''; for (const p of String(txt).split(' ')) { const t2 = linha ? linha + ' ' + p : p; if (g2.measureText(t2).width > largura && linha) { out.push(linha); linha = p; } else linha = t2; } if (linha) out.push(linha); return out; }
+  function leitura(t) {
+    if (dist > 230 || !BIB) { leituraCap = null; return null; }
+    let melhor = null, dm = Infinity;
+    for (const lv of livros) { if (Math.hypot(lv.cx - alvo.x, lv.cy - alvo.y) > lv.raio + dist * 2) continue; for (const c of lv.capPos) { const d = Math.hypot(c.x - alvo.x, c.y - alvo.y); if (d < dm) { dm = d; melhor = { lv, c }; } } }
+    if (!melhor || dm > 80 + dist) { leituraCap = null; return null; }
+    const { lv, c } = melhor; leituraCap = { b: lv.num, c: c.c };
+    const versos = BIB[lv.i].chapters[c.c - 1];
+    const larg = Math.min(380, W * 0.36), x0 = W - larg - 18, y0 = 46, maxY = H - 50;
+    const kDest = constel && !constel.soltoEm ? constel.origem : selecionado;
+    const dDest = kDest ? decompor(kDest) : null;
+    const noCap = dDest && dDest.b === lv.num && dDest.c === c.c;
+    let inicio = noCap ? Math.max(0, dDest.v - 4) : 0;
+    g2.save();
+    g2.fillStyle = 'rgba(3,6,16,.97)'; g2.strokeStyle = 'rgba(233,210,150,.35)'; g2.lineWidth = 1;
+    g2.beginPath(); if (g2.roundRect) g2.roundRect(x0 - 14, y0 - 12, larg + 28, maxY - y0 + 24, 14); else g2.rect(x0 - 14, y0 - 12, larg + 28, maxY - y0 + 24); g2.fill(); g2.stroke();
+    g2.textAlign = 'left'; g2.textBaseline = 'top';
+    g2.font = '700 20px "Cormorant Garamond", Georgia, serif'; g2.fillStyle = '#FFE8B0'; g2.fillText(lv.nome + ' ' + c.c, x0, y0);
+    g2.font = '12px Inter, system-ui, sans-serif'; g2.fillStyle = 'rgba(210,218,236,.85)'; g2.fillText(versos.length + ' versículos · Almeida · passe o mouse nas estrelas', x0, y0 + 26);
+    let y = y0 + 50;
+    for (let v = inicio; v < versos.length && y < maxY - 18; v++) {
+      const dest = noCap && dDest.v === v + 1;
+      g2.font = (dest ? '600 ' : '') + '15px "Cormorant Garamond", Georgia, serif';
+      const linhas = quebrar(versos[v], larg - 26);
+      if (dest) { g2.fillStyle = 'rgba(233,200,120,.18)'; g2.fillRect(x0 - 6, y - 3, larg + 12, linhas.length * 19 + 6); }
+      g2.font = '700 11px Inter, system-ui, sans-serif'; g2.fillStyle = dest ? '#FFE8B0' : '#9FB7E8'; g2.fillText(String(v + 1), x0, y + 3);
+      g2.font = (dest ? '600 ' : '') + '15px "Cormorant Garamond", Georgia, serif'; g2.fillStyle = dest ? '#FFF6DC' : '#EEF1FA';
+      for (const l of linhas) { if (y > maxY - 18) break; g2.fillText(l, x0 + 24, y); y += 19; }
+      y += 5;
+    }
+    g2.restore();
+    return { x0: x0 - 14, x1: x0 + larg + 14, y0: y0 - 12, y1: maxY + 12 };
+  }
+  let leituraCap = null;
 
   // ── laço ─────────────────────────────────────────────────────────────────────
   let ativo = false, quadro = 0, ultimo = performance.now(), pronto = false;
@@ -569,12 +656,22 @@ export function criarCeu(container, estado, acoes) {
       dist = Math.exp(Math.log(voo.de.d) + (Math.log(voo.para.d) - Math.log(voo.de.d)) * e); posicionar();
       if (q >= 1) voo = null;
     } else if (!arrasto && inercia.lengthSq() > 1e-4) { alvo.x += inercia.x * dt / 16; alvo.y += inercia.y * dt / 16; inercia.multiplyScalar(0.92); posicionar(); }
-    fundoCamadas.forEach((m) => m.uniforms.cam.value.set(alvo.x, alvo.y));
-    matVers.uniforms.k.value = 1;
+    const seg = reduzido ? 0 : t / 1000;
+    fundoCamadas.forEach((m) => { m.uniforms.cam.value.set(alvo.x, alvo.y); m.uniforms.tempo.value = seg; });
+    matVers.uniforms.k.value = 1; matVers.uniforms.tempo.value = seg; if (matVia) matVia.uniforms.tempo.value = seg;
+    if (!reduzido) {
+      galaxias.children.forEach((sp, i) => { sp.material.rotation += dt * 0.000035 * (i % 2 ? 1 : -1) * (1 + (i % 5) * 0.2); });
+      viaLactea.children.forEach((sp, i) => { if (sp.isSprite) sp.material.opacity = 0.16 + 0.06 * Math.sin(seg * 0.3 + i); });
+      // estrela cadente de vez em quando, dentro da vista
+      if (!cad && t > proxCad) { const w = dist * 0.8, a = -0.6 - Math.random() * 0.5; cad = { x: alvo.x + (Math.random() - 0.3) * w, y: alvo.y + (Math.random() * 0.6) * w, dx: Math.cos(a) * dist * 0.5, dy: Math.sin(a) * dist * 0.5, t0: t }; }
+      const ca = gCad.attributes.position, cl = gCad.attributes.alfa;
+      if (cad) { const q = (t - cad.t0) / 900; if (q >= 1) { cad = null; proxCad = t + 6000 + Math.random() * 9000; cl.setX(0, 0); cl.setX(1, 0); } else { const hx = cad.x + cad.dx * q, hy = cad.y + cad.dy * q; ca.setXYZ(0, hx - cad.dx * 0.25, hy - cad.dy * 0.25, -50); ca.setXYZ(1, hx, hy, -50); cl.setX(0, 0); cl.setX(1, Math.sin(q * Math.PI) * 0.9); } ca.needsUpdate = cl.needsUpdate = true; }
+    }
     // galáxias e nebulosas: fortes de longe, somem perto
     const longe = Math.min(1, Math.max(0, (dist - 900) / 6000));
-    galaxias.children.forEach((sp, i) => { const lv = livros[i]; const foco = sobreLivro === lv ? 0.55 : 0; sp.material.opacity += ((0.12 + 0.5 * longe + foco) - sp.material.opacity) * 0.12; });
-    nebulosas.children.forEach((sp) => { sp.material.opacity = 0.05 + 0.13 * longe; });
+    const resp = reduzido ? 1 : 1;
+    galaxias.children.forEach((sp, i) => { const lv = livros[i]; const foco = sobreLivro === lv ? 0.55 : 0; const pulso = reduzido ? 0 : 0.06 * Math.sin(t / 1000 * 0.8 + i * 1.7); sp.material.opacity += ((0.12 + 0.5 * longe + foco + pulso) - sp.material.opacity) * 0.12; });
+    nebulosas.children.forEach((sp, i) => { sp.material.opacity = (0.05 + 0.13 * longe) * (reduzido ? 1 : 0.8 + 0.2 * Math.sin(t / 1000 * 0.25 + i * 0.9)); });
     if (pronto) {
       // constelação: estrelas ligadas brilham e se aproximam um pouco; linhas acendem em sequência
       const lp = gLin.attributes.position, la = gLin.attributes.alfa, lc = gLin.attributes.cor;
@@ -659,9 +756,10 @@ export function criarCeu(container, estado, acoes) {
       pronto: () => pronto, dist: () => dist, alvo: () => ({ x: alvo.x, y: alvo.y }), nivel: () => nivelEl.textContent,
       telaVerso: (k) => { const j = vIdx.get(k); return j == null ? null : tela(vPos[j * 3], vPos[j * 3 + 1]); },
       mundoVerso: (k) => { const j = vIdx.get(k); return j == null ? null : { x: vBase[j * 3], y: vBase[j * 3 + 1] }; },
-      irPara: (x, y, d) => { voo = null; alvo.set(x, y, 0); dist = d; posicionar(); },
+      irPara: (x, y, d) => { voo = null; interagiu = true; alvo.set(x, y, 0); dist = d; posicionar(); },
       constelacao: () => (constel ? { origem: constel.origem, alvos: constel.alvos.length, acesas: constel.alvos.filter((a) => performance.now() > a.inicio + 420).length, solta: !!constel.soltoEm } : null),
       cartao: () => !cartao.hidden, satelites: () => sats.length, versos: () => vChave.length, livros: () => livros.length,
+      leitura: () => leituraCap,
       telaLivro: (n) => { const lv = livros[n - 1]; return lv ? tela(lv.cx, lv.cy) : null; }, incl: () => incl,
     },
   };
