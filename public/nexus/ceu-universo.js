@@ -475,7 +475,11 @@ export function criarCeu(container, estado, acoes) {
   const revela = new Array(10).fill(0); let secRevelada = null, revelaAte = 0, caixasRegiao = [];
   const longeR = () => Math.max(0, Math.min(1, (dist - 6000) / 3000));   // 0 perto (tudo aparece) … 1 longe (só o revelado)
   function revelar(i, ms = 1600) { if (i == null || i < 0) return; secRevelada = i; revelaAte = performance.now() + ms; }
-  function regiaoNoPonto(x, y) { const c = caixasRegiao.find((b) => x >= b.x0 - 6 && x <= b.x1 + 6 && y >= b.y0 - 6 && y <= b.y1 + 6); return c ? c.i : -1; }
+  function regiaoNoPonto(x, y) {
+    // região já revelada: o cursor em qualquer ponto dela mantém os livros à vista
+    if (secRevelada != null) { const c = caixasRegiao.find((b) => b.i === secRevelada); const s2 = secoes[secRevelada]; if (c && s2) { const borda = tela(s2.cx + s2.raio * 1.15, s2.cy, zB); const r = borda ? Math.hypot(borda.x - c.cx, borda.y - c.cy) : 120; if (Math.hypot(x - c.cx, y - c.cy) < Math.max(r, 90)) return secRevelada; } }
+    const cs = caixasRegiao.filter((b) => x >= b.x0 - 4 && x <= b.x1 + 4 && y >= b.y0 - 4 && y <= b.y1 + 4).sort((a, b) => Math.hypot(x - a.cx, y - a.cy) - Math.hypot(x - b.cx, y - b.cy)); return cs.length ? cs[0].i : -1;
+  }
   const livroOculto = (lv) => lv && longeR() > 0.5 && revela[secoes.indexOf(lv.sec)] < 0.3;
 
   // ── projeção, escolha e informação ───────────────────────────────────────────
@@ -1027,8 +1031,17 @@ export function criarCeu(container, estado, acoes) {
       nivel = 'Universo · regiões do cânon';
       const a = Math.min(1, (dist - 9000) / 4000) * 0.55 + 0.25;
       caixasRegiao = [];
-      if (vU) secoes.forEach((s, si) => { const p = tela(s.cx, s.cy - s.raio * 0.95, 0); if (!p) return; const bx = texto(s.nome.toUpperCase(), p.x, p.y, '700 19px "Cormorant Garamond", Georgia, serif', secRevelada === si ? '#FFF4D0' : '#FFE8B0', secRevelada === si ? 'rgba(60,44,10,.75)' : 'rgba(2,5,14,.55)', secRevelada === si ? 1 : a); if (bx) caixasRegiao.push({ ...bx, i: si }); });
-      if (vB) livros.forEach((lv) => { const rv = revela[secoes.indexOf(lv.sec)]; if (rv < 0.25) return; const p = tela(lv.cx, lv.cy); if (p) texto(lv.nome, p.x, p.y + 4, '600 12.5px Inter, system-ui, sans-serif', '#F7F2E0', 'rgba(2,5,14,.6)', Math.min(1, (rv - 0.25) / 0.6)); });
+      if (vB) secoes.forEach((sc, si) => {   // livros da região revelada: surgem em roda, a partir do centro onde estava o nome
+        const rv = revela[si]; if (rv < 0.15) return; const c = tela(sc.cx, sc.cy, zB); if (!c) return;
+        const lvs = livros.filter((lv) => lv.sec === sc), n = lvs.length, raioT = (60 + n * 9) * (0.4 + 0.6 * rv);
+        lvs.forEach((lv, k) => {
+          const ang = -Math.PI / 2 + (k / n) * Math.PI * 2, lx = c.x + Math.cos(ang) * raioT * (n > 6 ? 1.25 : 1), ly = c.y + Math.sin(ang) * raioT * 0.72;
+          const g = tela(lv.cx, lv.cy, zB);
+          if (g) { g2.globalAlpha = rv * 0.5; g2.strokeStyle = 'rgba(233,210,150,.6)'; g2.lineWidth = 1; g2.setLineDash([2, 3]); g2.beginPath(); g2.moveTo(g.x, g.y); g2.lineTo(lx, ly); g2.stroke(); g2.setLineDash([]); g2.globalAlpha = 1; }
+          texto(lv.nome, lx, ly, '600 13px Inter, system-ui, sans-serif', '#F7F2E0', 'rgba(2,5,14,.72)', Math.min(1, (rv - 0.15) / 0.6));
+        });
+      });
+      if (vU) secoes.forEach((s, si) => { const p = tela(s.cx, s.cy, zB); if (!p) return; const some = 1 - revela[si]; g2.font = '700 19px "Cormorant Garamond", Georgia, serif'; const meia = g2.measureText(s.nome.toUpperCase()).width / 2 + 8; caixasRegiao.push({ x0: p.x - meia, x1: p.x + meia, y0: p.y - 14, y1: p.y + 14, i: si, cx: p.x, cy: p.y }); if (some < 0.03) return; texto(s.nome.toUpperCase(), p.x, p.y, '700 19px "Cormorant Garamond", Georgia, serif', '#FFE8B0', 'rgba(2,5,14,.55)', a * some); });   // o nome dissolve e os livros surgem no mesmo lugar
     } else if (dist > 2200) {   // GALÁXIAS (livros)
       nivel = 'Galáxias · livros';
       if (vB) livros.forEach((lv) => { const p = tela(lv.cx, lv.cy - lv.raio * 1.05); if (p && p.x > -80 && p.x < W + 80 && p.y > -30 && p.y < H + 30) texto(lv.nome, p.x, p.y, '700 17px "Cormorant Garamond", Georgia, serif', '#FFE8B0', 'rgba(2,5,14,.7)', 1); });
