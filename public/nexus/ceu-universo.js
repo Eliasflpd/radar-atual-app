@@ -74,7 +74,7 @@ export function criarCeu(container, estado, acoes) {
     <div class="cu-relogio"><div class="cu-hora"></div><div class="cu-tempo-bts"><button type="button" data-tempo="-60">−1h</button><button type="button" data-tempo="agora">Agora</button><button type="button" data-tempo="60">+1h</button><button type="button" data-tempo="local" title="Usar a localização deste aparelho">📍</button></div><input type="range" min="-720" max="720" value="0" step="10" data-tempo="barra" aria-label="Avançar ou voltar no tempo"></div>
     <div class="cu-invest" hidden></div>
     <div class="cu-cartao" hidden></div>
-    <div class="cu-credito">Céu real ao vivo: estrelas do Yale Bright Star Catalog (domínio público) · Via Láctea ESO/S. Brunier (CC BY 4.0) · Lua, Sol e planetas: astronomy-engine (MIT) · versículos da Almeida · ligações OpenBible (CC BY) e NEXUS</div>`;
+    <div class="cu-credito">Céu real ao vivo: estrelas HYG v4.1 (CC BY-SA 4.0) · Via Láctea ESO/S. Brunier (CC BY 4.0) · Lua, Sol e planetas: astronomy-engine (MIT) · versículos da Almeida · ligações OpenBible (CC BY) e NEXUS</div>`;
   container.append(canvas, rot, ui);
   const estilo = document.createElement('style');
   estilo.textContent = `
@@ -322,117 +322,10 @@ export function criarCeu(container, estado, acoes) {
   });
   const nebulosas = new THREE.Group(), galaxias = new THREE.Group(), viaLactea = new THREE.Group(); GU.add(nebulosas); GB.add(galaxias);
 
-  // ── O CÉU REAL E AO VIVO (camada Universo) ─────────────────────────────────────────────
-  //   estrelas: Yale Bright Star Catalog, 5ª ed. (domínio público) — 9.096 estrelas a olho nu, posição, brilho e cor reais;
-  //   Via Láctea: panorama do céu inteiro ESO/S. Brunier (CC BY 4.0), em coordenadas galácticas;
-  //   Lua (com a fase), Sol e planetas: calculados para a hora real com astronomy-engine (MIT), sem câmera e sem vídeo.
-  // O céu é calculado para AGORA no lugar do observador (Fortaleza por padrão; "minha localização" opcional) e gira
-  // como o céu de verdade. O controle de tempo avança ou volta as horas. O zênite fica no centro da vista; o que está
-  // abaixo do horizonte aparece apagado.
-  const OBS = { lat: -3.73, lon: -38.52, nome: 'Fortaleza' };
-  let deslocTempo = 0;                       // ms em relação a agora (controle de tempo)
-  const ceuReal = new THREE.Group(); ceuReal.renderOrder = -100; GU.add(ceuReal);
-  const ceuEq = new THREE.Group(); ceuEq.matrixAutoUpdate = false; ceuReal.add(ceuEq);   // filhos em coordenadas equatoriais
-  const vEq = (ra, de) => new THREE.Vector3(Math.cos(de) * Math.cos(ra), Math.cos(de) * Math.sin(ra), Math.sin(de));
-  const Rgal = new THREE.Matrix3().set(-0.0548755604, -0.8734370902, -0.4838350155, 0.4941094279, -0.4448296300, 0.7469822445, -0.8676661490, -0.1980763734, 0.4559837762);
-  const zenEq = new THREE.Vector3(0, 0, 1);
-  function lstHoras(ms) { const d = ms / 86400000 + 2440587.5 - 2451545.0; const gmst = ((18.697374558 + 24.06570982441908 * d) % 24 + 24) % 24; return ((gmst + OBS.lon / 15) % 24 + 24) % 24; }
-  function orientarCeu(ms) {   // equatorial -> mundo: olhando para o zênite, norte em cima, leste à esquerda
-    const Z = vEq(lstHoras(ms) * 15 * Math.PI / 180, OBS.lat * Math.PI / 180); zenEq.copy(Z);
-    const P = new THREE.Vector3(0, 0, 1), N = P.clone().sub(Z.clone().multiplyScalar(P.dot(Z))).normalize();
-    const L = new THREE.Vector3().crossVectors(P, Z).normalize(), O = L.clone().negate();
-    ceuEq.matrix.set(O.x, O.y, O.z, 0, N.x, N.y, N.z, 0, -Z.x, -Z.y, -Z.z, 0, 0, 0, 0, 1); ceuEq.matrixWorldNeedsUpdate = true;
-    if (matCupula) matCupula.uniforms.zen.value.copy(Z); if (matEstrelasReais) matEstrelasReais.uniforms.zen.value.copy(Z);
-  }
-  let matCupula = null, matEstrelasReais = null, astros = [], ASTRO = null, astrosEm = 0;
-  function montarCeuReal() {
-    const tex = new THREE.TextureLoader().load('/nexus/via-lactea-eso.jpg'); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = THREE.RepeatWrapping;
-    matCupula = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, depthTest: false, transparent: true,
-      uniforms: { mapa: { value: tex }, e2g: { value: Rgal }, zen: { value: new THREE.Vector3(0, 0, 1) }, opac: { value: 1 }, forca: { value: 1.1 }, dia: { value: 0 } },
-      vertexShader: 'varying vec3 d; void main(){ d = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: `uniform sampler2D mapa; uniform mat3 e2g; uniform vec3 zen; uniform float opac; uniform float forca; uniform float dia; varying vec3 d;
-        void main(){ vec3 e = normalize(d); vec3 g = normalize(e2g * e); float l = atan(g.y, g.x); float b = asin(clamp(g.z, -1.0, 1.0));
-          vec2 uv = vec2(fract(0.5 - l / 6.2831853), 0.5 + b / 3.1415927);
-          vec3 c = pow(texture2D(mapa, uv).rgb, vec3(1.05)) * forca;
-          float alt = dot(e, zen); float acima = smoothstep(-0.06, 0.04, alt);
-          c *= mix(0.22, 1.0, acima); c += vec3(0.02, 0.05, 0.12) * dia * acima;
-          gl_FragColor = vec4(c * opac, 1.0); }` });
-    const cupula = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), matCupula); cupula.renderOrder = -100; cupula.frustumCulled = false; ceuEq.add(cupula);
-    fetch('/nexus/estrelas-bsc.json').then((r) => r.json()).then((dd) => {
-      const n = dd.estrelas.length, pos = new Float32Array(n * 3), cor = new Float32Array(n * 3), tam = new Float32Array(n), bri = new Float32Array(n);
-      dd.estrelas.forEach(([ra, de, v, k], i) => {
-        const w = vEq(ra * Math.PI / 180, de * Math.PI / 180).multiplyScalar(0.98);
-        pos[i * 3] = w.x; pos[i * 3 + 1] = w.y; pos[i * 3 + 2] = w.z;
-        const c = corDaTemperatura(k); cor[i * 3] = c[0]; cor[i * 3 + 1] = c[1]; cor[i * 3 + 2] = c[2];
-        tam[i] = Math.max(1.4, Math.min(8.5, 4.8 - 0.62 * (v - 0.5))); bri[i] = Math.max(0.28, Math.min(1, Math.pow(10, -0.4 * (v - 2.2))));
-      });
-      const g = new THREE.BufferGeometry();
-      g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(cor, 3));
-      g.setAttribute('tam', new THREE.BufferAttribute(tam, 1)); g.setAttribute('brilho', new THREE.BufferAttribute(bri, 1));
-      matEstrelasReais = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, vertexColors: true,
-        uniforms: { px: { value: escala }, tempo: { value: 0 }, opac: { value: 1 }, zen: { value: zenEq.clone() } },
-        vertexShader: `attribute float tam; attribute float brilho; uniform float px; uniform float tempo; uniform vec3 zen; varying vec3 c; varying float b;
-          void main(){ c = color; float f = fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453) * 6.2831;
-            float alt = dot(normalize(position), zen); float acima = smoothstep(-0.05, 0.03, alt);
-            b = brilho * (0.86 + 0.14 * sin(tempo * (1.1 + fract(f) * 2.3) + f)) * mix(0.18, 1.0, acima);
-            gl_PointSize = tam * px; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-        fragmentShader: `uniform float opac; varying vec3 c; varying float b; void main(){ float d = length(gl_PointCoord - 0.5); float nucleo = smoothstep(0.22, 0.0, d); float halo = smoothstep(0.5, 0.05, d) * 0.35; float a = (nucleo + halo) * b; gl_FragColor = opac * vec4(c * a, a); }` });
-      const pts = new THREE.Points(g, matEstrelasReais); pts.renderOrder = -99; pts.frustumCulled = false; ceuEq.add(pts); precisaOpac = true; orientarCeu(Date.now() + deslocTempo);
-    }).catch(() => {});
-    // Lua, Sol e planetas (posições reais calculadas para a hora escolhida)
-    import('https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/esm/astronomy.js').then((A) => { ASTRO = A; montarAstros(); }).catch((e) => console.warn('astronomy-engine indisponível', e));
-  }
-  function texturaLua(fracao, crescente) {   // desenha a fase da Lua (parte iluminada)
-    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); const r = 52, h = 64;
-    const gr = g.createRadialGradient(h, h, r * 0.8, h, h, r * 1.25); gr.addColorStop(0, 'rgba(255,248,225,.35)'); gr.addColorStop(1, 'rgba(255,248,225,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
-    g.fillStyle = 'rgba(40,44,60,.9)'; g.beginPath(); g.arc(h, h, r, 0, 6.29); g.fill();
-    g.save(); g.beginPath(); g.arc(h, h, r, 0, 6.29); g.clip();
-    g.fillStyle = '#F6F0DC'; const k = 1 - 2 * fracao;   // terminador: elipse
-    g.beginPath(); if (crescente) { g.arc(h, h, r, -Math.PI / 2, Math.PI / 2); g.ellipse(h, h, Math.abs(k) * r, r, 0, Math.PI / 2, -Math.PI / 2, k > 0); } else { g.arc(h, h, r, Math.PI / 2, -Math.PI / 2); g.ellipse(h, h, Math.abs(k) * r, r, 0, -Math.PI / 2, Math.PI / 2, k > 0); }
-    g.fill(); g.restore();
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-  }
-  const NOMES_ASTRO = { Moon: 'Lua', Sun: 'Sol', Mercury: 'Mercúrio', Venus: 'Vênus', Mars: 'Marte', Jupiter: 'Júpiter', Saturn: 'Saturno' };
-  function montarAstros() {
-    for (const corpo of ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn']) {
-      const mat = new THREE.SpriteMaterial({ map: corpo === 'Moon' ? texturaLua(0.5, true) : texPonto, color: corpo === 'Sun' ? '#FFE9A8' : corpo === 'Mars' ? '#FFB28A' : '#FFF6E2', transparent: true, depthWrite: false, depthTest: false, blending: corpo === 'Moon' ? THREE.NormalBlending : THREE.AdditiveBlending, sizeAttenuation: false });
-      const sp = new THREE.Sprite(mat); sp.renderOrder = -98; sp.frustumCulled = false; ceuEq.add(sp);
-      const tam = corpo === 'Moon' ? 0.075 : corpo === 'Sun' ? 0.06 : corpo === 'Venus' || corpo === 'Jupiter' ? 0.03 : 0.022; 
-      astros.push({ corpo, nome: NOMES_ASTRO[corpo], sp, alt: 0, fase: 0, tam });
-    }
-    atualizarAstros(Date.now() + deslocTempo);
-  }
-  let estadoCeu = { sol: 0, lua: null };
-  function atualizarAstros(ms) {
-    if (!ASTRO || !astros.length) return;
-    const data = new Date(ms), obs = new ASTRO.Observer(OBS.lat, OBS.lon, 0);
-    for (const a of astros) {
-      try {
-        const eq = ASTRO.Equator(a.corpo, data, obs, true, true);   // de data, com correção de aberração (topocêntrico)
-        const v = vEq(eq.ra * 15 * Math.PI / 180, eq.dec * Math.PI / 180); a.sp.position.copy(v.multiplyScalar(0.97));
-        const hz = ASTRO.Horizon(data, obs, eq.ra, eq.dec, 'normal'); a.alt = hz.altitude;
-        a.sp.material.opacity = a.alt > -2 ? 1 : 0.3;
-        if (a.corpo === 'Moon') {
-          const il = ASTRO.Illumination('Moon', data), ang = ASTRO.MoonPhase(data);
-          const fr = il.phase_fraction, cres = ang < 180;
-          if (Math.abs((a.fase || 0) - fr) > 0.01 || a.cres !== cres) { a.sp.material.map && a.sp.material.map.dispose(); a.sp.material.map = texturaLua(fr, cres); a.sp.material.needsUpdate = true; a.fase = fr; a.cres = cres; }
-          estadoCeu.lua = { fracao: fr, angulo: ang, alt: a.alt };
-        }
-        if (a.corpo === 'Sun') estadoCeu.sol = a.alt;
-      } catch (_) { /* corpo indisponível */ }
-    }
-    const dia = Math.max(0, Math.min(1, (estadoCeu.sol + 6) / 12));
-    if (matCupula) matCupula.uniforms.dia.value = dia;
-    atualizarRelogio(ms);
-  }
-  function corDaTemperatura(k) {   // aproximação da cor de corpo negro (estrelas azuladas, brancas, amareladas, alaranjadas)
-    const t = Math.max(2500, Math.min(25000, k || 5800)) / 100; let r, g, b;
-    if (t <= 66) { r = 255; g = 99.47 * Math.log(t) - 161.12; b = t <= 19 ? 0 : 138.52 * Math.log(t - 10) - 305.04; }
-    else { r = 329.7 * Math.pow(t - 60, -0.1332); g = 288.12 * Math.pow(t - 60, -0.0755); b = 255; }
-    const cl = (x) => Math.max(0, Math.min(255, x)) / 255; const mix = (x) => 0.55 * cl(x) + 0.45;
-    return [mix(r), mix(g), mix(b)];
-  }
-  montarCeuReal();
+  // ── O CÉU REAL E AO VIVO (fundo da camada Universo): módulo ceu-real.js, numa cena própria desenhada antes ───
+  let ceuR = null;
+  import('/nexus/ceu-real.js?v=1').then((m) => { ceuR = m.criarCeuReal(THREE, { escala }); atualizarRelogio(); }).catch((e) => console.warn('céu real indisponível', e));
+  renderer.autoClear = false;
   // estrela cadente (decorativa): um risco de luz de vez em quando
   const gCad = new THREE.BufferGeometry();
   gCad.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3).setUsage(THREE.DynamicDrawUsage));
@@ -667,12 +560,13 @@ export function criarCeu(container, estado, acoes) {
     pairarT = setTimeout(() => {
       const li = lugarPerto(x, y, 10);
       if (li >= 0) { const l = atlasC.lugares[li]; const conf = l.conf >= 700 ? 'identificação segura' : l.conf >= 300 ? 'identificação provável' : 'identificação incerta'; canvas.style.cursor = 'pointer'; info.innerHTML = `<b>${esc(l.nome)}</b>${l.identificacao && l.identificacao !== l.nome ? `<em>hoje: ${esc(l.identificacao)}</em>` : ''}<small>Atlas · ${l.peso} versículo(s) · ${conf} (${l.conf}/1000) · OpenBible.info · clique para acender os versículos</small>`; info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!lugarAtivo && livroAtivo == null) { atlasC.acender([li]); fios = l.versos.slice(0, 80).map((k) => ({ l: li, j: vIdx.get(k) })).filter((f) => f.j != null); } return; }
-      const s = dist < 1800 ? satPerto(x, y, 12) : -1;
+      const bV = camada('biblia').visivel && camada('biblia').opacidade > 0.1;   // só pega o que está visível
+      const s = bV && dist < 1800 ? satPerto(x, y, 12) : -1;
       if (s >= 0) { canvas.style.cursor = 'pointer'; info.innerHTML = `<b>${esc(sats[s].rotulo)}</b><small>${esc(NOME_TIPO[sats[s].tipo] || sats[s].tipo)} · ligado a ${esc(nomeRef(sats[s].k))} · clique para ver as evidências</small>`; info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; return; }
-      const j = dist < 5200 ? versoPerto(x, y, 12) : -1;
+      const j = bV && dist < 5200 ? versoPerto(x, y, 12) : -1;
       if (j >= 0) { sobreLivro = null; formar(vChave[j]); canvas.style.cursor = 'pointer'; mostrarInfo(); return; }
       if (constel && !constel.soltoEm) soltar();
-      const lv = dist >= 1200 ? livroPerto(x, y) : null;
+      const lv = bV && dist >= 1200 ? livroPerto(x, y) : null;
       sobreLivro = lv; canvas.style.cursor = lv ? 'pointer' : '';
       mostrarInfo();
     }, 40);
@@ -695,14 +589,16 @@ export function criarCeu(container, estado, acoes) {
     if (duplo) { clearTimeout(cartaoT); const w = noPlano(x, y); if (w) { lembrarVista(); voo = { de: { x: alvo.x, y: alvo.y, d: dist }, para: { x: w.x, y: w.y, d: Math.max(DIST_MIN, dist * 0.35) }, t0: agora, dur: 700 }; } return; }
     const li = lugarPerto(x, y, tipo === 'touch' ? 20 : 11);
     if (li >= 0) { escolherLugar(atlasC.lugares[li]); return; }
-    const s = dist < 1800 ? satPerto(x, y, tipo === 'touch' ? 22 : 12) : -1;
+    const bV = camada('biblia').visivel && camada('biblia').opacidade > 0.1;
+    const s = bV && dist < 1800 ? satPerto(x, y, tipo === 'touch' ? 22 : 12) : -1;
     if (s >= 0) { acoes.selecionar(sats[s].id, false, true); return; }
-    const j = dist < 5200 ? versoPerto(x, y, tipo === 'touch' ? 24 : 12) : -1;
+    const j = bV && dist < 5200 ? versoPerto(x, y, tipo === 'touch' ? 24 : 12) : -1;
     if (j >= 0) { formar(vChave[j]); clearTimeout(cartaoT); const kk = vChave[j]; if (tipo === 'touch') cartaoT = setTimeout(() => abrirCartao(kk), 330); else abrirCartao(kk); return; }
-    const lv = livroPerto(x, y);
+    const lv = bV ? livroPerto(x, y) : null;
     if (lv && dist > 1500) { voar(lv.cx, lv.cy, lv.raio * 4.2); return; }
-    const sec = secoes.find((s2) => { const p = tela(s2.cx, s2.cy, 0); return p && Math.hypot(p.x - x, p.y - y) < 60; });
+    const sec = camada('universo').visivel ? secoes.find((s2) => { const p = tela(s2.cx, s2.cy, 0); return p && Math.hypot(p.x - x, p.y - y) < 40; }) : null;
     if (sec) { voar(sec.cx, sec.cy, sec.raio * 3.4); return; }
+    if (ceuR && camada('universo').visivel) { const f = ceuR.tocar(x, y, W, H, tipo === 'touch' ? 24 : 14); if (f) { mostrarFichaCeu(f); return; } }
     if (tipo === 'touch' && constel) soltar();
   }
   canvas.addEventListener('wheel', (e) => { e.preventDefault(); voo = null; interagiu = true; zoomEm(e.offsetX, e.offsetY, Math.exp(e.deltaY * 0.0016)); }, { passive: false });
@@ -724,6 +620,10 @@ export function criarCeu(container, estado, acoes) {
     const t = Math.tan(camera.fov * Math.PI / 360), aspecto = W / H;
     const d = Math.max((y1 - y0) / 2 / t, (x1 - x0) / 2 / (t * aspecto)) * 1.12;
     return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, d: Math.min(DIST_MAX, d) };
+  }
+  function mostrarFichaCeu(f) {
+    invest.innerHTML = `<button class="cu-fechar-inv" type="button" aria-label="Fechar">×</button><small>Céu real · camada Universo</small><h3>${esc(f.titulo)}</h3>${f.html}`;
+    invest.hidden = false; invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; };
   }
   function vistaGeral() { if (!secoes.length) return; const c = caixaGeral(); voar(c.x, c.y, c.d); incl = 0; }
   function centralizar(id) {
@@ -834,22 +734,23 @@ export function criarCeu(container, estado, acoes) {
     return false;
   }
   const relogio = ui.querySelector('.cu-relogio');
-  function atualizarRelogio(ms) {
-    const d = new Date(ms), fmt = (x) => x.toLocaleString('pt-BR', { timeZone: OBS.tz || undefined, hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
-    const lua = estadoCeu.lua ? ` · Lua ${Math.round(estadoCeu.lua.fracao * 100)}% iluminada${estadoCeu.lua.alt > 0 ? '' : ' (abaixo do horizonte)'}` : '';
-    const sol = estadoCeu.sol > -6 ? ' · é dia: o céu aparece como seria sem o Sol' : '';
-    relogio.querySelector('.cu-hora').innerHTML = `${deslocTempo ? '🕒 ' : '🔴 Ao vivo · '}${fmt(d)} · ${esc(OBS.nome)}<small>${lua.slice(3)}${sol}</small>`;
+  function atualizarRelogio() {
+    if (!ceuR) return; const e = ceuR.estado(), d = new Date(Date.now() + e.desloc);
+    const fmt = d.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+    const lua = e.luaFracao ? `Lua ${Math.round(e.luaFracao * 100)}% iluminada${e.luaAlt > 0 ? '' : ' (abaixo do horizonte)'}` : '';
+    const dia = e.solAlt > 0 ? ' · é dia: o céu azul apaga as estrelas (arraste a barra para a noite)' : e.solAlt > -18 ? ' · crepúsculo' : '';
+    relogio.querySelector('.cu-hora').innerHTML = `${e.desloc ? '🕒 ' : '🔴 Ao vivo · '}${fmt} · ${esc(e.local)}<small>${lua}${dia}</small>`;
   }
   relogio.addEventListener('click', (e) => {
-    const b = e.target.closest('button[data-tempo]'); if (!b) return;
-    const v = b.dataset.tempo;
-    if (v === 'agora') deslocTempo = 0;
-    else if (v === 'local') { if (navigator.geolocation) navigator.geolocation.getCurrentPosition((p) => { OBS.lat = p.coords.latitude; OBS.lon = p.coords.longitude; OBS.nome = 'sua localização'; atualizarAstros(Date.now() + deslocTempo); }, () => {}, { maximumAge: 600000, timeout: 8000 }); return; }
-    else deslocTempo += (+v) * 60000;
-    relogio.querySelector('[data-tempo="barra"]').value = Math.round(deslocTempo / 60000);
-    orientarCeu(Date.now() + deslocTempo); atualizarAstros(Date.now() + deslocTempo);
+    const b = e.target.closest('button[data-tempo]'); if (!b || !ceuR) return;
+    const v = b.dataset.tempo; let ms = ceuR.desloc();
+    if (v === 'agora') ms = 0;
+    else if (v === 'local') { if (navigator.geolocation) navigator.geolocation.getCurrentPosition((p) => { ceuR.local(p.coords.latitude, p.coords.longitude, 'sua localização'); atualizarRelogio(); }, () => {}, { maximumAge: 600000, timeout: 8000 }); return; }
+    else ms += (+v) * 60000;
+    relogio.querySelector('[data-tempo="barra"]').value = Math.round(ms / 60000); ceuR.tempo(ms); atualizarRelogio();
   });
-  relogio.querySelector('[data-tempo="barra"]').addEventListener('input', (e) => { deslocTempo = (+e.target.value) * 60000; orientarCeu(Date.now() + deslocTempo); atualizarAstros(Date.now() + deslocTempo); });
+  relogio.querySelector('[data-tempo="barra"]').addEventListener('input', (e) => { if (ceuR) { ceuR.tempo((+e.target.value) * 60000); atualizarRelogio(); } });
+  setInterval(atualizarRelogio, 20000);
   ui.querySelector('.cu-busca').addEventListener('submit', (e) => { e.preventDefault(); buscar(e.target.querySelector('input').value); interagiu = true; });
   // lugar sob o ponteiro (camada Atlas, por cima)
   function lugarPerto(px, py, raio) {
@@ -965,7 +866,7 @@ export function criarCeu(container, estado, acoes) {
     const kAtivo = constel && !constel.soltoEm ? constel.origem : selecionado;
     let nSat = 0;
     if (vB && dist < 900) sats.forEach((s) => { if (nSat >= 36 || (s.k !== kAtivo && dist > 260)) return; const p = tela(s.x, s.y, zB + 1); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H) { nSat++; const r = String(s.rotulo); texto(r.length > 30 ? r.slice(0, 28) + '…' : r, p.x + 9, p.y, '600 12.5px Inter, system-ui, sans-serif', '#DDF7F3', null, 1, false); } });
-    if (vU && astros.length) for (const a of astros) { if (a.alt < -1) continue; const w = a.sp.getWorldPosition(new THREE.Vector3()); tmp.copy(w).project(camera); if (tmp.z > 1) continue; const x = (tmp.x + 1) / 2 * W, y = (1 - tmp.y) / 2 * H; if (x > 0 && x < W && y > 0 && y < H) texto(a.nome + (a.corpo === 'Moon' && estadoCeu.lua ? ' ' + Math.round(estadoCeu.lua.fracao * 100) + '%' : ''), x + 14, y, '600 12.5px Inter, system-ui, sans-serif', '#FFF6DC', 'rgba(2,5,14,.6)', 0.95, false); }
+    if (vU && ceuR) ceuR.rotulos((txt, x, y, forte) => { if (x > 0 && x < W && y > 0 && y < H) texto(txt, x, y, forte ? '600 12.5px Inter, system-ui, sans-serif' : '500 11.5px Inter, system-ui, sans-serif', forte ? '#FFF6DC' : 'rgba(235,238,248,.85)', 'rgba(2,5,14,.55)', 0.95, false); }, W, H);
     let nivel;
     if (dist > 9000) {   // REGIÕES
       nivel = 'Universo · regiões do cânon';
@@ -1059,11 +960,7 @@ export function criarCeu(container, estado, acoes) {
       if (q >= 1) voo = null;
     } else if (!arrasto && inercia.lengthSq() > 1e-4) { alvo.x += inercia.x * dt / 16; alvo.y += inercia.y * dt / 16; inercia.multiplyScalar(0.92); posicionar(); }
     aplicarCamadas(); alvo.z = zB; posicionar();
-    ceuReal.position.set(camera.position.x - GU.position.x, camera.position.y - GU.position.y, camera.position.z - GU.position.z);
-    { const raio = camera.far * 0.45; ceuReal.scale.setScalar(raio); ceuReal.rotation.set(-alvo.y * 0.000018, alvo.x * 0.000018, 0); for (const a of astros) a.sp.scale.set(a.tam / raio, a.tam / raio, 1); }   // a cúpula é enorme: os astros compensam a escala
-    orientarCeu(Date.now() + deslocTempo);
-    if (t - astrosEm > 2000) { astrosEm = t; atualizarAstros(Date.now() + deslocTempo); }
-    if (matEstrelasReais) matEstrelasReais.uniforms.tempo.value = t / 1000;
+    if (ceuR) ceuR.quadro(camera, t, alvo, dist, camada('universo').opacidade, camada('universo').visivel);
     if (atlasC) { const cg = camera.position; atlasC.quadro(t, Math.max(0.6, Math.min(2.4, Math.pow(9000 / dist, 0.35))), cg, camera.far, alvo, camera.far * 1.8); }
     const seg = reduzido ? 0 : t / 1000;
     fundoCamadas.forEach((m) => { m.uniforms.cam.value.set(alvo.x, alvo.y); m.uniforms.tempo.value = seg; });
@@ -1126,6 +1023,9 @@ export function criarCeu(container, estado, acoes) {
       if (sats.length) { const sa = gSat.attributes.alfa; const perto = Math.min(1, Math.max(0, (1800 - dist) / 1300)); const kA = constel && !constel.soltoEm ? constel.origem : selecionado; sats.forEach((s, i) => sa.setX(i, perto * (s.k === kA ? 1 : 0.45))); sa.needsUpdate = true; }
     }
     atualizarFios(t);
+    renderer.clear();
+    if (ceuR) renderer.render(ceuR.cena, ceuR.camera);   // 1º o céu real (fundo da camada Universo)
+    renderer.clearDepth();
     renderer.render(cena, camera);
     rotulos(t);
     if (constel || sobreLivro) mostrarInfo();
@@ -1181,7 +1081,7 @@ export function criarCeu(container, estado, acoes) {
           const pl = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, y1 - y0), new THREE.MeshBasicMaterial({ color: '#1C3466', transparent: true, opacity: 0.08, depthWrite: false })); pl.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0);
           return [pl, pts]; } }); montarPainel(); return CAMADAS.length; },
       fpsMedio: () => new Promise((r) => { let n = 0; const t0 = performance.now(); (function f() { n++; if (performance.now() - t0 < 2000) requestAnimationFrame(f); else r(Math.round(n / 2)); })(); }),
-      resolucao: () => resAtual, ceu: () => ({ lst: lstHoras(Date.now() + deslocTempo), sol: estadoCeu.sol, lua: estadoCeu.lua, astros: astros.map((a) => [a.nome, Math.round(a.alt)]), desloc: deslocTempo }), tempo: (min) => { deslocTempo = min * 60000; orientarCeu(Date.now() + deslocTempo); atualizarAstros(Date.now() + deslocTempo); },
+      resolucao: () => resAtual, ceu: () => (ceuR ? ceuR.estado() : null), tempo: (min) => { ceuR && ceuR.tempo(min * 60000); atualizarRelogio(); }, tocarCeu: (x, y) => (ceuR ? ceuR.tocar(x, y, W, H, 14) : null), telaCeu: (nome) => (ceuR ? ceuR.telaDe(nome, W, H) : null),
       separar: (v) => { separacao = v; sincronizarPainel(); }, buscar: (q) => buscar(q), incline: (v) => { incl = v; posicionar(); },
       composicao: () => ({ livro: livroAtivo != null ? livros[livroAtivo].nome : null, secao: secAtiva != null ? SECOES[secAtiva].nome : null, versosAcesos: realceLivro.size || realceLugar.size, lugaresAcesos: atlasC ? atlasC.acesos().size : 0, fios: fios.length }),
       telaLugar: (nome) => { if (!atlasC) return null; const l = atlasC.lugares.filter((x) => x.nome === nome).sort((a, b) => b.peso - a.peso)[0]; return l ? tela(l.x, l.y, zA + atlasC.zLugar()) : null; },

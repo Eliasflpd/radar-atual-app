@@ -470,7 +470,7 @@ async function abrirCeu() {
     if (!ceu) {
       // PRÉVIA do novo Céu: só em desenvolvimento local (localhost/127.x) e com ?ceu=previa; o publicado segue em ceu.js v9
       const previaCeu = /^(localhost|127\.)/.test(location.hostname) && ['previa', 'universo'].includes(PARAM_CEU);
-      const qualPrevia = PARAM_CEU === 'universo' ? '/nexus/ceu-universo.js?v=10' : '/nexus/ceu-previa.js?v=1';
+      const qualPrevia = PARAM_CEU === 'universo' ? '/nexus/ceu-universo.js?v=11' : '/nexus/ceu-previa.js?v=1';
       const { criarCeu } = await import(previaCeu ? qualPrevia : '/nexus/ceu.js?v=9');
       ceu = criarCeu($('ceu'), S, { visivelNo, visivelAresta, selecionar, expandir, painelAresta, abrirGrupo, indisponivel: ceuIndisponivel });
       if (previaCeu) window.__ceuPrevia = ceu;
