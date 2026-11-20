@@ -3,7 +3,7 @@
 // Fontes abertas (baixadas no PC, fora do repositório):
 //   • OpenBible.info, Bible Geocoding Data (CC BY 4.0): https://github.com/openbibleinfo/Bible-Geocoding-Data
 //       data/ancient.jsonl (lugares bíblicos, identificação e versículos) + data/modern.jsonl (coordenadas)
-//   • Natural Earth (domínio público): ne_50m_land, ne_50m_rivers_lake_centerlines, ne_10m_lakes (.geojson)
+//   • Natural Earth (domínio público): ne_10m_land, ne_10m_rivers_lake_centerlines, ne_10m_lakes (.geojson)
 // Uso: node scripts/atlas-gerar.cjs <pasta com os arquivos>
 const fs = require('fs'), path = require('path');
 const D = process.argv[2];
@@ -31,38 +31,54 @@ for (const l of ler('ancient.jsonl').trim().split('\n')) {
   lugares.push({ id: a.id, nome: PT[base] || base, en: a.friendly_id, tipo: (a.types || [])[0] || '', lon: +lon.toFixed(4), lat: +lat.toFixed(4), conf: assoc.score || 0, identificacao: assoc.name || '', versos });
 }
 
-// ── base do mapa (recortada na região bíblica e simplificada) ─────────────────────
-function simplificar(pts, tol) {   // Douglas-Peucker
-  if (pts.length < 3) return pts;
-  const d = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy || 1e-12; let t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L; t = Math.max(0, Math.min(1, t)); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy); };
-  let max = 0, i0 = 0; for (let i = 1; i < pts.length - 1; i++) { const x = d(pts[i], pts[0], pts[pts.length - 1]); if (x > max) { max = x; i0 = i; } }
-  if (max <= tol) return [pts[0], pts[pts.length - 1]];
-  return simplificar(pts.slice(0, i0 + 1), tol).slice(0, -1).concat(simplificar(pts.slice(i0), tol));
+// ── base do mapa: o MUNDO inteiro (Atlas infinito), com alta resolução na região bíblica ─────────────
+const DETALHE = { lon0: 22, lon1: 54, lat0: 20, lat1: 42 };
+const naRegiao = (p) => p[0] >= DETALHE.lon0 && p[0] <= DETALHE.lon1 && p[1] >= DETALHE.lat0 && p[1] <= DETALHE.lat1;
+function simplificar(pts, tol) {   // Douglas-Peucker (iterativo)
+  if (pts.length < 3) return pts.slice();
+  const manter = new Uint8Array(pts.length); manter[0] = manter[pts.length - 1] = 1;
+  const pilha = [[0, pts.length - 1]];
+  while (pilha.length) {
+    const [a, b] = pilha.pop(); let max = 0, im = -1;
+    const ax = pts[a][0], ay = pts[a][1], dx = pts[b][0] - ax, dy = pts[b][1] - ay, L = dx * dx + dy * dy || 1e-12;
+    for (let i = a + 1; i < b; i++) { let t = ((pts[i][0] - ax) * dx + (pts[i][1] - ay) * dy) / L; t = Math.max(0, Math.min(1, t)); const d = Math.hypot(pts[i][0] - ax - t * dx, pts[i][1] - ay - t * dy); if (d > max) { max = d; im = i; } }
+    if (max > tol && im > 0) { manter[im] = 1; pilha.push([a, im], [im, b]); }
+  }
+  return pts.filter((_, i) => manter[i]);
 }
-const dentro = (p) => p[0] >= CAIXA.lon0 - 2 && p[0] <= CAIXA.lon1 + 2 && p[1] >= CAIXA.lat0 - 2 && p[1] <= CAIXA.lat1 + 2;
-const prender = (p) => [Math.max(CAIXA.lon0, Math.min(CAIXA.lon1, p[0])), Math.max(CAIXA.lat0, Math.min(CAIXA.lat1, p[1]))];
-const r2 = (p) => [+p[0].toFixed(3), +p[1].toFixed(3)];
-function aneis(geo, tipoAlvo) {
+// simplifica por trechos: fino dentro da região bíblica, grosso fora
+function simplificarVar(pts, fino, grosso) {
+  const out = []; let trecho = [pts[0]], dentro = naRegiao(pts[0]);
+  for (let i = 1; i < pts.length; i++) { const d = naRegiao(pts[i]); trecho.push(pts[i]); if (d !== dentro || i === pts.length - 1) { const s2 = simplificar(trecho, dentro ? fino : grosso); out.push(...(out.length ? s2.slice(1) : s2)); trecho = [pts[i]]; dentro = d; } }
+  return out;
+}
+const r3 = (p) => [+p[0].toFixed(3), +p[1].toFixed(3)];
+function poligonos(geo, fino, grosso, filtro) {
   const out = [];
   for (const f of geo.features) {
     const g = f.geometry; if (!g) continue;
     const polis = g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : [];
-    for (const poli of polis) { const anel = poli[0]; if (!anel.some(dentro)) continue; const s = simplificar(anel.map(prender), 0.04).map(r2); if (s.length >= 4) out.push(s); }
-    if (tipoAlvo === 'linha') {
-      const linhas = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : [];
-      for (const ln of linhas) { const pts = ln.filter(dentro); if (pts.length < 2) continue; out.push({ nome: f.properties && (f.properties.name_pt || f.properties.name), pts: simplificar(pts, 0.03).map(r2) }); }
-    }
+    for (const poli of polis) { const anel = poli[0]; if (!anel.some((p) => p[1] > -58)) continue; if (filtro && !filtro(anel)) continue; const s2 = simplificarVar(anel, fino, grosso).map(r3); if (s2.length >= 4) out.push(s2); }
   }
   return out;
 }
-const terra = aneis(JSON.parse(ler('ne_50m_land.geojson')));
-const rios = aneis(JSON.parse(ler('ne_50m_rivers_lake_centerlines.geojson')), 'linha').filter((x) => x.pts);
-const lagos = aneis(JSON.parse(ler('ne_10m_lakes.geojson'))).filter((a) => { const xs = a.map((p) => p[0]), ys = a.map((p) => p[1]); return Math.max(...xs) > 25 && Math.min(...xs) < 50 && Math.max(...ys) > 25 && Math.min(...ys) < 42; });
+function linhas(geo, fino, grosso, filtro) {
+  const out = [];
+  for (const f of geo.features) {
+    const g = f.geometry; if (!g) continue;
+    const ls = g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : [];
+    for (const ln of ls) { if (filtro && !filtro(ln, f.properties || {})) continue; const s2 = simplificarVar(ln, fino, grosso).map(r3); if (s2.length >= 2) out.push({ nome: f.properties && (f.properties.name_pt || f.properties.name), pts: s2 }); }
+  }
+  return out;
+}
+const terra = poligonos(JSON.parse(ler('ne_10m_land.geojson')), 0.006, 0.09, (a) => a.length > 6);
+const rios = linhas(JSON.parse(ler('ne_10m_rivers_lake_centerlines.geojson')), 0.004, 0.06, (ln, pr) => ln.some(naRegiao) || (pr.scalerank != null && pr.scalerank <= 4));
+const lagos = poligonos(JSON.parse(ler('ne_10m_lakes.geojson')), 0.003, 0.06, (a) => a.some(naRegiao) || a.length > 120);
 
 const saida = {
   gerado_em: new Date().toISOString().slice(0, 10), caixa: CAIXA,
-  creditos: ['Lugares, identificações e versículos: OpenBible.info, Bible Geocoding Data (CC BY 4.0)', 'Contornos de terra, rios e lagos: Natural Earth (domínio público)'],
-  lugares: lugares.filter((l) => l.lon >= CAIXA.lon0 && l.lon <= CAIXA.lon1 && l.lat >= CAIXA.lat0 && l.lat <= CAIXA.lat1),
+  creditos: ['Lugares, identificações e versículos: OpenBible.info, Bible Geocoding Data (CC BY 4.0)', 'Contornos de terra, rios e lagos: Natural Earth 1:10m (domínio público)'],
+  lugares, mundo: true, detalhe: DETALHE,
   terra, rios, lagos,
 };
 const destino = path.join(__dirname, '..', 'public', 'nexus', 'atlas-dados.json');

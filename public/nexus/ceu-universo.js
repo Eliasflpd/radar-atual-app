@@ -738,7 +738,7 @@ export function criarCeu(container, estado, acoes) {
   async function montarAtlas() {
     try {
       const d = await (await fetch('/nexus/atlas-dados.json')).json();
-      const { criarCamadaAtlas } = await import('/nexus/atlas-camada.js?v=1');
+      const { criarCamadaAtlas } = await import('/nexus/atlas-camada.js?v=2');
       const x0 = Math.min(...secoes.map((q) => q.cx - q.raio)), x1 = Math.max(...secoes.map((q) => q.cx + q.raio));
       const y0 = Math.min(...secoes.map((q) => q.cy - q.raio)), y1 = Math.max(...secoes.map((q) => q.cy + q.raio));
       const cosR = Math.cos(31.5 * Math.PI / 180), larg = (d.caixa.lon1 - d.caixa.lon0) * cosR, alt = d.caixa.lat1 - d.caixa.lat0;
@@ -1064,7 +1064,7 @@ export function criarCeu(container, estado, acoes) {
     orientarCeu(Date.now() + deslocTempo);
     if (t - astrosEm > 2000) { astrosEm = t; atualizarAstros(Date.now() + deslocTempo); }
     if (matEstrelasReais) matEstrelasReais.uniforms.tempo.value = t / 1000;
-    if (atlasC) atlasC.quadro(t, Math.max(0.6, Math.min(2.4, Math.pow(9000 / dist, 0.35))));
+    if (atlasC) { const cg = camera.position; atlasC.quadro(t, Math.max(0.6, Math.min(2.4, Math.pow(9000 / dist, 0.35))), cg, camera.far, alvo, camera.far * 1.8); }
     const seg = reduzido ? 0 : t / 1000;
     fundoCamadas.forEach((m) => { m.uniforms.cam.value.set(alvo.x, alvo.y); m.uniforms.tempo.value = seg; });
     matVers.uniforms.k.value = 1; matVers.uniforms.tempo.value = seg; if (matVia) matVia.uniforms.tempo.value = seg;

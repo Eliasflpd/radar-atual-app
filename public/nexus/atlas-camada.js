@@ -1,5 +1,5 @@
 // NEXUS BÍBLICO — CAMADA ATLAS (folha transparente alinhada ao universo; versão de teste, 20/11/2026).
-// Mapa em relevo dourado sobre vidro azul, com rolos dourados e rosa dos ventos, no MESMO sistema de coordenadas
+// Mapa em relevo dourado sobre vidro azul, INFINITO (o mundo inteiro, sem bordas), no MESMO sistema de coordenadas
 // do universo: a camada fica empilhada acima da camada Bíblia e anda junto com a câmera.
 // Dados reais (public/nexus/atlas-dados.json, gerado por scripts/atlas-gerar.cjs):
 //   lugares, identificações e versículos: OpenBible.info, Bible Geocoding Data (CC BY 4.0);
@@ -16,48 +16,37 @@ export function criarCamadaAtlas(THREE, dados, mapa) {
   const x0 = X(c.lon0), x1 = X(c.lon1), y0 = Y(c.lat0), y1 = Y(c.lat1);
   const opacos = [];   // materiais comuns (opacidade multiplicada pela da camada)
 
-  // mar de vidro azul com graticulado dourado discreto
-  const matMar = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { tempo: { value: 0 }, opac: { value: 1 } },
-    vertexShader: 'varying vec2 u; void main(){ u = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-    fragmentShader: `uniform float opac; varying vec2 u; uniform float tempo;
-      void main(){ vec3 fundo = mix(vec3(0.04,0.13,0.32), vec3(0.09,0.27,0.55), u.y * 0.7 + 0.15);
-        float onda = 0.035 * sin(u.x * 46.0 + tempo * 0.5) * sin(u.y * 31.0 - tempo * 0.35);
-        vec2 g = abs(fract(u * vec2(13.0, 7.0)) - 0.5); float grade = smoothstep(0.486, 0.5, max(g.x, g.y)) * 0.22;
-        float borda = smoothstep(0.0, 0.015, min(min(u.x, 1.0 - u.x), min(u.y, 1.0 - u.y)));
+  // ATLAS INFINITO: o mar de vidro continua para todos os lados (sem borda) e o mundo inteiro está no mapa,
+  // com alta resolução na região bíblica. O graticulado (latitude/longitude) é calculado no próprio shader.
+  const matMar = new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
+    uniforms: { tempo: { value: 0 }, opac: { value: 1 }, cam: { value: new THREE.Vector3() }, longe: { value: 1e6 }, ref: { value: new THREE.Vector4(mapa.cx, mapa.cy, mapa.s, COS) }, cen: { value: new THREE.Vector2(lonC, latC) } },
+    vertexShader: 'varying vec3 w; void main(){ vec4 p = modelMatrix * vec4(position, 1.0); w = p.xyz; gl_Position = projectionMatrix * viewMatrix * p; }',
+    fragmentShader: `uniform float opac; uniform float tempo; uniform vec3 cam; uniform float longe; uniform vec4 ref; uniform vec2 cen; varying vec3 w;
+      void main(){
+        float lon = cen.x + (w.x - ref.x) / (ref.w * ref.z), lat = cen.y + (w.y - ref.y) / ref.z;
+        vec3 fundo = mix(vec3(0.04,0.12,0.30), vec3(0.08,0.24,0.50), clamp(0.5 + lat / 140.0, 0.0, 1.0));
+        float onda = 0.03 * sin(lon * 3.0 + tempo * 0.5) * sin(lat * 2.6 - tempo * 0.35);
+        vec2 gr = abs(fract(vec2(lon, lat) / 5.0) - 0.5); float px = fwidth(lon / 5.0);
+        float grade = (1.0 - smoothstep(0.0, px * 1.5, 0.5 - max(gr.x, gr.y))) * 0.2;
+        float fade = 1.0 - smoothstep(longe * 0.35, longe * 0.8, distance(w, cam));
         vec3 cor = fundo + vec3(0.95, 0.78, 0.42) * grade + onda;
-        gl_FragColor = opac * vec4(cor * 0.85, 0.62 * borda); }` });
-  const mar = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, y1 - y0), matMar); mar.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0); grupo.add(mar);
+        gl_FragColor = opac * vec4(cor * 0.85, 0.6 * fade); }` });
+  matMar.extensions = { derivatives: true };
+  const mar = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), matMar); mar.frustumCulled = false; grupo.add(mar);
 
-  // terra em relevo dourado (a espessura acompanha a separação entre as camadas)
+  // terra em relevo dourado: uma só geometria para o mundo inteiro (rápido), costa e rios em linhas únicas
   const ouro = new THREE.MeshStandardMaterial({ color: '#C49A48', metalness: 0.55, roughness: 0.62, emissive: '#2E2106', emissiveIntensity: 0.3, transparent: true, depthWrite: false });
   const costa = new THREE.LineBasicMaterial({ color: '#FFE3A3', transparent: true, opacity: 0.9, depthWrite: false });
   opacos.push(ouro, costa);
-  for (const anel of dados.terra) {
-    const forma = new THREE.Shape(anel.map(([lo, la]) => new THREE.Vector2(X(lo), Y(la))));
-    relevo.add(new THREE.Mesh(new THREE.ExtrudeGeometry(forma, { depth: 1, bevelEnabled: false, curveSegments: 1 }), ouro));
-    relevo.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(anel.map(([lo, la]) => new THREE.Vector3(X(lo), Y(la), 1.02))), costa));
-  }
+  const formas = dados.terra.map((anel) => new THREE.Shape(anel.map(([lo, la]) => new THREE.Vector2(X(lo), Y(la)))));
+  relevo.add(new THREE.Mesh(new THREE.ExtrudeGeometry(formas, { depth: 1, bevelEnabled: false, curveSegments: 1 }), ouro));
+  const segmentos = (aneis, z, fechar) => { const v = []; for (const a of aneis) { for (let i = 0; i < a.length - 1; i++) v.push(X(a[i][0]), Y(a[i][1]), z, X(a[i + 1][0]), Y(a[i + 1][1]), z); if (fechar && a.length > 2) { const u = a[a.length - 1], q = a[0]; v.push(X(u[0]), Y(u[1]), z, X(q[0]), Y(q[1]), z); } } const g2 = new THREE.BufferGeometry(); g2.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); return g2; };
+  relevo.add(new THREE.LineSegments(segmentos(dados.terra, 1.02, true), costa));
   const lago = new THREE.MeshStandardMaterial({ color: '#2F6FB8', metalness: 0.3, roughness: 0.2, emissive: '#0B2A55', emissiveIntensity: 0.7, transparent: true, depthWrite: false });
   const rio = new THREE.LineBasicMaterial({ color: '#9CCBFF', transparent: true, opacity: 0.9, depthWrite: false });
   opacos.push(lago, rio);
-  for (const anel of dados.lagos) { const m = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(anel.map(([lo, la]) => new THREE.Vector2(X(lo), Y(la))))), lago); m.position.z = 1.04; relevo.add(m); }
-  for (const r of dados.rios) relevo.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(r.pts.map(([lo, la]) => new THREE.Vector3(X(lo), Y(la), 1.06))), rio));
-
-  // rolos dourados e rosa dos ventos
-  const rolo = new THREE.MeshStandardMaterial({ color: '#D8B25E', metalness: 0.95, roughness: 0.25, transparent: true, depthWrite: false }); opacos.push(rolo);
-  const rRolo = mapa.s * 0.55;
-  for (const y of [y0 - rRolo * 1.1, y1 + rRolo * 1.1]) {
-    const cil = new THREE.Mesh(new THREE.CylinderGeometry(rRolo, rRolo, x1 - x0 + rRolo * 2.6, 32), rolo); cil.rotation.z = Math.PI / 2; cil.position.set((x0 + x1) / 2, y, 0); grupo.add(cil);
-    for (const x of [x0 - rRolo * 2, x1 + rRolo * 2]) { const b = new THREE.Mesh(new THREE.SphereGeometry(rRolo * 1.55, 24, 16), rolo); b.position.set(x, y, 0); grupo.add(b); }
-  }
-  const tc = document.createElement('canvas'); tc.width = tc.height = 256; const g = tc.getContext('2d'); g.translate(128, 128);
-  g.strokeStyle = '#FFE3A3'; g.fillStyle = 'rgba(255,227,163,.9)'; g.lineWidth = 2;
-  g.beginPath(); g.arc(0, 0, 100, 0, 6.29); g.stroke(); g.beginPath(); g.arc(0, 0, 88, 0, 6.29); g.stroke();
-  for (let k = 0; k < 8; k++) { g.save(); g.rotate(k * Math.PI / 4); const L = k % 2 ? 62 : 104; g.beginPath(); g.moveTo(0, -L); g.lineTo(10, 0); g.lineTo(-10, 0); g.closePath(); g.fill(); g.restore(); }
-  g.font = '700 26px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', 0, -112); g.fillText('S', 0, 112); g.fillText('L', 112, 0); g.fillText('O', -112, 0);
-  const tex = new THREE.CanvasTexture(tc); tex.colorSpace = THREE.SRGBColorSpace;
-  const matRosa = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }); opacos.push(matRosa);
-  const rosa = new THREE.Mesh(new THREE.PlaneGeometry(mapa.s * 7, mapa.s * 7), matRosa); rosa.position.set(X(-6.5), Y(14), 2); grupo.add(rosa);
+  const mLagos = new THREE.Mesh(new THREE.ShapeGeometry(dados.lagos.map((anel) => new THREE.Shape(anel.map(([lo, la]) => new THREE.Vector2(X(lo), Y(la)))))), lago); mLagos.position.z = 1.04; relevo.add(mLagos);
+  relevo.add(new THREE.LineSegments(segmentos(dados.rios.map((r) => r.pts), 1.06, false), rio));
 
   // lugares
   const lugares = dados.lugares.map((l, i) => ({ ...l, i, x: X(l.lon), y: Y(l.lat), peso: l.versos.length }));
@@ -99,7 +88,8 @@ export function criarCamadaAtlas(THREE, dados, mapa) {
     opacidade(o) { matMar.uniforms.opac.value = o; matLug.uniforms.opac.value = o; opacos.forEach((m) => { m.opacity = m.userData.base * o; }); },
     espessura(e) { relevo.scale.z = e; pontos.scale.z = e; if (rota) rota.scale.z = e; esp = e; },
     zLugar: () => 1.2 * esp,
-    quadro(t, zoom) { matMar.uniforms.tempo.value = t / 1000; matLug.uniforms.tempo.value = t / 1000; matLug.uniforms.zoom.value = zoom; },
-    caixa: { x0, x1, y0, y1 },
+    quadro(t, zoom, camPos, longe, alvoXY, tamanho) { matMar.uniforms.tempo.value = t / 1000; matLug.uniforms.tempo.value = t / 1000; matLug.uniforms.zoom.value = zoom;
+      if (camPos) { matMar.uniforms.cam.value.copy(camPos); matMar.uniforms.longe.value = longe; mar.position.set(alvoXY.x, alvoXY.y, 0); mar.scale.set(tamanho, tamanho, 1); } },
+    caixa: { x0, x1, y0, y1 }, X, Y,
   };
 }
