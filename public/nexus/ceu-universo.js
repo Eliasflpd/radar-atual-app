@@ -204,7 +204,7 @@ export function criarCeu(container, estado, acoes) {
 
   // ── o endereço de cada versículo ─────────────────────────────────────────────
   let BIB = null;                       // [{abbrev,name,chapters}]
-  let vPos = null, vCor = null, vTam = null, vBri = null, vIdx = new Map(), vChave = [];
+  let vSec = null, vPos = null, vCor = null, vTam = null, vBri = null, vIdx = new Map(), vChave = [];
   let livros = [], secoes = [];
   function montarUniverso(bib) {
     BIB = bib;
@@ -232,7 +232,7 @@ export function criarCeu(container, estado, acoes) {
     });
     // versículos: espiral de dois braços por livro (capítulos ao longo dos braços)
     const total = versos.reduce((a, b) => a + b, 0);
-    vPos = new Float32Array(total * 3); vCor = new Float32Array(total * 3); vTam = new Float32Array(total); vBri = new Float32Array(total);
+    vPos = new Float32Array(total * 3); vCor = new Float32Array(total * 3); vTam = new Float32Array(total); vBri = new Float32Array(total); vSec = new Float32Array(total);
     let j = 0;
     const branco = new THREE.Color('#FFFFFF');
     livros.forEach((lv) => {
@@ -250,7 +250,7 @@ export function criarCeu(container, estado, acoes) {
           vPos[j * 3] = pcx + Math.cos(a2) * r2; vPos[j * 3 + 1] = pcy + Math.sin(a2) * r2; vPos[j * 3 + 2] = 0;
           const c = lv.sec.cor3.clone().lerp(branco, 0.35 + hash(j) * 0.4);
           vCor[j * 3] = c.r; vCor[j * 3 + 1] = c.g; vCor[j * 3 + 2] = c.b;
-          vTam[j] = 1.4 + hash(j * 7) * 1.4; vBri[j] = 0.55 + hash(j * 3) * 0.35;
+          vTam[j] = 1.4 + hash(j * 7) * 1.4; vBri[j] = 0.55 + hash(j * 3) * 0.35; vSec[j] = secoes.indexOf(lv.sec);
           const k = chave(lv.num, ci + 1, vi + 1);
           vIdx.set(k, j); vChave.push(k);
           j++;
@@ -261,6 +261,7 @@ export function criarCeu(container, estado, acoes) {
     gVers.setAttribute('color', new THREE.BufferAttribute(vCor, 3));
     gVers.setAttribute('tam', new THREE.BufferAttribute(vTam, 1));
     gVers.setAttribute('brilho', new THREE.BufferAttribute(vBri, 1).setUsage(THREE.DynamicDrawUsage));
+    gVers.setAttribute('sec', new THREE.BufferAttribute(vSec, 1));
     vBase = vPos.slice(); vBriBase = vBri.slice();
     // galáxias (brilho de cada livro) e nebulosas das seções — decorativas, sobre posições reais
     livros.forEach((lv) => {
@@ -324,7 +325,7 @@ export function criarCeu(container, estado, acoes) {
 
   // ── O CÉU REAL E AO VIVO (fundo da camada Universo): módulo ceu-real.js, numa cena própria desenhada antes ───
   let ceuR = null;
-  import('/nexus/ceu-real.js?v=1').then((m) => { ceuR = m.criarCeuReal(THREE, { escala }); atualizarRelogio(); }).catch((e) => console.warn('céu real indisponível', e));
+  import('/nexus/ceu-real.js?v=6').then((m) => { ceuR = m.criarCeuReal(THREE, { escala }); atualizarRelogio(); }).catch((e) => console.warn('céu real indisponível', e));
   renderer.autoClear = false;
   // estrela cadente (decorativa): um risco de luz de vez em quando
   const gCad = new THREE.BufferGeometry();
@@ -365,12 +366,12 @@ export function criarCeu(container, estado, acoes) {
   const gVers = new THREE.BufferGeometry();
   let vBase = null, vBriBase = null;
   const matVers = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true,
-    uniforms: { px: { value: escala }, k: { value: 1 }, tempo: { value: 0 } },
-    vertexShader: `attribute float tam; attribute float brilho; uniform float px; uniform float k; uniform float tempo; varying vec3 c; varying float b;
-      void main(){ c = color;
+    uniforms: { px: { value: escala }, k: { value: 1 }, tempo: { value: 0 }, revela: { value: new Array(10).fill(0) }, longeR: { value: 1 } },
+    vertexShader: `attribute float tam; attribute float brilho; attribute float sec; uniform float px; uniform float k; uniform float tempo; uniform float revela[10]; uniform float longeR; varying vec3 c; varying float b;
+      void main(){ c = color; float rv = 1.0; for (int i = 0; i < 10; i++) { if (float(i) == sec) rv = revela[i]; }
         float fase = fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453) * 6.2831;
         float tw = 0.8 + 0.2 * sin(tempo * (0.8 + fract(fase * 3.7) * 2.4) + fase);
-        b = brilho * (brilho > 1.1 ? 1.0 : tw);
+        b = brilho * (brilho > 1.1 ? 1.0 : tw) * mix(1.0, rv, brilho > 1.1 ? 0.0 : longeR);
         vec4 mv = modelViewMatrix * vec4(position, 1.0); float s = tam * k * 900.0 / -mv.z; gl_PointSize = clamp(s, 0.9, 26.0) * px * (0.65 + 0.35 * b); gl_Position = projectionMatrix * mv; }`,
     fragmentShader: 'uniform float opac; varying vec3 c; varying float b; void main(){ float d = length(gl_PointCoord - 0.5); float nucleo = smoothstep(0.18, 0.0, d); float halo = smoothstep(0.5, 0.0, d) * 0.5; float a = (nucleo + halo) * b; gl_FragColor = opac * vec4(c * a + vec3(nucleo * b * 0.35), a); }' });
   const versos = new THREE.Points(gVers, matVers); versos.frustumCulled = false; GB.add(versos);
@@ -461,6 +462,13 @@ export function criarCeu(container, estado, acoes) {
     gSat.setAttribute('color', new THREE.BufferAttribute(new Float32Array(sats.flatMap((s) => [s.cor.r, s.cor.g, s.cor.b])), 3));
     gSat.setAttribute('alfa', new THREE.BufferAttribute(new Float32Array(sats.length), 1).setUsage(THREE.DynamicDrawUsage));
   }
+
+  // ── REVELAÇÃO DAS REGIÕES: de longe só o nome da região; ao passar o mouse (ou tocar) no nome, os livros surgem ──
+  const revela = new Array(10).fill(0); let secRevelada = null, revelaAte = 0, caixasRegiao = [];
+  const longeR = () => Math.max(0, Math.min(1, (dist - 6000) / 3000));   // 0 perto (tudo aparece) … 1 longe (só o revelado)
+  function revelar(i, ms = 1600) { if (i == null || i < 0) return; secRevelada = i; revelaAte = performance.now() + ms; }
+  function regiaoNoPonto(x, y) { const c = caixasRegiao.find((b) => x >= b.x0 - 6 && x <= b.x1 + 6 && y >= b.y0 - 6 && y <= b.y1 + 6); return c ? c.i : -1; }
+  const livroOculto = (lv) => lv && longeR() > 0.5 && revela[secoes.indexOf(lv.sec)] < 0.3;
 
   // ── projeção, escolha e informação ───────────────────────────────────────────
   let W = 1, H = 1;
@@ -566,7 +574,10 @@ export function criarCeu(container, estado, acoes) {
       const j = bV && dist < 5200 ? versoPerto(x, y, 12) : -1;
       if (j >= 0) { sobreLivro = null; formar(vChave[j]); canvas.style.cursor = 'pointer'; mostrarInfo(); return; }
       if (constel && !constel.soltoEm) soltar();
-      const lv = bV && dist >= 1200 ? livroPerto(x, y) : null;
+      const riH = regiaoNoPonto(x, y);
+      if (riH >= 0) { revelar(riH, 2200); canvas.style.cursor = 'pointer'; sobreLivro = null; info.hidden = true; return; }
+      let lv = bV && dist >= 1200 ? livroPerto(x, y) : null;
+      if (livroOculto(lv)) lv = null; else if (lv && longeR() > 0.5) revelar(secoes.indexOf(lv.sec), 1500);
       sobreLivro = lv; canvas.style.cursor = lv ? 'pointer' : '';
       mostrarInfo();
     }, 40);
@@ -594,7 +605,9 @@ export function criarCeu(container, estado, acoes) {
     if (s >= 0) { acoes.selecionar(sats[s].id, false, true); return; }
     const j = bV && dist < 5200 ? versoPerto(x, y, tipo === 'touch' ? 24 : 12) : -1;
     if (j >= 0) { formar(vChave[j]); clearTimeout(cartaoT); const kk = vChave[j]; if (tipo === 'touch') cartaoT = setTimeout(() => abrirCartao(kk), 330); else abrirCartao(kk); return; }
-    const lv = bV ? livroPerto(x, y) : null;
+    const riC = regiaoNoPonto(x, y);
+    if (riC >= 0) { if (tipo === 'touch' && (secRevelada !== riC || revela[riC] < 0.6)) { revelar(riC, 5000); return; } voar(secoes[riC].cx, secoes[riC].cy, secoes[riC].raio * 3.4); return; }
+    let lv = bV ? livroPerto(x, y) : null; if (livroOculto(lv)) lv = null;
     if (lv && dist > 1500) { voar(lv.cx, lv.cy, lv.raio * 4.2); return; }
     const sec = camada('universo').visivel ? secoes.find((s2) => { const p = tela(s2.cx, s2.cy, 0); return p && Math.hypot(p.x - x, p.y - y) < 40; }) : null;
     if (sec) { voar(sec.cx, sec.cy, sec.raio * 3.4); return; }
@@ -622,8 +635,10 @@ export function criarCeu(container, estado, acoes) {
     return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, d: Math.min(DIST_MAX, d) };
   }
   function mostrarFichaCeu(f) {
-    invest.innerHTML = `<button class="cu-fechar-inv" type="button" aria-label="Fechar">×</button><small>Céu real · camada Universo</small><h3>${esc(f.titulo)}</h3>${f.html}`;
+    invest.innerHTML = `<button class="cu-fechar-inv" type="button" aria-label="Fechar">×</button><small>Céu real · camada Universo</small><h3>${esc(f.titulo)}</h3>${f.html}${f.alvo ? '<div class="cu-chips" style="margin-top:8px"><button type="button" class="cu-apontar">🔭 Aproximar no telescópio</button><button type="button" class="cu-soltar">Voltar ao céu a olho nu</button></div>' : ''}`;
     invest.hidden = false; invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; };
+    const ap = invest.querySelector('.cu-apontar'); if (ap) ap.onclick = () => { if (ceuR.apontar(f.alvo)) voar(alvo.x, alvo.y, Math.min(dist, 260)); };
+    const so = invest.querySelector('.cu-soltar'); if (so) so.onclick = () => { ceuR.soltarMira(); vistaGeral(); };
   }
   function vistaGeral() { if (!secoes.length) return; const c = caixaGeral(); voar(c.x, c.y, c.d); incl = 0; }
   function centralizar(id) {
@@ -846,7 +861,7 @@ export function criarCeu(container, estado, acoes) {
       g2.fillStyle = fundo || 'rgba(2,5,14,.62)'; g2.beginPath(); if (g2.roundRect) g2.roundRect(b.x0, b.y0, b.x1 - b.x0, alt, alt / 2); else g2.rect(b.x0, b.y0, b.x1 - b.x0, alt); g2.fill();
       g2.textAlign = 'left'; g2.textBaseline = 'middle';
       g2.lineWidth = 3; g2.strokeStyle = 'rgba(0,0,0,.85)'; g2.lineJoin = 'round'; g2.strokeText(txt, x0, y);
-      g2.fillStyle = cor; g2.fillText(txt, x0, y); g2.globalAlpha = 1; return true;
+      g2.fillStyle = cor; g2.fillText(txt, x0, y); g2.globalAlpha = 1; return b;
     };
     // destaques primeiro: a constelação ativa
     if (constel && vB) {
@@ -871,8 +886,9 @@ export function criarCeu(container, estado, acoes) {
     if (dist > 9000) {   // REGIÕES
       nivel = 'Universo · regiões do cânon';
       const a = Math.min(1, (dist - 9000) / 4000) * 0.55 + 0.25;
-      if (vU) secoes.forEach((s) => { const p = tela(s.cx, s.cy - s.raio * 0.95, 0); if (p) texto(s.nome.toUpperCase(), p.x, p.y, '700 19px "Cormorant Garamond", Georgia, serif', '#FFE8B0', 'rgba(2,5,14,.55)', a); });
-      if (vB && dist < 16000) livros.forEach((lv) => { const p = tela(lv.cx, lv.cy); if (p) texto(lv.nome, p.x, p.y + 4, '600 12.5px Inter, system-ui, sans-serif', '#F2F5FF', null, Math.min(1, (16000 - dist) / 5000)); });
+      caixasRegiao = [];
+      if (vU) secoes.forEach((s, si) => { const p = tela(s.cx, s.cy - s.raio * 0.95, 0); if (!p) return; const bx = texto(s.nome.toUpperCase(), p.x, p.y, '700 19px "Cormorant Garamond", Georgia, serif', secRevelada === si ? '#FFF4D0' : '#FFE8B0', secRevelada === si ? 'rgba(60,44,10,.75)' : 'rgba(2,5,14,.55)', secRevelada === si ? 1 : a); if (bx) caixasRegiao.push({ ...bx, i: si }); });
+      if (vB) livros.forEach((lv) => { const rv = revela[secoes.indexOf(lv.sec)]; if (rv < 0.25) return; const p = tela(lv.cx, lv.cy); if (p) texto(lv.nome, p.x, p.y + 4, '600 12.5px Inter, system-ui, sans-serif', '#F7F2E0', 'rgba(2,5,14,.6)', Math.min(1, (rv - 0.25) / 0.6)); });
     } else if (dist > 2200) {   // GALÁXIAS (livros)
       nivel = 'Galáxias · livros';
       if (vB) livros.forEach((lv) => { const p = tela(lv.cx, lv.cy - lv.raio * 1.05); if (p && p.x > -80 && p.x < W + 80 && p.y > -30 && p.y < H + 30) texto(lv.nome, p.x, p.y, '700 17px "Cormorant Garamond", Georgia, serif', '#FFE8B0', 'rgba(2,5,14,.7)', 1); });
@@ -976,7 +992,11 @@ export function criarCeu(container, estado, acoes) {
     // galáxias e nebulosas: fortes de longe, somem perto
     const longe = Math.min(1, Math.max(0, (dist - 900) / 6000));
     const resp = reduzido ? 1 : 1;
-    galaxias.children.forEach((sp, i) => { const lv = livros[i]; const foco = sobreLivro === lv ? 0.55 : 0; const pulso = reduzido ? 0 : 0.06 * Math.sin(t / 1000 * 0.8 + i * 1.7); const bb = sp.material.userData.base ?? 0.5; sp.material.userData.base = bb + ((0.12 + 0.5 * longe + foco + pulso + (livroAtivo === i ? 0.6 : 0)) - bb) * 0.12; });
+    if (secRevelada != null && performance.now() > revelaAte) secRevelada = null;
+    for (let i = 0; i < 10; i++) revela[i] += ((secRevelada === i ? 1 : 0) - revela[i]) * Math.min(1, dt / 180);
+    matVers.uniforms.longeR.value = longeR(); for (let i = 0; i < 10; i++) matVers.uniforms.revela.value[i] = revela[i];
+    galaxias.children.forEach((sp, i) => { const lv = livros[i]; const rvL = revela[secoes.indexOf(lv.sec)], fatR = 1 - longeR() * (1 - rvL); const esc2 = lv.raio * 2.9 * (0.35 + 0.65 * fatR); sp.scale.set(esc2, esc2, 1); sp.visible = fatR > 0.02;
+      const foco = sobreLivro === lv ? 0.55 : 0; const pulso = reduzido ? 0 : 0.06 * Math.sin(t / 1000 * 0.8 + i * 1.7); const bb = sp.material.userData.base ?? 0.5; sp.material.userData.base = (bb + ((0.12 + 0.5 * longe + foco + pulso + (livroAtivo === i ? 0.6 : 0)) - bb) * 0.12); sp.material.opacity = sp.material.userData.base * fatR * camada('biblia').opacidade; });
     nebulosas.children.forEach((sp, i) => { sp.material.userData.base = (0.025 + 0.06 * longe) * (reduzido ? 1 : 0.8 + 0.2 * Math.sin(t / 1000 * 0.25 + i * 0.9)) * (secAtiva != null && sp.userData.secao === secAtiva ? 3.2 : 1); });
     if (pronto) {
       // constelação: estrelas ligadas brilham e se aproximam um pouco; linhas acendem em sequência
@@ -1081,10 +1101,11 @@ export function criarCeu(container, estado, acoes) {
           const pl = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, y1 - y0), new THREE.MeshBasicMaterial({ color: '#1C3466', transparent: true, opacity: 0.08, depthWrite: false })); pl.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0);
           return [pl, pts]; } }); montarPainel(); return CAMADAS.length; },
       fpsMedio: () => new Promise((r) => { let n = 0; const t0 = performance.now(); (function f() { n++; if (performance.now() - t0 < 2000) requestAnimationFrame(f); else r(Math.round(n / 2)); })(); }),
-      resolucao: () => resAtual, ceu: () => (ceuR ? ceuR.estado() : null), tempo: (min) => { ceuR && ceuR.tempo(min * 60000); atualizarRelogio(); }, tocarCeu: (x, y) => (ceuR ? ceuR.tocar(x, y, W, H, 14) : null), telaCeu: (nome) => (ceuR ? ceuR.telaDe(nome, W, H) : null),
+      resolucao: () => resAtual, ceu: () => (ceuR ? ceuR.estado() : null), tempo: (min) => { ceuR && ceuR.tempo(min * 60000); atualizarRelogio(); }, tocarCeu: (x, y) => (ceuR ? ceuR.tocar(x, y, W, H, 14) : null), telaCeu: (nome) => (ceuR ? ceuR.telaDe(nome, W, H) : null), debugCeu: (n) => ceuR && ceuR._debug(n), apontarCeu: (nome) => { if (ceuR && ceuR.apontar(nome)) voar(alvo.x, alvo.y, 260); },
       separar: (v) => { separacao = v; sincronizarPainel(); }, buscar: (q) => buscar(q), incline: (v) => { incl = v; posicionar(); },
       composicao: () => ({ livro: livroAtivo != null ? livros[livroAtivo].nome : null, secao: secAtiva != null ? SECOES[secAtiva].nome : null, versosAcesos: realceLivro.size || realceLugar.size, lugaresAcesos: atlasC ? atlasC.acesos().size : 0, fios: fios.length }),
       telaLugar: (nome) => { if (!atlasC) return null; const l = atlasC.lugares.filter((x) => x.nome === nome).sort((a, b) => b.peso - a.peso)[0]; return l ? tela(l.x, l.y, zA + atlasC.zLugar()) : null; },
+      revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       telaLivro: (n) => { const lv = livros[n - 1]; return lv ? tela(lv.cx, lv.cy) : null; }, incl: () => incl,
     },
   };
