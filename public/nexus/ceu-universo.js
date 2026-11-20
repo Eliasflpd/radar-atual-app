@@ -190,6 +190,14 @@ export function criarCeu(container, estado, acoes) {
   function noPlano(x, y, z = zB) { plano.constant = -z; ndc.set((x / W) * 2 - 1, -(y / H) * 2 + 1); ray.setFromCamera(ndc, camera); const p = new THREE.Vector3(); return ray.ray.intersectPlane(plano, p) ? p : null; }
   function zoomEm(x, y, fator) {
     inercia.set(0, 0);
+    // cursor sobre o globo: aproxima em direção ao ponto da Terra sob o cursor (ele fica parado na tela)
+    if (typeof raioNoGlobo === 'function' && atlasC && !modoTerra) { const hit = raioNoGlobo(x, y); if (hit) {
+      // a câmera anda em linha reta na direção do ponto (mesma orientação): o ponto fica cravado sob o cursor
+      const camPos = camera.position.clone(), novoPos = hit.clone().add(camPos.sub(hit).multiplyScalar(fator));
+      const ci = Math.cos(incl), d2 = (novoPos.z - zB) / Math.max(ci, 0.05);
+      if (d2 < DIST_MIN || d2 > DIST_MAX) return;
+      dist = d2; alvo.x = novoPos.x; alvo.y = novoPos.y + Math.sin(incl) * dist; posicionar(); return;
+    } }
     const antes = noPlano(x, y);
     dist *= fator; posicionar();
     const depois = noPlano(x, y);
@@ -536,6 +544,7 @@ export function criarCeu(container, estado, acoes) {
     voo = null; inercia.set(0, 0); moveu = false; botaoDireito = e.button === 2; interagiu = true;
     if (ponteiros.size === 1) {
       arrasto = { x: e.offsetX, y: e.offsetY, t: performance.now() };
+      if (modoTerra) { posicionarTerra(); const pt = raioNoGlobo(e.offsetX, e.offsetY); modoTerra.agarrado = pt ? atlasC.latLonDe(pt) : null; modoTerra.vel = { lat: 0, lon: 0 }; modoTerra.ancora = null; modoTerra.cursor = null; modoTerra.ancoraPinca = false; }
       if (e.pointerType === 'touch') { clearTimeout(toqueLongo); toqueLongo = setTimeout(() => { if (!moveu) { const j = versoPerto(e.offsetX, e.offsetY, 26); if (j >= 0) { formar(vChave[j]); investigar(vChave[j]); } } }, 600); }
     }
     if (ponteiros.size === 2) { const [a, b] = [...ponteiros.values()]; pinca = { d: Math.hypot(a.x - b.x, a.y - b.y), dist, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 }; arrasto = null; clearTimeout(toqueLongo); }
@@ -553,7 +562,7 @@ export function criarCeu(container, estado, acoes) {
     if (arrasto) {
       const dx = e.offsetX - arrasto.x, dy = e.offsetY - arrasto.y;
       if (Math.abs(dx) + Math.abs(dy) > 4) { moveu = true; clearTimeout(toqueLongo); }
-      if (modoTerra) { const k = Math.max(modoTerra.alt, 2) / RAIO_GLOBO * 57.3 * 0.0021 * (900 / Math.max(H, 300)); modoTerra.lat += dy * k; modoTerra.lon -= dx * k / Math.max(0.2, Math.cos(modoTerra.lat * Math.PI / 180)); arrasto = { x: e.offsetX, y: e.offsetY, t: performance.now() }; return; }
+      if (modoTerra) { arrastarTerra(e.offsetX, e.offsetY); arrasto = { x: e.offsetX, y: e.offsetY, t: performance.now() }; return; }
       if (botaoDireito) { incl += dy * 0.004; posicionar(); }
       else {
         const a0 = noPlano(arrasto.x, arrasto.y), a1 = noPlano(e.offsetX, e.offsetY);
@@ -599,7 +608,7 @@ export function criarCeu(container, estado, acoes) {
   let cartaoT = 0;   // no toque, o cartão espera um instante (um segundo toque vira zoom)
   function clique(x, y, tipo) {
     const agora = performance.now(), duplo = agora - ultimoToque < 320; ultimoToque = agora;
-    if (duplo && modoTerra) { const pt = raioNoGlobo(x, y); if (pt) { const ll = atlasC.latLonDe(pt); modoTerra.lat = ll.lat; modoTerra.lon = ll.lon; } modoTerra.alt *= 0.4; return; }
+    if (duplo && modoTerra) { posicionarTerra(); modoTerra.ancora = latLonNaTela(x, y); modoTerra.cursor = { x, y }; modoTerra.altAlvo = modoTerra.altAlvo * 0.35; return; }
     if (duplo) { clearTimeout(cartaoT); const w = noPlano(x, y); if (w) { lembrarVista(); voo = { de: { x: alvo.x, y: alvo.y, d: dist }, para: { x: w.x, y: w.y, d: Math.max(DIST_MIN, dist * 0.35) }, t0: agora, dur: 700 }; } return; }
     const li = lugarPerto(x, y, tipo === 'touch' ? 20 : 11);
     if (li >= 0) { escolherLugar(atlasC.lugares[li], !modoTerra); return; }
@@ -621,11 +630,11 @@ export function criarCeu(container, estado, acoes) {
   }
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault(); voo = null; interagiu = true;
-    if (modoTerra) { modoTerra.alt *= Math.exp(e.deltaY * 0.0016); if (modoTerra.alt > RAIO_GLOBO * 3.2) sairTerra(); return; }
-    if (e.deltaY < 0 && atlasC && camada('atlas').visivel) { const pt = raioNoGlobo(e.offsetX, e.offsetY); if (pt && camera.position.distanceTo(atlasC.centroMundo()) < RAIO_GLOBO * 4.5) { entrarTerra(pt); modoTerra.alt *= Math.exp(e.deltaY * 0.0016); return; } }
+    if (modoTerra) { if (!transicao) { posicionarTerra(); modoTerra.ancora = latLonNaTela(e.offsetX, e.offsetY); } modoTerra.cursor = { x: e.offsetX, y: e.offsetY }; modoTerra.altAlvo = Math.min(RAIO_GLOBO * 3.6, Math.max(1.5, modoTerra.altAlvo * Math.exp(e.deltaY * 0.0014))); return; }
+    if (e.deltaY < 0 && atlasC && camada('atlas').visivel) { const pt = raioNoGlobo(e.offsetX, e.offsetY); if (pt && camera.position.distanceTo(atlasC.centroMundo()) < RAIO_GLOBO * 3.2) { entrarTerra(pt); modoTerra.cursor = { x: e.offsetX, y: e.offsetY }; modoTerra.altAlvo *= Math.exp(e.deltaY * 0.0014); return; } }
     zoomEm(e.offsetX, e.offsetY, Math.exp(e.deltaY * 0.0016)); }, { passive: false });
   // pinça no modo terra: aproxima do chão
-  const pincaTerra = (fator) => { if (modoTerra) { modoTerra.alt *= fator; if (modoTerra.alt > RAIO_GLOBO * 3.2) sairTerra(); return true; } return false; };
+  const pincaTerra = (fator) => { if (modoTerra) { modoTerra.cursor = pinca ? { x: pinca.cx, y: pinca.cy } : null; if (modoTerra.cursor && !modoTerra.ancoraPinca) { posicionarTerra(); modoTerra.ancora = latLonNaTela(modoTerra.cursor.x, modoTerra.cursor.y); modoTerra.ancoraPinca = true; } modoTerra.altAlvo = Math.min(RAIO_GLOBO * 3.6, Math.max(1.5, modoTerra.altAlvo * fator)); return true; } return false; };
   ui.querySelector('.cu-controles').addEventListener('click', (e) => {
     const b = e.target.closest('[data-cu]'); if (!b) return;
     const o = b.dataset.cu;
@@ -656,17 +665,50 @@ export function criarCeu(container, estado, acoes) {
   function raioNoGlobo(x, y) {   // ponto do globo sob o cursor (ou null)
     if (!atlasC || !camada('atlas').visivel) return null;
     ndc.set((x / W) * 2 - 1, -(y / H) * 2 + 1); ray.setFromCamera(ndc, camera);
-    const esf = new THREE.Sphere(atlasC.centroMundo(), RAIO_GLOBO); const pt = new THREE.Vector3();
+    const esf = new THREE.Sphere(atlasC.centroMundo(), RAIO_GLOBO * 1.0036); const pt = new THREE.Vector3();   // altura do chão (terra em relevo), não do nível do mar
     return ray.ray.intersectSphere(esf, pt) ? pt : null;
   }
+  let transicao = null;   // { pos, quat, t0 } — mistura suave entre o modo espaço e o modo Terra
+  function guardarTransicao() { transicao = { pos: camera.position.clone(), quat: camera.quaternion.clone(), t0: performance.now() }; }
   function entrarTerra(ptMundo) {
-    const ll = atlasC.latLonDe(ptMundo), c = atlasC.centroMundo();
-    modoTerra = { lat: ll.lat, lon: ll.lon, alt: Math.max(20, camera.position.distanceTo(c) - RAIO_GLOBO), voo: null };
+    guardarTransicao();
+    const c = atlasC.centroMundo(), sub = atlasC.latLonDe(camera.position.clone());   // começa olhando o ponto logo abaixo da câmera
+    const alt = Math.max(20, camera.position.distanceTo(c) - RAIO_GLOBO);
+    modoTerra = { lat: sub.lat, lon: sub.lon, alt, altAlvo: alt, cursor: null, vel: { lat: 0, lon: 0 }, ancora: ptMundo ? atlasC.latLonDe(ptMundo) : null };   // o ponto da Terra que estava sob o cursor
     voo = null; inercia.set(0, 0); interagiu = true;
   }
   function sairTerra() {
-    if (!modoTerra) return; const c = atlasC.centroMundo(); modoTerra = null;
-    alvo.set(c.x, c.y, zB); dist = Math.min(DIST_MAX, RAIO_GLOBO * 4.2); incl = Math.min(incl, 0.6); posicionar();
+    if (!modoTerra) return; guardarTransicao();
+    const c = atlasC.centroMundo(); modoTerra = null;
+    alvo.set(c.x, c.y, zB); dist = Math.min(DIST_MAX, Math.max(RAIO_GLOBO * 3.6, camera.position.distanceTo(c))); incl = Math.min(incl, 0.5); posicionar();
+  }
+  function latLonNaTela(x, y) { const pt = raioNoGlobo(x, y); return pt ? atlasC.latLonDe(pt) : null; }
+  const difLon = (a, b) => { let d = a - b; while (d > 180) d -= 360; while (d < -180) d += 360; return d; };
+  // gira o centro da vista pela mesma rotação que leva o ponto 'de' até o ponto 'para' (exato na esfera)
+  const vLL = (ll) => { const la = ll.lat * Math.PI / 180, lo = ll.lon * Math.PI / 180; return new THREE.Vector3(Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)); };
+  function girarCentro(de, para) {   // o ponto que está sob o cursor ('de') volta para onde estava ('para')
+    const m = modoTerra, r = new THREE.Quaternion().setFromUnitVectors(vLL(de), vLL(para));
+    const cn = vLL(m).applyQuaternion(r);
+    m.lat = Math.asin(Math.max(-1, Math.min(1, cn.z))) * 180 / Math.PI; m.lon = Math.atan2(cn.y, cn.x) * 180 / Math.PI;
+  }
+  function arrastarTerra(x, y) {
+    const m = modoTerra, ag = m.agarrado;
+    if (ag) { posicionarTerra(); const q = latLonNaTela(x, y); if (q) { const l0 = m.lat, n0 = m.lon; girarCentro(q, ag); m.vel = { lat: m.lat - l0, lon: difLon(m.lon, n0) }; posicionarTerra(); return; } }
+    const k = Math.max(m.alt, 2) / RAIO_GLOBO * 57.3 * 0.0021 * (900 / Math.max(H, 300)), dx = x - arrasto.x, dy = y - arrasto.y;
+    m.lat += dy * k; m.lon -= dx * k / Math.max(0.2, Math.cos(m.lat * Math.PI / 180));
+  }
+  // a cada quadro: aproximação suave mantendo o ponto do cursor no lugar; inércia do arrasto; saída para o espaço
+  function animarTerra() {
+    const m = modoTerra;
+    if (Math.abs(m.altAlvo - m.alt) > m.alt * 0.002) {
+      posicionarTerra();   // mede com a câmera exata deste quadro (antes e depois)
+      const antes = m.cursor ? (m.ancora || latLonNaTela(m.cursor.x, m.cursor.y)) : null;
+      m.alt += (m.altAlvo - m.alt) * 0.2; posicionarTerra();
+      if (antes) for (let it = 0; it < 3; it++) { const depois = latLonNaTela(m.cursor.x, m.cursor.y); if (!depois) break; girarCentro(depois, antes); posicionarTerra(); }   // 3 passos: o ponto do cursor fica cravado
+    }
+    if (!arrasto && m.vel && (Math.abs(m.vel.lat) + Math.abs(m.vel.lon) > 1e-5)) { m.lat += m.vel.lat; m.lon += m.vel.lon; m.vel.lat *= 0.9; m.vel.lon *= 0.9; }
+    if (m.altAlvo > RAIO_GLOBO * 3.3 && m.alt > RAIO_GLOBO * 3.1) { sairTerra(); return false; }
+    return true;
   }
   function posicionarTerra() {
     const m = modoTerra; m.lat = Math.max(-85, Math.min(85, m.lat)); m.lon = ((m.lon + 540) % 360) - 180;
@@ -675,10 +717,10 @@ export function criarCeu(container, estado, acoes) {
     const norte = dn.sub(d.clone().multiplyScalar(dn.dot(d))).normalize();
     const sup = c.clone().addScaledVector(d, RAIO_GLOBO * 1.0035);
     // perto do chão a câmera inclina um pouco (como olhar o horizonte); longe, olha de cima
-    const inc = Math.max(0, Math.min(0.9, 0.9 - Math.log10(Math.max(m.alt, 1)) * 0.28));
+    const inc = Math.max(0, Math.min(0.75, (Math.log10(RAIO_GLOBO * 0.15) - Math.log10(Math.max(m.alt, 1))) * 0.42));   // longe: de cima; perto do chão: olhando o horizonte
     const pos = sup.clone().addScaledVector(d, m.alt * Math.cos(inc)).addScaledVector(norte, -m.alt * Math.sin(inc));
     camera.position.copy(pos); camera.up.copy(norte.clone().multiplyScalar(Math.cos(inc)).addScaledVector(d, Math.sin(inc))); camera.lookAt(sup);
-    camera.near = Math.max(0.05, m.alt * 0.01); camera.far = camera.position.distanceTo(c) * 6 + 80000; camera.updateProjectionMatrix();
+    camera.near = Math.max(0.05, m.alt * 0.01); camera.far = camera.position.distanceTo(c) * 6 + 80000; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);   // a medida sob o cursor usa a câmera deste instante
   }
   function vistaGeral() { if (modoTerra) sairTerra(); if (!secoes.length) return; const c = caixaGeral(); voar(c.x, c.y, c.d); incl = 0; }
   function centralizar(id) {
@@ -693,7 +735,7 @@ export function criarCeu(container, estado, acoes) {
   async function montarAtlas() {
     try {
       const d = await (await fetch('/nexus/atlas-dados.json')).json();
-      const { criarGloboAtlas } = await import('/nexus/atlas-globo.js?v=2');
+      const { criarGloboAtlas } = await import('/nexus/atlas-globo.js?v=3');
       const x0 = Math.min(...secoes.map((q) => q.cx - q.raio)), x1 = Math.max(...secoes.map((q) => q.cx + q.raio));
       const y0 = Math.min(...secoes.map((q) => q.cy - q.raio)), y1 = Math.max(...secoes.map((q) => q.cy + q.raio));
       RAIO_GLOBO = Math.round((y1 - y0) * 0.22);
@@ -859,7 +901,7 @@ export function criarCeu(container, estado, acoes) {
   }
   // aplica visibilidade, altura e opacidade de cada camada (chamado a cada quadro)
   function aplicarCamadas() {
-    espaco = Math.min(4200, Math.max(10, dist * 0.17)) * separacao;
+    espaco = 1800 * separacao;   // altura fixa entre as folhas (o globo e as galáxias não andam quando se dá zoom)
     CAMADAS.forEach((c, i) => {
       c.z = i * espaco; c.grupo.position.z = c.z;
       const vis = c.visivel && c.opacidade > 0.01;
@@ -1019,7 +1061,8 @@ export function criarCeu(container, estado, acoes) {
       dist = Math.exp(Math.log(voo.de.d) + (Math.log(voo.para.d) - Math.log(voo.de.d)) * e); posicionar();
       if (q >= 1) voo = null;
     } else if (!arrasto && inercia.lengthSq() > 1e-4) { alvo.x += inercia.x * dt / 16; alvo.y += inercia.y * dt / 16; inercia.multiplyScalar(0.92); posicionar(); }
-    aplicarCamadas(); if (modoTerra && atlasC) posicionarTerra(); else { alvo.z = zB; posicionar(); }
+    aplicarCamadas(); if (modoTerra && atlasC) { if (animarTerra()) posicionarTerra(); } else { alvo.z = zB; posicionar(); }
+    if (transicao) { const q = Math.min(1, (performance.now() - transicao.t0) / 650), e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2; if (q >= 1) transicao = null; else { camera.position.lerpVectors(transicao.pos, camera.position.clone(), e); camera.quaternion.slerpQuaternions(transicao.quat, camera.quaternion.clone(), e); camera.updateMatrixWorld(); } }
     if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel);
     if (atlasC) atlasC.quadro(t, modoTerra ? Math.max(0.8, Math.min(2.4, Math.pow(RAIO_GLOBO / Math.max(modoTerra.alt, 1), 0.3))) : Math.max(0.6, Math.min(2.0, Math.pow(9000 / dist, 0.3))));
     const seg = reduzido ? 0 : t / 1000;
@@ -1149,7 +1192,7 @@ export function criarCeu(container, estado, acoes) {
       separar: (v) => { separacao = v; sincronizarPainel(); }, buscar: (q) => buscar(q), incline: (v) => { incl = v; posicionar(); },
       composicao: () => ({ livro: livroAtivo != null ? livros[livroAtivo].nome : null, secao: secAtiva != null ? SECOES[secAtiva].nome : null, versosAcesos: realceLivro.size || realceLugar.size, lugaresAcesos: atlasC ? atlasC.acesos().size : 0, fios: fios.length }),
       telaLugar: (nome) => { if (!atlasC) return null; const l = atlasC.lugares.filter((x) => x.nome === nome).sort((a, b) => b.peso - a.peso)[0]; return l ? telaLugarV(l) : null; },
-      terra: () => (modoTerra ? { lat: +modoTerra.lat.toFixed(2), lon: +modoTerra.lon.toFixed(2), alt: Math.round(modoTerra.alt) } : null), irTerra: (lat, lon, alt) => { if (!atlasC) return false; modoTerra = { lat, lon, alt }; return true; }, sairTerra: () => sairTerra(), raioGlobo: () => RAIO_GLOBO, telaGlobo: () => { if (!atlasC) return null; const c = atlasC.centroMundo(); tmp.copy(c).project(camera); return { x: (tmp.x + 1) / 2 * W, y: (1 - tmp.y) / 2 * H }; },
+      terra: () => (modoTerra ? { lat: +modoTerra.lat.toFixed(2), lon: +modoTerra.lon.toFixed(2), alt: Math.round(modoTerra.alt) } : null), irTerra: (lat, lon, alt) => { if (!atlasC) return false; modoTerra = { lat, lon, alt, altAlvo: alt, cursor: null, vel: { lat: 0, lon: 0 } }; return true; }, sairTerra: () => sairTerra(), raioGlobo: () => RAIO_GLOBO, telaGlobo: () => { if (!atlasC) return null; const c = atlasC.centroMundo(); tmp.copy(c).project(camera); return { x: (tmp.x + 1) / 2 * W, y: (1 - tmp.y) / 2 * H }; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       telaLivro: (n) => { const lv = livros[n - 1]; return lv ? tela(lv.cx, lv.cy) : null; }, incl: () => incl,
     },

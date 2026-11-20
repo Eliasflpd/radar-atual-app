@@ -69,7 +69,7 @@ export function criarGloboAtlas(THREE, dados, opcoes) {
   giro.add(new THREE.Mesh(new THREE.SphereGeometry(R * 1.06, 96, 48), matAtm));
 
   // lugares (pontos dourados; os do outro lado do globo somem)
-  const lugares = dados.lugares.map((l, i) => ({ ...l, i, peso: l.versos.length, local: n(l.lat, l.lon).multiplyScalar(R * (H + 0.0012)) }));
+  const lugares = dados.lugares.map((l, i) => ({ ...l, i, peso: l.versos.length, local: n(l.lat, l.lon).multiplyScalar(R * (H + 0.0001)) }));
   const porVerso = new Map(); for (const l of lugares) for (const k of l.versos) { const a = porVerso.get(k) || []; a.push(l.i); porVerso.set(k, a); }
   const gLug = new THREE.BufferGeometry();
   gLug.setAttribute('position', new THREE.BufferAttribute(new Float32Array(lugares.flatMap((l) => [l.local.x, l.local.y, l.local.z])), 3));
