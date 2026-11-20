@@ -547,11 +547,13 @@ export function criarCeu(container, estado, acoes) {
     if (pinca && ponteiros.size === 2) {
       const [a, b] = [...ponteiros.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y);
       const alvoD = pinca.dist * pinca.d / Math.max(10, d);
+      if (pincaTerra(alvoD / (pinca.ultimo || pinca.dist))) { pinca.ultimo = alvoD; moveu = true; return; }
       zoomEm(pinca.cx, pinca.cy, alvoD / dist); moveu = true; return;
     }
     if (arrasto) {
       const dx = e.offsetX - arrasto.x, dy = e.offsetY - arrasto.y;
       if (Math.abs(dx) + Math.abs(dy) > 4) { moveu = true; clearTimeout(toqueLongo); }
+      if (modoTerra) { const k = Math.max(modoTerra.alt, 2) / RAIO_GLOBO * 57.3 * 0.0021 * (900 / Math.max(H, 300)); modoTerra.lat += dy * k; modoTerra.lon -= dx * k / Math.max(0.2, Math.cos(modoTerra.lat * Math.PI / 180)); arrasto = { x: e.offsetX, y: e.offsetY, t: performance.now() }; return; }
       if (botaoDireito) { incl += dy * 0.004; posicionar(); }
       else {
         const a0 = noPlano(arrasto.x, arrasto.y), a1 = noPlano(e.offsetX, e.offsetY);
@@ -568,7 +570,7 @@ export function criarCeu(container, estado, acoes) {
     pairarT = setTimeout(() => {
       const li = lugarPerto(x, y, 10);
       if (li >= 0) { const l = atlasC.lugares[li]; const conf = l.conf >= 700 ? 'identificação segura' : l.conf >= 300 ? 'identificação provável' : 'identificação incerta'; canvas.style.cursor = 'pointer'; info.innerHTML = `<b>${esc(l.nome)}</b>${l.identificacao && l.identificacao !== l.nome ? `<em>hoje: ${esc(l.identificacao)}</em>` : ''}<small>Atlas · ${l.peso} versículo(s) · ${conf} (${l.conf}/1000) · OpenBible.info · clique para acender os versículos</small>`; info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!lugarAtivo && livroAtivo == null) { atlasC.acender([li]); fios = l.versos.slice(0, 80).map((k) => ({ l: li, j: vIdx.get(k) })).filter((f) => f.j != null); } return; }
-      const bV = camada('biblia').visivel && camada('biblia').opacidade > 0.1;   // só pega o que está visível
+      const bV = !modoTerra && camada('biblia').visivel && camada('biblia').opacidade > 0.1;   // só pega o que está visível
       const s = bV && dist < 1800 ? satPerto(x, y, 12) : -1;
       if (s >= 0) { canvas.style.cursor = 'pointer'; info.innerHTML = `<b>${esc(sats[s].rotulo)}</b><small>${esc(NOME_TIPO[sats[s].tipo] || sats[s].tipo)} · ligado a ${esc(nomeRef(sats[s].k))} · clique para ver as evidências</small>`; info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; return; }
       const j = bV && dist < 5200 ? versoPerto(x, y, 12) : -1;
@@ -597,10 +599,13 @@ export function criarCeu(container, estado, acoes) {
   let cartaoT = 0;   // no toque, o cartão espera um instante (um segundo toque vira zoom)
   function clique(x, y, tipo) {
     const agora = performance.now(), duplo = agora - ultimoToque < 320; ultimoToque = agora;
+    if (duplo && modoTerra) { const pt = raioNoGlobo(x, y); if (pt) { const ll = atlasC.latLonDe(pt); modoTerra.lat = ll.lat; modoTerra.lon = ll.lon; } modoTerra.alt *= 0.4; return; }
     if (duplo) { clearTimeout(cartaoT); const w = noPlano(x, y); if (w) { lembrarVista(); voo = { de: { x: alvo.x, y: alvo.y, d: dist }, para: { x: w.x, y: w.y, d: Math.max(DIST_MIN, dist * 0.35) }, t0: agora, dur: 700 }; } return; }
     const li = lugarPerto(x, y, tipo === 'touch' ? 20 : 11);
-    if (li >= 0) { escolherLugar(atlasC.lugares[li]); return; }
-    const bV = camada('biblia').visivel && camada('biblia').opacidade > 0.1;
+    if (li >= 0) { escolherLugar(atlasC.lugares[li], !modoTerra); return; }
+    if (modoTerra) return;
+    if (atlasC && camada('atlas').visivel && camada('atlas').opacidade > 0.2) { const pt = raioNoGlobo(x, y); if (pt) { entrarTerra(pt); modoTerra.alt = Math.min(modoTerra.alt, RAIO_GLOBO * 1.2); return; } }
+    const bV = !modoTerra && camada('biblia').visivel && camada('biblia').opacidade > 0.1;
     const s = bV && dist < 1800 ? satPerto(x, y, tipo === 'touch' ? 22 : 12) : -1;
     if (s >= 0) { acoes.selecionar(sats[s].id, false, true); return; }
     const j = bV && dist < 5200 ? versoPerto(x, y, tipo === 'touch' ? 24 : 12) : -1;
@@ -614,7 +619,13 @@ export function criarCeu(container, estado, acoes) {
     if (ceuR && camada('universo').visivel) { const f = ceuR.tocar(x, y, W, H, tipo === 'touch' ? 24 : 14); if (f) { mostrarFichaCeu(f); return; } }
     if (tipo === 'touch' && constel) soltar();
   }
-  canvas.addEventListener('wheel', (e) => { e.preventDefault(); voo = null; interagiu = true; zoomEm(e.offsetX, e.offsetY, Math.exp(e.deltaY * 0.0016)); }, { passive: false });
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault(); voo = null; interagiu = true;
+    if (modoTerra) { modoTerra.alt *= Math.exp(e.deltaY * 0.0016); if (modoTerra.alt > RAIO_GLOBO * 3.2) sairTerra(); return; }
+    if (e.deltaY < 0 && atlasC && camada('atlas').visivel) { const pt = raioNoGlobo(e.offsetX, e.offsetY); if (pt && camera.position.distanceTo(atlasC.centroMundo()) < RAIO_GLOBO * 4.5) { entrarTerra(pt); modoTerra.alt *= Math.exp(e.deltaY * 0.0016); return; } }
+    zoomEm(e.offsetX, e.offsetY, Math.exp(e.deltaY * 0.0016)); }, { passive: false });
+  // pinça no modo terra: aproxima do chão
+  const pincaTerra = (fator) => { if (modoTerra) { modoTerra.alt *= fator; if (modoTerra.alt > RAIO_GLOBO * 3.2) sairTerra(); return true; } return false; };
   ui.querySelector('.cu-controles').addEventListener('click', (e) => {
     const b = e.target.closest('[data-cu]'); if (!b) return;
     const o = b.dataset.cu;
@@ -640,7 +651,36 @@ export function criarCeu(container, estado, acoes) {
     const ap = invest.querySelector('.cu-apontar'); if (ap) ap.onclick = () => { if (ceuR.apontar(f.alvo)) voar(alvo.x, alvo.y, Math.min(dist, 260)); };
     const so = invest.querySelector('.cu-soltar'); if (so) so.onclick = () => { ceuR.soltarMira(); vistaGeral(); };
   }
-  function vistaGeral() { if (!secoes.length) return; const c = caixaGeral(); voar(c.x, c.y, c.d); incl = 0; }
+  // ── MODO TERRA ───────────────────────────────────────────────────────────────
+  let modoTerra = null;   // { lat, lon, alt }
+  function raioNoGlobo(x, y) {   // ponto do globo sob o cursor (ou null)
+    if (!atlasC || !camada('atlas').visivel) return null;
+    ndc.set((x / W) * 2 - 1, -(y / H) * 2 + 1); ray.setFromCamera(ndc, camera);
+    const esf = new THREE.Sphere(atlasC.centroMundo(), RAIO_GLOBO); const pt = new THREE.Vector3();
+    return ray.ray.intersectSphere(esf, pt) ? pt : null;
+  }
+  function entrarTerra(ptMundo) {
+    const ll = atlasC.latLonDe(ptMundo), c = atlasC.centroMundo();
+    modoTerra = { lat: ll.lat, lon: ll.lon, alt: Math.max(20, camera.position.distanceTo(c) - RAIO_GLOBO), voo: null };
+    voo = null; inercia.set(0, 0); interagiu = true;
+  }
+  function sairTerra() {
+    if (!modoTerra) return; const c = atlasC.centroMundo(); modoTerra = null;
+    alvo.set(c.x, c.y, zB); dist = Math.min(DIST_MAX, RAIO_GLOBO * 4.2); incl = Math.min(incl, 0.6); posicionar();
+  }
+  function posicionarTerra() {
+    const m = modoTerra; m.lat = Math.max(-85, Math.min(85, m.lat)); m.lon = ((m.lon + 540) % 360) - 180;
+    m.alt = Math.max(1.5, m.alt);
+    const c = atlasC.centroMundo(), d = atlasC.direcao(m.lat, m.lon), dn = atlasC.direcao(Math.min(89.9, m.lat + 0.5), m.lon);
+    const norte = dn.sub(d.clone().multiplyScalar(dn.dot(d))).normalize();
+    const sup = c.clone().addScaledVector(d, RAIO_GLOBO * 1.0035);
+    // perto do chão a câmera inclina um pouco (como olhar o horizonte); longe, olha de cima
+    const inc = Math.max(0, Math.min(0.9, 0.9 - Math.log10(Math.max(m.alt, 1)) * 0.28));
+    const pos = sup.clone().addScaledVector(d, m.alt * Math.cos(inc)).addScaledVector(norte, -m.alt * Math.sin(inc));
+    camera.position.copy(pos); camera.up.copy(norte.clone().multiplyScalar(Math.cos(inc)).addScaledVector(d, Math.sin(inc))); camera.lookAt(sup);
+    camera.near = Math.max(0.05, m.alt * 0.01); camera.far = camera.position.distanceTo(c) * 6 + 80000; camera.updateProjectionMatrix();
+  }
+  function vistaGeral() { if (modoTerra) sairTerra(); if (!secoes.length) return; const c = caixaGeral(); voar(c.x, c.y, c.d); incl = 0; }
   function centralizar(id) {
     const q = lerId(id);
     if (q && vIdx.has(q.ini)) { const j = vIdx.get(q.ini); voar(vBase[j * 3], vBase[j * 3 + 1], Math.min(dist, 260)); return; }
@@ -653,15 +693,19 @@ export function criarCeu(container, estado, acoes) {
   async function montarAtlas() {
     try {
       const d = await (await fetch('/nexus/atlas-dados.json')).json();
-      const { criarCamadaAtlas } = await import('/nexus/atlas-camada.js?v=2');
+      const { criarGloboAtlas } = await import('/nexus/atlas-globo.js?v=2');
       const x0 = Math.min(...secoes.map((q) => q.cx - q.raio)), x1 = Math.max(...secoes.map((q) => q.cx + q.raio));
       const y0 = Math.min(...secoes.map((q) => q.cy - q.raio)), y1 = Math.max(...secoes.map((q) => q.cy + q.raio));
-      const cosR = Math.cos(31.5 * Math.PI / 180), larg = (d.caixa.lon1 - d.caixa.lon0) * cosR, alt = d.caixa.lat1 - d.caixa.lat0;
-      const sMapa = Math.min((x1 - x0) * 1.05 / larg, (y1 - y0) * 1.6 / alt);
-      atlasC = criarCamadaAtlas(THREE, d, { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, s: sMapa });
+      RAIO_GLOBO = Math.round((y1 - y0) * 0.22);
+      atlasC = criarGloboAtlas(THREE, d, { raio: RAIO_GLOBO });
+      atlasC.grupo.position.set((x0 + x1) / 2, (y0 + y1) / 2, RAIO_GLOBO * 1.15);   // a Terra no meio do universo, acima das galáxias
       GA.add(atlasC.grupo); precisaOpac = true;
     } catch (e) { console.warn('Atlas indisponível:', e); }
   }
+  let RAIO_GLOBO = 2000;
+  // posição na tela de um lugar do globo (null se estiver do outro lado)
+  const lugarPos = (l) => atlasC.posMundo(l);
+  function telaLugarV(l) { if (!atlasC.deFrente(l, camera.position)) return null; const w = lugarPos(l); tmp.copy(w).project(camera); if (tmp.z > 1) return null; return { x: (tmp.x + 1) / 2 * W, y: (1 - tmp.y) / 2 * H }; }
   const norm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   function limparComposicao() {
     lugarAtivo = null; realceLugar = new Set(); realceLivro = new Set(); livroAtivo = null; secAtiva = null; fios = [];
@@ -686,7 +730,7 @@ export function criarCeu(container, estado, acoes) {
     chipLugar.innerHTML = `📍 ${esc(l.nome)} · ${realceLugar.size} versículo(s) acesos em ${livrosLugar.size} livro(s) <button type="button" aria-label="Apagar">×</button>`;
     chipLugar.hidden = false;
     chipLugar.querySelector('button').onclick = () => limparComposicao();
-    if (enquadrar && js.length) enquadrarXY(js.map((j) => vBase[j * 3]).concat([l.x]), js.map((j) => vBase[j * 3 + 1]).concat([l.y]));
+    if (enquadrar && js.length) { const c = atlasC.centroMundo(); enquadrarXY(js.map((j) => vBase[j * 3]).concat([c.x]), js.map((j) => vBase[j * 3 + 1]).concat([c.y])); }
   }
   // versículo sob o mouse -> lugares citados acendem no Atlas
   function lugaresDoVerso(k) {
@@ -729,7 +773,7 @@ export function criarCeu(container, estado, acoes) {
     // enquadra o livro e os lugares juntos, em perspectiva, com as folhas afastadas
     const pts = ordem.slice(0, 20).map(([li]) => atlasC.lugares[li]);
     separacao = Math.max(separacao, 1.6); sincronizarPainel();
-    enquadrarXY([lv.cx - lv.raio, lv.cx + lv.raio].concat(pts.map((q) => q.x)), [lv.cy - lv.raio, lv.cy + lv.raio].concat(pts.map((q) => q.y)), 0.78);
+    { const c = atlasC.centroMundo(); enquadrarXY([lv.cx - lv.raio, lv.cx + lv.raio, c.x - RAIO_GLOBO, c.x + RAIO_GLOBO], [lv.cy - lv.raio, lv.cy + lv.raio, c.y - RAIO_GLOBO, c.y + RAIO_GLOBO], 0.78); }
   }
   function comporSecao(si) {
     limparComposicao(); secAtiva = si; const q = secoes[si];
@@ -770,9 +814,9 @@ export function criarCeu(container, estado, acoes) {
   // lugar sob o ponteiro (camada Atlas, por cima)
   function lugarPerto(px, py, raio) {
     if (!atlasC || !camada('atlas').visivel || camada('atlas').opacidade < 0.08) return -1;
-    let m = -1, dm = raio * raio; const zl = zA + atlasC.zLugar();
+    let m = -1, dm = raio * raio;
     // vários lugares juntos (de longe): fica o mais citado entre os que estão sob o ponteiro
-    let pm = -1; for (const l of atlasC.lugares) { const p = tela(l.x, l.y, zl); if (!p) continue; const d = (p.x - px) ** 2 + (p.y - py) ** 2; if (d < dm && (l.peso > pm || m < 0)) { pm = l.peso; m = l.i; } }
+    let pm = Infinity; const pesoConta = !modoTerra || modoTerra.alt > RAIO_GLOBO * 0.15; for (const l of atlasC.lugares) { const p = telaLugarV(l); if (!p) continue; const d = (p.x - px) ** 2 + (p.y - py) ** 2; const sc = pesoConta ? d / (1 + Math.log2(1 + l.peso)) : (d + 4) * (1 + 2 / (1 + Math.log2(1 + l.peso))); if (d < dm && sc < pm) { pm = sc; m = l.i; } }
     return m;
   }
   // painel das camadas (gerado a partir de CAMADAS: uma camada nova aparece aqui sozinha)
@@ -803,10 +847,9 @@ export function criarCeu(container, estado, acoes) {
     const pa = gFio.attributes.position, al = gFio.attributes.alfa; let n = 0;
     const mostrar = atlasC && camada('atlas').visivel && camada('biblia').visivel;
     if (mostrar) {
-      const zl = zA + atlasC.zLugar();
       for (const f of fios) {
         if (n >= MAX_FIOS) break; const l = atlasC.lugares[f.l]; if (!l || f.j == null) continue;
-        pa.setXYZ(n * 2, l.x, l.y, zl); pa.setXYZ(n * 2 + 1, vPos[f.j * 3], vPos[f.j * 3 + 1], zB);
+        const w = lugarPos(l); pa.setXYZ(n * 2, w.x, w.y, w.z); pa.setXYZ(n * 2 + 1, vPos[f.j * 3], vPos[f.j * 3 + 1], zB);
         const a = 0.5 * Math.min(camada('atlas').opacidade + 0.3, 1) * (0.75 + 0.25 * Math.sin(t / 300 + n));
         al.setX(n * 2, a); al.setX(n * 2 + 1, a * 0.55); n++;
       }
@@ -827,7 +870,7 @@ export function criarCeu(container, estado, acoes) {
     zB = camada('biblia').z; zA = camada('atlas').z;
     for (const c of CAMADAS) {
       if (!c.grupo.visible) continue;                                     // desligada: custo zero
-      if (c.propria) { if (c.id === 'atlas' && atlasC) { atlasC.opacidade(c.opacidade); atlasC.espessura(Math.max(0.4, espaco * 0.05)); } continue; }
+      if (c.propria) { if (c.id === 'atlas' && atlasC) atlasC.opacidade(c.opacidade); continue; }
       if (!c.animada && !c._sujo && c._op === c.opacidade) continue;       // nada mudou
       c._op = c.opacidade; c._sujo = false;
       c.grupo.traverse((o) => { const m = o.material; if (!m) return; if (m.isShaderMaterial) { if (!m.uniforms.opac) m.uniforms.opac = { value: 1 }; m.uniforms.opac.value = c.opacidade; } else { if (m.userData.base == null) m.userData.base = m.opacity; m.transparent = true; m.opacity = m.userData.base * c.opacidade; } });
@@ -851,7 +894,7 @@ export function criarCeu(container, estado, acoes) {
     const ocup = [];
     const cabe = (b) => !ocup.some((o) => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0);
     // LEITURA: de bem perto, o capítulo inteiro aparece num painel (a Bíblia toda pode ser lida no universo); os rótulos desviam dele
-    const vU = camada('universo').visivel && camada('universo').opacidade > 0.1, vB = camada('biblia').visivel && camada('biblia').opacidade > 0.1;   // rótulos seguem a camada
+    const vU = !modoTerra && camada('universo').visivel && camada('universo').opacidade > 0.1, vB = !modoTerra && camada('biblia').visivel && camada('biblia').opacidade > 0.1;   // perto da Terra, só a Terra fala   // rótulos seguem a camada
     const caixaLeitura = vB ? leitura(t) : null; if (caixaLeitura) ocup.push(caixaLeitura);
     const texto = (txt, x, y, fonte, cor, fundo, alfa = 1, centro = true) => {
       g2.font = fonte; const w = g2.measureText(txt).width; const x0 = centro ? x - w / 2 : x;
@@ -872,10 +915,10 @@ export function criarCeu(container, estado, acoes) {
     }
     if (vB && realceLugar.size && dist < 6000) { let nL = 0; for (const j of realceLugar) { if (nL >= 28) break; const p = tela(vPos[j * 3], vPos[j * 3 + 1]); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H && texto(nomeRef(vChave[j]), p.x + 8, p.y, '600 12.5px Inter, system-ui, sans-serif', '#FFE8B0', 'rgba(40,28,6,.75)', 1, false)) nL++; } }
     if (atlasC && camada('atlas').visivel && camada('atlas').opacidade > 0.15) {
-      const zl = zA + atlasC.zLugar(), aces = atlasC.acesos();
+      const aces = atlasC.acesos();
       const fontL = '700 13px "Cormorant Garamond", Georgia, serif';
-      let nA = 0; for (const li of aces) { if (nA >= 26) break; const l = atlasC.lugares[li]; const p = tela(l.x, l.y, zl); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H && texto(l.nome, p.x + 8, p.y, fontL, '#FFF0C8', 'rgba(40,28,6,.8)', 1, false)) nA++; }
-      if (!aces.size && dist < 16000) { if (!ordemLug) ordemLug = atlasC.lugares.slice().sort((a, b) => b.peso - a.peso); let nB = 0; const lim = Math.round(8 + 60000 / dist); for (const l of ordemLug) { if (nB >= Math.min(lim, 40)) break; const p = tela(l.x, l.y, zl); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H && texto(l.nome, p.x + 7, p.y, '600 12px "Cormorant Garamond", Georgia, serif', '#FFE3A3', 'rgba(20,14,2,.6)', 0.9 * Math.min(1, camada('atlas').opacidade + 0.2), false)) nB++; } }
+      let nA = 0; for (const li of aces) { if (nA >= 26) break; const l = atlasC.lugares[li]; const p = telaLugarV(l); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H && texto(l.nome, p.x + 8, p.y, fontL, '#FFF0C8', 'rgba(40,28,6,.8)', 1, false)) nA++; }
+      if (!aces.size && (modoTerra || dist < 16000)) { if (!ordemLug) ordemLug = atlasC.lugares.slice().sort((a, b) => b.peso - a.peso); let nB = 0; const lim = modoTerra ? Math.round(10 + 3 * RAIO_GLOBO / Math.max(modoTerra.alt, 1)) : Math.round(8 + 60000 / dist); for (const l of ordemLug) { if (nB >= Math.min(lim, 40)) break; const p = telaLugarV(l); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H && texto(l.nome, p.x + 7, p.y, '600 12px "Cormorant Garamond", Georgia, serif', '#FFE3A3', 'rgba(20,14,2,.6)', 0.9 * Math.min(1, camada('atlas').opacidade + 0.2), false)) nB++; } }
     }
     // satélites (com PIN) quando perto
     const kAtivo = constel && !constel.soltoEm ? constel.origem : selecionado;
@@ -921,6 +964,7 @@ export function criarCeu(container, estado, acoes) {
       const j = vIdx.get(qf.ini), p = tela(vPos[j * 3], vPos[j * 3 + 1]);
       if (p) { const pulso = 9 + Math.sin(t / 380) * 3; g2.strokeStyle = 'rgba(242,214,140,.75)'; g2.lineWidth = 1.2; g2.beginPath(); g2.arc(p.x, p.y, pulso, 0, 6.29); g2.stroke(); if (dist > 520) texto(nomeRef(qf.ini), p.x + 14, p.y - 10, '700 13px Inter, system-ui, sans-serif', '#FFE8B0', 'rgba(2,5,14,.78)', 1, false); }
     }
+    if (modoTerra) nivel = 'Terra · ' + (modoTerra.alt > RAIO_GLOBO * 0.6 ? 'o globo' : modoTerra.alt > RAIO_GLOBO * 0.05 ? 'regiões' : 'cidades e lugares');
     if (nivelEl.textContent !== nivel) nivelEl.textContent = nivel;
   }
 
@@ -975,9 +1019,9 @@ export function criarCeu(container, estado, acoes) {
       dist = Math.exp(Math.log(voo.de.d) + (Math.log(voo.para.d) - Math.log(voo.de.d)) * e); posicionar();
       if (q >= 1) voo = null;
     } else if (!arrasto && inercia.lengthSq() > 1e-4) { alvo.x += inercia.x * dt / 16; alvo.y += inercia.y * dt / 16; inercia.multiplyScalar(0.92); posicionar(); }
-    aplicarCamadas(); alvo.z = zB; posicionar();
-    if (ceuR) ceuR.quadro(camera, t, alvo, dist, camada('universo').opacidade, camada('universo').visivel);
-    if (atlasC) { const cg = camera.position; atlasC.quadro(t, Math.max(0.6, Math.min(2.4, Math.pow(9000 / dist, 0.35))), cg, camera.far, alvo, camera.far * 1.8); }
+    aplicarCamadas(); if (modoTerra && atlasC) posicionarTerra(); else { alvo.z = zB; posicionar(); }
+    if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel);
+    if (atlasC) atlasC.quadro(t, modoTerra ? Math.max(0.8, Math.min(2.4, Math.pow(RAIO_GLOBO / Math.max(modoTerra.alt, 1), 0.3))) : Math.max(0.6, Math.min(2.0, Math.pow(9000 / dist, 0.3))));
     const seg = reduzido ? 0 : t / 1000;
     fundoCamadas.forEach((m) => { m.uniforms.cam.value.set(alvo.x, alvo.y); m.uniforms.tempo.value = seg; });
     matVers.uniforms.k.value = 1; matVers.uniforms.tempo.value = seg; if (matVia) matVia.uniforms.tempo.value = seg;
@@ -1104,7 +1148,8 @@ export function criarCeu(container, estado, acoes) {
       resolucao: () => resAtual, ceu: () => (ceuR ? ceuR.estado() : null), tempo: (min) => { ceuR && ceuR.tempo(min * 60000); atualizarRelogio(); }, tocarCeu: (x, y) => (ceuR ? ceuR.tocar(x, y, W, H, 14) : null), telaCeu: (nome) => (ceuR ? ceuR.telaDe(nome, W, H) : null), debugCeu: (n) => ceuR && ceuR._debug(n), apontarCeu: (nome) => { if (ceuR && ceuR.apontar(nome)) voar(alvo.x, alvo.y, 260); },
       separar: (v) => { separacao = v; sincronizarPainel(); }, buscar: (q) => buscar(q), incline: (v) => { incl = v; posicionar(); },
       composicao: () => ({ livro: livroAtivo != null ? livros[livroAtivo].nome : null, secao: secAtiva != null ? SECOES[secAtiva].nome : null, versosAcesos: realceLivro.size || realceLugar.size, lugaresAcesos: atlasC ? atlasC.acesos().size : 0, fios: fios.length }),
-      telaLugar: (nome) => { if (!atlasC) return null; const l = atlasC.lugares.filter((x) => x.nome === nome).sort((a, b) => b.peso - a.peso)[0]; return l ? tela(l.x, l.y, zA + atlasC.zLugar()) : null; },
+      telaLugar: (nome) => { if (!atlasC) return null; const l = atlasC.lugares.filter((x) => x.nome === nome).sort((a, b) => b.peso - a.peso)[0]; return l ? telaLugarV(l) : null; },
+      terra: () => (modoTerra ? { lat: +modoTerra.lat.toFixed(2), lon: +modoTerra.lon.toFixed(2), alt: Math.round(modoTerra.alt) } : null), irTerra: (lat, lon, alt) => { if (!atlasC) return false; modoTerra = { lat, lon, alt }; return true; }, sairTerra: () => sairTerra(), raioGlobo: () => RAIO_GLOBO, telaGlobo: () => { if (!atlasC) return null; const c = atlasC.centroMundo(); tmp.copy(c).project(camera); return { x: (tmp.x + 1) / 2 * W, y: (1 - tmp.y) / 2 * H }; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       telaLivro: (n) => { const lv = livros[n - 1]; return lv ? tela(lv.cx, lv.cy) : null; }, incl: () => incl,
     },
