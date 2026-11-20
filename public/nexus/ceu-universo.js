@@ -700,6 +700,17 @@ export function criarCeu(container, estado, acoes) {
   // a cada quadro: aproximação suave mantendo o ponto do cursor no lugar; inércia do arrasto; saída para o espaço
   function animarTerra() {
     const m = modoTerra;
+    if (m.voo) {
+      const v = m.voo, q = Math.min(1, (performance.now() - v.t0) / v.dur), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2;
+      const a = vLL(v.de), b = vLL(v.para), ang = a.angleTo(b);
+      const c = ang < 1e-6 ? b : a.clone().multiplyScalar(Math.sin((1 - e) * ang)).addScaledVector(b, Math.sin(e * ang)).divideScalar(Math.sin(ang));
+      m.lat = Math.asin(Math.max(-1, Math.min(1, c.z))) * 180 / Math.PI; m.lon = Math.atan2(c.y, c.x) * 180 / Math.PI;
+      const la = Math.log(v.de.alt), lb = Math.log(v.para.alt), lt = Math.log(v.topo);
+      const meio = Math.sin(q * Math.PI);   // sobe no meio do caminho e desce no fim
+      m.alt = Math.exp(la + (lb - la) * e + Math.max(0, lt - Math.max(la, lb)) * meio * (ang > 0.02 ? 1 : 0)); m.altAlvo = m.alt;
+      if (q >= 1) { m.voo = null; m.alt = m.altAlvo = v.para.alt; const f = m.aoChegar; m.aoChegar = null; f && f(); }
+      return true;
+    }
     if (Math.abs(m.altAlvo - m.alt) > m.alt * 0.002) {
       posicionarTerra();   // mede com a câmera exata deste quadro (antes e depois)
       const antes = m.cursor ? (m.ancora || latLonNaTela(m.cursor.x, m.cursor.y)) : null;
@@ -822,8 +833,52 @@ export function criarCeu(container, estado, acoes) {
     for (let i = q.de; i <= q.ate; i++) { const lv = livros[i], ini = vIdx.get(chave(lv.num, 1, 1)); for (let j = ini; j < ini + lv.versos; j++) realceLivro.add(j); }
     voar(q.cx, q.cy, q.raio * 3.4);
   }
+  // ── BUSCA DE LUGAR NA FRASE ("Jesus no Getsêmani"): acha o lugar real (mesmo com erro de digitação) e voa até ele ──
+  function lev(a, b) { const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 9; const d = Array.from({ length: m + 1 }, (_, i) => [i]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; }
+  const PALAVRAS_VAZIAS = new Set(['no', 'na', 'em', 'de', 'da', 'do', 'dos', 'das', 'o', 'a', 'os', 'as', 'e', 'com', 'para', 'monte', 'rio', 'mar', 'vale', 'jesus', 'cristo', 'deus', 'senhor']);
+  function lugarNaFrase(q) {
+    if (!atlasC) return null;
+    const palavras = q.split(/[^a-z0-9]+/).filter(Boolean), frase = ' ' + palavras.join(' ') + ' ';
+    let melhor = null;
+    for (const l of atlasC.lugares) {
+      for (const nome of [l.nome, l.en]) {
+        const nn = norm(nome).replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); if (nn.length < 3) continue;
+        let pont = 0;
+        if (frase.includes(' ' + nn + ' ')) pont = 100 + nn.length;   // o nome inteiro está na frase
+        else if (!nn.includes(' ') && nn.length >= 5) { for (const w of palavras) { if (w.length < 5 || PALAVRAS_VAZIAS.has(w)) continue; const dd = lev(w, nn); if (dd <= (nn.length >= 8 ? 2 : 1)) pont = Math.max(pont, 60 - dd * 10 + nn.length); } }
+        if (pont && (!melhor || pont > melhor.pont || (pont === melhor.pont && l.peso > melhor.l.peso))) melhor = { l, pont };
+      }
+    }
+    return melhor ? melhor.l : null;
+  }
+  // voo como no Google Earth: sobe, atravessa e desce até o lugar
+  function voarParaLugar(l, palavrasExtras) {
+    if (!atlasC) return;
+    if (!modoTerra) entrarTerra(null);
+    const m = modoTerra, de = { lat: m.lat, lon: m.lon, alt: m.alt };
+    const ang = Math.acos(Math.max(-1, Math.min(1, vLL(de).dot(vLL(l))))) ;
+    m.voo = { de, para: { lat: l.lat, lon: l.lon, alt: Math.max(4, RAIO_GLOBO * 0.0035) }, topo: Math.max(de.alt, RAIO_GLOBO * Math.min(1.6, ang * 1.1)), t0: performance.now(), dur: 2600 + ang * 900 };
+    m.cursor = null; m.ancora = null;
+    m.aoChegar = () => { escolherLugar(l, false); mostrarLugarNaFrase(l, palavrasExtras); };
+  }
+  function mostrarLugarNaFrase(l, extras) {
+    const ref = (k) => { const d = decompor(k); return BIB ? `${BIB[d.b - 1].name} ${d.c}:${d.v}` : String(k); };
+    // versículos reais onde o lugar aparece; se a frase tem outras palavras (ex.: "Jesus"), ficam primeiro os que também as citam
+    const ex = (extras || []).filter((w) => w.length >= 3 && !PALAVRAS_VAZIAS.has(w) || w === 'jesus');
+    const comTodas = l.versos.filter((k) => ex.length && ex.every((w) => norm(textoDe(k)).includes(w)));
+    const ordem = comTodas.concat(l.versos.filter((k) => !comTodas.includes(k))).slice(0, 12);
+    const conf = l.conf >= 700 ? 'identificação segura' : l.conf >= 300 ? 'identificação provável' : 'identificação incerta';
+    invest.innerHTML = `<button class="cu-fechar-inv" type="button" aria-label="Fechar">×</button><small>Atlas · lugar bíblico</small><h3>${esc(l.nome)}</h3>
+      <p>${l.identificacao && l.identificacao !== l.nome ? `Hoje: <b>${esc(l.identificacao)}</b> · ` : ''}${conf} (${l.conf}/1000) · ${l.versos.length} versículo(s)</p>
+      ${ex.length ? `<small>${comTodas.length ? `${comTodas.length} versículo(s) citam ${esc(l.nome)} e também “${esc(ex.join(' '))}”` : `Nenhum versículo cita ${esc(l.nome)} junto com “${esc(ex.join(' '))}”; abaixo, todos os que citam o lugar.`}</small>` : ''}
+      ${ordem.map((k) => `<p><b>${esc(ref(k))}</b> — “${esc(textoDe(k))}”</p>`).join('')}
+      <small>Fontes: OpenBible.info (lugar e versículos, CC BY 4.0) · texto da Almeida</small>`;
+    invest.hidden = false; invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; };
+  }
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
+    { const l = q.split(/\s+/).length > 1 || !livros.some((lv) => norm(lv.nome).startsWith(q)) ? lugarNaFrase(q) : null;
+      if (l) { const palavras = q.split(/[^a-z0-9]+/).filter((w) => w && !norm(l.nome).split(/\s+/).includes(w) && lev(w, norm(l.nome)) > 2); voarParaLugar(l, palavras); return true; } }
     const iL = livros.findIndex((lv) => norm(lv.nome) === q || norm(lv.abbrev) === q);
     const iL2 = iL >= 0 ? iL : livros.findIndex((lv) => q.length >= 3 && norm(lv.nome).startsWith(q));
     if (iL2 >= 0) { comporLivro(iL2); return true; }
@@ -1193,6 +1248,7 @@ export function criarCeu(container, estado, acoes) {
       composicao: () => ({ livro: livroAtivo != null ? livros[livroAtivo].nome : null, secao: secAtiva != null ? SECOES[secAtiva].nome : null, versosAcesos: realceLivro.size || realceLugar.size, lugaresAcesos: atlasC ? atlasC.acesos().size : 0, fios: fios.length }),
       telaLugar: (nome) => { if (!atlasC) return null; const l = atlasC.lugares.filter((x) => x.nome === nome).sort((a, b) => b.peso - a.peso)[0]; return l ? telaLugarV(l) : null; },
       terra: () => (modoTerra ? { lat: +modoTerra.lat.toFixed(2), lon: +modoTerra.lon.toFixed(2), alt: Math.round(modoTerra.alt) } : null), irTerra: (lat, lon, alt) => { if (!atlasC) return false; modoTerra = { lat, lon, alt, altAlvo: alt, cursor: null, vel: { lat: 0, lon: 0 } }; return true; }, sairTerra: () => sairTerra(), raioGlobo: () => RAIO_GLOBO, telaGlobo: () => { if (!atlasC) return null; const c = atlasC.centroMundo(); tmp.copy(c).project(camera); return { x: (tmp.x + 1) / 2 * W, y: (1 - tmp.y) / 2 * H }; },
+      lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       telaLivro: (n) => { const lv = livros[n - 1]; return lv ? tela(lv.cx, lv.cy) : null; }, incl: () => incl,
     },
