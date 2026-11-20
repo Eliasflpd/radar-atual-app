@@ -269,7 +269,7 @@ async function explorar(texto, inicial = false) {
     const r = await api({ acao: 'resolver', ref: t }, true);
     if (!r.ok) { aviso(r.err || 'Referência não reconhecida.'); return; }
     S.foco = r.id;
-    try { history.replaceState(null, '', '?ref=' + encodeURIComponent(t) + (PARAM_CEU ? '&ceu=' + encodeURIComponent(PARAM_CEU) : '')); } catch (_) {}   // atualizar a página mantém a prévia aberta
+    try { history.replaceState(null, '', '?ref=' + encodeURIComponent(t) + (PARAM_CEU ? '&ceu=' + encodeURIComponent(PARAM_CEU) : '') + (new URLSearchParams(location.search).get('versao') ? '&versao=' + new URLSearchParams(location.search).get('versao') : '')); } catch (_) {}   // atualizar a página mantém a prévia aberta
     if (!S.graph.hasNode(r.id) || !S.expandidos.has(r.id)) await expandir(r.id);
     if (S.graph.hasNode(r.id)) { S.graph.mergeNodeAttributes(r.id, { fixado: true, fixed: true, x: 0, y: 0 }); }
     selecionar(r.id, false, !inicial || (!carregandoCeu && S.modo !== 'ceu'));
@@ -470,7 +470,7 @@ async function abrirCeu() {
     if (!ceu) {
       // PRÉVIA do novo Céu: só em desenvolvimento local (localhost/127.x) e com ?ceu=previa; o publicado segue em ceu.js v9
       const previaCeu = /^(localhost|127\.)/.test(location.hostname) && ['previa', 'universo'].includes(PARAM_CEU);
-      const qualPrevia = PARAM_CEU === 'universo' ? '/nexus/ceu-universo.js?v=20' : '/nexus/ceu-previa.js?v=1';
+      const qualPrevia = PARAM_CEU === 'universo' ? (new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' :  '/nexus/ceu-universo.js?v=20') : '/nexus/ceu-previa.js?v=1';
       const { criarCeu } = await import(previaCeu ? qualPrevia : '/nexus/ceu.js?v=9');
       ceu = criarCeu($('ceu'), S, { visivelNo, visivelAresta, selecionar, expandir, painelAresta, abrirGrupo, indisponivel: ceuIndisponivel });
       if (previaCeu) window.__ceuPrevia = ceu;
