@@ -146,6 +146,16 @@ export function criarCeu(container, estado, acoes) {
   [['tempo', 'Tempo · cronologia', '#9FD3C7'], ['personagens', 'Personagens · genealogias', '#E8A87C'], ['linguas', 'Línguas originais', '#B5C7F2'],
    ['historia', 'História e cultura', '#D9B98C'], ['manuscritos', 'Manuscritos · crítica textual', '#C9B6E4'], ['teologia', 'Teologia · doutrinas', '#F2C6A0'],
    ['tradicao', 'Tradição · história da Igreja', '#A9D18E']].forEach(([id, nome, cor]) => CAMADAS.push({ id, nome, cor, grupo: new THREE.Group(), visivel: false, opacidade: 0.8, z: 0, reservada: true }));
+  // camadas já construídas: o módulo de cada uma devolve { objetos, quadro, pegar, info, ficha, rotulos, buscar, pos, versos, realcar }
+  const MODULOS_CAMADA = {
+    tempo: { carregar: () => import('/nexus/camada-tempo.js?v=2').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
+  };
+  CAMADAS.forEach((c) => { const md = MODULOS_CAMADA[c.id]; if (!md) return;
+    Object.assign(c, { reservada: false, modulo: true, visivel: md.visivel, opacidade: md.opacidade, criada: false,
+      criar: async () => { const f = await md.carregar(); c.api = await f(THREE, ctxCamada(c)); return c.api.objetos; } }); });
+  function ctxCamada(c) { return { escala, esc, norm: (t) => norm(t), nomeRef: (k) => nomeRef(k), textoDe: (k) => textoDe(k), fraco,
+    tela: (x, y) => tela(x, y, c.z), posVerso: (k) => { const j = vIdx.get(k); return j == null ? null : { x: vBase[j * 3], y: vBase[j * 3 + 1] }; } }; }
+  const camadasAtivas = () => (modoTerra ? [] : CAMADAS.filter((c) => c.api && c.grupo.visible && c.opacidade > 0.1).reverse());   // de cima para baixo
   // MOTOR DE CAMADAS — feito para 10 ou mais folhas sem pesar:
   //   • registrarCamada({ id, nome, cor, criar(ctx) }) acrescenta uma folha; criar() só roda quando a folha é ligada
   //     pela primeira vez (carga sob demanda) e devolve os objetos que vão no grupo dela;
@@ -288,6 +298,7 @@ export function criarCeu(container, estado, acoes) {
     precisaOpac = true;
     montarAtlas();
     pronto = true;
+    setTimeout(() => CAMADAS.forEach((c) => { if (c.modulo) garantirCriada(c); }), 1500);
     restaurarVista();
   }
 
@@ -581,6 +592,8 @@ export function criarCeu(container, estado, acoes) {
   function pairar(x, y) {
     clearTimeout(pairarT);
     pairarT = setTimeout(() => {
+      for (const c of camadasAtivas()) { const i = c.api.pegar(x, y, 11); if (i >= 0) { canvas.style.cursor = 'pointer'; info.innerHTML = c.api.info(i); info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!fichaCamada) ligarCamada(c, i, false); return; } }
+      if (pairCamada && !fichaCamada) limparCamada(); pairCamada = null;
       const li = lugarPerto(x, y, 10);
       if (li >= 0) { const l = atlasC.lugares[li]; const conf = l.conf >= 700 ? 'identificação segura' : l.conf >= 300 ? 'identificação provável' : 'identificação incerta'; canvas.style.cursor = 'pointer'; info.innerHTML = `<b>${esc(l.nome)}</b>${l.identificacao && l.identificacao !== l.nome ? `<em>hoje: ${esc(l.identificacao)}</em>` : ''}<small>Atlas · ${l.peso} versículo(s) · ${conf} (${l.conf}/1000) · OpenBible.info · clique para acender os versículos</small>`; info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!lugarAtivo && livroAtivo == null) { atlasC.acender([li]); fios = l.versos.slice(0, 80).map((k) => ({ l: li, j: vIdx.get(k) })).filter((f) => f.j != null); } return; }
       const bV = !modoTerra && camada('biblia').visivel && camada('biblia').opacidade > 0.1;   // só pega o que está visível
@@ -614,6 +627,7 @@ export function criarCeu(container, estado, acoes) {
     const agora = performance.now(), duplo = agora - ultimoToque < 320; ultimoToque = agora;
     if (duplo && modoTerra) { posicionarTerra(); modoTerra.ancora = latLonNaTela(x, y); modoTerra.cursor = { x, y }; modoTerra.altAlvo = modoTerra.altAlvo * 0.35; return; }
     if (duplo) { clearTimeout(cartaoT); const w = noPlano(x, y); if (w) { lembrarVista(); voo = { de: { x: alvo.x, y: alvo.y, d: dist }, para: { x: w.x, y: w.y, d: Math.max(DIST_MIN, dist * 0.35) }, t0: agora, dur: 700 }; } return; }
+    for (const c of camadasAtivas()) { const i = c.api.pegar(x, y, tipo === 'touch' ? 22 : 12); if (i >= 0) { abrirFichaCamada(c, i); return; } }
     const li = lugarPerto(x, y, tipo === 'touch' ? 20 : 11);
     if (li >= 0) { escolherLugar(atlasC.lugares[li], !modoTerra); return; }
     if (modoTerra) return;
@@ -745,6 +759,31 @@ export function criarCeu(container, estado, acoes) {
   }
 
   // ── CAMADA ATLAS + composição de assuntos nas três camadas ──────────────────────────────
+  let realceCamada = new Set(), fiosCamada = [], fichaCamada = null, pairCamada = null;
+  function ligarCamada(c, i, fixo) {
+    const js = (c.api.versos(i) || []).map((k) => vIdx.get(k)).filter((j) => j != null);
+    realceCamada = new Set(js); const passo = Math.max(1, Math.floor(js.length / 120));
+    fiosCamada = js.filter((_, q) => q % passo === 0).map((j) => ({ c, i, j }));
+    CAMADAS.forEach((o) => o.api && o.api.realcar && o.api.realcar(o === c ? [i] : []));
+    if (fixo) fichaCamada = { c, i }; else pairCamada = { c, i };
+  }
+  // voa até um ponto que está numa folha acima da Bíblia: a câmera fica acima da folha, com o ponto no centro da vista
+  function voarAltura(x, y, z, d) { const h = Math.max(0, z - zB), ti = Math.tan(incl), ci = Math.max(0.2, Math.cos(incl)); voar(x, y + h * ti, h / ci + d); }
+  function limparCamada() { realceCamada = new Set(); fiosCamada = []; fichaCamada = null; pairCamada = null; CAMADAS.forEach((o) => o.api && o.api.realcar && o.api.realcar([])); }
+  function abrirFichaCamada(c, i, irAte = false) {
+    limparComposicao(); const f = c.api.ficha(i); if (!f) return;
+    invest.innerHTML = `<button class="cu-fechar-inv" type="button" aria-label="Fechar">×</button><small>${esc(f.rotulo || c.nome)}</small><h3>${esc(f.titulo)}</h3>${f.html}
+      <div class="cu-chips" style="margin-top:8px">${f.versos && f.versos.length ? '<button type="button" class="cu-acender">✨ Acender versículos na Bíblia</button>' : ''}<button type="button" class="cu-ir">◎ Aproximar</button></div>`;
+    invest.hidden = false;
+    ligarCamada(c, i, true);
+    invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; limparCamada(); };
+    invest.querySelectorAll('[data-evento]').forEach((b) => { b.onclick = () => abrirFichaCamada(c, +b.dataset.evento, true); });
+    invest.querySelectorAll('[data-busca]').forEach((b) => { b.onclick = () => buscar(b.dataset.busca); });
+    const ir = () => { const p = c.api.pos(i); if (p) voarAltura(p.x, p.y, c.z, 1400); };
+    invest.querySelector('.cu-ir').onclick = ir;
+    const ac = invest.querySelector('.cu-acender'); if (ac) ac.onclick = () => { const js = [...realceCamada]; if (js.length) { camada('biblia').visivel = true; montarPainel(); enquadrarXY(js.map((j) => vBase[j * 3]), js.map((j) => vBase[j * 3 + 1])); } };
+    if (irAte) ir();
+  }
   let atlasC = null, lugarAtivo = null, realceLugar = new Set(), realceLivro = new Set(), livroAtivo = null, secAtiva = null, fios = [];
   const chipLugar = ui.querySelector('.cu-lugar'), invest = ui.querySelector('.cu-invest');
   async function montarAtlas() {
@@ -765,7 +804,7 @@ export function criarCeu(container, estado, acoes) {
   function telaLugarV(l) { if (!atlasC.deFrente(l, camera.position)) return null; const w = lugarPos(l); tmp.copy(w).project(camera); if (tmp.z > 1) return null; return { x: (tmp.x + 1) / 2 * W, y: (1 - tmp.y) / 2 * H }; }
   const norm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   function limparComposicao() {
-    lugarAtivo = null; realceLugar = new Set(); realceLivro = new Set(); livroAtivo = null; secAtiva = null; fios = [];
+    lugarAtivo = null; realceLugar = new Set(); realceLivro = new Set(); livroAtivo = null; secAtiva = null; fios = []; limparCamada();
     chipLugar.hidden = true; invest.hidden = true;
     if (atlasC) { atlasC.acender([]); atlasC.definirRota(null); }
   }
@@ -879,8 +918,15 @@ export function criarCeu(container, estado, acoes) {
       <small>Fontes: OpenBible.info (lugar e versículos, CC BY 4.0) · texto da Almeida</small>`;
     invest.hidden = false; invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; };
   }
+  function buscarCamadas(q, minimo) {
+    let melhor = null;
+    for (const c of CAMADAS) { if (!c.api || !c.api.buscar) continue; const r = c.api.buscar(q); if (r && r.pont >= minimo && (!melhor || r.pont > melhor.r.pont)) melhor = { c, r }; }
+    if (!melhor) return false;
+    const c = melhor.c; c.visivel = true; if (c.opacidade < 0.3) c.opacidade = 0.75; montarPainel(); abrirFichaCamada(c, melhor.r.i, true); return true;
+  }
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
+    if (buscarCamadas(q, 100)) return true;
     { const l = q.split(/\s+/).length > 1 || !livros.some((lv) => norm(lv.nome).startsWith(q)) ? lugarNaFrase(q) : null;
       if (l) { const palavras = q.split(/[^a-z0-9]+/).filter((w) => w && !norm(l.nome).split(/\s+/).includes(w) && lev(w, norm(l.nome)) > 2); voarParaLugar(l, palavras); return true; } }
     const iL = livros.findIndex((lv) => norm(lv.nome) === q || norm(lv.abbrev) === q);
@@ -889,6 +935,7 @@ export function criarCeu(container, estado, acoes) {
     if (atlasC) { const cand = atlasC.lugares.filter((l) => norm(l.nome) === q || norm(l.en) === q).sort((a, b) => b.peso - a.peso); if (cand.length) { escolherLugar(cand[0]); return true; } }
     const si = SECOES.findIndex((x) => norm(x.nome).includes(q));
     if (si >= 0) { comporSecao(si); return true; }
+    if (buscarCamadas(q, 1)) return true;
     chipLugar.innerHTML = `Não encontrei “${esc(texto)}” nas camadas (livro, lugar ou seção). <button type="button" aria-label="Fechar">×</button>`; chipLugar.hidden = false;
     chipLugar.querySelector('button').onclick = () => { chipLugar.hidden = true; };
     return false;
@@ -955,6 +1002,11 @@ export function criarCeu(container, estado, acoes) {
         al.setX(n * 2, a); al.setX(n * 2 + 1, a * 0.55); n++;
       }
     }
+    if (camada('biblia').visivel) for (const f of fiosCamada) {
+      if (n >= MAX_FIOS) break; if (!f.c.grupo.visible) continue; const p = f.c.api.pos(f.i); if (!p) continue;
+      pa.setXYZ(n * 2, p.x, p.y, f.c.z); pa.setXYZ(n * 2 + 1, vPos[f.j * 3], vPos[f.j * 3 + 1], zB);
+      const a = 0.42 * Math.min(f.c.opacidade + 0.3, 1) * (0.75 + 0.25 * Math.sin(t / 300 + n)); al.setX(n * 2, a); al.setX(n * 2 + 1, a * 0.5); n++;
+    }
     for (let i = n; i < MAX_FIOS; i++) { al.setX(i * 2, 0); al.setX(i * 2 + 1, 0); }
     pa.needsUpdate = al.needsUpdate = true;
   }
@@ -962,7 +1014,7 @@ export function criarCeu(container, estado, acoes) {
   function aplicarCamadas() {
     espaco = 1800 * separacao;   // altura fixa entre as folhas (o globo e as galáxias não andam quando se dá zoom)
     CAMADAS.forEach((c, i) => {
-      c.z = i * espaco; c.grupo.position.z = c.z;
+      c.z = i <= 2 ? i * espaco : 2 * espaco + (i - 2) * espaco * 0.5; c.grupo.position.z = c.z;   // 4 em diante: folhas mais próximas (a perspectiva não as espalha demais)
       const vis = c.visivel && c.opacidade > 0.01;
       const criada = !c.criar || c.criada;
       if (vis && !criada) garantirCriada(c);
@@ -1021,6 +1073,7 @@ export function criarCeu(container, estado, acoes) {
       let nA = 0; for (const li of aces) { if (nA >= 26) break; const l = atlasC.lugares[li]; const p = telaLugarV(l); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H && texto(l.nome, p.x + 8, p.y, fontL, '#FFF0C8', 'rgba(40,28,6,.8)', 1, false)) nA++; }
       if (!aces.size && (modoTerra || dist < 16000)) { if (!ordemLug) ordemLug = atlasC.lugares.slice().sort((a, b) => b.peso - a.peso); let nB = 0; const lim = modoTerra ? Math.round(10 + 3 * RAIO_GLOBO / Math.max(modoTerra.alt, 1)) : Math.round(8 + 60000 / dist); for (const l of ordemLug) { if (nB >= Math.min(lim, 40)) break; const p = telaLugarV(l); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H && texto(l.nome, p.x + 7, p.y, '600 12px "Cormorant Garamond", Georgia, serif', '#FFE3A3', 'rgba(20,14,2,.6)', 0.9 * Math.min(1, camada('atlas').opacidade + 0.2), false)) nB++; } }
     }
+    for (const c of camadasAtivas()) c.api.rotulos(texto, dist, W, H);
     // satélites (com PIN) quando perto
     const kAtivo = constel && !constel.soltoEm ? constel.origem : selecionado;
     let nSat = 0;
@@ -1161,6 +1214,7 @@ export function criarCeu(container, estado, acoes) {
       if (tocados.size) { for (const j of tocados) { vBri[j] = vBriBase[j]; vPos[j * 3] = vBase[j * 3]; vPos[j * 3 + 1] = vBase[j * 3 + 1]; } tocados.clear(); }
       if (realceLugar.size) { const pul = 1.7 + 0.25 * Math.sin(t / 260); for (const j of realceLugar) { vBri[j] = pul; tocados.add(j); } }
       if (realceLivro.size) { const pul = 1.35 + 0.12 * Math.sin(t / 400); for (const j of realceLivro) { vBri[j] = pul; tocados.add(j); } }
+      if (realceCamada.size) { const pul = 1.6 + 0.2 * Math.sin(t / 300); for (const j of realceCamada) { vBri[j] = pul; tocados.add(j); } }
       let nl = 0, np = 0;
       if (constel) {
         const fade = constel.soltoEm ? Math.max(0, 1 - (t - constel.soltoEm) / 2600) : 1;
@@ -1197,6 +1251,7 @@ export function criarCeu(container, estado, acoes) {
       if (ass !== assinatura) { assinatura = ass; montarSatelites(); precisaOpac = true; }
       if (sats.length) { const sa = gSat.attributes.alfa; const perto = Math.min(1, Math.max(0, (1800 - dist) / 1300)); const kA = constel && !constel.soltoEm ? constel.origem : selecionado; sats.forEach((s, i) => sa.setX(i, perto * (s.k === kA ? 1 : 0.45))); sa.needsUpdate = true; }
     }
+    for (const c of CAMADAS) if (c.api && c.grupo.visible) c.api.quadro(t);
     atualizarFios(t);
     renderer.clear();
     if (ceuR) renderer.render(ceuR.cena, ceuR.camera);   // 1º o céu real (fundo da camada Universo)
@@ -1263,6 +1318,8 @@ export function criarCeu(container, estado, acoes) {
       terra: () => (modoTerra ? { lat: +modoTerra.lat.toFixed(2), lon: +modoTerra.lon.toFixed(2), alt: Math.round(modoTerra.alt) } : null), irTerra: (lat, lon, alt) => { if (!atlasC) return false; modoTerra = { lat, lon, alt, altAlvo: alt, cursor: null, vel: { lat: 0, lon: 0 } }; return true; }, sairTerra: () => sairTerra(), raioGlobo: () => RAIO_GLOBO, telaGlobo: () => { if (!atlasC) return null; const c = atlasC.centroMundo(); tmp.copy(c).project(camera); return { x: (tmp.x + 1) / 2 * W, y: (1 - tmp.y) / 2 * H }; },
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
+      camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
+      fichaCamada: () => (fichaCamada ? { id: fichaCamada.c.id, i: fichaCamada.i, versos: realceCamada.size, fios: fiosCamada.length } : null), buscaCamada: (id, q) => { const c = camada(id); return c && c.api ? c.api.buscar(norm(q)) : null; },
       telaLivro: (n) => { const lv = livros[n - 1]; return lv ? tela(lv.cx, lv.cy) : null; }, incl: () => incl,
     },
   };
