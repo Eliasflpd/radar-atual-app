@@ -137,7 +137,8 @@ export function criarCeu(container, estado, acoes) {
     .cu-cartao .cu-bts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
     .cu-cartao button{border:1px solid #E5DFD2;background:#fff;border-radius:10px;padding:7px 11px;font-size:13px;cursor:pointer;color:#14284B}
     .cu-cartao button.cu-abrir{background:#14284B;color:#fff;border-color:#14284B}
-    @media (max-width:760px){.cu-cartao{top:auto;bottom:40px;left:10px;right:58px;width:auto}.cu-controles{bottom:auto;top:40px;left:8px}}`;
+    @media (max-width:760px){.cu-cartao{top:auto;bottom:40px;left:10px;right:58px;width:auto}.cu-controles{bottom:auto;top:40px;left:8px}}
+    @media (max-width:1100px){.cu-nivel{top:56px}}`;   // no tablet o nome do nível fica abaixo da busca
   document.head.appendChild(estilo);
 
   // ── câmera: plano infinito, zoom em direção ao cursor, inclinação opcional ──────────────────
@@ -163,7 +164,8 @@ export function criarCeu(container, estado, acoes) {
     historia: { carregar: () => import('/nexus/camada-temas.js?v=2').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'historia', arquivo: '/nexus/camadas/historia.json?v=1', rotulo: 'História e cultura', forma: 'anel', cores: ['#E6C79C', '#F2D28B', '#C9B27A', '#E9A97A', '#D98C7A', '#A9C98E'] })), visivel: true, opacidade: 0.75 },
   };
   CAMADAS.forEach((c) => { const md = MODULOS_CAMADA[c.id]; if (!md) return;
-    Object.assign(c, { reservada: false, modulo: true, visivel: md.visivel, opacidade: md.opacidade, criada: false,
+    // em tablet/celular, só Tempo e Personagens começam ligadas (as outras baixam os dados quando a pessoa liga)
+    Object.assign(c, { reservada: false, modulo: true, visivel: md.visivel && (!fraco || ['tempo', 'personagens'].includes(c.id)), opacidade: md.opacidade, criada: false,
       criar: async () => { const f = await md.carregar(); c.api = await f(THREE, ctxCamada(c)); return c.api.objetos; } }); });
   function ctxCamada(c) { return { escala, esc, norm: (t) => norm(t), nomeRef: (k) => nomeRef(k), textoDe: (k) => textoDe(k), fraco,
     tela: (x, y) => tela(x, y, c.z), noPlano: (x, y) => noPlano(x, y, c.z), posVerso: (k) => { const j = vIdx.get(k); return j == null ? null : { x: vBase[j * 3], y: vBase[j * 3 + 1] }; } }; }
@@ -312,7 +314,7 @@ export function criarCeu(container, estado, acoes) {
     precisaOpac = true;
     montarAtlas();
     pronto = true;
-    setTimeout(() => CAMADAS.forEach((c) => { if (c.modulo) garantirCriada(c); }), 1500);
+    setTimeout(() => CAMADAS.forEach((c) => { if (c.modulo && (c.visivel || !fraco)) garantirCriada(c); }), 1500);
     restaurarVista();
   }
 
