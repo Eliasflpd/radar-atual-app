@@ -34,7 +34,7 @@ const SECOES = [
 ];
 const NOME_TIPO = { passagem: 'Passagem', obra: 'Obra', autor: 'Autor', conceito: 'Conceito', verbete: 'Termo original', descoberta: 'Descoberta' };
 const COR_TIPO = { obra: '#E2B65C', autor: '#C9D3E3', conceito: '#8FD3CF', verbete: '#A6D9A0', descoberta: '#F0A08C' };
-const DIST_MIN = 26, DIST_MAX = 30000;
+const DIST_MIN = 26, DIST_MAX = 140000;   // dá para afastar muito: o universo inteiro vira um ponto de luz
 
 function hash(s) { let h = 2166136261; for (const c of String(s)) h = Math.imul(h ^ c.codePointAt(0), 16777619) >>> 0; return h / 4294967295; }
 const chave = (b, c, v) => b * 1e6 + c * 1e3 + v;
@@ -221,8 +221,8 @@ export function criarCeu(container, estado, acoes) {
       // a câmera anda em linha reta na direção do ponto (mesma orientação): o ponto fica cravado sob o cursor
       const camPos = camera.position.clone(), novoPos = hit.clone().add(camPos.sub(hit).multiplyScalar(fator));
       const ci = Math.cos(incl), d2 = (novoPos.z - zB) / Math.max(ci, 0.05);
-      if (d2 < DIST_MIN || d2 > DIST_MAX) return;
-      dist = d2; alvo.x = novoPos.x; alvo.y = novoPos.y + Math.sin(incl) * dist; posicionar(); return;
+      if (d2 >= DIST_MIN && d2 <= DIST_MAX) { dist = d2; alvo.x = novoPos.x; alvo.y = novoPos.y + Math.sin(incl) * dist; posicionar(); return; }
+      // fora do limite: segue o zoom normal abaixo (antes o zoom travava aqui quando os dedos estavam sobre o globo)
     } }
     const antes = noPlano(x, y);
     dist *= fator; posicionar();
@@ -571,7 +571,7 @@ export function criarCeu(container, estado, acoes) {
   let arrasto = null, pinca = null, moveu = false, toqueLongo = 0, ultimoToque = 0, botaoDireito = false;
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   canvas.addEventListener('pointerdown', (e) => {
-    canvas.setPointerCapture(e.pointerId);
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
     ponteiros.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
     voo = null; inercia.set(0, 0); moveu = false; botaoDireito = e.button === 2; interagiu = true;
     if (ponteiros.size === 1) {
@@ -1161,7 +1161,9 @@ export function criarCeu(container, estado, acoes) {
     // LEITURA: de bem perto, o capítulo inteiro aparece num painel (a Bíblia toda pode ser lida no universo); os rótulos desviam dele
     const vU = !modoTerra && camada('universo').visivel && camada('universo').opacidade > 0.1, vB = !modoTerra && camada('biblia').visivel && camada('biblia').opacidade > 0.1;   // perto da Terra, só a Terra fala   // rótulos seguem a camada
     const caixaLeitura = vB ? leitura(t) : null; if (caixaLeitura) ocup.push(caixaLeitura);
+    const longeT = Math.max(0, (dist - 26000) / 60000), escT = Math.max(0.45, 1 - longeT * 0.6), someT = Math.max(0, 1 - longeT * 1.1);   // de muito longe as letras diminuem e somem
     const texto = (txt, x, y, fonte, cor, fundo, alfa = 1, centro = true) => {
+      if (someT <= 0.02) return false; if (escT < 1) fonte = fonte.replace(/(\d+(?:\.\d+)?)px/, (m0, v) => (v * escT).toFixed(1) + 'px'); alfa *= someT;
       g2.font = fonte; const w = g2.measureText(txt).width; const x0 = centro ? x - w / 2 : x;
       const tam = parseFloat(fonte.split('px')[0].split(' ').pop()) || 12, alt = tam + 9;
       const b = { x0: x0 - 7, x1: x0 + w + 7, y0: y - alt / 2, y1: y + alt / 2 }; if (!cabe(b)) return false; ocup.push(b);
@@ -1435,7 +1437,7 @@ export function criarCeu(container, estado, acoes) {
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
-      fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
+      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
       abrirTerra: () => abrirTerra(), imagemTerra: () => (atlasC ? atlasC.imagemReal() : false), subsolar: () => pontoSubsolar(Date.now()),
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
       fichaCamada: () => (fichaCamada ? { id: fichaCamada.c.id, i: fichaCamada.i, versos: realceCamada.size, fios: fiosCamada.length } : null), buscaCamada: (id, q) => { const c = camada(id); return c && c.api ? c.api.buscar(norm(q)) : null; },
