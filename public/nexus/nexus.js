@@ -468,12 +468,15 @@ async function abrirCeu() {
   carregandoCeu = botao.disabled = true;
   try {
     if (!ceu) {
-      // PRÉVIA do novo Céu: só em desenvolvimento local (localhost/127.x) e com ?ceu=previa; o publicado segue em ceu.js v9
-      const previaCeu = /^(localhost|127\.)/.test(location.hostname) && ['previa', 'universo'].includes(PARAM_CEU);
-      const qualPrevia = PARAM_CEU === 'universo' ? (new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' :  '/nexus/ceu-universo.js?v=57') : '/nexus/ceu-previa.js?v=1';
-      const { criarCeu } = await import(previaCeu ? qualPrevia : '/nexus/ceu.js?v=9');
+      // O CÉU PUBLICADO é o universo navegável (10 camadas + Terra), aprovado pelo Elias em 21/11/2026.
+      // O Céu anterior (v9) continua disponível com ?ceu=classico; a prévia esférica antiga só no PC (?ceu=previa).
+      const local = /^(localhost|127\.)/.test(location.hostname);
+      const arquivo = PARAM_CEU === 'classico' ? '/nexus/ceu.js?v=9'
+        : PARAM_CEU === 'previa' && local ? '/nexus/ceu-previa.js?v=1'
+        : new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' : '/nexus/ceu-universo.js?v=59';
+      const { criarCeu } = await import(arquivo);
       ceu = criarCeu($('ceu'), S, { visivelNo, visivelAresta, selecionar, expandir, painelAresta, abrirGrupo, indisponivel: ceuIndisponivel });
-      if (previaCeu) window.__ceuPrevia = ceu;
+      window.__ceuPrevia = ceu;   // ganchos de teste (só leitura)
     }
     if (versao === versaoModo) definirModo('ceu');
   } catch (erro) {
