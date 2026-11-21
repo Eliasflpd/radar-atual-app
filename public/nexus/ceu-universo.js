@@ -151,6 +151,7 @@ export function criarCeu(container, estado, acoes) {
     tempo: { carregar: () => import('/nexus/camada-tempo.js?v=3').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
     personagens: { carregar: () => import('/nexus/camada-personagens.js?v=1').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
     linguas: { carregar: () => import('/nexus/camada-linguas.js?v=1').then((m) => m.criarCamadaLinguas), visivel: true, opacidade: 0.55 },
+    manuscritos: { carregar: () => import('/nexus/camada-manuscritos.js?v=1').then((m) => m.criarCamadaManuscritos), visivel: true, opacidade: 0.7 },
     historia: { carregar: () => import('/nexus/camada-temas.js?v=1').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'historia', arquivo: '/nexus/camadas/historia.json?v=1', rotulo: 'História e cultura', forma: 'anel', cores: ['#E6C79C', '#F2D28B', '#C9B27A', '#E9A97A', '#D98C7A', '#A9C98E'] })), visivel: true, opacidade: 0.75 },
   };
   CAMADAS.forEach((c) => { const md = MODULOS_CAMADA[c.id]; if (!md) return;
