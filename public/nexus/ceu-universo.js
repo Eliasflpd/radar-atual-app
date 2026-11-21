@@ -150,12 +150,13 @@ export function criarCeu(container, estado, acoes) {
   const MODULOS_CAMADA = {
     tempo: { carregar: () => import('/nexus/camada-tempo.js?v=3').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
     personagens: { carregar: () => import('/nexus/camada-personagens.js?v=1').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
+    linguas: { carregar: () => import('/nexus/camada-linguas.js?v=1').then((m) => m.criarCamadaLinguas), visivel: true, opacidade: 0.55 },
   };
   CAMADAS.forEach((c) => { const md = MODULOS_CAMADA[c.id]; if (!md) return;
     Object.assign(c, { reservada: false, modulo: true, visivel: md.visivel, opacidade: md.opacidade, criada: false,
       criar: async () => { const f = await md.carregar(); c.api = await f(THREE, ctxCamada(c)); return c.api.objetos; } }); });
   function ctxCamada(c) { return { escala, esc, norm: (t) => norm(t), nomeRef: (k) => nomeRef(k), textoDe: (k) => textoDe(k), fraco,
-    tela: (x, y) => tela(x, y, c.z), posVerso: (k) => { const j = vIdx.get(k); return j == null ? null : { x: vBase[j * 3], y: vBase[j * 3 + 1] }; } }; }
+    tela: (x, y) => tela(x, y, c.z), noPlano: (x, y) => noPlano(x, y, c.z), posVerso: (k) => { const j = vIdx.get(k); return j == null ? null : { x: vBase[j * 3], y: vBase[j * 3 + 1] }; } }; }
   // o item mais próximo do ponteiro entre todas as folhas visíveis (empate: a folha de cima)
   function pegarCamadas(x, y, raio) { let m = null; for (const c of camadasAtivas()) { const i = c.api.pegar(x, y, raio); if (i < 0) continue; const p = c.api.pos(i), q = p && tela(p.x, p.y, c.z); const d = q ? Math.hypot(q.x - x, q.y - y) : raio; if (!m || d < m.d - 0.5) m = { c, i, d }; } return m; }
   const camadasAtivas = () => (modoTerra ? [] : CAMADAS.filter((c) => c.api && c.grupo.visible && c.opacidade > 0.1).reverse());   // de cima para baixo
@@ -1326,6 +1327,7 @@ export function criarCeu(container, estado, acoes) {
       terra: () => (modoTerra ? { lat: +modoTerra.lat.toFixed(2), lon: +modoTerra.lon.toFixed(2), alt: Math.round(modoTerra.alt) } : null), irTerra: (lat, lon, alt) => { if (!atlasC) return false; modoTerra = { lat, lon, alt, altAlvo: alt, cursor: null, vel: { lat: 0, lon: 0 } }; return true; }, sairTerra: () => sairTerra(), raioGlobo: () => RAIO_GLOBO, telaGlobo: () => { if (!atlasC) return null; const c = atlasC.centroMundo(); tmp.copy(c).project(camera); return { x: (tmp.x + 1) / 2 * W, y: (1 - tmp.y) / 2 * H }; },
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
+      pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
       fichaCamada: () => (fichaCamada ? { id: fichaCamada.c.id, i: fichaCamada.i, versos: realceCamada.size, fios: fiosCamada.length } : null), buscaCamada: (id, q) => { const c = camada(id); return c && c.api ? c.api.buscar(norm(q)) : null; },
       telaLivro: (n) => { const lv = livros[n - 1]; return lv ? tela(lv.cx, lv.cy) : null; }, incl: () => incl,
