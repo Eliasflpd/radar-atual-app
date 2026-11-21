@@ -70,6 +70,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':
 const ler = (k) => { try { return localStorage.getItem(k) || ''; } catch (_) { return ''; } };
 const gravar = (k, v) => { try { localStorage.setItem(k, v); } catch (_) { /* sem armazenamento */ } };
 let ceu = null, carregandoCeu = false, versaoModo = 0;
+const PARAM_CEU = new URLSearchParams(location.search).get('ceu');   // lido no início: a busca troca o endereço depois
 const lab = (id) => (S.graph.hasNode(id) ? S.graph.getNodeAttribute(id, 'label') : id);
 
 // ── API (com memória curta no aparelho) ─────────────────────────────────────
@@ -268,7 +269,7 @@ async function explorar(texto, inicial = false) {
     const r = await api({ acao: 'resolver', ref: t }, true);
     if (!r.ok) { aviso(r.err || 'Referência não reconhecida.'); return; }
     S.foco = r.id;
-    try { history.replaceState(null, '', '?ref=' + encodeURIComponent(t)); } catch (_) {}
+    try { history.replaceState(null, '', '?ref=' + encodeURIComponent(t) + (PARAM_CEU ? '&ceu=' + encodeURIComponent(PARAM_CEU) : '') + (new URLSearchParams(location.search).get('versao') ? '&versao=' + new URLSearchParams(location.search).get('versao') : '')); } catch (_) {}   // atualizar a página mantém a prévia aberta
     if (!S.graph.hasNode(r.id) || !S.expandidos.has(r.id)) await expandir(r.id);
     if (S.graph.hasNode(r.id)) { S.graph.mergeNodeAttributes(r.id, { fixado: true, fixed: true, x: 0, y: 0 }); }
     selecionar(r.id, false, !inicial || (!carregandoCeu && S.modo !== 'ceu'));
@@ -468,8 +469,9 @@ async function abrirCeu() {
   try {
     if (!ceu) {
       // PRÉVIA do novo Céu: só em desenvolvimento local (localhost/127.x) e com ?ceu=previa; o publicado segue em ceu.js v9
-      const previaCeu = /^(localhost|127\.)/.test(location.hostname) && new URLSearchParams(location.search).get('ceu') === 'previa';
-      const { criarCeu } = await import(previaCeu ? '/nexus/ceu-previa.js?v=1' : '/nexus/ceu.js?v=9');
+      const previaCeu = /^(localhost|127\.)/.test(location.hostname) && ['previa', 'universo'].includes(PARAM_CEU);
+      const qualPrevia = PARAM_CEU === 'universo' ? (new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' :  '/nexus/ceu-universo.js?v=57') : '/nexus/ceu-previa.js?v=1';
+      const { criarCeu } = await import(previaCeu ? qualPrevia : '/nexus/ceu.js?v=9');
       ceu = criarCeu($('ceu'), S, { visivelNo, visivelAresta, selecionar, expandir, painelAresta, abrirGrupo, indisponivel: ceuIndisponivel });
       if (previaCeu) window.__ceuPrevia = ceu;
     }
