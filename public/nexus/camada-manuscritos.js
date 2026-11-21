@@ -31,7 +31,7 @@ export async function criarCamadaManuscritos(THREE, ctx) {
   const pts = new THREE.Points(g, mat); pts.frustumCulled = false; objetos.push(pts);
   const CEL = 120, grade = new Map(); vis.forEach((r) => { const c = Math.floor(r.x / CEL) + ':' + Math.floor(r.y / CEL); (grade.get(c) || grade.set(c, []).get(c)).push(r); });
   let realcados = [];
-  const ordemPeso = vis.slice().sort((a, b) => b.peso - a.peso);
+  const ordemPeso = vis.slice().sort((a, b) => b.peso - a.peso).slice(0, 300);
   const resumo = (r) => [r.qk && `${r.qk} Qere/Ketiv`, r.lxx && `${r.lxx} da Septuaginta`, r.rest && `${r.rest} restaurada(s)`, r.ms && `${r.ms} em outros manuscritos`, r.semNA && `${r.semNA} ausente(s) no NA28`, r.semTR && `${r.semTR} ausente(s) no TR`, r.cd && 'trecho entre colchetes duplos no NA28', r.alt && `${r.alt} leitura(s) alternativa(s)`].filter(Boolean).join(' · ');
 
   return {

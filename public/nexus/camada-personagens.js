@@ -63,7 +63,7 @@ export async function criarCamadaPersonagens(THREE, ctx) {
   const familia = new THREE.LineSegments(gf, matF); familia.frustumCulled = false; objetos.push(familia);
   const COR_REL = { pai: new THREE.Color('#9FC0FF'), mae: new THREE.Color('#F0B9C8'), filhos: new THREE.Color('#FFE3A3'), conj: new THREE.Color('#F2A0A0'), irm: new THREE.Color('#B9E0A5') };
   let realcados = [];
-  const ordemPeso = vis.slice().sort((a, b) => b.qv - a.qv);
+  const ordemPeso = vis.slice().sort((a, b) => b.qv - a.qv).slice(0, 400);
   const nomeDe = (id) => { const p = porId.get(id); return p ? p.nome : null; };
 
   return {

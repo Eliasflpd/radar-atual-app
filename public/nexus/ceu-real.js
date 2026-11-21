@@ -240,7 +240,7 @@ export function criarCeuReal(THREE, opcoes) {
   function posMundo(nome) { const a = astros.find((x) => x.nome === nome); if (a) return a.sp.getWorldPosition(new THREE.Vector3()); const o = profundos.find((x) => x.nome === nome || x.id === nome); if (o) return o.sp.getWorldPosition(new THREE.Vector3()); const i = estrelas.findIndex((x) => x[5] === nome); if (i < 0 || !gE) return null; const p = gE.attributes.position.array; return new THREE.Vector3(p[i * 3], p[i * 3 + 1], p[i * 3 + 2]).applyMatrix4(eq.matrixWorld); }
   return {
     cena, camera, OBS,
-    quadro(cam, t, alvo, dist, opac, visivel) {
+    quadro(cam, t, alvo, dist, opac, visivel, espaco) {   // espaco = visto de fora da Terra (sem céu azul do dia)
       camera.quaternion.copy(cam.quaternion); camera.aspect = cam.aspect;
       const lupa = Math.max(1, Math.min(8, Math.pow(26000 / Math.max(dist, 30), 0.42)));   // aproximar o mapa aproxima o céu
       camera.fov = cam.fov / lupa; camera.updateProjectionMatrix();
@@ -251,6 +251,7 @@ export function criarCeuReal(THREE, opcoes) {
       eq.matrix.premultiply(rot); qAtual.slerp(qAlvo, 0.07); eq.matrix.premultiply(new THREE.Matrix4().makeRotationFromQuaternion(qAtual)); eq.matrixWorldNeedsUpdate = true; eq.updateMatrixWorld(true);
       if (t - ultAstros > 2000) { ultAstros = t; atualizarAstros(); }
       atualizarProfundos(lupa);
+      U.solAlt.value = espaco ? -0.6 : Math.sin(solAlt * Math.PI / 180);
       const lua = astros.find((a) => a.corpo === 'Moon'); if (lua) { lua.sp.material.sizeAttenuation = true; const ang = Math.max(0.0091, 14 / 760 * camera.fov * Math.PI / 180) * 1.25; lua.sp.scale.set(ang, ang, 1); }
     },
     tocar, rotulos,

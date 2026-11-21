@@ -28,7 +28,38 @@ export function criarGloboAtlas(THREE, dados, opcoes) {
         vec3 cor = fundo + vec3(0.95, 0.78, 0.42) * grade + vec3(0.35, 0.55, 0.95) * borda * 0.5;
         gl_FragColor = vec4(cor, (0.78 + 0.2 * borda) * opac); }` });
   matMar.extensions = { derivatives: true };
-  giro.add(new THREE.Mesh(new THREE.SphereGeometry(R, 128, 64), matMar));
+  const esferaMar = new THREE.Mesh(new THREE.SphereGeometry(R, 128, 64), matMar); giro.add(esferaMar);
+
+  // ── TERRA REAL: imagem de satélite NASA Blue Marble (GIBS, domínio público), com dia e noite pelo Sol de agora ──
+  // A grade EPSG:4326 do GIBS começa em (-180°, 90°) e cada ladrilho de 512 px cobre 288/2^nível graus.
+  const matTerraReal = (bounds) => new THREE.ShaderMaterial({ transparent: true, depthWrite: true,
+    uniforms: { mapa: { value: null }, sol: { value: new THREE.Vector3(1, 0, 0) }, b: { value: new THREE.Vector4(...bounds) }, opac: { value: 1 }, pronto: { value: 0 } },
+    vertexShader: 'varying vec3 p; varying vec3 nn; varying vec3 vw; void main(){ p = normalize(position); nn = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position, 1.0); vw = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }',
+    fragmentShader: `uniform sampler2D mapa; uniform vec3 sol; uniform vec4 b; uniform float opac; uniform float pronto; varying vec3 p; varying vec3 nn; varying vec3 vw;
+      void main(){ float lat = asin(clamp(p.z, -1.0, 1.0)) * 57.29578, lon = atan(p.y, p.x) * 57.29578;
+        vec2 uv = vec2((lon - b.x) / (b.y - b.x), (lat - b.z) / (b.w - b.z)); if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 || pronto < 0.5) discard;
+        vec3 dia = texture2D(mapa, uv).rgb; float luz = dot(p, sol); float k = smoothstep(-0.12, 0.12, luz);
+        vec3 noite = dia * 0.3 + vec3(0.01, 0.02, 0.07); vec3 cor = mix(noite, dia * (0.85 + 0.25 * max(luz, 0.0)), k);
+        cor += vec3(1.0, 0.45, 0.15) * (1.0 - abs(luz) / 0.12) * step(abs(luz), 0.12) * 0.12;   // faixa alaranjada do crepúsculo
+        float borda = pow(1.0 - max(dot(nn, vw), 0.0), 3.0); cor += vec3(0.3, 0.5, 1.0) * borda * 0.35 * (0.3 + 0.7 * k);
+        gl_FragColor = vec4(cor, opac); }` });
+  const matReal = matTerraReal([-180, 180, -90, 90]), matDet = matTerraReal([27, 45, 22.5, 40.5]);
+  const esferaReal = new THREE.Mesh(new THREE.SphereGeometry(R * 1.0006, 192, 96), matReal); giro.add(esferaReal);
+  { // retalho de detalhe sobre a Terra Santa (mais resolução)
+    const pl = [], il = [], N = 64; for (let a = 0; a <= N; a++) for (let o = 0; o <= N; o++) { const la = 22.5 + 18 * a / N, lo = 27 + 18 * o / N, v = n(la, lo).multiplyScalar(R * 1.0012); pl.push(v.x, v.y, v.z); }
+    for (let a = 0; a < N; a++) for (let o = 0; o < N; o++) { const q = a * (N + 1) + o; il.push(q, q + 1, q + N + 1, q + 1, q + N + 2, q + N + 1); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pl, 3)); g.setIndex(il); g.computeVertexNormals(); giro.add(new THREE.Mesh(g, matDet)); }
+  const ladrilho = (nivel, lin, col) => new Promise((ok) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => ok(im); im.onerror = () => ok(null);
+    im.src = `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/BlueMarble_ShadedRelief_Bathymetry/default/500m/${nivel}/${lin}/${col}.jpeg`; });
+  async function montarImagem(nivel, c0, c1, l0, l1, larg, alt, mat) {
+    const cv = document.createElement('canvas'); cv.width = larg; cv.height = alt; const g = cv.getContext('2d'), w = larg / (c1 - c0), h = alt / (l1 - l0); let ok = 0;
+    const tarefas = []; for (let l = l0; l < l1; l++) for (let c = c0; c < c1; c++) tarefas.push(ladrilho(nivel, l, c).then((im) => { if (im) { g.drawImage(im, (c - c0) * w, (l - l0) * h, w + 0.5, h + 0.5); ok++; } }));
+    await Promise.all(tarefas); if (!ok) return false;
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.flipY = true; t.anisotropy = 4; t.needsUpdate = true;
+    mat.uniforms.mapa.value = t; mat.uniforms.pronto.value = 1; return true;
+  }
+  let imagemReal = false;
+  const pImagem = montarImagem(3, 0, 10, 0, 5, 4096, 2048, matReal).then((ok) => { imagemReal = ok; if (ok) { terraOuro.visible = false; costaM.userData.base = 0.28; rioM.userData.base = 0.55; } return montarImagem(6, 46, 50, 11, 15, 2048, 2048, matDet); }).catch(() => false);
 
   // terra: triangulada em lat/lon, subdividida para acompanhar a curvatura, numa só geometria
   const ouro = new THREE.MeshStandardMaterial({ color: '#C9A04C', metalness: 0.5, roughness: 0.6, emissive: '#2E2106', emissiveIntensity: 0.35, transparent: true });
@@ -53,10 +84,10 @@ export function criarGloboAtlas(THREE, dados, opcoes) {
   const gTerra = new THREE.BufferGeometry(); gTerra.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); gTerra.setIndex(idx); gTerra.computeVertexNormals();
   // normais radiais (relevo suave e sem costuras)
   { const nrm = gTerra.attributes.normal, ps = gTerra.attributes.position; const v = new THREE.Vector3(); for (let i = 0; i < ps.count; i++) { v.fromBufferAttribute(ps, i).normalize(); nrm.setXYZ(i, v.x, v.y, v.z); } }
-  giro.add(new THREE.Mesh(gTerra, ouro));
+  const terraOuro = new THREE.Mesh(gTerra, ouro); giro.add(terraOuro);
   const linhas = (aneis, h, fechar) => { const v = []; for (const a of aneis) { if (atravessa(a)) continue; for (let i = 0; i < a.length - 1; i++) { const p1 = n(a[i][1], a[i][0]).multiplyScalar(R * h), p2 = n(a[i + 1][1], a[i + 1][0]).multiplyScalar(R * h); v.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z); } if (fechar && a.length > 2) { const p1 = n(a[a.length - 1][1], a[a.length - 1][0]).multiplyScalar(R * h), p2 = n(a[0][1], a[0][0]).multiplyScalar(R * h); v.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z); } } const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); return g; };
   const costa = new THREE.LineBasicMaterial({ color: '#FFE3A3', transparent: true, opacity: 0.85 }), rio = new THREE.LineBasicMaterial({ color: '#9CCBFF', transparent: true, opacity: 0.85 });
-  opacos.push(costa, rio);
+  opacos.push(costa, rio); const costaM = costa, rioM = rio;
   giro.add(new THREE.LineSegments(linhas(dados.terra, H + 0.0003, true), costa));
   giro.add(new THREE.LineSegments(linhas(dados.rios.map((r) => r.pts), H + 0.0005, false), rio));
   const lago = new THREE.MeshStandardMaterial({ color: '#2F6FB8', metalness: 0.3, roughness: 0.25, emissive: '#0B2A55', emissiveIntensity: 0.7, transparent: true }); opacos.push(lago);
@@ -112,7 +143,10 @@ export function criarGloboAtlas(THREE, dados, opcoes) {
     direcao(lat, lon) { grupo.updateMatrixWorld(true); return n(lat, lon).applyQuaternion(giro.getWorldQuaternion(new THREE.Quaternion())).normalize(); },
     latLonDe(pMundo) { const c = this.centroMundo(); const v = pMundo.clone().sub(c).applyQuaternion(giro.getWorldQuaternion(new THREE.Quaternion()).invert()).normalize(); return { lat: Math.asin(v.z) / RAD, lon: Math.atan2(v.y, v.x) / RAD }; },
     acender(ids) { acesos = new Set(ids); aplicar(); }, acesos: () => acesos, definirRota,
-    opacidade(o) { matMar.uniforms.opac.value = o; matLug.uniforms.opac.value = o; matAtm.uniforms.opac.value = o; opacos.forEach((m) => { m.opacity = m.userData.base * o; }); },
+    imagemReal: () => imagemReal, esperarImagem: () => pImagem,
+    // Sol: ponto subsolar (lat/lon) -> direção no espaço do globo
+    sol(lat, lon) { const v = n(lat, lon); matReal.uniforms.sol.value.copy(v); matDet.uniforms.sol.value.copy(v); },
+    opacidade(o) { matReal.uniforms.opac.value = o; matDet.uniforms.opac.value = o; matMar.uniforms.opac.value = o; matLug.uniforms.opac.value = o; matAtm.uniforms.opac.value = o; opacos.forEach((m) => { m.opacity = m.userData.base * o; }); },
     quadro(t, zoom) { matLug.uniforms.tempo.value = t / 1000; matLug.uniforms.zoom.value = zoom; matMar.uniforms.tempo.value = t / 1000; },
     triangulos: () => idx.length / 3,
   };

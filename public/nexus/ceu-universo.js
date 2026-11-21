@@ -63,12 +63,14 @@ export function criarCeu(container, estado, acoes) {
       <button data-cu="voltar" title="Voltar à vista anterior" aria-label="Voltar">↶</button>
       <button data-cu="tela" title="Tela cheia" aria-label="Tela cheia">⛶</button>
       <button data-cu="camadas" title="Camadas: ligar, desligar e transparência" aria-label="Camadas" class="cu-bt-atlas ativo">◫</button>
+      <button data-cu="terra" title="Terra: o globo como mundo próprio (imagem de satélite, dia e noite agora)" aria-label="Abrir a Terra">🌍</button>
     </div>
     <div class="cu-nivel"></div>
     <div class="cu-dica">Arraste para navegar · roda para aproximar · passe o mouse nas estrelas · duplo clique aproxima</div>
     <div class="cu-dica-toque">Um dedo navega · dois dedos aproximam · toque seleciona · toque longo abre a investigação</div>
     <div class="cu-info" hidden></div>
     <div class="cu-lugar" hidden></div>
+    <div class="cu-terra" hidden><span class="cu-terra-txt"></span><button type="button" data-cu-terra="sair">↩ Voltar ao universo</button></div>
     <form class="cu-busca" autocomplete="off"><input type="search" placeholder="Pesquisar assunto: livro, lugar ou seção (ex.: Êxodo, Jerusalém)" aria-label="Pesquisar assunto nas camadas" enterkeyhint="search"><button type="submit">Buscar</button></form>
     <div class="cu-camadas"></div>
     <div class="cu-relogio"><div class="cu-hora"></div><div class="cu-tempo-bts"><button type="button" data-tempo="-60">−1h</button><button type="button" data-tempo="agora">Agora</button><button type="button" data-tempo="60">+1h</button><button type="button" data-tempo="local" title="Usar a localização deste aparelho">📍</button></div><input type="range" min="-720" max="720" value="0" step="10" data-tempo="barra" aria-label="Avançar ou voltar no tempo"></div>
@@ -88,6 +90,10 @@ export function criarCeu(container, estado, acoes) {
     .cu-controles button{width:38px;height:38px;border-radius:12px;border:1px solid rgba(233,210,150,.28);background:rgba(8,14,30,.72);color:#F1E6C8;font-size:17px;cursor:pointer;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center}
     .cu-controles .cu-bt-atlas.ativo{background:rgba(201,162,78,.35);border-color:#E9C878}
     .cu-lugar{pointer-events:auto;position:absolute;left:50%;top:12px;transform:translateX(-50%);background:rgba(3,8,22,.88);border:1px solid rgba(233,200,120,.55);border-radius:999px;padding:6px 8px 6px 14px;color:#FFE3A3;font:600 13px Inter,system-ui,sans-serif;display:flex;gap:10px;align-items:center;white-space:nowrap}
+    .cu-terra{pointer-events:auto;position:absolute;left:50%;bottom:40px;transform:translateX(-50%);background:rgba(3,8,22,.88);border:1px solid rgba(140,190,255,.5);border-radius:999px;padding:6px 8px 6px 14px;color:#D8E8FF;font:600 12.5px Inter,system-ui,sans-serif;display:flex;gap:10px;align-items:center;white-space:nowrap;max-width:calc(100% - 120px)}
+    .cu-terra[hidden]{display:none}.cu-terra-txt{overflow:hidden;text-overflow:ellipsis}
+    .cu-terra button{border:1px solid rgba(140,190,255,.6);background:rgba(60,110,200,.3);color:#E8F1FF;border-radius:999px;padding:4px 12px;cursor:pointer;font:600 12.5px Inter,system-ui,sans-serif}
+    body.ceu-universo.modo-terra .cu-camadas,body.ceu-universo.modo-terra .cu-dica{display:none}
     .cu-lugar button{border:0;background:rgba(201,162,78,.25);color:#FFE3A3;border-radius:999px;width:24px;height:24px;cursor:pointer}
     .cu-busca{pointer-events:auto;position:absolute;left:50%;top:10px;transform:translateX(-50%);display:flex;gap:6px;width:min(520px,calc(100% - 300px))}
     .cu-busca input{flex:1;min-width:0;background:rgba(3,8,22,.82);border:1px solid rgba(233,200,120,.45);border-radius:999px;color:#F4EEDC;padding:8px 14px;font:14px Inter,system-ui,sans-serif;outline:none}
@@ -149,11 +155,11 @@ export function criarCeu(container, estado, acoes) {
   // camadas já construídas: o módulo de cada uma devolve { objetos, quadro, pegar, info, ficha, rotulos, buscar, pos, versos, realcar }
   const MODULOS_CAMADA = {
     tempo: { carregar: () => import('/nexus/camada-tempo.js?v=4').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
-    personagens: { carregar: () => import('/nexus/camada-personagens.js?v=2').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
-    linguas: { carregar: () => import('/nexus/camada-linguas.js?v=2').then((m) => m.criarCamadaLinguas), visivel: true, opacidade: 0.55 },
-    tradicao: { carregar: () => import('/nexus/camada-tradicao.js?v=2').then((m) => m.criarCamadaTradicao), visivel: true, opacidade: 0.75 },
+    personagens: { carregar: () => import('/nexus/camada-personagens.js?v=3').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
+    linguas: { carregar: () => import('/nexus/camada-linguas.js?v=3').then((m) => m.criarCamadaLinguas), visivel: true, opacidade: 0.55 },
+    tradicao: { carregar: () => import('/nexus/camada-tradicao.js?v=3').then((m) => m.criarCamadaTradicao), visivel: true, opacidade: 0.75 },
     teologia: { carregar: () => import('/nexus/camada-temas.js?v=2').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'teologia', arquivo: '/nexus/camadas/teologia.json?v=1', rotulo: 'Teologia', forma: 'estrela', cores: ['#FFE3A3', '#F2C6A0', '#B9E0A5', '#E8A0A0', '#B5C7F2'] })), visivel: true, opacidade: 0.75 },
-    manuscritos: { carregar: () => import('/nexus/camada-manuscritos.js?v=2').then((m) => m.criarCamadaManuscritos), visivel: true, opacidade: 0.7 },
+    manuscritos: { carregar: () => import('/nexus/camada-manuscritos.js?v=3').then((m) => m.criarCamadaManuscritos), visivel: true, opacidade: 0.7 },
     historia: { carregar: () => import('/nexus/camada-temas.js?v=2').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'historia', arquivo: '/nexus/camadas/historia.json?v=1', rotulo: 'História e cultura', forma: 'anel', cores: ['#E6C79C', '#F2D28B', '#C9B27A', '#E9A97A', '#D98C7A', '#A9C98E'] })), visivel: true, opacidade: 0.75 },
   };
   CAMADAS.forEach((c) => { const md = MODULOS_CAMADA[c.id]; if (!md) return;
@@ -352,7 +358,7 @@ export function criarCeu(container, estado, acoes) {
 
   // ── O CÉU REAL E AO VIVO (fundo da camada Universo): módulo ceu-real.js, numa cena própria desenhada antes ───
   let ceuR = null;
-  import('/nexus/ceu-real.js?v=6').then((m) => { ceuR = m.criarCeuReal(THREE, { escala }); atualizarRelogio(); }).catch((e) => console.warn('céu real indisponível', e));
+  import('/nexus/ceu-real.js?v=7').then((m) => { ceuR = m.criarCeuReal(THREE, { escala }); atualizarRelogio(); }).catch((e) => console.warn('céu real indisponível', e));
   renderer.autoClear = false;
   // estrela cadente (decorativa): um risco de luz de vez em quando
   const gCad = new THREE.BufferGeometry();
@@ -671,6 +677,7 @@ export function criarCeu(container, estado, acoes) {
     else if (o === 'centro') centralizar(selecionado ? 'p:' + selecionado + '-' + selecionado : (estado.sel || estado.foco));
     else if (o === 'voltar') { const v = historico.pop(); if (v) { voo = { de: { x: alvo.x, y: alvo.y, d: dist }, para: { x: v.x, y: v.y, d: v.d }, t0: performance.now(), dur: 900 }; incl = v.i; } }
     else if (o === 'camadas') { painelCamadas.hidden = !painelCamadas.hidden; b.classList.toggle('ativo', !painelCamadas.hidden); }
+    else if (o === 'terra') { if (modoTerra) sairTerra(); else abrirTerra(); }
     else if (o === 'tela') { const el = container.closest('.palco') || container; if (document.fullscreenElement) document.exitFullscreen(); else el.requestFullscreen && el.requestFullscreen().catch(() => {}); }
   });
   // distância que mostra todas as regiões na tela (com folga)
@@ -760,6 +767,22 @@ export function criarCeu(container, estado, acoes) {
     camera.position.copy(pos); camera.up.copy(norte.clone().multiplyScalar(Math.cos(inc)).addScaledVector(d, Math.sin(inc))); camera.lookAt(sup);
     camera.near = Math.max(0.05, m.alt * 0.01); camera.far = camera.position.distanceTo(c) * 6 + 80000; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);   // a medida sob o cursor usa a câmera deste instante
   }
+  function abrirTerra(lat = 31.78, lon = 35.22) {
+    if (!atlasC) return; camada('atlas').visivel = true; montarPainel();
+    if (!modoTerra) entrarTerra(null);
+    const m = modoTerra, de = { lat: m.lat, lon: m.lon, alt: m.alt };
+    m.voo = { de, para: { lat, lon, alt: RAIO_GLOBO * 1.6 }, topo: Math.max(de.alt, RAIO_GLOBO * 1.6), t0: performance.now(), dur: 1800 }; m.cursor = null; m.ancora = null;
+  }
+  const faixaTerra = ui.querySelector('.cu-terra');
+  faixaTerra.querySelector('[data-cu-terra="sair"]').onclick = () => { sairTerra(); vistaGeral(); };
+  // Sol de agora (ou da hora escolhida no relógio): ponto subsolar aproximado (declinação + equação do tempo)
+  function pontoSubsolar(ms) {
+    const d = new Date(ms), ini = Date.UTC(d.getUTCFullYear(), 0, 0), N = (ms - ini) / 86400000;
+    const dec = -23.44 * Math.cos(2 * Math.PI / 365 * (N + 10)), B = 2 * Math.PI * (N - 81) / 364, eq = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+    const h = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600; let lon = -15 * (h - 12 + eq / 60); lon = ((lon + 540) % 360) - 180;
+    return { lat: dec, lon };
+  }
+  let solEm = 0;
   function vistaGeral() { if (modoTerra) sairTerra(); if (!secoes.length) return; const c = caixaGeral(); voar(c.x, c.y, c.d); incl = 0; }
   function centralizar(id) {
     const q = lerId(id);
@@ -866,7 +889,7 @@ export function criarCeu(container, estado, acoes) {
   async function montarAtlas() {
     try {
       const d = await (await fetch('/nexus/atlas-dados.json')).json();
-      const { criarGloboAtlas } = await import('/nexus/atlas-globo.js?v=3');
+      const { criarGloboAtlas } = await import('/nexus/atlas-globo.js?v=6');
       const x0 = Math.min(...secoes.map((q) => q.cx - q.raio)), x1 = Math.max(...secoes.map((q) => q.cx + q.raio));
       const y0 = Math.min(...secoes.map((q) => q.cy - q.raio)), y1 = Math.max(...secoes.map((q) => q.cy + q.raio));
       RAIO_GLOBO = Math.round((y1 - y0) * 0.22);
@@ -1074,6 +1097,7 @@ export function criarCeu(container, estado, acoes) {
   fiosObj.frustumCulled = false; fiosObj.renderOrder = 25; cena.add(fiosObj);
   function atualizarFios(t) {
     const pa = gFio.attributes.position, al = gFio.attributes.alfa; let n = 0;
+    if (modoTerra) { for (let i = 0; i < MAX_FIOS; i++) { al.setX(i * 2, 0); al.setX(i * 2 + 1, 0); } al.needsUpdate = true; return; }   // na Terra não há fios para as outras folhas
     const mostrar = atlasC && camada('atlas').visivel && camada('biblia').visivel;
     if (mostrar) {
       for (const f of fios) {
@@ -1104,12 +1128,12 @@ export function criarCeu(container, estado, acoes) {
       const vis = c.visivel && c.opacidade > 0.01;
       const criada = !c.criar || c.criada;
       if (vis && !criada) garantirCriada(c);
-      c.grupo.visible = vis && criada;
+      c.grupo.visible = vis && criada && (!modoTerra || c.id === 'atlas');   // modo Terra: um mundo à parte (só o globo e o céu)
     });
     zB = camada('biblia').z; zA = camada('atlas').z;
     for (const c of CAMADAS) {
       if (!c.grupo.visible) continue;                                     // desligada: custo zero
-      if (c.propria) { if (c.id === 'atlas' && atlasC) atlasC.opacidade(c.opacidade); continue; }
+      if (c.propria) { if (c.id === 'atlas' && atlasC) atlasC.opacidade(modoTerra ? 1 : c.opacidade); continue; }   // na Terra o globo fica inteiro
       if (!c.animada && !c._sujo && c._op === c.opacidade) continue;       // nada mudou
       c._op = c.opacidade; c._sujo = false;
       c.grupo.traverse((o) => { const m = o.material; if (!m) return; if (m.isShaderMaterial) { if (!m.uniforms.opac) m.uniforms.opac = { value: 1 }; m.uniforms.opac.value = c.opacidade; } else { if (m.userData.base == null) m.userData.base = m.opacity; m.transparent = true; m.opacity = m.userData.base * c.opacidade; } });
@@ -1270,7 +1294,11 @@ export function criarCeu(container, estado, acoes) {
     } else if (!arrasto && inercia.lengthSq() > 1e-4) { alvo.x += inercia.x * dt / 16; alvo.y += inercia.y * dt / 16; inercia.multiplyScalar(0.92); posicionar(); }
     aplicarCamadas(); if (modoTerra && atlasC) { if (animarTerra()) posicionarTerra(); } else { alvo.z = zB; posicionar(); }
     if (transicao) { const q = Math.min(1, (performance.now() - transicao.t0) / 650), e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2; if (q >= 1) transicao = null; else { camera.position.lerpVectors(transicao.pos, camera.position.clone(), e); camera.quaternion.slerpQuaternions(transicao.quat, camera.quaternion.clone(), e); camera.updateMatrixWorld(); } }
-    if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel);
+    if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel || !!modoTerra, !!modoTerra && modoTerra.alt > RAIO_GLOBO * 0.02);   // na Terra, vista do espaço: céu negro com estrelas
+    if (atlasC && t - solEm > 1000) { solEm = t; const ss = pontoSubsolar(Date.now() + (ceuR ? ceuR.estado().desloc || 0 : 0)); atlasC.sol(ss.lat, ss.lon);
+      if (modoTerra) { const l = modoTerra; const dLon = ((l.lon - ss.lon + 540) % 360) - 180, cz = Math.sin(l.lat * Math.PI / 180) * Math.sin(ss.lat * Math.PI / 180) + Math.cos(l.lat * Math.PI / 180) * Math.cos(ss.lat * Math.PI / 180) * Math.cos(dLon * Math.PI / 180);
+        faixaTerra.querySelector('.cu-terra-txt').textContent = `🌍 Terra · ${cz > 0.05 ? 'é dia' : cz > -0.1 ? 'crepúsculo' : 'é noite'} no centro da vista (${l.lat.toFixed(1)}°, ${l.lon.toFixed(1)}°) · ${atlasC.imagemReal() ? 'imagem de satélite NASA Blue Marble' : 'carregando imagem de satélite…'} · Sol ${ceuR && ceuR.estado().desloc ? 'da hora escolhida' : 'de agora'}`; } }
+    faixaTerra.hidden = !modoTerra; document.body.classList.toggle('modo-terra', !!modoTerra);
     if (atlasC) atlasC.quadro(t, modoTerra ? Math.max(0.8, Math.min(2.4, Math.pow(RAIO_GLOBO / Math.max(modoTerra.alt, 1), 0.3))) : Math.max(0.6, Math.min(2.0, Math.pow(9000 / dist, 0.3))));
     const seg = reduzido ? 0 : t / 1000;
     fundoCamadas.forEach((m) => { m.uniforms.cam.value.set(alvo.x, alvo.y); m.uniforms.tempo.value = seg; });
@@ -1406,6 +1434,7 @@ export function criarCeu(container, estado, acoes) {
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
       fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
+      abrirTerra: () => abrirTerra(), imagemTerra: () => (atlasC ? atlasC.imagemReal() : false), subsolar: () => pontoSubsolar(Date.now()),
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
       fichaCamada: () => (fichaCamada ? { id: fichaCamada.c.id, i: fichaCamada.i, versos: realceCamada.size, fios: fiosCamada.length } : null), buscaCamada: (id, q) => { const c = camada(id); return c && c.api ? c.api.buscar(norm(q)) : null; },
       telaLivro: (n) => { const lv = livros[n - 1]; return lv ? tela(lv.cx, lv.cy) : null; }, incl: () => incl,

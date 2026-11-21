@@ -44,7 +44,7 @@ export async function criarCamadaLinguas(THREE, ctx) {
       float a = smoothstep(0.5, 0.0, d) * b; gl_FragColor = opac * vec4(c * a, a); }` });   // forma de losango: as palavras se distinguem das pessoas e dos acontecimentos
   const pts = new THREE.Points(g, mat); pts.frustumCulled = false; objetos.push(pts);
   let realcados = [];
-  const rotulaveis = vis.filter(conteudo).sort((a, b) => b.n - a.n);
+  const rotulaveis = vis.filter(conteudo).sort((a, b) => b.n - a.n).slice(0, 500);   // só as mais frequentes ganham rótulo (economiza o processador)
   const nomeL = (l) => `${l.w || l.s} · ${l.g || l.t}`;
 
   return {

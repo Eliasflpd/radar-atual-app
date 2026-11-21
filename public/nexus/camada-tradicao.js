@@ -37,7 +37,7 @@ export async function criarCamadaTradicao(THREE, ctx) {
       float a = (cruz * 0.95 + halo) * b; gl_FragColor = opac * vec4(c * a, a); }` });
   const pts = new THREE.Points(g, mat); pts.frustumCulled = false; objetos.push(pts);
   let realcados = [];
-  const ordemPeso = vis.slice().sort((a, b) => b.v.length - a.v.length);
+  const ordemPeso = vis.slice().sort((a, b) => b.v.length - a.v.length).slice(0, 400);
   const anoT = (a) => (a ? (a < 1000 ? `c. ${a}` : String(a)) : 's/ data');
 
   return {
