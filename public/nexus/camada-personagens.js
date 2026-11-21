@@ -67,6 +67,8 @@ export async function criarCamadaPersonagens(THREE, ctx) {
   const nomeDe = (id) => { const p = porId.get(id); return p ? p.nome : null; };
 
   return {
+    nome: (i) => (todas[i] ? todas[i].rotulo || todas[i].nome : ''),
+    total: () => todas.length,
     objetos, pessoas: todas,
     quadro(t) { mat.uniforms.tempo.value = t / 1000; matF.uniforms.tempo.value = t / 1000; },
     porId(id) { const p = porId.get(id); return p ? p.i : -1; },

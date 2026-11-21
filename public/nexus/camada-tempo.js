@@ -68,6 +68,8 @@ export async function criarCamadaTempo(THREE, ctx) {
   let realcados = new Set();
 
   return {
+    nome: (i) => (ev[i] ? `${ev[i].nome} · ${anoTexto(ev[i].a)}` : ''),
+    total: () => ev.length,
     objetos, eventos: ev, aviso: dados.aviso, fonte: dados.fonte,
     quadro(t) { mat.uniforms.tempo.value = t / 1000; matL.uniforms.tempo.value = t / 1000; },
     realcar(lista) { realcados = new Set(lista); for (let i = 0; i < n; i++) realce[i] = 0; for (const i of realcados) if (ev[i] && ev[i].vi != null) realce[ev[i].vi] = 1; g.attributes.realce.needsUpdate = true; },

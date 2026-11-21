@@ -41,6 +41,8 @@ export async function criarCamadaTradicao(THREE, ctx) {
   const anoT = (a) => (a ? (a < 1000 ? `c. ${a}` : String(a)) : 's/ data');
 
   return {
+    nome: (i) => (I[i] ? I[i].nome : ''),
+    total: () => I.length,
     objetos, itens: I, documentos: D,
     quadro(t) { mat.uniforms.tempo.value = t / 1000; },
     realcar(lista) { for (const i of realcados) { const t = I[i]; if (t && t.vi != null) realce[t.vi] = 0; } realcados = lista.filter((i) => I[i]); for (const i of realcados) if (I[i].vi != null) realce[I[i].vi] = 1; g.attributes.realce.needsUpdate = true; },

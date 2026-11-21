@@ -41,6 +41,8 @@ export async function criarCamadaTemas(THREE, ctx, op) {
   const ordemPeso = vis.slice().sort((a, b) => b.v.length - a.v.length);
 
   return {
+    nome: (i) => (itens[i] ? itens[i].nome : ''),
+    total: () => itens.length,
     objetos, itens,
     quadro(t) { mat.uniforms.tempo.value = t / 1000; },
     realcar(lista) { for (const i of realcados) { const t = itens[i]; if (t && t.vi != null) realce[t.vi] = 0; } realcados = lista.filter((i) => itens[i]); for (const i of realcados) if (itens[i].vi != null) realce[itens[i].vi] = 1; g.attributes.realce.needsUpdate = true; },

@@ -35,6 +35,8 @@ export async function criarCamadaManuscritos(THREE, ctx) {
   const resumo = (r) => [r.qk && `${r.qk} Qere/Ketiv`, r.lxx && `${r.lxx} da Septuaginta`, r.rest && `${r.rest} restaurada(s)`, r.ms && `${r.ms} em outros manuscritos`, r.semNA && `${r.semNA} ausente(s) no NA28`, r.semTR && `${r.semTR} ausente(s) no TR`, r.cd && 'trecho entre colchetes duplos no NA28', r.alt && `${r.alt} leitura(s) alternativa(s)`].filter(Boolean).join(' · ');
 
   return {
+    nome: (i) => (L[i] ? `${ctx.nomeRef(L[i].k)}: diferenças entre edições` : ''),
+    total: () => L.length,
     objetos, versosDif: L,
     quadro(t) { mat.uniforms.tempo.value = t / 1000; },
     realcar(lista) { for (const i of realcados) { const r = L[i]; if (r && r.vi != null) realce[r.vi] = 0; } realcados = lista.filter((i) => L[i]); for (const i of realcados) if (L[i].vi != null) realce[L[i].vi] = 1; g.attributes.realce.needsUpdate = true; },

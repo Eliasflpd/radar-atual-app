@@ -74,7 +74,7 @@ export function criarCeu(container, estado, acoes) {
     <div class="cu-relogio"><div class="cu-hora"></div><div class="cu-tempo-bts"><button type="button" data-tempo="-60">−1h</button><button type="button" data-tempo="agora">Agora</button><button type="button" data-tempo="60">+1h</button><button type="button" data-tempo="local" title="Usar a localização deste aparelho">📍</button></div><input type="range" min="-720" max="720" value="0" step="10" data-tempo="barra" aria-label="Avançar ou voltar no tempo"></div>
     <div class="cu-invest" hidden></div>
     <div class="cu-cartao" hidden></div>
-    <div class="cu-credito">Céu real ao vivo: estrelas HYG v4.1 (CC BY-SA 4.0) · Via Láctea ESO/S. Brunier (CC BY 4.0) · Lua, Sol e planetas: astronomy-engine (MIT) · versículos da Almeida · ligações OpenBible (CC BY) e NEXUS</div>`;
+    <div class="cu-credito">Céu: HYG v4.1 (CC BY-SA) · Via Láctea ESO/S. Brunier (CC BY) · astronomy-engine (MIT) · Almeida · OpenBible (CC BY) · Natural Earth · Theographic (CC BY-SA) · STEPBible/Tyndale House (CC BY) · Easton 1897 (dom. público) · credos históricos (dom. público) · NEXUS</div>`;
   container.append(canvas, rot, ui);
   const estilo = document.createElement('style');
   estilo.textContent = `
@@ -148,13 +148,13 @@ export function criarCeu(container, estado, acoes) {
    ['tradicao', 'Tradição · história da Igreja', '#A9D18E']].forEach(([id, nome, cor]) => CAMADAS.push({ id, nome, cor, grupo: new THREE.Group(), visivel: false, opacidade: 0.8, z: 0, reservada: true }));
   // camadas já construídas: o módulo de cada uma devolve { objetos, quadro, pegar, info, ficha, rotulos, buscar, pos, versos, realcar }
   const MODULOS_CAMADA = {
-    tempo: { carregar: () => import('/nexus/camada-tempo.js?v=3').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
-    personagens: { carregar: () => import('/nexus/camada-personagens.js?v=1').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
-    linguas: { carregar: () => import('/nexus/camada-linguas.js?v=1').then((m) => m.criarCamadaLinguas), visivel: true, opacidade: 0.55 },
-    tradicao: { carregar: () => import('/nexus/camada-tradicao.js?v=1').then((m) => m.criarCamadaTradicao), visivel: true, opacidade: 0.75 },
-    teologia: { carregar: () => import('/nexus/camada-temas.js?v=1').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'teologia', arquivo: '/nexus/camadas/teologia.json?v=1', rotulo: 'Teologia', forma: 'estrela', cores: ['#FFE3A3', '#F2C6A0', '#B9E0A5', '#E8A0A0', '#B5C7F2'] })), visivel: true, opacidade: 0.75 },
-    manuscritos: { carregar: () => import('/nexus/camada-manuscritos.js?v=1').then((m) => m.criarCamadaManuscritos), visivel: true, opacidade: 0.7 },
-    historia: { carregar: () => import('/nexus/camada-temas.js?v=1').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'historia', arquivo: '/nexus/camadas/historia.json?v=1', rotulo: 'História e cultura', forma: 'anel', cores: ['#E6C79C', '#F2D28B', '#C9B27A', '#E9A97A', '#D98C7A', '#A9C98E'] })), visivel: true, opacidade: 0.75 },
+    tempo: { carregar: () => import('/nexus/camada-tempo.js?v=4').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
+    personagens: { carregar: () => import('/nexus/camada-personagens.js?v=2').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
+    linguas: { carregar: () => import('/nexus/camada-linguas.js?v=2').then((m) => m.criarCamadaLinguas), visivel: true, opacidade: 0.55 },
+    tradicao: { carregar: () => import('/nexus/camada-tradicao.js?v=2').then((m) => m.criarCamadaTradicao), visivel: true, opacidade: 0.75 },
+    teologia: { carregar: () => import('/nexus/camada-temas.js?v=2').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'teologia', arquivo: '/nexus/camadas/teologia.json?v=1', rotulo: 'Teologia', forma: 'estrela', cores: ['#FFE3A3', '#F2C6A0', '#B9E0A5', '#E8A0A0', '#B5C7F2'] })), visivel: true, opacidade: 0.75 },
+    manuscritos: { carregar: () => import('/nexus/camada-manuscritos.js?v=2').then((m) => m.criarCamadaManuscritos), visivel: true, opacidade: 0.7 },
+    historia: { carregar: () => import('/nexus/camada-temas.js?v=2').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'historia', arquivo: '/nexus/camadas/historia.json?v=1', rotulo: 'História e cultura', forma: 'anel', cores: ['#E6C79C', '#F2D28B', '#C9B27A', '#E9A97A', '#D98C7A', '#A9C98E'] })), visivel: true, opacidade: 0.75 },
   };
   CAMADAS.forEach((c) => { const md = MODULOS_CAMADA[c.id]; if (!md) return;
     Object.assign(c, { reservada: false, modulo: true, visivel: md.visivel, opacidade: md.opacidade, criada: false,
@@ -543,9 +543,10 @@ export function criarCeu(container, estado, acoes) {
     selecionado = k;
     const t = textoDe(k), d = decompor(k);
     cartao.innerHTML = `<small>Passagem · ${esc(livros[d.b - 1].sec.nome)}</small><b>${esc(nomeRef(k))}</b><q>${esc(t)}</q>
-      <div class="cu-bts"><button class="cu-abrir" type="button">Abrir investigação</button><button class="cu-aprox" type="button">Aproximar</button><button class="cu-fechar" type="button">Fechar</button></div>`;
+      <div class="cu-bts"><button class="cu-abrir" type="button">Abrir investigação</button><button class="cu-camadas-v" type="button">✦ Nas 10 camadas</button><button class="cu-aprox" type="button">Aproximar</button><button class="cu-fechar" type="button">Fechar</button></div>`;
     cartao.hidden = false;
     cartao.querySelector('.cu-abrir').onclick = () => investigar(k);
+    cartao.querySelector('.cu-camadas-v').onclick = () => fichaVerso(k);
     cartao.querySelector('.cu-aprox').onclick = () => { const j = vIdx.get(k); voar(vBase[j * 3], vBase[j * 3 + 1], 160); };
     cartao.querySelector('.cu-fechar').onclick = () => { cartao.hidden = true; selecionado = null; soltar(); };
   }
@@ -777,20 +778,84 @@ export function criarCeu(container, estado, acoes) {
   }
   // voa até um ponto que está numa folha acima da Bíblia: a câmera fica acima da folha, com o ponto no centro da vista
   function voarAltura(x, y, z, d) { const h = Math.max(0, z - zB), ti = Math.tan(incl), ci = Math.max(0.2, Math.cos(incl)); voar(x, y + h * ti, h / ci + d); }
-  function limparCamada() { realceCamada = new Set(); fiosCamada = []; fichaCamada = null; pairCamada = null; CAMADAS.forEach((o) => o.api && o.api.realcar && o.api.realcar([])); }
-  function abrirFichaCamada(c, i, irAte = false) {
-    limparComposicao(); const f = c.api.ficha(i); if (!f) return;
-    invest.innerHTML = `<button class="cu-fechar-inv" type="button" aria-label="Fechar">×</button><small>${esc(f.rotulo || c.nome)}</small><h3>${esc(f.titulo)}</h3>${f.html}
-      <div class="cu-chips" style="margin-top:8px">${f.versos && f.versos.length ? '<button type="button" class="cu-acender">✨ Acender versículos na Bíblia</button>' : ''}<button type="button" class="cu-ir">◎ Aproximar</button></div>`;
-    invest.hidden = false;
-    ligarCamada(c, i, true);
-    invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; limparCamada(); };
-    invest.querySelectorAll('[data-evento]').forEach((b) => { b.onclick = () => abrirFichaCamada(c, +b.dataset.evento, true); });
-    invest.querySelectorAll('[data-busca]').forEach((b) => { b.onclick = () => buscar(b.dataset.busca); });
-    invest.querySelectorAll('[data-camada]').forEach((b) => { b.onclick = () => {   // ligação entre camadas: abre o item na outra folha
+  // ── INTERLIGAÇÃO DAS CAMADAS: tudo se liga pelos versículos (o endereço comum das dez folhas) ──
+  const indices = new Map();   // id da camada -> { m: Map(versículo -> [itens]), tam: Int32Array (versículos de cada item) }
+  function indiceDe(c) {
+    if (!c.api || !c.api.total || (c.api.pronto && !c.api.pronto())) return null;
+    let x = indices.get(c.id); if (x) return x;
+    const n = c.api.total(), m = new Map(), tam = new Int32Array(n);
+    for (let i = 0; i < n; i++) { const vs = c.api.versos(i) || []; tam[i] = vs.length; for (const k of vs) { let l = m.get(k); if (!l) m.set(k, l = []); l.push(i); } }
+    x = { m, tam }; indices.set(c.id, x); return x;
+  }
+  // itens das outras folhas que mais compartilham versículos com um conjunto (medida de semelhança: cosseno)
+  function relacionados(V, origem, porCamada = 4) {
+    const Vs = V instanceof Set ? V : new Set(V), out = []; if (!Vs.size) return out;
+    for (const c of CAMADAS) {
+      const x = indiceDe(c); if (!x) continue;
+      const cont = new Map(); for (const k of Vs) for (const i of x.m.get(k) || []) cont.set(i, (cont.get(i) || 0) + 1);
+      const minimo = Vs.size > 3 ? 2 : 1;
+      const lista = [...cont.entries()].filter(([i, n]) => n >= minimo && !(origem && origem.c === c && origem.i === i))
+        .map(([i, n]) => ({ c, i, n, sc: n / Math.sqrt(Math.max(1, x.tam[i]) * Vs.size) })).sort((a, b) => b.sc - a.sc).slice(0, porCamada);
+      if (lista.length) out.push({ c, lista });
+    }
+    if (atlasC) { const cont = new Map(); for (const k of Vs) for (const li of atlasC.porVerso.get(k) || []) cont.set(li, (cont.get(li) || 0) + 1);
+      const lista = [...cont.entries()].sort((a, b) => b[1] - a[1]).slice(0, porCamada); if (lista.length) out.push({ atlas: true, lista }); }
+    return out;
+  }
+  let fiosEntre = [];   // fios de item para item, de uma folha para outra
+  function secaoLigacoes(rel, titulo) {
+    if (!rel.length) return '';
+    return `<h5>${titulo}</h5>` + rel.map((r) => r.atlas
+      ? `<div><small>Atlas</small><div class="cu-chips">${r.lista.map(([li, n]) => `<button type="button" data-lugar-atlas="${li}">📍 ${esc(atlasC.lugares[li].nome)} · ${n}</button>`).join('')}</div></div>`
+      : `<div><small>${esc(r.c.nome)}</small><div class="cu-chips">${r.lista.map((x) => `<button type="button" data-camada="${r.c.id}" data-item="${x.i}">${esc(r.c.api.nome ? r.c.api.nome(x.i) : '#' + x.i)}</button>`).join('')}</div></div>`).join('');
+  }
+  function ligarChips(raiz) {
+    raiz.querySelectorAll('[data-busca]').forEach((b) => { if (!b.dataset.camada) b.onclick = () => buscar(b.dataset.busca); });
+    raiz.querySelectorAll('[data-camada]').forEach((b) => { b.onclick = () => {
       const c2 = camada(b.dataset.camada); if (!c2 || !c2.api) { if (b.dataset.busca) buscar(b.dataset.busca); return; }
       const i2 = b.dataset.id != null ? c2.api.porId(+b.dataset.id) : +b.dataset.item; if (i2 == null || i2 < 0) return;
       c2.visivel = true; if (c2.opacidade < 0.3) c2.opacidade = 0.7; montarPainel(); abrirFichaCamada(c2, i2, true); }; });
+    raiz.querySelectorAll('[data-lugar-atlas]').forEach((b) => { b.onclick = () => { camada('atlas').visivel = true; montarPainel(); voarParaLugar(atlasC.lugares[+b.dataset.lugarAtlas], []); }; });
+  }
+  // um versículo nas dez camadas: tudo o que cada folha diz dele, com fios de luz subindo até cada item
+  function fichaVerso(k) {
+    const j = vIdx.get(k); if (j == null) return;
+    limparComposicao(); const partes = []; fiosCamada = []; realceCamada = new Set([j]);
+    for (const c of CAMADAS.slice().reverse()) {
+      const x = indiceDe(c); if (!x) continue; const is = (x.m.get(k) || []).slice(); if (!is.length) continue;
+      is.sort((a, b) => x.tam[a] - x.tam[b]); const top = is.slice(0, c.id === 'linguas' ? 16 : 8);
+      partes.push(`<div><small>${esc(c.nome)} (${is.length})</small><div class="cu-chips">${top.map((i) => `<button type="button" data-camada="${c.id}" data-item="${i}">${esc(c.api.nome ? c.api.nome(i) : '#' + i)}</button>`).join('')}</div></div>`);
+      top.forEach((i) => fiosCamada.push({ c, i, j })); c.api.realcar && c.api.realcar(top);
+    }
+    const lugs = atlasC ? atlasC.porVerso.get(k) || [] : [];
+    if (lugs.length) { partes.push(`<div><small>Atlas (${lugs.length})</small><div class="cu-chips">${lugs.slice(0, 8).map((li) => `<button type="button" data-lugar-atlas="${li}">📍 ${esc(atlasC.lugares[li].nome)}</button>`).join('')}</div></div>`); atlasC.acender(lugs); fios = lugs.map((li) => ({ l: li, j })); }
+    invest.innerHTML = `<button class="cu-fechar-inv" type="button" aria-label="Fechar">×</button><small>Versículo nas camadas</small><h3>${esc(nomeRef(k))}</h3><p><i>“${esc(textoDe(k))}”</i></p>
+      ${partes.length ? '<h5>O que cada camada diz deste versículo</h5>' + partes.join('') : '<p><small>Nenhuma das camadas tem dado ligado a este versículo ainda.</small></p>'}
+      <p><small>Cada ligação vem da fonte da sua camada (mostrada na ficha de cada item). Fios de luz sobem do versículo até cada folha.</small></p>`;
+    invest.hidden = false; cartao.hidden = true;
+    invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; limparComposicao(); };
+    ligarChips(invest);
+  }
+  function limparCamada() { realceCamada = new Set(); fiosCamada = []; fiosEntre = []; fichaCamada = null; pairCamada = null; CAMADAS.forEach((o) => o.api && o.api.realcar && o.api.realcar([])); }
+  function abrirFichaCamada(c, i, irAte = false) {
+    limparComposicao(); const f = c.api.ficha(i); if (!f) return;
+    invest.innerHTML = `<button class="cu-fechar-inv" type="button" aria-label="Fechar">×</button><small>${esc(f.rotulo || c.nome)}</small><h3>${esc(f.titulo)}</h3>${f.html}
+      <div class="cu-chips cu-acoes" style="margin-top:8px">${f.versos && f.versos.length ? '<button type="button" class="cu-acender">✨ Acender versículos na Bíblia</button>' : ''}<button type="button" class="cu-ir">◎ Aproximar</button></div>`;
+    invest.hidden = false;
+    ligarCamada(c, i, true);
+    // interligação: o que as outras folhas têm em comum com este item (pelos versículos compartilhados)
+    const rel = relacionados(f.versos || [], { c, i });
+    if (rel.length) {
+      const div = document.createElement('div'); div.innerHTML = secaoLigacoes(rel, 'Ligações nas outras camadas') + '<p><small>Itens que compartilham mais versículos com este, em cada camada (semelhança calculada pelo NEXUS a partir das fontes de cada camada).</small></p>';
+      invest.insertBefore(div, invest.querySelector(':scope > .cu-acoes'));
+      const lig = new Map(); rel.forEach((r) => { if (!r.atlas) lig.set(r.c, r.lista.map((x) => x.i)); });
+      CAMADAS.forEach((o) => { if (o.api && o.api.realcar) o.api.realcar(o === c ? [i, ...(lig.get(o) || [])] : lig.get(o) || []); });
+      fiosEntre = rel.filter((r) => !r.atlas).flatMap((r) => r.lista.map((x) => ({ c, i, c2: r.c, i2: x.i })));
+      const at = rel.find((r) => r.atlas); if (at && atlasC) atlasC.acender(at.lista.map(([li]) => li));
+    }
+    invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; limparCamada(); if (atlasC) atlasC.acender([]); };
+    invest.querySelectorAll('[data-evento]').forEach((b) => { b.onclick = () => abrirFichaCamada(c, +b.dataset.evento, true); });
+    ligarChips(invest);
     const ir = () => { const p = c.api.pos(i); if (p) voarAltura(p.x, p.y, c.z, 1400); };
     invest.querySelector('.cu-ir').onclick = ir;
     const ac = invest.querySelector('.cu-acender'); if (ac) ac.onclick = () => { const js = [...realceCamada]; if (js.length) { camada('biblia').visivel = true; montarPainel(); enquadrarXY(js.map((j) => vBase[j * 3]), js.map((j) => vBase[j * 3 + 1])); } };
@@ -872,12 +937,14 @@ export function criarCeu(container, estado, acoes) {
       <h5>Atlas</h5><div>${cont.size} lugar(es) citado(s) no livro</div>
       <div class="cu-chips">${ordem.slice(0, 14).map(([li, c]) => `<button type="button" data-lugar="${li}">${esc(atlasC.lugares[li].nome)} · ${c.n}</button>`).join('')}</div>
       <p><small>A linha tracejada no Atlas liga os lugares na ordem em que o texto os cita pela primeira vez: não é a rota histórica.</small></p>
-      <h5>Ainda não disponível</h5><small>Personagens e acontecimentos por versículo ainda não existem como dado no NEXUS.</small>
-      <p><small>Fontes: Almeida (texto), OpenBible.info (lugares, CC BY 4.0), Natural Earth (mapa).</small></p>`;
+      <div class="cu-lig-livro"></div>
+      <p><small>Fontes: Almeida (texto), OpenBible.info (lugares, CC BY 4.0), Natural Earth (mapa); as das outras camadas estão na ficha de cada item.</small></p>`;
     invest.hidden = false;
     invest.querySelector('.cu-fechar-inv').onclick = () => limparComposicao();
     invest.querySelectorAll('[data-lugar]').forEach((b) => { b.onclick = () => { const l = atlasC.lugares[+b.dataset.lugar]; escolherLugar(l); }; });
     invest.querySelectorAll('[data-cap]').forEach((b) => { b.onclick = () => { const c = lv.capPos[+b.dataset.cap - 1]; if (c) voar(c.x, c.y, 200); }; });
+    { const Vl = new Set(); for (let j = ini; j < ini + lv.versos; j++) Vl.add(vChave[j]); const rel = relacionados(Vl, null, 6).filter((r) => !r.atlas);
+      const box = invest.querySelector('.cu-lig-livro'); if (box && rel.length) { box.innerHTML = secaoLigacoes(rel, 'Nas outras camadas'); ligarChips(box); CAMADAS.forEach((o) => { const r = rel.find((q) => q.c === o); if (o.api && o.api.realcar) o.api.realcar(r ? r.lista.map((x) => x.i) : []); }); } }
     // enquadra o livro e os lugares juntos, em perspectiva, com as folhas afastadas
     const pts = ordem.slice(0, 20).map(([li]) => atlasC.lugares[li]);
     separacao = Math.max(separacao, 1.6); sincronizarPainel();
@@ -1020,6 +1087,11 @@ export function criarCeu(container, estado, acoes) {
       if (n >= MAX_FIOS) break; if (!f.c.grupo.visible) continue; const p = f.c.api.pos(f.i); if (!p) continue;
       pa.setXYZ(n * 2, p.x, p.y, f.c.z); pa.setXYZ(n * 2 + 1, vPos[f.j * 3], vPos[f.j * 3 + 1], zB);
       const a = 0.42 * Math.min(f.c.opacidade + 0.3, 1) * (0.75 + 0.25 * Math.sin(t / 300 + n)); al.setX(n * 2, a); al.setX(n * 2 + 1, a * 0.5); n++;
+    }
+    for (const f of fiosEntre) {
+      if (n >= MAX_FIOS) break; if (!f.c.grupo.visible || !f.c2.grupo.visible) continue; const p = f.c.api.pos(f.i), q = f.c2.api.pos(f.i2); if (!p || !q) continue;
+      pa.setXYZ(n * 2, p.x, p.y, f.c.z); pa.setXYZ(n * 2 + 1, q.x, q.y, f.c2.z);
+      const a = 0.55 * (0.7 + 0.3 * Math.sin(t / 260 + n)); al.setX(n * 2, a); al.setX(n * 2 + 1, a * 0.8); n++;
     }
     for (let i = n; i < MAX_FIOS; i++) { al.setX(i * 2, 0); al.setX(i * 2 + 1, 0); }
     pa.needsUpdate = al.needsUpdate = true;
@@ -1333,6 +1405,7 @@ export function criarCeu(container, estado, acoes) {
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
+      fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
       fichaCamada: () => (fichaCamada ? { id: fichaCamada.c.id, i: fichaCamada.i, versos: realceCamada.size, fios: fiosCamada.length } : null), buscaCamada: (id, q) => { const c = camada(id); return c && c.api ? c.api.buscar(norm(q)) : null; },
       telaLivro: (n) => { const lv = livros[n - 1]; return lv ? tela(lv.cx, lv.cy) : null; }, incl: () => incl,

@@ -48,6 +48,8 @@ export async function criarCamadaLinguas(THREE, ctx) {
   const nomeL = (l) => `${l.w || l.s} · ${l.g || l.t}`;
 
   return {
+    nome: (i) => (L[i] ? `${L[i].w || L[i].s} · ${L[i].g || L[i].t}` : ''),
+    total: () => L.length,
     objetos, lemas: L, aviso: dados.aviso, fonte: dados.fonte, pronto: () => !!det, esperar: () => pDet,
     quadro(t) { mat.uniforms.tempo.value = t / 1000; },
     realcar(lista) { for (const i of realcados) { const l = L[i]; if (l && l.vi != null) realce[l.vi] = 0; } realcados = lista.filter((i) => L[i]); for (const i of realcados) if (L[i].vi != null) realce[L[i].vi] = 1; g.attributes.realce.needsUpdate = true; },
