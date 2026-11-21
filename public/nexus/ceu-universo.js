@@ -119,6 +119,7 @@ export function criarCeu(container, estado, acoes) {
     .cu-invest .cu-chips{display:flex;flex-wrap:wrap;gap:5px}
     .cu-invest .cu-chips button{border:1px solid rgba(233,200,120,.4);background:rgba(201,162,78,.14);color:#FFE8B0;border-radius:999px;padding:3px 9px;font-size:12px;cursor:pointer}
     .cu-invest small{color:rgba(200,212,236,.8)}
+    .cu-dossie{border-top:1px solid rgba(233,200,120,.18);padding:4px 0}.cu-dossie summary{cursor:pointer;font:700 12px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#FFE3A3;padding:6px 0;list-style-position:inside}.cu-dossie[open] summary{color:#FFF6DC}.cu-seta{color:rgba(233,200,120,.6);margin:0 2px}
     .cu-investig{pointer-events:auto;position:absolute;left:62px;top:54px;width:min(390px,calc(100% - 80px));max-height:calc(100% - 110px);overflow:auto;background:rgba(3,8,22,.93);border:1px solid rgba(233,200,120,.5);border-radius:14px;padding:12px 14px;color:#EEF1FA;font:13px/1.45 Inter,system-ui,sans-serif}
     .cu-investig[hidden]{display:none}
     .cu-investig h3{margin:0 0 6px;font:700 24px "Cormorant Garamond",Georgia,serif;color:#FFE3A3}.cu-investig h5{margin:12px 0 5px;font:700 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9FB7E8}
@@ -177,7 +178,7 @@ export function criarCeu(container, estado, acoes) {
   // camadas já construídas: o módulo de cada uma devolve { objetos, quadro, pegar, info, ficha, rotulos, buscar, pos, versos, realcar }
   const MODULOS_CAMADA = {
     tempo: { carregar: () => import('/nexus/camada-tempo.js?v=4').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
-    personagens: { carregar: () => import('/nexus/camada-personagens.js?v=3').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
+    personagens: { carregar: () => import('/nexus/camada-personagens.js?v=5').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
     linguas: { carregar: () => import('/nexus/camada-linguas.js?v=3').then((m) => m.criarCamadaLinguas), visivel: true, opacidade: 0.55 },
     tradicao: { carregar: () => import('/nexus/camada-tradicao.js?v=3').then((m) => m.criarCamadaTradicao), visivel: true, opacidade: 0.75 },
     teologia: { carregar: () => import('/nexus/camada-temas.js?v=2').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'teologia', arquivo: '/nexus/camadas/teologia.json?v=1', rotulo: 'Teologia', forma: 'estrela', cores: ['#FFE3A3', '#F2C6A0', '#B9E0A5', '#E8A0A0', '#B5C7F2'] })), visivel: true, opacidade: 0.75 },
@@ -190,6 +191,7 @@ export function criarCeu(container, estado, acoes) {
       opacidade: md.opacidade, criada: false,
       criar: async () => { const f = await md.carregar(); c.api = await f(THREE, ctxCamada(c)); return c.api.objetos; } }); });
   function ctxCamada(c) { return { escala, esc, norm: (t) => norm(t), nomeRef: (k) => nomeRef(k), textoDe: (k) => textoDe(k), fraco,
+    camadaApi: (id) => { const x = camada(id); return x && x.api; }, nomeLugarPt: (nm) => { const l = atlasC && atlasC.lugares.find((x) => x.en === nm || x.nome === nm); return l ? l.nome : nm; }, lugaresDoVerso: (k) => (atlasC ? (atlasC.porVerso.get(k) || []).map((li) => atlasC.lugares[li].nome) : []),
     tela: (x, y) => tela(x, y, c.z), noPlano: (x, y) => noPlano(x, y, c.z), posVerso: (k) => { const j = vIdx.get(k); return j == null ? null : { x: vBase[j * 3], y: vBase[j * 3 + 1] }; } }; }
   // o item mais próximo do ponteiro entre todas as folhas visíveis (empate: a folha de cima)
   function pegarCamadas(x, y, raio) { let m = null; for (const c of camadasAtivas()) { const i = c.api.pegar(x, y, raio); if (i < 0) continue; const p = c.api.pos(i), q = p && tela(p.x, p.y, c.z); const d = q ? Math.hypot(q.x - x, q.y - y) : raio; if (!m || d < m.d - 0.5) m = { c, i, d }; } return m; }
@@ -820,7 +822,7 @@ export function criarCeu(container, estado, acoes) {
   let realceCamada = new Set(), fiosCamada = [], fichaCamada = null, pairCamada = null;
   function ligarCamada(c, i, fixo) {
     const js = (c.api.versos(i) || []).map((k) => vIdx.get(k)).filter((j) => j != null);
-    realceCamada = new Set(js); const passo = Math.max(1, Math.floor(js.length / 120));
+    realceCamada = new Set(js); const passo = Math.max(1, Math.floor(js.length / 40));   // no máximo ~40 fios (mais que isso vira emaranhado)
     fiosCamada = js.filter((_, q) => q % passo === 0).map((j) => ({ c, i, j }));
     CAMADAS.forEach((o) => o.api && o.api.realcar && o.api.realcar(o === c ? [i] : []));
     if (fixo) fichaCamada = { c, i }; else pairCamada = { c, i };
@@ -864,6 +866,7 @@ export function criarCeu(container, estado, acoes) {
       const c2 = camada(b.dataset.camada); if (!c2 || !c2.api) { if (b.dataset.busca) buscar(b.dataset.busca); return; }
       const i2 = b.dataset.id != null ? c2.api.porId(+b.dataset.id) : +b.dataset.item; if (i2 == null || i2 < 0) return;
       c2.visivel = true; if (c2.opacidade < 0.3) c2.opacidade = 0.7; montarPainel(); abrirFichaCamada(c2, i2, true); }; });
+    raiz.querySelectorAll('[data-verso]').forEach((b) => { if (!b.onclick) b.onclick = () => fichaVerso(+b.dataset.verso); });
     raiz.querySelectorAll('[data-lugar-atlas]').forEach((b) => { b.onclick = () => { camada('atlas').visivel = true; montarPainel(); voarParaLugar(atlasC.lugares[+b.dataset.lugarAtlas], []); }; });
   }
   // um versículo nas dez camadas: tudo o que cada folha diz dele, com fios de luz subindo até cada item
