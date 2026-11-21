@@ -119,6 +119,7 @@ export function criarCeu(container, estado, acoes) {
     .cu-invest .cu-chips{display:flex;flex-wrap:wrap;gap:5px}
     .cu-invest .cu-chips button{border:1px solid rgba(233,200,120,.4);background:rgba(201,162,78,.14);color:#FFE8B0;border-radius:999px;padding:3px 9px;font-size:12px;cursor:pointer}
     .cu-invest small{color:rgba(200,212,236,.8)}
+    .cu-dossie{border-top:1px solid rgba(233,200,120,.18);padding:4px 0}.cu-dossie summary{cursor:pointer;font:700 12px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#FFE3A3;padding:6px 0;list-style-position:inside}.cu-dossie[open] summary{color:#FFF6DC}.cu-seta{color:rgba(233,200,120,.6);margin:0 2px}
     .cu-investig{pointer-events:auto;position:absolute;left:62px;top:54px;width:min(390px,calc(100% - 80px));max-height:calc(100% - 110px);overflow:auto;background:rgba(3,8,22,.93);border:1px solid rgba(233,200,120,.5);border-radius:14px;padding:12px 14px;color:#EEF1FA;font:13px/1.45 Inter,system-ui,sans-serif}
     .cu-investig[hidden]{display:none}
     .cu-investig h3{margin:0 0 6px;font:700 24px "Cormorant Garamond",Georgia,serif;color:#FFE3A3}.cu-investig h5{margin:12px 0 5px;font:700 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9FB7E8}
@@ -177,7 +178,7 @@ export function criarCeu(container, estado, acoes) {
   // camadas já construídas: o módulo de cada uma devolve { objetos, quadro, pegar, info, ficha, rotulos, buscar, pos, versos, realcar }
   const MODULOS_CAMADA = {
     tempo: { carregar: () => import('/nexus/camada-tempo.js?v=4').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
-    personagens: { carregar: () => import('/nexus/camada-personagens.js?v=3').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
+    personagens: { carregar: () => import('/nexus/camada-personagens.js?v=5').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
     linguas: { carregar: () => import('/nexus/camada-linguas.js?v=3').then((m) => m.criarCamadaLinguas), visivel: true, opacidade: 0.55 },
     tradicao: { carregar: () => import('/nexus/camada-tradicao.js?v=3').then((m) => m.criarCamadaTradicao), visivel: true, opacidade: 0.75 },
     teologia: { carregar: () => import('/nexus/camada-temas.js?v=2').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'teologia', arquivo: '/nexus/camadas/teologia.json?v=1', rotulo: 'Teologia', forma: 'estrela', cores: ['#FFE3A3', '#F2C6A0', '#B9E0A5', '#E8A0A0', '#B5C7F2'] })), visivel: true, opacidade: 0.75 },
@@ -186,9 +187,11 @@ export function criarCeu(container, estado, acoes) {
   };
   CAMADAS.forEach((c) => { const md = MODULOS_CAMADA[c.id]; if (!md) return;
     // em tablet/celular, só Tempo e Personagens começam ligadas (as outras baixam os dados quando a pessoa liga)
-    Object.assign(c, { reservada: false, modulo: true, visivel: md.visivel && (!fraco || ['tempo', 'personagens'].includes(c.id)), opacidade: md.opacidade, criada: false,
+    Object.assign(c, { reservada: false, modulo: true, visivel: false,   // vista limpa: acendem na pesquisa ou pelo painel de camadas
+      opacidade: md.opacidade, criada: false,
       criar: async () => { const f = await md.carregar(); c.api = await f(THREE, ctxCamada(c)); return c.api.objetos; } }); });
   function ctxCamada(c) { return { escala, esc, norm: (t) => norm(t), nomeRef: (k) => nomeRef(k), textoDe: (k) => textoDe(k), fraco,
+    camadaApi: (id) => { const x = camada(id); return x && x.api; }, nomeLugarPt: (nm) => { const l = atlasC && atlasC.lugares.find((x) => x.en === nm || x.nome === nm); return l ? l.nome : nm; }, lugaresDoVerso: (k) => (atlasC ? (atlasC.porVerso.get(k) || []).map((li) => atlasC.lugares[li].nome) : []),
     tela: (x, y) => tela(x, y, c.z), noPlano: (x, y) => noPlano(x, y, c.z), posVerso: (k) => { const j = vIdx.get(k); return j == null ? null : { x: vBase[j * 3], y: vBase[j * 3 + 1] }; } }; }
   // o item mais próximo do ponteiro entre todas as folhas visíveis (empate: a folha de cima)
   function pegarCamadas(x, y, raio) { let m = null; for (const c of camadasAtivas()) { const i = c.api.pegar(x, y, raio); if (i < 0) continue; const p = c.api.pos(i), q = p && tela(p.x, p.y, c.z); const d = q ? Math.hypot(q.x - x, q.y - y) : raio; if (!m || d < m.d - 0.5) m = { c, i, d }; } return m; }
@@ -207,10 +210,12 @@ export function criarCeu(container, estado, acoes) {
     if (typeof montarPainel === 'function') montarPainel();
     return c;
   }
-  async function garantirCriada(c) {
-    if (c.criada || c.criando) return; c.criando = true;
-    try { const objs = await c.criar({ THREE, secoes, livros, vIdx, vBase }); (Array.isArray(objs) ? objs : [objs]).forEach((o) => o && c.grupo.add(o)); c._sujo = true; }
-    finally { c.criada = true; c.criando = false; precisaOpac = true; }
+  function garantirCriada(c) {   // devolve sempre a mesma promessa (quem espera, espera a carga de verdade)
+    if (c.criada) return Promise.resolve(); if (c._prom) return c._prom; c.criando = true;
+    c._prom = (async () => { try { const objs = await c.criar({ THREE, secoes, livros, vIdx, vBase }); (Array.isArray(objs) ? objs : [objs]).forEach((o) => o && c.grupo.add(o)); c._sujo = true; }
+      catch (e) { console.warn('camada ' + c.id + ' indisponível', e); }
+      finally { c.criada = true; c.criando = false; precisaOpac = true; } })();
+    return c._prom;
   }
   let precisaOpac = true;
   const camada = (id) => CAMADAS.find((c) => c.id === id);
@@ -817,7 +822,7 @@ export function criarCeu(container, estado, acoes) {
   let realceCamada = new Set(), fiosCamada = [], fichaCamada = null, pairCamada = null;
   function ligarCamada(c, i, fixo) {
     const js = (c.api.versos(i) || []).map((k) => vIdx.get(k)).filter((j) => j != null);
-    realceCamada = new Set(js); const passo = Math.max(1, Math.floor(js.length / 120));
+    realceCamada = new Set(js); const passo = Math.max(1, Math.floor(js.length / 40));   // no máximo ~40 fios (mais que isso vira emaranhado)
     fiosCamada = js.filter((_, q) => q % passo === 0).map((j) => ({ c, i, j }));
     CAMADAS.forEach((o) => o.api && o.api.realcar && o.api.realcar(o === c ? [i] : []));
     if (fixo) fichaCamada = { c, i }; else pairCamada = { c, i };
@@ -861,6 +866,7 @@ export function criarCeu(container, estado, acoes) {
       const c2 = camada(b.dataset.camada); if (!c2 || !c2.api) { if (b.dataset.busca) buscar(b.dataset.busca); return; }
       const i2 = b.dataset.id != null ? c2.api.porId(+b.dataset.id) : +b.dataset.item; if (i2 == null || i2 < 0) return;
       c2.visivel = true; if (c2.opacidade < 0.3) c2.opacidade = 0.7; montarPainel(); abrirFichaCamada(c2, i2, true); }; });
+    raiz.querySelectorAll('[data-verso]').forEach((b) => { if (!b.onclick) b.onclick = () => fichaVerso(+b.dataset.verso); });
     raiz.querySelectorAll('[data-lugar-atlas]').forEach((b) => { b.onclick = () => { camada('atlas').visivel = true; montarPainel(); voarParaLugar(atlasC.lugares[+b.dataset.lugarAtlas], []); }; });
   }
   // um versículo nas dez camadas: tudo o que cada folha diz dele, com fios de luz subindo até cada item
@@ -1023,9 +1029,11 @@ export function criarCeu(container, estado, acoes) {
     return true;
   }
   let laminas = null;
-  function montarLaminas(cx, cy) {   // as dez lâminas: cartões translúcidos empilhados em volta do assunto (como na imagem de referência)
+  let laminasModo = null;   // 'local' (investigação) ou 'global' (camadas ligadas pelo painel)
+  function montarLaminas(cx, cy, w = 15000, h = 9500, modo = 'local') {   // as dez lâminas: cartões translúcidos empilhados (como na imagem de referência)
+    laminasModo = modo;
     (laminas || []).forEach((l) => { l.c.grupo.remove(l.g); l.g.traverse((o) => { o.geometry && o.geometry.dispose(); o.material && o.material.dispose(); }); });
-    laminas = []; const w = 15000, h = 9500, x0 = cx - w / 2, x1 = cx + w / 2, y0 = cy - h / 2, y1 = cy + h / 2;
+    laminas = []; const x0 = cx - w / 2, x1 = cx + w / 2, y0 = cy - h / 2, y1 = cy + h / 2;
     CAMADAS.forEach((c, k) => { if (k >= 10) return;
       const pl = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: c.cor, transparent: true, opacity: 0.05, depthWrite: false, side: THREE.DoubleSide }));
       pl.position.set(cx, cy, -6);
@@ -1033,7 +1041,15 @@ export function criarCeu(container, estado, acoes) {
       const g = new THREE.Group(); g.add(pl, borda); g.visible = false; c.grupo.add(g); laminas.push({ c, g, x0, y1, num: k + 1 }); });
     precisaOpac = true; CAMADAS.forEach((c) => { c._sujo = true; });
   }
-  function mostrarLaminas(sim) { (laminas || []).forEach((l) => { l.g.visible = sim; }); precisaOpac = true; CAMADAS.forEach((c) => { c._sujo = true; }); }
+  // a cada quadro: com alguma camada 4–10 ligada (fora da investigação), as lâminas do universo inteiro aparecem
+  let laminasVis = false;
+  function atualizarLaminas() {
+    if (investigacao || !secoes.length) return;
+    const algum = CAMADAS.some((c) => c.modulo && c.visivel);
+    if (algum && laminasModo !== 'global') { const x0 = Math.min(...secoes.map((q) => q.cx - q.raio)) - 1200, x1 = Math.max(...secoes.map((q) => q.cx + q.raio)) + 1200, y0 = Math.min(...secoes.map((q) => q.cy - q.raio)) - 1200, y1 = Math.max(...secoes.map((q) => q.cy + q.raio)) + 1200; montarLaminas((x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0, 'global'); }
+    if (algum !== laminasVis) mostrarLaminas(algum);
+  }
+  function mostrarLaminas(sim) { laminasVis = sim; (laminas || []).forEach((l) => { l.g.visible = sim; }); precisaOpac = true; CAMADAS.forEach((c) => { c._sujo = true; }); }
   function acenderFolha(id) {
     const inv = investigacao, F = inv.F[id], c = camada(id); inv.acesas = (inv.acesas || 0) + 1; inv.ultima = id;
     if (!c) return; c.visivel = true; if (c.opacidade < 0.35) c.opacidade = id === 'atlas' ? 0.35 : 0.75; montarPainel();
@@ -1089,7 +1105,7 @@ export function criarCeu(container, estado, acoes) {
   }
   painelInv.addEventListener('click', (e) => {
     const inv = investigacao; if (!inv) return; const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.invFechar != null) { investigacao = null; desenharInvestigacao(); limparComposicao(); mostrarLaminas(false); return; }
+    if (b.dataset.invFechar != null) { investigacao = null; desenharInvestigacao(); limparComposicao(); mostrarLaminas(false); laminasModo = null; CAMADAS.forEach((c) => { if (c.modulo) c.visivel = false; }); montarPainel(); return; }   // ao fechar, a vista volta limpa
     if (b.dataset.invAba) { inv.aba = b.dataset.invAba; desenharInvestigacao(); return; }
     if (b.dataset.invVerso) { fichaVerso(+b.dataset.invVerso); return; }
     if (b.dataset.invLugar) { const l = atlasC.lugares[+b.dataset.invLugar]; const j = vIdx.get(l.versos[0]); if (j != null) voar(vBase[j * 3], vBase[j * 3 + 1], Math.min(dist, 2400)); atlasC.acender([l.i]); return; }
@@ -1271,7 +1287,11 @@ export function criarCeu(container, estado, acoes) {
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
     { const iE = livros.findIndex((lv) => norm(lv.nome) === q || norm(lv.abbrev) === q); if (iE >= 0) { comporLivro(iE); return true; } }   // nome exato de livro (Rute, Jó, Daniel) é o livro
-    if (q.split(/\s+/).length <= 4 && !/\d/.test(q) && investigarAssunto(texto)) return true;   // MOTOR ÚNICO: pessoa, lugar, palavra, acontecimento, tema → as dez camadas
+    if (q.split(/\s+/).length <= 4 && !/\d/.test(q)) {
+      const pend = CAMADAS.filter((c) => c.modulo && !c.criada);   // no tablet as camadas só baixam quando precisam: carrega e pesquisa
+      if (pend.length) { chipLugar.innerHTML = 'Preparando as dez camadas para a pesquisa…'; chipLugar.hidden = false; Promise.all(pend.map((c) => garantirCriada(c))).then(() => { chipLugar.hidden = true; buscar(texto); }); return true; }
+      if (investigarAssunto(texto)) return true;
+    }   // MOTOR ÚNICO: pessoa, lugar, palavra, acontecimento, tema → as dez camadas
     if (buscarCamadas(q, 100)) return true;
     { const l = q.split(/\s+/).length > 1 || !livros.some((lv) => norm(lv.nome).startsWith(q)) ? lugarNaFrase(q) : null;
       if (l) { const palavras = q.split(/[^a-z0-9]+/).filter((w) => w && !norm(l.nome).split(/\s+/).includes(w) && lev(w, norm(l.nome)) > 2); voarParaLugar(l, palavras); return true; } }
@@ -1432,7 +1452,7 @@ export function criarCeu(container, estado, acoes) {
         L.slice(0, 4).forEach((x) => { let q = null; const a = x.acao;
           if (a.c) { const p0 = c.api.pos(a.i); q = p0 && tela(p0.x, p0.y, c.z); } else if (a.verso) { const j = vIdx.get(a.verso); q = j != null && tela(vPos[j * 3], vPos[j * 3 + 1]); } else if (a.lugar != null && atlasC) q = telaLugarV(atlasC.lugares[a.lugar]);
           if (q && q.x > 0 && q.x < W && q.y > 0 && q.y < H) texto(x.rot, q.x + 9, q.y - 9, '600 12.5px Inter, system-ui, sans-serif', c.cor, 'rgba(2,5,14,.78)', 1, false); }); }
-    } else for (const c of camadasAtivas()) c.api.rotulos(texto, dist, W, H);
+    } else if (dist < 4500) for (const c of camadasAtivas()) c.api.rotulos(texto, dist, W, H);   // de longe, sem nomes soltos: só o título de cada lâmina
     // satélites (com PIN) quando perto
     const kAtivo = constel && !constel.soltoEm ? constel.origem : selecionado;
     let nSat = 0;
@@ -1486,7 +1506,7 @@ export function criarCeu(container, estado, acoes) {
       const j = vIdx.get(qf.ini), p = tela(vPos[j * 3], vPos[j * 3 + 1]);
       if (p) { const pulso = 9 + Math.sin(t / 380) * 3; g2.strokeStyle = 'rgba(242,214,140,.75)'; g2.lineWidth = 1.2; g2.beginPath(); g2.arc(p.x, p.y, pulso, 0, 6.29); g2.stroke(); if (dist > 520) texto(nomeRef(qf.ini), p.x + 14, p.y - 10, '700 13px Inter, system-ui, sans-serif', '#FFE8B0', 'rgba(2,5,14,.78)', 1, false); }
     }
-    if (investigacao && laminas) for (const l of laminas) { if (!l.c.grupo.visible) continue; const p = tela(l.x0, l.y1, l.c.z); if (p && p.x > -40 && p.x < W && p.y > 0 && p.y < H) texto(`${String(l.num).padStart(2, '0')} · ${l.c.nome.toUpperCase()}`, p.x + 10, p.y + 12, '700 12px Inter, system-ui, sans-serif', l.c.cor, 'rgba(2,5,14,.7)', 0.95, false); }
+    if (laminasVis && laminas) for (const l of laminas) { if (!l.c.grupo.visible) continue; const p = tela(l.x0, l.y1, l.c.z); if (p && p.x > -40 && p.x < W && p.y > 0 && p.y < H) texto(`${String(l.num).padStart(2, '0')} · ${l.c.nome.toUpperCase()}`, p.x + 10, p.y + 12, '700 12px Inter, system-ui, sans-serif', l.c.cor, 'rgba(2,5,14,.7)', 0.95, false); }
     if (investigacao && investigacao.lugarIncerto && atlasC && camada('atlas').visivel) {   // local incerto: círculo tracejado, não ponto comprovado
       const l = investigacao.lugarIncerto, p = telaLugarV(l);
       if (p) { const r = 22 + 5 * Math.sin(t / 400); g2.save(); g2.setLineDash([5, 5]); g2.lineWidth = 1.6; g2.strokeStyle = 'rgba(255,214,140,.95)'; g2.beginPath(); g2.arc(p.x, p.y, r, 0, 6.29); g2.stroke(); g2.beginPath(); g2.arc(p.x, p.y, r * 1.9, 0, 6.29); g2.strokeStyle = 'rgba(255,214,140,.4)'; g2.stroke(); g2.restore();
@@ -1549,7 +1569,7 @@ export function criarCeu(container, estado, acoes) {
     } else if (!arrasto && inercia.lengthSq() > 1e-4) { alvo.x += inercia.x * dt / 16; alvo.y += inercia.y * dt / 16; inercia.multiplyScalar(0.92); posicionar(); }
     aplicarCamadas(); if (modoTerra && atlasC) { if (animarTerra()) posicionarTerra(); } else { alvo.z = zB; posicionar(); }
     if (transicao) { const q = Math.min(1, (performance.now() - transicao.t0) / 650), e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2; if (q >= 1) transicao = null; else { camera.position.lerpVectors(transicao.pos, camera.position.clone(), e); camera.quaternion.slerpQuaternions(transicao.quat, camera.quaternion.clone(), e); camera.updateMatrixWorld(); } }
-    if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel || !!modoTerra, (!!modoTerra && modoTerra.alt > RAIO_GLOBO * 0.02) || !!investigacao);   // na Terra, vista do espaço: céu negro com estrelas
+    if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel || !!modoTerra, !modoTerra || modoTerra.alt > RAIO_GLOBO * 0.02);   // o universo é visto do espaço: estrelas reais da hora, sem o azul do dia (só perto do chão, na Terra, o céu fica azul)   // na Terra, vista do espaço: céu negro com estrelas
     if (atlasC && t - solEm > 1000) { solEm = t; const ss = pontoSubsolar(Date.now() + (ceuR ? ceuR.estado().desloc || 0 : 0)); atlasC.sol(ss.lat, ss.lon);
       if (modoTerra) { const l = modoTerra; const dLon = ((l.lon - ss.lon + 540) % 360) - 180, cz = Math.sin(l.lat * Math.PI / 180) * Math.sin(ss.lat * Math.PI / 180) + Math.cos(l.lat * Math.PI / 180) * Math.cos(ss.lat * Math.PI / 180) * Math.cos(dLon * Math.PI / 180);
         faixaTerra.querySelector('.cu-terra-txt').textContent = `🌍 Terra · ${cz > 0.05 ? 'é dia' : cz > -0.1 ? 'crepúsculo' : 'é noite'} no centro da vista (${l.lat.toFixed(1)}°, ${l.lon.toFixed(1)}°) · ${atlasC.imagemReal() ? 'imagem de satélite NASA Blue Marble' : 'carregando imagem de satélite…'} · Sol ${ceuR && ceuR.estado().desloc ? 'da hora escolhida' : 'de agora'}`; } }
@@ -1620,6 +1640,7 @@ export function criarCeu(container, estado, acoes) {
       if (ass !== assinatura) { assinatura = ass; montarSatelites(); precisaOpac = true; }
       if (sats.length) { const sa = gSat.attributes.alfa; const perto = Math.min(1, Math.max(0, (1800 - dist) / 1300)); const kA = constel && !constel.soltoEm ? constel.origem : selecionado; sats.forEach((s, i) => sa.setX(i, perto * (s.k === kA ? 1 : 0.45))); sa.needsUpdate = true; }
     }
+    atualizarLaminas();
     for (const c of CAMADAS) if (c.api && c.grupo.visible) c.api.quadro(t);
     atualizarFios(t);
     renderer.clear();
