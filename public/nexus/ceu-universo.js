@@ -34,7 +34,7 @@ const SECOES = [
 ];
 const NOME_TIPO = { passagem: 'Passagem', obra: 'Obra', autor: 'Autor', conceito: 'Conceito', verbete: 'Termo original', descoberta: 'Descoberta' };
 const COR_TIPO = { obra: '#E2B65C', autor: '#C9D3E3', conceito: '#8FD3CF', verbete: '#A6D9A0', descoberta: '#F0A08C' };
-const DIST_MIN = 26, DIST_MAX = 30000;
+const DIST_MIN = 26, DIST_MAX = 140000;   // dá para afastar muito: o universo inteiro vira um ponto de luz
 
 function hash(s) { let h = 2166136261; for (const c of String(s)) h = Math.imul(h ^ c.codePointAt(0), 16777619) >>> 0; return h / 4294967295; }
 const chave = (b, c, v) => b * 1e6 + c * 1e3 + v;
@@ -221,8 +221,8 @@ export function criarCeu(container, estado, acoes) {
       // a câmera anda em linha reta na direção do ponto (mesma orientação): o ponto fica cravado sob o cursor
       const camPos = camera.position.clone(), novoPos = hit.clone().add(camPos.sub(hit).multiplyScalar(fator));
       const ci = Math.cos(incl), d2 = (novoPos.z - zB) / Math.max(ci, 0.05);
-      if (d2 < DIST_MIN || d2 > DIST_MAX) return;
-      dist = d2; alvo.x = novoPos.x; alvo.y = novoPos.y + Math.sin(incl) * dist; posicionar(); return;
+      if (d2 >= DIST_MIN && d2 <= DIST_MAX) { dist = d2; alvo.x = novoPos.x; alvo.y = novoPos.y + Math.sin(incl) * dist; posicionar(); return; }
+      // fora do limite: segue o zoom normal abaixo (antes o zoom travava aqui quando os dedos estavam sobre o globo)
     } }
     const antes = noPlano(x, y);
     dist *= fator; posicionar();
@@ -571,7 +571,7 @@ export function criarCeu(container, estado, acoes) {
   let arrasto = null, pinca = null, moveu = false, toqueLongo = 0, ultimoToque = 0, botaoDireito = false;
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   canvas.addEventListener('pointerdown', (e) => {
-    canvas.setPointerCapture(e.pointerId);
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
     ponteiros.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
     voo = null; inercia.set(0, 0); moveu = false; botaoDireito = e.button === 2; interagiu = true;
     if (ponteiros.size === 1) {
@@ -860,6 +860,57 @@ export function criarCeu(container, estado, acoes) {
     invest.hidden = false; cartao.hidden = true;
     invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; limparComposicao(); };
     ligarChips(invest);
+  }
+  // ── PREPARAR (sermão, pregação, mensagem, estudo): o universo inteiro trabalha a favor do tema ──
+  // 1) acha os versículos do tema (passagem citada, itens das camadas com esse nome, ou palavras no texto da Almeida);
+  // 2) reúne o que as 10 camadas dizem desses versículos; 3) acende tudo no universo; 4) devolve o dossiê para a IA.
+  function versosDoTema(texto) {
+    const q = norm(texto), V = new Set(), origem = [];
+    const m = /^(.+?)\s+(\d+)(?::(\d+)(?:\s*-\s*(\d+))?)?$/.exec(q);
+    if (m) { const lv = livros.find((l) => norm(l.nome) === m[1] || norm(l.abbrev) === m[1]) || livros.find((l) => norm(l.nome).startsWith(m[1]));
+      if (lv && BIB[lv.i].chapters[+m[2] - 1]) { const cap = BIB[lv.i].chapters[+m[2] - 1], v0 = m[3] ? +m[3] : 1, v1 = m[4] ? +m[4] : m[3] ? +m[3] : cap.length;
+        for (let v = v0; v <= Math.min(v1, cap.length); v++) V.add(chave(lv.num, +m[2], v)); const base = [...V];
+        if (V.size < 6) { for (let v = Math.max(1, v0 - 5); v <= Math.min(cap.length, v1 + 5); v++) V.add(chave(lv.num, +m[2], v)); }   // passagem curta: entra o contexto ao redor
+        origem.push(`passagem ${lv.nome} ${m[2]}${m[3] ? ':' + m[3] + (m[4] ? '-' + m[4] : '') : ''}${V.size > base.length ? ' (com o contexto ao redor)' : ''}`); return { V, origem, base }; } }
+    for (const c of CAMADAS) { if (!c.api || !c.api.buscar) continue; const r = c.api.buscar(q); if (r && r.pont >= 45) { (c.api.versos(r.i) || []).slice(0, 120).forEach((k) => V.add(k)); origem.push(`${c.nome}: ${c.api.nome ? c.api.nome(r.i) : ''}`); } }
+    if (atlasC) { const l = atlasC.lugares.filter((x) => norm(x.nome) === q).sort((a, b) => b.peso - a.peso)[0]; if (l) { l.versos.slice(0, 80).forEach((k) => V.add(k)); origem.push('Atlas: ' + l.nome); } }
+    const palavras = q.split(/[^a-z0-9]+/).filter((w) => w.length >= 4 && !PALAVRAS_VAZIAS.has(w));
+    if (palavras.length) { let n = 0; for (let j = 0; j < vChave.length && n < 80; j++) { const t = norm(textoDe(vChave[j])); if (palavras.every((w) => t.includes(w))) { V.add(vChave[j]); n++; } } if (n) origem.push(`${n} versículo(s) da Almeida com “${palavras.join(' ')}”`); }
+    return { V, origem, base: [] };
+  }
+  function prepararDossie(texto) {
+    if (!pronto) return null;
+    const { V, origem, base } = versosDoTema(texto); limparComposicao();
+    if (!V.size) { chipLugar.innerHTML = `Não achei “${esc(texto)}” no universo: tente uma passagem (ex.: Romanos 8) ou um tema (ex.: graça, Páscoa, Davi). <button type="button" aria-label="Fechar">×</button>`; chipLugar.hidden = false; chipLugar.querySelector('button').onclick = () => { chipLugar.hidden = true; }; return { tema: texto, vazio: true }; }
+    // versículos centrais: os que mais camadas comentam (a passagem pedida vem sempre primeiro)
+    const peso = new Map(); for (const k of V) { let p = base.includes(k) ? 100 : 0; for (const c of CAMADAS) { const x = indiceDe(c); if (x && x.m.has(k)) p += 1 + Math.min(3, x.m.get(k).length / 4); } peso.set(k, p); }
+    const centrais = [...V].sort((a, b) => peso.get(b) - peso.get(a) || a - b).slice(0, 24).sort((a, b) => a - b);
+    const rel = relacionados(V, null, 6);
+    if (base.length) for (const c of CAMADAS) {   // o que as camadas dizem da própria passagem pedida vem primeiro
+      const x = indiceDe(c); if (!x) continue; const dir = [...new Set(base.flatMap((k) => x.m.get(k) || []))].sort((a, b) => x.tam[a] - x.tam[b]).slice(0, c.id === 'linguas' ? 8 : 5); if (!dir.length) continue;
+      let r = rel.find((q) => q.c === c); if (!r) { r = { c, lista: [] }; rel.push(r); }
+      r.lista = dir.map((i) => ({ c, i, n: 1, sc: 9 })).concat(r.lista.filter((q) => !dir.includes(q.i))).slice(0, 8);
+    }
+    // o universo trabalhando: versículos acesos, itens relacionados acesos em cada folha, fios dos versículos até eles
+    realceCamada = new Set([...V].map((k) => vIdx.get(k)).filter((j) => j != null)); fiosCamada = [];
+    rel.forEach((r) => { if (r.atlas) { atlasC.acender(r.lista.map(([li]) => li)); fios = r.lista.map(([li]) => { const k = atlasC.lugares[li].versos.find((v) => V.has(v)); return { l: li, j: vIdx.get(k) }; }).filter((f) => f.j != null); return; }
+      r.c.visivel = true; r.c.api.realcar && r.c.api.realcar(r.lista.map((x) => x.i));
+      r.lista.forEach((x) => { const k = (r.c.api.versos(x.i) || []).find((v) => V.has(v)); const j = vIdx.get(k); if (j != null) fiosCamada.push({ c: r.c, i: x.i, j }); }); });
+    montarPainel();
+    const js = [...realceCamada]; if (js.length) enquadrarXY(js.map((j) => vBase[j * 3]), js.map((j) => vBase[j * 3 + 1]), 0.7);
+    invest.innerHTML = `<button class="cu-fechar-inv" type="button" aria-label="Fechar">×</button><small>O universo trabalhando no seu preparo</small><h3>${esc(texto)}</h3>
+      <p><small>Ponto de partida: ${esc(origem.join(' · '))}. ${V.size} versículo(s) acesos na Bíblia.</small></p>
+      <h5>Versículos centrais</h5><div class="cu-chips">${centrais.slice(0, 12).map((k) => `<button type="button" data-verso="${k}">${esc(nomeRef(k))}</button>`).join('')}</div>
+      ${secaoLigacoes(rel, 'O que as camadas trazem')}
+      <p><small>Cada item vem da fonte da sua camada (veja a ficha). É este material que vai para o Claude escrever o texto.</small></p>`;
+    invest.hidden = false; invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; limparComposicao(); };
+    ligarChips(invest); invest.querySelectorAll('[data-verso]').forEach((b) => { b.onclick = () => fichaVerso(+b.dataset.verso); });
+    return {
+      tema: texto, origem, total_versos: V.size,
+      versos: centrais.map((k) => ({ ref: nomeRef(k), texto: textoDe(k) })),
+      camadas: rel.filter((r) => !r.atlas).map((r) => ({ camada: r.c.nome, itens: r.lista.map((x) => (r.c.api.nome ? r.c.api.nome(x.i) : '')).filter(Boolean) })),
+      lugares: (rel.find((r) => r.atlas) || { lista: [] }).lista.map(([li]) => atlasC.lugares[li].nome),
+    };
   }
   function limparCamada() { realceCamada = new Set(); fiosCamada = []; fiosEntre = []; fichaCamada = null; pairCamada = null; CAMADAS.forEach((o) => o.api && o.api.realcar && o.api.realcar([])); }
   function abrirFichaCamada(c, i, irAte = false) {
@@ -1161,7 +1212,9 @@ export function criarCeu(container, estado, acoes) {
     // LEITURA: de bem perto, o capítulo inteiro aparece num painel (a Bíblia toda pode ser lida no universo); os rótulos desviam dele
     const vU = !modoTerra && camada('universo').visivel && camada('universo').opacidade > 0.1, vB = !modoTerra && camada('biblia').visivel && camada('biblia').opacidade > 0.1;   // perto da Terra, só a Terra fala   // rótulos seguem a camada
     const caixaLeitura = vB ? leitura(t) : null; if (caixaLeitura) ocup.push(caixaLeitura);
+    const longeT = Math.max(0, (dist - 26000) / 60000), escT = Math.max(0.45, 1 - longeT * 0.6), someT = Math.max(0, 1 - longeT * 1.1);   // de muito longe as letras diminuem e somem
     const texto = (txt, x, y, fonte, cor, fundo, alfa = 1, centro = true) => {
+      if (someT <= 0.02) return false; if (escT < 1) fonte = fonte.replace(/(\d+(?:\.\d+)?)px/, (m0, v) => (v * escT).toFixed(1) + 'px'); alfa *= someT;
       g2.font = fonte; const w = g2.measureText(txt).width; const x0 = centro ? x - w / 2 : x;
       const tam = parseFloat(fonte.split('px')[0].split(' ').pop()) || 12, alt = tam + 9;
       const b = { x0: x0 - 7, x1: x0 + w + 7, y0: y - alt / 2, y1: y + alt / 2 }; if (!cabe(b)) return false; ocup.push(b);
@@ -1401,7 +1454,8 @@ export function criarCeu(container, estado, acoes) {
         ultimo = performance.now(); quadro = requestAnimationFrame(quadroDesenho);
       }
     },
-    enquadrar() { if (!interagiu) vistaGeral(); },   // o NEXUS pede enquadrar ao carregar; não tira a vista de quem já está navegando
+    enquadrar() { if (!interagiu) vistaGeral(); },
+    prepararDossie: (texto) => prepararDossie(texto),   // usado pela barra 'Preparar'   // o NEXUS pede enquadrar ao carregar; não tira a vista de quem já está navegando
     zoom(f) { voar(alvo.x, alvo.y, dist * f); },
     centralizar(id) { centralizar(id); },
     prever() {},
@@ -1435,7 +1489,7 @@ export function criarCeu(container, estado, acoes) {
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
-      fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
+      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
       abrirTerra: () => abrirTerra(), imagemTerra: () => (atlasC ? atlasC.imagemReal() : false), subsolar: () => pontoSubsolar(Date.now()),
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
       fichaCamada: () => (fichaCamada ? { id: fichaCamada.c.id, i: fichaCamada.i, versos: realceCamada.size, fios: fiosCamada.length } : null), buscaCamada: (id, q) => { const c = camada(id); return c && c.api ? c.api.buscar(norm(q)) : null; },
