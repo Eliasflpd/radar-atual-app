@@ -151,6 +151,7 @@ export function criarCeu(container, estado, acoes) {
     tempo: { carregar: () => import('/nexus/camada-tempo.js?v=3').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
     personagens: { carregar: () => import('/nexus/camada-personagens.js?v=1').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
     linguas: { carregar: () => import('/nexus/camada-linguas.js?v=1').then((m) => m.criarCamadaLinguas), visivel: true, opacidade: 0.55 },
+    historia: { carregar: () => import('/nexus/camada-temas.js?v=1').then((m) => (THREE2, ctx) => m.criarCamadaTemas(THREE2, ctx, { id: 'historia', arquivo: '/nexus/camadas/historia.json?v=1', rotulo: 'História e cultura', forma: 'anel', cores: ['#E6C79C', '#F2D28B', '#C9B27A', '#E9A97A', '#D98C7A', '#A9C98E'] })), visivel: true, opacidade: 0.75 },
   };
   CAMADAS.forEach((c) => { const md = MODULOS_CAMADA[c.id]; if (!md) return;
     Object.assign(c, { reservada: false, modulo: true, visivel: md.visivel, opacidade: md.opacidade, criada: false,
@@ -935,6 +936,7 @@ export function criarCeu(container, estado, acoes) {
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
     { const iE = livros.findIndex((lv) => norm(lv.nome) === q || norm(lv.abbrev) === q); if (iE >= 0) { comporLivro(iE); return true; } }   // nome exato de livro (Rute, Jó, Daniel) é o livro
+    if (atlasC) { const cand = atlasC.lugares.filter((l) => norm(l.nome) === q).sort((a, b) => b.peso - a.peso); if (cand.length) { voarParaLugar(cand[0], []); return true; } }   // nome exato de lugar (Siquém) é o lugar
     if (buscarCamadas(q, 100)) return true;
     { const l = q.split(/\s+/).length > 1 || !livros.some((lv) => norm(lv.nome).startsWith(q)) ? lugarNaFrase(q) : null;
       if (l) { const palavras = q.split(/[^a-z0-9]+/).filter((w) => w && !norm(l.nome).split(/\s+/).includes(w) && lev(w, norm(l.nome)) > 2); voarParaLugar(l, palavras); return true; } }
