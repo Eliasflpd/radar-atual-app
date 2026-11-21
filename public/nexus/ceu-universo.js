@@ -119,6 +119,27 @@ export function criarCeu(container, estado, acoes) {
     .cu-invest .cu-chips{display:flex;flex-wrap:wrap;gap:5px}
     .cu-invest .cu-chips button{border:1px solid rgba(233,200,120,.4);background:rgba(201,162,78,.14);color:#FFE8B0;border-radius:999px;padding:3px 9px;font-size:12px;cursor:pointer}
     .cu-invest small{color:rgba(200,212,236,.8)}
+    .cu-investig{pointer-events:auto;position:absolute;left:62px;top:54px;width:min(390px,calc(100% - 80px));max-height:calc(100% - 110px);overflow:auto;background:rgba(3,8,22,.93);border:1px solid rgba(233,200,120,.5);border-radius:14px;padding:12px 14px;color:#EEF1FA;font:13px/1.45 Inter,system-ui,sans-serif}
+    .cu-investig[hidden]{display:none}
+    .cu-investig h3{margin:0 0 6px;font:700 24px "Cormorant Garamond",Georgia,serif;color:#FFE3A3}.cu-investig h5{margin:12px 0 5px;font:700 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9FB7E8}
+    .cu-investig .cu-fechar-inv{float:right;border:0;background:none;color:#FFE3A3;font-size:18px;cursor:pointer}
+    .cu-inv-barra{display:flex;gap:3px;margin:4px 0 2px}.cu-inv-barra i{flex:1;font-style:normal;text-align:center;font:700 10px Inter,system-ui,sans-serif;padding:4px 0;border-radius:6px;background:rgba(255,255,255,.06);color:rgba(220,226,240,.4);transition:all .4s}
+    .cu-inv-barra i.acesa{background:color-mix(in srgb,var(--c) 40%,transparent);color:#fff;box-shadow:0 0 10px var(--c)}.cu-inv-barra i.vazia{background:rgba(255,255,255,.1);color:rgba(220,226,240,.6)}
+    .cu-inv-estado{color:rgba(200,212,236,.75)}
+    .cu-inv-abas{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}.cu-inv-abas button{border:1px solid rgba(233,200,120,.35);background:rgba(201,162,78,.1);color:#FFE8B0;border-radius:999px;padding:3px 9px;font-size:12px;cursor:pointer}.cu-inv-abas button.ativa{background:rgba(201,162,78,.45);color:#fff}
+    .cu-inv-item{display:block;width:100%;text-align:left;border:1px solid rgba(233,200,120,.18);background:rgba(255,255,255,.04);color:#F1F4FB;border-radius:10px;padding:6px 9px;margin:4px 0;cursor:pointer;font:13px Inter,system-ui,sans-serif}
+    .cu-inv-item:hover{border-color:rgba(233,200,120,.6);background:rgba(201,162,78,.12)}.cu-inv-item small,.cu-inv-fonte small{display:block;color:rgba(200,212,236,.78);margin-top:2px}
+    .cu-inv-folha{margin:6px 0 2px}.cu-inv-nada{color:rgba(200,212,236,.55);font-size:12px;margin:2px 0 6px}
+    .cu-selo{display:inline-block;font:700 10px Inter,system-ui,sans-serif;border-radius:999px;padding:1px 7px;margin-left:4px;vertical-align:1px}
+    .cu-selo-direta,.cu-selo-segura{background:#1F5E3A;color:#C8F2D4}.cu-selo-interpretacao,.cu-selo-provavel{background:#5A4A1C;color:#FFE3A3}.cu-selo-hipotese{background:#4A2E5E;color:#E6CCF5}.cu-selo-incerta{background:#6B2A1F;color:#FFD0C2}.cu-selo-tradicional{background:#2C3F5E;color:#CFE0FF}
+    .cu-inv-alerta{background:rgba(107,42,31,.35);border:1px solid rgba(255,180,150,.4);border-radius:10px;padding:6px 9px}
+    .cu-inv-fonte{border-left:2px solid rgba(233,200,120,.4);padding:4px 0 4px 9px;margin:6px 0}.cu-inv-fonte blockquote{margin:4px 0;font:italic 13px/1.45 "Cormorant Garamond",Georgia,serif;color:#E9ECF6}.cu-inv-fonte cite{display:block;font:11px Inter,system-ui,sans-serif;color:#9FB7E8;font-style:normal}
+    .cu-inv-medidor{height:6px;background:rgba(255,255,255,.1);border-radius:3px;margin:4px 0;overflow:hidden}.cu-inv-medidor span{display:block;height:100%;background:linear-gradient(90deg,#C0563F,#E9C878,#5FB37A)}
+    .cu-inv-mini{border:1px solid rgba(140,190,255,.5);background:rgba(60,110,200,.25);color:#E8F1FF;border-radius:999px;padding:2px 9px;font-size:11.5px;cursor:pointer;margin-top:3px}
+    .cu-inv-nota{width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(233,200,120,.35);border-radius:10px;color:#F1F4FB;padding:8px;font:14px Inter,system-ui,sans-serif;resize:vertical}
+    body.cu-com-investig .cu-invest{left:auto;right:262px}
+    @media (max-width:1100px){body.cu-com-investig .cu-invest{right:12px;top:96px}body.cu-com-investig .cu-camadas{display:none}body.cu-com-investig .cu-investig{width:min(360px,calc(100% - 80px));max-height:calc(100% - 130px)}}
+    @media (max-width:760px){.cu-investig{left:8px;top:auto;bottom:8px;width:calc(100% - 16px);max-height:55%}body.cu-com-investig .cu-invest{left:8px;right:8px;top:52px;width:auto;max-height:40%}}
     .cu-invest .cu-fechar-inv{float:right;border:0;background:none;color:#FFE3A3;font-size:18px;cursor:pointer}
     @media (max-width:1100px){.cu-busca{left:62px;right:262px;width:auto;transform:none}.cu-nivel{top:52px}.cu-invest{top:92px}}
     @media (max-width:760px){.cu-busca{width:calc(100% - 70px);left:auto;right:8px;transform:none}.cu-camadas{top:52px;right:8px}.cu-invest{left:8px;top:52px;width:calc(100% - 16px);max-height:45%}}
@@ -912,6 +933,173 @@ export function criarCeu(container, estado, acoes) {
       lugares: (rel.find((r) => r.atlas) || { lista: [] }).lista.map(([li]) => atlasC.lugares[li].nome),
     };
   }
+
+  // ══ MOTOR ÚNICO DE DESCOBERTA: uma pesquisa, dez dimensões ═══════════════════════════════════════
+  // 1) identifica o assunto (lugar, pessoa, acontecimento, palavra, tema…) e separa os homônimos;
+  // 2) toma os versículos do assunto como sementes (o endereço comum das dez folhas);
+  // 3) cada folha responde com o que tem DIRETAMENTE nesses versículos (evidência da fonte da folha) e, se for
+  //    pouco, com itens relacionados por versículos compartilhados (marcados como hipótese calculada);
+  // 4) a biblioteca entra pelo motor de descoberta que já existe (ação "descobrir": obras, autores, léxicos,
+  //    patrística), com a porta (crachá/PIN); nada novo é indexado nem gravado;
+  // 5) as folhas acendem uma a uma, com fios de luz, e o painel de investigação organiza tudo.
+  const trl = (t) => norm(t).replace(/[^a-z0-9 ]+/g, '').replace(/sh/g, 's').replace(/ph/g, 'f').replace(/th/g, 't').replace(/ch/g, 'c').replace(/y/g, 'i').replace(/[aeo]$/, 'a');
+  const TIPO_CAMADA = { tempo: 'acontecimento', personagens: 'pessoa', linguas: 'palavra original', historia: 'tema de história e cultura', teologia: 'doutrina', tradicao: 'artigo de confissão', manuscritos: 'nota textual' };
+  const CONF = {   // grau de confiabilidade mostrado em cada achado
+    direta: ['direta', 'evidência direta na fonte da camada'], interpretacao: ['interpretação', 'interpretação de uma obra ou tradição'],
+    hipotese: ['hipótese', 'relação calculada pelo NEXUS (versículos em comum)'], incerta: ['incerta', 'identificação incerta'], provavel: ['provável', 'identificação provável'],
+    tradicional: ['data tradicional', 'data da cronologia tradicional da fonte, não consenso'], segura: ['segura', 'identificação segura'] };
+  const selo = (k) => `<span class="cu-selo cu-selo-${k}" title="${CONF[k][1]}">${CONF[k][0]}</span>`;
+  function candidatosDe(texto) {
+    const qn = norm(texto), qt = trl(texto), out = [];
+    if (atlasC) for (const l of atlasC.lugares) { let p = 0; for (const nm of [l.nome, l.en]) { const a = norm(nm), b = trl(nm); p = Math.max(p, a === qn ? 100 : b === qt ? 97 : qt.length >= 5 && lev(b, qt) <= 1 ? 82 : 0); }
+      if (p) out.push({ tipo: 'lugar', rot: p >= 100 ? l.nome : `${texto.trim().replace(/^./, (c) => c.toUpperCase())} (${l.nome}, no Atlas)`, desc: `lugar bíblico · ${l.versos.length} versículo(s) · ${l.conf >= 700 ? 'identificação segura' : l.conf >= 300 ? 'identificação provável' : 'localização incerta'}`, pont: p + Math.min(2.5, Math.log2(1 + l.peso) / 3), lugar: l, versos: l.versos }); }
+    const cP = camada('personagens'); if (cP && cP.api && cP.api.pessoas) for (const pe of cP.api.pessoas) { const a = norm(pe.nome).replace(/ \(.*\)$/, ''), b = norm(pe.n).replace(/ \(.*\)$/, ''); const p = a === qn || b === qn ? 99 : trl(a) === qt || trl(b) === qt ? 95 : 0;
+      if (p && pe.v.length) out.push({ tipo: 'pessoa', rot: pe.rotulo || pe.nome, desc: `pessoa · ${pe.qv} versículo(s)${pe.v[0] ? ' · aparece em ' + nomeRef(pe.v[0]) : ''}`, pont: p + Math.min(3, Math.log2(1 + pe.qv) / 3), c: cP, i: pe.i, versos: pe.v }); }
+    for (const c of CAMADAS) { if (!c.api || !c.api.buscar || c.id === 'personagens' || c.id === 'manuscritos') continue; const r = c.api.buscar(qn); if (r && r.pont >= 95) out.push({ tipo: TIPO_CAMADA[c.id] || c.nome, rot: c.api.nome(r.i), desc: c.nome, pont: r.pont - 2, c, i: r.i, versos: c.api.versos(r.i) || [] }); }
+    const cL = camada('linguas'); if (cL && cL.api && cL.api.lemas && cL.api.pronto && cL.api.pronto()) cL.api.lemas.forEach((l, i) => { if (l.t && trl(l.t) === qt && qt.length >= 4) out.push({ tipo: 'palavra original', rot: `${l.w} · ${l.t}`, desc: `${l.g} (inglês) · ${l.n} ocorrência(s)`, pont: 90, c: cL, i, versos: cL.api.versos(i) }); });
+    return out.filter((x) => x.versos && x.versos.length).sort((a, b) => b.pont - a.pont);
+  }
+  let investigacao = null;   // { cand, outros, sementes, folhas, fontes, lugarIncerto, t0 }
+  const ORDEM_FOLHAS = ['universo', 'biblia', 'atlas', 'tempo', 'personagens', 'linguas', 'historia', 'manuscritos', 'teologia', 'tradicao'];
+  const CONF_CAMADA = { tempo: 'tradicional', personagens: 'direta', linguas: 'direta', historia: 'interpretacao', teologia: 'interpretacao', tradicao: 'interpretacao', manuscritos: 'direta' };
+  function folhasDa(sementes, cand) {
+    const S = new Set(sementes), F = {};
+    // 01 Universo: onde o assunto está no cânon
+    const porSec = new Map(); for (const k of S) { const b = decompor(k).b - 1; const si = SECOES.findIndex((q) => b >= q.de && b <= q.ate); porSec.set(si, (porSec.get(si) || 0) + 1); }
+    F.universo = [...porSec.entries()].sort((a, b) => b[1] - a[1]).map(([si, n]) => ({ rot: SECOES[si].nome, desc: `${n} versículo(s) do assunto nesta região do cânon`, conf: 'direta', acao: { secao: si } }));
+    // 02 Bíblia: os próprios versículos
+    F.biblia = [...S].sort((a, b) => a - b).slice(0, 14).map((k) => ({ rot: nomeRef(k), desc: textoDe(k), conf: 'direta', acao: { verso: k } }));
+    // 03 Atlas: lugares citados nesses versículos (com a confiança da identificação)
+    const cont = new Map(); if (atlasC) for (const k of S) for (const li of atlasC.porVerso.get(k) || []) cont.set(li, (cont.get(li) || 0) + 1);
+    if (cand.lugar) cont.set(cand.lugar.i, 999);
+    F.atlas = [...cont.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([li, n]) => { const l = atlasC.lugares[li], ck = l.conf >= 700 ? 'segura' : l.conf >= 300 ? 'provavel' : 'incerta';
+      return { rot: l.nome, desc: `${l.identificacao && l.identificacao !== l.nome ? 'identificação moderna proposta: ' + l.identificacao + ' · ' : ''}confiança ${l.conf}/1000 (OpenBible) · ${n === 999 ? 'o próprio assunto' : n + ' versículo(s) em comum'}`, conf: ck, acao: { lugar: li }, conf1000: l.conf }; });
+    // 04–10: o que cada folha tem DIRETAMENTE nesses versículos; se for pouco, os relacionados (hipótese).
+    // Expansão de um passo: quando o assunto é lugar ou palavra, segue a pessoa principal ligada a ele (ex.: Tisba → Elias)
+    let ponte = null, S2 = S;
+    { const cP = camada('personagens'), xP = cP && indiceDe(cP); if (xP && cand.tipo !== 'pessoa') { const n = new Map(); for (const k of S) for (const i of xP.m.get(k) || []) n.set(i, (n.get(i) || 0) + 1);
+        const top = [...n.entries()].sort((a, b) => b[1] - a[1] || xP.tam[b[0]] - xP.tam[a[0]])[0]; if (top && top[1] >= Math.min(2, S.size)) { ponte = cP.api.nome(top[0]); S2 = new Set([...S, ...(cP.api.versos(top[0]) || []).slice(0, 120)]); } } }
+    for (const id of ORDEM_FOLHAS.slice(3)) {
+      const c = camada(id), x = c && indiceDe(c); if (!x) { F[id] = null; continue; }
+      const n = new Map(); for (const k of S) for (const i of x.m.get(k) || []) n.set(i, (n.get(i) || 0) + 1);
+      const dir = [...n.entries()].filter(([i]) => id !== 'linguas' || x.tam[i] < 1500).sort(id === 'linguas' ? (a, b) => x.tam[a[0]] - x.tam[b[0]] : (a, b) => b[1] - a[1] || x.tam[a[0]] - x.tam[b[0]]).slice(0, id === 'linguas' ? 8 : 6).map(([i, q]) => ({ rot: c.api.nome(i), desc: `${q} versículo(s) do assunto${id === 'linguas' ? ' · ' + x.tam[i] + ' versículo(s) na Bíblia toda' : ''}`, conf: CONF_CAMADA[id], acao: { c: id, i } }));
+      if (dir.length < 4 && id !== 'manuscritos' && id !== 'linguas') { const rel = relacionados(S2, cand.c ? { c: cand.c, i: cand.i } : null, 6).find((r) => r.c === c);
+        if (rel) rel.lista.filter((q) => !n.has(q.i)).slice(0, 4 - dir.length).forEach((q) => dir.push({ rot: c.api.nome(q.i), desc: `${q.n} versículo(s) em comum${ponte ? ' com o assunto e com ' + ponte : ' com o assunto'}`, conf: 'hipotese', acao: { c: id, i: q.i } })); }
+      F[id] = dir;
+    }
+    F._ponte = ponte;
+    return F;
+  }
+  async function fontesDaBiblioteca(sementes) {   // o motor de descoberta que já existe, sem indexar nada novo
+    const out = { blocos: [], porta: true };
+    for (const k of [...sementes].sort((a, b) => a - b).slice(0, 2)) {
+      try {
+        const r = await fetch('/api/nexus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'descobrir', id: 'p:' + k + '-' + k, cracha: ler('radar_chave'), token: ler('lp_token') }) });
+        const j = await r.json(); if (!j.ok) { if (j.motivo === 'particular') out.porta = false; continue; }
+        for (const b of j.blocos || []) if ((b.itens || []).length && !/Referências cruzadas|Caminhos/.test(b.titulo)) out.blocos.push({ verso: k, titulo: b.titulo, itens: b.itens.slice(0, 4) });
+      } catch (_) { /* sem conexão: segue sem a biblioteca */ }
+    }
+    return out;
+  }
+  function investigarAssunto(texto, escolhido) {
+    if (!pronto) return false;
+    const cands = escolhido ? [escolhido] : candidatosDe(texto); if (!cands.length || cands[0].pont < 80) return false;
+    const cand = cands[0], outros = escolhido ? (investigacao ? investigacao.outros : []) : cands.slice(1, 7);
+    if (modoTerra) sairTerra();
+    limparComposicao();
+    const sementes = [...new Set(cand.versos)].slice(0, 160), F = folhasDa(sementes, cand);
+    investigacao = { texto, cand, outros, sementes, F, fontes: null, aba: 'geral', t0: performance.now(), lugarIncerto: cand.lugar && cand.lugar.conf < 300 ? cand.lugar : null };
+    // a composição: folhas afastadas e vistas em perspectiva, como lâminas
+    separacao = Math.max(separacao, 2.2); sincronizarPainel();
+    const js = sementes.map((k) => vIdx.get(k)).filter((j) => j != null);
+    if (js.length) { const xs = js.map((j) => vBase[j * 3]), ys = js.map((j) => vBase[j * 3 + 1]), cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+      montarLaminas(cx, cy); mostrarLaminas(true);
+      incl = 0.9; voar(cx, cy + 15000, 40000); }   // de longe e inclinado: as dez lâminas empilhadas à vista
+    // as folhas acendem uma a uma (a revelação progressiva)
+    realceCamada = new Set(js); fiosCamada = [];
+    ORDEM_FOLHAS.forEach((id, n) => setTimeout(() => { if (!investigacao || investigacao.cand !== cand) return; acenderFolha(id); desenharInvestigacao(); }, 250 + n * 330));
+    desenharInvestigacao();
+    fontesDaBiblioteca(sementes).then((f) => { if (investigacao && investigacao.cand === cand) { investigacao.fontes = f; desenharInvestigacao(); } });
+    return true;
+  }
+  let laminas = null;
+  function montarLaminas(cx, cy) {   // as dez lâminas: cartões translúcidos empilhados em volta do assunto (como na imagem de referência)
+    (laminas || []).forEach((l) => { l.c.grupo.remove(l.g); l.g.traverse((o) => { o.geometry && o.geometry.dispose(); o.material && o.material.dispose(); }); });
+    laminas = []; const w = 15000, h = 9500, x0 = cx - w / 2, x1 = cx + w / 2, y0 = cy - h / 2, y1 = cy + h / 2;
+    CAMADAS.forEach((c, k) => { if (k >= 10) return;
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: c.cor, transparent: true, opacity: 0.05, depthWrite: false, side: THREE.DoubleSide }));
+      pl.position.set(cx, cy, -6);
+      const borda = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x0, y0, -5), new THREE.Vector3(x1, y0, -5), new THREE.Vector3(x1, y1, -5), new THREE.Vector3(x0, y1, -5)]), new THREE.LineBasicMaterial({ color: c.cor, transparent: true, opacity: 0.7, depthWrite: false }));
+      const g = new THREE.Group(); g.add(pl, borda); g.visible = false; c.grupo.add(g); laminas.push({ c, g, x0, y1, num: k + 1 }); });
+    precisaOpac = true; CAMADAS.forEach((c) => { c._sujo = true; });
+  }
+  function mostrarLaminas(sim) { (laminas || []).forEach((l) => { l.g.visible = sim; }); precisaOpac = true; CAMADAS.forEach((c) => { c._sujo = true; }); }
+  function acenderFolha(id) {
+    const inv = investigacao, F = inv.F[id], c = camada(id); inv.acesas = (inv.acesas || 0) + 1; inv.ultima = id;
+    if (!c) return; c.visivel = true; if (c.opacidade < 0.35) c.opacidade = id === 'atlas' ? 0.35 : 0.75; montarPainel();
+    if (id === 'atlas' && atlasC && F && F.length) { atlasC.acender(F.map((x) => x.acao.lugar)); fios = F.flatMap((x) => { const l = atlasC.lugares[x.acao.lugar]; const k = l.versos.find((v) => inv.sementes.includes(v)); const j = vIdx.get(k); return j == null ? [] : [{ l: x.acao.lugar, j }]; }); }
+    if (F && c.api && c.api.realcar) { const is = F.map((x) => x.acao.i).filter((i) => i != null); c.api.realcar(is);
+      for (const i of is) { const k = (c.api.versos(i) || []).find((v) => inv.sementes.includes(v)); const j = vIdx.get(k); if (j != null) fiosCamada.push({ c, i, j }); } }
+    if (id === 'universo' && F && F[0]) secAtiva = F[0].acao.secao;
+  }
+  // painel de investigação: visão geral · conexões · fontes · mapas · cronologia · notas
+  const painelInv = document.createElement('div'); painelInv.className = 'cu-investig'; painelInv.hidden = true; ui.appendChild(painelInv);
+  const NOMES_ABAS = [['geral', 'Visão geral'], ['conexoes', 'Conexões'], ['fontes', 'Fontes'], ['mapas', 'Mapas'], ['cronologia', 'Cronologia'], ['notas', 'Notas']];
+  function itemHtml(x) {
+    const a = x.acao, attr = a.verso ? `data-inv-verso="${a.verso}"` : a.lugar != null ? `data-inv-lugar="${a.lugar}"` : a.secao != null ? `data-inv-secao="${a.secao}"` : `data-camada="${a.c}" data-item="${a.i}"`;
+    return `<button type="button" class="cu-inv-item" ${attr}><b>${esc(x.rot)}</b> ${selo(x.conf)}<small>${esc(String(x.desc || '').slice(0, 160))}</small></button>`;
+  }
+  function desenharInvestigacao() {
+    const inv = investigacao; if (!inv) { painelInv.hidden = true; document.body.classList.remove('cu-com-investig'); return; }
+    painelInv.hidden = false; document.body.classList.add('cu-com-investig');
+    const F = inv.F, cand = inv.cand, n = inv.acesas || 0;
+    const barra = ORDEM_FOLHAS.map((id, k) => { const c = camada(id), tem = F[id] && F[id].length; return `<i title="${esc(c ? c.nome : id)}${tem ? ': ' + F[id].length + ' achado(s)' : ': nada no acervo'}" class="${k < n ? (tem ? 'acesa' : 'vazia') : ''}" style="--c:${c ? c.cor : '#999'}">${String(k + 1).padStart(2, '0')}</i>`; }).join('');
+    let corpo = '';
+    if (inv.aba === 'geral') {
+      const pess = (F.personagens || []).filter((x) => x.conf !== 'hipotese').slice(0, 3).map((x) => x.rot), lugs = (F.atlas || []).slice(0, 3).map((x) => x.rot);
+      corpo = `<p><b>${esc(cand.rot)}</b> — ${esc(cand.tipo)}. Aparece em <b>${inv.sementes.length}</b> versículo(s)${inv.sementes[0] ? ', a começar por ' + esc(nomeRef(Math.min(...inv.sementes))) : ''}.</p>
+        ${F._ponte ? `<p><small>A investigação seguiu a ligação principal: <b>${esc(F._ponte)}</b>. Itens achados por esse caminho aparecem como hipótese.</small></p>` : ''}
+        ${pess.length ? `<p>Ligado diretamente a: ${esc(pess.join(', '))}${lugs.length ? '; lugares: ' + esc(lugs.join(', ')) : ''}.</p>` : ''}
+        ${inv.lugarIncerto ? `<p class="cu-inv-alerta">⚠️ A localização exata de ${esc(inv.lugarIncerto.nome)} é <b>incerta</b>: a confiança da identificação é ${inv.lugarIncerto.conf}/1000 no OpenBible. No mapa ela aparece com um círculo tracejado, não como ponto comprovado.</p>` : ''}
+        ${inv.outros.length ? `<h5>Outros com nome parecido</h5>${inv.outros.map((o, k) => `<button type="button" class="cu-inv-item" data-inv-outro="${k}"><b>${esc(o.rot)}</b><small>${esc(o.tipo)} · ${esc(o.desc)}</small></button>`).join('')}` : ''}
+        <h5>As dez camadas</h5>${ORDEM_FOLHAS.map((id) => { const c = camada(id), L = F[id]; return `<div class="cu-inv-folha"><small style="color:${c ? c.cor : '#ccc'}">${esc(c ? c.nome : id)}</small>${L && L.length ? L.slice(0, 3).map(itemHtml).join('') : `<p class="cu-inv-nada">Nada no acervo do NEXUS para estes versículos.</p>`}</div>`; }).join('')}`;
+    } else if (inv.aba === 'conexoes') {
+      corpo = ORDEM_FOLHAS.filter((id) => F[id] && F[id].length).map((id) => `<h5>${esc(camada(id).nome)}</h5>${F[id].map(itemHtml).join('')}`).join('');
+    } else if (inv.aba === 'fontes') {
+      const f = inv.fontes;
+      corpo = !f ? '<p class="cu-inv-nada">Consultando a biblioteca pelo motor de descoberta…</p>' : !f.porta ? '<p class="cu-inv-nada">As fontes da biblioteca (comentários, léxicos, patrística) aparecem com o PIN ou no aparelho liberado.</p>' : !f.blocos.length ? '<p class="cu-inv-nada">A biblioteca não tem obras ligadas a estes versículos.</p>' :
+        f.blocos.map((b) => `<h5>${esc(b.titulo)} · ${esc(nomeRef(b.verso))}</h5>` + b.itens.map((it) => `<div class="cu-inv-fonte"><b>${esc(it.rotulo || '')}</b> ${selo(/patr/i.test(b.titulo) || /cita|comenta|define/.test((it.evidencias && it.evidencias[0] && it.evidencias[0].modo) || '') ? 'direta' : 'interpretacao')}<small>${esc(it.detalhe || '')}</small>${(it.evidencias || []).slice(0, 2).map((e) => `<blockquote>${esc(e.trecho || '')}<cite>${esc([e.autor, e.obra, e.secao].filter(Boolean).join(' · '))}</cite></blockquote>`).join('')}</div>`).join('')).join('');
+      corpo += `<h5>Fontes das camadas</h5><small>Bíblia: Almeida · Atlas: OpenBible (CC BY) e Natural Earth · Tempo e Personagens: Theographic (CC BY-SA) · Línguas e Manuscritos: STEPBible/Tyndale House (CC BY) · História e Teologia: Easton, 1897 (domínio público) · Tradição: credos e confissões históricos (domínio público).</small>`;
+    } else if (inv.aba === 'mapas') {
+      corpo = (F.atlas || []).length ? F.atlas.map((x) => { const l = atlasC.lugares[x.acao.lugar]; return `<div class="cu-inv-fonte"><b>${esc(l.nome)}</b> ${selo(x.conf)}<div class="cu-inv-medidor"><span style="width:${Math.max(2, l.conf / 10)}%"></span></div><small>${esc(x.desc)}</small><button type="button" class="cu-inv-mini" data-inv-terra="${x.acao.lugar}">🌍 Ver na Terra</button></div>`; }).join('') : '<p class="cu-inv-nada">Nenhum lugar do Atlas nestes versículos.</p>';
+      corpo += '<p><small>O medidor mostra a confiança da identificação do lugar (0 a 1000), segundo o OpenBible. Abaixo de 300, o NEXUS trata a localização como incerta.</small></p>';
+    } else if (inv.aba === 'cronologia') {
+      const ev = (F.tempo || []).map((x) => ({ x, ev: camada('tempo').api.eventos[x.acao.i] })).sort((a, b) => a.ev.a - b.ev.a);
+      corpo = ev.length ? ev.map(({ x }) => itemHtml(x)).join('') + `<p><small>⚠️ ${esc(camada('tempo').api.aviso || '')}</small></p>` : '<p class="cu-inv-nada">Nenhum acontecimento datado nestes versículos.</p>';
+    } else if (inv.aba === 'notas') {
+      const chaveN = 'nexus_nota_' + norm(cand.rot);
+      corpo = `<textarea class="cu-inv-nota" rows="9" placeholder="Suas anotações sobre ${esc(cand.rot)}…">${esc(ler(chaveN))}</textarea><p><small>Fica guardada só neste aparelho (não vai para o banco).</small></p>`;
+    }
+    painelInv.innerHTML = `<button class="cu-fechar-inv" type="button" data-inv-fechar aria-label="Fechar">×</button><small>Investigação multidimensional</small><h3>${esc(cand.rot)}</h3>
+      <div class="cu-inv-barra">${barra}</div><small class="cu-inv-estado">${n < 10 ? `revelando a camada ${String(n + 1).padStart(2, '0')}…` : `${ORDEM_FOLHAS.filter((id) => F[id] && F[id].length).length} de 10 camadas com achados`}</small>
+      <div class="cu-inv-abas">${NOMES_ABAS.map(([k, nm]) => `<button type="button" data-inv-aba="${k}" class="${inv.aba === k ? 'ativa' : ''}">${nm}</button>`).join('')}</div>
+      <div class="cu-inv-corpo">${corpo}</div>`;
+    ligarChips(painelInv);
+    const nota = painelInv.querySelector('.cu-inv-nota'); if (nota) nota.oninput = () => { try { localStorage.setItem('nexus_nota_' + norm(cand.rot), nota.value); } catch (_) {} };
+  }
+  painelInv.addEventListener('click', (e) => {
+    const inv = investigacao; if (!inv) return; const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.invFechar != null) { investigacao = null; desenharInvestigacao(); limparComposicao(); mostrarLaminas(false); return; }
+    if (b.dataset.invAba) { inv.aba = b.dataset.invAba; desenharInvestigacao(); return; }
+    if (b.dataset.invVerso) { fichaVerso(+b.dataset.invVerso); return; }
+    if (b.dataset.invLugar) { const l = atlasC.lugares[+b.dataset.invLugar]; const j = vIdx.get(l.versos[0]); if (j != null) voar(vBase[j * 3], vBase[j * 3 + 1], Math.min(dist, 2400)); atlasC.acender([l.i]); return; }
+    if (b.dataset.invTerra) { voarParaLugar(atlasC.lugares[+b.dataset.invTerra], []); return; }
+    if (b.dataset.invSecao) { const q = secoes[+b.dataset.invSecao]; voar(q.cx, q.cy, q.raio * 3.4); return; }
+    if (b.dataset.invOutro) { investigarAssunto(inv.texto, inv.outros[+b.dataset.invOutro]); return; }
+  });
+  // na ficha de qualquer item aberta a partir da investigação: voltar a ela
+  function voltarInvestigacao() { if (!investigacao) return; const inv = investigacao; invest.hidden = true; limparComposicao(); investigacao = inv; realceCamada = new Set(inv.sementes.map((k) => vIdx.get(k)).filter((j) => j != null)); fiosCamada = []; inv.acesas = 0; ORDEM_FOLHAS.forEach((id) => acenderFolha(id)); desenharInvestigacao(); }
+
   function limparCamada() { realceCamada = new Set(); fiosCamada = []; fiosEntre = []; fichaCamada = null; pairCamada = null; CAMADAS.forEach((o) => o.api && o.api.realcar && o.api.realcar([])); }
   function abrirFichaCamada(c, i, irAte = false) {
     limparComposicao(); const f = c.api.ficha(i); if (!f) return;
@@ -935,6 +1123,7 @@ export function criarCeu(container, estado, acoes) {
     const ir = () => { const p = c.api.pos(i); if (p) voarAltura(p.x, p.y, c.z, 1400); };
     invest.querySelector('.cu-ir').onclick = ir;
     const ac = invest.querySelector('.cu-acender'); if (ac) ac.onclick = () => { const js = [...realceCamada]; if (js.length) { camada('biblia').visivel = true; montarPainel(); enquadrarXY(js.map((j) => vBase[j * 3]), js.map((j) => vBase[j * 3 + 1])); } };
+    if (investigacao) { const bv = document.createElement('button'); bv.type = 'button'; bv.textContent = '↩ Voltar à investigação'; bv.onclick = voltarInvestigacao; invest.querySelector(':scope > .cu-acoes').appendChild(bv); }
     if (irAte) ir();
   }
   let atlasC = null, lugarAtivo = null, realceLugar = new Set(), realceLivro = new Set(), livroAtivo = null, secAtiva = null, fios = [];
@@ -1082,7 +1271,7 @@ export function criarCeu(container, estado, acoes) {
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
     { const iE = livros.findIndex((lv) => norm(lv.nome) === q || norm(lv.abbrev) === q); if (iE >= 0) { comporLivro(iE); return true; } }   // nome exato de livro (Rute, Jó, Daniel) é o livro
-    if (atlasC) { const cand = atlasC.lugares.filter((l) => norm(l.nome) === q).sort((a, b) => b.peso - a.peso); if (cand.length) { voarParaLugar(cand[0], []); return true; } }   // nome exato de lugar (Siquém) é o lugar
+    if (q.split(/\s+/).length <= 4 && !/\d/.test(q) && investigarAssunto(texto)) return true;   // MOTOR ÚNICO: pessoa, lugar, palavra, acontecimento, tema → as dez camadas
     if (buscarCamadas(q, 100)) return true;
     { const l = q.split(/\s+/).length > 1 || !livros.some((lv) => norm(lv.nome).startsWith(q)) ? lugarNaFrase(q) : null;
       if (l) { const palavras = q.split(/[^a-z0-9]+/).filter((w) => w && !norm(l.nome).split(/\s+/).includes(w) && lev(w, norm(l.nome)) > 2); voarParaLugar(l, palavras); return true; } }
@@ -1238,7 +1427,12 @@ export function criarCeu(container, estado, acoes) {
       let nA = 0; for (const li of aces) { if (nA >= 26) break; const l = atlasC.lugares[li]; const p = telaLugarV(l); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H && texto(l.nome, p.x + 8, p.y, fontL, '#FFF0C8', 'rgba(40,28,6,.8)', 1, false)) nA++; }
       if (!aces.size && (modoTerra || dist < 16000)) { if (!ordemLug) ordemLug = atlasC.lugares.slice().sort((a, b) => b.peso - a.peso); let nB = 0; const lim = modoTerra ? Math.round(10 + 3 * RAIO_GLOBO / Math.max(modoTerra.alt, 1)) : Math.round(8 + 60000 / dist); for (const l of ordemLug) { if (nB >= Math.min(lim, 40)) break; const p = telaLugarV(l); if (p && p.x > 0 && p.x < W && p.y > 0 && p.y < H && texto(l.nome, p.x + 7, p.y, '600 12px "Cormorant Garamond", Georgia, serif', '#FFE3A3', 'rgba(20,14,2,.6)', 0.9 * Math.min(1, camada('atlas').opacidade + 0.2), false)) nB++; } }
     }
-    for (const c of camadasAtivas()) c.api.rotulos(texto, dist, W, H);
+    if (investigacao) {   // investigação: só os achados ganham nome (sem poluição), com a cor da lâmina
+      for (const id of ORDEM_FOLHAS) { const L = investigacao.F[id], c = camada(id); if (!L || !c || !c.grupo.visible) continue;
+        L.slice(0, 4).forEach((x) => { let q = null; const a = x.acao;
+          if (a.c) { const p0 = c.api.pos(a.i); q = p0 && tela(p0.x, p0.y, c.z); } else if (a.verso) { const j = vIdx.get(a.verso); q = j != null && tela(vPos[j * 3], vPos[j * 3 + 1]); } else if (a.lugar != null && atlasC) q = telaLugarV(atlasC.lugares[a.lugar]);
+          if (q && q.x > 0 && q.x < W && q.y > 0 && q.y < H) texto(x.rot, q.x + 9, q.y - 9, '600 12.5px Inter, system-ui, sans-serif', c.cor, 'rgba(2,5,14,.78)', 1, false); }); }
+    } else for (const c of camadasAtivas()) c.api.rotulos(texto, dist, W, H);
     // satélites (com PIN) quando perto
     const kAtivo = constel && !constel.soltoEm ? constel.origem : selecionado;
     let nSat = 0;
@@ -1291,6 +1485,12 @@ export function criarCeu(container, estado, acoes) {
     if (vB && qf && vIdx.has(qf.ini)) {
       const j = vIdx.get(qf.ini), p = tela(vPos[j * 3], vPos[j * 3 + 1]);
       if (p) { const pulso = 9 + Math.sin(t / 380) * 3; g2.strokeStyle = 'rgba(242,214,140,.75)'; g2.lineWidth = 1.2; g2.beginPath(); g2.arc(p.x, p.y, pulso, 0, 6.29); g2.stroke(); if (dist > 520) texto(nomeRef(qf.ini), p.x + 14, p.y - 10, '700 13px Inter, system-ui, sans-serif', '#FFE8B0', 'rgba(2,5,14,.78)', 1, false); }
+    }
+    if (investigacao && laminas) for (const l of laminas) { if (!l.c.grupo.visible) continue; const p = tela(l.x0, l.y1, l.c.z); if (p && p.x > -40 && p.x < W && p.y > 0 && p.y < H) texto(`${String(l.num).padStart(2, '0')} · ${l.c.nome.toUpperCase()}`, p.x + 10, p.y + 12, '700 12px Inter, system-ui, sans-serif', l.c.cor, 'rgba(2,5,14,.7)', 0.95, false); }
+    if (investigacao && investigacao.lugarIncerto && atlasC && camada('atlas').visivel) {   // local incerto: círculo tracejado, não ponto comprovado
+      const l = investigacao.lugarIncerto, p = telaLugarV(l);
+      if (p) { const r = 22 + 5 * Math.sin(t / 400); g2.save(); g2.setLineDash([5, 5]); g2.lineWidth = 1.6; g2.strokeStyle = 'rgba(255,214,140,.95)'; g2.beginPath(); g2.arc(p.x, p.y, r, 0, 6.29); g2.stroke(); g2.beginPath(); g2.arc(p.x, p.y, r * 1.9, 0, 6.29); g2.strokeStyle = 'rgba(255,214,140,.4)'; g2.stroke(); g2.restore();
+        texto(`${l.nome}? · localização incerta (${l.conf}/1000)`, p.x + r * 1.9 + 6, p.y, '700 12.5px Inter, system-ui, sans-serif', '#FFE3A3', 'rgba(40,24,4,.85)', 1, false); }
     }
     if (modoTerra) nivel = 'Terra · ' + (modoTerra.alt > RAIO_GLOBO * 0.6 ? 'o globo' : modoTerra.alt > RAIO_GLOBO * 0.05 ? 'regiões' : 'cidades e lugares');
     if (nivelEl.textContent !== nivel) nivelEl.textContent = nivel;
@@ -1349,7 +1549,7 @@ export function criarCeu(container, estado, acoes) {
     } else if (!arrasto && inercia.lengthSq() > 1e-4) { alvo.x += inercia.x * dt / 16; alvo.y += inercia.y * dt / 16; inercia.multiplyScalar(0.92); posicionar(); }
     aplicarCamadas(); if (modoTerra && atlasC) { if (animarTerra()) posicionarTerra(); } else { alvo.z = zB; posicionar(); }
     if (transicao) { const q = Math.min(1, (performance.now() - transicao.t0) / 650), e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2; if (q >= 1) transicao = null; else { camera.position.lerpVectors(transicao.pos, camera.position.clone(), e); camera.quaternion.slerpQuaternions(transicao.quat, camera.quaternion.clone(), e); camera.updateMatrixWorld(); } }
-    if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel || !!modoTerra, !!modoTerra && modoTerra.alt > RAIO_GLOBO * 0.02);   // na Terra, vista do espaço: céu negro com estrelas
+    if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel || !!modoTerra, (!!modoTerra && modoTerra.alt > RAIO_GLOBO * 0.02) || !!investigacao);   // na Terra, vista do espaço: céu negro com estrelas
     if (atlasC && t - solEm > 1000) { solEm = t; const ss = pontoSubsolar(Date.now() + (ceuR ? ceuR.estado().desloc || 0 : 0)); atlasC.sol(ss.lat, ss.lon);
       if (modoTerra) { const l = modoTerra; const dLon = ((l.lon - ss.lon + 540) % 360) - 180, cz = Math.sin(l.lat * Math.PI / 180) * Math.sin(ss.lat * Math.PI / 180) + Math.cos(l.lat * Math.PI / 180) * Math.cos(ss.lat * Math.PI / 180) * Math.cos(dLon * Math.PI / 180);
         faixaTerra.querySelector('.cu-terra-txt').textContent = `🌍 Terra · ${cz > 0.05 ? 'é dia' : cz > -0.1 ? 'crepúsculo' : 'é noite'} no centro da vista (${l.lat.toFixed(1)}°, ${l.lon.toFixed(1)}°) · ${atlasC.imagemReal() ? 'imagem de satélite NASA Blue Marble' : 'carregando imagem de satélite…'} · Sol ${ceuR && ceuR.estado().desloc ? 'da hora escolhida' : 'de agora'}`; } }
@@ -1489,7 +1689,8 @@ export function criarCeu(container, estado, acoes) {
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
-      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
+      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), buscarFicha: (t) => buscarCamadas(norm(t), 1), investigar: (t) => investigarAssunto(t), investigacao: () => (investigacao ? { cand: investigacao.cand.rot, tipo: investigacao.cand.tipo, sementes: investigacao.sementes.length, acesas: investigacao.acesas || 0, folhas: Object.fromEntries(ORDEM_FOLHAS.map((id) => [id, investigacao.F[id] ? investigacao.F[id].map((x) => x.rot + ' [' + x.conf + ']') : null])), outros: investigacao.outros.map((o) => o.rot + ' (' + o.tipo + ')'), fontes: investigacao.fontes ? investigacao.fontes.blocos.map((b) => b.titulo + ': ' + b.itens.length) : null, incerto: !!investigacao.lugarIncerto } : null), abaInvestigacao: (a) => { if (investigacao) { investigacao.aba = a; desenharInvestigacao(); } },
+      fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
       abrirTerra: () => abrirTerra(), imagemTerra: () => (atlasC ? atlasC.imagemReal() : false), subsolar: () => pontoSubsolar(Date.now()),
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
       fichaCamada: () => (fichaCamada ? { id: fichaCamada.c.id, i: fichaCamada.i, versos: realceCamada.size, fios: fiosCamada.length } : null), buscaCamada: (id, q) => { const c = camada(id); return c && c.api ? c.api.buscar(norm(q)) : null; },
