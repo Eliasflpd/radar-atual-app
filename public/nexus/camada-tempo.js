@@ -82,7 +82,7 @@ export async function criarCamadaTempo(THREE, ctx) {
       return { titulo: e.nome, rotulo: 'Tempo · cronologia', html:
         `<p><b>${anoTexto(e.a)}</b>${e.dur ? ' · duração: ' + durTexto(e.dur) : ''} · época: ${ERAS[e.era].nome}</p>
         ${e.pt && e.pt !== e.t ? `<small>Título na fonte: ${esc(e.t)}</small>` : ''}
-        ${e.pn.length ? `<h5>Quem participa</h5><div class="cu-chips">${e.pn.map((p) => `<button type="button" data-busca="${esc(p)}">${esc(p)}</button>`).join('')}</div>` : ''}
+        ${e.pn.length ? `<h5>Quem participa</h5><div class="cu-chips">${e.pn.map((p, k) => `<button type="button" data-camada="personagens" data-id="${e.p[k]}" data-busca="${esc(p)}">${esc(p)}</button>`).join('')}</div>` : ''}
         ${antes.length ? `<h5>Vem depois de</h5><div class="cu-chips">${antes.map((q) => `<button type="button" data-evento="${q.i}">${esc(q.nome)}</button>`).join('')}</div>` : ''}
         ${depois.length ? `<h5>Leva a</h5><div class="cu-chips">${depois.map((q) => `<button type="button" data-evento="${q.i}">${esc(q.nome)}</button>`).join('')}</div>` : ''}
         <h5>Versículos (${e.v.length})</h5>${e.v.slice(0, 6).map(verso).join('')}${e.v.length > 6 ? `<small>e mais ${e.v.length - 6}: use “Acender versículos” para vê-los na Bíblia.</small>` : ''}

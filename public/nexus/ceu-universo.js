@@ -148,13 +148,16 @@ export function criarCeu(container, estado, acoes) {
    ['tradicao', 'Tradição · história da Igreja', '#A9D18E']].forEach(([id, nome, cor]) => CAMADAS.push({ id, nome, cor, grupo: new THREE.Group(), visivel: false, opacidade: 0.8, z: 0, reservada: true }));
   // camadas já construídas: o módulo de cada uma devolve { objetos, quadro, pegar, info, ficha, rotulos, buscar, pos, versos, realcar }
   const MODULOS_CAMADA = {
-    tempo: { carregar: () => import('/nexus/camada-tempo.js?v=2').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
+    tempo: { carregar: () => import('/nexus/camada-tempo.js?v=3').then((m) => m.criarCamadaTempo), visivel: true, opacidade: 0.75 },
+    personagens: { carregar: () => import('/nexus/camada-personagens.js?v=1').then((m) => m.criarCamadaPersonagens), visivel: true, opacidade: 0.7 },
   };
   CAMADAS.forEach((c) => { const md = MODULOS_CAMADA[c.id]; if (!md) return;
     Object.assign(c, { reservada: false, modulo: true, visivel: md.visivel, opacidade: md.opacidade, criada: false,
       criar: async () => { const f = await md.carregar(); c.api = await f(THREE, ctxCamada(c)); return c.api.objetos; } }); });
   function ctxCamada(c) { return { escala, esc, norm: (t) => norm(t), nomeRef: (k) => nomeRef(k), textoDe: (k) => textoDe(k), fraco,
     tela: (x, y) => tela(x, y, c.z), posVerso: (k) => { const j = vIdx.get(k); return j == null ? null : { x: vBase[j * 3], y: vBase[j * 3 + 1] }; } }; }
+  // o item mais próximo do ponteiro entre todas as folhas visíveis (empate: a folha de cima)
+  function pegarCamadas(x, y, raio) { let m = null; for (const c of camadasAtivas()) { const i = c.api.pegar(x, y, raio); if (i < 0) continue; const p = c.api.pos(i), q = p && tela(p.x, p.y, c.z); const d = q ? Math.hypot(q.x - x, q.y - y) : raio; if (!m || d < m.d - 0.5) m = { c, i, d }; } return m; }
   const camadasAtivas = () => (modoTerra ? [] : CAMADAS.filter((c) => c.api && c.grupo.visible && c.opacidade > 0.1).reverse());   // de cima para baixo
   // MOTOR DE CAMADAS — feito para 10 ou mais folhas sem pesar:
   //   • registrarCamada({ id, nome, cor, criar(ctx) }) acrescenta uma folha; criar() só roda quando a folha é ligada
@@ -592,7 +595,7 @@ export function criarCeu(container, estado, acoes) {
   function pairar(x, y) {
     clearTimeout(pairarT);
     pairarT = setTimeout(() => {
-      for (const c of camadasAtivas()) { const i = c.api.pegar(x, y, 11); if (i >= 0) { canvas.style.cursor = 'pointer'; info.innerHTML = c.api.info(i); info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!fichaCamada) ligarCamada(c, i, false); return; } }
+      { const pc = pegarCamadas(x, y, 11); if (pc) { const { c, i } = pc; canvas.style.cursor = 'pointer'; info.innerHTML = c.api.info(i); info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!fichaCamada) ligarCamada(c, i, false); return; } }
       if (pairCamada && !fichaCamada) limparCamada(); pairCamada = null;
       const li = lugarPerto(x, y, 10);
       if (li >= 0) { const l = atlasC.lugares[li]; const conf = l.conf >= 700 ? 'identificação segura' : l.conf >= 300 ? 'identificação provável' : 'identificação incerta'; canvas.style.cursor = 'pointer'; info.innerHTML = `<b>${esc(l.nome)}</b>${l.identificacao && l.identificacao !== l.nome ? `<em>hoje: ${esc(l.identificacao)}</em>` : ''}<small>Atlas · ${l.peso} versículo(s) · ${conf} (${l.conf}/1000) · OpenBible.info · clique para acender os versículos</small>`; info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!lugarAtivo && livroAtivo == null) { atlasC.acender([li]); fios = l.versos.slice(0, 80).map((k) => ({ l: li, j: vIdx.get(k) })).filter((f) => f.j != null); } return; }
@@ -627,7 +630,7 @@ export function criarCeu(container, estado, acoes) {
     const agora = performance.now(), duplo = agora - ultimoToque < 320; ultimoToque = agora;
     if (duplo && modoTerra) { posicionarTerra(); modoTerra.ancora = latLonNaTela(x, y); modoTerra.cursor = { x, y }; modoTerra.altAlvo = modoTerra.altAlvo * 0.35; return; }
     if (duplo) { clearTimeout(cartaoT); const w = noPlano(x, y); if (w) { lembrarVista(); voo = { de: { x: alvo.x, y: alvo.y, d: dist }, para: { x: w.x, y: w.y, d: Math.max(DIST_MIN, dist * 0.35) }, t0: agora, dur: 700 }; } return; }
-    for (const c of camadasAtivas()) { const i = c.api.pegar(x, y, tipo === 'touch' ? 22 : 12); if (i >= 0) { abrirFichaCamada(c, i); return; } }
+    { const pc = pegarCamadas(x, y, tipo === 'touch' ? 22 : 12); if (pc) { abrirFichaCamada(pc.c, pc.i); return; } }
     const li = lugarPerto(x, y, tipo === 'touch' ? 20 : 11);
     if (li >= 0) { escolherLugar(atlasC.lugares[li], !modoTerra); return; }
     if (modoTerra) return;
@@ -779,6 +782,10 @@ export function criarCeu(container, estado, acoes) {
     invest.querySelector('.cu-fechar-inv').onclick = () => { invest.hidden = true; limparCamada(); };
     invest.querySelectorAll('[data-evento]').forEach((b) => { b.onclick = () => abrirFichaCamada(c, +b.dataset.evento, true); });
     invest.querySelectorAll('[data-busca]').forEach((b) => { b.onclick = () => buscar(b.dataset.busca); });
+    invest.querySelectorAll('[data-camada]').forEach((b) => { b.onclick = () => {   // ligação entre camadas: abre o item na outra folha
+      const c2 = camada(b.dataset.camada); if (!c2 || !c2.api) { if (b.dataset.busca) buscar(b.dataset.busca); return; }
+      const i2 = b.dataset.id != null ? c2.api.porId(+b.dataset.id) : +b.dataset.item; if (i2 == null || i2 < 0) return;
+      c2.visivel = true; if (c2.opacidade < 0.3) c2.opacidade = 0.7; montarPainel(); abrirFichaCamada(c2, i2, true); }; });
     const ir = () => { const p = c.api.pos(i); if (p) voarAltura(p.x, p.y, c.z, 1400); };
     invest.querySelector('.cu-ir').onclick = ir;
     const ac = invest.querySelector('.cu-acender'); if (ac) ac.onclick = () => { const js = [...realceCamada]; if (js.length) { camada('biblia').visivel = true; montarPainel(); enquadrarXY(js.map((j) => vBase[j * 3]), js.map((j) => vBase[j * 3 + 1])); } };
@@ -926,6 +933,7 @@ export function criarCeu(container, estado, acoes) {
   }
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
+    { const iE = livros.findIndex((lv) => norm(lv.nome) === q || norm(lv.abbrev) === q); if (iE >= 0) { comporLivro(iE); return true; } }   // nome exato de livro (Rute, Jó, Daniel) é o livro
     if (buscarCamadas(q, 100)) return true;
     { const l = q.split(/\s+/).length > 1 || !livros.some((lv) => norm(lv.nome).startsWith(q)) ? lugarNaFrase(q) : null;
       if (l) { const palavras = q.split(/[^a-z0-9]+/).filter((w) => w && !norm(l.nome).split(/\s+/).includes(w) && lev(w, norm(l.nome)) > 2); voarParaLugar(l, palavras); return true; } }

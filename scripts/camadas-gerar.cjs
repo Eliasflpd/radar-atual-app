@@ -8,7 +8,19 @@ const dir = process.argv[2]; if (!dir) { console.error('informe a pasta da fonte
 const ler = (f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
 const verses = ler('verses.json'), events = ler('events.json'), people = ler('people.json');
 const saida = path.join(__dirname, '..', 'public', 'nexus', 'camadas'); fs.mkdirSync(saida, { recursive: true });
+let NP = {}; try { NP = JSON.parse(fs.readFileSync(path.join(__dirname, 'nomes-pt.json'), 'utf8')); } catch (_) {}
 let pt = {}; try { pt = JSON.parse(fs.readFileSync(path.join(__dirname, 'camadas-pt.json'), 'utf8')); } catch (_) {}
+// nomes na forma da Almeida (scripts/nomes-pt.json); o que não estiver no mapa fica com o nome da fonte (marcado)
+const REL = { son: 'filho', daughter: 'filha', father: 'pai', mother: 'mãe', brother: 'irmão', sister: 'irmã', wife: 'mulher', husband: 'marido', king: 'rei', 'King': 'rei', Son: 'filho', Brother: 'irmão', Mother: 'mãe', Disciple: 'discípulo', line: 'linhagem' };
+const PAR = { patriarch: 'patriarca', Levite: 'levita', 'of the Exodus': 'do Êxodo', 'army captain': 'comandante do exército', 'antediluvian patriarch': 'patriarca antediluviano', "Mary's Husband": 'marido de Maria', 'Disciple at Damascus': 'discípulo em Damasco' };
+function ptNome(n) {
+  if (NP[n]) return NP[n];
+  const m = /^(.*?) \((.+)\)$/.exec(n); if (!m) return null;
+  const base = NP[m[1]]; if (!base) return null;
+  const q = m[2]; let par = PAR[q] || NP[q] || null;
+  if (!par) { const r = /^(\w+) (?:of|at) (.+)$/.exec(q); if (r) { const y = NP[r[2]] || r[2].replace(/^the /, ''); par = (REL[r[1]] || REL[r[1].toLowerCase()] || r[1].toLowerCase()) + (q.includes(' at ') ? ' em ' : ' de ') + y; } else if (/^of (.+)$/.test(q)) { const y = q.slice(3); par = 'de ' + (NP[y] || y); } }
+  return par ? `${base} (${par})` : base;
+}
 
 const chaveVerso = new Map(); for (const v of verses) chaveVerso.set(v.id, +v.fields.verseID);   // "01001001" -> 1001001 (livro*1e6+cap*1e3+vers)
 const pessoa = new Map(); for (const p of people) pessoa.set(p.id, p);
@@ -25,7 +37,7 @@ const tempo = evs.map((f) => ({
   t: f.title, pt: pt[f.title] || null, a: ano(f.startDate), dur: f.duration || null,
   v: chaves(f.verses),
   p: (f.participants || []).map((id) => pessoa.get(id)).filter(Boolean).map((p) => p.fields.personID),
-  pn: (f.participants || []).map((id) => pessoa.get(id)).filter(Boolean).map((p) => p.fields.displayTitle || p.fields.name),
+  pn: (f.participants || []).map((id) => pessoa.get(id)).filter(Boolean).map((p) => ptNome(p.fields.displayTitle || p.fields.name) || p.fields.displayTitle || p.fields.name),
   ant: (f.predecessor || []).map((id) => evento.get(id)).filter(Boolean).map((e) => idxEv.get(e.fields.eventID)).filter((x) => x != null),
   nota: f.notes ? String(f.notes).trim() : null,
 }));
@@ -40,7 +52,7 @@ const usados = people.filter((p) => p.fields.isProperName !== false && (p.fields
 const ids = new Map(usados.map((p) => [p.id, p.fields.personID]));
 const rel = (lista) => (Array.isArray(lista) ? lista : []).map((id) => ids.get(id)).filter((x) => x != null);
 const pessoas = usados.map((p) => { const f = p.fields; return {
-  id: f.personID, n: f.displayTitle || f.name, s: f.gender === 'Female' ? 'f' : f.gender === 'Male' ? 'm' : null,
+  id: f.personID, n: f.displayTitle || f.name, pt: ptNome(f.displayTitle || f.name), s: f.gender === 'Female' ? 'f' : f.gender === 'Male' ? 'm' : null,
   nasc: ano(f.birthYear), morte: ano(f.deathYear), qv: f.verseCount || 0,
   v: chaves(f.verses).slice(0, 400), pai: rel(f.father), mae: rel(f.mother), filhos: rel(f.children), conj: rel(f.partners), irm: rel(f.siblings),
   tb: typeof f.alsoCalled === "string" ? f.alsoCalled : null, amb: !!f.ambiguous,
