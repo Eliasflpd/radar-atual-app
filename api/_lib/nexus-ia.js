@@ -33,6 +33,7 @@ const TAREFAS = {
   explicar: { nivel: 'padrao', max: 1400, effort: 'medium', nome: 'Explicar as evidências' },
   resumir: { nivel: 'leve', max: 500, effort: 'low', nome: 'Resumo da investigação' },
   conversar: { nivel: 'padrao', max: 1100, effort: 'low', nome: 'Conversa com o Claude (barra lateral)' },
+  preparar: { nivel: 'padrao', max: 4000, effort: 'medium', prazo: 110000, nome: 'Preparar sermão, pregação, mensagem ou estudo (barra Preparar)' },
 };
 const PADRAO = {
   ligado: true,
@@ -135,7 +136,7 @@ async function executar(db, { tarefa, sys, user, dono, investigacao }) {
   // 3) chamada (pela integração existente)
   const { iaTexto } = await import('./ia.js');
   let rr;
-  if (nivel) rr = await iaTexto({ sys, user, max_tokens: t.max, effort: t.effort, premium: true, modeloClaude: MODELO[nivel], tag: 'nexus-' + tarefa, prazoPremium: 45000 });
+  if (nivel) rr = await iaTexto({ sys, user, max_tokens: t.max, effort: t.effort, premium: true, modeloClaude: MODELO[nivel], tag: 'nexus-' + tarefa, prazoPremium: t.prazo || 45000 });
   else rr = await iaTexto({ sys, user, max_tokens: t.max, temperature: 0.2, tag: 'nexus-' + tarefa + '-gratis' });
   const pagoClaude = rr.provedor === 'claude';
   const r = {

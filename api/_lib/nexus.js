@@ -13,6 +13,7 @@
 //   explicar  { id }              -> { texto, evidencias }    a IA explica o resultado de `descobrir`, citando [E1], [E2]…
 //   salvar    { titulo, estado, investigacao? } / listar / abrir { investigacao } / apagar { investigacao }
 //   conversar { mensagens:[{papel,texto}], contexto? } -> { texto }  barra lateral 'Pergunte ao Claude' (com a porta)
+//   preparar { tipo, tema, publico?, duracao?, obs?, dossie } -> { texto }  barra 'Preparar' (sermão/pregação/mensagem/estudo; com a porta)
 //   ponteiros-obra { modo: migrar|simular|gravar|reverter|estado, lote? , lote_id? }  (administrativo, com a porta)
 //             ponteiros de obras externas (só localizadores; ver api/_lib/nexus-ponteiros.js)
 //
@@ -1236,6 +1237,7 @@ async function explicar(db, ini, fim, bib, quem) {
 }
 
 // ═══ BARRA LATERAL 'PERGUNTE AO CLAUDE' ═══
+const SYS_PREPARAR = "Você é o Claude dentro do NEXUS BÍBLICO, ajudando um pastor pentecostal brasileiro a preparar um sermão, uma pregação, uma mensagem devocional ou um estudo bíblico. Escreva em português do Brasil, com calor pastoral e clareza, pronto para ser usado no púlpito ou na sala de aula. ESTRUTURA: título; texto base (com a referência); para sermão e pregação: introdução, 3 ou 4 pontos com explicação do texto, ilustração e aplicação, conclusão e apelo; para mensagem: texto curto e direto (5 a 8 parágrafos) com uma aplicação prática; para estudo: objetivo, contexto, exposição em tópicos, perguntas para discussão e aplicação. Ajuste o tamanho à duração pedida. Use títulos curtos em linhas próprias (sem markdown pesado; pode usar '-' para listas). BASE OBRIGATÓRIA: construa o texto sobre o DOSSIÊ que o universo do NEXUS montou (versículos centrais, acontecimentos, personagens, palavras no original, temas, doutrinas, confissões, lugares, notas de crítica textual) e cite as referências bíblicas exatamente como aparecem no dossiê. Quando usar algo das camadas, diga de qual veio (ex.: 'no original grego, ἀγάπη...'; 'a Confissão de Westminster cita...'). RIGOR INEGOCIÁVEL: não invente versículos, citações, autores, datas, estatísticas nem histórias apresentadas como fatos; ilustrações que você criar devem ser apresentadas como sugestão ('imagine...', 'por exemplo...'); separe o que o texto bíblico diz do que é interpretação de uma tradição; se o dossiê for fraco para o tema, diga isso no início e use só o que for seguro; datas antigas da cronologia são tradicionais, não consenso. Termine com uma linha 'Base no NEXUS:' listando as camadas que você usou.";
 const SYS_CONVERSA = "Você é o Claude dentro do NEXUS BÍBLICO, conversando com um pastor estudioso como um professor experiente, caloroso e paciente. Escreva em português do Brasil, em prosa natural e acolhedora, de 1 a 4 parágrafos curtos (use lista só quando ele pedir um roteiro ou passos). Você ajuda de dois jeitos: (1) explicando como usar o NEXUS; (2) ajudando nos estudos bíblicos (roteiros, perguntas para meditar, contexto, línguas originais, caminhos de investigação). COMO O NEXUS FUNCIONA: a busca no alto abre uma passagem (ex.: João 1:1); tocar num ponto mostra o painel com as ligações e as fontes; tocar de novo ou usar Expandir traz os vizinhos; a legenda embaixo é clicável e destaca um tipo de elemento ou um estado de evidência; os nomes dos grupos de assuntos abrem a lista dos membros; o botão Céu Infinito alterna entre o mapa 2D e o céu 3D; Descobrir roda os algoritmos do motor (referências cruzadas, citações literais, apoio patrístico, temas, relações lexicais, descobertas da Oficina); Explicar pede à IA um texto ancorado nas evidências numeradas [E1], [E2]; Entidades mostra pessoas, lugares e conceitos citados nas obras; Caminho liga dois elementos; a Trilha guarda o percurso; Salvar e Investigações guardam o mapa no banco do NEXUS; Filtros escondem estados, naturezas e métodos; o acesso à biblioteca é pelo PIN. Estados da evidência: direta (a fonte cita ou define), corroboração (3+ autores independentes), interpretação (comentaristas, curadoria), hipótese (vínculo calculado) e inferência (texto de IA). RIGOR INEGOCIÁVEL: nunca invente citações, páginas, autores ou referências bibliográficas; separe com clareza o que é texto bíblico, o que é consenso acadêmico, o que é interpretação de uma tradição e o que é hipótese; quando não souber ou houver controvérsia, diga com honestidade; lembre que esta conversa NÃO consulta a biblioteca do NEXUS e que, para evidências conferíveis, ele deve usar Descobrir e Explicar.";
 
 // ═══ INVESTIGAÇÕES SALVAS (banco próprio do NEXUS) ═══════════════════════════════════════
@@ -1430,6 +1432,24 @@ module.exports = async (req, res) => {
         msgs.map((m) => (m.papel === 'eu' ? 'PASTOR: ' : 'CLAUDE: ') + m.texto).join(NL + NL) + NL + NL + 'CLAUDE:';
       const rr = await IA.executar(db, { tarefa: 'conversar', sys: SYS_CONVERSA, user, dono: donoDe(b), investigacao: null });
       res.json({ ok: !!rr.texto, texto: String(rr.texto || '').trim() || 'Não consegui responder agora.', modelo: rr.modelo || '', custo_usd: rr.custo || 0, reaproveitado: !!rr.reaproveitado, motivo: rr.motivo || '' });
+      return;
+    }
+    if (acao === 'preparar') {   // barra 'Preparar': sermão, pregação, mensagem ou estudo a partir do dossiê que o universo montou
+      const NL = String.fromCharCode(10), corta = (t, n) => String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, n);
+      const TIPOS = { sermao: 'sermão', pregacao: 'pregação', mensagem: 'mensagem (devocional curta)', estudo: 'estudo bíblico' };
+      const tipo = TIPOS[b.tipo] ? b.tipo : 'mensagem';
+      const tema = corta(b.tema, 160); if (!tema) { res.json({ ok: false, err: 'escreva o tema ou a passagem' }); return; }
+      const d = b.dossie && typeof b.dossie === 'object' ? b.dossie : {};
+      const versos = (Array.isArray(d.versos) ? d.versos : []).slice(0, 24).map((v) => `- ${corta(v.ref, 40)}: "${corta(v.texto, 400)}"`);
+      const camadas = (Array.isArray(d.camadas) ? d.camadas : []).slice(0, 10).map((c) => `- ${corta(c.camada, 40)}: ${(Array.isArray(c.itens) ? c.itens : []).slice(0, 8).map((x) => corta(x, 90)).join('; ')}`);
+      const lugares = (Array.isArray(d.lugares) ? d.lugares : []).slice(0, 8).map((x) => corta(x, 40));
+      const user = `PEDIDO: ${TIPOS[tipo]} sobre "${tema}".` + NL + `Público: ${corta(b.publico, 80) || 'igreja local'}. Duração: ${corta(b.duracao, 30) || 'livre'}.` + (b.obs ? NL + 'Observações do pastor: ' + corta(b.obs, 500) : '') + NL + NL +
+        'DOSSIÊ MONTADO PELO UNIVERSO DO NEXUS (dados das camadas, cada um com fonte conferível no NEXUS):' + NL +
+        (versos.length ? 'Versículos centrais (Almeida):' + NL + versos.join(NL) + NL : 'Nenhum versículo foi achado no universo para este tema.' + NL) +
+        (camadas.length ? 'O que as camadas trazem:' + NL + camadas.join(NL) + NL : '') + (lugares.length ? 'Lugares (Atlas): ' + lugares.join(', ') + NL : '') +
+        (Array.isArray(d.origem) ? 'Como o tema foi achado: ' + d.origem.slice(0, 6).map((x) => corta(x, 80)).join('; ') + NL : '');
+      const rr = await IA.executar(db, { tarefa: 'preparar', sys: SYS_PREPARAR, user, dono: donoDe(b), investigacao: null });
+      res.json({ ok: !!rr.texto, texto: String(rr.texto || '').trim() || 'Não consegui preparar agora.', modelo: rr.modelo || '', custo_usd: rr.custo || 0, reaproveitado: !!rr.reaproveitado, motivo: rr.motivo || '' });
       return;
     }
     if (acao === 'ia-consumo') { res.json({ ok: true, ...(await IA.consumo(db, b.investigacao || null)) }); return; }
