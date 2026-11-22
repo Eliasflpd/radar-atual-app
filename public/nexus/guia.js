@@ -13,11 +13,12 @@ const CENAS = [
   [/templo de herodes|segundo templo|templo de jesus/, 'templo de Herodes', 'o templo de Herodes'],
   [/templo de salomao|primeiro templo|templo$/, 'templo de Salomão', 'o templo de Salomão'],
   [/getsemani|horto das oliveiras/, 'Getsêmani', 'o Getsêmani'],
+  [/vale de ela|golias/, 'Vale de Elá', 'o Vale de Elá (1 Samuel 17)'],
   [/golgota|calvario|santo sepulcro/, 'Gólgota', 'o Gólgota'],
   [/lazaro/, 'túmulo de Lázaro', 'o túmulo de Lázaro em Betânia'],
   [/nazare/, 'Nazaré', 'Nazaré'], [/cafarnaum/, 'Cafarnaum', 'Cafarnaum'], [/magdala/, 'Magdala', 'Magdala'], [/mar da galileia|genezare|tiberiades/, 'Mar da Galileia', 'o Mar da Galileia'],
 ];
-const IDS = ['queda', 'trombetas', 'eden', 'criacao', 'templo-herodes', 'templo-salomao', 'getsemani', 'golgota', 'lazaro', 'nazare', 'cafarnaum', 'magdala', 'mar-galileia'];   // na mesma ordem de CENAS
+const IDS = ['queda', 'trombetas', 'eden', 'criacao', 'templo-herodes', 'templo-salomao', 'getsemani', 'ela', 'golgota', 'lazaro', 'nazare', 'cafarnaum', 'magdala', 'mar-galileia'];   // na mesma ordem de CENAS
 const CHAVE = 'nexus_guia';
 let hist = []; try { hist = JSON.parse(sessionStorage.getItem(CHAVE) || '[]'); } catch (_) { hist = []; }
 const guardar = () => { try { sessionStorage.setItem(CHAVE, JSON.stringify(hist.slice(-30))); } catch (_) {} };
