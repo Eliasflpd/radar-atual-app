@@ -6,9 +6,9 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 // cenas que o NEXUS já tem (abrem pela pesquisa do universo)
 const CENAS = [
-  [/fruto|queda|adao|serpente|genesis 3\b|pecado original|arvore do conhecimento|escolha do homem|voz da mulher/, null, 'o mundo de Gênesis 3: a escolha do homem', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('queda')],
+  [/fruto proibido|queda|serpente|genesis 3\b|pecado original|arvore do conhecimento|escolha do homem|voz da mulher/, null, 'o mundo de Gênesis 3: a escolha do homem', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('queda')],
   [/(sete|7) trombetas|trombeta/, null, 'o mundo das sete trombetas (Apocalipse 8–11)', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('trombetas')],
-  [/\beden\b|paraiso/, 'Éden', 'o jardim do Éden: o drone desce e você anda dentro'],
+  [/\beden\b|paraiso|jardim|arvore da vida/, 'Éden', 'o jardim do Éden: o drone desce e você anda dentro'],
   [/criacao|genesis 1\b|no principio/, null, 'a criação (Gênesis 1)', () => window.__ceuPrevia && window.__ceuPrevia._teste && window.__ceuPrevia._teste.entrarLivro(1)],
   [/templo de herodes|segundo templo|templo de jesus/, 'templo de Herodes', 'o templo de Herodes'],
   [/templo de salomao|primeiro templo|templo$/, 'templo de Salomão', 'o templo de Salomão'],
@@ -17,6 +17,7 @@ const CENAS = [
   [/lazaro/, 'túmulo de Lázaro', 'o túmulo de Lázaro em Betânia'],
   [/nazare/, 'Nazaré', 'Nazaré'], [/cafarnaum/, 'Cafarnaum', 'Cafarnaum'], [/magdala/, 'Magdala', 'Magdala'], [/mar da galileia|genezare|tiberiades/, 'Mar da Galileia', 'o Mar da Galileia'],
 ];
+const IDS = ['queda', 'trombetas', 'eden', 'criacao', 'templo-herodes', 'templo-salomao', 'getsemani', 'golgota', 'lazaro', 'nazare', 'cafarnaum', 'magdala', 'mar-galileia'];   // na mesma ordem de CENAS
 const CHAVE = 'nexus_guia';
 let hist = []; try { hist = JSON.parse(sessionStorage.getItem(CHAVE) || '[]'); } catch (_) { hist = []; }
 const guardar = () => { try { sessionStorage.setItem(CHAVE, JSON.stringify(hist.slice(-30))); } catch (_) {} };
@@ -55,20 +56,20 @@ export function iniciarGuia() {
     if (!hist.length) { corpo.innerHTML = `<div class="guia-msg guia-nx"><p>Olá! Vamos conversar. Pergunte o que quiser sobre a Bíblia, discuta um estudo ou um sermão comigo, ou peça um lugar e o ambiente muda.</p></div><div class="guia-sug">${['Me leve ao Éden', 'Por que Deus plantou um jardim?', 'Sermão sobre Gênesis 3', 'Getsêmani', 'O que é a árvore da vida?'].map((s) => `<button type="button" data-s="${s}">${s}</button>`).join('')}</div>`; return; }
     corpo.innerHTML = hist.map((m, i) => `<div class="guia-msg ${m.eu ? 'guia-eu' : 'guia-nx'}">${m.eu ? esc(m.t) : par(m.t)}${m.nota ? `<small>${esc(m.nota)}</small>` : ''}${!m.eu && m.claude ? `<div class="guia-acoes">${m.rascunho ? `<button type="button" data-baixar="${i}">⬇ Baixar</button><button type="button" data-copiar="${i}">⧉ Copiar</button>` : ''}${m.gptFeito ? '' : `<button type="button" data-gpt="${i}">🤖 Segunda opinião (GPT, grátis)</button>`}</div>` : ''}</div>`).join(''); corpo.scrollTop = corpo.scrollHeight;
   }
+  async function abrirCena(cena) { const [, busca, , fn] = cena;
+    if ((!window.__ceuPrevia || !document.body.classList.contains('ceu-universo')) && typeof window.NEXUS_ABRIR_CEU === 'function') await window.NEXUS_ABRIR_CEU();
+    for (let i = 0; i < 40 && !(window.__ceuPrevia && window.__ceuPrevia._teste && window.__ceuPrevia._teste.pronto()); i++) await new Promise((ok) => setTimeout(ok, 250));
+    document.querySelectorAll('.mt-sair,.p3-sair,.lr-sair,.tp-sair,.lc-pular,.ej-sair').forEach((b) => { try { b.click(); } catch (_) {} });   // fecha a cena aberta
+    await new Promise((ok) => setTimeout(ok, 700));
+    try { if (fn) fn(); else window.__ceuPrevia._teste.buscar(busca); } catch (_) {} }
   async function pedir(texto) {
     texto = String(texto || '').trim(); if (!texto) return; const q = norm(texto);
     hist.push({ eu: true, t: texto }); desenhar();
     const pergunta = /\?$/.test(texto) || /^(o que|oque|por que|porque|pq|quem|como|qual|quais|quando|onde|sera|explique|me explica|fale|me fala|conte|me conta|voce acha)\b/.test(q);
-    const comando = /^(me leve|leve-me|leva|abra|abre|abrir|mostre|mostra|mostrar|quero ver|quero ir|vamos|ir para|va para|entrar|entra|entre)\b/.test(q) || (!pergunta && q.split(/\s+/).length <= 4);
+    const comando = /\b(me leve|leve-me|me leva|leva|abra|abre|abrir|mostre|mostra|mostrar|quero ver|quero ir|quero andar|quero entrar|quero conhecer|vamos|ir para|ir ao|va para|entrar|entra|entre|visitar|visite|conhecer|passear|andar|vislumbre|visao|me de|me da|deixa eu ver|leve)\b/.test(q) || (!pergunta && q.split(/\s+/).length <= 4);
     const cena = comando || /\b(estudo|sermao|pregacao)\b/.test(q) ? CENAS.find(([re]) => re.test(q)) : null;
     if (cena) {   // a cena muda na hora (sem custo)
-      const [, busca, nome, fn] = cena;
-      if ((!window.__ceuPrevia || !document.body.classList.contains('ceu-universo')) && typeof window.NEXUS_ABRIR_CEU === 'function') await window.NEXUS_ABRIR_CEU();
-      for (let i = 0; i < 40 && !(window.__ceuPrevia && window.__ceuPrevia._teste && window.__ceuPrevia._teste.pronto()); i++) await new Promise((ok) => setTimeout(ok, 250));
-      // fecha a cena que estiver aberta antes de abrir a nova
-      document.querySelectorAll('.mt-sair,.p3-sair,.lr-sair,.tp-sair,.lc-pular,.ej-sair').forEach((b) => { try { b.click(); } catch (_) {} });
-      await new Promise((ok) => setTimeout(ok, 700));
-      try { if (fn) fn(); else window.__ceuPrevia._teste.buscar(busca); } catch (_) {}
+      const [, busca, nome, fn] = cena; await abrirCena(cena);
       const estudo = /\b(estudo|sermao|pregacao|mensagem)\b/.test(q);
       hist.push({ t: `Abrindo ${nome}.` + (estudo ? ' Agora vou preparar o texto com o universo; ele aparece aqui quando estiver pronto.' : ' Pode me perguntar sobre o que está vendo.'), nota: 'cena do NEXUS · sem custo' }); guardar(); desenhar();
       if (!estudo) return;
@@ -92,6 +93,8 @@ export function iniciarGuia() {
       const r = await fetch('/api/nexus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'conversar', mensagens: hist.filter((m) => !m.pend).slice(-10).map((m) => ({ papel: m.eu ? 'eu' : 'claude', texto: m.t })), contexto: ctx, cracha: ler('radar_chave'), token: ler('lp_token') }) });
       j = await r.json(); } catch (_) { j = { ok: false, err: 'Sem conexão agora.' }; }
     hist.pop();
+    let ordem = null; if (j.ok && j.texto) { const mm = String(j.texto).match(/\[\[CENA:([a-z-]+)\]\]/); if (mm) { ordem = mm[1]; j.texto = String(j.texto).replace(/\s*\[\[CENA:[a-z-]+\]\]\s*/g, ' ').trim(); } }
+    if (ordem && IDS.includes(ordem)) abrirCena(CENAS[IDS.indexOf(ordem)]);
     const msg = j.ok ? { t: j.texto, claude: true, nota: j.reaproveitado ? 'resposta reaproveitada, sem custo' : (j.modelo ? j.modelo + ' · US$ ' + Number(j.custo_usd || 0).toFixed(4) : '') } : { t: j.motivo === 'particular' ? 'Para conversar comigo, entre com o PIN (botão de acesso no alto). As cenas abrem mesmo sem PIN.' : (j.err || 'Não consegui responder agora.') };
     hist.push(msg); guardar(); if (j.ok) await digitar(msg); else desenhar();
   }
