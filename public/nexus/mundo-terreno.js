@@ -7,10 +7,10 @@ export const MUNDOS = {
   eden: { titulo: 'O jardim do Éden', sub: 'GÊNESIS 2:8–14 · SOBREVOO', mapa: '/nexus/livros/eden-mapa.jpg', altura: 46,
     credito: 'Reconstituição artística (imagens do ChatGPT a pedido do NEXUS; ilustrativas). O texto não descreve a aparência do jardim; os rios Tigre e Eufrates são conhecidos, Pisom e Giom são debatidos.',
     pontos: [
-      { u: 0.5, v: 0.5, rot: 'A árvore da vida', panorama: 'eden', ref: 'Gênesis 2:9' },
-      { u: 0.55, v: 0.56, rot: 'O rio que se divide em quatro', panorama: 'eden-rio', ref: 'Gênesis 2:10' },
-      { u: 0.72, v: 0.2, rot: 'As montanhas', panorama: 'eden-montanhas', ref: 'Gênesis 2:10–14' },
-      { u: 0.86, v: 0.5, rot: 'A entrada oriental', panorama: 'eden-oriente', ref: 'Gênesis 3:24' },
+      { u: 0.47, v: 0.44, rot: 'A árvore da vida', panorama: 'eden', ref: 'Gênesis 2:9' },
+      { u: 0.58, v: 0.49, rot: 'O rio que se divide em quatro', panorama: 'eden-rio', ref: 'Gênesis 2:10' },
+      { u: 0.80, v: 0.18, rot: 'As montanhas', panorama: 'eden-montanhas', ref: 'Gênesis 2:10–14' },
+      { u: 0.89, v: 0.42, rot: 'A entrada oriental', panorama: 'eden-oriente', ref: 'Gênesis 3:24' },
     ] },
 };
 
@@ -34,7 +34,7 @@ export async function abrirMundo(THREE, id, host, { aoFechar } = {}) {
   host.appendChild(raiz);
   const canvas = raiz.querySelector('canvas'), ptsEl = raiz.querySelector('.mt-pts');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
-  const cena = new THREE.Scene(); cena.background = new THREE.Color(0xa9c3d8); cena.fog = new THREE.FogExp2(0xc9d8e2, 0.0011);
+  const cena = new THREE.Scene(); cena.background = new THREE.Color(0xa9c3d8); cena.fog = new THREE.FogExp2(0xc9d8e2, 0.00042);
   const camera = new THREE.PerspectiveCamera(45, 1, 1, 8000);
   cena.add(new THREE.HemisphereLight(0xeaf2ff, 0x5a4a30, 1.1)); const sol = new THREE.DirectionalLight(0xfff0d6, 2.2); sol.position.set(-600, 900, 400); cena.add(sol);
   // carrega o mapa e calcula o relevo a partir das cores
@@ -54,6 +54,8 @@ export async function abrirMundo(THREE, id, host, { aoFechar } = {}) {
   for (let i = 0; i < pos.count; i++) pos.setY(i, alt[i] * Mn.altura * 3); geo.computeVertexNormals();
   const tex = new THREE.Texture(img); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); tex.needsUpdate = true;
   cena.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 })));
+  { const mar = new THREE.Mesh(new THREE.CircleGeometry(L * 3, 64), new THREE.MeshStandardMaterial({ color: 0x5d8a5a, roughness: 1 })); mar.rotation.x = -Math.PI / 2; mar.position.y = -4; cena.add(mar);   // o mundo continua além da borda (terra verde sob a névoa)
+    const nuv = new THREE.Mesh(new THREE.RingGeometry(L * 0.62, L * 2.6, 64), new THREE.MeshBasicMaterial({ color: 0xdde8ef, transparent: true, opacity: 0.85, depthWrite: false })); nuv.rotation.x = -Math.PI / 2; nuv.position.y = Mn.altura * 1.4; cena.add(nuv); }   // um anel de nuvens esconde a borda
   const altura = (u, v) => { const x = Math.min(SX - 1, Math.max(0, Math.round(u * (SX - 1)))), y = Math.min(SY - 1, Math.max(0, Math.round(v * (SY - 1)))); return alt[y * SX + x] * Mn.altura * 3; };
   const mundo = (u, v) => new THREE.Vector3((u - 0.5) * L, altura(u, v), (v - 0.5) * A);
   // câmera tipo Google Earth
@@ -76,7 +78,7 @@ export async function abrirMundo(THREE, id, host, { aoFechar } = {}) {
   function voar(p, d) { voo = { de: { a: alvo.clone(), d: dist }, para: { a: new THREE.Vector3(p.x, alvo.y, p.z), d }, t0: performance.now() }; }
   // pontos para descer em 360°
   let p360 = null;
-  const pts = Mn.pontos.map((p) => { const d = document.createElement('div'); d.className = 'mt-pt'; d.innerHTML = `<span>${p.rot}</span><b></b>`; d.onclick = async () => { const w = mundo(p.u, p.v); voar(w, 60); setTimeout(async () => { const m = await import('/nexus/panorama360.js?v=4'); if (m.PANORAMAS[p.panorama]) p360 = await m.abrirPanorama(THREE, p.panorama, raiz, { aoFechar: () => { p360 = null; } }); }, 1300); }; ptsEl.appendChild(d); return { p, d, w: mundo(p.u, p.v) }; });
+  const pts = Mn.pontos.map((p) => { const d = document.createElement('div'); d.className = 'mt-pt'; d.innerHTML = `<span>${p.rot}</span><b></b>`; d.onclick = async () => { const w = mundo(p.u, p.v); voar(w, 60); setTimeout(async () => { const m = await import('/nexus/panorama360.js?v=5'); if (m.PANORAMAS[p.panorama]) p360 = await m.abrirPanorama(THREE, p.panorama, raiz, { aoFechar: () => { p360 = null; } }); }, 1300); }; ptsEl.appendChild(d); return { p, d, w: mundo(p.u, p.v) }; });
   function ajustar() { const w = raiz.clientWidth, h = raiz.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   const obs = new ResizeObserver(ajustar); obs.observe(raiz); ajustar();
   // chegada: de muito alto, descendo e girando até ver o jardim inclinado
