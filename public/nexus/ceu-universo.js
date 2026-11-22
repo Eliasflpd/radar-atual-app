@@ -122,6 +122,19 @@ export function criarCeu(container, estado, acoes) {
     .cu-dossie{border-top:1px solid rgba(233,200,120,.18);padding:4px 0}.cu-dossie summary{cursor:pointer;font:700 12px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#FFE3A3;padding:6px 0;list-style-position:inside}.cu-dossie[open] summary{color:#FFF6DC}.cu-seta{color:rgba(233,200,120,.6);margin:0 2px}
     .cu-investig{pointer-events:auto;position:absolute;left:62px;top:54px;width:min(390px,calc(100% - 80px));max-height:calc(100% - 110px);overflow:auto;background:rgba(3,8,22,.93);border:1px solid rgba(233,200,120,.5);border-radius:14px;padding:12px 14px;color:#EEF1FA;font:13px/1.45 Inter,system-ui,sans-serif}
     .cu-investig[hidden]{display:none}
+    .cu-jornada{pointer-events:auto;position:absolute;left:50%;bottom:34px;transform:translateX(-50%);width:min(760px,calc(100% - 120px));max-height:62%;overflow:auto;background:rgba(3,8,22,.94);border:1px solid rgba(233,200,120,.55);border-radius:16px;padding:12px 18px 14px;color:#EEF1FA;font:13.5px/1.5 Inter,system-ui,sans-serif;box-shadow:0 18px 50px rgba(0,0,0,.55)}
+    .cu-jornada[hidden]{display:none}
+    .cu-j-topo{display:flex;justify-content:space-between;align-items:center;color:rgba(200,212,236,.85)}.cu-j-topo button{border:0;background:none;color:#FFE3A3;font-size:18px;cursor:pointer}
+    .cu-j-barra{height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin:6px 0 8px;overflow:hidden}.cu-j-barra span{display:block;height:100%;background:linear-gradient(90deg,#C9A24E,#FFE3A3);transition:width .5s}
+    .cu-jornada h3{margin:0 0 6px;font:700 24px "Cormorant Garamond",Georgia,serif;color:#FFE3A3}
+    .cu-jornada blockquote{margin:6px 0 10px;font:italic 21px/1.45 "Cormorant Garamond",Georgia,serif;color:#FFF8E6}.cu-jornada cite{display:block;font:600 12px Inter,system-ui,sans-serif;font-style:normal;color:#9FB7E8;margin-top:4px}
+    .cu-j-linhas{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.cu-j-linhas small{color:#9FB7E8;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:10.5px}
+    .cu-jornada .cu-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}.cu-jornada .cu-chips button{border:1px solid rgba(233,200,120,.4);background:rgba(201,162,78,.14);color:#FFE8B0;border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}
+    .cu-j-pergunta{margin:10px 0 6px;color:#E6ECF8;font-style:italic}
+    .cu-j-bts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:-14px;background:rgba(3,8,22,.97);padding:8px 0 4px;margin-top:4px}.cu-j-bts button{border:1px solid rgba(233,200,120,.5);background:rgba(201,162,78,.16);color:#FFE8B0;border-radius:10px;padding:8px 14px;font:600 13.5px Inter,system-ui,sans-serif;cursor:pointer}.cu-j-bts button:disabled{opacity:.35}.cu-j-bts .cu-j-prox{background:#C9A24E;color:#1B1405;border-color:#E9C878}
+    .cu-inv-jornada,.cu-bt-jornada{display:block;width:100%;margin:6px 0 10px;border:1px solid #E9C878!important;background:#C9A24E!important;color:#1B1405!important;border-radius:10px!important;padding:9px 12px!important;font:700 13.5px Inter,system-ui,sans-serif!important;cursor:pointer}
+    body.cu-em-jornada .cu-camadas,body.cu-em-jornada .cu-relogio,body.cu-em-jornada .cu-dica,body.cu-em-jornada .cu-terra{display:none!important}
+    @media (max-width:760px){.cu-jornada{width:calc(100% - 16px);bottom:8px;max-height:70%}.cu-j-linhas{grid-template-columns:1fr}.cu-jornada blockquote{font-size:18px}}
     .cu-investig h3{margin:0 0 6px;font:700 24px "Cormorant Garamond",Georgia,serif;color:#FFE3A3}.cu-investig h5{margin:12px 0 5px;font:700 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9FB7E8}
     .cu-investig .cu-fechar-inv{float:right;border:0;background:none;color:#FFE3A3;font-size:18px;cursor:pointer}
     .cu-inv-barra{display:flex;gap:3px;margin:4px 0 2px}.cu-inv-barra i{flex:1;font-style:normal;text-align:center;font:700 10px Inter,system-ui,sans-serif;padding:4px 0;border-radius:6px;background:rgba(255,255,255,.06);color:rgba(220,226,240,.4);transition:all .4s}
@@ -1073,7 +1086,7 @@ export function criarCeu(container, estado, acoes) {
     let corpo = '';
     if (inv.aba === 'geral') {
       const pess = (F.personagens || []).filter((x) => x.conf !== 'hipotese').slice(0, 3).map((x) => x.rot), lugs = (F.atlas || []).slice(0, 3).map((x) => x.rot);
-      corpo = `<p><b>${esc(cand.rot)}</b> — ${esc(cand.tipo)}. Aparece em <b>${inv.sementes.length}</b> versículo(s)${inv.sementes[0] ? ', a começar por ' + esc(nomeRef(Math.min(...inv.sementes))) : ''}.</p>
+      corpo = `${cand.tipo === 'pessoa' ? `<button type="button" class="cu-inv-jornada" data-inv-jornada="1">▶ Ver a jornada de ${esc(cand.rot.replace(/ · .*$/, ''))}, passo a passo</button>` : ''}<p><b>${esc(cand.rot)}</b> — ${esc(cand.tipo)}. Aparece em <b>${inv.sementes.length}</b> versículo(s)${inv.sementes[0] ? ', a começar por ' + esc(nomeRef(Math.min(...inv.sementes))) : ''}.</p>
         ${F._ponte ? `<p><small>A investigação seguiu a ligação principal: <b>${esc(F._ponte)}</b>. Itens achados por esse caminho aparecem como hipótese.</small></p>` : ''}
         ${pess.length ? `<p>Ligado diretamente a: ${esc(pess.join(', '))}${lugs.length ? '; lugares: ' + esc(lugs.join(', ')) : ''}.</p>` : ''}
         ${inv.lugarIncerto ? `<p class="cu-inv-alerta">⚠️ A localização exata de ${esc(inv.lugarIncerto.nome)} é <b>incerta</b>: a confiança da identificação é ${inv.lugarIncerto.conf}/1000 no OpenBible. No mapa ela aparece com um círculo tracejado, não como ponto comprovado.</p>` : ''}
@@ -1111,8 +1124,107 @@ export function criarCeu(container, estado, acoes) {
     if (b.dataset.invLugar) { const l = atlasC.lugares[+b.dataset.invLugar]; const j = vIdx.get(l.versos[0]); if (j != null) voar(vBase[j * 3], vBase[j * 3 + 1], Math.min(dist, 2400)); atlasC.acender([l.i]); return; }
     if (b.dataset.invTerra) { voarParaLugar(atlasC.lugares[+b.dataset.invTerra], []); return; }
     if (b.dataset.invSecao) { const q = secoes[+b.dataset.invSecao]; voar(q.cx, q.cy, q.raio * 3.4); return; }
+    if (b.dataset.invJornada) { iniciarJornada(inv.cand.i); return; }
     if (b.dataset.invOutro) { investigarAssunto(inv.texto, inv.outros[+b.dataset.invOutro]); return; }
   });
+
+  // ══ MODO JORNADA: a vida de uma pessoa contada passo a passo (capítulo por capítulo da narrativa) ═══════
+  // Cada passo é um capítulo em que a pessoa aparece: o versículo-chave em destaque, o lugar (a câmera voa até ele no
+  // globo), quem está junto, uma palavra do original e o acontecimento datado, quando houver. Tudo sai das camadas;
+  // nada é inventado. Funciona para qualquer personagem (Davi, Moisés, Elias, Pedro, Paulo…).
+  let jornada = null;
+  const LIVROS_NARRATIVA = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 27, 32, 40, 41, 42, 43, 44]);   // Gn–2Rs, Ed, Ne, Et, Dn, Jn, Evangelhos, Atos
+  function montarJornada(iPessoa) {
+    const cP = camada('personagens'); if (!cP || !cP.api) return null; const pe = cP.api.pessoas[iPessoa]; if (!pe) return null;
+    const xP = indiceDe(cP), xL = indiceDe(camada('linguas')), xH = indiceDe(camada('historia')), tempo = camada('tempo').api;
+    const porCap = new Map(); for (const k of pe.v) { const d = decompor(k); if (!LIVROS_NARRATIVA.has(d.b)) continue; const ch = d.b * 1000 + d.c; (porCap.get(ch) || porCap.set(ch, []).get(ch)).push(k); }
+    let caps = [...porCap.entries()].filter(([, ks]) => ks.length >= 2).sort((a, b) => a[0] - b[0]);
+    // a jornada termina na morte da pessoa, quando a cronologia registra (depois disso o texto só a lembra)
+    const morte = tempo && tempo.eventos ? tempo.eventos.find((e) => e.p && e.p.includes(pe.id) && /^Death of /.test(e.t)) : null;
+    if (morte && morte.v.length) { const fim = Math.max(...morte.v.map((k) => Math.floor(k / 1000))); caps = caps.filter(([ch]) => ch <= fim); }
+    // se a mesma história aparece em Samuel/Reis e em Crônicas, fica a narrativa principal (Crônicas não entra na jornada)
+    const passos = caps.slice(0, 48).map(([ch, ks]) => {
+      const b = Math.floor(ch / 1000), c = ch % 1000, cap = BIB[b - 1].chapters[c - 1], todos = cap.map((_, i) => chave(b, c, i + 1));
+      // versículo-chave: onde a pessoa aparece junto com mais gente e lugares
+      const peso = (k) => (xP && xP.m.get(k) ? xP.m.get(k).length : 0) + (atlasC && atlasC.porVerso.get(k) ? atlasC.porVerso.get(k).length * 1.5 : 0);
+      const chaveV = ks.slice().sort((a, b2) => peso(b2) - peso(a) || a - b2)[0];
+      const gente = new Map(); if (xP) for (const k of todos) for (const i of xP.m.get(k) || []) if (i !== iPessoa) gente.set(i, (gente.get(i) || 0) + 1);
+      const pessoas = [...gente.entries()].sort((a, b2) => b2[1] - a[1]).slice(0, 6).map(([i]) => i);
+      const lug = new Map(); if (atlasC) todos.forEach((k, ordem) => { for (const li of atlasC.porVerso.get(k) || []) { const x = lug.get(li) || { n: 0, ordem }; x.n++; lug.set(li, x); } });
+      const noChave = new Set(atlasC ? atlasC.porVerso.get(chaveV) || [] : []), pesoL = (li, x) => x.n + (noChave.has(li) ? 3 : 0) + (1 - x.ordem / todos.length);   // mais citado, presente no versículo-chave, citado cedo
+      const lugares = [...lug.entries()].sort((a, b2) => pesoL(b2[0], b2[1]) - pesoL(a[0], a[1])).map(([li]) => li);
+      const lugarVoo = lugares.find((li) => atlasC.lugares[li].conf >= 300);
+      let palavra = null; if (xL) { const cand = (xL.m.get(chaveV) || []).filter((i) => xL.tam[i] >= 3 && xL.tam[i] <= 400).sort((a, b2) => xL.tam[a] - xL.tam[b2]); palavra = cand[0] != null ? cand[0] : null; }
+      const evs = tempo && tempo.eventos ? tempo.eventos.filter((e) => e.v.some((k) => Math.floor(k / 1000) === ch) && e.v.length < 200).sort((a, b2) => a.v.length - b2.v.length).slice(0, 2) : [];
+      const temas = xH ? [...new Set(todos.flatMap((k) => xH.m.get(k) || []))].slice(0, 3) : [];
+      return { b, c, ks, chaveV, pessoas, lugares: lugares.slice(0, 4), lugarVoo, palavra, evs, temas, livro: BIB[b - 1].name };
+    });
+    const fora = pe.v.filter((k) => !LIVROS_NARRATIVA.has(decompor(k).b));
+    return { pe, iPessoa, passos, fora, n: 0 };
+  }
+  const painelJ = document.createElement('div'); painelJ.className = 'cu-jornada'; painelJ.hidden = true; ui.appendChild(painelJ);
+  function voarTerraPara(l, alt) {   // a câmera voa até o lugar no globo (sem abrir a ficha)
+    if (!atlasC) return; camada('atlas').visivel = true; if (!modoTerra) entrarTerra(null);
+    const m = modoTerra, de = { lat: m.lat, lon: m.lon, alt: m.alt }, ang = Math.acos(Math.max(-1, Math.min(1, vLL(de).dot(vLL(l)))));
+    m.voo = { de, para: { lat: l.lat, lon: l.lon, alt }, topo: Math.max(de.alt, alt, RAIO_GLOBO * Math.min(1.2, ang * 1.6)), t0: performance.now(), dur: 2200 + ang * 700 }; m.cursor = null; m.ancora = null; m.aoChegar = null;
+    atlasC.acender([l.i]);
+  }
+  function iniciarJornada(iPessoa) {
+    const j = montarJornada(iPessoa); if (!j || !j.passos.length) { chipLugar.innerHTML = 'Esta pessoa não aparece em capítulos narrativos suficientes para uma jornada. <button type="button" aria-label="Fechar">×</button>'; chipLugar.hidden = false; chipLugar.querySelector('button').onclick = () => { chipLugar.hidden = true; }; return false; }
+    jornada = j; invest.hidden = true; painelInv.hidden = true; document.body.classList.add('cu-em-jornada');
+    mostrarPasso(0); return true;
+  }
+  function sairJornada() { jornada = null; painelJ.hidden = true; document.body.classList.remove('cu-em-jornada'); if (modoTerra) sairTerra(); limparComposicao(); if (investigacao) desenharInvestigacao(); vistaGeral(); }
+  function mostrarPasso(n) {
+    const j = jornada; if (!j) return; j.n = Math.max(0, Math.min(j.passos.length - 1, n)); const P = j.passos[j.n], cP = camada('personagens'), cL = camada('linguas');
+    // o universo acompanha: versículos do capítulo acesos; a pessoa e quem está com ela acesos na lâmina de Personagens
+    realceCamada = new Set(P.ks.map((k) => vIdx.get(k)).filter((x) => x != null)); fiosCamada = []; fios = [];
+    if (cP.api) cP.api.realcar([j.iPessoa, ...P.pessoas]);
+    // a câmera: voa até o lugar no globo; se o capítulo não tem lugar identificado, vai até o versículo na galáxia
+    if (P.lugarVoo != null) { const l = atlasC.lugares[P.lugarVoo]; voarTerraPara(l, Math.max(6, RAIO_GLOBO * 0.012)); atlasC.acender(P.lugares); }
+    else { if (modoTerra) sairTerra(); const jj = vIdx.get(P.chaveV); if (jj != null) voar(vBase[jj * 3], vBase[jj * 3 + 1], 260); }
+    const pess = P.pessoas.map((i) => `<button type="button" data-camada="personagens" data-item="${i}">${esc(cP.api.nome(i))}</button>`).join('');
+    const lugs = P.lugares.map((li) => { const l = atlasC.lugares[li]; return `<button type="button" data-jl="${li}">📍 ${esc(l.nome)}${l.conf < 300 ? ' (local incerto)' : ''}</button>`; }).join('');
+    const pal = P.palavra != null && cL.api ? (() => { const l = cL.api.lemas[P.palavra]; return `<button type="button" data-camada="linguas" data-item="${P.palavra}"><span dir="auto">${esc(l.w)}</span> · ${esc(l.t)} · “${esc(l.g)}” (inglês)</button>`; })() : '';
+    const evs = P.evs.map((e) => `<button type="button" data-camada="tempo" data-item="${e.i}">🕰 ${esc(e.nome)} · ${e.a < 0 ? 'c. ' + -e.a + ' a.C.' : 'c. ' + e.a + ' d.C.'}</button>`).join('');
+    const temas = P.temas.map((i) => `<button type="button" data-camada="historia" data-item="${i}">${esc(camada('historia').api.nome(i))}</button>`).join('');
+    const ref = nomeRef(P.chaveV), nomeP = cP.api.nome(j.iPessoa).replace(/ · .*$/, '');
+    painelJ.innerHTML = `<div class="cu-j-topo"><small>Jornada de ${esc(nomeP)} · passo ${j.n + 1} de ${j.passos.length}</small><button type="button" data-j="sair" aria-label="Sair da jornada">✕</button></div>
+      <div class="cu-j-barra"><span style="width:${((j.n + 1) / j.passos.length) * 100}%"></span></div>
+      <h3>${esc(P.livro)} ${P.c}${P.evs[0] ? ' · ' + esc(P.evs[0].nome) : ''}</h3>
+      <blockquote>“${esc(textoDe(P.chaveV))}”<cite>${esc(ref)} · Almeida</cite></blockquote>
+      <div class="cu-j-linhas">
+        ${lugs ? `<div><small>Onde</small><div class="cu-chips">${lugs}</div></div>` : ''}
+        ${pess ? `<div><small>Quem está junto</small><div class="cu-chips">${pess}</div></div>` : ''}
+        ${pal ? `<div><small>Uma palavra do original neste versículo</small><div class="cu-chips">${pal}</div></div>` : ''}
+        ${evs || temas ? `<div><small>Contexto</small><div class="cu-chips">${evs}${temas}</div></div>` : ''}
+      </div>
+      <p class="cu-j-pergunta">✎ Para refletir: leia ${esc(P.livro)} ${P.c} inteiro. O que ${esc(nomeP)} faz aqui, e o que isso revela sobre ele e sobre Deus?</p>
+      <div class="cu-j-bts"><button type="button" data-j="ant" ${j.n === 0 ? 'disabled' : ''}>◀ Anterior</button><button type="button" data-j="ler">📖 Ler o capítulo</button><button type="button" data-j="prox" class="cu-j-prox">${j.n === j.passos.length - 1 ? 'Concluir ✓' : 'Próximo ▶'}</button></div>`;
+    painelJ.hidden = false; ligarChips(painelJ);
+  }
+  function concluirJornada() {
+    const j = jornada; if (!j) return; const cP = camada('personagens'), nomeP = cP.api.nome(j.iPessoa).replace(/ · .*$/, '');
+    const porLivro = new Map(); for (const k of j.fora) { const b = decompor(k).b; porLivro.set(b, (porLivro.get(b) || 0) + 1); }
+    painelJ.innerHTML = `<div class="cu-j-topo"><small>Jornada de ${esc(nomeP)} · concluída</small><button type="button" data-j="sair" aria-label="Sair">✕</button></div><div class="cu-j-barra"><span style="width:100%"></span></div>
+      <h3>Você percorreu ${j.passos.length} capítulos da vida de ${esc(nomeP)}</h3>
+      ${j.fora.length ? `<p>${esc(nomeP)} também aparece em ${j.fora.length} versículo(s) fora das narrativas:</p><div class="cu-chips">${[...porLivro.entries()].sort((a, b) => a[0] - b[0]).map(([b, n]) => `<button type="button" data-busca="${esc(BIB[b - 1].name)}">${esc(BIB[b - 1].name)} · ${n}</button>`).join('')}</div>` : ''}
+      <div class="cu-j-bts"><button type="button" data-j="recomecar">↺ Recomeçar</button><button type="button" data-j="dossie">📜 Abrir o dossiê</button><button type="button" data-j="preparar" class="cu-j-prox">✦ Preparar estudo sobre ${esc(nomeP)}</button></div>`;
+    ligarChips(painelJ);
+  }
+  painelJ.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-j], [data-jl]'); if (!b || !jornada) return;
+    if (b.dataset.jl) { voarTerraPara(atlasC.lugares[+b.dataset.jl], Math.max(6, RAIO_GLOBO * 0.012)); return; }
+    const a = b.dataset.j, j = jornada;
+    if (a === 'sair') sairJornada();
+    else if (a === 'ant') mostrarPasso(j.n - 1);
+    else if (a === 'prox') { if (j.n >= j.passos.length - 1) concluirJornada(); else mostrarPasso(j.n + 1); }
+    else if (a === 'ler') { const P = j.passos[j.n]; if (modoTerra) sairTerra(); const c = livros[P.b - 1].capPos[P.c - 1]; if (c) voar(c.x, c.y, 180); }
+    else if (a === 'recomecar') mostrarPasso(0);
+    else if (a === 'dossie') { const i = j.iPessoa; sairJornada(); abrirFichaCamada(camada('personagens'), i, true); }
+    else if (a === 'preparar') { const bt = document.getElementById('bt-preparar'); const nome = camada('personagens').api.nome(j.iPessoa).replace(/ · .*$/, ''); sairJornada(); if (bt) { bt.click(); setTimeout(() => { const f = document.querySelector('#preparar [name=tema]'); const est = document.querySelector('#preparar input[value=estudo]'); if (f) f.value = nome; if (est) est.checked = true; }, 120); } }
+  });
+
   // na ficha de qualquer item aberta a partir da investigação: voltar a ela
   function voltarInvestigacao() { if (!investigacao) return; const inv = investigacao; invest.hidden = true; limparComposicao(); investigacao = inv; realceCamada = new Set(inv.sementes.map((k) => vIdx.get(k)).filter((j) => j != null)); fiosCamada = []; inv.acesas = 0; ORDEM_FOLHAS.forEach((id) => acenderFolha(id)); desenharInvestigacao(); }
 
@@ -1139,6 +1251,7 @@ export function criarCeu(container, estado, acoes) {
     const ir = () => { const p = c.api.pos(i); if (p) voarAltura(p.x, p.y, c.z, 1400); };
     invest.querySelector('.cu-ir').onclick = ir;
     const ac = invest.querySelector('.cu-acender'); if (ac) ac.onclick = () => { const js = [...realceCamada]; if (js.length) { camada('biblia').visivel = true; montarPainel(); enquadrarXY(js.map((j) => vBase[j * 3]), js.map((j) => vBase[j * 3 + 1])); } };
+    if (c.id === 'personagens') { const bj = document.createElement('button'); bj.type = 'button'; bj.className = 'cu-bt-jornada'; bj.textContent = '▶ Ver a jornada de ' + String(f.titulo).replace(/ \(.*\)$/, ''); bj.onclick = () => iniciarJornada(i); invest.querySelector(':scope > .cu-acoes').prepend(bj); }
     if (investigacao) { const bv = document.createElement('button'); bv.type = 'button'; bv.textContent = '↩ Voltar à investigação'; bv.onclick = voltarInvestigacao; invest.querySelector(':scope > .cu-acoes').appendChild(bv); }
     if (irAte) ir();
   }
@@ -1710,7 +1823,7 @@ export function criarCeu(container, estado, acoes) {
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
-      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), buscarFicha: (t) => buscarCamadas(norm(t), 1), investigar: (t) => investigarAssunto(t), investigacao: () => (investigacao ? { cand: investigacao.cand.rot, tipo: investigacao.cand.tipo, sementes: investigacao.sementes.length, acesas: investigacao.acesas || 0, folhas: Object.fromEntries(ORDEM_FOLHAS.map((id) => [id, investigacao.F[id] ? investigacao.F[id].map((x) => x.rot + ' [' + x.conf + ']') : null])), outros: investigacao.outros.map((o) => o.rot + ' (' + o.tipo + ')'), fontes: investigacao.fontes ? investigacao.fontes.blocos.map((b) => b.titulo + ': ' + b.itens.length) : null, incerto: !!investigacao.lugarIncerto } : null), abaInvestigacao: (a) => { if (investigacao) { investigacao.aba = a; desenharInvestigacao(); } },
+      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), buscarFicha: (t) => buscarCamadas(norm(t), 1), jornada: (n) => { const cP = camada('personagens'); const i = cP && cP.api ? cP.api.pessoas.findIndex((x) => x.nome === n || x.n === n) : -1; return i >= 0 && iniciarJornada(i); }, jornadaEstado: () => (jornada ? { n: jornada.n, total: jornada.passos.length, passos: jornada.passos.map((P) => P.livro + ' ' + P.c + (P.lugarVoo != null ? ' @' + atlasC.lugares[P.lugarVoo].nome : '') + (P.evs[0] ? ' · ' + P.evs[0].nome : '')) } : null), passoJornada: (k) => mostrarPasso(k), investigar: (t) => investigarAssunto(t), investigacao: () => (investigacao ? { cand: investigacao.cand.rot, tipo: investigacao.cand.tipo, sementes: investigacao.sementes.length, acesas: investigacao.acesas || 0, folhas: Object.fromEntries(ORDEM_FOLHAS.map((id) => [id, investigacao.F[id] ? investigacao.F[id].map((x) => x.rot + ' [' + x.conf + ']') : null])), outros: investigacao.outros.map((o) => o.rot + ' (' + o.tipo + ')'), fontes: investigacao.fontes ? investigacao.fontes.blocos.map((b) => b.titulo + ': ' + b.itens.length) : null, incerto: !!investigacao.lugarIncerto } : null), abaInvestigacao: (a) => { if (investigacao) { investigacao.aba = a; desenharInvestigacao(); } },
       fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
       abrirTerra: () => abrirTerra(), imagemTerra: () => (atlasC ? atlasC.imagemReal() : false), subsolar: () => pontoSubsolar(Date.now()),
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
