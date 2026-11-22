@@ -1629,7 +1629,7 @@ export function criarCeu(container, estado, acoes) {
   const cinemaVisto = new Set(); let cinemaMod = null;
   let mundoAtivo = null;
   window.NEXUS_MUNDO = async (id) => {   // o ambiente inteiro vira o mundo do tema (protótipo: 'trombetas')
-    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=6'); } catch (_) { return false; }
+    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=7'); } catch (_) { return false; }
     if (!cinemaMod.CINEMA[id]) return false; if (mundoAtivo) mundoAtivo.terminar();
     document.body.classList.add('mundo-ativo'); mundoAtivo = cinemaMod.tocarCinema(id, ui, { estudo: true, aoTerminar: () => { mundoAtivo = null; document.body.classList.remove('mundo-ativo'); } });
     return true;
@@ -1638,7 +1638,7 @@ export function criarCeu(container, estado, acoes) {
   async function entrarLivro(lv) {
     sobreLivro = null; info.hidden = true;
     const voa = () => voar(lv.cx, lv.cy, lv.raio * 4.2);
-    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=6'); } catch (_) { voa(); return; }
+    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=7'); } catch (_) { voa(); return; }
     const lista = await fetch('/nexus/livros/cinema.json?v=' + Math.floor(Date.now() / 60000)).then((r) => r.json()).catch(() => []);
     if (!cinemaMod.CINEMA[lv.num] || !lista.includes(lv.num) || cinemaVisto.has(lv.num)) { voa(); return; }
     cinemaVisto.add(lv.num); cinemaMod.tocarCinema(lv.num, ui, { aoTerminar: voa });
@@ -1652,13 +1652,13 @@ export function criarCeu(container, estado, acoes) {
     if (!modoTerra) abrirTerra(); setTimeout(() => voarTerraPara(l, Math.max(6, RAIO_GLOBO * 0.01)), 60);
     let aviso = ui.querySelector('.cu-aviso-templo'); if (!aviso) { aviso = document.createElement('div'); aviso.className = 'cu-aviso-templo'; aviso.style.cssText = 'position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:8;background:rgba(5,11,26,.9);border:1px solid rgba(233,200,120,.5);color:#FFE8B0;border-radius:999px;padding:8px 16px;font:600 13px Inter,system-ui,sans-serif;pointer-events:none;white-space:nowrap'; ui.appendChild(aviso); }
     aviso.textContent = qual === 'herodes' ? '🏛 Templo de Herodes · o templo do tempo de Jesus · Jerusalém, século I · o templo vai surgir aqui' : '🏛 Templo de Salomão · Monte Moriá, Jerusalém (2 Crônicas 3:1) · o templo vai surgir aqui'; ui.dataset.templo = qual; aviso.hidden = false;
-    setTimeout(async () => { aviso.hidden = true; if (temploAberto) return; const m = await import(qual === 'herodes' ? '/nexus/templo-herodes.js?v=6' : '/nexus/templo-maquete.js?v=6'); temploAberto = await m.abrirTemplo(THREE, ui, { aoFechar: () => { temploAberto = null; } }); }, 3400);
+    setTimeout(async () => { aviso.hidden = true; if (temploAberto) return; const m = await import(qual === 'herodes' ? '/nexus/templo-herodes.js?v=6' : '/nexus/templo-maquete.js?v=7'); temploAberto = await m.abrirTemplo(THREE, ui, { aoFechar: () => { temploAberto = null; } }); }, 3400);
     return true;
   }
   // LUGARES DE JESUS EM IMAGEM REAL: o globo voa até o lugar e abre a foto de hoje ao lado da reconstituição do ano 30
   let lugarRealAberto = null;
   async function abrirLugarReal(id) {
-    const m = await import('/nexus/lugares-reais.js?v=5'); const L = m.LUGARES[id]; if (!L || !atlasC) return false;
+    const m = await import('/nexus/lugares-reais.js?v=6'); const L = m.LUGARES[id]; if (!L || !atlasC) return false;
     const l = atlasC.lugares.find((x) => x.en === L.atlas); if (!modoTerra) abrirTerra(); if (l) setTimeout(() => voarTerraPara(l, Math.max(6, RAIO_GLOBO * 0.008)), 60);
     let aviso = ui.querySelector('.cu-aviso-templo'); if (!aviso) { aviso = document.createElement('div'); aviso.className = 'cu-aviso-templo'; aviso.style.cssText = 'position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:8;background:rgba(5,11,26,.9);border:1px solid rgba(233,200,120,.5);color:#FFE8B0;border-radius:999px;padding:8px 16px;font:600 13px Inter,system-ui,sans-serif;pointer-events:none;white-space:nowrap'; ui.appendChild(aviso); }
     aviso.textContent = `📍 ${L.titulo} · ${L.sub.toLowerCase()} · abrindo a imagem real`; aviso.hidden = false;
@@ -1672,7 +1672,7 @@ export function criarCeu(container, estado, acoes) {
     if (/^(o )?(tumulo|sepulcro) de lazaro$/.test(q)) { abrirLugarReal('lazaro'); return true; }
     if (/^nazare$/.test(q)) { abrirLugarReal('nazare'); return true; }
     if (/(sete|7) trombetas|^trombetas$/.test(q)) { window.NEXUS_MUNDO('trombetas'); return true; }
-    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { fetch('/nexus/livros/eden-mapa.jpg', { method: 'HEAD' }).then((r) => (r.ok ? import('/nexus/mundo-terreno.js?v=6').then((m) => m.abrirMundo(THREE, 'eden', ui)) : import('/nexus/panorama360.js?v=5').then((m) => m.abrirPanorama(THREE, 'eden', ui)))); return true; }   // sobrevoo como no Google Earth; sem o mapa, o 360°
+    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { fetch((window.NEXUS_MIDIA || '/nexus') + '/livros/eden-mapa.jpg', { method: 'HEAD' }).then((r) => (r.ok ? import('/nexus/mundo-terreno.js?v=7').then((m) => m.abrirMundo(THREE, 'eden', ui)) : import('/nexus/panorama360.js?v=6').then((m) => m.abrirPanorama(THREE, 'eden', ui)))); return true; }   // sobrevoo como no Google Earth; sem o mapa, o 360°
     if (/^(cafarnaum|capernaum|casa de pedro)$/.test(q)) { abrirLugarReal('cafarnaum'); return true; }
     if (/^(magdala|sinagoga de magdala)$/.test(q)) { abrirLugarReal('magdala'); return true; }
     if (/^(o )?(mar da galileia|lago de genezare|mar de tiberiades|mar de genezare|lago da galileia)$/.test(q)) { abrirLugarReal('mar'); return true; }

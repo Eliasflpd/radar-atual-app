@@ -300,7 +300,7 @@ export async function abrirTemplo(THREE, host, { aoFechar } = {}) {
     let GLTFLoader = null;
     let lista = []; try { lista = await (await fetch('/nexus/templo3d/pecas.json?v=' + Date.now())).json(); } catch (_) { return; }   // as peças já convertidas
     for (const nome of Object.keys(PECAS3D)) {
-      if (!lista.includes(nome)) continue; const url = `/nexus/templo3d/${nome}.glb`;
+      if (!lista.includes(nome)) continue; const url = `${window.NEXUS_MIDIA || '/nexus'}/templo3d/${nome}.glb`;
       if (!GLTFLoader) GLTFLoader = (await import(CDN + 'loaders/GLTFLoader.js')).GLTFLoader;
       const gltf = await new GLTFLoader().loadAsync(url); const modelo = gltf.scene; const cfg = PECAS3D[nome];
       const cx = new THREE.Box3().setFromObject(modelo), tam = cx.getSize(new THREE.Vector3()), centro = cx.getCenter(new THREE.Vector3());

@@ -4,7 +4,7 @@
 // Os pontos dourados descem para um 360° daquele lugar (panorama360.js).
 
 export const MUNDOS = {
-  eden: { titulo: 'O jardim do Éden', sub: 'GÊNESIS 2:8–14 · SOBREVOO', mapa: '/nexus/livros/eden-mapa.jpg', altura: 46,
+  eden: { titulo: 'O jardim do Éden', sub: 'GÊNESIS 2:8–14 · SOBREVOO', mapa: (window.NEXUS_MIDIA || '/nexus') + '/livros/eden-mapa.jpg', altura: 46,
     credito: 'Reconstituição artística (imagens do ChatGPT a pedido do NEXUS; ilustrativas). O texto não descreve a aparência do jardim; os rios Tigre e Eufrates são conhecidos, Pisom e Giom são debatidos.',
     pontos: [
       { u: 0.47, v: 0.44, rot: 'A árvore da vida', panorama: 'eden', ref: 'Gênesis 2:9' },
@@ -79,13 +79,13 @@ export async function abrirMundo(THREE, id, host, { aoFechar } = {}) {
   function voar(p, d) { voo = { de: { a: alvo.clone(), d: dist }, para: { a: new THREE.Vector3(p.x, alvo.y, p.z), d }, t0: performance.now() }; }
   // pontos para descer em 360°
   let p360 = null;
-  const pts = Mn.pontos.map((p) => { const d = document.createElement('div'); d.className = 'mt-pt'; d.innerHTML = `<span>${p.rot}</span><b></b>`; d.onclick = async () => { const w = mundo(p.u, p.v); voar(w, 120); setTimeout(async () => { const m = await import('/nexus/panorama360.js?v=5'); if (m.PANORAMAS[p.panorama]) p360 = await m.abrirPanorama(THREE, p.panorama, raiz, { aoFechar: () => { p360 = null; } }); }, 1300); }; ptsEl.appendChild(d); return { p, d, w: mundo(p.u, p.v) }; });
+  const pts = Mn.pontos.map((p) => { const d = document.createElement('div'); d.className = 'mt-pt'; d.innerHTML = `<span>${p.rot}</span><b></b>`; d.onclick = async () => { const w = mundo(p.u, p.v); voar(w, 120); setTimeout(async () => { const m = await import('/nexus/panorama360.js?v=6'); if (m.PANORAMAS[p.panorama]) p360 = await m.abrirPanorama(THREE, p.panorama, raiz, { aoFechar: () => { p360 = null; } }); }, 1300); }; ptsEl.appendChild(d); return { p, d, w: mundo(p.u, p.v) }; });
   function ajustar() { const w = raiz.clientWidth, h = raiz.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   const obs = new ResizeObserver(ajustar); obs.observe(raiz); ajustar();
   // chegada: de muito alto, descendo e girando até ver o jardim inclinado
   const t0 = performance.now(); let ativo = true; const arv = mundo(Mn.pontos[0].u, Mn.pontos[0].v); dist = 9000; incl = 1.45; alvo.set(arv.x, arv.y, arv.z);
   const DUR = 9000; let pousou = false;
-  async function pousar() { const p0 = Mn.pontos[0]; if (!p0 || !p0.panorama) return; const m = await import('/nexus/panorama360.js?v=5'); if (m.PANORAMAS[p0.panorama] && !p360) p360 = await m.abrirPanorama(THREE, p0.panorama, raiz, { aoFechar: () => { p360 = null; } }); }
+  async function pousar() { const p0 = Mn.pontos[0]; if (!p0 || !p0.panorama) return; const m = await import('/nexus/panorama360.js?v=6'); if (m.PANORAMAS[p0.panorama] && !p360) p360 = await m.abrirPanorama(THREE, p0.panorama, raiz, { aoFechar: () => { p360 = null; } }); }
   function quadro(t) { if (!ativo) return;
     const q = Math.min(1, (t - t0) / DUR); if (q < 1) { const e = 1 - Math.pow(1 - q, 2.6), e2 = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2;
       dist = Math.exp(Math.log(9000) + (Math.log(520) - Math.log(9000)) * e); incl = 1.45 + (0.32 - 1.45) * Math.pow(e2, 0.8); azim = Math.PI / 2 + 1.1 * e2;

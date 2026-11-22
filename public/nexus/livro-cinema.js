@@ -67,13 +67,13 @@ export function tocarCinema(num, host, { aoTerminar, estudo = false } = {}) {
   <div class="lc-dica">${estudo ? 'Clique na imagem ou nos pontos para passar' : 'Clique para avançar'}</div>${C.nota ? `<div class="lc-nota">${C.nota}</div>` : ''}${estudo ? '<button type="button" class="lc-pulp">⛶ Modo púlpito</button>' : ''}<button type="button" class="lc-pular">${estudo ? '✕ Sair do mundo' : 'Entrar no livro ›'}</button>`;
   if (estudo) raiz.classList.add('estudo'); host.appendChild(raiz);
   const box = raiz.querySelector('.lc-quadros'), txt = raiz.querySelector('.lc-txt'), ref = raiz.querySelector('.lc-ref'), pts = [...raiz.querySelectorAll('.lc-pontos i')];
-  const els = C.quadros.map((q) => { const d = document.createElement('div'); d.className = 'lc-q'; d.style.backgroundImage = `url(/nexus/livros/${q.img}.jpg)`; box.appendChild(d); return d; });
+  const els = C.quadros.map((q) => { const d = document.createElement('div'); d.className = 'lc-q'; d.style.backgroundImage = `url(${window.NEXUS_MIDIA || '/nexus'}/livros/${q.img}.jpg)`; box.appendChild(d); return d; });
   // pré-carrega
-  C.quadros.forEach((q) => { const im = new Image(); im.src = `/nexus/livros/${q.img}.jpg`; });
+  C.quadros.forEach((q) => { const im = new Image(); im.src = `${window.NEXUS_MIDIA || '/nexus'}/livros/${q.img}.jpg`; });
   let n = -1, t0 = 0, auto = 0, fim = false;
   function mostrar(k) {
     if (k >= C.quadros.length) { terminar(); return; }
-    els.forEach((e, i) => e.classList.toggle('vis', i === k)); n = k; t0 = performance.now(); { const f = raiz.querySelector('.lc-fundo'); if (f) f.style.backgroundImage = `url(/nexus/livros/${C.quadros[k].img}.jpg)`; }   // o fundo inteiro leva as cores da cena (desfocado), sem área preta
+    els.forEach((e, i) => e.classList.toggle('vis', i === k)); n = k; t0 = performance.now(); { const f = raiz.querySelector('.lc-fundo'); if (f) f.style.backgroundImage = `url(${window.NEXUS_MIDIA || '/nexus'}/livros/${C.quadros[k].img}.jpg)`; }   // o fundo inteiro leva as cores da cena (desfocado), sem área preta
     pts.forEach((p, i) => p.classList.toggle('a', i === k));
     const q = C.quadros[k]; const pe = raiz.querySelector('.lc-ponto'), ne = raiz.querySelector('.lc-notas');
     pe.textContent = q.ponto ? `${k + 1}. ${q.ponto}` : ''; ne.innerHTML = estudo && q.notas ? q.notas.map((t) => `<div>${t}</div>`).join('') : ''; [...ne.children].forEach((d, i) => setTimeout(() => d.classList.add('v'), 1600 + i * 500));
