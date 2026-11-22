@@ -122,6 +122,37 @@ export function criarCeu(container, estado, acoes) {
     .cu-dossie{border-top:1px solid rgba(233,200,120,.18);padding:4px 0}.cu-dossie summary{cursor:pointer;font:700 12px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#FFE3A3;padding:6px 0;list-style-position:inside}.cu-dossie[open] summary{color:#FFF6DC}.cu-seta{color:rgba(233,200,120,.6);margin:0 2px}
     .cu-investig{pointer-events:auto;position:absolute;left:62px;top:54px;width:min(390px,calc(100% - 80px));max-height:calc(100% - 110px);overflow:auto;background:rgba(3,8,22,.93);border:1px solid rgba(233,200,120,.5);border-radius:14px;padding:12px 14px;color:#EEF1FA;font:13px/1.45 Inter,system-ui,sans-serif}
     .cu-investig[hidden]{display:none}
+    .cu-estudo{pointer-events:none;position:absolute;inset:0;background:radial-gradient(ellipse at 45% 55%,rgba(3,6,16,.35),rgba(3,6,16,.86) 75%)}
+    .cu-estudo[hidden]{display:none}
+    .cu-estudo>*{pointer-events:auto}
+    .cu-e-cab{position:absolute;left:50%;top:10px;transform:translateX(-62%);display:flex;align-items:center;gap:12px;color:#FFE3A3;width:min(760px,60%)}
+    .cu-e-marca{font-size:28px;color:#F2C86A;text-shadow:0 0 18px rgba(242,200,106,.8)}
+    .cu-e-cab small{color:rgba(230,215,180,.75);letter-spacing:.12em;text-transform:uppercase;font:700 11px Inter,system-ui,sans-serif}
+    .cu-e-cab h2{margin:0;font:700 30px "Cormorant Garamond",Georgia,serif;color:#FFF3D6;text-shadow:0 0 22px rgba(242,200,106,.45)}
+    .cu-e-bts{margin-left:auto;display:flex;gap:6px}.cu-e-bts button{border:1px solid rgba(233,200,120,.55);background:rgba(20,16,6,.75);color:#FFE3A3;border-radius:999px;padding:6px 12px;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer}
+    .cu-e-pilha{position:absolute;left:50%;top:64px;bottom:20px;transform:translateX(-62%);width:min(820px,58%);display:flex;flex-direction:column;justify-content:center;gap:6px;perspective:1300px;overflow:auto;padding:6px 10px}
+    .cu-e-cartao{position:relative;transform:rotateX(24deg) translateY(0);transform-origin:center bottom;border-radius:14px;border:1.5px solid color-mix(in srgb,var(--c) 75%,#fff 10%);background:linear-gradient(100deg,rgba(10,10,20,.92),color-mix(in srgb,var(--c) 22%,rgba(10,10,20,.85)) 55%,rgba(10,10,20,.9));box-shadow:0 0 18px color-mix(in srgb,var(--c) 45%,transparent),inset 0 0 22px rgba(0,0,0,.4);cursor:pointer;animation:cuEntra .6s ease-out both;animation-delay:calc(var(--k) * .09s);transition:transform .35s,box-shadow .35s}
+    .cu-e-cartao:hover{transform:rotateX(14deg) translateY(-3px);box-shadow:0 0 30px color-mix(in srgb,var(--c) 70%,transparent)}
+    .cu-e-cartao.aberto{transform:none;box-shadow:0 0 34px color-mix(in srgb,var(--c) 75%,transparent)}
+    .cu-e-cartao.vazio{opacity:.45;filter:saturate(.4)}
+    @keyframes cuEntra{from{opacity:0;transform:rotateX(60deg) translateY(40px)}to{opacity:1}}
+    .cu-e-linha{display:grid;grid-template-columns:42px 190px 120px 1fr;align-items:center;gap:10px;padding:10px 14px;min-height:46px}
+    .cu-e-num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:800 14px Inter,system-ui,sans-serif;color:#1B1405;background:radial-gradient(circle,#FFE6A6,var(--c));box-shadow:0 0 12px var(--c)}
+    .cu-e-nome{font:800 16px Inter,system-ui,sans-serif;letter-spacing:.06em;color:#FFF6E0;text-shadow:0 0 10px rgba(0,0,0,.8)}
+    .cu-e-resumo{font:600 13px Inter,system-ui,sans-serif;color:#F3EAD2;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cu-e-img{width:110px;height:44px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.25)}
+    .cu-e-palavra{font:700 30px "Times New Roman",serif;color:#FFF3D6;text-shadow:0 0 14px var(--c);text-align:center}
+    .cu-e-data{font:700 13px Inter,system-ui,sans-serif;color:#FFE3A3;text-align:center}
+    .cu-e-icone{font-size:24px;text-align:center;color:#FFE3A3;filter:drop-shadow(0 0 8px var(--c))}
+    .cu-e-itens{padding:0 14px 12px;max-height:260px;overflow:auto;cursor:default}
+    .cu-e-fontes{position:absolute;left:62px;top:84px;width:210px;background:rgba(10,8,4,.78);border:1px solid rgba(233,200,120,.4);border-radius:14px;padding:10px 12px;color:#EDE4CC;font:12px/1.5 Inter,system-ui,sans-serif}
+    .cu-e-fontes h4{margin:6px 0 4px;font:700 14px "Cormorant Garamond",Georgia,serif;color:#FFE3A3}.cu-e-fontes ul{margin:0;padding-left:16px}.cu-e-fontes p{margin:0 0 6px}
+    .cu-estudo{z-index:2}body.cu-modo-estudo .cu-investig{z-index:3;left:auto;right:14px;top:14px;width:min(380px,30%);max-height:calc(100% - 28px)}
+    body.cu-modo-estudo .cu-camadas,body.cu-modo-estudo .cu-relogio,body.cu-modo-estudo .cu-busca,body.cu-modo-estudo .cu-nivel,body.cu-modo-estudo .cu-dica{display:none!important}
+    body.cu-modo-estudo .cu-invest{z-index:5;left:50%;right:auto;transform:translateX(-50%);top:60px;width:min(460px,46%)}
+    @media (max-width:1400px){.cu-e-fontes{display:none}.cu-e-pilha,.cu-e-cab{transform:translateX(-58%)}}
+    @media (max-width:1100px){.cu-e-linha{grid-template-columns:36px 1fr 90px}.cu-e-resumo{grid-column:1/-1;text-align:left;white-space:normal}.cu-e-pilha,.cu-e-cab{left:12px;transform:none;width:calc(100% - 54px - min(340px,40%))}body.cu-modo-estudo .cu-investig{width:min(340px,40%)}}
+    @media (max-width:760px){.cu-e-pilha{top:56px;bottom:46%;width:calc(100% - 24px)}.cu-e-cab{width:calc(100% - 24px)}.cu-e-cab h2{font-size:22px}body.cu-modo-estudo .cu-investig{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:44%}}
     .cu-jornada{pointer-events:auto;position:absolute;left:50%;bottom:34px;transform:translateX(-50%);width:min(760px,calc(100% - 120px));max-height:62%;overflow:auto;background:rgba(3,8,22,.94);border:1px solid rgba(233,200,120,.55);border-radius:16px;padding:12px 18px 14px;color:#EEF1FA;font:13.5px/1.5 Inter,system-ui,sans-serif;box-shadow:0 18px 50px rgba(0,0,0,.55)}
     .cu-jornada[hidden]{display:none}
     .cu-j-topo{display:flex;justify-content:space-between;align-items:center;color:rgba(200,212,236,.85)}.cu-j-topo button{border:0;background:none;color:#FFE3A3;font-size:18px;cursor:pointer}
@@ -136,6 +167,7 @@ export function criarCeu(container, estado, acoes) {
     body.cu-em-jornada .cu-camadas,body.cu-em-jornada .cu-relogio,body.cu-em-jornada .cu-dica,body.cu-em-jornada .cu-terra{display:none!important}
     @media (max-width:760px){.cu-jornada{width:calc(100% - 16px);bottom:8px;max-height:70%}.cu-j-linhas{grid-template-columns:1fr}.cu-jornada blockquote{font-size:18px}}
     .cu-investig h3{margin:0 0 6px;font:700 24px "Cormorant Garamond",Georgia,serif;color:#FFE3A3}.cu-investig h5{margin:12px 0 5px;font:700 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9FB7E8}
+    .cu-investig .cu-chips{display:flex;flex-wrap:wrap;gap:5px}.cu-investig .cu-chips button{border:1px solid rgba(233,200,120,.4);background:rgba(201,162,78,.14);color:#FFE8B0;border-radius:999px;padding:3px 9px;font-size:12px;cursor:pointer}
     .cu-investig .cu-fechar-inv{float:right;border:0;background:none;color:#FFE3A3;font-size:18px;cursor:pointer}
     .cu-inv-barra{display:flex;gap:3px;margin:4px 0 2px}.cu-inv-barra i{flex:1;font-style:normal;text-align:center;font:700 10px Inter,system-ui,sans-serif;padding:4px 0;border-radius:6px;background:rgba(255,255,255,.06);color:rgba(220,226,240,.4);transition:all .4s}
     .cu-inv-barra i.acesa{background:color-mix(in srgb,var(--c) 40%,transparent);color:#fff;box-shadow:0 0 10px var(--c)}.cu-inv-barra i.vazia{background:rgba(255,255,255,.1);color:rgba(220,226,240,.6)}
@@ -1001,7 +1033,8 @@ export function criarCeu(container, estado, acoes) {
     for (const id of ORDEM_FOLHAS.slice(3)) {
       const c = camada(id), x = c && indiceDe(c); if (!x) { F[id] = null; continue; }
       const n = new Map(); for (const k of S) for (const i of x.m.get(k) || []) n.set(i, (n.get(i) || 0) + 1);
-      const dir = [...n.entries()].filter(([i]) => id !== 'linguas' || x.tam[i] < 1500).sort(id === 'linguas' ? (a, b) => x.tam[a[0]] - x.tam[b[0]] : (a, b) => b[1] - a[1] || x.tam[a[0]] - x.tam[b[0]]).slice(0, id === 'linguas' ? 8 : 6).map(([i, q]) => ({ rot: c.api.nome(i), desc: `${q} versículo(s) do assunto${id === 'linguas' ? ' · ' + x.tam[i] + ' versículo(s) na Bíblia toda' : ''}`, conf: CONF_CAMADA[id], acao: { c: id, i } }));
+      const dir = [...n.entries()].filter(([i]) => (id !== 'linguas' || x.tam[i] < 1500) && !(cand.c && cand.c.id === id && cand.i === i))   // o próprio assunto não aparece como achado dele mesmo
+        .sort(id === 'linguas' ? (a, b) => x.tam[a[0]] - x.tam[b[0]] : (a, b) => b[1] - a[1] || x.tam[a[0]] - x.tam[b[0]]).slice(0, id === 'linguas' ? 8 : 6).map(([i, q]) => ({ rot: c.api.nome(i), desc: `${q} versículo(s) do assunto${id === 'linguas' ? ' · ' + x.tam[i] + ' versículo(s) na Bíblia toda' : ''}`, conf: CONF_CAMADA[id], acao: { c: id, i } }));
       if (dir.length < 4 && id !== 'manuscritos' && id !== 'linguas') { const rel = relacionados(S2, cand.c ? { c: cand.c, i: cand.i } : null, 6).find((r) => r.c === c);
         if (rel) rel.lista.filter((q) => !n.has(q.i)).slice(0, 4 - dir.length).forEach((q) => dir.push({ rot: c.api.nome(q.i), desc: `${q.n} versículo(s) em comum${ponte ? ' com o assunto e com ' + ponte : ' com o assunto'}`, conf: 'hipotese', acao: { c: id, i: q.i } })); }
       F[id] = dir;
@@ -1026,8 +1059,8 @@ export function criarCeu(container, estado, acoes) {
     const cand = cands[0], outros = escolhido ? (investigacao ? investigacao.outros : []) : cands.slice(1, 7);
     if (modoTerra) sairTerra();
     limparComposicao();
-    const sementes = [...new Set(cand.versos)].slice(0, 160), F = folhasDa(sementes, cand);
-    investigacao = { texto, cand, outros, sementes, F, fontes: null, aba: 'geral', t0: performance.now(), lugarIncerto: cand.lugar && cand.lugar.conf < 300 ? cand.lugar : null };
+    const sementes = [...new Set(cand.versos)].slice(0, 600), F = folhasDa(sementes, cand);
+    investigacao = { texto, cand, outros, sementes, F, fontes: null, aba: 'geral', t0: performance.now(), lugarIncerto: cand.lugar && cand.lugar.conf < 300 ? cand.lugar : null }; estudoAberto = true; cartaoAberto = null;
     // a composição: folhas afastadas e vistas em perspectiva, como lâminas
     separacao = Math.max(separacao, 2.2); sincronizarPainel();
     const js = sementes.map((k) => vIdx.get(k)).filter((j) => j != null);
@@ -1079,14 +1112,18 @@ export function criarCeu(container, estado, acoes) {
     return `<button type="button" class="cu-inv-item" ${attr}><b>${esc(x.rot)}</b> ${selo(x.conf)}<small>${esc(String(x.desc || '').slice(0, 160))}</small></button>`;
   }
   function desenharInvestigacao() {
-    const inv = investigacao; if (!inv) { painelInv.hidden = true; document.body.classList.remove('cu-com-investig'); return; }
-    painelInv.hidden = false; document.body.classList.add('cu-com-investig');
+    const inv = investigacao; if (!inv) { painelInv.hidden = true; document.body.classList.remove('cu-com-investig'); desenharEstudo(); return; }
+    painelInv.hidden = false; document.body.classList.add('cu-com-investig'); desenharEstudo(); ligarChips(telaEstudo);
     const F = inv.F, cand = inv.cand, n = inv.acesas || 0;
     const barra = ORDEM_FOLHAS.map((id, k) => { const c = camada(id), tem = F[id] && F[id].length; return `<i title="${esc(c ? c.nome : id)}${tem ? ': ' + F[id].length + ' achado(s)' : ': nada no acervo'}" class="${k < n ? (tem ? 'acesa' : 'vazia') : ''}" style="--c:${c ? c.cor : '#999'}">${String(k + 1).padStart(2, '0')}</i>`; }).join('');
     let corpo = '';
     if (inv.aba === 'geral') {
       const pess = (F.personagens || []).filter((x) => x.conf !== 'hipotese').slice(0, 3).map((x) => x.rot), lugs = (F.atlas || []).slice(0, 3).map((x) => x.rot);
       corpo = `${cand.tipo === 'pessoa' ? `<button type="button" class="cu-inv-jornada" data-inv-jornada="1">▶ Ver a jornada de ${esc(cand.rot.replace(/ · .*$/, ''))}, passo a passo</button>` : ''}<p><b>${esc(cand.rot)}</b> — ${esc(cand.tipo)}. Aparece em <b>${inv.sementes.length}</b> versículo(s)${inv.sementes[0] ? ', a começar por ' + esc(nomeRef(Math.min(...inv.sementes))) : ''}.</p>
+        ${(() => { const fx = faixasDeReferencia(inv.sementes), lg = (F.atlas || []).slice(0, 5), ev = (F.tempo || []).filter((x) => x.conf !== 'hipotese').slice(0, 2);
+          return `${fx.length ? `<h5>📖 Principais referências</h5><div class="cu-chips">${fx.map((x) => `<button type="button" data-verso="${chave(x.b, x.c0, 1)}">${esc(x.txt)}</button>`).join('')}</div>` : ''}
+          ${lg.length ? `<h5>📍 Localizações principais (Atlas)</h5><div class="cu-chips">${lg.map((x) => `<button type="button" data-inv-lugar="${x.acao.lugar}">${esc(x.rot)}${x.conf === 'incerta' ? ' (incerto)' : ''}</button>`).join('')}</div>` : ''}
+          ${ev.length ? `<h5>⌛ Cronologia (Tempo)</h5><p>${ev.map((x) => esc(x.rot)).join('<br>')} <small>(data tradicional)</small></p>` : ''}`; })()}
         ${F._ponte ? `<p><small>A investigação seguiu a ligação principal: <b>${esc(F._ponte)}</b>. Itens achados por esse caminho aparecem como hipótese.</small></p>` : ''}
         ${pess.length ? `<p>Ligado diretamente a: ${esc(pess.join(', '))}${lugs.length ? '; lugares: ' + esc(lugs.join(', ')) : ''}.</p>` : ''}
         ${inv.lugarIncerto ? `<p class="cu-inv-alerta">⚠️ A localização exata de ${esc(inv.lugarIncerto.nome)} é <b>incerta</b>: a confiança da identificação é ${inv.lugarIncerto.conf}/1000 no OpenBible. No mapa ela aparece com um círculo tracejado, não como ponto comprovado.</p>` : ''}
@@ -1223,6 +1260,63 @@ export function criarCeu(container, estado, acoes) {
     else if (a === 'recomecar') mostrarPasso(0);
     else if (a === 'dossie') { const i = j.iPessoa; sairJornada(); abrirFichaCamada(camada('personagens'), i, true); }
     else if (a === 'preparar') { const bt = document.getElementById('bt-preparar'); const nome = camada('personagens').api.nome(j.iPessoa).replace(/ · .*$/, ''); sairJornada(); if (bt) { bt.click(); setTimeout(() => { const f = document.querySelector('#preparar [name=tema]'); const est = document.querySelector('#preparar input[value=estudo]'); if (f) f.value = nome; if (est) est.checked = true; }, 120); } }
+  });
+
+
+  // ══ TELA "ESTUDO": as dez camadas como cartões empilhados, cada um com o resumo do que achou ══════════════
+  // (modelo visual do proprietário, 22/11/2026). Tudo sai da investigação (dados reais); as imagens são reais:
+  // o recorte de satélite NASA do lugar e a palavra no original. Nada de retrato inventado.
+  const ICONE = { universo: '✶', biblia: '📖', atlas: '📍', tempo: '⌛', personagens: '👥', linguas: 'א', historia: '🏛', manuscritos: '📜', teologia: '⚖', tradicao: '✝' };
+  const telaEstudo = document.createElement('div'); telaEstudo.className = 'cu-estudo'; telaEstudo.hidden = true; ui.appendChild(telaEstudo);
+  let estudoAberto = true, cartaoAberto = null;
+  const abrevLivro = (b) => String(livros[b - 1].abbrev).replace(/^(\d)([a-z])/, '$1 $2').replace(/(^|\s)([a-z])/g, (m, a, c) => a + c.toUpperCase());
+  function faixasDeReferencia(versos) {   // "1 Sm 16–31", "2 Sm 1–24", "Sl"
+    const porLivro = new Map(); for (const k of versos) { const d = decompor(k); (porLivro.get(d.b) || porLivro.set(d.b, new Map()).get(d.b)).set(d.c, ((porLivro.get(d.b).get(d.c)) || 0) + 1); }
+    return [...porLivro.entries()].map(([b, caps]) => { const cs = [...caps.entries()].filter(([, n]) => n >= 2).map(([c]) => c).sort((x, y) => x - y); const n = [...caps.values()].reduce((a, x) => a + x, 0);
+      return { b, n, txt: cs.length >= 2 ? `${abrevLivro(b)} ${cs[0]}–${cs[cs.length - 1]}` : cs.length === 1 ? `${abrevLivro(b)} ${cs[0]}` : abrevLivro(b), c0: cs[0] || [...caps.keys()][0] }; })
+      .sort((x, y) => y.n - x.n).slice(0, 6).sort((x, y) => x.b - y.b);
+  }
+  function imagemSatelite(l) { if (!l) return ''; const col = Math.floor((l.lon + 180) / 4.5), lin = Math.floor((90 - l.lat) / 4.5); return `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/BlueMarble_ShadedRelief_Bathymetry/default/500m/6/${lin}/${col}.jpeg`; }
+  function palavraDoNome(inv) {   // a palavra original que É o nome do assunto (ex.: דָּוִד para Davi), se estiver nos versículos
+    const cL = camada('linguas'), x = cL && indiceDe(cL); if (!x || !cL.api.lemas) return null;
+    const alvo = inv.cand.c && inv.cand.c.id === 'personagens' ? String(cL && camada('personagens').api.pessoas[inv.cand.i].n).replace(/ \(.*\)$/, '') : inv.cand.lugar ? inv.cand.lugar.en : null; if (!alvo) return null;
+    const S = new Set(inv.sementes), cand = new Map(); for (const k of S) for (const i of x.m.get(k) || []) cand.set(i, (cand.get(i) || 0) + 1);
+    let m = null; for (const [i, n] of cand) { const l = cL.api.lemas[i]; if (l && l.g && norm(l.g).replace(/[^a-z ]/g, '') === norm(alvo).replace(/[^a-z ]/g, '') && (!m || n > m.n)) m = { i, n, l }; } return m;
+  }
+  function desenharEstudo() {
+    const inv = investigacao; if (!inv || !estudoAberto) { telaEstudo.hidden = true; document.body.classList.remove('cu-modo-estudo'); return; }
+    telaEstudo.hidden = false; document.body.classList.add('cu-modo-estudo');
+    const F = inv.F, cand = inv.cand, nome = cand.rot.replace(/ · .*$/, '').replace(/ \(.*\)$/, '');
+    const pal = palavraDoNome(inv), lug = (F.atlas || [])[0] && atlasC.lugares[F.atlas[0].acao.lugar];
+    const resumo = (id) => { const L = F[id] || []; if (id === 'manuscritos') return L.length + ' versículo(s) com diferenças entre edições: ' + L.slice(0, 3).map((x) => x.rot.replace(/:.*?: .*$/, '').replace(/: diferenças.*$/, '')).join(', '); return [...new Set(L.slice(0, 5).map((x) => x.rot.replace(/ · .*$/, '')))].slice(0, 4).join(' • '); };
+    const visual = (id) => {
+      if (id === 'atlas' && lug) return `<img class="cu-e-img" src="${imagemSatelite(lug)}" alt="Imagem de satélite da região de ${esc(lug.nome)} (NASA)" loading="lazy">`;
+      if (id === 'linguas' && pal) return `<span class="cu-e-palavra" dir="rtl">${esc(pal.l.w)}</span>`;
+      if (id === 'tempo') { const ev = (F.tempo || []).map((x) => camada('tempo').api.eventos[x.acao.i]).filter(Boolean).sort((a, b) => a.a - b.a); if (ev.length) { const a = ev[0].a, z = ev[ev.length - 1].a, f = (v) => (v < 0 ? -v + ' a.C.' : v + ' d.C.'); return `<span class="cu-e-data">c. ${a === z ? f(a) : f(a) + ' – ' + f(z)}</span>`; } }
+      if (id === 'biblia') { const fx = faixasDeReferencia(inv.sementes); return `<span class="cu-e-data">${esc(fx.slice(0, 3).map((x) => x.txt).join(' · '))}</span>`; }
+      return `<span class="cu-e-icone">${ICONE[id]}</span>`;
+    };
+    const cartoes = ORDEM_FOLHAS.slice().reverse().map((id, k) => {
+      const c = camada(id), L = F[id] || [], num = ORDEM_FOLHAS.indexOf(id) + 1, aberto = cartaoAberto === id;
+      return `<div class="cu-e-cartao ${L.length ? '' : 'vazio'} ${aberto ? 'aberto' : ''}" data-e-cartao="${id}" style="--c:${c ? c.cor : '#ccc'};--k:${9 - k}" role="button" tabindex="0" aria-expanded="${aberto}">
+        <div class="cu-e-linha"><b class="cu-e-num">${String(num).padStart(2, '0')}</b><span class="cu-e-nome">${esc(c ? c.nome.split(' · ')[0] : id).toUpperCase()}</span>${visual(id)}<span class="cu-e-resumo">${L.length ? esc(resumo(id)) : 'nada no acervo para este assunto'}</span></div>
+        ${aberto ? `<div class="cu-e-itens">${L.map(itemHtml).join('') || '<p class="cu-inv-nada">Nada no acervo do NEXUS.</p>'}</div>` : ''}</div>`;
+    }).join('');
+    const fx = faixasDeReferencia(inv.sementes);
+    telaEstudo.innerHTML = `<div class="cu-e-cab"><span class="cu-e-marca">✦</span><div><small>Estudo multidimensional</small><h2>Estudo: ${esc(nome)}</h2></div>
+        <div class="cu-e-bts">${cand.tipo === 'pessoa' ? `<button type="button" data-e="jornada">▶ Jornada</button>` : ''}<button type="button" data-e="3d">◫ Ver as lâminas em 3D</button><button type="button" data-e="fechar" aria-label="Fechar o estudo">✕</button></div></div>
+      <div class="cu-e-pilha">${cartoes}</div>
+      <aside class="cu-e-fontes"><h4>Como o NEXUS pesquisou</h4><p>Uma pesquisa só percorre as dez camadas, a partir dos versículos de “${esc(nome)}”.</p>
+        <h4>Fontes consultadas</h4><ul><li>Bíblia Almeida</li><li>Atlas: OpenBible (CC BY), NASA</li><li>Cronologia e personagens: Theographic</li><li>Hebraico, aramaico e grego: STEPBible</li><li>Manuscritos: STEPBible (edições comparadas)</li><li>História e teologia: Easton (1897)</li><li>Tradição: credos e confissões</li><li>Biblioteca particular (motor de descoberta)</li></ul>
+        <h4>Selos</h4><p>${selo('direta')} ${selo('interpretacao')} ${selo('hipotese')} ${selo('incerta')} ${selo('tradicional')}</p></aside>`;
+    // o painel do assunto (abas) vai para a direita, como no modelo
+    const ref = painelInv.querySelector('.cu-inv-refs'); if (!ref && fx.length) { /* desenhado em desenharInvestigacao */ }
+  }
+  telaEstudo.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-e]'); if (b) { const a = b.dataset.e; if (a === 'fechar') { investigacao = null; desenharInvestigacao(); limparComposicao(); mostrarLaminas(false); laminasModo = null; CAMADAS.forEach((c) => { if (c.modulo) c.visivel = false; }); montarPainel(); desenharEstudo(); } else if (a === '3d') { estudoAberto = false; desenharEstudo(); desenharInvestigacao(); } else if (a === 'jornada') iniciarJornada(investigacao.cand.i); return; }
+    { const v = e.target.closest('[data-inv-verso]'); if (v) { fichaVerso(+v.dataset.invVerso); return; } const l = e.target.closest('[data-inv-lugar]'); if (l) { voarTerraPara(atlasC.lugares[+l.dataset.invLugar], Math.max(8, RAIO_GLOBO * 0.02)); estudoAberto = false; desenharEstudo(); return; } const sc = e.target.closest('[data-inv-secao]'); if (sc) { const q = secoes[+sc.dataset.invSecao]; estudoAberto = false; desenharEstudo(); voar(q.cx, q.cy, q.raio * 3.4); return; } }
+    if (e.target.closest('.cu-e-itens')) return;   // os itens das camadas abrem as fichas (ligarChips)
+    const c = e.target.closest('[data-e-cartao]'); if (c) { cartaoAberto = cartaoAberto === c.dataset.eCartao ? null : c.dataset.eCartao; desenharEstudo(); ligarChips(telaEstudo); }
   });
 
   // na ficha de qualquer item aberta a partir da investigação: voltar a ela
@@ -1823,7 +1917,7 @@ export function criarCeu(container, estado, acoes) {
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
-      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), buscarFicha: (t) => buscarCamadas(norm(t), 1), jornada: (n) => { const cP = camada('personagens'); const i = cP && cP.api ? cP.api.pessoas.findIndex((x) => x.nome === n || x.n === n) : -1; return i >= 0 && iniciarJornada(i); }, jornadaEstado: () => (jornada ? { n: jornada.n, total: jornada.passos.length, passos: jornada.passos.map((P) => P.livro + ' ' + P.c + (P.lugarVoo != null ? ' @' + atlasC.lugares[P.lugarVoo].nome : '') + (P.evs[0] ? ' · ' + P.evs[0].nome : '')) } : null), passoJornada: (k) => mostrarPasso(k), investigar: (t) => investigarAssunto(t), investigacao: () => (investigacao ? { cand: investigacao.cand.rot, tipo: investigacao.cand.tipo, sementes: investigacao.sementes.length, acesas: investigacao.acesas || 0, folhas: Object.fromEntries(ORDEM_FOLHAS.map((id) => [id, investigacao.F[id] ? investigacao.F[id].map((x) => x.rot + ' [' + x.conf + ']') : null])), outros: investigacao.outros.map((o) => o.rot + ' (' + o.tipo + ')'), fontes: investigacao.fontes ? investigacao.fontes.blocos.map((b) => b.titulo + ': ' + b.itens.length) : null, incerto: !!investigacao.lugarIncerto } : null), abaInvestigacao: (a) => { if (investigacao) { investigacao.aba = a; desenharInvestigacao(); } },
+      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), buscarFicha: (t) => buscarCamadas(norm(t), 1), jornada: (n) => { const cP = camada('personagens'); const i = cP && cP.api ? cP.api.pessoas.findIndex((x) => x.nome === n || x.n === n) : -1; return i >= 0 && iniciarJornada(i); }, jornadaEstado: () => (jornada ? { n: jornada.n, total: jornada.passos.length, passos: jornada.passos.map((P) => P.livro + ' ' + P.c + (P.lugarVoo != null ? ' @' + atlasC.lugares[P.lugarVoo].nome : '') + (P.evs[0] ? ' · ' + P.evs[0].nome : '')) } : null), passoJornada: (k) => mostrarPasso(k), estudo: () => (telaEstudo.hidden ? null : { cartoes: telaEstudo.querySelectorAll('[data-e-cartao]').length, vazios: telaEstudo.querySelectorAll('.cu-e-cartao.vazio').length, palavra: (telaEstudo.querySelector('.cu-e-palavra') || {}).textContent || null, img: !!telaEstudo.querySelector('.cu-e-img') }), abrirCartao: (id) => { cartaoAberto = id; desenharEstudo(); ligarChips(telaEstudo); }, investigar: (t) => investigarAssunto(t), investigacao: () => (investigacao ? { cand: investigacao.cand.rot, tipo: investigacao.cand.tipo, sementes: investigacao.sementes.length, acesas: investigacao.acesas || 0, folhas: Object.fromEntries(ORDEM_FOLHAS.map((id) => [id, investigacao.F[id] ? investigacao.F[id].map((x) => x.rot + ' [' + x.conf + ']') : null])), outros: investigacao.outros.map((o) => o.rot + ' (' + o.tipo + ')'), fontes: investigacao.fontes ? investigacao.fontes.blocos.map((b) => b.titulo + ': ' + b.itens.length) : null, incerto: !!investigacao.lugarIncerto } : null), abaInvestigacao: (a) => { if (investigacao) { investigacao.aba = a; desenharInvestigacao(); } },
       fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
       abrirTerra: () => abrirTerra(), imagemTerra: () => (atlasC ? atlasC.imagemReal() : false), subsolar: () => pontoSubsolar(Date.now()),
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
