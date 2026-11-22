@@ -1669,7 +1669,7 @@ export function criarCeu(container, estado, acoes) {
   const ORIGENS = { eden: { lat: 31.0, lon: 47.4 } };
   async function viajarParaMundo(mundo, lat, lon, nome) {
     const veioDe = window.__nexusMundoAtual; const aberto = ui.querySelector('.ej-raiz'); if (aberto) { const b = aberto.querySelector('.ej-sair'); if (b) b.click(); await new Promise((ok) => setTimeout(ok, 900)); }
-    const abrir = () => import('/nexus/eden-caminhar.js?v=14').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo })).catch(() => {});
+    const abrir = () => import('/nexus/eden-caminhar.js?v=15').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo })).catch(() => {});
     if (!atlasC) { abrir(); return; }
     camada('atlas').visivel = true; if (!modoTerra) entrarTerra(null);
     const m = modoTerra, o = ORIGENS[veioDe]; if (o) { m.lat = o.lat; m.lon = o.lon; m.alt = Math.max(m.alt || 0, RAIO_GLOBO * 0.02); }
@@ -1685,7 +1685,7 @@ export function criarCeu(container, estado, acoes) {
     if (/^(o )?(tumulo|sepulcro) de lazaro$/.test(q)) { abrirLugarReal('lazaro'); return true; }
     if (/^nazare$/.test(q)) { abrirLugarReal('nazare'); return true; }
     if (/(sete|7) trombetas|^trombetas$/.test(q)) { window.NEXUS_MUNDO('trombetas'); return true; }
-    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { import('/nexus/eden-caminhar.js?v=14').then((m) => m.abrirJardim(THREE, ui, { chegada: true })).catch(() => import('/nexus/panorama360.js?v=6').then((m) => m.abrirPanorama(THREE, 'eden', ui))); return true; }   // direto no jardim realista: o drone desce e pousa dentro dele
+    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { import('/nexus/eden-caminhar.js?v=15').then((m) => m.abrirJardim(THREE, ui, { chegada: true })).catch(() => import('/nexus/panorama360.js?v=6').then((m) => m.abrirPanorama(THREE, 'eden', ui))); return true; }   // direto no jardim realista: o drone desce e pousa dentro dele
     if (/^(cafarnaum|capernaum|casa de pedro)$/.test(q)) { abrirLugarReal('cafarnaum'); return true; }
     if (/^(magdala|sinagoga de magdala)$/.test(q)) { abrirLugarReal('magdala'); return true; }
     if (/^(o )?(mar da galileia|lago de genezare|mar de tiberiades|mar de genezare|lago da galileia)$/.test(q)) { abrirLugarReal('mar'); return true; }

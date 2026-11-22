@@ -32,10 +32,11 @@ export const MUNDOS_ANDAVEIS = {
       rocha: ['Mateus 26:39', 'E adiantando-se um pouco, prostrou-se com o rosto em terra e orou, dizendo: Meu Pai, se é possível, passa de mim este cálice; todavia, não seja como eu quero, mas como tu queres.'],
       presenca: ['Lucas 22:43', 'Então lhe apareceu um anjo do céu, que o confortava.'],
       tochas: ['João 18:3', 'Tendo, pois, Judas tomado a corte e uns guardas da parte dos principais sacerdotes e fariseus, chegou ali com lanternas archotes e armas.'],
+      cidade: ['Lucas 19:41', 'E quando chegou perto e viu a cidade, chorou sobre ela,'],
       bom: ['Mateus 26:41', 'Vigiai e orai, para que não entreis em tentação; o espírito, na verdade, está pronto, mas a carne é fraca.'],
     },
-    notas: { rocha: 'Lucas 22:44 acrescenta a agonia e o suor “como grandes gotas de sangue”. A rocha aqui é ilustrativa; a tradição a mostra na Basílica da Agonia.', presenca: 'O anjo aparece só como luz, sem figura: o texto não o descreve.', chegada: '“Getsêmani” quer dizer “prensa de azeite”.' },
-    lugar: { rocha: 'junto da rocha onde Jesus orou (Mt 26:39)', vigiai: 'no olival, perto de onde os discípulos dormiram (Mt 26:38–43)', presenca: 'junto da luz que representa o anjo que o confortou (Lc 22:43)', tochas: 'vendo as tochas dos guardas subindo do vale do Cedrom (Jo 18:3)', chegada: 'na trilha que sobe do ribeiro de Cedrom (Jo 18:1)', bom: 'nas partes altas do Monte das Oliveiras' }, nome: 'Jardim do Getsêmani' },
+    notas: { vigiai: 'As 8 oliveiras antigas de hoje, junto à Basílica da Agonia, foram datadas em parte por carbono-14: três têm troncos dos anos 1092, 1166 e 1198 (estudo italiano de 2012, publicado em 2015); as raízes podem ser mais antigas. Aqui elas representam o olival da época, não as árvores do ano 30.', cidade: 'Do outro lado do vale do Cedrom, a uns 300 m e mais alto que o olival: Jerusalém, com o Templo de Herodes no monte do Templo, as muralhas e a porta do lado leste; ao sul, a Cidade de Davi e o Monte Sião. (Lc 19:41 se passa nesta mesma encosta, alguns dias antes.)', rocha: 'Lucas 22:44 acrescenta a agonia e o suor “como grandes gotas de sangue”. A rocha aqui é ilustrativa; a tradição a mostra na Basílica da Agonia.', presenca: 'O anjo aparece só como luz, sem figura: o texto não o descreve.', chegada: '“Getsêmani” quer dizer “prensa de azeite”.' },
+    lugar: { cidade: 'no mirante do Getsêmani, olhando Jerusalém e o Templo do outro lado do vale do Cedrom', rocha: 'junto da rocha onde Jesus orou (Mt 26:39)', vigiai: 'no olival, perto de onde os discípulos dormiram (Mt 26:38–43)', presenca: 'junto da luz que representa o anjo que o confortou (Lc 22:43)', tochas: 'vendo as tochas dos guardas subindo do vale do Cedrom (Jo 18:3)', chegada: 'na trilha que sobe do ribeiro de Cedrom (Jo 18:1)', bom: 'nas partes altas do Monte das Oliveiras' }, nome: 'Jardim do Getsêmani' },
 };
 
 export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo = 'eden' } = {}) {
@@ -103,7 +104,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   function distRio(x, z) { let m = 1e9, w = 11; const cx = Math.floor(x / CEL), cz = Math.floor(z / CEL); for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const l = grade.get((cx + a) + ',' + (cz + b)); if (!l) continue; for (const i of l) { const dx = x - amostras[i], dz = z - amostras[i + 1], d = dx * dx + dz * dz; if (d < m) { m = d; w = amostras[i + 2]; } } } return [m < 1e9 ? Math.sqrt(m) : 999, w]; }
 
   // RELEVO: colinas suaves no jardim, montanhas ao longe, leito dos rios escavado
-  const hGets = (x, z) => { const sJ = -(x * MW.TD.x + z * MW.TD.z), xx = -sJ; const enc = 0.11 * xx + 6 * Math.tanh((xx + 260) / 90) - Math.max(0, sJ - 300) * 0.12 - 1.2 * Math.sin(z * 0.012) + 0.6 * Math.sin(x * 0.05 + z * 0.03); const pas = 1.6, k = enc / pas, deg = pas * (Math.floor(k) + THREE.MathUtils.smoothstep(k - Math.floor(k), 0.78, 1)); const plano = 1 - THREE.MathUtils.smoothstep(Math.hypot(x, z), 6, 16); return (deg * 0.85 + enc * 0.15) * (1 - plano); };
+  const hGets = (x, z) => { const sJ = -(x * MW.TD.x + z * MW.TD.z), xx = -sJ, ss = THREE.MathUtils.smoothstep;   // perfil real: o olival fica no pé do Monte das Oliveiras, uns 20 m acima do Cedrom; do outro lado o monte do Templo sobe uns 45 m acima do olival, a ~300 m
+    const enc = (sJ > 0 ? -22 * ss(sJ, 15, 120) - 6 * ss(sJ, 200, 420) : 0.11 * xx + 2.5 * Math.tanh(xx / 60)) - 1.2 * Math.sin(z * 0.012) + 0.6 * Math.sin(x * 0.05 + z * 0.03); const pas = 1.6, k = enc / pas, deg = pas * (Math.floor(k) + THREE.MathUtils.smoothstep(k - Math.floor(k), 0.78, 1)); const plano = 1 - THREE.MathUtils.smoothstep(Math.hypot(x, z), 6, 16); return (deg * 0.85 + enc * 0.15) * (1 - plano); };
   const hBase = (x, z) => { if (!E) return hGets(x, z); const r = Math.hypot(x, z); return 2.6 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.3 * Math.sin(x * 0.031 + z * 0.027) + 0.5 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
   const T = 4400, NS = toque ? 400 : 560;
   const geoT = new THREE.PlaneGeometry(T, T, NS, NS); geoT.rotateX(-Math.PI / 2);
@@ -316,11 +318,13 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   // espalha posições evitando a água e o caminho de chegada
   function espalhar(n, rMin, rMax, folga = 6, evitar = []) { const out = []; let tent = 0;
     while (out.length < n && tent++ < n * 40) { const a = rnd() * 6.283, r = Math.sqrt(rMin * rMin + rnd() * (rMax * rMax - rMin * rMin)), x = Math.cos(a) * r, z = Math.sin(a) * r;
-      const [d, w] = distRio(x, z); if (d < w + folga) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; } if (evitar.some((e) => Math.hypot(e.x - x, e.z - z) < e.r)) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
+      const [d, w] = distRio(x, z); if (d < w + folga) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; if (!E && -tt.s > 3 && Math.abs(tt.lado) < -tt.s * 0.5 + 5 && -tt.s < 420) continue; if (!E && -tt.s > 105) continue; } if (evitar.some((e) => Math.hypot(e.x - x, e.z - z) < e.r)) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
     return out; }
   const centroArv = { x: 0, z: 0, r: E ? 26 : 9 };
   if (!E) await Promise.all([
     figuras('rocha-oracao', [{ x: 0, z: 0, s: 1 }], 1.5, 0),
+    figuras('oliveira-milenar-1', [[-8, 6], [9, 4], [13, -8]].map(([l, sx]) => { const w = T2W(l, sx); return { x: w.x, z: w.z, s: 1, vira: l > 0 }; }), 10, 0.3),
+    figuras('oliveira-milenar-2', [[-11, -4], [12, -3], [-4, 14]].map(([l, sx]) => { const w = T2W(l, sx); return { x: w.x, z: w.z, s: 1, vira: l < 0 }; }), 9, 0.3),
     figuras('oliveira-1', [...espalhar(toque ? 160 : 260, 9, 300, 3, [centroArv]), ...espalhar(toque ? 300 : 520, 300, 1300, 3, [centroArv])], 7.5, 0.5),
     figuras('oliveira-2', [...espalhar(toque ? 130 : 220, 9, 300, 3, [centroArv]), ...espalhar(toque ? 250 : 420, 300, 1300, 3, [centroArv])], 6.5, 0.5),
     figuras('oliveira-3', [...espalhar(toque ? 90 : 150, 12, 320, 3, [centroArv]), ...espalhar(toque ? 180 : 300, 320, 1300, 3, [centroArv])], 8.5, 0.6),
@@ -482,13 +486,22 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   brilho.scale.set(26, 26, 1); brilho.position.y = 6; presenca.add(brilho); lixo.push(brilho.material);
   const caminhoPresenca = new THREE.CatmullRomCurve3(E ? [V(70, 60), V(120, -40), V(40, -120), V(-80, -90), V(-120, 20), V(-60, 110), V(30, 120)] : [V(5, 4), V(7, 0), V(5, -4), V(3, 0)], true);
   if (!E) { coluna.scale.set(0.35, 0.5, 0.35); coluna.position.y = 17; brilho.scale.set(9, 9, 1); }
+  // JERUSALÉM do outro lado do vale do Cedrom (Getsêmani): a cidade iluminada, de frente para o olival
+  let cidadeM = null;
+  if (!E && pecas['jerusalem-noite']) { const tx = await carregar('jerusalem-noite.png'); if (tx) { lixo.push(tx); const pc = pecas["jerusalem-noite"], L = 430, Hc = L * pc.h / pc.w, dist = 330;   // a muralha leste do monte do Templo tinha uns 470 m
+    const g = new THREE.PlaneGeometry(L, Hc); g.translate(0, Hc / 2, 0); const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { map: { value: tx } },   // bordas que se desfazem na noite (sem cara de cartão-postal)
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+      fragmentShader: `uniform sampler2D map; varying vec2 vUv; void main(){ vec4 c = texture2D(map, vUv); float a = c.a * smoothstep(0., .16, vUv.x) * smoothstep(1., .84, vUv.x) * smoothstep(0., .3, vUv.y); if (a < .02) discard; gl_FragColor = vec4(c.rgb * .82, a);
+#include <colorspace_fragment>
+      }` });
+    cidadeM = new THREE.Mesh(g, mat); const cx = -TD.x * dist, cz = -TD.z * dist; cidadeM.position.set(cx, -27, cz); cidadeM.lookAt(0, cidadeM.position.y, 0); cena.add(cidadeM); lixo.push(g, mat); } }
   // TOCHAS (Getsêmani, Jo 18:3): os guardas sobem do vale do Cedrom com lanternas e archotes, devagar, em fila
   const tochas = []; let tochaPerto = () => 1e9;
   if (!E) {
     const cv = document.createElement('canvas'); cv.width = cv.height = 64; const gx = cv.getContext('2d'), gr = gx.createRadialGradient(32, 40, 2, 32, 36, 30); gr.addColorStop(0, 'rgba(255,240,190,1)'); gr.addColorStop(0.25, 'rgba(255,160,60,.9)'); gr.addColorStop(0.6, 'rgba(220,80,20,.35)'); gr.addColorStop(1, 'rgba(120,30,0,0)'); gx.fillStyle = gr; gx.fillRect(0, 0, 64, 64);
     const tf = new THREE.CanvasTexture(cv); lixo.push(tf);
     const JT = (l, sx) => new THREE.Vector3(-TD.x * sx + TP.x * l, 0, -TD.z * sx + TP.z * l);   // do lado de Jerusalém, subindo do Cedrom
-    const rota = new THREE.CatmullRomCurve3([JT(0, 520), JT(-30, 420), JT(10, 320), JT(-10, 230), JT(4, 150), JT(0, 90), JT(1, 40)]);
+    const rota = new THREE.CatmullRomCurve3([JT(-40, 300), JT(-30, 240), JT(-10, 170), JT(4, 120), JT(0, 80), JT(1, 40)]);   // da porta da cidade, desce ao Cedrom e sobe ao olival
     for (let i = 0; i < 14; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tf, color: new THREE.Color(3, 2.2, 1.3), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); sp.scale.set(1.1, 1.6, 1); cena.add(sp); lixo.push(sp.material); tochas.push({ sp, atraso: i * 0.012 + Math.random() * 0.006, lado: (Math.random() - 0.5) * 2.4, fase: Math.random() * 6 }); }
     const luzes = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xff9a3c, 0, 22, 1.6); cena.add(l); return l; });
     const posT = new THREE.Vector3();
@@ -651,7 +664,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       const dArv = Math.hypot(eu.x, eu.z), dForq = Math.hypot(eu.x - FORQ.x, eu.z - FORQ.z), dPres = Math.hypot(eu.x - posPresenca.x, eu.z - posPresenca.z);
       const perto = bichos.some((b) => Math.hypot(b.x - eu.x, b.z - eu.z) < 9);
       cartao(E ? (dPres < 16 ? 'presenca' : dArv < 30 ? 'arvore' : dForq < 26 ? 'rio' : perto ? 'animais' : dArv < 90 ? 'chegada' : r > 300 ? 'bom' : null)
-        : (dPres < 5 ? 'presenca' : dArv < 10 ? 'rocha' : tochaPerto(eu.x, eu.z) < 30 ? 'tochas' : dArv < 45 ? 'vigiai' : dArv < 180 ? 'chegada' : 'bom'));
+        : (dPres < 5 ? 'presenca' : Math.hypot(eu.x + TD.x * 12, eu.z + TD.z * 12) < 7 ? 'cidade' : dArv < 10 ? 'rocha' : tochaPerto(eu.x, eu.z) < 30 ? 'tochas' : dArv < 45 ? 'vigiai' : dArv < 180 ? 'chegada' : 'bom'));
     }
     moverBichos(dt); if (tochas.mover) tochas.mover(t);
     caminhoPresenca.getPointAt(((t / 160) % 1 + 1) % 1, posPresenca); presenca.position.set(posPresenca.x, altura(posPresenca.x, posPresenca.z), posPresenca.z); brilho.material.opacity = 0.75 + 0.25 * Math.sin(t * 1.7);
