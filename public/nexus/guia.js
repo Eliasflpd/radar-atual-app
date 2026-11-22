@@ -25,6 +25,7 @@ export function iniciarGuia() {
   const el = document.createElement('div'); el.className = 'guia'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Guia do NEXUS');
   el.innerHTML = `<style>
     .guia{position:fixed;left:24px;bottom:24px;width:min(380px,calc(100vw - 32px));height:min(520px,calc(100vh - 140px));z-index:2147483000;display:flex;flex-direction:column;background:rgba(252,248,238,.97);border:1px solid rgba(201,162,78,.55);border-radius:16px;box-shadow:0 22px 50px rgba(5,10,25,.45);backdrop-filter:blur(8px);font:14px/1.5 Inter,system-ui,sans-serif;color:#1E2A44;overflow:hidden}
+    body:has(.guia:not(.min)) .p3-card,body:has(.guia:not(.min)) .tp-ficha{left:auto!important;right:24px}body:has(.guia:not(.min)) .p3-cred,body:has(.guia:not(.min)) .mt-cred,body:has(.guia:not(.min)) .lr-cred{left:420px}
     .guia.min{height:auto;width:auto}.guia.min .guia-corpo,.guia.min .guia-form{display:none}
     .guia-topo{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#14213D;color:#F3E2B3;cursor:move;user-select:none}
     .guia-topo b{font:700 15px "Cormorant Garamond",Georgia,serif;letter-spacing:.04em;flex:1}.guia-topo small{color:rgba(243,226,179,.7);font-size:11px}
