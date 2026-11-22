@@ -1190,7 +1190,9 @@ export function criarCeu(container, estado, acoes) {
       // versículo-chave: onde a pessoa aparece junto com mais gente e lugares
       const peso = (k) => (xP && xP.m.get(k) ? xP.m.get(k).length : 0) + (atlasC && atlasC.porVerso.get(k) ? atlasC.porVerso.get(k).length * 1.5 : 0);
       const evCap = tempo && tempo.eventos ? tempo.eventos.find((e) => e.p && e.p.includes(pe.id) && e.v.length < 200 && e.v.some((k) => Math.floor(k / 1000) === ch)) : null;
-      const doEv = evCap ? ks.filter((k) => evCap.v.includes(k)) : [];
+      let doEv = evCap ? ks.filter((k) => evCap.v.includes(k)) : [];
+      if (evCap) { const outros = (evCap.pn || []).map((x) => norm(String(x).replace(/ \(.*\)$/, ''))).filter((x) => x && x !== norm(String(pe.nome).replace(/ \(.*\)$/, '')));   // versículo em que aparece também o outro protagonista (ex.: Golias)
+        const comOutro = doEv.filter((k) => outros.some((o) => norm(textoDe(k)).includes(o))); if (comOutro.length) doEv = comOutro; }
       const chaveV = (doEv.length ? doEv : ks).slice().sort((a, b2) => peso(b2) - peso(a) || a - b2)[0];
       const gente = new Map(); if (xP) for (const k of todos) for (const i of xP.m.get(k) || []) if (i !== iPessoa) gente.set(i, (gente.get(i) || 0) + 1);
       const pessoas = [...gente.entries()].sort((a, b2) => b2[1] - a[1]).slice(0, 6).map(([i]) => i);
