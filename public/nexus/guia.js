@@ -24,17 +24,17 @@ const par = (t) => esc(t).split(/\n\s*\n/).map((b) => '<p>' + b.replace(/\n/g, '
 export function iniciarGuia() {
   const el = document.createElement('div'); el.className = 'guia'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Guia do NEXUS');
   el.innerHTML = `<style>
-    .guia{position:fixed;left:24px;bottom:24px;width:min(380px,calc(100vw - 32px));height:min(520px,calc(100vh - 140px));z-index:2147483000;display:flex;flex-direction:column;background:rgba(252,248,238,.97);border:1px solid rgba(201,162,78,.55);border-radius:16px;box-shadow:0 22px 50px rgba(5,10,25,.45);backdrop-filter:blur(8px);font:14px/1.5 Inter,system-ui,sans-serif;color:#1E2A44;overflow:hidden}
+    .guia{position:fixed;left:24px;bottom:24px;width:min(380px,calc(100vw - 32px));height:min(520px,calc(100vh - 140px));z-index:2147483000;display:flex;flex-direction:column;background:rgba(8,14,30,.58);border:1px solid rgba(243,211,142,.45);border-radius:16px;box-shadow:0 22px 50px rgba(0,0,0,.45);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);font:15px/1.55 Inter,system-ui,sans-serif;color:#F7F3E8;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.55)}
     body:has(.guia:not(.min)) .p3-card,body:has(.guia:not(.min)) .tp-ficha{left:auto!important;right:24px}body:has(.guia:not(.min)) .p3-cred,body:has(.guia:not(.min)) .mt-cred,body:has(.guia:not(.min)) .lr-cred{left:420px}
     .guia.min{height:auto;width:auto}.guia.min .guia-corpo,.guia.min .guia-form{display:none}
-    .guia-topo{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#14213D;color:#F3E2B3;cursor:move;user-select:none}
+    .guia-topo{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(10,18,40,.55);border-bottom:1px solid rgba(243,211,142,.25);color:#F3E2B3;cursor:move;user-select:none}
     .guia-topo b{font:700 15px "Cormorant Garamond",Georgia,serif;letter-spacing:.04em;flex:1}.guia-topo small{color:rgba(243,226,179,.7);font-size:11px}
     .guia-topo button{border:0;background:rgba(255,255,255,.12);color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;font:700 14px Inter,sans-serif}
     .guia-corpo{flex:1;overflow:auto;padding:12px}
     .guia-msg{margin:0 0 10px;padding:9px 12px;border-radius:12px;max-width:92%}.guia-msg p{margin:0 0 6px}.guia-msg p:last-child{margin:0}
-    .guia-eu{margin-left:auto;background:#14213D;color:#fff}.guia-nx{background:#fff;border:1px solid rgba(201,162,78,.35)}.guia-nx small{display:block;color:#8a7a5a;font-size:11px;margin-top:4px}
-    .guia-sug{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}.guia-sug button{border:1px solid rgba(201,162,78,.5);background:#fff;color:#14213D;border-radius:999px;padding:5px 10px;font:600 12px Inter,sans-serif;cursor:pointer}
-    .guia-form{display:flex;gap:6px;padding:10px;border-top:1px solid rgba(201,162,78,.3)}.guia-form textarea{flex:1;resize:none;border:1px solid rgba(20,33,61,.2);border-radius:10px;padding:8px 10px;font:14px Inter,sans-serif;height:42px}
+    .guia-eu{margin-left:auto;background:rgba(201,162,78,.32);border:1px solid rgba(243,211,142,.45);color:#fff}.guia-nx{background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.14);color:#F7F3E8}.guia-nx small{display:block;color:rgba(243,226,179,.75);font-size:11.5px;margin-top:4px}.guia-msg b{color:#FFE3A3}
+    .guia-sug{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}.guia-sug button{border:1px solid rgba(243,211,142,.55);background:rgba(0,0,0,.3);color:#FFE8B0;border-radius:999px;padding:5px 10px;font:600 12px Inter,sans-serif;cursor:pointer}
+    .guia-form{display:flex;gap:6px;padding:10px;border-top:1px solid rgba(243,211,142,.25)}.guia-form textarea{flex:1;resize:none;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.35);color:#fff;border-radius:10px;padding:8px 10px;font:14px Inter,sans-serif;height:42px}.guia-form textarea::placeholder{color:rgba(255,255,255,.6)}
     .guia-form button{border:0;background:#C9A24E;color:#1B1405;border-radius:10px;padding:0 14px;font:700 13px Inter,sans-serif;cursor:pointer}
   </style>
   <div class="guia-topo"><b>✦ Guia do NEXUS</b><small>peça e a cena muda</small><button type="button" data-g="min" title="Minimizar" aria-label="Minimizar">–</button></div>
