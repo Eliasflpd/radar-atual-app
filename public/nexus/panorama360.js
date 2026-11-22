@@ -6,6 +6,9 @@ export const PANORAMAS = {
   eden: { titulo: 'O jardim do Éden', sub: 'GÊNESIS 2:8–14', img: '/nexus/livros/eden-360.jpg', credito: 'Reconstituição artística em 360° (imagem gerada pelo ChatGPT a pedido do NEXUS; ilustrativa — o texto bíblico não descreve a aparência do jardim)',
     refs: [['Gênesis 2:8', 'E plantou o Senhor Deus um jardim no Éden, da banda do oriente; e pôs ali o homem que tinha formado.'], ['Gênesis 2:9', 'E o Senhor Deus fez brotar da terra toda a árvore agradável à vista, e boa para comida; e a árvore da vida no meio do jardim, e a árvore da ciência do bem e do mal.'], ['Gênesis 2:10', 'E saía um rio do Éden para regar o jardim; e dali se dividia e se tornava em quatro braços.']],
     pontos: [{ yaw: 0, pitch: -8, rot: 'O rio que se divide em quatro', ref: 'Gênesis 2:10–14', txt: 'Pisom, Giom, Hidequel (Tigre) e Eufrates. Os dois últimos são conhecidos; a identificação dos dois primeiros é debatida.' }, { yaw: -70, pitch: 6, rot: 'A árvore da vida', ref: 'Gênesis 2:9; Apocalipse 22:2', txt: 'No meio do jardim. A figura aqui é ilustrativa: o texto não descreve a árvore.' }] },
+  'eden-rio': { titulo: 'Onde o rio se divide', sub: 'GÊNESIS 2:10–14', img: '/nexus/livros/eden-360-rio.jpg', credito: 'Reconstituição artística em 360° (ChatGPT; ilustrativa).', refs: [['Gênesis 2:10', 'E saía um rio do Éden para regar o jardim; e dali se dividia e se tornava em quatro braços.'], ['Gênesis 2:14', 'E o nome do terceiro rio é Hidequel; este é o que vai para o lado oriental da Assíria; e o quarto rio é o Eufrates.']], pontos: [] },
+  'eden-montanhas': { titulo: 'Das montanhas, o jardim inteiro', sub: 'GÊNESIS 2:8–14', img: '/nexus/livros/eden-360-montanhas.jpg', credito: 'Reconstituição artística em 360° (ChatGPT; ilustrativa).', refs: [['Gênesis 2:8', 'E plantou o Senhor Deus um jardim no Éden, da banda do oriente; e pôs ali o homem que tinha formado.']], pontos: [] },
+  'eden-oriente': { titulo: 'A entrada oriental', sub: 'GÊNESIS 3:24', img: '/nexus/livros/eden-360-oriente.jpg', credito: 'Reconstituição artística em 360° (ChatGPT; ilustrativa); os querubins não são mostrados.', refs: [['Gênesis 3:24', 'E havendo lançado fora o homem, pôs querubins ao oriente do jardim do Éden, e uma espada inflamada que andava ao redor, para guardar o caminho da árvore da vida.']], pontos: [] },
 };
 
 export async function abrirPanorama(THREE, id, host, { aoFechar } = {}) {
@@ -33,7 +36,24 @@ export async function abrirPanorama(THREE, id, host, { aoFechar } = {}) {
   const cena = new THREE.Scene(), camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1100);
   const geo = new THREE.SphereGeometry(500, 96, 64); geo.scale(-1, 1, 1);
   const tex = await new THREE.TextureLoader().loadAsync(P.img); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  cena.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex })));
+  const viva = new THREE.ShaderMaterial({ uniforms: { map: { value: tex }, t: { value: 0 } }, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: `uniform sampler2D map; uniform float t; varying vec2 vUv;
+      vec3 rgb2hsv(vec3 c){ vec4 K=vec4(0.,-1./3.,2./3.,-1.); vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g)); vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r)); float d=q.x-min(q.w,q.y); return vec3(abs(q.z+(q.w-q.y)/(6.*d+1e-10)),d/(q.x+1e-10),q.x); }
+      void main(){ vec2 uv = vUv; vec3 c0 = texture2D(map, uv).rgb; vec3 h = rgb2hsv(c0);
+        float baixo = smoothstep(0.62, 0.40, uv.y), alto = smoothstep(0.52, 0.70, uv.y);
+        float agua = baixo * smoothstep(0.45, 0.58, h.x) * smoothstep(0.62, 0.50, h.x) * smoothstep(0.12, 0.3, h.y);   // azul-ciano nas partes baixas
+        float folha = smoothstep(0.17, 0.25, h.x) * smoothstep(0.45, 0.33, h.x) * smoothstep(0.2, 0.35, h.y);   // verdes
+        float ceu = alto * (1. - folha) * smoothstep(0.35, 0.6, h.z);
+        vec2 d = vec2(0.);
+        d += agua * vec2(sin(uv.y*900. + t*3.2)*0.0009 + t*0.0, sin(uv.x*700. - t*4.0)*0.0011);
+        d += folha * vec2(sin(t*1.3 + uv.y*60.)*0.0007, cos(t*1.1 + uv.x*80.)*0.0005);
+        d += ceu * vec2(t*0.0009, 0.);
+        vec3 c = texture2D(map, uv + d).rgb;
+        c += agua * 0.10 * pow(max(0., sin(uv.x*1600. + uv.y*400. - t*5.)), 24.);   // brilho correndo na água
+        gl_FragColor = vec4(c, 1.);
+#include <colorspace_fragment>
+      }` });
+  cena.add(new THREE.Mesh(geo, viva));
   let yaw = 0, pitch = 0, fov = 75, auto = true, arr = null, vy = 0;
   const pts = P.pontos.map((p) => { const d = document.createElement('div'); d.className = 'p3-pt'; d.innerHTML = `<b></b><span>${p.rot}</span>`; d.onclick = (e) => { e.stopPropagation(); card.innerHTML = `<button class="x" aria-label="Fechar">×</button><h4>${p.rot}</h4><p>${p.txt}</p><cite>${p.ref}</cite>`; card.hidden = false; card.querySelector('.x').onclick = () => { card.hidden = true; }; }; ptsEl.appendChild(d); return { p, d }; });
   const intro = P.refs[0]; card.innerHTML = `<button class="x" aria-label="Fechar">×</button><h4>${P.titulo}</h4>${P.refs.map(([r, t]) => `<p>“${t}”<br><cite>${r} · Almeida</cite></p>`).join('')}`; card.hidden = false; card.querySelector('.x').onclick = () => { card.hidden = true; };
@@ -49,7 +69,7 @@ export async function abrirPanorama(THREE, id, host, { aoFechar } = {}) {
     if (auto) yaw += 0.03; else if (!arr) { yaw += vy; vy *= 0.92; }
     camera.fov += (fov - camera.fov) * 0.15; camera.updateProjectionMatrix();
     const ph = THREE.MathUtils.degToRad(90 - pitch), th = THREE.MathUtils.degToRad(yaw); camera.lookAt(v.setFromSphericalCoords(1, ph, th));
-    renderer.render(cena, camera);
+    viva.uniforms.t.value = performance.now() / 1000; renderer.render(cena, camera);
     for (const { p, d } of pts) { const q = new THREE.Vector3().setFromSphericalCoords(400, THREE.MathUtils.degToRad(90 - p.pitch), THREE.MathUtils.degToRad(p.yaw)); q.project(camera); const vis = q.z < 1 && Math.abs(q.x) < 1.1 && Math.abs(q.y) < 1.1; d.style.display = vis ? 'flex' : 'none'; if (vis) { d.style.left = (q.x + 1) / 2 * raiz.clientWidth + 'px'; d.style.top = (1 - q.y) / 2 * raiz.clientHeight + 'px'; } }
     requestAnimationFrame(quadro); }
   requestAnimationFrame(() => raiz.classList.add('on')); quadro();

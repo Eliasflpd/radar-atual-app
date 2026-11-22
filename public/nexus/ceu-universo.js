@@ -1628,7 +1628,7 @@ export function criarCeu(container, estado, acoes) {
   const cinemaVisto = new Set(); let cinemaMod = null;
   let mundoAtivo = null;
   window.NEXUS_MUNDO = async (id) => {   // o ambiente inteiro vira o mundo do tema (protótipo: 'trombetas')
-    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=2'); } catch (_) { return false; }
+    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=3'); } catch (_) { return false; }
     if (!cinemaMod.CINEMA[id]) return false; if (mundoAtivo) mundoAtivo.terminar();
     document.body.classList.add('mundo-ativo'); mundoAtivo = cinemaMod.tocarCinema(id, ui, { estudo: true, aoTerminar: () => { mundoAtivo = null; document.body.classList.remove('mundo-ativo'); } });
     return true;
@@ -1637,7 +1637,7 @@ export function criarCeu(container, estado, acoes) {
   async function entrarLivro(lv) {
     sobreLivro = null; info.hidden = true;
     const voa = () => voar(lv.cx, lv.cy, lv.raio * 4.2);
-    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=2'); } catch (_) { voa(); return; }
+    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=3'); } catch (_) { voa(); return; }
     const lista = await fetch('/nexus/livros/cinema.json?v=' + Math.floor(Date.now() / 60000)).then((r) => r.json()).catch(() => []);
     if (!cinemaMod.CINEMA[lv.num] || !lista.includes(lv.num) || cinemaVisto.has(lv.num)) { voa(); return; }
     cinemaVisto.add(lv.num); cinemaMod.tocarCinema(lv.num, ui, { aoTerminar: voa });
@@ -1671,7 +1671,7 @@ export function criarCeu(container, estado, acoes) {
     if (/^(o )?(tumulo|sepulcro) de lazaro$/.test(q)) { abrirLugarReal('lazaro'); return true; }
     if (/^nazare$/.test(q)) { abrirLugarReal('nazare'); return true; }
     if (/(sete|7) trombetas|^trombetas$/.test(q)) { window.NEXUS_MUNDO('trombetas'); return true; }
-    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { import('/nexus/panorama360.js?v=1').then((m) => m.abrirPanorama(THREE, 'eden', ui)); return true; }
+    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { fetch('/nexus/livros/eden-mapa.jpg', { method: 'HEAD' }).then((r) => (r.ok ? import('/nexus/mundo-terreno.js?v=1').then((m) => m.abrirMundo(THREE, 'eden', ui)) : import('/nexus/panorama360.js?v=4').then((m) => m.abrirPanorama(THREE, 'eden', ui)))); return true; }   // sobrevoo como no Google Earth; sem o mapa, o 360°
     if (/^(cafarnaum|capernaum|casa de pedro)$/.test(q)) { abrirLugarReal('cafarnaum'); return true; }
     if (/^(magdala|sinagoga de magdala)$/.test(q)) { abrirLugarReal('magdala'); return true; }
     if (/^(o )?(mar da galileia|lago de genezare|mar de tiberiades|mar de genezare|lago da galileia)$/.test(q)) { abrirLugarReal('mar'); return true; }
