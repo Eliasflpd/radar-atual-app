@@ -124,7 +124,7 @@ export async function abrirTemplo(THREE, host, { aoFechar } = {}) {
   };
 
   // ── utilidades de modelagem ──
-  const grupos = {}; const pecas = [];
+  const grupos = {}; const pecas = []; const refs = { querubim: [], arca: [], boi: [], coluna: [], candelabro: [] };
   const G = (id) => { const g = new THREE.Group(); g.name = id; cena.add(g); grupos[id] = g; return g; };
   const I = (titulo, texto, ref, aviso) => ({ titulo, texto, ref, aviso });
   function uvCaixa(geo, w, h, d, esc) {   // textura em escala do mundo (sem esticar)
@@ -224,7 +224,7 @@ export async function abrirTemplo(THREE, host, { aoFechar } = {}) {
     function mesa() { const m = new THREE.Group(); const top = new THREE.Mesh(new THREE.BoxGeometry(2, 0.12, 1), M.ouro); top.position.y = 1.5; m.add(top);
       for (const [a, b] of [[-0.9, -0.42], [0.9, -0.42], [-0.9, 0.42], [0.9, 0.42]]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 1.5, 8), M.ouro); p.position.set(a, 0.75, b); m.add(p); }
       for (let k = 0; k < 12; k++) { const pao = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 6), M.pao); pao.scale.set(1, 0.45, 0.8); pao.position.set(-0.75 + (k % 6) * 0.3, 1.62 + Math.floor(k / 6) * 0.08, Math.floor(k / 6) ? 0.18 : -0.18); m.add(pao); } return m; }
-    for (let k = 0; k < 5; k++) for (const s of [-1, 1]) { const x = -5 + k * 7.5; const c = candelabro(); c.position.set(x, Y0 + 0.3, s * 7.4); c.scale.setScalar(1.25); marcar(c, iCand); gS.add(c); const m = mesa(); m.position.set(x + 3.6, Y0 + 0.3, s * 7.6); marcar(m, iMesa); gS.add(m); }
+    for (let k = 0; k < 5; k++) for (const s of [-1, 1]) { const x = -5 + k * 7.5; const c = candelabro(); c.position.set(x, Y0 + 0.3, s * 7.4); c.scale.setScalar(1.25); marcar(c, iCand); gS.add(c); refs.candelabro.push(c); const m = mesa(); m.position.set(x + 3.6, Y0 + 0.3, s * 7.6); marcar(m, iMesa); gS.add(m); }
     const al = new THREE.Group(); const corpoAl = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), M.ouro); corpoAl.position.y = 1; al.add(corpoAl);
     for (const [a, b] of [[-0.45, -0.45], [0.45, -0.45], [-0.45, 0.45], [0.45, 0.45]]) { const h = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.3, 8), M.ouro); h.position.set(a, 2.15, b); al.add(h); }
     al.position.set(-7.5, Y0 + 0.3, 0); marcar(al, I('Altar do incenso', 'Também cobriu de ouro o altar que estava diante do oráculo.', '1 Reis 6:22; 7:48', 'Medidas segundo Êxodo 30:1–2 (interpretação).')); gS.add(al);
@@ -238,13 +238,13 @@ export async function abrirTemplo(THREE, host, { aoFechar } = {}) {
       q.add(new THREE.Mesh(torno([[0, 0], [1.4, 0], [1.4, 0.7], [1.05, 0.9], [1.15, 4.2], [1.0, 6.3], [0.75, 7.2], [0.5, 7.6], [0.0, 7.7]], 28), M.ouro));
       const cab = new THREE.Mesh(new THREE.SphereGeometry(0.85, 24, 18), M.ouro); cab.position.y = 8.4; cab.scale.set(0.9, 1.05, 0.9); q.add(cab);
       for (const s of [-1, 1]) { const asa = new THREE.Mesh(asaG, M.ouro); asa.position.set(0, 7.9, 0); asa.rotation.set(0, s > 0 ? -Math.PI / 2 : Math.PI / 2, 0.08); q.add(asa); }   // cada asa 5 côvados: uma toca a parede, a outra a do outro querubim
-      marcar(q, iQ); gQ.add(q); }
+      marcar(q, iQ); gQ.add(q); refs.querubim.push(q); }
     const iArca = I('Arca da aliança', 'E trouxeram os sacerdotes a arca da aliança do Senhor ao seu lugar, ao oráculo da casa, ao lugar santíssimo, até debaixo das asas dos querubins.', '1 Reis 8:6', 'Medidas da arca: Êxodo 25:10 (2,5 × 1,5 × 1,5 côvados). Os pequenos querubins da tampa (Êx 25:18–20) são distintos dos grandes.');
     const arca = new THREE.Group(); const corpo = new THREE.Mesh(uvCaixa(new THREE.BoxGeometry(1.5, 1.5, 2.5), 1.5, 1.5, 2.5, 1.6), M.painelOuroF); corpo.position.y = 0.75; arca.add(corpo);
     const tampa = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.16, 2.62), M.ouro); tampa.position.y = 1.58; arca.add(tampa);
     for (const s of [-1, 1]) { const pq = new THREE.Group(); pq.add(new THREE.Mesh(torno([[0, 0], [0.18, 0], [0.16, 0.4], [0.1, 0.55], [0, 0.6]], 14), M.ouro)); const a1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.32, 0.75), M.ouro); a1.position.set(0, 0.55, -s * 0.3); a1.rotation.x = s * 0.6; pq.add(a1); pq.position.set(0, 1.66, s * 0.95); arca.add(pq); }
     for (const s of [-1, 1]) { const v = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 4.6, 10), M.ouro); v.position.set(s * 0.82, 0.55, 0); v.rotation.x = Math.PI / 2; arca.add(v); }
-    arca.position.set(-20, Y0 + 0.3, 0); marcar(arca, iArca); gQ.add(arca);
+    arca.position.set(-20, Y0 + 0.3, 0); marcar(arca, iArca); gQ.add(arca); refs.arca.push(arca);
     const luzQ = new THREE.PointLight(0xffb45a, 0, 34, 1.6); luzQ.position.set(-14, Y0 + 10, 0); gQ.add(luzQ); gQ.userData.luz = luzQ; }
   // ═════ COLUNAS JAQUIM (sul) e BOAZ (norte) — 1 Rs 7:15–22 ═════
   const gCo = G('colunas');
@@ -258,7 +258,7 @@ export async function abrirTemplo(THREE, host, { aoFechar } = {}) {
       const aba = new THREE.Mesh(new THREE.CylinderGeometry(r * 2.05, r * 2.0, 0.5, 48), M.bronze); aba.position.y = 24.85; c.add(aba);
       for (const [y, rr, off] of [[20.4, 1.47, 0], [21.5, 1.53, 0.5]]) for (let k = 0; k < 30; k++) { const a = (k + off) / 30 * Math.PI * 2, rom = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), M.bronze); rom.position.set(Math.cos(a) * r * rr, y, Math.sin(a) * r * rr); c.add(rom); }
       for (let k = 0; k < 7; k++) { const t = new THREE.Mesh(new THREE.TorusGeometry(r * (1.46 + k * 0.012), 0.05, 6, 48), M.bronze); t.rotation.x = Math.PI / 2; t.position.y = 20 + k * 0.28; c.add(t); }
-      marcar(c, I('Coluna ' + nome, 'Formou duas colunas de bronze; a altura de cada coluna era de dezoito côvados, e um fio de doze côvados cercava cada uma das colunas… Depois levantou as colunas no pórtico do templo; e levantou a coluna direita, e chamou o seu nome Jaquim; e levantou a coluna esquerda, e chamou o seu nome Boaz.', '1 Reis 7:15, 21', 'Capitel de 5 côvados com redes, correntes, romãs e lírio (7:16–22); o desenho exato é interpretação. Jaquim ao sul, conforme o projeto.')); gCo.add(c); } }
+      marcar(c, I('Coluna ' + nome, 'Formou duas colunas de bronze; a altura de cada coluna era de dezoito côvados, e um fio de doze côvados cercava cada uma das colunas… Depois levantou as colunas no pórtico do templo; e levantou a coluna direita, e chamou o seu nome Jaquim; e levantou a coluna esquerda, e chamou o seu nome Boaz.', '1 Reis 7:15, 21', 'Capitel de 5 côvados com redes, correntes, romãs e lírio (7:16–22); o desenho exato é interpretação. Jaquim ao sul, conforme o projeto.')); gCo.add(c); refs.coluna.push(c); } }
   // ═════ PÁTIO: mar de fundição, dez pias, altar de bronze ═════
   const gM = G('mar'), gPi = G('pias'), gA = G('altar');
   { const iMar = I('Mar de fundição', 'Fez mais o mar de fundição, de dez côvados de uma borda até a outra borda, redondo ao redor, e de cinco côvados de alto; e um cordão de trinta côvados o cingia em redor… e a sua borda era como a borda de um copo, como flor de lírios.', '1 Reis 7:23, 26', 'Posição: "ao lado direito da casa, para o oriente, da banda do sul" (1 Rs 7:39).');
@@ -274,7 +274,7 @@ export async function abrirTemplo(THREE, host, { aoFechar } = {}) {
       const cab = new THREE.Mesh(new THREE.SphereGeometry(0.55, 14, 10), M.bronze); cab.scale.set(1.3, 0.85, 0.8); cab.position.set(2.15, 2.6, 0); b.add(cab);
       for (const s of [-1, 1]) { const ch = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.7, 8), M.bronze); ch.position.set(2.0, 3.1, s * 0.4); ch.rotation.x = s * 0.9; b.add(ch); }
       for (const [a, c] of [[1, 0.45], [1, -0.45], [-1, 0.45], [-1, -0.45]]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.17, 1.6, 8), M.bronze); p.position.set(a * 0.95, 1.2, c); b.add(p); } return b; }
-    for (let k = 0; k < 12; k++) { const lado = Math.floor(k / 3), a = lado * Math.PI / 2 + ((k % 3) - 1) * 0.42, bo = boi(); bo.position.set(xm + Math.cos(a) * 2.6, 0.8, zm + Math.sin(a) * 2.6); bo.rotation.y = -a; marcar(bo, iBoi); gM.add(bo); }
+    for (let k = 0; k < 12; k++) { const lado = Math.floor(k / 3), a = lado * Math.PI / 2 + ((k % 3) - 1) * 0.42, bo = boi(); bo.position.set(xm + Math.cos(a) * 2.6, 0.8, zm + Math.sin(a) * 2.6); bo.rotation.y = -a; marcar(bo, iBoi); gM.add(bo); refs.boi.push(bo); }
     const iPia = I('Pia sobre suporte (uma das dez)', 'Fez também dez suportes de bronze; o comprimento de cada suporte era de quatro côvados, e de quatro côvados a sua largura, e de três côvados a sua altura… E cada suporte tinha quatro rodas de bronze… Fez também dez pias de bronze; em cada pia cabiam quarenta batos.', '1 Reis 7:27, 30, 38', 'Cinco ao norte e cinco ao sul (7:39); o espaçamento é escolha do projeto.');
     function pia() { const p = new THREE.Group(); const cx = new THREE.Mesh(uvCaixa(new THREE.BoxGeometry(4, 2.2, 4), 4, 2.2, 4, 4), M.bronze); cx.position.y = 2.1; p.add(cx);
       for (const [a, c] of [[1.6, 2.05], [-1.6, 2.05], [1.6, -2.05], [-1.6, -2.05]]) { const rr = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.25, 20), M.bronze); rr.rotation.x = Math.PI / 2; rr.position.set(a, 0.75, c); p.add(rr); }
@@ -293,6 +293,30 @@ export async function abrirTemplo(THREE, host, { aoFechar } = {}) {
     marcar(alt, iAl); gA.add(alt); }
 
   const luzesDentro = [gS.userData.luz, gQ.userData.luz];
+  // ── PEÇAS DO CHATGPT EM 3D: imagem do ChatGPT → modelo 3D (Hunyuan3D-2) → entra no lugar da peça simples, no tamanho bíblico ──
+  // medida: 'alt' = altura em côvados; 'larg' = maior medida horizontal; giro: para onde o modelo olha
+  const PECAS3D = { querubim: { alt: 10, larg: 10, giro: -Math.PI / 2 }, arca: { larg: 2.5, giro: Math.PI / 2 }, boi: { larg: 3.4, giro: Math.PI / 2 }, coluna: { alt: 22.6, base: 2, giro: 0 }, candelabro: { alt: 2.6, giro: 0 } };
+  (async () => {
+    let GLTFLoader = null;
+    let lista = []; try { lista = await (await fetch('/nexus/templo3d/pecas.json?v=' + Date.now())).json(); } catch (_) { return; }   // as peças já convertidas
+    for (const nome of Object.keys(PECAS3D)) {
+      if (!lista.includes(nome)) continue; const url = `/nexus/templo3d/${nome}.glb`;
+      if (!GLTFLoader) GLTFLoader = (await import(CDN + 'loaders/GLTFLoader.js')).GLTFLoader;
+      const gltf = await new GLTFLoader().loadAsync(url); const modelo = gltf.scene; const cfg = PECAS3D[nome];
+      const cx = new THREE.Box3().setFromObject(modelo), tam = cx.getSize(new THREE.Vector3()), centro = cx.getCenter(new THREE.Vector3());
+      const esc = Math.min(cfg.alt ? cfg.alt / tam.y : Infinity, cfg.larg ? cfg.larg / Math.max(tam.x, tam.z) : Infinity);
+      const matPeca = nome === 'boi' || nome === 'coluna' ? M.bronze : M.ouro;   // a forma vem do modelo; o material é o do projeto (ouro ou bronze)
+      modelo.traverse((o) => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; o.material = matPeca; if (o.geometry && !o.geometry.attributes.normal) o.geometry.computeVertexNormals(); } });
+      for (const ref of refs[nome]) {
+        const piv = new THREE.Group(), cl = modelo.clone(true); cl.scale.setScalar(esc); cl.position.set(-centro.x * esc, -cx.min.y * esc, -centro.z * esc); piv.add(cl);
+        piv.position.copy(ref.position); if (cfg.base) piv.position.y += cfg.base; piv.rotation.y = ref.rotation.y + cfg.giro;
+        const info = (() => { let i = null; ref.traverse((o) => { if (!i && o.userData.info) i = o.userData.info; }); return i; })();
+        marcar(piv, info ? { ...info, aviso: (info.aviso ? info.aviso + ' ' : '') + 'Modelo 3D gerado a partir da imagem do ChatGPT (Hunyuan3D-2): forma ilustrativa.' } : null);
+        ref.parent.add(piv); ref.visible = false; if (nome === 'coluna') ref.children.slice(1).forEach((o) => { o.visible = false; }), ref.visible = true;
+      }
+      if (nome === 'coluna') refs.coluna.forEach((c) => { c.children.forEach((o, k) => { o.visible = k === 0; }); });
+    }
+  })().catch((e) => console.warn('peças 3D', e));
   // ── painel de camadas ──
   const ROT = { terreno: 'Monte Moriá e colinas', patio: 'Pátio interior', casa: 'Paredes e pódio', janelas: 'Janelas de grades', telhado: 'Cobertura e cornija', portico: 'Pórtico', camaras: 'Câmaras laterais (3 andares)', revestimento: 'Cedro e ouro por dentro', santo: 'Santo Lugar', santissimo: 'Santo dos Santos', colunas: 'Colunas Jaquim e Boaz', mar: 'Mar de fundição', pias: 'Dez pias', altar: 'Altar de bronze' };
   raiz.querySelector('.tp-cam-l').innerHTML = Object.keys(ROT).map((id) => `<label><input type="checkbox" data-g="${id}" checked>${ROT[id]}</label>`).join('');

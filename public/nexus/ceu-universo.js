@@ -1613,7 +1613,7 @@ export function criarCeu(container, estado, acoes) {
     if (!modoTerra) abrirTerra(); setTimeout(() => voarTerraPara(l, Math.max(6, RAIO_GLOBO * 0.01)), 60);
     let aviso = ui.querySelector('.cu-aviso-templo'); if (!aviso) { aviso = document.createElement('div'); aviso.className = 'cu-aviso-templo'; aviso.style.cssText = 'position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:8;background:rgba(5,11,26,.9);border:1px solid rgba(233,200,120,.5);color:#FFE8B0;border-radius:999px;padding:8px 16px;font:600 13px Inter,system-ui,sans-serif;pointer-events:none;white-space:nowrap'; ui.appendChild(aviso); }
     aviso.textContent = '🏛 Templo de Salomão · Monte Moriá, Jerusalém (2 Crônicas 3:1) · o templo vai surgir aqui'; aviso.hidden = false;
-    setTimeout(async () => { aviso.hidden = true; if (temploAberto) return; const m = await import('/nexus/templo-maquete.js?v=4'); temploAberto = await m.abrirTemplo(THREE, ui, { aoFechar: () => { temploAberto = null; } }); }, 3400);
+    setTimeout(async () => { aviso.hidden = true; if (temploAberto) return; const m = await import('/nexus/templo-maquete.js?v=6'); temploAberto = await m.abrirTemplo(THREE, ui, { aoFechar: () => { temploAberto = null; } }); }, 3400);
     return true;
   }
   function buscar(texto) {
