@@ -6,7 +6,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 // cenas que o NEXUS já tem (abrem pela pesquisa do universo)
 const CENAS = [
-  [/fruto|queda|adao|serpente|genesis 3\b|pecado original|arvore do conhecimento/, null, 'o mundo de Gênesis 3: a escolha do homem', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('queda')],
+  [/fruto|queda|adao|serpente|genesis 3\b|pecado original|arvore do conhecimento|escolha do homem|voz da mulher/, null, 'o mundo de Gênesis 3: a escolha do homem', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('queda')],
   [/(sete|7) trombetas|trombeta/, null, 'o mundo das sete trombetas (Apocalipse 8–11)', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('trombetas')],
   [/\beden\b|paraiso/, 'Éden', 'o jardim do Éden para sobrevoar'],
   [/criacao|genesis 1\b|no principio/, null, 'a criação (Gênesis 1)', () => window.__ceuPrevia && window.__ceuPrevia._teste && window.__ceuPrevia._teste.entrarLivro(1)],
@@ -53,7 +53,7 @@ export function iniciarGuia() {
     const cena = CENAS.find(([re]) => re.test(q));
     if (cena) {   // a cena muda na hora (sem custo)
       const [, busca, nome, fn] = cena;
-      if (!window.__ceuPrevia && typeof window.NEXUS_ABRIR_CEU === 'function') await window.NEXUS_ABRIR_CEU();
+      if ((!window.__ceuPrevia || !document.body.classList.contains('ceu-universo')) && typeof window.NEXUS_ABRIR_CEU === 'function') await window.NEXUS_ABRIR_CEU();
       for (let i = 0; i < 40 && !(window.__ceuPrevia && window.__ceuPrevia._teste && window.__ceuPrevia._teste.pronto()); i++) await new Promise((ok) => setTimeout(ok, 250));
       // fecha a cena que estiver aberta antes de abrir a nova
       document.querySelectorAll('.mt-sair,.p3-sair,.lr-sair,.tp-sair,.lc-pular').forEach((b) => { try { b.click(); } catch (_) {} });
