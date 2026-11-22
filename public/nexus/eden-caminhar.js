@@ -19,8 +19,59 @@ const NOTAS = {
   arvore: 'A aparência da árvore da vida é ilustrativa: o texto não a descreve.',
 };
 
-export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}) {
-  const BASES = [(window.NEXUS_MIDIA || '/nexus') + '/eden/', '/nexus/eden/'];
+// MUNDOS ANDÁVEIS: o mesmo motor monta o Éden e os lugares de Jesus. Cada mundo tem suas peças (pasta), céu, hora do dia e textos.
+export const MUNDOS_ANDAVEIS = {
+  eden: { titulo: 'O jardim do Éden', sub: 'GÊNESIS 2:8–15 · ANDAR NO JARDIM', pasta: 'eden', ceu: '/livros/eden-360-montanhas.jpg', noite: false, lat: 31.0, lon: 47.4, TD: { x: -0.6, z: -0.8 },
+    credito: 'Reconstituição artística: peças geradas pelo ChatGPT a pedido do NEXUS (ilustrativas). O texto bíblico não descreve a aparência do jardim.', versos: VERSOS, notas: NOTAS,
+    lugar: { arvore: 'diante da árvore da vida, no meio do jardim (Gn 2:9)', rio: 'onde o rio que sai do Éden se divide em quatro braços (Gn 2:10)', animais: 'entre os animais do jardim (Gn 2:19)', presenca: 'junto da luz que representa a presença do Senhor passeando no jardim (Gn 3:8)', chegada: 'na trilha que leva à árvore da vida (Gn 2:8)', bom: 'nas partes distantes do jardim (Gn 1:31)' }, nome: 'Jardim do Éden' },
+  getsemani: { titulo: 'O Getsêmani', sub: 'MATEUS 26:36–46 · NOITE DE PÁSCOA, c. 30 d.C.', pasta: 'getsemani', ceu: '/getsemani/ceu-noite-360.jpg', noite: true, lat: 31.7795, lon: 35.2398, TD: { x: -0.766, z: 0.643 },   // a trilha desce do monte; de frente para a rocha, Jerusalém fica ao fundo (como no céu 360°)
+    credito: 'Reconstituição artística do olival na encosta do Monte das Oliveiras, de noite (peças do ChatGPT, ilustrativas). A Páscoa cai na lua cheia; a posição exata do jardim não é conhecida.',
+    versos: {
+      chegada: ['João 18:1', 'Tendo Jesus dito isto, saiu com seus discípulos para o outro lado do ribeiro de Cedrom, onde havia um jardim, e com eles ali entrou.'],
+      vigiai: ['Mateus 26:38', 'Então lhes disse: A minha alma está triste até a morte; ficai aqui e vigiai comigo.'],
+      rocha: ['Mateus 26:39', 'E adiantando-se um pouco, prostrou-se com o rosto em terra e orou, dizendo: Meu Pai, se é possível, passa de mim este cálice; todavia, não seja como eu quero, mas como tu queres.'],
+      presenca: ['Lucas 22:43', 'Então lhe apareceu um anjo do céu, que o confortava.'],
+      tochas: ['João 18:3', 'Tendo, pois, Judas tomado a corte e uns guardas da parte dos principais sacerdotes e fariseus, chegou ali com lanternas archotes e armas.'],
+      cidade: ['Lucas 19:41', 'E quando chegou perto e viu a cidade, chorou sobre ela,'],
+      bom: ['Mateus 26:41', 'Vigiai e orai, para que não entreis em tentação; o espírito, na verdade, está pronto, mas a carne é fraca.'],
+    },
+    notas: { vigiai: 'As 8 oliveiras antigas de hoje, junto à Basílica da Agonia, foram datadas em parte por carbono-14: três têm troncos dos anos 1092, 1166 e 1198 (estudo italiano de 2012, publicado em 2015); as raízes podem ser mais antigas. Aqui elas representam o olival da época, não as árvores do ano 30.', cidade: 'Do outro lado do vale do Cedrom, a uns 300 m e mais alto que o olival: Jerusalém, com o Templo de Herodes no monte do Templo, as muralhas e a porta do lado leste; ao sul, a Cidade de Davi e o Monte Sião. (Lc 19:41 se passa nesta mesma encosta, alguns dias antes.)', rocha: 'Lucas 22:44 acrescenta a agonia e o suor “como grandes gotas de sangue”. A rocha aqui é ilustrativa; a tradição a mostra na Basílica da Agonia.', presenca: 'O anjo aparece só como luz, sem figura: o texto não o descreve.', chegada: '“Getsêmani” quer dizer “prensa de azeite”.' },
+    lugar: { cidade: 'no mirante do Getsêmani, olhando Jerusalém e o Templo do outro lado do vale do Cedrom', rocha: 'junto da rocha onde Jesus orou (Mt 26:39)', vigiai: 'no olival, perto de onde os discípulos dormiram (Mt 26:38–43)', presenca: 'junto da luz que representa o anjo que o confortou (Lc 22:43)', tochas: 'vendo as tochas dos guardas subindo do vale do Cedrom (Jo 18:3)', chegada: 'na trilha que sobe do ribeiro de Cedrom (Jo 18:1)', bom: 'nas partes altas do Monte das Oliveiras' }, nome: 'Jardim do Getsêmani' },
+  jerusalem: { titulo: 'Jerusalém', sub: 'c. 30 d.C. · O TEMPLO DE HERODES E A CIDADE', pasta: 'jerusalem', ceu: '/ela/ceu-ela-360.jpg', noite: false, lat: 31.7780, lon: 35.2354, TD: { x: 0.625, z: 0.781 }, inicio: 128,
+    credito: 'Reconstituição de Jerusalém no ano 30 d.C. a partir de Josefo, da Mishná (Middot) e da arqueologia (Ritmeyer, maquete Holyland). Muros da esplanada, vales e colinas seguem o terreno real; a planta dos pátios, a Segunda Muralha e as casas são reconstrução.',
+    versos: {
+      chegada: ['Salmos 122:1–2', 'Alegrei-me quando me disseram: Vamos à casa do Senhor. Os nossos pés estão dentro das tuas portas, ó Jerusalém.'],
+      santuario: ['João 2:20', 'Disseram, pois, os judeus: Em quarenta e seis anos foi edificado este templo, e tu o levantarás em três dias?'],
+      portaFormosa: ['Atos 3:2', 'E era trazido um varão que desde o ventre de sua mãe era coxo, o qual todos os dias punham à porta do templo, chamada Formosa, para pedir esmola aos que entravam.'],
+      salomao: ['João 10:23', 'E Jesus andava passeando no templo, no alpendre de Salomão.'],
+      porticoReal: ['Marcos 13:1', 'E, saindo ele do templo, disse-lhe um dos seus discípulos: Mestre, olha que pedras e que edifícios!'],
+      antonia: ['Atos 21:34', 'E, não podendo saber a verdade por causa do alvoroço, mandou conduzi-lo para a fortaleza.'],
+      palacio: ['Mateus 27:27', 'E logo os soldados do presidente, conduzindo Jesus à audiência, reuniram junto dele toda a coorte.'],
+      siloe: ['João 9:7', 'E disse-lhe: Vai, lava-te no tanque de Siloé (que significa o Enviado). Foi, pois, e lavou-se, e voltou vendo.'],
+      cidadeDavi: ['2 Samuel 5:7', 'Porém Davi tomou a fortaleza de Sião; esta é a cidade de Davi.'],
+      bom: ['Lucas 19:41', 'E quando chegou perto e viu a cidade, chorou sobre ela,'],
+    },
+    notas: { portaFormosa: 'A localização da Porta Formosa é debatida: a leitura mais comum a põe no muro leste do Pátio das Mulheres (a porta de bronze de Corinto descrita por Josefo); outros a identificam com a Porta de Nicanor.', palacio: 'Muitos estudiosos põem o pretório de Pilatos no palácio de Herodes, na Cidade Alta; a tradição medieval o punha na Antônia.', santuario: 'Medidas do Santuário segundo Josefo e a Mishná (Middot), que divergem em detalhes.' },
+    lugar: { chegada: 'no Pátio dos Gentios, na esplanada do Templo', santuario: 'diante do Santuário', portaFormosa: 'diante da Porta Formosa', salomao: 'no Pórtico de Salomão', porticoReal: 'no Pórtico Real', antonia: 'junto da fortaleza Antônia', palacio: 'diante do palácio de Herodes', siloe: 'no tanque de Siloé', cidadeDavi: 'na Cidade de Davi', bom: 'na cidade' }, nome: 'Jerusalém' },
+  ela: { titulo: 'O Vale de Elá', sub: '1 SAMUEL 17 · c. 1020 a.C.', pasta: 'ela', ceu: '/ela/ceu-ela-360.jpg', noite: false, lat: 31.69, lon: 34.96, TD: { x: 0, z: -1 }, inicio: 125,
+    credito: 'Reconstituição do Vale de Elá na Sefelá (peças do ChatGPT, ilustrativas). O relevo segue a geografia do vale; a posição exata dos acampamentos é debatida.',
+    versos: {
+      israel: ['1 Samuel 17:2–3', 'Saul, porém, e os homens de Israel se ajuntaram e acamparam no vale de Elá, e ordenaram a batalha contra os filisteus. Os filisteus estavam num monte de um lado, e os israelitas estavam num monte do outro lado; e entre eles o vale.'],
+      filisteus: ['1 Samuel 17:1', 'Ora, os filisteus ajuntaram as suas forças para a guerra e congregaram-se em Socó, que pertence a Judá, e acamparam entre Socó e Azeca, em Efes-Damim.'],
+      golias: ['1 Samuel 17:4', 'Então saiu do arraial dos filisteus um campeão, cujo nome era Golias, de Gate, que tinha de altura seis côvados e um palmo.'],
+      ribeiro: ['1 Samuel 17:40', 'Então tomou na mão o seu cajado, escolheu do ribeiro cinco seixos lisos e pô-los no alforje de pastor que trazia, a saber, no surrão, e, tomando na mão a sua funda, foi-se chegando ao filisteu.'],
+      davi: ['1 Samuel 17:45', 'Davi, porém, lhe respondeu: Tu vens a mim com espada, com lança e com escudo; mas eu venho a ti em nome do Senhor dos exércitos, o Deus dos exércitos de Israel, a quem tens afrontado.'],
+      oeste: ['1 Samuel 17:52', 'Então os homens de Israel e de Judá se levantaram, e jubilaram, e seguiram os filisteus até à entrada do vale, e até às portas de Ecrom; e caíram os feridos dos filisteus pelo caminho de Saaraim até Gate e até Ecrom.'],
+      bom: ['1 Samuel 17:49', 'E Davi, metendo a mão no alforje, tirou dali uma pedra e com a funda lha atirou, ferindo o filisteu na testa; a pedra se lhe cravou na testa, e ele caiu com o rosto em terra.'],
+    },
+    notas: { golias: 'O texto hebraico diz seis côvados e um palmo (uns 2,9 m); a Septuaginta e um manuscrito do mar Morto (4QSamᵃ) dizem quatro côvados e um palmo (uns 2 m).', ribeiro: 'O leito do ribeiro do vale ainda é cheio de seixos lisos e arredondados.', filisteus: 'Os estudiosos divergem sobre em qual encosta ficava cada exército; aqui os filisteus estão na do sul.', oeste: 'Daqui o vale se abre para o oeste: Gate (Tel Tzafit), a cidade de Golias, fica a uns 8 km; depois vem a planície costeira até Asquelom. Gaza fica a uns 50 km, perdida na névoa; o Egito não se vê daqui.' },
+    lugar: { israel: 'no acampamento de Israel, na encosta norte do vale', filisteus: 'perto do acampamento filisteu, na encosta sul', golias: 'diante de Golias, no meio do vale', ribeiro: 'no ribeiro de seixos onde Davi pegou as cinco pedras', oeste: 'olhando para o oeste, para Gate e a planície costeira', davi: 'no fundo do vale de Elá', bom: 'no vale de Elá' }, nome: 'Vale de Elá' },
+};
+
+export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo = 'eden', oculto = false } = {}) {
+  const folga = () => new Promise((ok) => setTimeout(ok, 0));   // montagem em pedaços: o globo continua girando liso enquanto o mundo é preparado
+  const MW = MUNDOS_ANDAVEIS[mundo] || MUNDOS_ANDAVEIS.eden, E = MW === MUNDOS_ANDAVEIS.eden, G = MW === MUNDOS_ANDAVEIS.getsemani, L = MW === MUNDOS_ANDAVEIS.ela, J = MW === MUNDOS_ANDAVEIS.jerusalem, N = !!MW.noite, I = MW.inicio || 70; window.__nexusMundoAtual = MW.pasta;
+  const BASES = [(window.NEXUS_MIDIA || '/nexus') + '/' + MW.pasta + '/', '/nexus/' + MW.pasta + '/'];
   let pecas = {}, base = BASES[0];
   for (const b of BASES) { try { const r = await fetch(b + 'pecas.json', { cache: 'no-cache' }); if (r.ok) { pecas = await r.json(); base = b; break; } } catch (_) {} }
   const toque = matchMedia('(pointer: coarse)').matches;
@@ -41,58 +92,69 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     .ej-dica{position:absolute;right:20px;bottom:20px;font-size:12px;color:#fff;text-shadow:0 1px 4px #000}
     .ej-mira{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:rgba(255,255,255,.6);pointer-events:none}
   </style><canvas></canvas><div class="ej-mira"></div>
-  <div class="ej-cab"><h2>O jardim do Éden</h2><p>GÊNESIS 2:8–15 · ANDAR NO JARDIM</p></div>
+  <div class="ej-cab"><h2>${MW.titulo}</h2><p>${MW.sub}</p></div>
   <div class="ej-bts"><button type="button" class="ej-modo">👁 Primeira pessoa</button><button type="button" class="ej-voar">🕊 Voar</button><button type="button" class="ej-som">🔈 Som</button><button type="button" class="ej-sair">↩ Voltar</button></div>
   <div class="ej-card"></div><div class="ej-joy"><b></b></div>
-  <div class="ej-cred">Reconstituição artística: peças geradas pelo ChatGPT a pedido do NEXUS (ilustrativas). O texto bíblico não descreve a aparência do jardim.</div>
+  <div class="ej-cred">${MW.credito}</div>
   <div class="ej-dica">${toque ? 'Joystick para andar · arraste para olhar · toque duplo no chão para ir até lá' : 'W A S D ou setas para andar · Shift corre · arraste para olhar · duplo clique no chão para ir até lá'}</div>`;
   host.appendChild(raiz);
   const canvas = raiz.querySelector('canvas'), card = raiz.querySelector('.ej-card');
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(toque ? 1.5 : 2, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
-  const cena = new THREE.Scene(); const NEVOA = new THREE.Color(0xc4cfa8), DENS = 0.0011;
+  const cena = new THREE.Scene(); const NEVOA = new THREE.Color(E ? 0xc4cfa8 : G ? 0x141c30 : 0xd9cfb4), DENS = E ? 0.0011 : G ? 0.0019 : 0.00055;
   cena.fog = new THREE.FogExp2(NEVOA, DENS); cena.background = NEVOA;
   const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 9000);
-  const SOL = new THREE.Vector3(-0.55, 0.42, -0.72).normalize();
-  cena.add(new THREE.HemisphereLight(0xfff4dc, 0x4f6a2c, 1.25)); const sol = new THREE.DirectionalLight(0xffe2b0, 2.4); sol.position.copy(SOL).multiplyScalar(500); cena.add(sol);
-  const carregar = (n) => new THREE.TextureLoader().loadAsync(base + n).then((t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }).catch(() => null);
-  const unif = { t: { value: 0 }, nevoa: { value: NEVOA }, dens: { value: DENS } };
+  const SOL = (E ? new THREE.Vector3(-0.55, 0.42, -0.72) : G ? new THREE.Vector3(-0.188, 0.656, -0.731) : new THREE.Vector3(0.78, 0.32, -0.3)).normalize();   // sol no Éden; lua cheia no Getsêmani
+  cena.add(!N ? new THREE.HemisphereLight(0xfff4dc, 0x5a5530, 1.25) : new THREE.HemisphereLight(0x8fa6d6, 0x15180e, 0.55)); const sol = !N ? new THREE.DirectionalLight(0xffe2b0, 2.4) : new THREE.DirectionalLight(0xc9d8ff, 1.15); sol.position.copy(SOL).multiplyScalar(500); cena.add(sol);
+  // a imagem é decodificada FORA da tarefa principal (createImageBitmap): o globo segue girando liso enquanto as peças chegam
+  const carregar = (n) => fetch(base + n).then((r) => { if (!r.ok) throw 0; return r.blob(); }).then((b) => createImageBitmap(b, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' }))
+    .then((bm) => { const t = new THREE.Texture(bm); t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true; return t; })
+    .catch(() => new THREE.TextureLoader().loadAsync(base + n).then((t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }).catch(() => null));
+  const unif = { t: { value: 0 }, nevoa: { value: NEVOA }, dens: { value: DENS }, luz: { value: !N ? new THREE.Color(1, 1, 1) : new THREE.Color(0.36, 0.43, 0.6) } };   // luz: de noite, tudo recebe o luar frio
   const lixo = [];
 
   // CÉU: o 360° das montanhas do Éden ao fundo
-  const ceuTex = await new THREE.TextureLoader().loadAsync((window.NEXUS_MIDIA || '/nexus') + '/livros/eden-360-montanhas.jpg').catch(() => null);
+  const ceuTex = await new THREE.TextureLoader().loadAsync((window.NEXUS_MIDIA || '/nexus') + MW.ceu).catch(() => new THREE.TextureLoader().loadAsync('/nexus' + MW.ceu).catch(() => null));
   let ceu = null;
-  if (ceuTex) { ceuTex.colorSpace = THREE.SRGBColorSpace; const g = new THREE.SphereGeometry(4000, 64, 32); g.scale(-1, 1, 1); ceu = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: ceuTex, color: new THREE.Color(1.25, 1.2, 1.1), fog: false, depthWrite: false })); ceu.renderOrder = -1; cena.add(ceu); lixo.push(ceuTex); }
+  if (ceuTex) { ceuTex.colorSpace = THREE.SRGBColorSpace; const g = new THREE.SphereGeometry(4000, 64, 32); g.scale(-1, 1, 1); ceu = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: ceuTex, color: E ? new THREE.Color(1.25, 1.2, 1.1) : G ? new THREE.Color(1, 1, 1.05) : new THREE.Color(1.12, 1.1, 1.05), fog: false, depthWrite: false })); ceu.renderOrder = -1; cena.add(ceu); lixo.push(ceuTex); }
 
   // RIOS: um rio vem do norte, passa ao lado da árvore da vida e se divide em quatro braços (Gn 2:10)
   const V = (x, z) => new THREE.Vector3(x, 0, z);
-  const TD = { x: -0.6, z: -0.8 }, TP = { x: 0.8, z: -0.6 };   // direção da trilha (do centro para fora) e o lado
+  const TD = MW.TD, TP = { x: -MW.TD.z, z: MW.TD.x };   // direção da trilha (do centro para fora) e o lado
   const T2W = (lado, s) => ({ x: TD.x * s + TP.x * lado, z: TD.z * s + TP.z * lado }); const W2T = (x, z) => ({ s: x * TD.x + z * TD.z, lado: x * TP.x + z * TP.z });
   const VT = (lado, s, y = 0) => { const w = T2W(lado, s); return new THREE.Vector3(w.x, y, w.z); };
   const FORQ = V(48, 36);
-  const rios = [
+  const rios = (E ? [
     [V(-180, -2100), V(-120, -1500), V(-60, -900), V(10, -520), V(-30, -260), V(40, -110), V(30, -20), FORQ],
     [FORQ, V(160, 10), V(330, -90), V(560, -60), V(900, -180), V(1500, -420), V(2100, -380)],
     [FORQ, V(130, 150), V(260, 330), V(330, 560), V(520, 900), V(800, 1500), V(1000, 2100)],
     [FORQ, V(10, 170), V(-90, 330), V(-160, 560), V(-260, 900), V(-420, 1500), V(-520, 2100)],
     [FORQ, V(-60, 90), V(-230, 120), V(-430, 60), V(-900, 140), V(-1500, 260), V(-2100, 180)],
-  ].map((p) => new THREE.CatmullRomCurve3(p, false, 'catmullrom', 0.5));
+  ] : []).map((p) => new THREE.CatmullRomCurve3(p, false, 'catmullrom', 0.5));
   const amostras = []; rios.forEach((c, i) => { for (let k = 0; k <= 700; k++) { const p = c.getPointAt(k / 700); amostras.push(p.x, p.z, i === 0 ? 16 : 11); } });
-  const CEL = 60, grade = new Map(); for (let i = 0; i < amostras.length; i += 3) { const k = Math.floor(amostras[i] / CEL) + ',' + Math.floor(amostras[i + 1] / CEL); if (!grade.has(k)) grade.set(k, []); grade.get(k).push(i); }
-  function distRio(x, z) { let m = 1e9, w = 11; const cx = Math.floor(x / CEL), cz = Math.floor(z / CEL); for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const l = grade.get((cx + a) + ',' + (cz + b)); if (!l) continue; for (const i of l) { const dx = x - amostras[i], dz = z - amostras[i + 1], d = dx * dx + dz * dz; if (d < m) { m = d; w = amostras[i + 2]; } } } return [m < 1e9 ? Math.sqrt(m) : 999, w]; }
+  const CEL = 60, grade = new Map(); for (let i = 0; i < amostras.length; i += 3) { const k = (Math.floor(amostras[i] / CEL) + 2048) * 4096 + Math.floor(amostras[i + 1] / CEL) + 2048; if (!grade.has(k)) grade.set(k, []); grade.get(k).push(i); }
+  function distRio(x, z) { let m = 1e9, w = 11; const cx = Math.floor(x / CEL), cz = Math.floor(z / CEL); for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const l = grade.get((cx + a + 2048) * 4096 + cz + b + 2048); if (!l) continue; for (const i of l) { const dx = x - amostras[i], dz = z - amostras[i + 1], d = dx * dx + dz * dz; if (d < m) { m = d; w = amostras[i + 2]; } } } return [m < 1e9 ? Math.sqrt(m) : 999, w]; }
 
   // RELEVO: colinas suaves no jardim, montanhas ao longe, leito dos rios escavado
-  const hBase = (x, z) => { const r = Math.hypot(x, z); return 2.6 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.3 * Math.sin(x * 0.031 + z * 0.027) + 0.5 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
+  const hGets = (x, z) => { const sJ = -(x * MW.TD.x + z * MW.TD.z), xx = -sJ, ss = THREE.MathUtils.smoothstep;   // perfil real: o olival fica no pé do Monte das Oliveiras, uns 20 m acima do Cedrom; do outro lado o monte do Templo sobe uns 45 m acima do olival, a ~300 m
+    const enc = (sJ > 0 ? -22 * ss(sJ, 15, 120) - 6 * ss(sJ, 200, 420) : 0.11 * xx + 2.5 * Math.tanh(xx / 60)) - 1.2 * Math.sin(z * 0.012) + 0.6 * Math.sin(x * 0.05 + z * 0.03); const pas = 1.6, k = enc / pas, deg = pas * (Math.floor(k) + THREE.MathUtils.smoothstep(k - Math.floor(k), 0.78, 1)); const plano = 1 - THREE.MathUtils.smoothstep(Math.hypot(x, z), 6, 16); return (deg * 0.85 + enc * 0.15) * (1 - plano); };
+  const ribZ = (x) => 12 * Math.sin(x / 180) + 5 * Math.sin(x / 63);   // o ribeiro serpenteia pelo fundo do vale
+  const hEla = (x, z) => { const ss = THREE.MathUtils.smoothstep, az = Math.abs(z), abre = ss(x, -1700, -600), leste = Math.max(0, x - 1000) * 0.12;
+    const encosta = 85 * ss(az, 70, 300) * (0.78 + 0.22 * Math.sin(x * 0.004 + (z > 0 ? 1 : 2.5))), ondula = 4 * Math.sin(x * 0.011) * Math.cos(z * 0.013) + 2 * Math.sin(x * 0.03 + z * 0.02);
+    const leito = -1.6 * (1 - ss(Math.abs(z - ribZ(x)), 2.2, 7)); return encosta * abre + ondula * (0.35 + 0.65 * ss(az, 60, 220)) + leste + leito - 12 * (1 - abre); };
+  const JC = J ? await import('/nexus/jerusalem-cidade.js?v=4') : null;
+  const hBase = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z); return 2.6 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.3 * Math.sin(x * 0.031 + z * 0.027) + 0.5 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
   const T = 4400, NS = toque ? 400 : 560;
   const geoT = new THREE.PlaneGeometry(T, T, NS, NS); geoT.rotateX(-Math.PI / 2);
   const pos = geoT.attributes.position, cores = new Float32Array(pos.count * 3), alturas = new Float32Array(pos.count), relRio = new Float32Array(pos.count);
-  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i); const [d, w] = distRio(x, z); relRio[i] = d / w; const leito = (1 - THREE.MathUtils.smoothstep(d, w * 0.95, w * 1.45)) * 1.5 + 6.2 * Math.pow(Math.max(0, 1 - d / w), 1.15); const h = hBase(x, z) - leito; pos.setY(i, h); alturas[i] = h;
+  for (let i = 0; i < pos.count; i++) { if (i % 3000 === 0) await folga(); const x = pos.getX(i), z = pos.getZ(i); const [d, w] = distRio(x, z); relRio[i] = d / w; const leito = (1 - THREE.MathUtils.smoothstep(d, w * 0.95, w * 1.45)) * 1.5 + 6.2 * Math.pow(Math.max(0, 1 - d / w), 1.15); const h = hBase(x, z) - leito; pos.setY(i, h); alturas[i] = h;
     const mar = THREE.MathUtils.smoothstep(d, w * 1.2, w * 2.4), longe = THREE.MathUtils.smoothstep(Math.hypot(x, z), 420, 700), v = 0.85 + 0.25 * Math.sin(x * 0.05) * Math.cos(z * 0.043);
     cores[i * 3] = (0.78 + 0.22 * (1 - mar)) * v * (1 + longe * 0.15); cores[i * 3 + 1] = (0.92 + 0.0 * mar) * v; cores[i * 3 + 2] = (0.72 + 0.18 * (1 - mar)) * v * (1 - longe * 0.1);
     const banco = 1 - THREE.MathUtils.smoothstep(d, w * 1.0, w * 1.35); if (banco > 0) { cores[i * 3] = cores[i * 3] * (1 - banco) + 0.85 * banco; cores[i * 3 + 1] = cores[i * 3 + 1] * (1 - banco) + 0.72 * banco; cores[i * 3 + 2] = cores[i * 3 + 2] * (1 - banco) + 0.55 * banco; } }
+  if (J) for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), v = 0.9 + 0.12 * Math.sin(x * 0.07) * Math.cos(z * 0.05) + 0.06 * Math.sin(x * 0.31 + z * 0.23), oliv = THREE.MathUtils.smoothstep(x, 300, 600) * 0.5; cores[i * 3] = (0.92 - oliv * 0.2) * v; cores[i * 3 + 1] = (0.88 - oliv * 0.02) * v; cores[i * 3 + 2] = (0.8 - oliv * 0.12) * v; }   // terra rosa e calcário; oliveiras a leste
   geoT.setAttribute('color', new THREE.BufferAttribute(cores, 3)); geoT.computeVertexNormals();
-  const chaoTex = await carregar('chao-grama.jpg'); if (chaoTex) { chaoTex.wrapS = chaoTex.wrapT = THREE.RepeatWrapping; chaoTex.repeat.set(T / 9, T / 9); lixo.push(chaoTex); }
+  const chaoTex = await carregar(E ? 'chao-grama.jpg' : G || J ? 'chao-terra.jpg' : 'chao-ela.jpg'); if (chaoTex) { chaoTex.wrapS = chaoTex.wrapT = THREE.RepeatWrapping; chaoTex.repeat.set(T / 9, T / 9); lixo.push(chaoTex); }
   const terreno = new THREE.Mesh(geoT, new THREE.MeshStandardMaterial({ map: chaoTex, color: chaoTex ? 0xffffff : 0x6f8f3a, vertexColors: true, roughness: 0.96 }));
   cena.add(terreno); lixo.push(geoT, terreno.material);
   const passo = T / NS;
@@ -151,12 +213,12 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
 #include <colorspace_fragment>
       }` });
   const aguas = [];
-  rios.forEach((c, i) => { const N = 1700, M = 14, w = i === 0 ? 16 : 11, P = [], U = [], TG = [], PR = [], I = []; let s = 0, ant = null;
+  for (const [i, c] of rios.entries()) { await folga(); const N = 1700, M = 14, w = i === 0 ? 16 : 11, P = [], U = [], TG = [], PR = [], I = []; let s = 0, ant = null;
     for (let k = 0; k <= N; k++) { const u = k / N, p = c.getPointAt(u), tg = c.getTangentAt(u), lado = new THREE.Vector3(-tg.z, 0, tg.x).normalize(); if (ant) s += p.distanceTo(ant); ant = p;
       for (let j = 0; j <= M; j++) { const a = j / M, q = p.clone().addScaledVector(lado, (a * 2 - 1) * w * 1.08), y = hBase(q.x, q.z) - 1.0; P.push(q.x, y, q.z); U.push(a, s); TG.push(tg.x, 0, tg.z); PR.push(Math.max(0, y - altura(q.x, q.z))); } }
     for (let k = 0; k < N; k++) for (let j = 0; j < M; j++) { const a = k * (M + 1) + j, b = a + M + 1; I.push(a, b, a + 1, a + 1, b, b + 1); }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setAttribute('tg', new THREE.Float32BufferAttribute(TG, 3)); g.setAttribute('prof', new THREE.Float32BufferAttribute(PR, 1)); g.setIndex(I);
-    const m = new THREE.Mesh(g, matAgua); m.renderOrder = 2; cena.add(m); aguas.push(m); lixo.push(g); });
+    const m = new THREE.Mesh(g, matAgua); m.renderOrder = 2; cena.add(m); aguas.push(m); lixo.push(g); }
   lixo.push(matAgua, reflRT);
   // A MARGEM: faixa de areia molhada e cascalho dos dois lados de cada braço do rio, escurecida junto à água,
   // com a espuma que avança e recua na beira; por cima, seixos e pedras meio enterrados
@@ -190,16 +252,16 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
       }` });
-  rios.forEach((c, i) => { const w = i === 0 ? 16 : 11, N = 1700, M = 6;
+  for (const [i, c] of rios.entries()) { await folga(); const w = i === 0 ? 16 : 11, N = 1700, M = 6;
     for (const lado of [-1, 1]) { const P = [], MM = [], LS = [], I = []; let s = 0, ant = null;
       for (let k = 0; k <= N; k++) { const u = k / N, p = c.getPointAt(u), tg = c.getTangentAt(u), ld = new THREE.Vector3(-tg.z, 0, tg.x).normalize(); if (ant) s += p.distanceTo(ant); ant = p;
         for (let j = 0; j <= M; j++) { const m = j / M, off = w * (0.85 + m * 0.55), q = p.clone().addScaledVector(ld, lado * off); P.push(q.x, Math.max(altura(q.x, q.z), hBase(q.x, q.z) - 1.05) + 0.2, q.z); MM.push(m); LS.push(s); } }
       for (let k = 0; k < N; k++) for (let j = 0; j < M; j++) { const a = k * (M + 1) + j, b = a + M + 1; I.push(a, b, a + 1, a + 1, b, b + 1); }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('m', new THREE.Float32BufferAttribute(MM, 1)); g.setAttribute('ls', new THREE.Float32BufferAttribute(LS, 1)); g.setIndex(I);
-      const ms = new THREE.Mesh(g, matMargem); ms.renderOrder = 1; cena.add(ms); lixo.push(g); } });
+      const ms = new THREE.Mesh(g, matMargem); ms.renderOrder = 1; cena.add(ms); lixo.push(g); } }
   lixo.push(matMargem);
   { const gq = new THREE.IcosahedronGeometry(1, 2), pq = gq.attributes.position; for (let i = 0; i < pq.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(pq, i), k = 1 + 0.18 * Math.sin(v.x * 4.1 + v.z * 3.3) * Math.cos(v.y * 3.7); pq.setXYZ(i, v.x * k * 1.3, v.y * k * 0.55, v.z * k); } gq.computeVertexNormals();
-    const NQ = toque ? 600 : 1300, mq = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), iq = new THREE.InstancedMesh(gq, mq, NQ), mt = new THREE.Matrix4(), qq = new THREE.Quaternion(); let k = 0;
+    const NQ = !rios.length ? 0 : toque ? 600 : 1300, mq = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), iq = new THREE.InstancedMesh(gq, mq, NQ), mt = new THREE.Matrix4(), qq = new THREE.Quaternion(); let k = 0;
     for (let tent = 0; k < NQ && tent < NQ * 6; tent++) { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = ci === 0 ? 16 : 11, u = rnd() * 0.75, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (0.98 + rnd() * 0.4), x = p.x - tg.z * sx * d, z = p.z + tg.x * sx * d;
       if (Math.hypot(x, z) < 22) continue; const sc = 0.18 + Math.pow(rnd(), 2.5) * 0.9; qq.setFromEuler(new THREE.Euler(rnd() * 0.5, rnd() * 6.28, rnd() * 0.5)); mt.compose(new THREE.Vector3(x, Math.max(altura(x, z), hBase(x, z) - 1.15) - sc * 0.15, z), qq, new THREE.Vector3(sc, sc, sc)); iq.setMatrixAt(k, mt); iq.setColorAt(k, new THREE.Color().setHSL(0.09 + rnd() * 0.06, 0.1 + rnd() * 0.12, 0.3 + rnd() * 0.2)); k++; }
     iq.count = k; cena.add(iq); lixo.push(gq, mq); }
@@ -211,7 +273,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   const naAgua = (x, z) => { const [d, w] = distRio(x, z); return d < w * 1.15; };
   const fundura = (x, z) => hBase(x, z) - 1.0 - altura(x, z);
   // espelho: a cena vista de baixo da superfície, para o reflexo
-  function refletir() { const Y0 = hBase(camera.position.x, camera.position.z) - 1.0; if (camera.position.y - Y0 > 900) return;
+  function refletir() { if (!aguas.length) return; const Y0 = hBase(camera.position.x, camera.position.z) - 1.0; if (camera.position.y - Y0 > 900) return;
     const rot = new THREE.Matrix4().extractRotation(camera.matrixWorld), cpos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
     const alvoV = new THREE.Vector3(0, 0, -1).applyMatrix4(rot).add(cpos), upV = new THREE.Vector3(0, 1, 0).applyMatrix4(rot); upV.y = -upV.y;
     reflCam.position.set(cpos.x, 2 * Y0 - cpos.y, cpos.z); reflCam.up.copy(upV); reflCam.lookAt(alvoV.x, 2 * Y0 - alvoV.y, alvoV.z); reflCam.updateMatrixWorld(); reflCam.projectionMatrix.copy(camera.projectionMatrix);
@@ -224,15 +286,17 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     renderer.setRenderTarget(reflRT); renderer.render(cena, reflCam); ocultos.forEach((o) => { o.visible = true; });
     if (ceu) ceu.position.copy(camera.position); solDisco.position.copy(camera.position).addScaledVector(SOL, 3500); }
 
+  // JERUSALÉM: esplanada, pórticos, Santuário, Antônia, palácio, muralhas e casas (jerusalem-cidade.js)
+  let caixasJ = null; if (J) { const r = await JC.construir(THREE, cena, { altura, folga, lixo, toque, rnd }); caixasJ = r.obst; window.__mundoJ = { cena, altura, r }; }
   // GRAMA ALTA que balança ao vento em volta de quem anda
-  const NG = toque ? 70000 : 150000, RG = 30;
+  const NG = Math.round((toque ? 70000 : 150000) * (E ? 1 : G ? 0.45 : J ? 0 : 0.7)), RG = 30;
   // lâmina fina, afinando até a ponta, em 5 gomos (para poder curvar)
   const lamina = new THREE.PlaneGeometry(0.035, 1, 1, 5); lamina.translate(0, 0.5, 0);
   { const p = lamina.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); p.setX(i, p.getX(i) * (1 - Math.pow(y, 1.6) * 0.96)); } }
   const matGrama = new THREE.ShaderMaterial({ side: THREE.DoubleSide, uniforms: { ...unif, centro: { value: new THREE.Vector2() }, sol: { value: SOL } },
     vertexShader: `uniform float t; uniform vec2 centro; attribute vec3 iOff; attribute float iRot, iEsc; varying float vY, vD, vFl, vX, vTr; varying vec3 vC, vFc; uniform sampler2D alt; uniform vec3 sol;
       void main(){ vec2 rel = mod(iOff.xz - centro + ${RG}.0, ${(RG * 2).toFixed(1)}) - ${RG}.0; vec2 xz = centro + rel; float dist = length(rel);
-        float esc = iEsc * smoothstep(${RG}.0, ${(RG * 0.55).toFixed(1)}, dist); float ts = dot(xz, vec2(-.6, -.8)), tl = dot(xz, vec2(.8, -.6)); if (ts > 12. && ts < 170.) esc *= smoothstep(.55, 1.25, abs(tl - 2.5 * sin(ts / 13.)));
+        float esc = iEsc * smoothstep(${RG}.0, ${(RG * 0.55).toFixed(1)}, dist); float ts = dot(xz, vec2(${TD.x.toFixed(3)}, ${TD.z.toFixed(3)})), tl = dot(xz, vec2(${TP.x.toFixed(3)}, ${TP.z.toFixed(3)})); if (ts > 12. && ts < 170.) esc *= smoothstep(.55, 1.25, abs(tl - 2.5 * sin(ts / 13.)));
         float r2 = fract(iRot * 7.13), r3 = fract(iEsc * 13.7 + iOff.y * 3.1);
         float y = position.y; float altL = esc * (.18 + .42 * r3 * r3 + .12 * iOff.y);   // alturas variadas: muitas baixas, algumas altas
         // curva natural da lâmina (cai para um lado) e vento que vem em ondas pelo campo
@@ -242,16 +306,16 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
         p.x += vento * .55; p.z += vento * .25; p.y -= vento * vento * .6;
         vY = y; vX = position.x / .035 + .5;
         vec3 verde = mix(vec3(.10, .24, .05), vec3(.20, .36, .07), iOff.y), amarelo = vec3(.42, .45, .14), seco = vec3(.40, .34, .17);
-        vC = mix(verde, amarelo, r2 * r2 * .4); vC = mix(vC, seco, step(.93, r3) * .7);
+        vC = mix(verde, amarelo, r2 * r2 * .4); vC = mix(vC, seco, step(.93, r3) * .7);${G ? ' vC = mix(vC, vec3(.30, .28, .15), .6);' : L ? ' vC = mix(vC, vec3(.42, .40, .16), .3);' : ''}
         vFl = step(.965, iOff.y) * step(.82, y); vFc = iOff.y > .99 ? vec3(1.2, 1.15, 1.05) : iOff.y > .978 ? vec3(1.3, .95, .2) : vec3(1.1, .3, .45);
         vTr = pow(max(dot(normalize(vec3(xz.x, cameraPosition.y - 1.2, xz.y) - cameraPosition), sol), 0.), 3.);
         vec4 mv = viewMatrix * vec4(p + vec3(xz.x, 0., xz.y), 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform float dens; uniform vec3 nevoa, sol; varying float vY, vD, vFl, vX, vTr; varying vec3 vC, vFc;
+    fragmentShader: `uniform float dens; uniform vec3 nevoa, sol, luz; varying float vY, vD, vFl, vX, vTr; varying vec3 vC, vFc;
       void main(){ float base = smoothstep(.0, .55, vY);   // sombra na base, onde a luz não chega
         float meio = 1. - abs(vX * 2. - 1.); vec3 c = vC * (.28 + .9 * base) * (.8 + .3 * meio);
         c += vec3(.10, .16, .02) * pow(vY, 3.) * .5;   // ponta mais clara, a luz atravessa
         c += vec3(.10, .18, .03) * vTr * vY;
-        c = mix(c, vFc, vFl); float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), 1.);
+        c = mix(c, vFc, vFl); c *= luz; float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), 1.);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
       }` });
@@ -268,37 +332,72 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   const grama = new THREE.Mesh(gramaGeo, matGrama); grama.frustumCulled = false; cena.add(grama); lixo.push(gramaGeo, matGrama, altTex, lamina);
 
   // FIGURAS (recortes do ChatGPT) que sempre olham para quem anda, com vento no alto das árvores
-  const matFig = (tex, vento) => new THREE.ShaderMaterial({ uniforms: { ...unif, map: { value: tex }, vento: { value: vento } },
+  // atl: folha de quadros de um VÍDEO REAL recortado (colunas, linhas): cada animal mostra o seu quadro do passo
+  const matFig = (tex, vento, atl) => new THREE.ShaderMaterial({ uniforms: { ...unif, map: { value: tex }, vento: { value: vento } },
     vertexShader: `uniform float t, vento; attribute vec3 iPos; attribute vec2 iTam; attribute float iFase, iVira; varying vec2 vUv; varying float vD;
-      void main(){ vUv = vec2(iVira > .5 ? 1. - uv.x : uv.x, uv.y);
+      ${atl ? 'attribute float iQuadro;' : ''}
+      void main(){ vUv = vec2(iVira > .5 ? 1. - uv.x : uv.x, uv.y);${atl ? ` float qd = floor(iQuadro); float cl = mod(qd, ${atl[0].toFixed(1)}), ln = floor(qd / ${atl[0].toFixed(1)}); vUv = vec2((cl + vUv.x) / ${atl[0].toFixed(1)}, 1. - (ln + 1. - vUv.y) / ${atl[1].toFixed(1)});` : ''}
         vec3 d3 = normalize(cameraPosition - iPos); vec3 dir = d3; dir.y = 0.; dir = normalize(dir + vec3(1e-4, 0., 0.)); vec3 dirX = vec3(dir.z, 0., -dir.x);
         float k = smoothstep(15., 140., cameraPosition.y - iPos.y) * .85; vec3 upV = normalize(mix(vec3(0., 1., 0.), cross(d3, dirX), k));
         float y = position.y; float sopro = (sin(t * 1.1 + iFase) * .6 + sin(t * 2.3 + iFase * 1.7) * .25) * vento * y * y;
         vec3 w = iPos + dirX * (position.x * iTam.x + sopro * iTam.y * .035) + upV * y * iTam.y;
         vec4 mv = viewMatrix * vec4(w, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform sampler2D map; uniform float dens; uniform vec3 nevoa; varying vec2 vUv; varying float vD;
-      void main(){ vec4 c = texture2D(map, vUv); if (c.a < .5) discard; float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c.rgb * 1.04, nevoa, f), 1.);
+    fragmentShader: `uniform sampler2D map; uniform float dens; uniform vec3 nevoa, luz; varying vec2 vUv; varying float vD;
+      void main(){ vec4 c = texture2D(map, vUv); if (c.a < .5) discard; float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c.rgb * 1.04 * luz, nevoa, f), 1.);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
       }` });
   const quad = new THREE.PlaneGeometry(1, 1); quad.translate(0, 0.5, 0); lixo.push(quad);
   const obst = [];   // troncos: o explorador não atravessa
-  async function figuras(nome, lista, alturaReal, vento = 0) {
-    const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + '.png'); if (!tex) return null; lixo.push(tex);
+  async function figuras(nome, lista, alturaReal, vento = 0) { await folga();
+    const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + (pc.ext || '.png')); if (!tex) return null; lixo.push(tex);
     const asp = pc.w / pc.h, g = new THREE.InstancedBufferGeometry(); g.index = quad.index; g.attributes.position = quad.attributes.position; g.attributes.uv = quad.attributes.uv; g.instanceCount = lista.length;
     const P = new Float32Array(lista.length * 3), S = new Float32Array(lista.length * 2), F = new Float32Array(lista.length), R = new Float32Array(lista.length);
     lista.forEach((o, i) => { const hR = alturaReal * (o.s || 1); P.set([o.x, altura(o.x, o.z) - 0.15 + (o.y || 0), o.z], i * 3); S.set([hR * asp, hR], i * 2); F[i] = Math.random() * 6.28; R[i] = o.vira ? 1 : 0; });
     g.setAttribute('iPos', new THREE.InstancedBufferAttribute(P, 3)); g.setAttribute('iTam', new THREE.InstancedBufferAttribute(S, 2)); g.setAttribute('iFase', new THREE.InstancedBufferAttribute(F, 1)); g.setAttribute('iVira', new THREE.InstancedBufferAttribute(R, 1));
     if (/arvore|palmeira/.test(nome)) lista.forEach((o) => obst.push({ x: o.x, z: o.z, r: 0.35 + alturaReal * (o.s || 1) * 0.045 }));
-    const m = new THREE.Mesh(g, matFig(tex, vento)); m.frustumCulled = false; cena.add(m); lixo.push(g, m.material); return { m, P, R, g };
+    let Q = null; if (pc.quadros) { Q = new Float32Array(lista.length); for (let i = 0; i < Q.length; i++) Q[i] = Math.floor(Math.random() * pc.quadros); g.setAttribute('iQuadro', new THREE.InstancedBufferAttribute(Q, 1)); tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter; }
+    const m = new THREE.Mesh(g, matFig(tex, vento, pc.quadros ? [pc.cols, pc.rows] : null)); m.frustumCulled = false; cena.add(m); lixo.push(g, m.material); return { m, P, R, g, Q, pc };
   }
   // espalha posições evitando a água e o caminho de chegada
   function espalhar(n, rMin, rMax, folga = 6, evitar = []) { const out = []; let tent = 0;
     while (out.length < n && tent++ < n * 40) { const a = rnd() * 6.283, r = Math.sqrt(rMin * rMin + rnd() * (rMax * rMax - rMin * rMin)), x = Math.cos(a) * r, z = Math.sin(a) * r;
-      const [d, w] = distRio(x, z); if (d < w + folga) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; } if (evitar.some((e) => Math.hypot(e.x - x, e.z - z) < e.r)) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
+      const [d, w] = distRio(x, z); if (d < w + folga) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; if (G && -tt.s > 3 && Math.abs(tt.lado) < -tt.s * 0.5 + 5 && -tt.s < 420) continue; if (G && -tt.s > 105) continue; } if (evitar.some((e) => Math.hypot(e.x - x, e.z - z) < e.r)) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
     return out; }
-  const centroArv = { x: 0, z: 0, r: 26 };
-  await Promise.all([
+  const centroArv = { x: 0, z: 0, r: E ? 26 : G ? 9 : 30 };
+  // VALE DE ELÁ: terebintos (Elá = terebinto), carvalhos e oliveiras nas encostas; trigo no fundo do vale; os dois exércitos e Golias
+  if (L) {
+    const naFaixa = (n, x0, x1, z0, z1) => Array.from({ length: n }, () => ({ x: x0 + rnd() * (x1 - x0), z: z0 + rnd() * (z1 - z0), s: 0.85 + rnd() * 0.3, vira: rnd() > 0.5 }));
+    const fila = (z, x0, x1, passo) => { const o = []; for (let x = x0; x <= x1; x += passo) o.push({ x: x + (rnd() - 0.5) * 3, z: z + (rnd() - 0.5) * 4, s: 0.95 + rnd() * 0.1, vira: rnd() > 0.5 }); return o; };
+    await Promise.all([
+      figuras('terebinto', [...espalhar(toque ? 140 : 240, 40, 900, 4, [centroArv]), ...espalhar(toque ? 140 : 260, 900, 1600, 4)], 9, 0.4),
+      figuras('carvalho', espalhar(toque ? 90 : 160, 60, 1500, 4, [centroArv]), 10, 0.4),
+      figuras('oliveira-ela', espalhar(toque ? 90 : 160, 60, 1300, 3, [centroArv]), 6, 0.4),
+      figuras('arbusto-sefela', espalhar(toque ? 400 : 800, 12, 1300, 1.5, [centroArv]), 1.2, 0.4),
+      figuras('trigo', naFaixa(toque ? 160 : 300, -900, 900, -95, 95).filter((o) => Math.abs(o.z - ribZ(o.x)) > 8 && Math.hypot(o.x, o.z - 40) > 30), 1.1, 0.6),
+      figuras('tendas-filisteias', naFaixa(toque ? 18 : 30, -380, 380, 215, 300), 4.5, 0.1),
+      figuras('exercito-filisteu', [...fila(160, -200, 200, 9), ...fila(172, -170, 170, 10), ...fila(184, -140, 140, 11)], 2.3, 0),
+      figuras('exercito-israel', [...fila(-150, -190, -12, 9), ...fila(-150, 12, 190, 9), ...fila(-162, -160, 160, 10)], 2.2, 0),
+      figuras('golias', [{ x: 0, z: 40, s: 1 }], 2.9, 0),
+    ]);
+    // o ribeiro de seixos no fundo do vale (1Sm 17:40)
+    const sx = await carregar('seixos.jpg'); if (sx) { sx.wrapS = sx.wrapT = THREE.RepeatWrapping; lixo.push(sx); const P = [], U = [], Ix = []; let k = 0;
+      for (let x = -1700; x <= 1700; x += 2) { const z = ribZ(x); for (const lz of [-2.6, 2.6]) { P.push(x, altura(x, z + lz) + 0.05, z + lz); U.push(x / 4, (lz + 2.6) / 4); } if (k) { const a = (k - 1) * 2; Ix.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } k++; }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(Ix); g.computeVertexNormals();
+      const m = new THREE.MeshStandardMaterial({ map: sx, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -3 }); const rb = new THREE.Mesh(g, m); rb.renderOrder = 1; cena.add(rb); lixo.push(g, m); }
+  }
+  if (G) await Promise.all([
+    figuras('rocha-oracao', [{ x: 0, z: 0, s: 1 }], 1.5, 0),
+    figuras('oliveira-milenar-1', [[-8, 6], [9, 4], [13, -8]].map(([l, sx]) => { const w = T2W(l, sx); return { x: w.x, z: w.z, s: 1, vira: l > 0 }; }), 10, 0.3),
+    figuras('oliveira-milenar-2', [[-11, -4], [12, -3], [-4, 14]].map(([l, sx]) => { const w = T2W(l, sx); return { x: w.x, z: w.z, s: 1, vira: l < 0 }; }), 9, 0.3),
+    figuras('oliveira-1', [...espalhar(toque ? 160 : 260, 9, 300, 3, [centroArv]), ...espalhar(toque ? 300 : 520, 300, 1300, 3, [centroArv])], 7.5, 0.5),
+    figuras('oliveira-2', [...espalhar(toque ? 130 : 220, 9, 300, 3, [centroArv]), ...espalhar(toque ? 250 : 420, 300, 1300, 3, [centroArv])], 6.5, 0.5),
+    figuras('oliveira-3', [...espalhar(toque ? 90 : 150, 12, 320, 3, [centroArv]), ...espalhar(toque ? 180 : 300, 320, 1300, 3, [centroArv])], 8.5, 0.6),
+    figuras('muro-pedra', espalhar(toque ? 90 : 160, 10, 420, 2, [centroArv]), 1.1, 0),
+    figuras('arbusto-seco', [...espalhar(toque ? 300 : 520, 5, 300, 1.5, [centroArv]), ...espalhar(toque ? 300 : 600, 300, 1200, 1.5, [centroArv])], 1.0, 0.4),
+    figuras('cipreste', espalhar(toque ? 50 : 90, 40, 1100, 5, [centroArv]), 15, 0.3),
+  ]);
+  if (E) await Promise.all([
     figuras('arvore-vida', [{ x: 0, z: 0, s: 1 }], 34, 0.5),
     figuras('arvore-fruto-1', [...espalhar(toque ? 150 : 240, 30, 520, 7, [centroArv]), ...espalhar(Math.round((toque ? 150 : 240) * (toque ? 2.2 : 3)), 520, 520 * 2.7, 7, [centroArv])], 15, 1),
     figuras('arvore-fruto-2', [...espalhar(toque ? 120 : 200, 30, 520, 7, [centroArv]), ...espalhar(Math.round((toque ? 120 : 200) * (toque ? 2.2 : 3)), 520, 520 * 2.7, 7, [centroArv])], 12, 1),
@@ -317,13 +416,13 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
 
   // TRILHA de terra batida que leva até a árvore da vida
   const trilhaX = (z) => 2.5 * Math.sin(z / 13);
-  { const P = [], U = [], I = []; let k = 0; for (let z = 170; z >= 12; z -= 0.8) { const x = trilhaX(z); for (const sx of [-1, 1]) { const w = T2W(x + sx * 0.95, z); P.push(w.x, altura(w.x, w.z) + 0.05, w.z); U.push(sx < 0 ? 0 : 1, z / 3); } if (k) { const a = (k - 1) * 2; I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } k++; }
+  if (!J) { const P = [], U = [], I = []; let k = 0; for (let z = 170; z >= 12; z -= 0.8) { const x = trilhaX(z); for (const sx of [-1, 1]) { const w = T2W(x + sx * 0.95, z); P.push(w.x, altura(w.x, w.z) + 0.05, w.z); U.push(sx < 0 ? 0 : 1, z / 3); } if (k) { const a = (k - 1) * 2; I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } k++; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I);
     const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, uniforms: unif,
       vertexShader: `varying vec2 vUv; varying float vD; void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
-      fragmentShader: `uniform float dens; uniform vec3 nevoa; varying vec2 vUv; varying float vD; float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+      fragmentShader: `uniform float dens; uniform vec3 nevoa, luz; varying vec2 vUv; varying float vD; float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
         float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
-        void main(){ vec2 p = vec2(vUv.x * 2., vUv.y * 3.); float k = n(p * 3.) * .5 + n(p * 9.) * .3 + n(p * 27.) * .2; vec3 c = mix(vec3(.30, .22, .14), vec3(.52, .41, .28), k); c *= .85 + .3 * step(.78, n(p * 14.));
+        void main(){ vec2 p = vec2(vUv.x * 2., vUv.y * 3.); float k = n(p * 3.) * .5 + n(p * 9.) * .3 + n(p * 27.) * .2; vec3 c = mix(vec3(.30, .22, .14), vec3(.52, .41, .28), k); c *= .85 + .3 * step(.78, n(p * 14.)); c *= luz;
           float a = smoothstep(0., .28 + .15 * n(p * 4.), vUv.x) * smoothstep(1., .72 - .15 * n(p * 4. + 7.), vUv.x); float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), a);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
@@ -331,16 +430,17 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     const tr = new THREE.Mesh(g, m); tr.renderOrder = 1; cena.add(tr); lixo.push(g, m); }
   // árvores frutíferas grandes dos dois lados da trilha, emoldurando o caminho
   const moldura = []; for (let z = 30; z < 165; z += 13) { const x = trilhaX(z); for (const sx of [-1, 1]) { const w = T2W(x + sx * (6 + rnd() * 3), z + rnd() * 6), xx = w.x, zz = w.z; if (!naAgua(xx, zz)) moldura.push({ x: xx, z: zz, s: 0.9 + rnd() * 0.35, vira: rnd() > 0.5 }); } }
-  await Promise.all([figuras('arvore-fruto-1', moldura.filter((_, i) => i % 2 === 0), 15, 1), figuras('arvore-fruto-2', moldura.filter((_, i) => i % 2 === 1), 12, 1)]);
+  if (E) await Promise.all([figuras('arvore-fruto-1', moldura.filter((_, i) => i % 2 === 0), 15, 1), figuras('arvore-fruto-2', moldura.filter((_, i) => i % 2 === 1), 12, 1)]);
+  else if (G) { const pw = T2W(5.5, 42); await Promise.all([figuras('oliveira-1', moldura.filter((_, i) => i % 2 === 0), 7.5, 0.5), figuras('oliveira-2', moldura.filter((_, i) => i % 2 === 1), 6.5, 0.5), figuras('prensa-azeite', [{ x: pw.x, z: pw.z, s: 1 }], 2.2, 0)]); }
   // FLORES em camadas: à beira da trilha (perto e grandes), nas margens do rio e espalhadas; árvores floridas, romãzeiras e videiras
   const beiraTrilha = (n, a0, a1) => Array.from({ length: n }, () => { const z = 14 + rnd() * 155, sx = rnd() > 0.5 ? 1 : -1, w = T2W(trilhaX(z) + sx * (a0 + rnd() * (a1 - a0)), z); return { x: w.x, z: w.z, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => !naAgua(o.x, o.z));
   const beiraRio = (n) => Array.from({ length: n }, () => { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = ci === 0 ? 16 : 11, u = rnd() * 0.7, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (1.42 + rnd() * 0.5); return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => Math.hypot(o.x, o.z) > 24);
-  const flores = [['flor-lirios', 1.1, 1], ['flor-hibisco', 1.7, 0.4], ['flor-roxa', 1.0, 1], ['flor-ave-paraiso', 1.5, 0.7], ['flor-rosa', 0.8, 1.2]];
+  const flores = !E ? [] : [['flor-lirios', 1.1, 1], ['flor-hibisco', 1.7, 0.4], ['flor-roxa', 1.0, 1], ['flor-ave-paraiso', 1.5, 0.7], ['flor-rosa', 0.8, 1.2]];
   await Promise.all([
     ...flores.map(([nm, h, q]) => figuras(nm, [...beiraTrilha(Math.round((toque ? 40 : 70) * q), 1.25, 4.5), ...beiraRio(Math.round((toque ? 50 : 90) * q)), ...espalhar(Math.round((toque ? 40 : 80) * q), 8, 220, 2, [centroArv])], h, 0.5)),
-    figuras('arvore-florida', [...espalhar(toque ? 30 : 55, 25, 420, 6, [centroArv]), ...espalhar(Math.round((toque ? 30 : 55) * (toque ? 2.2 : 3)), 420, 420 * 2.7, 6, [centroArv])], 11, 0.8),
-    figuras('romazeira', [...beiraTrilha(toque ? 8 : 14, 5, 9), ...[...espalhar(toque ? 15 : 30, 20, 300, 4, [centroArv]), ...espalhar(Math.round((toque ? 15 : 30) * (toque ? 2.2 : 3)), 300, 300 * 2.7, 4, [centroArv])]], 5.5, 0.7),
-    figuras('videira', [...beiraTrilha(toque ? 8 : 14, 4.5, 8), ...[...espalhar(toque ? 12 : 24, 20, 260, 4, [centroArv]), ...espalhar(Math.round((toque ? 12 : 24) * (toque ? 2.2 : 3)), 260, 260 * 2.7, 4, [centroArv])]], 4.2, 0.5),
+    E && figuras('arvore-florida', [...espalhar(toque ? 30 : 55, 25, 420, 6, [centroArv]), ...espalhar(Math.round((toque ? 30 : 55) * (toque ? 2.2 : 3)), 420, 420 * 2.7, 6, [centroArv])], 11, 0.8),
+    E && figuras('romazeira', [...beiraTrilha(toque ? 8 : 14, 5, 9), ...[...espalhar(toque ? 15 : 30, 20, 300, 4, [centroArv]), ...espalhar(Math.round((toque ? 15 : 30) * (toque ? 2.2 : 3)), 300, 300 * 2.7, 4, [centroArv])]], 5.5, 0.7),
+    E && figuras('videira', [...beiraTrilha(toque ? 8 : 14, 4.5, 8), ...[...espalhar(toque ? 12 : 24, 20, 260, 4, [centroArv]), ...espalhar(Math.round((toque ? 12 : 24) * (toque ? 2.2 : 3)), 260, 260 * 2.7, 4, [centroArv])]], 4.2, 0.5),
   ]);
   // FEIXES DE SOL atravessando a copa (raios de luz no ar úmido), sempre em volta de quem anda
   const NF = toque ? 18 : 30, gF = new THREE.InstancedBufferGeometry(), qF = new THREE.PlaneGeometry(1, 1); qF.translate(0, 0.5, 0); gF.index = qF.index; gF.attributes.position = qF.attributes.position; gF.attributes.uv = qF.attributes.uv; gF.instanceCount = NF;
@@ -351,18 +451,16 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
         vec3 ax = normalize(sol); vec3 vd = normalize(cameraPosition - base); vec3 lado = normalize(cross(ax, vd)); float L = 38.;
         vec3 w = base + ax * position.y * L + lado * position.x * iF.z; vec4 mv = viewMatrix * vec4(w, 1.); float d = -mv.z;
         vA = smoothstep(3., 14., d) * smoothstep(80., 40., d) * (.6 + .4 * sin(t * .35 + iF.w)); gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `varying vec2 vUv; varying float vA; void main(){ float x = 1. - abs(vUv.x * 2. - 1.); float a = x * x * smoothstep(0., .25, vUv.y) * smoothstep(1., .45, vUv.y) * vA * .11; gl_FragColor = vec4(vec3(1.6, 1.3, .8) * a, a); }` });
+    fragmentShader: `varying vec2 vUv; varying float vA; void main(){ float x = 1. - abs(vUv.x * 2. - 1.); float a = x * x * smoothstep(0., .25, vUv.y) * smoothstep(1., .45, vUv.y) * vA * ${!N ? (L ? '.06' : '.11') : '.05'}; gl_FragColor = vec4(${!N ? 'vec3(1.6, 1.3, .8)' : 'vec3(.6, .72, 1.1)'} * a, a); }` });
   const feixes = new THREE.Mesh(gF, matF); feixes.frustumCulled = false; cena.add(feixes); lixo.push(gF, qF, matF);
 
   // ANIMAIS que andam devagar pelo jardim (o leão descansa)
-  const especies = [
-    { n: 'leao', h: 1.15, q: 3, anda: 0 }, { n: 'cordeiro', h: 0.85, q: 6, anda: 0.5 }, { n: 'cervo', h: 1.75, q: 5, anda: 0.9 },
-    { n: 'elefante', h: 3.2, q: 3, anda: 0.6 }, { n: 'girafa', h: 5.2, q: 3, anda: 0.7 }, { n: 'pavao', h: 1.1, q: 4, anda: 0.4 },
-    { n: 'onca', h: 0.95, q: 3, anda: 0.8 }, { n: 'anta', h: 1.1, q: 3, anda: 0.5 }, { n: 'capivara', h: 0.62, q: 10, anda: 0.35, rio: true },
-    { n: 'tigre', h: 1.05, q: 3, anda: 0.75 }, { n: 'tigre-rugindo', h: 1.2, q: 1, anda: 0 }, { n: 'tigre-deitado', h: 0.85, q: 2, anda: 0 },
+  // só animais tirados de VÍDEO REAL (andam de verdade); as figuras paradas saíram a pedido do Elias (22/11/2026)
+  const especies = !E ? [] : [
+    { n: 'elefante-anda', h: 3.3, q: 3, anda: 1.0 }, { n: 'leao-anda', h: 1.3, q: 3, anda: 1.25 },
   ];
   const bichos = [];
-  const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], elefante: [-26, 22], girafa: [24, 24], pavao: [5, 53], onca: [-16, 58], anta: [18, 60], 'tigre-rugindo': [-3.2, 96], tigre: [4, 128] };   // um grupo à vista de quem pousa
+  const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], 'elefante-anda': [-26, 22], 'leao-anda': [-16, 50], girafa: [24, 24], pavao: [5, 53], onca: [-16, 58], anta: [18, 60], 'tigre-rugindo': [-3.2, 96], tigre: [4, 128] };   // um grupo à vista de quem pousa
   const margem = (n) => rios.flatMap((c) => Array.from({ length: n }, () => { const u = 0.05 + rnd() * 0.5, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = (c === rios[0] ? 16 : 11) + 2 + rnd() * 4; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.85 + rnd() * 0.3 }; })).filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) < 190);
   for (const e of especies) { const lista = e.rio ? margem(3).slice(0, e.q - 1) : espalhar(e.q - 1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }]); const pp0 = PERTO[e.n], pw = pp0 ? T2W(pp0[0], pp0[1]) : null, pp = pw ? [pw.x, pw.z] : null; if (pp && !naAgua(pp[0], pp[1])) lista.unshift({ x: pp[0], z: pp[1], s: 1, vira: e.n === 'leao' }); else lista.push(...espalhar(1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }])); const f = await figuras(e.n, lista, e.h, 0); if (!f) continue;
     lista.forEach((o, i) => bichos.push({ f, i, e, x: o.x, z: o.z, alvo: null, espera: rnd() * 6, fase: rnd() * 6 })); }
@@ -373,7 +471,9 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
       // vira a figura conforme o lado para onde anda (em relação a quem olha)
       const dirX = new THREE.Vector3().subVectors(camera.position, new THREE.Vector3(b.x, 0, b.z)); const ladoX = new THREE.Vector3(dirX.z, 0, -dirX.x).normalize(); const vaiDireita = (dx * ladoX.x + dz * ladoX.z) > 0;
       b.f.R[b.i] = vaiDireita === !!b.e.olhaEsq ? 1 : 0; b.f.g.attributes.iVira.needsUpdate = true;
-      b.f.P[b.i * 3] = b.x; b.f.P[b.i * 3 + 1] = altura(b.x, b.z) - 0.1 + Math.sin(b.fase += dt * b.e.anda * 2.6) * 0.006 * b.e.h; b.f.P[b.i * 3 + 2] = b.z; b.f.g.attributes.iPos.needsUpdate = true; } }
+      // vídeo real: o passo avança no ritmo do vídeo enquanto o animal anda (o balanço do corpo já vem do vídeo)
+      if (b.f.Q) { b.f.Q[b.i] = (b.f.Q[b.i] + dt * b.f.pc.quadros / b.f.pc.dur) % b.f.pc.quadros; b.f.g.attributes.iQuadro.needsUpdate = true; }
+      b.f.P[b.i * 3] = b.x; b.f.P[b.i * 3 + 1] = altura(b.x, b.z) - 0.1 + (b.f.Q ? 0 : Math.sin(b.fase += dt * b.e.anda * 2.6) * 0.006 * b.e.h); b.f.P[b.i * 3 + 2] = b.z; b.f.g.attributes.iPos.needsUpdate = true; } }
 
   // AVES em voo circular e BORBOLETAS perto das flores: tudo calculado na placa de vídeo
   async function voadores(nome, n, tam, modo) {
@@ -390,21 +490,22 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
           vec3 dX = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]); vec3 dY = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
           ${modo === 2 ? `if (dot(vel, dX) < 0.) vUv.x = 1. - vUv.x; vec3 w = c + dX * position.x * esc + dY * position.y * esc * (.55 + .45 * bate);` : `vec3 w = c + dX * position.x * esc * (.25 + .75 * bate) + dY * position.y * esc;`}
           vec4 mv = viewMatrix * vec4(w, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
-      fragmentShader: `uniform sampler2D map; uniform float dens; uniform vec3 nevoa; varying vec2 vUv; varying float vD;
-        void main(){ vec4 c = texture2D(map, vUv); if (c.a < .5) discard; float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c.rgb, nevoa, f), 1.);
+      fragmentShader: `uniform sampler2D map; uniform float dens; uniform vec3 nevoa, luz; varying vec2 vUv; varying float vD;
+        void main(){ vec4 c = texture2D(map, vUv); if (c.a < .5) discard; float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c.rgb * luz, nevoa, f), 1.);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
         }` }));
     m.frustumCulled = false; cena.add(m); lixo.push(g, m.material);
   }
-  await Promise.all([voadores('passaro', toque ? 24 : 40, 1.6, 0), voadores('borboleta', toque ? 90 : 160, 0.22, 1), voadores('arara-vermelha', toque ? 24 : 40, 1.3, 2), voadores('arara-azul', toque ? 24 : 40, 1.3, 2)]);
+  // aves e borboletas recortadas saíram (não eram realistas; pedido do Elias, 22/11/2026). Voltam quando houver versões de vídeo real.
+  if (false) await Promise.all([voadores('passaro', toque ? 24 : 40, 1.6, 0), voadores('borboleta', toque ? 90 : 160, 0.22, 1), voadores('arara-vermelha', toque ? 24 : 40, 1.3, 2), voadores('arara-azul', toque ? 24 : 40, 1.3, 2)]);
 
   // NAS ÁRVORES: tucanos, macacos e preguiças nos galhos
   const nosGalhos = (n, yMin, yMax) => espalhar(n, 14, 140, 4, [centroArv]).map((o) => ({ ...o, y: yMin + rnd() * (yMax - yMin) }));
-  await Promise.all([figuras('tucano', nosGalhos(toque ? 14 : 24, 3, 9), 0.75, 0.2), figuras('macaco', nosGalhos(toque ? 10 : 18, 2, 7), 0.7, 0.2), figuras('preguica', nosGalhos(toque ? 6 : 10, 4, 10), 1.3, 0.3)]);
+  if (false) await Promise.all([figuras('tucano', nosGalhos(toque ? 14 : 24, 3, 9), 0.75, 0.2), figuras('macaco', nosGalhos(toque ? 10 : 18, 2, 7), 0.7, 0.2), figuras('preguica', nosGalhos(toque ? 6 : 10, 4, 10), 1.3, 0.3)]);
 
   // VITÓRIAS-RÉGIAS nas margens mansas do rio
-  const vrTex = await carregar('vitoria-regia.png');
+  const vrTex = E ? await carregar('vitoria-regia.png') : null;
   if (vrTex) { lixo.push(vrTex); const NV = toque ? 300 : 600, gv = new THREE.PlaneGeometry(1, 1); gv.rotateX(-Math.PI / 2); const mv = new THREE.MeshLambertMaterial({ map: vrTex, alphaTest: 0.5, transparent: false });
     const im = new THREE.InstancedMesh(gv, mv, NV), mt = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Vector3(); let k = 0;
     for (let tent = 0; k < NV && tent < NV * 30; tent++) { const c = rios[Math.floor(rnd() * rios.length)], u = rnd() * 0.6, p = c.getPointAt(u), tg = c.getTangentAt(u), w = c === rios[0] ? 16 : 11, sx = rnd() > 0.5 ? 1 : -1, d = w * (0.75 + rnd() * 0.25);
@@ -412,7 +513,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     im.count = k; im.renderOrder = 3; cena.add(im); lixo.push(gv, mv); }
 
   // CACHOEIRAS nas encostas ao redor do jardim, com a água descendo
-  if (pecas.cachoeira) { const f = await figuras('cachoeira', Array.from({ length: 14 }, (_, i) => { const a = i / 14 * 6.283 + 0.2, rr = 1640 + rnd() * 120; return { x: Math.cos(a) * rr, z: Math.sin(a) * rr, s: 0.8 + rnd() * 0.5 }; }), 160, 0);
+  if (E && pecas.cachoeira) { const f = await figuras('cachoeira', Array.from({ length: 14 }, (_, i) => { const a = i / 14 * 6.283 + 0.2, rr = 1640 + rnd() * 120; return { x: Math.cos(a) * rr, z: Math.sin(a) * rr, s: 0.8 + rnd() * 0.5 }; }), 160, 0);
     if (f) { const tx = f.m.material.uniforms.map.value; tx.wrapT = THREE.RepeatWrapping; tx.needsUpdate = true; f.m.material.fragmentShader = f.m.material.fragmentShader.replace('vec4 c = texture2D(map, vUv);', 'vec4 c = texture2D(map, vUv); float lum = dot(c.rgb, vec3(.33)); float sat = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b)); float ag = smoothstep(.62, .8, lum) * smoothstep(.22, .08, sat); vec3 c2 = texture2D(map, vec2(vUv.x, fract(vUv.y + t * .35))).rgb; c.rgb = mix(c.rgb, max(c.rgb, c2) * 1.05, ag * .7);').replace('uniform sampler2D map;', 'uniform sampler2D map; uniform float t;'); f.m.material.needsUpdate = true; } }
 
   // PÓLEN dourado flutuando no ar à volta de quem anda (aparece nos feixes de luz)
@@ -423,7 +524,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
       p.x += sin(t * .23 + f) * 2.; p.z += cos(t * .19 + f * 1.3) * 2.; p.y = mod(p.y + t * .15 * (.5 + fract(f)), 14.);
       vec3 w = vec3(mod(p.x - centro.x + 40., 80.) - 40. + centro.x, centro.y + p.y - 2., mod(p.z - centro.z + 40., 80.) - 40. + centro.z);
       vec4 mv = viewMatrix * vec4(w, 1.); float d = -mv.z; vA = smoothstep(40., 8., d) * (.5 + .5 * sin(t * 2. + f * 9.)); gl_PointSize = clamp(90. / d, 1., 6.); gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - .5); float a = smoothstep(.5, 0., d) * vA; gl_FragColor = vec4(vec3(1.6, 1.3, .7) * a, a); }` });
+    fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - .5); float a = smoothstep(.5, 0., d) * vA; gl_FragColor = vec4(${!N ? 'vec3(1.6, 1.3, .7)' : 'vec3(.5, .6, .9)'} * a, a); }` });
   const polen = new THREE.Points(gPo, matPo); polen.frustumCulled = false; cena.add(polen); lixo.push(gPo, matPo);
   // sombras macias sob as copas
   { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, 'rgba(0,0,0,.55)'); gr.addColorStop(0.6, 'rgba(0,0,0,.25)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
@@ -432,10 +533,10 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     obst.forEach((o, i) => { const sc = Math.max(3, o.r * 9); mt.compose(v.set(o.x + SOL.x * -sc * 0.25, altura(o.x, o.z) + 0.06, o.z + SOL.z * -sc * 0.25), q, new THREE.Vector3(sc, 1, sc)); ims.setMatrixAt(i, mt); });
     ims.renderOrder = 1; cena.add(ims); lixo.push(ts, gs, ms); }
   // o sol (forte, para nascerem os feixes de luz entre as copas)
-  const solDisco = new THREE.Mesh(new THREE.SphereGeometry(75, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(9, 7.2, 4.5), fog: false })); cena.add(solDisco); lixo.push(solDisco.geometry, solDisco.material);
+  const solDisco = new THREE.Mesh(new THREE.SphereGeometry(75, 16, 12), new THREE.MeshBasicMaterial({ color: !N ? new THREE.Color(9, 7.2, 4.5) : new THREE.Color(2.4, 2.5, 2.8), fog: false })); cena.add(solDisco); if (G) solDisco.visible = false;   // a lua já está pintada no céu 360° lixo.push(solDisco.geometry, solDisco.material);
 
   // A PRESENÇA: luz dourada e vento que passeiam pelo jardim, sem figura (Gn 3:8)
-  const presenca = new THREE.Group(); cena.add(presenca);
+  const presenca = new THREE.Group(); cena.add(presenca); if (J) presenca.visible = false;
   const matColuna = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, uniforms: unif,
     vertexShader: `varying vec2 vUv; varying float vD; void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `uniform float t; varying vec2 vUv; varying float vD; void main(){ float a = (1. - vUv.y) * (1. - vUv.y) * (.22 + .08 * sin(t * 1.3 + vUv.x * 25.)) * smoothstep(6., 30., vD); gl_FragColor = vec4(vec3(1., .86, .55) * a, a); }` });
@@ -449,12 +550,41 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   presenca.add(new THREE.Points(gP, matP)); lixo.push(gP, matP);
   const brilho = new THREE.Sprite(new THREE.SpriteMaterial({ map: (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,240,200,1)'); gr.addColorStop(0.3, 'rgba(255,220,150,.45)'); gr.addColorStop(1, 'rgba(255,200,120,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128); const t = new THREE.CanvasTexture(c); lixo.push(t); return t; })(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
   brilho.scale.set(26, 26, 1); brilho.position.y = 6; presenca.add(brilho); lixo.push(brilho.material);
-  const caminhoPresenca = new THREE.CatmullRomCurve3([V(70, 60), V(120, -40), V(40, -120), V(-80, -90), V(-120, 20), V(-60, 110), V(30, 120)], true);
+  const caminhoPresenca = new THREE.CatmullRomCurve3(E ? [V(70, 60), V(120, -40), V(40, -120), V(-80, -90), V(-120, 20), V(-60, 110), V(30, 120)] : [V(5, 4), V(7, 0), V(5, -4), V(3, 0)], true);
+  if (G) { coluna.scale.set(0.35, 0.5, 0.35); coluna.position.y = 17; brilho.scale.set(9, 9, 1); }
+  if (L) presenca.visible = false;
+  // JERUSALÉM do outro lado do vale do Cedrom (Getsêmani): a cidade iluminada, de frente para o olival
+  let cidadeM = null;
+  if (G && pecas['jerusalem-noite']) { const tx = await carregar('jerusalem-noite.png'); if (tx) { lixo.push(tx); const pc = pecas["jerusalem-noite"], L = 430, Hc = L * pc.h / pc.w, dist = 330;   // a muralha leste do monte do Templo tinha uns 470 m
+    const g = new THREE.PlaneGeometry(L, Hc); g.translate(0, Hc / 2, 0); const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { map: { value: tx } },   // bordas que se desfazem na noite (sem cara de cartão-postal)
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+      fragmentShader: `uniform sampler2D map; varying vec2 vUv; void main(){ vec4 c = texture2D(map, vUv); float a = c.a * smoothstep(0., .16, vUv.x) * smoothstep(1., .84, vUv.x) * smoothstep(0., .3, vUv.y); if (a < .02) discard; gl_FragColor = vec4(c.rgb * .82, a);
+#include <colorspace_fragment>
+      }` });
+    cidadeM = new THREE.Mesh(g, mat); const cx = -TD.x * dist, cz = -TD.z * dist; cidadeM.position.set(cx, -27, cz); cidadeM.lookAt(0, cidadeM.position.y, 0); cena.add(cidadeM); lixo.push(g, mat); } }
+  // TOCHAS (Getsêmani, Jo 18:3): os guardas sobem do vale do Cedrom com lanternas e archotes, devagar, em fila
+  const tochas = []; let tochaPerto = () => 1e9;
+  if (G) {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64; const gx = cv.getContext('2d'), gr = gx.createRadialGradient(32, 40, 2, 32, 36, 30); gr.addColorStop(0, 'rgba(255,240,190,1)'); gr.addColorStop(0.25, 'rgba(255,160,60,.9)'); gr.addColorStop(0.6, 'rgba(220,80,20,.35)'); gr.addColorStop(1, 'rgba(120,30,0,0)'); gx.fillStyle = gr; gx.fillRect(0, 0, 64, 64);
+    const tf = new THREE.CanvasTexture(cv); lixo.push(tf);
+    const JT = (l, sx) => new THREE.Vector3(-TD.x * sx + TP.x * l, 0, -TD.z * sx + TP.z * l);   // do lado de Jerusalém, subindo do Cedrom
+    const rota = new THREE.CatmullRomCurve3([JT(-40, 300), JT(-30, 240), JT(-10, 170), JT(4, 120), JT(0, 80), JT(1, 40)]);   // da porta da cidade, desce ao Cedrom e sobe ao olival
+    for (let i = 0; i < 14; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tf, color: new THREE.Color(3, 2.2, 1.3), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); sp.scale.set(1.1, 1.6, 1); cena.add(sp); lixo.push(sp.material); tochas.push({ sp, atraso: i * 0.012 + Math.random() * 0.006, lado: (Math.random() - 0.5) * 2.4, fase: Math.random() * 6 }); }
+    const luzes = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xff9a3c, 0, 22, 1.6); cena.add(l); return l; });
+    const posT = new THREE.Vector3();
+    tochas.mover = (t) => { const u0 = ((t / 260) % 1); let mn = 1e9;
+      tochas.forEach((tc, i) => { const u = THREE.MathUtils.clamp(u0 - tc.atraso, 0, 1); rota.getPointAt(u, posT); const x = posT.x + tc.lado * Math.cos(i), z = posT.z + tc.lado * Math.sin(i);
+        tc.sp.position.set(x, altura(x, z) + 1.9 + Math.sin(t * 2 + tc.fase) * 0.05, z); tc.sp.material.opacity = (u0 - tc.atraso > 0 && u0 - tc.atraso < 0.98 ? 1 : 0) * (0.8 + 0.2 * Math.sin(t * 17 + tc.fase)); tc.sp.scale.y = 1.6 + 0.25 * Math.sin(t * 11 + tc.fase);
+        if (tc.sp.material.opacity > 0) mn = Math.min(mn, Math.hypot(x - eu.x, z - eu.z)); });
+      luzes.forEach((l, k) => { const tc = tochas[k * 5]; l.position.copy(tc.sp.position); l.intensity = tc.sp.material.opacity * (7 + Math.sin(t * 13 + k) * 1.5); });
+      tochaPerto = () => mn; };
+  }
+
   const posPresenca = new THREE.Vector3();
 
   // O EXPLORADOR (terceira pessoa): imagem do ChatGPT -> malha 3D (Hunyuan3D-2); a roupa é projetada das fotos de frente e de costas,
   // e o passo (pernas e braços) é feito no próprio desenho da malha
-  let avatar = null, matAv = null, modo = 'primeira', rumo = Math.atan2(0.6, 0.8), fasePasso = 0;
+  let avatar = null, matAv = null, modo = 'primeira', rumo = Math.atan2(-MW.TD.x, -MW.TD.z), fasePasso = 0;
   try {
     const resp = (pecas.explorador && new URLSearchParams(location.search).has('explorador')) ? await fetch(base + 'explorador.malha?v=1') : null;
     if (resp && resp.ok) {
@@ -487,11 +617,48 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   btModo.onclick = () => { modo = modo === 'terceira' ? 'primeira' : 'terceira'; btModo.textContent = modo === 'terceira' ? '👁 Primeira pessoa' : '🎥 Terceira pessoa'; if (modo === 'terceira') pitch = -0.12; camIni = false; };
   const camPos = new THREE.Vector3(), olhoAlvo = new THREE.Vector3(); let camIni = false;
 
+  // SEGUIR ADIANTE: dentro de um mundo, o chat entende pedidos de lugar que estão à vista e leva você até lá (sem voltar ao globo)
+  let indoLonge = null;
+  window.NEXUS_MUNDO_ACAO = (q) => {
+    if (G && /templo|santuario|santo lugar|cidade|jerusalem|muralha|porta (oriental|dourada|formosa)/.test(q)) {
+      const santo = /dentro|santo|santuario|interior/.test(q), cidade = /cidade|jerusalem|muralha/.test(q) && !/templo/.test(q);
+      indoLonge = { t0: performance.now(), de: camera.position.clone(), para: new THREE.Vector3(-TD.x * 300, 60, -TD.z * 300), olhar: new THREE.Vector3(-TD.x * 340, 40, -TD.z * 340), dur: 6500,
+        fim: () => { raiz.style.transition = 'opacity .8s ease'; raiz.classList.remove('on'); setTimeout(() => { fechar(); if (typeof window.NEXUS_ENTRAR_TEMPLO === 'function') window.NEXUS_ENTRAR_TEMPLO(santo ? 'santo' : cidade ? 'esplanada' : 'entrada'); }, 700); } };
+      return santo ? 'Atravessando o vale do Cedrom e subindo ao Templo… vamos entrar no Santo Lugar.' : cidade ? 'Atravessando o vale do Cedrom até a cidade…' : 'Atravessando o vale do Cedrom até o Templo…';
+    }
+    if (/suba|subir|ver de cima|vista de cima|vista aerea/.test(q)) { subida = Math.min(LIM * 0.6, subida + 250); return 'Subindo para ver de cima.'; }
+    if (/desca|descer|pousar|chao/.test(q)) { subida = 0; voarLivre = false; return 'Descendo.'; }
+    if (/rocha|onde (ele|jesus) orou/.test(q) && G) { indo = new THREE.Vector3(TD.x * 3, 0, TD.z * 3); return 'Indo até a rocha onde Jesus orou.'; }
+    // JERUSALÉM: 'me leve ao santuário', 'vá até a Porta Formosa', 'quero ver a Antônia'… vai a pé (num salto) e fica de frente
+    if (J) { const ALVOS = [[/porta formosa|patio das mulheres/, 'portaFormosa', [62, 4], 'a Porta Formosa'], [/santuario|santo|templo|altar|nicanor/, 'santuario', [0, 92], 'o Santuário'], [/portico real|pedras|edificios/, 'porticoReal', [0, -40], 'o Pórtico Real'], [/salomao|alpendre/, 'salomao', [-25, 0], 'o Pórtico de Salomão'],
+        [/antonia|fortaleza/, 'antonia', [40, 130], 'a fortaleza Antônia'], [/palacio|herodes|pretorio|pilatos/, 'palacio', [170, 0], 'o palácio de Herodes'], [/torre|hipico|fasael|mariane/, 'torres', [40, 60], 'as torres de Herodes'], [/siloe|tanque/, 'siloe', [0, -45], 'o tanque de Siloé'], [/cidade de davi|siao|ofel/, 'cidadeDavi', [0, 40], 'a Cidade de Davi'], [/oliveiras|ver a cidade|vista/, 'oliveiras', [0, 0], 'o Monte das Oliveiras, de onde se vê a cidade']];
+      const a = ALVOS.find(([re]) => re.test(q)); if (a) { const [lx, lz] = JC.LUGARES[a[1]]; const x = lx + a[2][0], z = lz + a[2][1]; pularChegada(); voarLivre = false; subida = 0; eu.set(x, 0, z); const ox = a[1] === 'oliveiras' ? 0 : lx, oz = a[1] === 'oliveiras' ? 0 : lz; yaw = Math.atan2(-(ox - x), -(oz - z)); pitch = a[1] === 'santuario' ? 0.18 : a[1] === 'portaFormosa' ? 0.12 : a[1] === 'oliveiras' ? -0.1 : 0;
+        if (/palacio|torres|siloe|cidadeDavi/.test(a[1])) subida = 45;   // na cidade, vê-se por cima dos telhados
+        return `Aqui está ${a[3]}.`; } }
+    // VER UM ANIMAL de perto: 'me mostre o elefante', 'quero ver o leão'
+    if (E && bichos.length) { const NOMES = [[/elefante/, ['elefante-anda'], 'o elefante'], [/leao|leoa|leoes/, ['leao-anda', 'leao'], 'o leão'], [/girafa/, ['girafa'], 'a girafa'], [/tigre/, ['tigre', 'tigre-rugindo', 'tigre-deitado'], 'o tigre'], [/cervo|veado/, ['cervo'], 'o cervo'], [/onca/, ['onca'], 'a onça'], [/cordeiro|ovelha/, ['cordeiro'], 'o cordeiro'], [/pavao/, ['pavao'], 'o pavão'], [/capivara/, ['capivara'], 'a capivara'], [/anta/, ['anta'], 'a anta'], [/animais|bichos|animal/, ['elefante-anda', 'leao-anda'], 'os animais']];
+      const k = NOMES.find(([re]) => re.test(q)); if (k) { let alvo = null; for (const nm of k[1]) { const lst = bichos.filter((b) => b.e.n === nm); if (lst.length) { alvo = lst.reduce((a, b) => Math.hypot(b.x - eu.x, b.z - eu.z) < Math.hypot(a.x - eu.x, a.z - eu.z) ? b : a); break; } }
+        if (alvo) { const dist = 4 + alvo.e.h * 2.4, dx = eu.x - alvo.x, dz = eu.z - alvo.z, d = Math.hypot(dx, dz) || 1; let x = alvo.x + dx / d * dist, z = alvo.z + dz / d * dist; if (naAgua(x, z)) { x = alvo.x - dx / d * dist; z = alvo.z - dz / d * dist; }
+          pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); yaw = Math.atan2(-(alvo.x - x), -(alvo.z - z)); pitch = -0.06;
+          // e ele começa a andar de lado, atravessando a sua frente
+          if (alvo.e.anda) { const ax = alvo.x - x, az = alvo.z - z, al = Math.hypot(ax, az) || 1; for (const sg of [1, -1]) { const tx = alvo.x + az / al * 18 * sg, tz = alvo.z - ax / al * 18 * sg; if (!naAgua(tx, tz)) { alvo.alvo = { x: tx, z: tz }; break; } } }
+          return `Aqui está ${k[2]}.`; } } }
+    if (/arvore da vida|meio do jardim/.test(q) && E) { indo = new THREE.Vector3(TD.x * 24, 0, TD.z * 24); return 'Indo até a árvore da vida.'; }
+    if (/golias|meio do vale/.test(q) && L) { indo = new THREE.Vector3(0, 0, 25); return 'Descendo ao vale, até Golias.'; }
+    if (/ribeiro|seixos|pedras/.test(q) && L) { indo = new THREE.Vector3(0, 0, ribZ(0) - 4); return 'Indo até o ribeiro dos seixos.'; }
+    return null;
+  };
+  // RODA DO MOUSE (ou pinça): para trás o drone sobe; o lugar some lá embaixo e você sai no globo (como no Google Earth); para frente, desce
+  let subida = 0, saindo = false; const LIM = E ? 1500 : 800;
+  const subir = (d) => { if (saindo) return; subida = Math.max(0, Math.min(LIM + 50, subida + d)); if (subida > LIM && typeof window.NEXUS_PARA_GLOBO === 'function' && MW.lat != null) { saindo = true; raiz.style.transition = 'opacity .9s ease'; raiz.classList.remove('on'); setTimeout(() => { window.NEXUS_PARA_GLOBO(MW.lat, MW.lon); fechar(); }, 700); } };
+  canvas.addEventListener('wheel', (e) => { e.preventDefault(); if (voando) return; subir(e.deltaY * (0.35 + subida / 900)); }, { passive: false });
+  let pin = null; canvas.addEventListener('touchmove', (e) => { if (e.touches.length !== 2) { pin = null; return; } const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); if (pin) subir((pin - d) * (1.2 + subida / 300)); pin = d; }, { passive: true });
+  canvas.addEventListener('touchend', () => { pin = null; });
   // VOAR: sobe como um drone para atravessar o jardim depressa; tocar de novo pousa
   let voarLivre = false, altVoo = 0; const btVoar = raiz.querySelector('.ej-voar');
   btVoar.onclick = () => { voarLivre = !voarLivre; btVoar.textContent = voarLivre ? '🦶 Pousar' : '🕊 Voar'; if (voarLivre) { pitch = Math.min(pitch, -0.3); if (modo === 'terceira') { modo = 'primeira'; } } };
   // CÂMERA e CONTROLES
-  let yaw = Math.atan2(-0.6, -0.8), pitch = -0.05, voando = chegada; const eu = VT(2.5 * Math.sin(70 / 13), 70); const vel = new THREE.Vector3();
+  let yaw = Math.atan2(TD.x, TD.z), pitch = -0.05, voando = chegada; const eu = VT(2.5 * Math.sin(I / 13), I); const vel = new THREE.Vector3();
   const teclas = new Set(), joy = { x: 0, y: 0 }; let indo = null, olhar = null, ultimoToque = 0;
   const kd = (e) => { if (e.target.closest && e.target.closest('input,textarea')) return; const k = e.key.toLowerCase(); if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift'].includes(k)) { teclas.add(k); indo = null; if (voando) pularChegada(); e.preventDefault(); } if (k === 'escape') fechar(); };
   const ku = (e) => teclas.delete(e.key.toLowerCase());
@@ -516,7 +683,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     const agua = ruido(), fA = ctx.createBiquadFilter(); fA.type = 'bandpass'; fA.frequency.value = 650; fA.Q.value = 0.5; const gA = ctx.createGain(); gA.gain.value = 0; agua.connect(fA).connect(gA).connect(ctx.destination);
     const agua2 = ruido(), fA2 = ctx.createBiquadFilter(); fA2.type = 'highpass'; fA2.frequency.value = 2400; const gA2 = ctx.createGain(); gA2.gain.value = 0; agua2.connect(fA2).connect(gA2).connect(ctx.destination);
     const vento = ruido(), fV = ctx.createBiquadFilter(); fV.type = 'lowpass'; fV.frequency.value = 380; const gV = ctx.createGain(); gV.gain.value = 0.18; vento.connect(fV).connect(gV).connect(ctx.destination);
-    function piar() { if (!ativo) return; if (somLigado) { const o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime, f0 = 2200 + Math.random() * 2200, k = 2 + Math.floor(Math.random() * 4); o.type = 'sine'; g.gain.value = 0; o.connect(g).connect(ctx.destination);
+    function grilo() { const t0 = ctx.currentTime; for (let i = 0; i < 3; i++) { const o = ctx.createOscillator(), g = ctx.createGain(), a = t0 + i * 0.09; o.type = 'triangle'; o.frequency.value = 4300 + Math.random() * 300; g.gain.setValueAtTime(0, a); g.gain.linearRampToValueAtTime(0.018, a + 0.01); g.gain.linearRampToValueAtTime(0, a + 0.05); o.connect(g).connect(ctx.destination); o.start(a); o.stop(a + 0.06); } }
+    function piar() { if (!ativo) return; if (somLigado && N) { grilo(); setTimeout(piar, 300 + Math.random() * 900); return; } if (somLigado) { const o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime, f0 = 2200 + Math.random() * 2200, k = 2 + Math.floor(Math.random() * 4); o.type = 'sine'; g.gain.value = 0; o.connect(g).connect(ctx.destination);
         for (let i = 0; i < k; i++) { const a = t0 + i * 0.13; o.frequency.setValueAtTime(f0, a); o.frequency.exponentialRampToValueAtTime(f0 * (1.25 + Math.random() * 0.4), a + 0.08); g.gain.setValueAtTime(0, a); g.gain.linearRampToValueAtTime(0.035, a + 0.02); g.gain.linearRampToValueAtTime(0, a + 0.1); }
         o.start(t0); o.stop(t0 + k * 0.13 + 0.1); }
       setTimeout(piar, 900 + Math.random() * 3800); }
@@ -533,7 +701,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
 
   // CARTÕES com o texto bíblico quando se chega perto de cada lugar
   let cartaoAtual = null;
-  function cartao(k) { if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } const [r, t] = VERSOS[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${NOTAS[k] ? `<small>${NOTAS[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
+  function cartao(k) { if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } if (!MW.versos[k]) { card.classList.remove('v'); return; } const [r, t] = MW.versos[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${MW.notas[k] ? `<small>${MW.notas[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
 
   const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: toque ? 0 : 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter });
   const posCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), posCena = new THREE.Scene();
@@ -546,7 +714,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
         vec2 d = (solTela - vUv) / 48.; vec2 uv = vUv; float dec = 1.; vec3 gr = vec3(0.);
         for (int i = 0; i < 48; i++) { uv += d; vec3 sm = textureLod(cena, clamp(uv, 0., 1.), 2.).rgb; float l = max(dot(sm, vec3(.3, .59, .11)) - 1.15, 0.); gr += min(sm * l, vec3(4.)) * dec; dec *= .965; }
         c += gr * .022 * solVis * vec3(1., .86, .62);
-        c *= 1.12; c = aces(c);
+        c *= ${!N ? '1.12' : '1.35'}; c = aces(c);${!N ? '' : ' c = mix(c, c * vec3(.86, .95, 1.12), .6);'}
         float lum = dot(c, vec3(.299, .587, .114)); c = mix(vec3(lum), c, 1.12); c = mix(c, c * vec3(1.05, 1.0, .9), smoothstep(.4, 1., lum)); c = mix(c, c * vec3(.92, 1.0, 1.05), smoothstep(.45, 0., lum));
         vec2 q = vUv - .5; q.x *= asp; c *= 1. - .32 * smoothstep(.35, .95, length(q));
         gl_FragColor = vec4(pow(c, vec3(1. / 2.2)), 1.); }` });
@@ -555,15 +723,18 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   const obs = new ResizeObserver(ajustar); obs.observe(raiz); ajustar();
 
   // CHEGADA DE DRONE: do alto, sobre o jardim, descendo em curva até pousar na trilha diante da árvore da vida
-  const voo = new THREE.CatmullRomCurve3([VT(-600, 1500, 820), VT(-300, 900, 420), VT(-60, 420, 160), VT(30, 200, 45), VT(20, 140, 18), VT(0, 72, 0)]);
-  if (avatar) { const a = 2.5 * Math.sin(70 / 13); voo.points[voo.points.length - 1].copy(VT(a + 0.8, 73.5, 2.0)); voo.points[voo.points.length - 2].copy(VT(14, 140, 30)); voo.updateArcLengths(); }
-  const DUR = 16000; let t0 = performance.now();
+  const voo = new THREE.CatmullRomCurve3(J ? [new THREE.Vector3(1150, 330, -260), new THREE.Vector3(700, 220, -150), new THREE.Vector3(380, 120, -40), new THREE.Vector3(215, 105, 60), new THREE.Vector3(140, 30, 85), VT(0, I + 8, 4), VT(0, I, 0)] : E ? [VT(-600, 1500, 820), VT(-300, 900, 420), VT(-60, 420, 160), VT(30, 200, 45), VT(20, 140, 18), VT(0, 72, 0)] : G ? [VT(-160, 420, 140), VT(-80, 260, 70), VT(-20, 150, 28), VT(10, 100, 10), VT(4, 80, 3), VT(0, 66, 0)] : [VT(-1900, 40, 320), VT(-1100, 90, 190), VT(-450, 150, 95), VT(-130, 185, 40), VT(-25, I + 6, 9), VT(0, I, 0)]);
+  if (avatar && E) { const a = 2.5 * Math.sin(70 / 13); voo.points[voo.points.length - 1].copy(VT(a + 0.8, 73.5, 2.0)); voo.points[voo.points.length - 2].copy(VT(14, 140, 30)); voo.updateArcLengths(); }
+  const DUR = 9000; let t0 = performance.now();
   if (voando) raiz.classList.add('voando');
   function pularChegada() { if (!voando) return; voando = false; raiz.classList.remove('voando'); cartao('chegada'); }
   let ativo = true, antes = performance.now(), passoBob = 0;
   function quadro(agora) { if (!ativo) return; const dt = Math.min(0.05, (agora - antes) / 1000); antes = agora; const t = agora / 1000; unif.t.value = t;
+    if (indoLonge) { const q = Math.min(1, (agora - indoLonge.t0) / indoLonge.dur), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; camera.position.lerpVectors(indoLonge.de, indoLonge.para, e); camera.position.y += Math.sin(q * Math.PI) * 25; camera.lookAt(indoLonge.olhar);
+      if (q >= 1) { const f = indoLonge.fim; indoLonge = null; f(); } renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); return; }
+    { const hc = camera.position.y - altura(camera.position.x, camera.position.z), kN = 1 - 0.8 * THREE.MathUtils.smoothstep(hc, 25, 260); cena.fog.density = DENS * kN; unif.dens.value = DENS * kN; }   // do alto (drone) a névoa abre: o jardim aparece inteiro, sem a tela clara
     if (voando) { const q = Math.min(1, (agora - t0) / DUR), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; const p = voo.getPointAt(e); const hc = altura(p.x, p.z); camera.position.set(p.x, Math.max(hc + 1.7, hc + p.y + 1.7), p.z);
-      const olhaPara = new THREE.Vector3(0, 10 * (1 - e) + 6 * e, 0); camera.lookAt(olhaPara); const fw = new THREE.Vector3(); camera.getWorldDirection(fw); yaw = Math.atan2(-fw.x, -fw.z); pitch = Math.asin(fw.y); if (modo === 'primeira' || !avatar) eu.set(p.x, 0, p.z); else { eu.copy(VT(2.5 * Math.sin(70 / 13), 70)); rumo = Math.atan2(0.6, 0.8); } camPos.copy(camera.position); camIni = true;
+      const olhaPara = new THREE.Vector3(0, 10 * (1 - e) + 6 * e, 0); camera.lookAt(olhaPara); const fw = new THREE.Vector3(); camera.getWorldDirection(fw); yaw = Math.atan2(-fw.x, -fw.z); pitch = Math.asin(fw.y); if (modo === 'primeira' || !avatar) eu.set(p.x, 0, p.z); else { eu.copy(VT(2.5 * Math.sin(I / 13), I)); rumo = Math.atan2(-TD.x, -TD.z); } camPos.copy(camera.position); camIni = true;
       if (q >= 1) pularChegada(); }
     else {
       // andar
@@ -577,6 +748,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
       const alvoV = new THREE.Vector3((-sinY * fz + cosY * fx) * vMax, 0, (-cosY * fz - sinY * fx) * vMax); vel.lerp(alvoV, Math.min(1, dt * 6));
       const ex = eu.x, ez = eu.z; eu.addScaledVector(vel, dt); { const f1 = fundura(eu.x, eu.z); if (!voarLivre && f1 > 1.1 && f1 > fundura(ex, ez)) { eu.x = ex; eu.z = ez; vel.multiplyScalar(0.2); } }
       // não atravessa troncos nem animais
+      if (caixasJ) for (const [a, b, c, d] of caixasJ) if (eu.x > a - 0.4 && eu.x < c + 0.4 && eu.z > b - 0.4 && eu.z < d + 0.4) { const e1 = eu.x - (a - 0.4), e2 = c + 0.4 - eu.x, e3 = eu.z - (b - 0.4), e4 = d + 0.4 - eu.z, m = Math.min(e1, e2, e3, e4); if (m === e1) eu.x = a - 0.4; else if (m === e2) eu.x = c + 0.4; else if (m === e3) eu.z = b - 0.4; else eu.z = d + 0.4; }
       for (const o of obst) { const dx = eu.x - o.x, dz = eu.z - o.z, d = Math.hypot(dx, dz), m = o.r + 0.35; if (d < m && d > 1e-4) { eu.x = o.x + dx / d * m; eu.z = o.z + dz / d * m; } }
       for (const b of bichos) { const dx = eu.x - b.x, dz = eu.z - b.z, d = Math.hypot(dx, dz), m = 0.3 + b.e.h * 0.45; if (d < m && d > 1e-4) { eu.x = b.x + dx / d * m; eu.z = b.z + dz / d * m; } }
       const r = Math.hypot(eu.x, eu.z); if (r > 1500) eu.multiplyScalar(1500 / r);
@@ -593,15 +765,18 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
         olhoAlvo.set(eu.x - dir.x * 4 + dirX.x * 0.85, hc + 1.4, eu.z - dir.z * 4 + dirX.z * 0.85); camera.lookAt(olhoAlvo);
       } else {
         if (avatar) avatar.visible = false;
-        altVoo += ((voarLivre ? 55 : 0) - altVoo) * Math.min(1, dt * 1.5); camera.position.set(eu.x, Math.max(hc, hBase(eu.x, eu.z) - 1.0 - 0.6) + 1.7 + altVoo + Math.sin(passoBob * 2) * 0.035 * Math.min(1, vv / 3) * (voarLivre ? 0 : 1), eu.z);
+        altVoo += (Math.max(voarLivre ? 55 : 0, subida) - altVoo) * Math.min(1, dt * 2.5); if (subida > 30) pitch += (-Math.min(1.25, 0.25 + subida / 700) - pitch) * Math.min(1, dt * 2); camera.position.set(eu.x, Math.max(hc, hBase(eu.x, eu.z) - 1.0 - 0.6) + 1.7 + altVoo + Math.sin(passoBob * 2) * 0.035 * Math.min(1, vv / 3) * (voarLivre ? 0 : 1), eu.z);
         camera.rotation.set(0, 0, 0); camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = pitch;
       }
       // cartões por proximidade
       const dArv = Math.hypot(eu.x, eu.z), dForq = Math.hypot(eu.x - FORQ.x, eu.z - FORQ.z), dPres = Math.hypot(eu.x - posPresenca.x, eu.z - posPresenca.z);
       const perto = bichos.some((b) => Math.hypot(b.x - eu.x, b.z - eu.z) < 9);
-      cartao(dPres < 16 ? 'presenca' : dArv < 30 ? 'arvore' : dForq < 26 ? 'rio' : perto ? 'animais' : dArv < 90 ? 'chegada' : r > 300 ? 'bom' : null);
+      cartao(E ? (dPres < 16 ? 'presenca' : dArv < 30 ? 'arvore' : dForq < 26 ? 'rio' : perto ? 'animais' : dArv < 90 ? 'chegada' : r > 300 ? 'bom' : null)
+        : L ? (Math.hypot(eu.x - 0, eu.z - 40) < 25 ? 'golias' : Math.abs(eu.z - ribZ(eu.x)) < 10 && Math.abs(eu.x) < 400 ? 'ribeiro' : eu.x < -450 ? 'oeste' : eu.z < -105 ? 'israel' : eu.z > 120 ? 'filisteus' : Math.abs(eu.z) < 80 ? 'davi' : 'bom')
+        : J ? (() => { let k = null, dm = 1e9; for (const [nm, [lx, lz]] of Object.entries(JC.LUGARES)) { const d = Math.hypot(eu.x - lx, eu.z - lz), lim = nm === 'santuario' ? 70 : nm === 'palacio' ? 90 : 40; if (d < lim && d < dm) { dm = d; k = nm; } } return k || (Math.abs(eu.x) < 150 && Math.abs(eu.z) < 242 ? 'chegada' : 'bom'); })()
+        : (dPres < 5 ? 'presenca' : Math.hypot(eu.x + TD.x * 12, eu.z + TD.z * 12) < 7 ? 'cidade' : dArv < 10 ? 'rocha' : tochaPerto(eu.x, eu.z) < 30 ? 'tochas' : dArv < 45 ? 'vigiai' : dArv < 180 ? 'chegada' : 'bom'));
     }
-    moverBichos(dt);
+    moverBichos(dt); if (tochas.mover) tochas.mover(t);
     caminhoPresenca.getPointAt(((t / 160) % 1 + 1) % 1, posPresenca); presenca.position.set(posPresenca.x, altura(posPresenca.x, posPresenca.z), posPresenca.z); brilho.material.opacity = 0.75 + 0.25 * Math.sin(t * 1.7);
     if (voando) matGrama.uniforms.centro.value.set(camera.position.x, camera.position.z); else matGrama.uniforms.centro.value.set(eu.x, eu.z); grama.visible = camera.position.y - altura(camera.position.x, camera.position.z) < 25;
     if (avatar && voando) { avatar.visible = modo === 'terceira'; avatar.position.set(eu.x, altura(eu.x, eu.z), eu.z); avatar.rotation.y = rumo + (pecas.explorador.giro || 0); }
@@ -610,15 +785,25 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
       const dP = Math.hypot(camera.position.x - posPresenca.x, camera.position.z - posPresenca.z); audio.gV.gain.setTargetAtTime(0.14 + 0.35 * Math.max(0, 1 - dP / 40) + 0.06 * Math.sin(t * 0.3), audio.ctx.currentTime, 0.5); }
     solDisco.position.copy(camera.position).addScaledVector(SOL, 3500); matF.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); feixes.visible = polen.visible; matPo.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); polen.visible = !voando || camera.position.y - altura(camera.position.x, camera.position.z) < 30;
     const sp = solDisco.position.clone().project(camera), fw = new THREE.Vector3(); camera.getWorldDirection(fw); matPos.uniforms.solTela.value.set(sp.x * 0.5 + 0.5, sp.y * 0.5 + 0.5); matPos.uniforms.solVis.value = Math.max(0, fw.dot(SOL)) ** 1.5 * (sp.z < 1 ? 1 : 0);
-    if (audio && somLigado) { const tg = bichos.find((b) => b.e.n === 'tigre-rugindo'); if (tg && Math.hypot(tg.x - camera.position.x, tg.z - camera.position.z) < 16 && t - (window.__ultRugido || 0) > 25) { window.__ultRugido = t; audio.rugir(); } }
+    if (audio && somLigado) { const tg = bichos.find((b) => b.e.n === 'leao-anda'); if (tg && Math.hypot(tg.x - camera.position.x, tg.z - camera.position.z) < 16 && t - (window.__ultRugido || 0) > 25) { window.__ultRugido = t; audio.rugir(); } }
     camera.updateMatrixWorld(); refletir(); renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); }
-  requestAnimationFrame((a) => { raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
+  const iniciar = () => requestAnimationFrame((a) => { raiz.style.pointerEvents = ''; raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
+  // aquecimento escondido: compila os shaders em paralelo e manda para a placa de vídeo uma peça por quadro (o globo segue liso durante o voo)
+  async function aquecer() { try { const p0 = voo.getPointAt(0); camera.position.set(p0.x, altura(p0.x, p0.z) + p0.y + 1.7, p0.z); camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
+      if (renderer.compileAsync) await renderer.compileAsync(cena, camera); const rtP = new THREE.WebGLRenderTarget(16, 16, { type: THREE.HalfFloatType }); const objs = cena.children.slice(), vis = objs.map((o) => o.visible), cul = objs.map((o) => o.frustumCulled);
+      objs.forEach((o) => { o.visible = false; o.frustumCulled = false; });
+      for (let i = 0; i < objs.length; i++) { objs[i].visible = vis[i]; renderer.setRenderTarget(rtP); renderer.render(cena, camera); await new Promise((ok) => requestAnimationFrame(ok)); }
+      // a imagem final (brilho, raios de sol, cor) também é compilada e o quadro grande alocado antes de aparecer
+            if (renderer.compileAsync) await renderer.compileAsync(posCena, posCam); renderer.setRenderTarget(rt); renderer.render(cena, camera); await new Promise((ok) => requestAnimationFrame(ok)); renderer.setRenderTarget(rtP); renderer.render(posCena, posCam); await new Promise((ok) => requestAnimationFrame(ok));
+      objs.forEach((o, i) => { o.frustumCulled = cul[i]; }); renderer.setRenderTarget(rt); renderer.clear(); renderer.setRenderTarget(reflRT); renderer.clear(); renderer.setRenderTarget(null); rtP.dispose(); } catch (e) { console.warn('aquecer', e); } }
+  if (oculto) { raiz.style.pointerEvents = 'none'; await aquecer(); } else iniciar();   // compila os shaders sem travar (em paralelo) e sobe as texturas antes de aparecer
 
-  function fechar() { if (!ativo) return; ativo = false; window.NEXUS_CENA = null; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
+  function fechar() { if (!ativo) return; ativo = false; window.NEXUS_CENA = null; window.NEXUS_MUNDO_ACAO = null; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
     setTimeout(() => { lixo.forEach((o) => o && o.dispose && o.dispose()); renderer.dispose(); raiz.remove(); }, 1400); if (aoFechar) aoFechar(); }
   raiz.querySelector('.ej-sair').onclick = fechar;
   // o guia sabe onde o pastor está dentro do jardim (para conversar sobre o que ele vê)
-  const LUGAR = { arvore: 'diante da árvore da vida, no meio do jardim (Gn 2:9)', rio: 'onde o rio que sai do Éden se divide em quatro braços (Gn 2:10)', animais: 'entre os animais do jardim (Gn 2:19)', presenca: 'junto da luz que representa a presença do Senhor passeando no jardim (Gn 3:8)', chegada: 'na trilha que leva à árvore da vida (Gn 2:8)', bom: 'nas partes distantes do jardim (Gn 1:31)' };
-  window.NEXUS_CENA = () => 'Jardim do Éden em 3D (reconstituição artística, ilustrativa), ' + (voando ? 'chegando de drone' : voarLivre ? 'voando sobre o jardim' : (LUGAR[cartaoAtual] || 'andando pelo jardim, entre a mata e os rios'));
-  return { cena, fechar, estado: () => ({ x: eu.x, z: eu.z, yaw, pitch, voando, bichos: bichos.length, onde: bichos.map((b) => [b.e.n, Math.round(b.x), Math.round(b.z)]) }), olhar: (y, p) => { yaw = y; pitch = p; }, irPara: (x, z) => { pularChegada(); eu.set(x, 0, z); } };
+  const LUGAR0 = { arvore: 'diante da árvore da vida, no meio do jardim (Gn 2:9)', rio: 'onde o rio que sai do Éden se divide em quatro braços (Gn 2:10)', animais: 'entre os animais do jardim (Gn 2:19)', presenca: 'junto da luz que representa a presença do Senhor passeando no jardim (Gn 3:8)', chegada: 'na trilha que leva à árvore da vida (Gn 2:8)', bom: 'nas partes distantes do jardim (Gn 1:31)' };
+  const LUGAR = MW.lugar || LUGAR0;
+  window.NEXUS_CENA = () => MW.nome + ' em 3D (reconstituição artística, ilustrativa), ' + (voando ? 'chegando de drone' : voarLivre ? 'voando sobre o lugar' : (LUGAR[cartaoAtual] || 'andando pelo lugar'));
+  return window.__mundoW = { cena, fechar, mostrar: () => { if (oculto) { oculto = false; iniciar(); } }, estado: () => ({ x: eu.x, z: eu.z, yaw, pitch, voando, cam: [Math.round(camera.position.x), Math.round(camera.position.y), Math.round(camera.position.z)], bichos: bichos.length, onde: bichos.map((b) => [b.e.n, Math.round(b.x), Math.round(b.z)]) }), olhar: (y, p) => { yaw = y; pitch = p; }, irPara: (x, z) => { pularChegada(); eu.set(x, 0, z); } };
 }

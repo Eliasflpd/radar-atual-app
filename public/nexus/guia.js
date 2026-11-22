@@ -10,14 +10,16 @@ const CENAS = [
   [/(sete|7) trombetas|trombeta/, null, 'o mundo das sete trombetas (Apocalipse 8–11)', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('trombetas')],
   [/\beden\b|paraiso|jardim(?! do getsemani| das oliveiras)|arvore da vida/, 'Éden', 'o jardim do Éden: o drone desce e você anda dentro'],
   [/criacao|genesis 1\b|no principio/, null, 'a criação (Gênesis 1)', () => window.__ceuPrevia && window.__ceuPrevia._teste && window.__ceuPrevia._teste.entrarLivro(1)],
-  [/templo de herodes|segundo templo|templo de jesus/, 'templo de Herodes', 'o templo de Herodes'],
+  [/templo de herodes|segundo templo|templo de jesus|jerusalem|porta formosa|portico de salomao|alpendre de salomao|fortaleza antonia|tanque de siloe/, 'Jerusalém', 'Jerusalém do ano 30: a esplanada do Templo de Herodes, para andar'],
   [/templo de salomao|primeiro templo|templo$/, 'templo de Salomão', 'o templo de Salomão'],
   [/getsemani|horto das oliveiras/, 'Getsêmani', 'o Getsêmani'],
+  [/vale de ela|golias/, 'Vale de Elá', 'o Vale de Elá (1 Samuel 17)'],
   [/golgota|calvario|santo sepulcro/, 'Gólgota', 'o Gólgota'],
   [/lazaro/, 'túmulo de Lázaro', 'o túmulo de Lázaro em Betânia'],
   [/nazare/, 'Nazaré', 'Nazaré'], [/cafarnaum/, 'Cafarnaum', 'Cafarnaum'], [/magdala/, 'Magdala', 'Magdala'], [/mar da galileia|genezare|tiberiades/, 'Mar da Galileia', 'o Mar da Galileia'],
 ];
-const IDS = ['queda', 'trombetas', 'eden', 'criacao', 'templo-herodes', 'templo-salomao', 'getsemani', 'golgota', 'lazaro', 'nazare', 'cafarnaum', 'magdala', 'mar-galileia'];   // na mesma ordem de CENAS
+const IDS = ['queda', 'trombetas', 'eden', 'criacao', 'templo-herodes', 'templo-salomao', 'getsemani', 'ela', 'golgota', 'lazaro', 'nazare', 'cafarnaum', 'magdala', 'mar-galileia'];   // na mesma ordem de CENAS
+const JUNTO = [/frutoproibido|queda|serpente|genesis3|pecadooriginal/, /trombeta/, /eden|paraiso|jardim(?!dogetsemani|dasoliveiras)|arvoredavida/, /criacao|genesis1|noprincipio/, /templodeherodes|segundotemplo|templodejesus|jerusalem|portaformosa|porticodesalomao|antonia|siloe/, /templodesalomao|primeirotemplo|templo$/, /getsemani|hortodasoliveiras/, /valedeela|golias/, /golgota|calvario|santosepulcro/, /lazaro/, /nazare/, /cafarnaum/, /magdala/, /mardagalileia|genezare|tiberiades/];   // na mesma ordem de CENAS
 const CHAVE = 'nexus_guia';
 let hist = []; try { hist = JSON.parse(sessionStorage.getItem(CHAVE) || '[]'); } catch (_) { hist = []; }
 const guardar = () => { try { sessionStorage.setItem(CHAVE, JSON.stringify(hist.slice(-30))); } catch (_) {} };
@@ -30,13 +32,13 @@ const par = (t) => esc(t).split(/\n\s*\n/).map((b) => { const ls = b.split('\n')
 export function iniciarGuia() {
   const el = document.createElement('div'); el.className = 'guia'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Guia do NEXUS');
   el.innerHTML = `<style>
-    .guia{position:fixed;left:24px;bottom:24px;width:min(380px,calc(100vw - 32px));height:min(520px,calc(100vh - 140px));z-index:2147483000;display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(20,33,61,.72) 0%,rgba(10,18,40,.55) 45%,rgba(40,28,8,.45) 100%);border:1px solid rgba(243,211,142,.45);border-radius:16px;box-shadow:0 22px 50px rgba(0,0,0,.45);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);font:15px/1.55 Inter,system-ui,sans-serif;color:#F7F3E8;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+    .guia{position:fixed;left:24px;bottom:24px;width:min(380px,calc(100vw - 32px));height:min(520px,calc(100vh - 140px));z-index:2147483000;display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(20,33,61,.34) 0%,rgba(10,18,40,.22) 45%,rgba(40,28,8,.18) 100%);border:1px solid rgba(243,211,142,.45);border-radius:16px;box-shadow:0 22px 50px rgba(0,0,0,.45);backdrop-filter:blur(5px) saturate(1.15);-webkit-backdrop-filter:blur(5px) saturate(1.15);font:15px/1.55 Inter,system-ui,sans-serif;color:#F7F3E8;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.55)}
     body:has(.guia:not(.min)) .p3-card,body:has(.guia:not(.min)) .tp-ficha{left:auto!important;right:24px}body:has(.guia:not(.min)) .p3-cred,body:has(.guia:not(.min)) .mt-cred,body:has(.guia:not(.min)) .lr-cred{left:420px}
     .guia.grande{left:auto!important;right:16px;top:76px!important;bottom:16px!important;width:min(620px,46vw);height:auto;font-size:16px}.guia.grande .guia-msg{max-width:96%}
     .guia-msg h4{margin:6px 0 4px;font:700 17px 'Cormorant Garamond',Georgia,serif;color:#FFE3A3}.guia-msg ul,.guia-msg ol{margin:4px 0 6px 18px;padding:0}.guia-msg li{margin:2px 0}
     .guia-digitando::after{content:'▍';animation:gpisca 1s steps(1) infinite;color:#F3D38E}@keyframes gpisca{50%{opacity:0}}
-    .guia.min{height:auto;width:auto}.guia.min .guia-corpo,.guia.min .guia-form{display:none}
-    .guia-topo{display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(90deg,rgba(20,33,61,.85),rgba(201,162,78,.35));border-bottom:1px solid rgba(243,211,142,.25);color:#F3E2B3;cursor:move;user-select:none}
+    .guia.min{height:auto;width:auto}.guia.grande.min{top:auto!important;width:auto}.guia.min .guia-corpo,.guia.min .guia-form{display:none}
+    .guia-topo{display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(90deg,rgba(20,33,61,.5),rgba(201,162,78,.22));border-bottom:1px solid rgba(243,211,142,.25);color:#F3E2B3;cursor:move;user-select:none}
     .guia-topo b{font:700 15px "Cormorant Garamond",Georgia,serif;letter-spacing:.04em;flex:1}.guia-topo small{color:rgba(243,226,179,.7);font-size:11px}
     .guia-topo button{border:0;background:rgba(255,255,255,.12);color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;font:700 14px Inter,sans-serif}
     .guia-corpo{flex:1;overflow:auto;padding:12px}
@@ -49,15 +51,15 @@ export function iniciarGuia() {
     /* ── jeito de WhatsApp ── */
     .guia-topo{padding:8px 10px}.guia-av{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE7A8,#C9A24E 60%,#7a5a1e);display:grid;place-items:center;color:#14213D;font:700 16px Georgia,serif;flex:none;box-shadow:0 0 0 2px rgba(243,211,142,.35)}
     .guia-nome{flex:1;display:flex;flex-direction:column;line-height:1.15}.guia-nome b{flex:none!important}.guia-nome small{color:#9fe3b0!important;font-size:11px!important}
-    .guia-corpo{background-color:rgba(8,14,28,.35);background-image:radial-gradient(rgba(243,211,142,.07) 1px,transparent 1.2px);background-size:18px 18px}
+    .guia-corpo{background-color:rgba(8,14,28,.06);background-image:radial-gradient(rgba(243,211,142,.07) 1px,transparent 1.2px);background-size:18px 18px}
     .guia-msg{position:relative;border-radius:10px;padding:7px 10px 18px;box-shadow:0 1px 2px rgba(0,0,0,.35)}
-    .guia-eu{border-top-right-radius:2px;background:linear-gradient(180deg,rgba(201,162,78,.55),rgba(160,120,40,.5))}
-    .guia-eu::after{content:'';position:absolute;right:-7px;top:0;border:7px solid transparent;border-top-color:rgba(190,150,60,.6);border-left-width:0}
-    .guia-nx{border-top-left-radius:2px;background:rgba(18,26,46,.85)}.guia-nx::before{content:'';position:absolute;left:-7px;top:0;border:7px solid transparent;border-top-color:rgba(18,26,46,.85);border-right-width:0}
+    .guia-eu{border-top-right-radius:2px;background:linear-gradient(180deg,rgba(201,162,78,.42),rgba(160,120,40,.36));backdrop-filter:blur(6px)}
+    .guia-eu::after{content:'';position:absolute;right:-7px;top:0;border:7px solid transparent;border-top-color:rgba(190,150,60,.42);border-left-width:0}
+    .guia-nx{border-top-left-radius:2px;background:rgba(18,26,46,.5);backdrop-filter:blur(6px)}.guia-nx::before{content:'';position:absolute;left:-7px;top:0;border:7px solid transparent;border-top-color:rgba(18,26,46,.5);border-right-width:0}
     .guia-hora{position:absolute;right:8px;bottom:3px;font-size:10.5px;color:rgba(255,255,255,.6);display:flex;gap:3px;align-items:center}.guia-hora i{font-style:normal;color:#8fd3ff;letter-spacing:-3px}
     .guia-anexo{display:block;margin:2px 0 6px;border-radius:8px;overflow:hidden;max-width:260px;cursor:pointer}.guia-anexo img{display:block;width:100%;height:auto}
     .guia-doc{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.25);border-radius:8px;padding:8px 10px;margin:2px 0 6px;font-size:13px}.guia-doc span{font-size:24px}
-    .guia-form{align-items:flex-end;gap:6px;padding:8px;background:rgba(8,14,28,.55)}
+    .guia-form{align-items:flex-end;gap:6px;padding:8px;background:rgba(8,14,28,.2)}
     .guia-caixa{flex:1;display:flex;align-items:flex-end;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:2px 4px 2px 6px}
     .guia-caixa textarea{border:0!important;background:transparent!important;height:38px;max-height:120px;padding:9px 6px!important}
     .guia-clip{border:0;background:none;width:36px;height:38px;cursor:pointer;display:grid;place-items:center;text-shadow:none}
@@ -90,9 +92,14 @@ export function iniciarGuia() {
     // foto de um lugar: vira cena 3D realista na hora (profundidade calculada no próprio aparelho)
     const foto = anexos.find((a) => a.tipo === 'imagem' && !a.video); if (foto) abrir3D(foto.url || foto.thumb, texto);
     if (anexos.length) { await conversar(texto || (foto ? 'Que lugar é este? Me conte o que você vê e a ligação com a Bíblia, se houver.' : 'Leia o anexo e me diga o essencial.'), anexos); return; }
+    // dentro de um mundo, o pedido de ir a algo que está à vista segue dali mesmo (não volta ao globo)
+    if (typeof window.NEXUS_MUNDO_ACAO === 'function') { const r = window.NEXUS_MUNDO_ACAO(q); if (r) { hist.push({ t: r, nota: 'no mundo · sem custo', hora: hora() }); guardar(); desenhar(); return; } }
     const pergunta = /\?$/.test(texto) || /^(o que|oque|por que|porque|pq|quem|como|qual|quais|quando|onde|sera|explique|me explica|fale|me fala|conte|me conta|voce acha)\b/.test(q);
     const comando = /\b(me leve|leve-me|me leva|leva|abra|abre|abrir|mostre|mostra|mostrar|quero ver|quero ir|quero andar|quero entrar|quero conhecer|vamos|ir para|ir ao|va para|entrar|entra|entre|visitar|visite|conhecer|passear|andar|vislumbre|visao|me de|me da|deixa eu ver|leve)\b/.test(q) || (!pergunta && q.split(/\s+/).length <= 4);
-    const cena = comando || /\b(estudo|sermao|pregacao)\b/.test(q) ? CENAS.find(([re]) => re.test(q)) : null;
+    // o mesmo pedido escrito tudo junto (sem espaços, como às vezes sai do teclado do tablet): 'meleveaojardimdoeden'
+    const junto = !/\s/.test(q) && q.length >= 8 ? q.replace(/[^a-z0-9]/g, '') : '';
+    let cena = comando || /\b(estudo|sermao|pregacao)\b/.test(q) ? CENAS.find(([re]) => re.test(q)) : null;
+    if (!cena && junto) { const i = JUNTO.findIndex((re) => re.test(junto)); if (i >= 0) cena = CENAS[i]; }
     if (cena) {   // a cena muda na hora (sem custo)
       const [, busca, nome, fn] = cena; await abrirCena(cena);
       const estudo = /\b(estudo|sermao|pregacao|mensagem)\b/.test(q);

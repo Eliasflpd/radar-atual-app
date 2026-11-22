@@ -6,7 +6,7 @@ from PIL import Image, ImageFilter
 import numpy as np
 
 src = sys.argv[1]
-dst = os.path.join(os.path.dirname(__file__), '..', 'public', 'nexus', 'eden')
+dst = os.path.join(os.path.dirname(__file__), '..', 'public', 'nexus', sys.argv[2] if len(sys.argv) > 2 else 'eden')
 os.makedirs(dst, exist_ok=True)
 pecas = {}
 try:
@@ -18,6 +18,10 @@ for nome in sorted(os.listdir(src)):
         continue
     base = nome[:-4]
     im = Image.open(os.path.join(src, nome)).convert('RGBA')
+    if base.startswith('alvo'):
+        continue
+    if base.startswith('ceu'):
+        im2 = im.convert('RGB'); w0, h0 = im2.size; esc0 = min(1, 4096 / w0); im2.resize((round(w0 * esc0), round(h0 * esc0)), Image.LANCZOS).save(os.path.join(dst, base + '.jpg'), quality=88); continue
     if base.startswith('chao'):
         im.convert('RGB').resize((1024, 1024), Image.LANCZOS).save(os.path.join(dst, base + '.jpg'), quality=88)
         pecas[base] = {'w': 1, 'h': 1}

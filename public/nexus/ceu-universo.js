@@ -920,6 +920,7 @@ export function criarCeu(container, estado, acoes) {
     }
     if (!arrasto && m.vel && (Math.abs(m.vel.lat) + Math.abs(m.vel.lon) > 1e-5)) { m.lat += m.vel.lat; m.lon += m.vel.lon; m.vel.lat *= 0.9; m.vel.lon *= 0.9; }
     if (m.altAlvo > RAIO_GLOBO * 3.3 && m.alt > RAIO_GLOBO * 3.1) { sairTerra(); return false; }
+    if (!m.voo && m.alt < 3.4 && performance.now() - mundoEntradaEm > 5000 && !ui.querySelector('.ej-raiz')) { const w = MUNDOS_GEO.find((w) => Math.abs(w.lat - m.lat) < 0.07 && Math.abs(w.lon - m.lon) < 0.09); if (w) { mundoEntradaEm = performance.now(); import('/nexus/eden-caminhar.js?v=45').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo: w.id })).catch(() => {}); } }
     return true;
   }
   function posicionarTerra() {
@@ -1665,14 +1666,40 @@ export function criarCeu(container, estado, acoes) {
     setTimeout(() => { aviso.hidden = true; if (lugarRealAberto) return; lugarRealAberto = m.abrirLugar(id, ui, { aoFechar: () => { lugarRealAberto = null; } }); }, 3000);
     return true;
   }
+  // VIAGEM COMO NO GOOGLE EARTH: fecha o mundo aberto, sobe ao espaço, cruza o mapa até o lugar e desce; ao chegar, o drone pousa no mundo andável
+  const ORIGENS = { eden: { lat: 31.0, lon: 47.4 }, getsemani: { lat: 31.7795, lon: 35.2398 }, ela: { lat: 31.69, lon: 34.96 }, jerusalem: { lat: 31.7780, lon: 35.2354 } };
+  // UM UNIVERSO SÓ: subindo de um mundo, ele some lá embaixo e você sai no globo; descendo no globo sobre um mundo, você entra nele
+  const MUNDOS_GEO = Object.entries(ORIGENS).map(([id, p]) => ({ id, ...p })); let mundoEntradaEm = 0;
+  // ENTRAR NO TEMPLO DE HERODES direto (vindo do Getsêmani): abre a maquete já na vista pedida (Escada de Nicanor, Santo Lugar…)
+  // vindo do Getsêmani: atravessa o Cedrom e entra no mundo de Jerusalém (o drone desce do Monte das Oliveiras até a esplanada)
+  window.NEXUS_ENTRAR_TEMPLO = async (vista) => { const mm = await import('/nexus/eden-caminhar.js?v=45'); const w = await mm.abrirJardim(THREE, ui, { chegada: true, mundo: 'jerusalem' }); if (w && vista && window.NEXUS_MUNDO_ACAO) setTimeout(() => window.NEXUS_MUNDO_ACAO(vista === 'santo' ? 'santuario' : vista === 'esplanada' ? 'cidade de davi' : 'santuario'), 9500); };
+  window.NEXUS_ENTRAR_TEMPLO_MAQUETE = async (vista) => { if (temploAberto) return; const m = await import('/nexus/templo-herodes.js?v=6'); temploAberto = await m.abrirTemplo(THREE, ui, { aoFechar: () => { temploAberto = null; } }); ui.dataset.templo = 'herodes';
+    if (vista) setTimeout(() => { const b = ui.querySelector(`.tp-raiz [data-v="${vista}"]`); if (b) b.click(); }, 1800); };
+  window.NEXUS_PARA_GLOBO = (lat, lon) => { if (!atlasC) return; camada('atlas').visivel = true; if (!modoTerra) entrarTerra(null); const m = modoTerra; m.lat = lat; m.lon = lon; m.alt = m.altAlvo = 2.2;
+    m.voo = { de: { lat, lon, alt: 2.2 }, para: { lat, lon, alt: RAIO_GLOBO * 0.05 }, topo: RAIO_GLOBO * 0.05, t0: performance.now(), dur: 3200 }; m.cursor = null; m.ancora = null; mundoEntradaEm = performance.now(); };
+  async function viajarParaMundo(mundo, lat, lon, nome) {
+    const veioDe = window.__nexusMundoAtual; const aberto = ui.querySelector('.ej-raiz'); if (aberto) { const b = aberto.querySelector('.ej-sair'); if (b) b.click(); await new Promise((ok) => setTimeout(ok, 900)); }
+    // o mundo começa a ser montado ESCONDIDO já no começo do voo; na chegada ele só aparece (sem travar)
+    const pre = import('/nexus/eden-caminhar.js?v=45').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo, oculto: true })).catch(() => null);
+    const abrir = () => pre.then((w) => { if (w) w.mostrar(); });
+    if (!atlasC) { abrir(); return; }
+    camada('atlas').visivel = true; if (!modoTerra) entrarTerra(null);
+    const m = modoTerra, o = ORIGENS[veioDe]; if (o) { m.lat = o.lat; m.lon = o.lon; m.alt = Math.max(m.alt || 0, RAIO_GLOBO * 0.02); }
+    let aviso = ui.querySelector('.cu-aviso-templo'); if (!aviso) { aviso = document.createElement('div'); aviso.className = 'cu-aviso-templo'; aviso.style.cssText = 'position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:8;background:rgba(5,11,26,.9);border:1px solid rgba(233,200,120,.5);color:#FFE8B0;border-radius:999px;padding:8px 16px;font:600 13px Inter,system-ui,sans-serif;pointer-events:none;white-space:nowrap'; ui.appendChild(aviso); }
+    aviso.textContent = '✈ Viajando para ' + nome + '…'; aviso.hidden = false; window.__solViagem = { lat: 12, lon: lon - 25 };   // durante a viagem, a Terra fica de dia (luz de cinema, como no Google Earth)
+    m.voo = { de: { lat: m.lat, lon: m.lon, alt: m.alt }, para: { lat, lon, alt: Math.max(10, RAIO_GLOBO * 0.012) }, topo: RAIO_GLOBO * 1.15, t0: performance.now(), dur: 7500 }; m.cursor = null; m.ancora = null;
+    m.aoChegar = () => { aviso.hidden = true; abrir(); setTimeout(() => { window.__solViagem = null; }, 2500); };
+  }
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
-    if (/^(o )?(jardim do )?getsemani$|^horto das oliveiras$/.test(q)) { abrirLugarReal('getsemani'); return true; }
+    if (/^(a )?(cidade de )?jerusalem( do (ano 30|tempo de jesus))?$|^(o )?(templo de herodes|templo herodiano|segundo templo|templo de jesus|templo do tempo de jesus)$|^(a )?porta formosa$|^(o )?(portico|alpendre) de salomao$|^(a )?(fortaleza )?antonia$|^(o )?tanque de siloe$/.test(q)) { viajarParaMundo('jerusalem', 31.7780, 35.2354, 'Jerusalém'); return true; }
+    if (/^(o )?vale de ela$|^(davi e )?golias$/.test(q)) { viajarParaMundo('ela', 31.69, 34.96, 'o Vale de Elá'); return true; }
+    if (/^(o )?(jardim do )?getsemani$|^horto das oliveiras$/.test(q)) { viajarParaMundo('getsemani', 31.7795, 35.2398, 'o Getsêmani'); return true; }   // mundo para andar, de noite; a foto fica de reserva
     if (/^(o )?(golgota|calvario|monte calvario|santo sepulcro|lugar da caveira|sepulcro de jesus|tumulo de jesus)$/.test(q)) { abrirLugarReal('golgota'); return true; }
     if (/^(o )?(tumulo|sepulcro) de lazaro$/.test(q)) { abrirLugarReal('lazaro'); return true; }
     if (/^nazare$/.test(q)) { abrirLugarReal('nazare'); return true; }
     if (/(sete|7) trombetas|^trombetas$/.test(q)) { window.NEXUS_MUNDO('trombetas'); return true; }
-    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { import('/nexus/eden-caminhar.js?v=12').then((m) => m.abrirJardim(THREE, ui, { chegada: true })).catch(() => import('/nexus/panorama360.js?v=6').then((m) => m.abrirPanorama(THREE, 'eden', ui))); return true; }   // direto no jardim realista: o drone desce e pousa dentro dele
+    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { viajarParaMundo('eden', 31.0, 47.4, 'o Éden'); return true; }   // direto no jardim realista: o drone desce e pousa dentro dele
     if (/^(cafarnaum|capernaum|casa de pedro)$/.test(q)) { abrirLugarReal('cafarnaum'); return true; }
     if (/^(magdala|sinagoga de magdala)$/.test(q)) { abrirLugarReal('magdala'); return true; }
     if (/^(o )?(mar da galileia|lago de genezare|mar de tiberiades|mar de genezare|lago da galileia)$/.test(q)) { abrirLugarReal('mar'); return true; }
@@ -2019,7 +2046,7 @@ export function criarCeu(container, estado, acoes) {
     aplicarCamadas(); if (modoTerra && atlasC) { if (animarTerra()) posicionarTerra(); } else { alvo.z = zB; posicionar(); }
     if (transicao) { const q = Math.min(1, (performance.now() - transicao.t0) / 650), e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2; if (q >= 1) transicao = null; else { camera.position.lerpVectors(transicao.pos, camera.position.clone(), e); camera.quaternion.slerpQuaternions(transicao.quat, camera.quaternion.clone(), e); camera.updateMatrixWorld(); } }
     if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel || !!modoTerra, !modoTerra || modoTerra.alt > RAIO_GLOBO * 0.02);   // o universo é visto do espaço: estrelas reais da hora, sem o azul do dia (só perto do chão, na Terra, o céu fica azul)   // na Terra, vista do espaço: céu negro com estrelas
-    if (atlasC && t - solEm > 1000) { solEm = t; const ss = pontoSubsolar(Date.now() + (ceuR ? ceuR.estado().desloc || 0 : 0)); atlasC.sol(ss.lat, ss.lon);
+    if (atlasC && t - solEm > 1000) { solEm = t; const ss = window.__solViagem || pontoSubsolar(Date.now() + (ceuR ? ceuR.estado().desloc || 0 : 0)); atlasC.sol(ss.lat, ss.lon);
       if (modoTerra) { const l = modoTerra; const dLon = ((l.lon - ss.lon + 540) % 360) - 180, cz = Math.sin(l.lat * Math.PI / 180) * Math.sin(ss.lat * Math.PI / 180) + Math.cos(l.lat * Math.PI / 180) * Math.cos(ss.lat * Math.PI / 180) * Math.cos(dLon * Math.PI / 180);
         faixaTerra.querySelector('.cu-terra-txt').textContent = `🌍 Terra · ${cz > 0.05 ? 'é dia' : cz > -0.1 ? 'crepúsculo' : 'é noite'} no centro da vista (${l.lat.toFixed(1)}°, ${l.lon.toFixed(1)}°) · ${atlasC.imagemReal() ? 'imagem de satélite NASA Blue Marble' : 'carregando imagem de satélite…'} · Sol ${ceuR && ceuR.estado().desloc ? 'da hora escolhida' : 'de agora'}`; } }
     faixaTerra.hidden = !modoTerra; document.body.classList.toggle('modo-terra', !!modoTerra);

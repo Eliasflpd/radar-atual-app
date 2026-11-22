@@ -1,0 +1,46 @@
+{
+"arbusto-sefela": {
+"w": 1024,
+"h": 515
+},
+"carvalho": {
+"w": 1020,
+"h": 1024
+},
+"chao-ela": {
+"w": 1,
+"h": 1
+},
+"exercito-filisteu": {
+"w": 1024,
+"h": 220
+},
+"exercito-israel": {
+"w": 1024,
+"h": 185
+},
+"golias": {
+"w": 536,
+"h": 1024
+},
+"oliveira-ela": {
+"w": 1000,
+"h": 1024
+},
+"seixos": {
+"w": 1024,
+"h": 1024
+},
+"tendas-filisteias": {
+"w": 1024,
+"h": 512
+},
+"terebinto": {
+"w": 1019,
+"h": 1024
+},
+"trigo": {
+"w": 1024,
+"h": 281
+}
+}
