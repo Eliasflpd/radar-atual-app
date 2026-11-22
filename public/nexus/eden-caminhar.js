@@ -432,11 +432,9 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const feixes = new THREE.Mesh(gF, matF); feixes.frustumCulled = false; cena.add(feixes); lixo.push(gF, qF, matF);
 
   // ANIMAIS que andam devagar pelo jardim (o leão descansa)
+  // só animais tirados de VÍDEO REAL (andam de verdade); as figuras paradas saíram a pedido do Elias (22/11/2026)
   const especies = !E ? [] : [
-    { n: 'leao', h: 1.15, q: 3, anda: 0 }, { n: 'cordeiro', h: 0.85, q: 6, anda: 0.5 }, { n: 'cervo', h: 1.75, q: 5, anda: 0.9 },
-    { n: 'elefante-anda', h: 3.3, q: 3, anda: 1.0 }, { n: 'leao-anda', h: 1.3, q: 2, anda: 1.25 }, { n: 'girafa', h: 5.2, q: 3, anda: 0.7 }, { n: 'pavao', h: 1.1, q: 4, anda: 0.4 },
-    { n: 'onca', h: 0.95, q: 3, anda: 0.8 }, { n: 'anta', h: 1.1, q: 3, anda: 0.5 }, { n: 'capivara', h: 0.62, q: 10, anda: 0.35, rio: true },
-    { n: 'tigre', h: 1.05, q: 3, anda: 0.75 }, { n: 'tigre-rugindo', h: 1.2, q: 1, anda: 0 }, { n: 'tigre-deitado', h: 0.85, q: 2, anda: 0 },
+    { n: 'elefante-anda', h: 3.3, q: 3, anda: 1.0 }, { n: 'leao-anda', h: 1.3, q: 3, anda: 1.25 },
   ];
   const bichos = [];
   const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], 'elefante-anda': [-26, 22], 'leao-anda': [-16, 50], girafa: [24, 24], pavao: [5, 53], onca: [-16, 58], anta: [18, 60], 'tigre-rugindo': [-3.2, 96], tigre: [4, 128] };   // um grupo à vista de quem pousa
@@ -754,7 +752,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       const dP = Math.hypot(camera.position.x - posPresenca.x, camera.position.z - posPresenca.z); audio.gV.gain.setTargetAtTime(0.14 + 0.35 * Math.max(0, 1 - dP / 40) + 0.06 * Math.sin(t * 0.3), audio.ctx.currentTime, 0.5); }
     solDisco.position.copy(camera.position).addScaledVector(SOL, 3500); matF.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); feixes.visible = polen.visible; matPo.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); polen.visible = !voando || camera.position.y - altura(camera.position.x, camera.position.z) < 30;
     const sp = solDisco.position.clone().project(camera), fw = new THREE.Vector3(); camera.getWorldDirection(fw); matPos.uniforms.solTela.value.set(sp.x * 0.5 + 0.5, sp.y * 0.5 + 0.5); matPos.uniforms.solVis.value = Math.max(0, fw.dot(SOL)) ** 1.5 * (sp.z < 1 ? 1 : 0);
-    if (audio && somLigado) { const tg = bichos.find((b) => b.e.n === 'tigre-rugindo'); if (tg && Math.hypot(tg.x - camera.position.x, tg.z - camera.position.z) < 16 && t - (window.__ultRugido || 0) > 25) { window.__ultRugido = t; audio.rugir(); } }
+    if (audio && somLigado) { const tg = bichos.find((b) => b.e.n === 'leao-anda'); if (tg && Math.hypot(tg.x - camera.position.x, tg.z - camera.position.z) < 16 && t - (window.__ultRugido || 0) > 25) { window.__ultRugido = t; audio.rugir(); } }
     camera.updateMatrixWorld(); refletir(); renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); }
   const iniciar = () => requestAnimationFrame((a) => { raiz.style.pointerEvents = ''; raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
   // aquecimento escondido: compila os shaders em paralelo e manda para a placa de vídeo uma peça por quadro (o globo segue liso durante o voo)
