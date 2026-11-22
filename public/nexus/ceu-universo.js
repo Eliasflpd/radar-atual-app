@@ -599,10 +599,12 @@ export function criarCeu(container, estado, acoes) {
   }
 
   // ── REVELAÇÃO DAS REGIÕES: de longe só o nome da região; ao passar o mouse (ou tocar) no nome, os livros surgem ──
-  const revela = new Array(10).fill(0); let secRevelada = null, revelaAte = 0, caixasRegiao = [];
+  const revela = new Array(10).fill(0); let secRevelada = null, revelaAte = 0, caixasRegiao = [], caixasLivro = [];
+  const livroNoRotulo = (x, y) => { const c = caixasLivro.find((b) => x >= b.x0 - 3 && x <= b.x1 + 3 && y >= b.y0 - 3 && y <= b.y1 + 3); return c || null; };   // o nome do livro, em leque, também é alvo do mouse e do dedo
   const longeR = () => Math.max(0, Math.min(1, (dist - 6000) / 3000));   // 0 perto (tudo aparece) … 1 longe (só o revelado)
   function revelar(i, ms = 1600) { if (i == null || i < 0) return; secRevelada = i; revelaAte = performance.now() + ms; }
   function regiaoNoPonto(x, y) {
+    { const r = livroNoRotulo(x, y); if (r) return r.si; }
     // região já revelada: o cursor em qualquer ponto dela mantém os livros à vista
     if (secRevelada != null) { const c = caixasRegiao.find((b) => b.i === secRevelada); const s2 = secoes[secRevelada]; if (c && s2) { const borda = tela(s2.cx + s2.raio * 1.15, s2.cy, zB); const r = borda ? Math.hypot(borda.x - c.cx, borda.y - c.cy) : 120; if (Math.hypot(x - c.cx, y - c.cy) < Math.max(r, 90)) return secRevelada; } }
     const cs = caixasRegiao.filter((b) => x >= b.x0 - 4 && x <= b.x1 + 4 && y >= b.y0 - 4 && y <= b.y1 + 4).sort((a, b) => Math.hypot(x - a.cx, y - a.cy) - Math.hypot(x - b.cx, y - b.cy)); return cs.length ? cs[0].i : -1;
@@ -632,14 +634,28 @@ export function criarCeu(container, estado, acoes) {
   const nomeRef = (k) => { const d = decompor(k); return BIB ? `${BIB[d.b - 1].name} ${d.c}:${d.v}` : String(k); };
   const textoDe = (k) => { const d = decompor(k); try { return BIB[d.b - 1].chapters[d.c - 1][d.v - 1] || ''; } catch (_) { return ''; } };
   const info = ui.querySelector('.cu-info');
-  let mouse = { x: -1, y: -1 }, sobreLivro = null;
+  let mouse = { x: -1, y: -1 }, sobreLivro = null, sobreRegiao = null;
+  const resumoCache = new Map();
+  function resumoLivro(lv) {   // pessoas e lugares mais citados no livro (camada Personagens e Atlas; versículo a versículo)
+    if (resumoCache.has(lv.num)) return resumoCache.get(lv.num);
+    const out = { pessoas: [], lugares: [] }; const ini = chave(lv.num, 1, 1), fim = chave(lv.num + 1, 0, 0);
+    const cP = camada('personagens');
+    if (cP && cP.api && cP.api.pessoas) { const n = cP.api.pessoas.map((pe) => [pe, (pe.v || []).filter((k) => k >= ini && k < fim).length]).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 4); out.pessoas = n.map(([pe]) => (pe.nome || pe.n).replace(/ \(.*\)$/, '')); }
+    else if (cP && !cP.criada && !cP._prom) garantirCriada(cP);
+    if (atlasC) { const c = new Map(); for (const [k, lis] of atlasC.porVerso) if (k >= ini && k < fim) for (const li of lis) c.set(li, (c.get(li) || 0) + 1); out.lugares = [...c.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([li]) => atlasC.lugares[li].nome); }
+    if (out.pessoas.length || !(cP && cP.api)) resumoCache.set(lv.num, out); return out;
+  }
   function mostrarInfo() {
     if (foraDoCanvas) { info.hidden = true; return; }
     if (constel && !constel.soltoEm) {
       const k = constel.origem, t = textoDe(k);
       info.innerHTML = `<b>${esc(nomeRef(k))}</b><em>“${esc(t.length > 140 ? t.slice(0, 138) + '…' : t)}”</em><small>${constel.alvos.length ? constel.alvos.length + ' referência(s) cruzada(s) acesas · OpenBible (interpretação)' : 'buscando ligações…'} · clique para investigar</small>`;
     } else if (sobreLivro) {
-      info.innerHTML = `<b>${esc(sobreLivro.nome)}</b><em>${sobreLivro.caps} capítulo(s) · ${sobreLivro.versos} versículos</em><small>${esc(sobreLivro.sec.nome)} · clique para entrar na galáxia</small>`;
+      const r = resumoLivro(sobreLivro);
+      info.innerHTML = `<b style="font-size:15px">${esc(sobreLivro.nome)}</b><em>${sobreLivro.caps} capítulo(s) · ${sobreLivro.versos.toLocaleString('pt-BR')} versículos · ${esc(sobreLivro.sec.nome)}</em>${r.pessoas.length ? `<small style="display:block;margin-top:4px">👤 Quem mais aparece: ${esc(r.pessoas.join(', '))}</small>` : ''}${r.lugares.length ? `<small style="display:block">📍 Lugares mais citados: ${esc(r.lugares.join(', '))}</small>` : ''}<small style="display:block;margin-top:5px;color:#FFE3A3;font-weight:700">👆 Clique para entrar no livro: capítulos viram constelações, versículos viram estrelas</small>`;
+    } else if (sobreRegiao != null && secoes[sobreRegiao]) {
+      const sq = secoes[sobreRegiao], lvs = livros.filter((l) => l.sec === sq), caps = lvs.reduce((a, l) => a + l.caps, 0), vs = lvs.reduce((a, l) => a + l.versos, 0);
+      info.innerHTML = `<b style="font-size:15px">${esc(sq.nome)}</b><em>${lvs.length} livro(s) · ${caps} capítulos · ${vs.toLocaleString('pt-BR')} versículos</em><small style="display:block;margin-top:4px">${esc(lvs.map((l) => l.nome).join(' · '))}</small><small style="display:block;margin-top:5px;color:#FFE3A3;font-weight:700">👆 Passe o mouse num livro para ver do que ele trata, e clique para entrar</small>`;
     } else { info.hidden = true; return; }
     info.hidden = false;
     const x = Math.min(W - 310, mouse.x + 16), y = Math.min(H - 90, mouse.y + 14);
@@ -720,9 +736,12 @@ export function criarCeu(container, estado, acoes) {
       const j = bV && dist < 5200 ? versoPerto(x, y, 12) : -1;
       if (j >= 0) { sobreLivro = null; formar(vChave[j]); canvas.style.cursor = 'pointer'; mostrarInfo(); return; }
       if (constel && !constel.soltoEm) soltar();
+      const rotL = livroNoRotulo(x, y); if (rotL) { revelar(rotL.si, 2200); sobreRegiao = null; sobreLivro = rotL.lv; canvas.style.cursor = 'pointer'; mostrarInfo(); return; }
       const riH = regiaoNoPonto(x, y);
-      if (riH >= 0) { revelar(riH, 2200); canvas.style.cursor = 'pointer'; sobreLivro = null; info.hidden = true; return; }
       let lv = bV && dist >= 1200 ? livroPerto(x, y) : null;
+      if (riH >= 0) { revelar(riH, 2200); canvas.style.cursor = 'pointer';
+        if (!lv || secoes.indexOf(lv.sec) !== riH || revela[riH] < 0.3) { sobreLivro = null; sobreRegiao = riH; mostrarInfo(); return; } }
+      sobreRegiao = null;
       if (livroOculto(lv)) lv = null; else if (lv && longeR() > 0.5) revelar(secoes.indexOf(lv.sec), 1500);
       sobreLivro = lv; canvas.style.cursor = lv ? 'pointer' : '';
       mostrarInfo();
@@ -740,7 +759,7 @@ export function criarCeu(container, estado, acoes) {
   canvas.addEventListener('pointerup', fim);
   canvas.addEventListener('pointercancel', fim);
   let foraDoCanvas = false;   // o cursor saiu do universo: nenhuma dica fica presa na tela
-  canvas.addEventListener('pointerleave', () => { foraDoCanvas = true; clearTimeout(pairarT); info.hidden = true; if (!ponteiros.size) { soltar(); sobreLivro = null; } });
+  canvas.addEventListener('pointerleave', () => { foraDoCanvas = true; clearTimeout(pairarT); info.hidden = true; if (!ponteiros.size) { soltar(); sobreLivro = null; sobreRegiao = null; } });
   canvas.addEventListener('pointerenter', () => { foraDoCanvas = false; });
   let cartaoT = 0;   // no toque, o cartão espera um instante (um segundo toque vira zoom)
   function clique(x, y, tipo) {
@@ -757,7 +776,9 @@ export function criarCeu(container, estado, acoes) {
     if (s >= 0) { acoes.selecionar(sats[s].id, false, true); return; }
     const j = bV && dist < 5200 ? versoPerto(x, y, tipo === 'touch' ? 24 : 12) : -1;
     if (j >= 0) { formar(vChave[j]); clearTimeout(cartaoT); const kk = vChave[j]; if (tipo === 'touch') cartaoT = setTimeout(() => abrirCartao(kk), 330); else abrirCartao(kk); return; }
+    { const rotL = livroNoRotulo(x, y); if (rotL && dist > 1500) { sobreLivro = null; info.hidden = true; voar(rotL.lv.cx, rotL.lv.cy, rotL.lv.raio * 4.2); return; } }
     const riC = regiaoNoPonto(x, y);
+    { const lvC = bV ? livroPerto(x, y) : null; if (lvC && riC >= 0 && secoes.indexOf(lvC.sec) === riC && revela[riC] >= 0.3 && dist > 1500) { voar(lvC.cx, lvC.cy, lvC.raio * 4.2); return; } }
     if (riC >= 0) { if (tipo === 'touch' && (secRevelada !== riC || revela[riC] < 0.6)) { revelar(riC, 5000); return; } voar(secoes[riC].cx, secoes[riC].cy, secoes[riC].raio * 3.4); return; }
     let lv = bV ? livroPerto(x, y) : null; if (livroOculto(lv)) lv = null;
     if (lv && dist > 1500) { voar(lv.cx, lv.cy, lv.raio * 4.2); return; }
@@ -1816,7 +1837,7 @@ export function criarCeu(container, estado, acoes) {
     if (dist > 9000) {   // REGIÕES
       nivel = 'Universo · regiões do cânon';
       const a = Math.min(1, (dist - 9000) / 4000) * 0.55 + 0.25;
-      caixasRegiao = [];
+      caixasRegiao = []; caixasLivro = [];
       if (vB) secoes.forEach((sc, si) => {   // livros da região revelada: surgem em roda, a partir do centro onde estava o nome
         const rv = revela[si]; if (rv < 0.15) return; const c = tela(sc.cx, sc.cy, zB); if (!c) return;
         const lvs = livros.filter((lv) => lv.sec === sc), n = lvs.length, raioT = (60 + n * 9) * (0.4 + 0.6 * rv);
@@ -1824,7 +1845,7 @@ export function criarCeu(container, estado, acoes) {
           const ang = -Math.PI / 2 + (k / n) * Math.PI * 2, lx = c.x + Math.cos(ang) * raioT * (n > 6 ? 1.25 : 1), ly = c.y + Math.sin(ang) * raioT * 0.72;
           const g = tela(lv.cx, lv.cy, zB);
           if (g) { g2.globalAlpha = rv * 0.5; g2.strokeStyle = 'rgba(233,210,150,.6)'; g2.lineWidth = 1; g2.setLineDash([2, 3]); g2.beginPath(); g2.moveTo(g.x, g.y); g2.lineTo(lx, ly); g2.stroke(); g2.setLineDash([]); g2.globalAlpha = 1; }
-          texto(lv.nome, lx, ly, '600 13px Inter, system-ui, sans-serif', '#F7F2E0', 'rgba(2,5,14,.72)', Math.min(1, (rv - 0.15) / 0.6));
+          const destaque = sobreLivro === lv; const bx = texto(lv.nome, lx, ly, (destaque ? '800 14px' : '600 13px') + ' Inter, system-ui, sans-serif', destaque ? '#1B1405' : '#F7F2E0', destaque ? '#F3D38E' : 'rgba(2,5,14,.72)', Math.min(1, (rv - 0.15) / 0.6)); if (bx && rv > 0.3) caixasLivro.push({ ...bx, lv, si });
         });
       });
       if (vU) secoes.forEach((s, si) => { const p = tela(s.cx, s.cy, zB); if (!p) return; const some = 1 - revela[si]; g2.font = '700 19px "Cormorant Garamond", Georgia, serif'; const meia = g2.measureText(s.nome.toUpperCase()).width / 2 + 8; caixasRegiao.push({ x0: p.x - meia, x1: p.x + meia, y0: p.y - 14, y1: p.y + 14, i: si, cx: p.x, cy: p.y }); if (some < 0.03) return; texto(s.nome.toUpperCase(), p.x, p.y, '700 19px "Cormorant Garamond", Georgia, serif', '#FFE8B0', 'rgba(2,5,14,.55)', a * some); });   // o nome dissolve e os livros surgem no mesmo lugar
@@ -2056,8 +2077,9 @@ export function criarCeu(container, estado, acoes) {
     renderer.clearDepth();
     renderer.render(cena, camera);
     rotulos(t); desenharMini(t);
-    if (sobreLivro && (dist < 1200 || modoTerra)) sobreLivro = null;   // a dica de livro só vale no nível das galáxias
-    if (constel || sobreLivro || foraDoCanvas) mostrarInfo();
+    if (sobreLivro && (dist < 2200 || modoTerra)) sobreLivro = null;   // dentro do livro, a dica do livro sai   // a dica de livro só vale no nível das galáxias
+    if (sobreRegiao != null && (dist < 1200 || modoTerra || secRevelada == null)) sobreRegiao = null;
+    if (constel || sobreLivro || sobreRegiao != null || foraDoCanvas) mostrarInfo();
     if (pronto && t - salvoEm > 1500) { salvoEm = t; try { sessionStorage.setItem('nexus_universo_vista', JSON.stringify({ x: alvo.x, y: alvo.y, d: dist, i: incl })); } catch (_) {} }
     quadro = requestAnimationFrame(quadroDesenho);
   }
