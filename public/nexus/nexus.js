@@ -98,7 +98,7 @@ function definirAcesso(aberto) {
 window.NEXUS_CONTEXTO = () => { const no = (id) => (id && S.graph && S.graph.hasNode(id) && !String(id).startsWith('x:') ? { id, rotulo: lab(id) } : null); return { foco: no(S.foco), sel: no(S.sel) }; };
 import('/nexus/conversa.js?v=1').then((m) => m.iniciarConversa()).catch(() => {});
 import('/nexus/preparar.js?v=2').then((m) => m.iniciarPreparar()).catch(() => {});
-import('/nexus/guia.js?v=4').then((m) => m.iniciarGuia()).catch(() => {});   // guia flutuante: peça e a cena muda
+import('/nexus/guia.js?v=5').then((m) => m.iniciarGuia()).catch(() => {});   // guia flutuante: peça e a cena muda
 window.NEXUS_ABRIR_CEU = () => abrirCeu();   // a barra Preparar abre o universo para ele trabalhar
 function tirarExternos() {
   const g = S.graph; if (!g || !g.order) return;
