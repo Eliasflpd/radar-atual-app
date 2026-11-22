@@ -10,7 +10,7 @@ const CENAS = [
   [/(sete|7) trombetas|trombeta/, null, 'o mundo das sete trombetas (Apocalipse 8–11)', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('trombetas')],
   [/\beden\b|paraiso|jardim(?! do getsemani| das oliveiras)|arvore da vida/, 'Éden', 'o jardim do Éden: o drone desce e você anda dentro'],
   [/criacao|genesis 1\b|no principio/, null, 'a criação (Gênesis 1)', () => window.__ceuPrevia && window.__ceuPrevia._teste && window.__ceuPrevia._teste.entrarLivro(1)],
-  [/templo de herodes|segundo templo|templo de jesus/, 'templo de Herodes', 'o templo de Herodes'],
+  [/templo de herodes|segundo templo|templo de jesus|jerusalem|porta formosa|portico de salomao|alpendre de salomao|fortaleza antonia|tanque de siloe/, 'Jerusalém', 'Jerusalém do ano 30: a esplanada do Templo de Herodes, para andar'],
   [/templo de salomao|primeiro templo|templo$/, 'templo de Salomão', 'o templo de Salomão'],
   [/getsemani|horto das oliveiras/, 'Getsêmani', 'o Getsêmani'],
   [/vale de ela|golias/, 'Vale de Elá', 'o Vale de Elá (1 Samuel 17)'],
@@ -19,7 +19,7 @@ const CENAS = [
   [/nazare/, 'Nazaré', 'Nazaré'], [/cafarnaum/, 'Cafarnaum', 'Cafarnaum'], [/magdala/, 'Magdala', 'Magdala'], [/mar da galileia|genezare|tiberiades/, 'Mar da Galileia', 'o Mar da Galileia'],
 ];
 const IDS = ['queda', 'trombetas', 'eden', 'criacao', 'templo-herodes', 'templo-salomao', 'getsemani', 'ela', 'golgota', 'lazaro', 'nazare', 'cafarnaum', 'magdala', 'mar-galileia'];   // na mesma ordem de CENAS
-const JUNTO = [/frutoproibido|queda|serpente|genesis3|pecadooriginal/, /trombeta/, /eden|paraiso|jardim(?!dogetsemani|dasoliveiras)|arvoredavida/, /criacao|genesis1|noprincipio/, /templodeherodes|segundotemplo|templodejesus/, /templodesalomao|primeirotemplo|templo$/, /getsemani|hortodasoliveiras/, /valedeela|golias/, /golgota|calvario|santosepulcro/, /lazaro/, /nazare/, /cafarnaum/, /magdala/, /mardagalileia|genezare|tiberiades/];   // na mesma ordem de CENAS
+const JUNTO = [/frutoproibido|queda|serpente|genesis3|pecadooriginal/, /trombeta/, /eden|paraiso|jardim(?!dogetsemani|dasoliveiras)|arvoredavida/, /criacao|genesis1|noprincipio/, /templodeherodes|segundotemplo|templodejesus|jerusalem|portaformosa|porticodesalomao|antonia|siloe/, /templodesalomao|primeirotemplo|templo$/, /getsemani|hortodasoliveiras/, /valedeela|golias/, /golgota|calvario|santosepulcro/, /lazaro/, /nazare/, /cafarnaum/, /magdala/, /mardagalileia|genezare|tiberiades/];   // na mesma ordem de CENAS
 const CHAVE = 'nexus_guia';
 let hist = []; try { hist = JSON.parse(sessionStorage.getItem(CHAVE) || '[]'); } catch (_) { hist = []; }
 const guardar = () => { try { sessionStorage.setItem(CHAVE, JSON.stringify(hist.slice(-30))); } catch (_) {} };
