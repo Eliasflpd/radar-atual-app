@@ -153,21 +153,22 @@ export function criarCeu(container, estado, acoes) {
     @media (max-width:1400px){.cu-e-fontes{display:none}.cu-e-pilha,.cu-e-cab{transform:translateX(-58%)}}
     @media (max-width:1100px){.cu-e-linha{grid-template-columns:36px 1fr 90px}.cu-e-resumo{grid-column:1/-1;text-align:left;white-space:normal}.cu-e-pilha,.cu-e-cab{left:12px;transform:none;width:calc(100% - 54px - min(340px,40%))}body.cu-modo-estudo .cu-investig{width:min(340px,40%)}}
     @media (max-width:760px){.cu-e-pilha{top:56px;bottom:46%;width:calc(100% - 24px)}.cu-e-cab{width:calc(100% - 24px)}.cu-e-cab h2{font-size:22px}body.cu-modo-estudo .cu-investig{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:44%}}
-    .cu-jornada{pointer-events:auto;position:absolute;left:50%;bottom:34px;transform:translateX(-50%);width:min(760px,calc(100% - 120px));max-height:62%;overflow:auto;background:rgba(3,8,22,.94);border:1px solid rgba(233,200,120,.55);border-radius:16px;padding:12px 18px 14px;color:#EEF1FA;font:13.5px/1.5 Inter,system-ui,sans-serif;box-shadow:0 18px 50px rgba(0,0,0,.55)}
+    .cu-jornada{pointer-events:auto;position:absolute;right:14px;top:14px;bottom:14px;width:min(400px,34%);overflow:auto;display:flex;flex-direction:column;background:rgba(3,8,22,.94);border:1px solid rgba(233,200,120,.55);border-radius:16px;padding:12px 18px 14px;color:#EEF1FA;font:13.5px/1.5 Inter,system-ui,sans-serif;box-shadow:0 18px 50px rgba(0,0,0,.55)}
     .cu-jornada[hidden]{display:none}
     .cu-j-topo{display:flex;justify-content:space-between;align-items:center;color:rgba(200,212,236,.85)}.cu-j-topo button{border:0;background:none;color:#FFE3A3;font-size:18px;cursor:pointer}
     .cu-j-barra{height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin:6px 0 8px;overflow:hidden}.cu-j-barra span{display:block;height:100%;background:linear-gradient(90deg,#C9A24E,#FFE3A3);transition:width .5s}
     .cu-jornada h3{margin:0 0 6px;font:700 24px "Cormorant Garamond",Georgia,serif;color:#FFE3A3}
     .cu-jornada blockquote{margin:6px 0 10px;font:italic 21px/1.45 "Cormorant Garamond",Georgia,serif;color:#FFF8E6}.cu-jornada cite{display:block;font:600 12px Inter,system-ui,sans-serif;font-style:normal;color:#9FB7E8;margin-top:4px}
-    .cu-j-linhas{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.cu-j-linhas small{color:#9FB7E8;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:10.5px}
+    .cu-j-linhas{display:grid;grid-template-columns:1fr;gap:8px}.cu-j-linhas small{color:#9FB7E8;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:10.5px}
     .cu-jornada .cu-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}.cu-jornada .cu-chips button{border:1px solid rgba(233,200,120,.4);background:rgba(201,162,78,.14);color:#FFE8B0;border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}
-    .cu-jornada.mini>*:not(.cu-j-topo):not(.cu-j-bts):not(.cu-j-barra):not(h3){display:none}.cu-jornada.mini{bottom:14px;max-height:none}
+    .cu-jornada.mini>*:not(.cu-j-topo):not(.cu-j-bts):not(.cu-j-barra):not(h3){display:none}.cu-jornada.mini{top:auto;bottom:14px}
     .cu-j-caminho{margin:6px 0 0;color:#FFE3A3;font-size:12.5px}.cu-j-caminho small{color:rgba(220,210,180,.7)}
     .cu-j-pergunta{margin:10px 0 6px;color:#E6ECF8;font-style:italic}
     .cu-j-bts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:-14px;background:rgba(3,8,22,.97);padding:8px 0 4px;margin-top:4px}.cu-j-bts button{border:1px solid rgba(233,200,120,.5);background:rgba(201,162,78,.16);color:#FFE8B0;border-radius:10px;padding:8px 14px;font:600 13.5px Inter,system-ui,sans-serif;cursor:pointer}.cu-j-bts button:disabled{opacity:.35}.cu-j-bts .cu-j-prox{background:#C9A24E;color:#1B1405;border-color:#E9C878}
     .cu-inv-jornada,.cu-bt-jornada{display:block;width:100%;margin:6px 0 10px;border:1px solid #E9C878!important;background:#C9A24E!important;color:#1B1405!important;border-radius:10px!important;padding:9px 12px!important;font:700 13.5px Inter,system-ui,sans-serif!important;cursor:pointer}
     body.cu-em-jornada .cu-camadas,body.cu-em-jornada .cu-relogio,body.cu-em-jornada .cu-dica,body.cu-em-jornada .cu-terra{display:none!important}
-    @media (max-width:760px){.cu-jornada{width:calc(100% - 16px);bottom:8px;max-height:70%}.cu-j-linhas{grid-template-columns:1fr}.cu-jornada blockquote{font-size:18px}}
+    .cu-j-recolher{border:1px solid rgba(233,200,120,.4)!important;border-radius:999px;font-size:12px!important;padding:2px 9px;margin-right:6px}
+    @media (max-width:760px){.cu-jornada{left:8px;right:8px;top:auto;width:auto;bottom:8px;max-height:70%}.cu-j-linhas{grid-template-columns:1fr}.cu-jornada blockquote{font-size:18px}}
     .cu-investig h3{margin:0 0 6px;font:700 24px "Cormorant Garamond",Georgia,serif;color:#FFE3A3}.cu-investig h5{margin:12px 0 5px;font:700 11px Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9FB7E8}
     .cu-investig .cu-chips{display:flex;flex-wrap:wrap;gap:5px}.cu-investig .cu-chips button{border:1px solid rgba(233,200,120,.4);background:rgba(201,162,78,.14);color:#FFE8B0;border-radius:999px;padding:3px 9px;font-size:12px;cursor:pointer}
     .cu-investig .cu-fechar-inv{float:right;border:0;background:none;color:#FFE3A3;font-size:18px;cursor:pointer}
@@ -1213,8 +1214,10 @@ export function criarCeu(container, estado, acoes) {
   const painelJ = document.createElement('div'); painelJ.className = 'cu-jornada'; painelJ.hidden = true; ui.appendChild(painelJ);
   function voarTerraPara(l, alt) {   // a câmera voa até o lugar no globo (sem abrir a ficha)
     if (!atlasC) return; camada('atlas').visivel = true; if (!modoTerra) entrarTerra(null);
-    const m = modoTerra, de = { lat: m.lat, lon: m.lon, alt: m.alt }, ang = Math.acos(Math.max(-1, Math.min(1, vLL(de).dot(vLL(l)))));
-    m.voo = { de, para: { lat: l.lat, lon: l.lon, alt }, topo: Math.max(de.alt, alt, RAIO_GLOBO * Math.min(1.2, ang * 1.6)), t0: performance.now(), dur: 2200 + ang * 700 }; m.cursor = null; m.ancora = null; m.aoChegar = null;
+    const desloc = !jornada || W < 760 || painelJ.classList.contains('mini') ? 0 : (alt / RAIO_GLOBO) * 57.3 * 0.3 / Math.max(0.3, Math.cos(l.lat * Math.PI / 180));   // o painel ocupa a direita: o lugar fica no meio da área livre
+    const alvoL = { lat: l.lat, lon: l.lon + desloc };
+    const m = modoTerra, de = { lat: m.lat, lon: m.lon, alt: m.alt }, ang = Math.acos(Math.max(-1, Math.min(1, vLL(de).dot(vLL(alvoL)))));
+    m.voo = { de, para: { lat: alvoL.lat, lon: alvoL.lon, alt }, topo: Math.max(de.alt, alt, RAIO_GLOBO * Math.min(1.2, ang * 1.6)), t0: performance.now(), dur: 2200 + ang * 700 }; m.cursor = null; m.ancora = null; m.aoChegar = null;
     if (l.i >= 0) atlasC.acender([l.i]);
   }
   function iniciarJornada(iPessoa) {
@@ -1239,7 +1242,7 @@ export function criarCeu(container, estado, acoes) {
     const evs = P.evs.map((e) => `<button type="button" data-camada="tempo" data-item="${e.i}">🕰 ${esc(e.nome)} · ${e.a < 0 ? 'c. ' + -e.a + ' a.C.' : 'c. ' + e.a + ' d.C.'}</button>`).join('');
     const temas = P.temas.map((i) => `<button type="button" data-camada="historia" data-item="${i}">${esc(camada('historia').api.nome(i))}</button>`).join('');
     const ref = nomeRef(P.chaveV), nomeP = cP.api.nome(j.iPessoa).replace(/ · .*$/, '');
-    painelJ.innerHTML = `<div class="cu-j-topo"><small>Jornada de ${esc(nomeP)} · passo ${j.n + 1} de ${j.passos.length}</small><button type="button" data-j="sair" aria-label="Sair da jornada">✕</button></div>
+    painelJ.innerHTML = `<div class="cu-j-topo"><small>Jornada de ${esc(nomeP)} · passo ${j.n + 1} de ${j.passos.length}</small><span><button type="button" class="cu-j-recolher" data-j="recolher">◧ recolher</button><button type="button" data-j="sair" aria-label="Sair da jornada">✕</button></span></div>
       <div class="cu-j-barra"><span style="width:${((j.n + 1) / j.passos.length) * 100}%"></span></div>
       <h3>${esc(P.livro)} ${P.c}${P.evs[0] ? ' · ' + esc(P.evs[0].nome) : ''}</h3>
       <blockquote>“${esc(textoDe(P.chaveV))}”<cite>${esc(ref)} · Almeida</cite></blockquote>
@@ -1280,6 +1283,7 @@ export function criarCeu(container, estado, acoes) {
     else if (a === 'ler') { const P = j.passos[j.n]; if (modoTerra) sairTerra(); const c = livros[P.b - 1].capPos[P.c - 1]; if (c) voar(c.x, c.y, 180); }
     else if (a === 'recomecar') mostrarPasso(0);
     else if (a === 'caminho') verCaminhoInteiro();
+    else if (a === 'recolher') { painelJ.classList.toggle('mini'); b.textContent = painelJ.classList.contains('mini') ? '◨ abrir' : '◧ recolher'; }
     else if (a === 'dossie') { const i = j.iPessoa; sairJornada(); abrirFichaCamada(camada('personagens'), i, true); }
     else if (a === 'preparar') { const bt = document.getElementById('bt-preparar'); const nome = camada('personagens').api.nome(j.iPessoa).replace(/ · .*$/, ''); sairJornada(); if (bt) { bt.click(); setTimeout(() => { const f = document.querySelector('#preparar [name=tema]'); const est = document.querySelector('#preparar input[value=estudo]'); if (f) f.value = nome; if (est) est.checked = true; }, 120); } }
   });
