@@ -245,3 +245,4 @@ body.modo-lista .legenda{display:flex;position:static;margin:0 0 12px;max-width:
 .preparar-custo{display:block;color:var(--mineral);font-size:11.5px;margin-top:6px}
 body.preparar-aberto .cu-camadas,body.preparar-aberto .cu-relogio{display:none!important}
 @media (max-width:760px){.preparar{top:auto;left:0;right:0;bottom:0;width:auto;height:80vh;border-radius:18px 18px 0 0}}
+body.ceu-universo .carregando{top:auto;bottom:46px;background:rgba(3,8,22,.88);border:1px solid rgba(233,200,120,.35)}

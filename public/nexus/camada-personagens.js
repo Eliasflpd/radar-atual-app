@@ -8,7 +8,7 @@ const FORA = new Set(['God', 'Holy Spirit']);
 const anoT = (a) => (a == null ? null : a < 0 ? `${-a} a.C.` : `${a} d.C.`);
 
 export async function criarCamadaPersonagens(THREE, ctx) {
-  const dados = await (await fetch('/nexus/camadas/personagens.json?v=1')).json();
+  const dados = await (await fetch('/nexus/camadas/personagens.json?v=2')).json();
   const todas = dados.pessoas.filter((p) => !FORA.has(p.n));
   const porId = new Map(); todas.forEach((p, i) => { p.i = i; p.nome = p.pt || p.n; porId.set(p.id, p); });
   // nome com desambiguação quando há várias pessoas com o mesmo nome (ex.: vários Zacarias)
@@ -85,19 +85,47 @@ export async function criarCamadaPersonagens(THREE, ctx) {
     versos(i) { return todas[i] ? todas[i].v : []; },
     info(i) { const p = todas[i]; const datas = p.nasc != null || p.morte != null ? ` · ${anoT(p.nasc) || '?'} – ${anoT(p.morte) || '?'}` : '';
       return `<b>${ctx.esc(p.rotulo || p.nome)}</b><em>${p.qv} versículo(s)${datas}${p.filhos.length ? ' · ' + p.filhos.length + ' filho(s) registrado(s)' : ''}</em><small>Personagens · ${p.pt ? '' : 'nome na forma da fonte · '}clique para a ficha e a família</small>`; },
-    ficha(i) {
-      const p = todas[i], esc = ctx.esc;
-      const chips = (rot, ids) => { const l = ids.map((id) => porId.get(id)).filter(Boolean); return l.length ? `<h5>${rot}</h5><div class="cu-chips">${l.map((o) => `<button type="button" data-camada="personagens" data-item="${o.i}">${esc(o.rotulo || o.nome)}</button>`).join('')}</div>` : ''; };
+    ficha(i) {   // o DOSSIÊ da pessoa: tudo o que o texto bíblico registra dela e o que a rodeia
+      const p = todas[i], esc = ctx.esc, nomeL = (o) => esc(o.rotulo || o.nome);
+      const chip = (o) => `<button type="button" data-camada="personagens" data-item="${o.i}">${nomeL(o)}</button>`;
+      const chips = (rot, ids) => { const l = (ids || []).map((id) => porId.get(id)).filter(Boolean); return l.length ? `<h5>${rot} (${l.length})</h5><div class="cu-chips">${l.map(chip).join('')}</div>` : ''; };
       const verso = (k) => `<p><b>${esc(ctx.nomeRef(k))}</b> — “${esc(ctx.textoDe(k))}”</p>`;
-      return { titulo: p.nome, rotulo: 'Personagens · genealogias', html:
-        `<p>${p.s === 'f' ? 'Mulher' : p.s === 'm' ? 'Homem' : 'Personagem'} · citado(a) em <b>${p.qv}</b> versículo(s)${p.nasc != null || p.morte != null ? ` · ${anoT(p.nasc) ? 'nasc. c. ' + anoT(p.nasc) : ''}${p.morte != null ? ' · morte c. ' + anoT(p.morte) : ''}` : ''}</p>
-        ${p.pt ? (p.pt !== p.n ? `<small>Nome na fonte: ${esc(p.n)}</small>` : '') : '<small>Nome mantido como na fonte (ainda sem a forma da Almeida no NEXUS).</small>'}
-        ${p.tb ? `<small>Também chamado: ${esc(p.tb)}</small>` : ''}
-        ${chips('Pai', p.pai)}${chips('Mãe', p.mae)}${chips('Cônjuge(s)', p.conj)}${chips('Filhos', p.filhos)}${chips('Irmãos', p.irm)}
-        <h5>Versículos (${p.qv})</h5>${p.v.slice(0, 6).map(verso).join('')}${p.qv > 6 ? `<small>e mais ${p.qv - 6}: use “Acender versículos” para vê-los na Bíblia.</small>` : ''}
-        ${p.dic ? `<h5>Dicionário Easton (1897, em inglês, domínio público)</h5><small>${esc(p.dic)}${p.dic.length >= 600 ? '…' : ''}</small>` : ''}
-        ${p.amb ? '<p><small>⚠️ A fonte marca este nome como ambíguo: há mais de uma pessoa com ele, e a separação entre elas é interpretação.</small></p>' : ''}
-        <p><small>⚠️ ${esc(dados.aviso)}</small></p><p><small>Fonte: ${esc(dados.fonte)}</small></p>`, versos: p.v };
+      const secao = (titulo, corpo, aberto) => corpo ? `<details class="cu-dossie"${aberto ? ' open' : ''}><summary>${titulo}</summary>${corpo}</details>` : '';
+      // antepassados pela linha do pai (como o texto registra), até a primeira pessoa sem pai conhecido
+      const linha = []; { let q = p, guarda = 0; while (q && q.pai && q.pai.length && guarda++ < 80) { const pai = porId.get(q.pai[0]); if (!pai || linha.includes(pai)) break; linha.push(pai); q = pai; } }
+      // descendentes registrados (todas as gerações)
+      let desc = 0; { const vistos = new Set(), fila = [...p.filhos]; while (fila.length && vistos.size < 5000) { const id = fila.shift(); if (vistos.has(id)) continue; vistos.add(id); const o = porId.get(id); if (o) fila.push(...o.filhos); } desc = vistos.size; }
+      // acontecimentos em que a pessoa participa (camada Tempo) e lugares (Atlas)
+      const tempo = ctx.camadaApi('tempo'), eventos = tempo && tempo.eventos ? tempo.eventos.filter((e) => e.p && e.p.includes(p.id)).sort((x, y) => x.a - y.a) : [];
+      const lug = new Map(); for (const k of p.v) for (const nm of ctx.lugaresDoVerso(k)) lug.set(nm, (lug.get(nm) || 0) + 1);
+      const lugares = [...lug.entries()].sort((x, y) => y[1] - x[1]).slice(0, 12);
+      // onde aparece: livros, Antigo × Novo Testamento
+      const porLivro = new Map(); for (const k of p.v) { const b = Math.floor(k / 1e6); porLivro.set(b, (porLivro.get(b) || 0) + 1); }
+      const nomeLivro = (b) => ctx.nomeRef(b * 1e6 + 1001).replace(/ 1:1$/, '');
+      const at = p.v.filter((k) => k < 40e6), nt = p.v.filter((k) => k >= 40e6);
+      const anoTx = (a) => (a == null ? '' : a < 0 ? `c. ${-a} a.C.` : `c. ${a} d.C.`);
+      const geral = `<p>${p.s === 'f' ? 'Mulher' : p.s === 'm' ? 'Homem' : 'Personagem'} citado(a) em <b>${p.qv}</b> versículo(s) de <b>${porLivro.size}</b> livro(s)${at.length && nt.length ? ` (${at.length} no Antigo e ${nt.length} no Novo Testamento)` : ''}.</p>
+        ${p.nasc != null || p.morte != null ? `<p>${p.nasc != null ? 'Nascimento ' + anoTx(p.nasc) : ''}${p.nasc != null && p.morte != null ? ' · ' : ''}${p.morte != null ? 'morte ' + anoTx(p.morte) : ''} <small>(cronologia tradicional da fonte)</small></p>` : ''}
+        ${p.ln.length || p.lm.length ? `<p>${p.ln.length ? 'Nasceu em: <b>' + esc(p.ln.map(ctx.nomeLugarPt).join(', ')) + '</b>' : ''}${p.ln.length && p.lm.length ? ' · ' : ''}${p.lm.length ? 'morreu em: <b>' + esc(p.lm.map(ctx.nomeLugarPt).join(', ')) + '</b>' : ''}</p>` : ''}
+        ${p.gr.length ? `<p>Grupo(s): <b>${esc(p.gr.join(' · '))}</b></p>` : ''}
+        ${p.tb ? `<p><small>Também chamado: ${esc(p.tb)}</small></p>` : ''}
+        ${p.po === 'almeida' ? `<p><small>Nome “${esc(p.nome)}” achado automaticamente no texto da Almeida, nos versículos desta pessoa (nome na fonte: ${esc(p.n)}). Vale conferir.</small></p>` : p.pt ? (p.pt !== p.n ? `<p><small>Nome na fonte: ${esc(p.n)}</small></p>` : '') : `<p><small>Nome mantido como na fonte (${esc(p.n)}): a forma da Almeida não foi achada nos versículos.</small></p>`}
+        ${p.amb ? '<p><small>⚠️ A fonte marca este nome como ambíguo: há mais de uma pessoa com ele, e a separação entre elas é interpretação.</small></p>' : ''}`;
+      const familia = chips('Pai', p.pai) + chips('Mãe', p.mae) + chips('Cônjuge(s)', p.conj) + chips('Filhos', p.filhos) + chips('Irmãos', p.irm) + chips('Meios-irmãos (mesmo pai)', p.mp) + chips('Meios-irmãos (mesma mãe)', p.mm) +
+        (linha.length ? `<h5>Linha dos antepassados pelo pai (${linha.length} geração(ões))</h5><div class="cu-chips">${linha.slice(0, 40).map(chip).join('<span class="cu-seta">←</span>')}${linha.length > 40 ? ' …' : ''}</div>` : '') +
+        (desc ? `<p><small>${desc} descendente(s) registrado(s) no texto, somando todas as gerações.</small></p>` : '');
+      const vida = (eventos.length ? `<h5>Acontecimentos em que aparece (${eventos.length})</h5><div class="cu-chips">${eventos.map((e) => `<button type="button" data-camada="tempo" data-item="${e.i}">${esc(e.nome)} · ${anoTx(e.a)}</button>`).join('')}</div>` : '') +
+        (lugares.length ? `<h5>Lugares ligados aos seus versículos</h5><div class="cu-chips">${lugares.map(([nm, n]) => `<button type="button" data-busca="${esc(nm)}">📍 ${esc(nm)} · ${n}</button>`).join('')}</div>` : '');
+      const encaixe = `<h5>Onde aparece na Bíblia</h5><div class="cu-chips">${[...porLivro.entries()].sort((x, y) => x[0] - y[0]).map(([b, n]) => `<button type="button" data-busca="${esc(nomeLivro(b))}">${esc(nomeLivro(b))} · ${n}</button>`).join('')}</div>` +
+        (p.gr.includes('Genealogia de Jesus') ? '<p>✦ Está na <b>genealogia de Jesus</b>, segundo a fonte (Mateus 1 e Lucas 3).</p>' : '') +
+        (at.length && nt.length ? `<h5>Lembrado no Novo Testamento (${nt.length})</h5>${nt.slice(0, 8).map(verso).join('')}${nt.length > 8 ? `<small>e mais ${nt.length - 8}.</small>` : ''}` : '') +
+        (eventos.length ? `<p><small>Época na cronologia: ${esc(anoTx(eventos[0].a))}${eventos.length > 1 ? ' a ' + esc(anoTx(eventos[eventos.length - 1].a)) : ''} (tradicional).</small></p>` : '');
+      const versos = `${p.v.slice(0, 8).map(verso).join('')}${p.v.length > 8 ? `<h5>Todos os ${p.v.length} versículos</h5><div class="cu-chips">${p.v.map((k) => `<button type="button" data-verso="${k}">${esc(ctx.nomeRef(k))}</button>`).join('')}</div>` : ''}`;
+      return { titulo: p.nome, rotulo: 'Personagens · dossiê', html:
+        secao('Visão geral', geral, true) + secao('Família e linhagem', familia, true) + secao('Vida: acontecimentos e lugares', vida, true) + secao('Onde se encaixa', encaixe, false) +
+        secao(`Versículos (${p.v.length})`, versos, false) +
+        secao('Dicionário Easton (1897, em inglês)', p.dic ? `<small>${esc(p.dic)}${p.dic.length >= 2400 ? '…' : ''}</small>` : '', false) +
+        `<p><small>⚠️ ${esc(dados.aviso)}</small></p><p><small>Fonte: ${esc(dados.fonte)}</small></p>`, versos: p.v };
     },
     rotulos(texto, dist, W, H) {
       const lim = dist > 9000 ? 14 : dist > 4000 ? 26 : dist > 1500 ? 44 : 70; let k = 0;
