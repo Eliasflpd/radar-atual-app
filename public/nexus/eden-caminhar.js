@@ -107,7 +107,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   const reflCam = new THREE.PerspectiveCamera(); const texMat = new THREE.Matrix4();
   const matAgua = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, uniforms: { ...unif, sol: { value: SOL }, refl: { value: reflRT.texture }, texMat: { value: texMat }, pedras: { value: pedU } },
     vertexShader: `uniform float t; uniform mat4 texMat; attribute vec3 tg; attribute float prof; varying vec2 vUv; varying vec3 vW, vTg; varying float vD, vProf; varying vec4 vRef;
-      void main(){ vUv = uv; vTg = tg; vProf = prof; vec3 p = position; float meio = smoothstep(.0, 1.2, prof);
+      void main(){ vUv = uv; vTg = tg; vProf = prof; vec3 p = position; float meio = smoothstep(.0, 1.2, prof); float rap = smoothstep(.25, .85, .5 + .5 * sin(uv.y * .013) * sin(uv.y * .029 + 1.)); meio *= 1. + 1.8 * rap;
         p.y += meio * (sin(uv.y * .55 - t * 2.4 + uv.x * 2.) * .16 + sin(uv.y * 1.3 - t * 3.6 + uv.x * 5.) * .07 + sin(uv.y * .21 - t * 1.3) * .1);
         vec4 w = modelMatrix * vec4(p, 1.); vW = w.xyz; vRef = texMat * w; vec4 mv = viewMatrix * w; vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `uniform float t, dens; uniform vec3 nevoa, sol, pedras[48]; uniform sampler2D refl; varying vec2 vUv; varying vec3 vW, vTg; varying float vD, vProf; varying vec4 vRef;
@@ -119,19 +119,20 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
         vec3 tg = normalize(vTg), lado = normalize(cross(vec3(0., 1., 0.), tg));
         vec2 q = vec2((vUv.x - .5) * 30., vUv.y);   // coordenadas da corrente (atravessando, ao longo)
         float e = .35, h0 = onda(q), hx = onda(q + vec2(e, 0.)), hz = onda(q + vec2(0., e));
-        float forca = .55 + .9 * smoothstep(.0, 2.5, vProf);
+        float rap = smoothstep(.25, .85, .5 + .5 * sin(vUv.y * .013) * sin(vUv.y * .029 + 1.)); float forca = (.55 + .9 * smoothstep(.0, 2.5, vProf)) * (1. + 1.4 * rap);
         vec3 nl = normalize(vec3(-(hx - h0) / e * forca, 1., -(hz - h0) / e * forca));
         vec3 nn = normalize(lado * nl.x + vec3(0., 1., 0.) * nl.y + tg * nl.z);
         vec3 olho = normalize(cameraPosition - vW); float cosv = max(dot(olho, nn), 0.); float F = .02 + .98 * pow(1. - cosv, 5.);
         // o fundo visto através da água (areia e seixos), engolido pela profundidade
         vec2 fp = vW.xz * .45 + nn.xz * (.6 + vProf * .25); float sx = fbm(fp * 1.3), seixo = smoothstep(.55, .7, n(fp * 3.1));
-        vec3 leito = mix(vec3(.46, .38, .26), vec3(.25, .23, .18), seixo) * (.7 + .5 * sx);
+        vec3 leito = mix(vec3(.46, .38, .26), vec3(.25, .23, .18), seixo) * (.7 + .5 * sx); float cau = pow(1. - abs(sin(fbm(fp * 1.7 + vec2(t * .25, -t * .4)) * 11.)), 7.); leito += vec3(1., .95, .75) * cau * .9 * exp(-vProf * 1.1) * max(dot(nn, sol), 0.);
         float caminho = vProf / max(cosv, .25); vec3 absorve = exp(-caminho * vec3(.62, .22, .30));
         vec3 profundo = vec3(.004, .035, .028);
         vec3 corpo = leito * absorve * 1.1 + profundo * (1. - absorve) + vec3(.006, .045, .028) * (1. - absorve.g) * (.6 + .5 * h0);
         // reflexo das árvores e do céu
         vec4 rr = vRef; rr.xy += nn.xz * 1.6 * rr.w * .06; vec3 ref = texture2DProj(refl, rr).rgb * vec3(.34, .46, .38);
         vec3 c = mix(corpo, ref, clamp(F * .85 + .03, 0., .75));
+        float crista = smoothstep(.58, .82, h0); c += vec3(.012, .1, .065) * crista * (1. - absorve.g) * (1. + rap);
         float bri = pow(max(dot(reflect(-sol, nn), olho), 0.), 300.) * 9. + pow(max(dot(reflect(-sol, nn), olho), 0.), 24.) * .22; c += vec3(1., .88, .62) * bri;
         // espuma: nas margens rasas, em linhas que a corrente arrasta e nas pedras
         float linhas = smoothstep(.66, .82, fbm(q * vec2(1.6, .12) - vec2(0., t * 2.2))) * smoothstep(.4, 2., vProf) * .75 + smoothstep(.72, .9, h0) * .5;
@@ -140,7 +141,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
         for (int i = 0; i < 48; i++) { vec2 rel = vW.xz - pedras[i].xy; float r = pedras[i].z; if (r <= 0.) continue; float dd = length(rel); if (dd > r * 9.) continue;
           float ao = dot(rel, tg.xz), at = dot(rel, lado.xz); float anel = smoothstep(r * 1.6, r * .95, dd); float esteira = exp(-abs(at) / (r * .7)) * smoothstep(-r, 0., ao) * exp(-max(ao, 0.) / (r * 4.));
           pedra += (anel + esteira * .8) * smoothstep(.3, .65, fbm(q * vec2(4., 1.6) - vec2(0., t * 4.))); }
-        float esp = clamp(linhas + margem + pedra, 0., 1.); c = mix(c, vec3(.95, .97, .96) * (.75 + .3 * max(dot(nn, sol), 0.)), esp * .85);
+        float branca = rap * smoothstep(.5, .72, h0 + .25 * fbm(q * vec2(3., 1.2) - vec2(0., t * 5.))) * smoothstep(.5, 2., vProf);
+        float esp = clamp(linhas + margem + pedra + branca * 1.2, 0., 1.); c = mix(c, vec3(.95, .97, .96) * (.75 + .3 * max(dot(nn, sol), 0.)), esp * .85);
         float a = smoothstep(0., .12, vProf) * smoothstep(0., .04, min(vUv.x, 1. - vUv.x)); a = max(a, esp * smoothstep(0., .05, vProf));
         float f = 1. - exp(-dens * dens * vD * vD); c = mix(c, nevoa, f);
         gl_FragColor = vec4(c, a);
@@ -382,9 +384,9 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
 
   // O EXPLORADOR (terceira pessoa): imagem do ChatGPT -> malha 3D (Hunyuan3D-2); a roupa é projetada das fotos de frente e de costas,
   // e o passo (pernas e braços) é feito no próprio desenho da malha
-  let avatar = null, matAv = null, modo = 'terceira', rumo = Math.atan2(0.6, 0.8), fasePasso = 0;
+  let avatar = null, matAv = null, modo = 'primeira', rumo = Math.atan2(0.6, 0.8), fasePasso = 0;
   try {
-    const resp = pecas.explorador ? await fetch(base + 'explorador.malha?v=1') : null;
+    const resp = (pecas.explorador && new URLSearchParams(location.search).has('explorador')) ? await fetch(base + 'explorador.malha?v=1') : null;
     if (resp && resp.ok) {
       const buf = await resp.arrayBuffer(), [nv, ni] = new Uint32Array(buf, 0, 2);
       const gm = new THREE.BufferGeometry(); gm.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf, 8, nv * 3), 3)); gm.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, 8 + nv * 12, ni), 1)); gm.computeVertexNormals(); lixo.push(gm);
@@ -410,7 +412,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
       avatar = piv; cena.add(avatar); lixo.push(matAv);
     }
   } catch (e) { console.warn('explorador', e); avatar = null; }
-  if (!avatar) modo = 'primeira';
+  if (!avatar) modo = 'primeira'; else modo = 'terceira';
   const btModo = raiz.querySelector('.ej-modo'); btModo.style.display = avatar ? '' : 'none';
   btModo.onclick = () => { modo = modo === 'terceira' ? 'primeira' : 'terceira'; btModo.textContent = modo === 'terceira' ? '👁 Primeira pessoa' : '🎥 Terceira pessoa'; if (modo === 'terceira') pitch = -0.12; camIni = false; };
   const camPos = new THREE.Vector3(), olhoAlvo = new THREE.Vector3(); let camIni = false;
