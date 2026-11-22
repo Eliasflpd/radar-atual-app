@@ -30,13 +30,13 @@ const par = (t) => esc(t).split(/\n\s*\n/).map((b) => { const ls = b.split('\n')
 export function iniciarGuia() {
   const el = document.createElement('div'); el.className = 'guia'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Guia do NEXUS');
   el.innerHTML = `<style>
-    .guia{position:fixed;left:24px;bottom:24px;width:min(380px,calc(100vw - 32px));height:min(520px,calc(100vh - 140px));z-index:2147483000;display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(20,33,61,.72) 0%,rgba(10,18,40,.55) 45%,rgba(40,28,8,.45) 100%);border:1px solid rgba(243,211,142,.45);border-radius:16px;box-shadow:0 22px 50px rgba(0,0,0,.45);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);font:15px/1.55 Inter,system-ui,sans-serif;color:#F7F3E8;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+    .guia{position:fixed;left:24px;bottom:24px;width:min(380px,calc(100vw - 32px));height:min(520px,calc(100vh - 140px));z-index:2147483000;display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(20,33,61,.34) 0%,rgba(10,18,40,.22) 45%,rgba(40,28,8,.18) 100%);border:1px solid rgba(243,211,142,.45);border-radius:16px;box-shadow:0 22px 50px rgba(0,0,0,.45);backdrop-filter:blur(5px) saturate(1.15);-webkit-backdrop-filter:blur(5px) saturate(1.15);font:15px/1.55 Inter,system-ui,sans-serif;color:#F7F3E8;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.55)}
     body:has(.guia:not(.min)) .p3-card,body:has(.guia:not(.min)) .tp-ficha{left:auto!important;right:24px}body:has(.guia:not(.min)) .p3-cred,body:has(.guia:not(.min)) .mt-cred,body:has(.guia:not(.min)) .lr-cred{left:420px}
     .guia.grande{left:auto!important;right:16px;top:76px!important;bottom:16px!important;width:min(620px,46vw);height:auto;font-size:16px}.guia.grande .guia-msg{max-width:96%}
     .guia-msg h4{margin:6px 0 4px;font:700 17px 'Cormorant Garamond',Georgia,serif;color:#FFE3A3}.guia-msg ul,.guia-msg ol{margin:4px 0 6px 18px;padding:0}.guia-msg li{margin:2px 0}
     .guia-digitando::after{content:'▍';animation:gpisca 1s steps(1) infinite;color:#F3D38E}@keyframes gpisca{50%{opacity:0}}
-    .guia.min{height:auto;width:auto}.guia.min .guia-corpo,.guia.min .guia-form{display:none}
-    .guia-topo{display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(90deg,rgba(20,33,61,.85),rgba(201,162,78,.35));border-bottom:1px solid rgba(243,211,142,.25);color:#F3E2B3;cursor:move;user-select:none}
+    .guia.min{height:auto;width:auto}.guia.grande.min{top:auto!important;width:auto}.guia.min .guia-corpo,.guia.min .guia-form{display:none}
+    .guia-topo{display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(90deg,rgba(20,33,61,.5),rgba(201,162,78,.22));border-bottom:1px solid rgba(243,211,142,.25);color:#F3E2B3;cursor:move;user-select:none}
     .guia-topo b{font:700 15px "Cormorant Garamond",Georgia,serif;letter-spacing:.04em;flex:1}.guia-topo small{color:rgba(243,226,179,.7);font-size:11px}
     .guia-topo button{border:0;background:rgba(255,255,255,.12);color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;font:700 14px Inter,sans-serif}
     .guia-corpo{flex:1;overflow:auto;padding:12px}
@@ -49,15 +49,15 @@ export function iniciarGuia() {
     /* ── jeito de WhatsApp ── */
     .guia-topo{padding:8px 10px}.guia-av{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE7A8,#C9A24E 60%,#7a5a1e);display:grid;place-items:center;color:#14213D;font:700 16px Georgia,serif;flex:none;box-shadow:0 0 0 2px rgba(243,211,142,.35)}
     .guia-nome{flex:1;display:flex;flex-direction:column;line-height:1.15}.guia-nome b{flex:none!important}.guia-nome small{color:#9fe3b0!important;font-size:11px!important}
-    .guia-corpo{background-color:rgba(8,14,28,.35);background-image:radial-gradient(rgba(243,211,142,.07) 1px,transparent 1.2px);background-size:18px 18px}
+    .guia-corpo{background-color:rgba(8,14,28,.06);background-image:radial-gradient(rgba(243,211,142,.07) 1px,transparent 1.2px);background-size:18px 18px}
     .guia-msg{position:relative;border-radius:10px;padding:7px 10px 18px;box-shadow:0 1px 2px rgba(0,0,0,.35)}
-    .guia-eu{border-top-right-radius:2px;background:linear-gradient(180deg,rgba(201,162,78,.55),rgba(160,120,40,.5))}
-    .guia-eu::after{content:'';position:absolute;right:-7px;top:0;border:7px solid transparent;border-top-color:rgba(190,150,60,.6);border-left-width:0}
-    .guia-nx{border-top-left-radius:2px;background:rgba(18,26,46,.85)}.guia-nx::before{content:'';position:absolute;left:-7px;top:0;border:7px solid transparent;border-top-color:rgba(18,26,46,.85);border-right-width:0}
+    .guia-eu{border-top-right-radius:2px;background:linear-gradient(180deg,rgba(201,162,78,.42),rgba(160,120,40,.36));backdrop-filter:blur(6px)}
+    .guia-eu::after{content:'';position:absolute;right:-7px;top:0;border:7px solid transparent;border-top-color:rgba(190,150,60,.42);border-left-width:0}
+    .guia-nx{border-top-left-radius:2px;background:rgba(18,26,46,.5);backdrop-filter:blur(6px)}.guia-nx::before{content:'';position:absolute;left:-7px;top:0;border:7px solid transparent;border-top-color:rgba(18,26,46,.5);border-right-width:0}
     .guia-hora{position:absolute;right:8px;bottom:3px;font-size:10.5px;color:rgba(255,255,255,.6);display:flex;gap:3px;align-items:center}.guia-hora i{font-style:normal;color:#8fd3ff;letter-spacing:-3px}
     .guia-anexo{display:block;margin:2px 0 6px;border-radius:8px;overflow:hidden;max-width:260px;cursor:pointer}.guia-anexo img{display:block;width:100%;height:auto}
     .guia-doc{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.25);border-radius:8px;padding:8px 10px;margin:2px 0 6px;font-size:13px}.guia-doc span{font-size:24px}
-    .guia-form{align-items:flex-end;gap:6px;padding:8px;background:rgba(8,14,28,.55)}
+    .guia-form{align-items:flex-end;gap:6px;padding:8px;background:rgba(8,14,28,.2)}
     .guia-caixa{flex:1;display:flex;align-items:flex-end;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:2px 4px 2px 6px}
     .guia-caixa textarea{border:0!important;background:transparent!important;height:38px;max-height:120px;padding:9px 6px!important}
     .guia-clip{border:0;background:none;width:36px;height:38px;cursor:pointer;display:grid;place-items:center;text-shadow:none}

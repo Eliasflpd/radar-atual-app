@@ -1667,12 +1667,12 @@ export function criarCeu(container, estado, acoes) {
   }
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
-    if (/^(o )?(jardim do )?getsemani$|^horto das oliveiras$/.test(q)) { abrirLugarReal('getsemani'); return true; }
+    if (/^(o )?(jardim do )?getsemani$|^horto das oliveiras$/.test(q)) { import('/nexus/eden-caminhar.js?v=13').then((m) => m.abrirJardim(THREE, ui, { chegada: true, mundo: 'getsemani' })).catch(() => abrirLugarReal('getsemani')); return true; }   // mundo para andar, de noite; a foto fica de reserva
     if (/^(o )?(golgota|calvario|monte calvario|santo sepulcro|lugar da caveira|sepulcro de jesus|tumulo de jesus)$/.test(q)) { abrirLugarReal('golgota'); return true; }
     if (/^(o )?(tumulo|sepulcro) de lazaro$/.test(q)) { abrirLugarReal('lazaro'); return true; }
     if (/^nazare$/.test(q)) { abrirLugarReal('nazare'); return true; }
     if (/(sete|7) trombetas|^trombetas$/.test(q)) { window.NEXUS_MUNDO('trombetas'); return true; }
-    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { import('/nexus/eden-caminhar.js?v=12').then((m) => m.abrirJardim(THREE, ui, { chegada: true })).catch(() => import('/nexus/panorama360.js?v=6').then((m) => m.abrirPanorama(THREE, 'eden', ui))); return true; }   // direto no jardim realista: o drone desce e pousa dentro dele
+    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { import('/nexus/eden-caminhar.js?v=13').then((m) => m.abrirJardim(THREE, ui, { chegada: true })).catch(() => import('/nexus/panorama360.js?v=6').then((m) => m.abrirPanorama(THREE, 'eden', ui))); return true; }   // direto no jardim realista: o drone desce e pousa dentro dele
     if (/^(cafarnaum|capernaum|casa de pedro)$/.test(q)) { abrirLugarReal('cafarnaum'); return true; }
     if (/^(magdala|sinagoga de magdala)$/.test(q)) { abrirLugarReal('magdala'); return true; }
     if (/^(o )?(mar da galileia|lago de genezare|mar de tiberiades|mar de genezare|lago da galileia)$/.test(q)) { abrirLugarReal('mar'); return true; }
