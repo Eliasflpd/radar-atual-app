@@ -348,7 +348,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
       // vira a figura conforme o lado para onde anda (em relação a quem olha)
       const dirX = new THREE.Vector3().subVectors(camera.position, new THREE.Vector3(b.x, 0, b.z)); const ladoX = new THREE.Vector3(dirX.z, 0, -dirX.x).normalize(); const vaiDireita = (dx * ladoX.x + dz * ladoX.z) > 0;
       b.f.R[b.i] = vaiDireita === !!b.e.olhaEsq ? 1 : 0; b.f.g.attributes.iVira.needsUpdate = true;
-      b.f.P[b.i * 3] = b.x; b.f.P[b.i * 3 + 1] = altura(b.x, b.z) - 0.1 + Math.abs(Math.sin(b.fase += dt * 6)) * 0.04 * b.e.h; b.f.P[b.i * 3 + 2] = b.z; b.f.g.attributes.iPos.needsUpdate = true; } }
+      b.f.P[b.i * 3] = b.x; b.f.P[b.i * 3 + 1] = altura(b.x, b.z) - 0.1 + Math.sin(b.fase += dt * b.e.anda * 2.6) * 0.006 * b.e.h; b.f.P[b.i * 3 + 2] = b.z; b.f.g.attributes.iPos.needsUpdate = true; } }
 
   // AVES em voo circular e BORBOLETAS perto das flores: tudo calculado na placa de vídeo
   async function voadores(nome, n, tam, modo) {
