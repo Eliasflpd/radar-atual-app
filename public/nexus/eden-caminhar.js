@@ -37,7 +37,7 @@ export const MUNDOS_ANDAVEIS = {
     },
     notas: { vigiai: 'As 8 oliveiras antigas de hoje, junto à Basílica da Agonia, foram datadas em parte por carbono-14: três têm troncos dos anos 1092, 1166 e 1198 (estudo italiano de 2012, publicado em 2015); as raízes podem ser mais antigas. Aqui elas representam o olival da época, não as árvores do ano 30.', cidade: 'Do outro lado do vale do Cedrom, a uns 300 m e mais alto que o olival: Jerusalém, com o Templo de Herodes no monte do Templo, as muralhas e a porta do lado leste; ao sul, a Cidade de Davi e o Monte Sião. (Lc 19:41 se passa nesta mesma encosta, alguns dias antes.)', rocha: 'Lucas 22:44 acrescenta a agonia e o suor “como grandes gotas de sangue”. A rocha aqui é ilustrativa; a tradição a mostra na Basílica da Agonia.', presenca: 'O anjo aparece só como luz, sem figura: o texto não o descreve.', chegada: '“Getsêmani” quer dizer “prensa de azeite”.' },
     lugar: { cidade: 'no mirante do Getsêmani, olhando Jerusalém e o Templo do outro lado do vale do Cedrom', rocha: 'junto da rocha onde Jesus orou (Mt 26:39)', vigiai: 'no olival, perto de onde os discípulos dormiram (Mt 26:38–43)', presenca: 'junto da luz que representa o anjo que o confortou (Lc 22:43)', tochas: 'vendo as tochas dos guardas subindo do vale do Cedrom (Jo 18:3)', chegada: 'na trilha que sobe do ribeiro de Cedrom (Jo 18:1)', bom: 'nas partes altas do Monte das Oliveiras' }, nome: 'Jardim do Getsêmani' },
-  ela: { titulo: 'O Vale de Elá', sub: '1 SAMUEL 17 · c. 1020 a.C.', pasta: 'ela', ceu: '/ela/ceu-ela-360.jpg', noite: false, lat: 31.69, lon: 34.96, TD: { x: 0, z: -1 }, inicio: 165,
+  ela: { titulo: 'O Vale de Elá', sub: '1 SAMUEL 17 · c. 1020 a.C.', pasta: 'ela', ceu: '/ela/ceu-ela-360.jpg', noite: false, lat: 31.69, lon: 34.96, TD: { x: 0, z: -1 }, inicio: 125,
     credito: 'Reconstituição do Vale de Elá na Sefelá (peças do ChatGPT, ilustrativas). O relevo segue a geografia do vale; a posição exata dos acampamentos é debatida.',
     versos: {
       israel: ['1 Samuel 17:2–3', 'Saul, porém, e os homens de Israel se ajuntaram e acamparam no vale de Elá, e ordenaram a batalha contra os filisteus. Os filisteus estavam num monte de um lado, e os israelitas estavam num monte do outro lado; e entre eles o vale.'],
@@ -121,7 +121,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const enc = (sJ > 0 ? -22 * ss(sJ, 15, 120) - 6 * ss(sJ, 200, 420) : 0.11 * xx + 2.5 * Math.tanh(xx / 60)) - 1.2 * Math.sin(z * 0.012) + 0.6 * Math.sin(x * 0.05 + z * 0.03); const pas = 1.6, k = enc / pas, deg = pas * (Math.floor(k) + THREE.MathUtils.smoothstep(k - Math.floor(k), 0.78, 1)); const plano = 1 - THREE.MathUtils.smoothstep(Math.hypot(x, z), 6, 16); return (deg * 0.85 + enc * 0.15) * (1 - plano); };
   const ribZ = (x) => 12 * Math.sin(x / 180) + 5 * Math.sin(x / 63);   // o ribeiro serpenteia pelo fundo do vale
   const hEla = (x, z) => { const ss = THREE.MathUtils.smoothstep, az = Math.abs(z), abre = ss(x, -1700, -600), leste = Math.max(0, x - 1000) * 0.12;
-    const encosta = 100 * ss(az, 110, 420) * (0.78 + 0.22 * Math.sin(x * 0.004 + (z > 0 ? 1 : 2.5))), ondula = 4 * Math.sin(x * 0.011) * Math.cos(z * 0.013) + 2 * Math.sin(x * 0.03 + z * 0.02);
+    const encosta = 85 * ss(az, 70, 300) * (0.78 + 0.22 * Math.sin(x * 0.004 + (z > 0 ? 1 : 2.5))), ondula = 4 * Math.sin(x * 0.011) * Math.cos(z * 0.013) + 2 * Math.sin(x * 0.03 + z * 0.02);
     const leito = -1.6 * (1 - ss(Math.abs(z - ribZ(x)), 2.2, 7)); return encosta * abre + ondula * (0.35 + 0.65 * ss(az, 60, 220)) + leste + leito - 12 * (1 - abre); };
   const hBase = (x, z) => { if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z); return 2.6 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.3 * Math.sin(x * 0.031 + z * 0.027) + 0.5 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
   const T = 4400, NS = toque ? 400 : 560;
@@ -348,9 +348,9 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       figuras('oliveira-ela', espalhar(toque ? 90 : 160, 60, 1300, 3, [centroArv]), 6, 0.4),
       figuras('arbusto-sefela', espalhar(toque ? 400 : 800, 12, 1300, 1.5, [centroArv]), 1.2, 0.4),
       figuras('trigo', naFaixa(toque ? 160 : 300, -900, 900, -95, 95).filter((o) => Math.abs(o.z - ribZ(o.x)) > 8 && Math.hypot(o.x, o.z - 40) > 30), 1.1, 0.6),
-      figuras('tendas-filisteias', naFaixa(toque ? 14 : 24, -420, 420, 330, 430), 4.5, 0.1),
-      figuras('exercito-filisteu', [...fila(255, -220, 220, 22), ...fila(285, -180, 180, 26)], 2.3, 0),
-      figuras('exercito-israel', [...fila(-240, -200, 200, 24), ...fila(-268, -160, 160, 28)], 2.2, 0),
+      figuras('tendas-filisteias', naFaixa(toque ? 18 : 30, -380, 380, 215, 300), 4.5, 0.1),
+      figuras('exercito-filisteu', [...fila(160, -200, 200, 9), ...fila(172, -170, 170, 10), ...fila(184, -140, 140, 11)], 2.3, 0),
+      figuras('exercito-israel', [...fila(-150, -190, -12, 9), ...fila(-150, 12, 190, 9), ...fila(-162, -160, 160, 10)], 2.2, 0),
       figuras('golias', [{ x: 0, z: 40, s: 1 }], 2.9, 0),
     ]);
     // o ribeiro de seixos no fundo do vale (1Sm 17:40)
@@ -659,7 +659,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
 
   // CARTÕES com o texto bíblico quando se chega perto de cada lugar
   let cartaoAtual = null;
-  function cartao(k) { if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } const [r, t] = MW.versos[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${MW.notas[k] ? `<small>${MW.notas[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
+  function cartao(k) { if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } if (!MW.versos[k]) { card.classList.remove('v'); return; } const [r, t] = MW.versos[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${MW.notas[k] ? `<small>${MW.notas[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
 
   const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: toque ? 0 : 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter });
   const posCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), posCena = new THREE.Scene();
@@ -728,7 +728,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       const dArv = Math.hypot(eu.x, eu.z), dForq = Math.hypot(eu.x - FORQ.x, eu.z - FORQ.z), dPres = Math.hypot(eu.x - posPresenca.x, eu.z - posPresenca.z);
       const perto = bichos.some((b) => Math.hypot(b.x - eu.x, b.z - eu.z) < 9);
       cartao(E ? (dPres < 16 ? 'presenca' : dArv < 30 ? 'arvore' : dForq < 26 ? 'rio' : perto ? 'animais' : dArv < 90 ? 'chegada' : r > 300 ? 'bom' : null)
-        : L ? (Math.hypot(eu.x - 0, eu.z - 40) < 25 ? 'golias' : Math.abs(eu.z - ribZ(eu.x)) < 10 && Math.abs(eu.x) < 400 ? 'ribeiro' : eu.x < -450 ? 'oeste' : eu.z < -190 ? 'israel' : eu.z > 190 ? 'filisteus' : Math.abs(eu.z) < 80 ? 'davi' : 'bom')
+        : L ? (Math.hypot(eu.x - 0, eu.z - 40) < 25 ? 'golias' : Math.abs(eu.z - ribZ(eu.x)) < 10 && Math.abs(eu.x) < 400 ? 'ribeiro' : eu.x < -450 ? 'oeste' : eu.z < -105 ? 'israel' : eu.z > 120 ? 'filisteus' : Math.abs(eu.z) < 80 ? 'davi' : 'bom')
         : (dPres < 5 ? 'presenca' : Math.hypot(eu.x + TD.x * 12, eu.z + TD.z * 12) < 7 ? 'cidade' : dArv < 10 ? 'rocha' : tochaPerto(eu.x, eu.z) < 30 ? 'tochas' : dArv < 45 ? 'vigiai' : dArv < 180 ? 'chegada' : 'bom'));
     }
     moverBichos(dt); if (tochas.mover) tochas.mover(t);
