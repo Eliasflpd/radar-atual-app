@@ -139,5 +139,37 @@
 "vitoria-regia": {
 "w": 1024,
 "h": 1012
+},
+"arvore-florida": {
+"w": 1004,
+"h": 1024
+},
+"flor-ave-paraiso": {
+"w": 1022,
+"h": 1024
+},
+"flor-hibisco": {
+"w": 1013,
+"h": 1024
+},
+"flor-lirios": {
+"w": 893,
+"h": 1024
+},
+"flor-rosa": {
+"w": 949,
+"h": 1024
+},
+"flor-roxa": {
+"w": 973,
+"h": 1024
+},
+"romazeira": {
+"w": 1015,
+"h": 1024
+},
+"videira": {
+"w": 582,
+"h": 1024
 }
 }

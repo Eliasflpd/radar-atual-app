@@ -318,6 +318,16 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   // árvores frutíferas grandes dos dois lados da trilha, emoldurando o caminho
   const moldura = []; for (let z = 30; z < 165; z += 13) { const x = trilhaX(z); for (const sx of [-1, 1]) { const w = T2W(x + sx * (6 + rnd() * 3), z + rnd() * 6), xx = w.x, zz = w.z; if (!naAgua(xx, zz)) moldura.push({ x: xx, z: zz, s: 0.9 + rnd() * 0.35, vira: rnd() > 0.5 }); } }
   await Promise.all([figuras('arvore-fruto-1', moldura.filter((_, i) => i % 2 === 0), 15, 1), figuras('arvore-fruto-2', moldura.filter((_, i) => i % 2 === 1), 12, 1)]);
+  // FLORES em camadas: à beira da trilha (perto e grandes), nas margens do rio e espalhadas; árvores floridas, romãzeiras e videiras
+  const beiraTrilha = (n, a0, a1) => Array.from({ length: n }, () => { const z = 14 + rnd() * 155, sx = rnd() > 0.5 ? 1 : -1, w = T2W(trilhaX(z) + sx * (a0 + rnd() * (a1 - a0)), z); return { x: w.x, z: w.z, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => !naAgua(o.x, o.z));
+  const beiraRio = (n) => Array.from({ length: n }, () => { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = ci === 0 ? 16 : 11, u = rnd() * 0.7, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (1.42 + rnd() * 0.5); return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => Math.hypot(o.x, o.z) > 24);
+  const flores = [['flor-lirios', 1.1, 1], ['flor-hibisco', 1.7, 0.4], ['flor-roxa', 1.0, 1], ['flor-ave-paraiso', 1.5, 0.7], ['flor-rosa', 0.8, 1.2]];
+  await Promise.all([
+    ...flores.map(([nm, h, q]) => figuras(nm, [...beiraTrilha(Math.round((toque ? 40 : 70) * q), 1.25, 4.5), ...beiraRio(Math.round((toque ? 50 : 90) * q)), ...espalhar(Math.round((toque ? 40 : 80) * q), 8, 220, 2, [centroArv])], h, 0.5)),
+    figuras('arvore-florida', espalhar(toque ? 30 : 55, 25, 420, 6, [centroArv]), 11, 0.8),
+    figuras('romazeira', [...beiraTrilha(toque ? 8 : 14, 5, 9), ...espalhar(toque ? 15 : 30, 20, 300, 4, [centroArv])], 5.5, 0.7),
+    figuras('videira', [...beiraTrilha(toque ? 8 : 14, 4.5, 8), ...espalhar(toque ? 12 : 24, 20, 260, 4, [centroArv])], 4.2, 0.5),
+  ]);
   // FEIXES DE SOL atravessando a copa (raios de luz no ar úmido), sempre em volta de quem anda
   const NF = toque ? 18 : 30, gF = new THREE.InstancedBufferGeometry(), qF = new THREE.PlaneGeometry(1, 1); qF.translate(0, 0.5, 0); gF.index = qF.index; gF.attributes.position = qF.attributes.position; gF.attributes.uv = qF.attributes.uv; gF.instanceCount = NF;
   const iF = new Float32Array(NF * 4); for (let i = 0; i < NF; i++) iF.set([(rnd() * 2 - 1) * 45, (rnd() * 2 - 1) * 45, 1.5 + rnd() * 3.5, rnd() * 100], i * 4); gF.setAttribute('iF', new THREE.InstancedBufferAttribute(iF, 4));
