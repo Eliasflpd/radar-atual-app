@@ -97,7 +97,9 @@ function definirAcesso(aberto) {
 // contexto para a barra lateral 'Pergunte ao Claude' (só os nomes; nós de obra externa ficam de fora)
 window.NEXUS_CONTEXTO = () => { const no = (id) => (id && S.graph && S.graph.hasNode(id) && !String(id).startsWith('x:') ? { id, rotulo: lab(id) } : null); return { foco: no(S.foco), sel: no(S.sel) }; };
 import('/nexus/conversa.js?v=1').then((m) => m.iniciarConversa()).catch(() => {});
-import('/nexus/preparar.js?v=1').then((m) => m.iniciarPreparar()).catch(() => {});
+import('/nexus/preparar.js?v=2').then((m) => m.iniciarPreparar()).catch(() => {});
+window.NEXUS_MIDIA = 'https://pub-4e9e380943cf4c73a98a95e5d5633c95.r2.dev';   // imagens e peças 3D no Cloudflare R2 (entrega rápida e gratuita)
+import('/nexus/guia.js?v=14').then((m) => m.iniciarGuia()).catch(() => {});   // guia flutuante: peça e a cena muda
 window.NEXUS_ABRIR_CEU = () => abrirCeu();   // a barra Preparar abre o universo para ele trabalhar
 function tirarExternos() {
   const g = S.graph; if (!g || !g.order) return;
@@ -475,7 +477,7 @@ async function abrirCeu() {
       const local = /^(localhost|127\.)/.test(location.hostname);
       const arquivo = PARAM_CEU === 'classico' ? '/nexus/ceu.js?v=9'
         : PARAM_CEU === 'previa' && local ? '/nexus/ceu-previa.js?v=1'
-        : new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' : '/nexus/ceu-universo.js?v=97';
+        : new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' : '/nexus/ceu-universo.js?v=149';
       const { criarCeu } = await import(arquivo);
       ceu = criarCeu($('ceu'), S, { visivelNo, visivelAresta, selecionar, expandir, painelAresta, abrirGrupo, indisponivel: ceuIndisponivel });
       window.__ceuPrevia = ceu;   // ganchos de teste (só leitura)

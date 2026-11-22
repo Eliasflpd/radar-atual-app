@@ -51,6 +51,9 @@ function mostrar(estado) {
 async function preparar(form) {
   const f = new FormData(form), pedido = { tipo: f.get('tipo'), tema: String(f.get('tema') || '').trim(), publico: f.get('publico'), duracao: f.get('duracao'), obs: String(f.get('obs') || '').trim() };
   if (!pedido.tema) return;
+  const MUNDOS = [[/trombeta/i, 'trombetas'], [/cria[cç][aã]o|g[eê]nesis\s*1\b|no princ[ií]pio/i, 1]];   // temas que têm um mundo de cinema
+  const mundo = (MUNDOS.find(([re]) => re.test(pedido.tema)) || [])[1];
+  if (mundo != null && typeof window.NEXUS_MUNDO === 'function') window.NEXUS_MUNDO(mundo);
   mostrar({ etapa: 'universo' });
   // 1) o universo trabalha: abre o Céu se preciso e monta o dossiê
   let dossie = null;
