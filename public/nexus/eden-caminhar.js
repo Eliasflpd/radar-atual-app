@@ -358,9 +358,10 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     { n: 'leao', h: 1.15, q: 3, anda: 0 }, { n: 'cordeiro', h: 0.85, q: 6, anda: 0.5 }, { n: 'cervo', h: 1.75, q: 5, anda: 0.9 },
     { n: 'elefante', h: 3.2, q: 3, anda: 0.6 }, { n: 'girafa', h: 5.2, q: 3, anda: 0.7 }, { n: 'pavao', h: 1.1, q: 4, anda: 0.4 },
     { n: 'onca', h: 0.95, q: 3, anda: 0.8 }, { n: 'anta', h: 1.1, q: 3, anda: 0.5 }, { n: 'capivara', h: 0.62, q: 10, anda: 0.35, rio: true },
+    { n: 'tigre', h: 1.05, q: 3, anda: 0.75 }, { n: 'tigre-rugindo', h: 1.2, q: 1, anda: 0 }, { n: 'tigre-deitado', h: 0.85, q: 2, anda: 0 },
   ];
   const bichos = [];
-  const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], elefante: [-26, 22], girafa: [24, 24], pavao: [5, 53], onca: [-16, 58], anta: [18, 60] };   // um grupo à vista de quem pousa
+  const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], elefante: [-26, 22], girafa: [24, 24], pavao: [5, 53], onca: [-16, 58], anta: [18, 60], 'tigre-rugindo': [-3.2, 96], tigre: [4, 128] };   // um grupo à vista de quem pousa
   const margem = (n) => rios.flatMap((c) => Array.from({ length: n }, () => { const u = 0.05 + rnd() * 0.5, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = (c === rios[0] ? 16 : 11) + 2 + rnd() * 4; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.85 + rnd() * 0.3 }; })).filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) < 190);
   for (const e of especies) { const lista = e.rio ? margem(3).slice(0, e.q - 1) : espalhar(e.q - 1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }]); const pp0 = PERTO[e.n], pw = pp0 ? T2W(pp0[0], pp0[1]) : null, pp = pw ? [pw.x, pw.z] : null; if (pp && !naAgua(pp[0], pp[1])) lista.unshift({ x: pp[0], z: pp[1], s: 1, vira: e.n === 'leao' }); else lista.push(...espalhar(1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }])); const f = await figuras(e.n, lista, e.h, 0); if (!f) continue;
     lista.forEach((o, i) => bichos.push({ f, i, e, x: o.x, z: o.z, alvo: null, espera: rnd() * 6, fase: rnd() * 6 })); }
@@ -516,7 +517,15 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
         o.start(t0); o.stop(t0 + k * 0.13 + 0.1); }
       setTimeout(piar, 900 + Math.random() * 3800); }
     setTimeout(piar, 1500);
-    return { ctx, gA, gA2, gV, fV }; }
+    function rugir() { const t0 = ctx.currentTime, d = 2.4; const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter();
+      o.type = 'sawtooth'; o2.type = 'sawtooth'; o.frequency.setValueAtTime(70, t0); o.frequency.linearRampToValueAtTime(115, t0 + 0.5); o.frequency.exponentialRampToValueAtTime(48, t0 + d);
+      o2.frequency.setValueAtTime(73, t0); o2.frequency.linearRampToValueAtTime(119, t0 + 0.5); o2.frequency.exponentialRampToValueAtTime(50, t0 + d);
+      f.type = 'bandpass'; f.frequency.setValueAtTime(420, t0); f.frequency.linearRampToValueAtTime(780, t0 + 0.4); f.frequency.exponentialRampToValueAtTime(260, t0 + d); f.Q.value = 1.4;
+      const rr = ruido(), gr = ctx.createGain(); f2.type = 'bandpass'; f2.frequency.value = 900; f2.Q.value = 0.8; rr.connect(f2).connect(gr); gr.gain.setValueAtTime(0, t0); gr.gain.linearRampToValueAtTime(0.5, t0 + 0.25); gr.gain.exponentialRampToValueAtTime(0.001, t0 + d);
+      const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 24; lg.gain.value = 0.35; lfo.connect(lg).connect(g.gain);
+      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.9, t0 + 0.2); g.gain.exponentialRampToValueAtTime(0.001, t0 + d);
+      o.connect(f); o2.connect(f); f.connect(g); gr.connect(g); g.connect(ctx.destination); [o, o2, lfo].forEach((x) => { x.start(t0); x.stop(t0 + d + 0.1); }); setTimeout(() => { try { rr.stop(); } catch (_) {} }, (d + 0.3) * 1000); }
+    return { ctx, gA, gA2, gV, fV, rugir }; }
 
   // CARTÕES com o texto bíblico quando se chega perto de cada lugar
   let cartaoAtual = null;
@@ -597,6 +606,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
       const dP = Math.hypot(camera.position.x - posPresenca.x, camera.position.z - posPresenca.z); audio.gV.gain.setTargetAtTime(0.14 + 0.35 * Math.max(0, 1 - dP / 40) + 0.06 * Math.sin(t * 0.3), audio.ctx.currentTime, 0.5); }
     solDisco.position.copy(camera.position).addScaledVector(SOL, 1300); matF.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); feixes.visible = polen.visible; matPo.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); polen.visible = !voando || camera.position.y - altura(camera.position.x, camera.position.z) < 30;
     const sp = solDisco.position.clone().project(camera), fw = new THREE.Vector3(); camera.getWorldDirection(fw); matPos.uniforms.solTela.value.set(sp.x * 0.5 + 0.5, sp.y * 0.5 + 0.5); matPos.uniforms.solVis.value = Math.max(0, fw.dot(SOL)) ** 1.5 * (sp.z < 1 ? 1 : 0);
+    if (audio && somLigado) { const tg = bichos.find((b) => b.e.n === 'tigre-rugindo'); if (tg && Math.hypot(tg.x - camera.position.x, tg.z - camera.position.z) < 16 && t - (window.__ultRugido || 0) > 25) { window.__ultRugido = t; audio.rugir(); } }
     camera.updateMatrixWorld(); refletir(); renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); }
   requestAnimationFrame((a) => { raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
 
