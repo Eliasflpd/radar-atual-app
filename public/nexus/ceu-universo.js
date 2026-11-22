@@ -1619,7 +1619,7 @@ export function criarCeu(container, estado, acoes) {
   // LUGARES DE JESUS EM IMAGEM REAL: o globo voa até o lugar e abre a foto de hoje ao lado da reconstituição do ano 30
   let lugarRealAberto = null;
   async function abrirLugarReal(id) {
-    const m = await import('/nexus/lugares-reais.js?v=3'); const L = m.LUGARES[id]; if (!L || !atlasC) return false;
+    const m = await import('/nexus/lugares-reais.js?v=5'); const L = m.LUGARES[id]; if (!L || !atlasC) return false;
     const l = atlasC.lugares.find((x) => x.en === L.atlas); if (!modoTerra) abrirTerra(); if (l) setTimeout(() => voarTerraPara(l, Math.max(6, RAIO_GLOBO * 0.008)), 60);
     let aviso = ui.querySelector('.cu-aviso-templo'); if (!aviso) { aviso = document.createElement('div'); aviso.className = 'cu-aviso-templo'; aviso.style.cssText = 'position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:8;background:rgba(5,11,26,.9);border:1px solid rgba(233,200,120,.5);color:#FFE8B0;border-radius:999px;padding:8px 16px;font:600 13px Inter,system-ui,sans-serif;pointer-events:none;white-space:nowrap'; ui.appendChild(aviso); }
     aviso.textContent = `📍 ${L.titulo} · ${L.sub.toLowerCase()} · abrindo a imagem real`; aviso.hidden = false;
@@ -1631,6 +1631,10 @@ export function criarCeu(container, estado, acoes) {
     if (/^(o )?(jardim do )?getsemani$|^horto das oliveiras$/.test(q)) { abrirLugarReal('getsemani'); return true; }
     if (/^(o )?(golgota|calvario|monte calvario|santo sepulcro|lugar da caveira|sepulcro de jesus|tumulo de jesus)$/.test(q)) { abrirLugarReal('golgota'); return true; }
     if (/^(o )?(tumulo|sepulcro) de lazaro$/.test(q)) { abrirLugarReal('lazaro'); return true; }
+    if (/^nazare$/.test(q)) { abrirLugarReal('nazare'); return true; }
+    if (/^(cafarnaum|capernaum|casa de pedro)$/.test(q)) { abrirLugarReal('cafarnaum'); return true; }
+    if (/^(magdala|sinagoga de magdala)$/.test(q)) { abrirLugarReal('magdala'); return true; }
+    if (/^(o )?(mar da galileia|lago de genezare|mar de tiberiades|mar de genezare|lago da galileia)$/.test(q)) { abrirLugarReal('mar'); return true; }
     if (/^(o )?(templo de herodes|templo herodiano|segundo templo|templo de jesus|templo do tempo de jesus|templo de zorobabel)$/.test(q)) return abrirTemploSalomao('herodes');
     if (/^(o )?(templo de salomao|templo salomao|primeiro templo|templo de jerusalem|templo do senhor|casa do senhor)$/.test(q) || /^templo$/.test(q)) return abrirTemploSalomao();
     { const iE = livros.findIndex((lv) => norm(lv.nome) === q || norm(lv.abbrev) === q); if (iE >= 0) { comporLivro(iE); return true; } }   // nome exato de livro (Rute, Jó, Daniel) é o livro
