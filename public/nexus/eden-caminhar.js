@@ -224,27 +224,40 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     if (ceu) ceu.position.copy(camera.position); solDisco.position.copy(camera.position).addScaledVector(SOL, 1300); }
 
   // GRAMA ALTA que balança ao vento em volta de quem anda
-  const NG = toque ? 34000 : 70000, RG = 36;
-  const lamina = new THREE.PlaneGeometry(0.07, 0.42, 1, 3); lamina.translate(0, 0.21, 0);
-  { const p = lamina.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i) / 0.7; p.setX(i, p.getX(i) * (1 - y * 0.85)); } }
+  const NG = toque ? 70000 : 150000, RG = 30;
+  // lâmina fina, afinando até a ponta, em 5 gomos (para poder curvar)
+  const lamina = new THREE.PlaneGeometry(0.035, 1, 1, 5); lamina.translate(0, 0.5, 0);
+  { const p = lamina.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); p.setX(i, p.getX(i) * (1 - Math.pow(y, 1.6) * 0.96)); } }
   const matGrama = new THREE.ShaderMaterial({ side: THREE.DoubleSide, uniforms: { ...unif, centro: { value: new THREE.Vector2() }, sol: { value: SOL } },
-    vertexShader: `uniform float t; uniform vec2 centro; attribute vec3 iOff; attribute float iRot, iEsc; varying float vY, vD, vFl; varying vec3 vC, vFc; uniform sampler2D alt;
+    vertexShader: `uniform float t; uniform vec2 centro; attribute vec3 iOff; attribute float iRot, iEsc; varying float vY, vD, vFl, vX, vTr; varying vec3 vC, vFc; uniform sampler2D alt; uniform vec3 sol;
       void main(){ vec2 rel = mod(iOff.xz - centro + ${RG}.0, ${(RG * 2).toFixed(1)}) - ${RG}.0; vec2 xz = centro + rel; float dist = length(rel);
-        float esc = iEsc * smoothstep(${RG}.0, ${(RG * 0.6).toFixed(1)}, dist); float ts = dot(xz, vec2(-.6, -.8)), tl = dot(xz, vec2(.8, -.6)); if (ts > 12. && ts < 170.) esc *= smoothstep(.55, 1.25, abs(tl - 2.5 * sin(ts / 13.)));
-        vec3 p = position * vec3(1., esc, 1.); float c = cos(iRot), s = sin(iRot); p = vec3(c*p.x - s*p.z, p.y, s*p.x + c*p.z);
-        float y = position.y / .42; float vento = sin(t * 1.7 + xz.x * .08 + xz.y * .05) * .5 + sin(t * 3.1 + xz.x * .3) * .18;
-        p.x += vento * y * y * .32 * esc; p.z += vento * y * y * .12 * esc;
-        vY = y; vC = vec3(.16 + iOff.y * .14, .34 + iOff.y * .14, .08); vFl = step(.94, iOff.y) * step(.75, y); vFc = iOff.y > .98 ? vec3(1.2,1.15,1.05) : iOff.y > .96 ? vec3(1.3,.95,.2) : vec3(1.2,.25,.2);
+        float esc = iEsc * smoothstep(${RG}.0, ${(RG * 0.55).toFixed(1)}, dist); float ts = dot(xz, vec2(-.6, -.8)), tl = dot(xz, vec2(.8, -.6)); if (ts > 12. && ts < 170.) esc *= smoothstep(.55, 1.25, abs(tl - 2.5 * sin(ts / 13.)));
+        float r2 = fract(iRot * 7.13), r3 = fract(iEsc * 13.7 + iOff.y * 3.1);
+        float y = position.y; float altL = esc * (.18 + .42 * r3 * r3 + .12 * iOff.y);   // alturas variadas: muitas baixas, algumas altas
+        // curva natural da lâmina (cai para um lado) e vento que vem em ondas pelo campo
+        float curva = (.25 + .5 * r2) * y * y; vec3 p = vec3(position.x * (.7 + .6 * r3), y * altL, curva * altL * .9);
+        float c = cos(iRot), s = sin(iRot); p = vec3(c * p.x - s * p.z, p.y, s * p.x + c * p.z);
+        float onda = sin(t * 1.3 - xz.x * .11 - xz.y * .07) * .5 + .5; float vento = (onda * .7 + sin(t * 3.7 + xz.x * .9 + xz.y * .6) * .12) * y * y * altL;
+        p.x += vento * .55; p.z += vento * .25; p.y -= vento * vento * .6;
+        vY = y; vX = position.x / .035 + .5;
+        vec3 verde = mix(vec3(.10, .24, .05), vec3(.20, .36, .07), iOff.y), amarelo = vec3(.42, .45, .14), seco = vec3(.40, .34, .17);
+        vC = mix(verde, amarelo, r2 * r2 * .4); vC = mix(vC, seco, step(.93, r3) * .7);
+        vFl = step(.965, iOff.y) * step(.82, y); vFc = iOff.y > .99 ? vec3(1.2, 1.15, 1.05) : iOff.y > .978 ? vec3(1.3, .95, .2) : vec3(1.1, .3, .45);
+        vTr = pow(max(dot(normalize(vec3(xz.x, cameraPosition.y - 1.2, xz.y) - cameraPosition), sol), 0.), 3.);
         vec4 mv = viewMatrix * vec4(p + vec3(xz.x, 0., xz.y), 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform float dens; uniform vec3 nevoa; varying float vY, vD, vFl; varying vec3 vC, vFc;
-      void main(){ vec3 c = vC * (.55 + .6 * vY) + vec3(.10,.08,.0) * vY * vY; c = mix(c, vFc, vFl); float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), 1.);
+    fragmentShader: `uniform float dens; uniform vec3 nevoa, sol; varying float vY, vD, vFl, vX, vTr; varying vec3 vC, vFc;
+      void main(){ float base = smoothstep(.0, .55, vY);   // sombra na base, onde a luz não chega
+        float meio = 1. - abs(vX * 2. - 1.); vec3 c = vC * (.28 + .9 * base) * (.8 + .3 * meio);
+        c += vec3(.10, .16, .02) * pow(vY, 3.) * .5;   // ponta mais clara, a luz atravessa
+        c += vec3(.10, .18, .03) * vTr * vY;
+        c = mix(c, vFc, vFl); float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), 1.);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
       }` });
   // a altura do chão de cada lâmina é calculada na CPU e guardada; a lâmina "anda" junto com quem caminha
   const gramaGeo = new THREE.InstancedBufferGeometry(); gramaGeo.index = lamina.index; gramaGeo.attributes.position = lamina.attributes.position; gramaGeo.instanceCount = NG;
   const off = new Float32Array(NG * 3), rot = new Float32Array(NG), esc = new Float32Array(NG);
-  for (let i = 0; i < NG; i++) { off[i * 3] = (Math.random() * 2 - 1) * RG; off[i * 3 + 1] = Math.random(); off[i * 3 + 2] = (Math.random() * 2 - 1) * RG; rot[i] = Math.random() * 6.28; esc[i] = 0.5 + Math.random() * 0.9; }
+  for (let i = 0; i < NG; i++) { off[i * 3] = (Math.random() * 2 - 1) * RG; off[i * 3 + 1] = Math.random(); off[i * 3 + 2] = (Math.random() * 2 - 1) * RG; rot[i] = Math.random() * 6.28; esc[i] = 0.6 + Math.random() * 0.8; }
   gramaGeo.setAttribute('iOff', new THREE.InstancedBufferAttribute(off, 3)); gramaGeo.setAttribute('iRot', new THREE.InstancedBufferAttribute(rot, 1)); gramaGeo.setAttribute('iEsc', new THREE.InstancedBufferAttribute(esc, 1));
   // para a lâmina ficar no chão, o shader precisa da altura: usamos uma textura de altura do terreno
   const altH = new Uint16Array(alturas.length * 2); for (let i = 0; i < alturas.length; i++) { altH[i * 2] = THREE.DataUtils.toHalfFloat(alturas[i]); altH[i * 2 + 1] = THREE.DataUtils.toHalfFloat(Math.min(8, relRio[i])); }
