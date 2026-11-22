@@ -7,7 +7,7 @@ from gradio_client import Client, handle_file
 
 img, saida = sys.argv[1], sys.argv[2]; RES = int(sys.argv[3]) if len(sys.argv) > 3 else 256   # resolução menor = arquivo mais leve
 # com uma chave gratuita do Hugging Face (variável HF_TOKEN) a cota diária fica bem maior
-c = Client('tencent/Hunyuan3D-2', verbose=False, hf_token=os.environ.get('HF_TOKEN') or None)
+c = Client('tencent/Hunyuan3D-2', verbose=False, token=os.environ.get('HF_TOKEN') or None) if 'token' in Client.__init__.__code__.co_varnames else Client('tencent/Hunyuan3D-2', verbose=False)
 r = c.predict(caption=None, image=handle_file(img), mv_image_front=None, mv_image_back=None, mv_image_left=None, mv_image_right=None,
               steps=30, guidance_scale=5.0, seed=1234, octree_resolution=RES, check_box_rembg=True, num_chunks=8000, randomize_seed=False,
               api_name='/shape_generation')
