@@ -62,10 +62,13 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   // CÉU: o 360° das montanhas do Éden ao fundo
   const ceuTex = await new THREE.TextureLoader().loadAsync((window.NEXUS_MIDIA || '/nexus') + '/livros/eden-360-montanhas.jpg').catch(() => null);
   let ceu = null;
-  if (ceuTex) { ceuTex.colorSpace = THREE.SRGBColorSpace; const g = new THREE.SphereGeometry(1400, 64, 32); g.scale(-1, 1, 1); ceu = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: ceuTex, fog: false, depthWrite: false })); ceu.renderOrder = -1; cena.add(ceu); lixo.push(ceuTex); }
+  if (ceuTex) { ceuTex.colorSpace = THREE.SRGBColorSpace; const g = new THREE.SphereGeometry(1400, 64, 32); g.scale(-1, 1, 1); ceu = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: ceuTex, color: new THREE.Color(1.25, 1.2, 1.1), fog: false, depthWrite: false })); ceu.renderOrder = -1; cena.add(ceu); lixo.push(ceuTex); }
 
   // RIOS: um rio vem do norte, passa ao lado da árvore da vida e se divide em quatro braços (Gn 2:10)
   const V = (x, z) => new THREE.Vector3(x, 0, z);
+  const TD = { x: -0.6, z: -0.8 }, TP = { x: 0.8, z: -0.6 };   // direção da trilha (do centro para fora) e o lado
+  const T2W = (lado, s) => ({ x: TD.x * s + TP.x * lado, z: TD.z * s + TP.z * lado }); const W2T = (x, z) => ({ s: x * TD.x + z * TD.z, lado: x * TP.x + z * TP.z });
+  const VT = (lado, s, y = 0) => { const w = T2W(lado, s); return new THREE.Vector3(w.x, y, w.z); };
   const FORQ = V(48, 36);
   const rios = [
     [V(-60, -900), V(10, -520), V(-30, -260), V(40, -110), V(30, -20), FORQ],
@@ -126,20 +129,20 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   const naAgua = (x, z) => { const [d, w] = distRio(x, z); return d < w * 1.5; };
 
   // GRAMA ALTA que balança ao vento em volta de quem anda
-  const NG = toque ? 30000 : 60000, RG = 42;
-  const lamina = new THREE.PlaneGeometry(0.06, 0.55, 1, 3); lamina.translate(0, 0.275, 0);
+  const NG = toque ? 34000 : 70000, RG = 36;
+  const lamina = new THREE.PlaneGeometry(0.07, 0.42, 1, 3); lamina.translate(0, 0.21, 0);
   { const p = lamina.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i) / 0.7; p.setX(i, p.getX(i) * (1 - y * 0.85)); } }
   const matGrama = new THREE.ShaderMaterial({ side: THREE.DoubleSide, uniforms: { ...unif, centro: { value: new THREE.Vector2() }, sol: { value: SOL } },
-    vertexShader: `uniform float t; uniform vec2 centro; attribute vec3 iOff; attribute float iRot, iEsc; varying float vY, vD; varying vec3 vC; uniform sampler2D alt;
+    vertexShader: `uniform float t; uniform vec2 centro; attribute vec3 iOff; attribute float iRot, iEsc; varying float vY, vD, vFl; varying vec3 vC, vFc; uniform sampler2D alt;
       void main(){ vec2 rel = mod(iOff.xz - centro + ${RG}.0, ${(RG * 2).toFixed(1)}) - ${RG}.0; vec2 xz = centro + rel; float dist = length(rel);
-        float esc = iEsc * smoothstep(${RG}.0, ${(RG * 0.6).toFixed(1)}, dist);
+        float esc = iEsc * smoothstep(${RG}.0, ${(RG * 0.6).toFixed(1)}, dist); float ts = dot(xz, vec2(-.6, -.8)), tl = dot(xz, vec2(.8, -.6)); if (ts > 12. && ts < 170.) esc *= smoothstep(.55, 1.25, abs(tl - 2.5 * sin(ts / 13.)));
         vec3 p = position * vec3(1., esc, 1.); float c = cos(iRot), s = sin(iRot); p = vec3(c*p.x - s*p.z, p.y, s*p.x + c*p.z);
-        float y = position.y / .55; float vento = sin(t * 1.7 + xz.x * .08 + xz.y * .05) * .5 + sin(t * 3.1 + xz.x * .3) * .18;
+        float y = position.y / .42; float vento = sin(t * 1.7 + xz.x * .08 + xz.y * .05) * .5 + sin(t * 3.1 + xz.x * .3) * .18;
         p.x += vento * y * y * .32 * esc; p.z += vento * y * y * .12 * esc;
-        vY = y; vC = vec3(.16 + iOff.y * .14, .34 + iOff.y * .14, .08);
+        vY = y; vC = vec3(.16 + iOff.y * .14, .34 + iOff.y * .14, .08); vFl = step(.94, iOff.y) * step(.75, y); vFc = iOff.y > .98 ? vec3(1.2,1.15,1.05) : iOff.y > .96 ? vec3(1.3,.95,.2) : vec3(1.2,.25,.2);
         vec4 mv = viewMatrix * vec4(p + vec3(xz.x, 0., xz.y), 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform float dens; uniform vec3 nevoa; varying float vY, vD; varying vec3 vC;
-      void main(){ vec3 c = vC * (.55 + .6 * vY) + vec3(.10,.08,.0) * vY * vY; float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), 1.);
+    fragmentShader: `uniform float dens; uniform vec3 nevoa; varying float vY, vD, vFl; varying vec3 vC, vFc;
+      void main(){ vec3 c = vC * (.55 + .6 * vY) + vec3(.10,.08,.0) * vY * vY; c = mix(c, vFc, vFl); float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), 1.);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
       }` });
@@ -175,7 +178,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + '.png'); if (!tex) return null; lixo.push(tex);
     const asp = pc.w / pc.h, g = new THREE.InstancedBufferGeometry(); g.index = quad.index; g.attributes.position = quad.attributes.position; g.attributes.uv = quad.attributes.uv; g.instanceCount = lista.length;
     const P = new Float32Array(lista.length * 3), S = new Float32Array(lista.length * 2), F = new Float32Array(lista.length), R = new Float32Array(lista.length);
-    lista.forEach((o, i) => { const hR = alturaReal * (o.s || 1); P.set([o.x, altura(o.x, o.z) - 0.15, o.z], i * 3); S.set([hR * asp, hR], i * 2); F[i] = Math.random() * 6.28; R[i] = o.vira ? 1 : 0; });
+    lista.forEach((o, i) => { const hR = alturaReal * (o.s || 1); P.set([o.x, altura(o.x, o.z) - 0.15 + (o.y || 0), o.z], i * 3); S.set([hR * asp, hR], i * 2); F[i] = Math.random() * 6.28; R[i] = o.vira ? 1 : 0; });
     g.setAttribute('iPos', new THREE.InstancedBufferAttribute(P, 3)); g.setAttribute('iTam', new THREE.InstancedBufferAttribute(S, 2)); g.setAttribute('iFase', new THREE.InstancedBufferAttribute(F, 1)); g.setAttribute('iVira', new THREE.InstancedBufferAttribute(R, 1));
     if (/arvore|palmeira/.test(nome)) lista.forEach((o) => obst.push({ x: o.x, z: o.z, r: 0.35 + alturaReal * (o.s || 1) * 0.045 }));
     const m = new THREE.Mesh(g, matFig(tex, vento)); m.frustumCulled = false; cena.add(m); lixo.push(g, m.material); return { m, P, R, g };
@@ -184,7 +187,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
   function espalhar(n, rMin, rMax, folga = 6, evitar = []) { const out = []; let tent = 0;
     while (out.length < n && tent++ < n * 40) { const a = rnd() * 6.283, r = Math.sqrt(rMin * rMin + rnd() * (rMax * rMax - rMin * rMin)), x = Math.cos(a) * r, z = Math.sin(a) * r;
-      const [d, w] = distRio(x, z); if (d < w + folga) continue; if (Math.abs(x) < 7 && z > 8 && z < 150) continue; if (evitar.some((e) => Math.hypot(e.x - x, e.z - z) < e.r)) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
+      const [d, w] = distRio(x, z); if (d < w + folga) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; } if (evitar.some((e) => Math.hypot(e.x - x, e.z - z) < e.r)) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
     return out; }
   const centroArv = { x: 0, z: 0, r: 26 };
   await Promise.all([
@@ -204,17 +207,48 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     figuras('mata-arbusto', espalhar(toque ? 400 : 700, 5, 300, 2, [centroArv]), 1.4, 0.6),
   ]);
 
+  // TRILHA de terra batida que leva até a árvore da vida
+  const trilhaX = (z) => 2.5 * Math.sin(z / 13);
+  { const P = [], U = [], I = []; let k = 0; for (let z = 170; z >= 12; z -= 0.8) { const x = trilhaX(z); for (const sx of [-1, 1]) { const w = T2W(x + sx * 0.95, z); P.push(w.x, altura(w.x, w.z) + 0.05, w.z); U.push(sx < 0 ? 0 : 1, z / 3); } if (k) { const a = (k - 1) * 2; I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } k++; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I);
+    const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, uniforms: unif,
+      vertexShader: `varying vec2 vUv; varying float vD; void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: `uniform float dens; uniform vec3 nevoa; varying vec2 vUv; varying float vD; float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+        float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+        void main(){ vec2 p = vec2(vUv.x * 2., vUv.y * 3.); float k = n(p * 3.) * .5 + n(p * 9.) * .3 + n(p * 27.) * .2; vec3 c = mix(vec3(.30, .22, .14), vec3(.52, .41, .28), k); c *= .85 + .3 * step(.78, n(p * 14.));
+          float a = smoothstep(0., .28 + .15 * n(p * 4.), vUv.x) * smoothstep(1., .72 - .15 * n(p * 4. + 7.), vUv.x); float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), a);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+        }` });
+    const tr = new THREE.Mesh(g, m); tr.renderOrder = 1; cena.add(tr); lixo.push(g, m); }
+  // árvores frutíferas grandes dos dois lados da trilha, emoldurando o caminho
+  const moldura = []; for (let z = 30; z < 165; z += 13) { const x = trilhaX(z); for (const sx of [-1, 1]) { const w = T2W(x + sx * (6 + rnd() * 3), z + rnd() * 6), xx = w.x, zz = w.z; if (!naAgua(xx, zz)) moldura.push({ x: xx, z: zz, s: 0.9 + rnd() * 0.35, vira: rnd() > 0.5 }); } }
+  await Promise.all([figuras('arvore-fruto-1', moldura.filter((_, i) => i % 2 === 0), 15, 1), figuras('arvore-fruto-2', moldura.filter((_, i) => i % 2 === 1), 12, 1)]);
+  // FEIXES DE SOL atravessando a copa (raios de luz no ar úmido), sempre em volta de quem anda
+  const NF = toque ? 18 : 30, gF = new THREE.InstancedBufferGeometry(), qF = new THREE.PlaneGeometry(1, 1); qF.translate(0, 0.5, 0); gF.index = qF.index; gF.attributes.position = qF.attributes.position; gF.attributes.uv = qF.attributes.uv; gF.instanceCount = NF;
+  const iF = new Float32Array(NF * 4); for (let i = 0; i < NF; i++) iF.set([(rnd() * 2 - 1) * 45, (rnd() * 2 - 1) * 45, 1.5 + rnd() * 3.5, rnd() * 100], i * 4); gF.setAttribute('iF', new THREE.InstancedBufferAttribute(iF, 4));
+  const matF = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, uniforms: { ...unif, sol: { value: SOL }, centro: { value: new THREE.Vector3() } },
+    vertexShader: `uniform vec3 sol, centro; uniform float t; attribute vec4 iF; varying vec2 vUv; varying float vA;
+      void main(){ vUv = uv; vec3 base = vec3(mod(iF.x - centro.x + 45., 90.) - 45. + centro.x, centro.y - 1., mod(iF.y - centro.z + 45., 90.) - 45. + centro.z);
+        vec3 ax = normalize(sol); vec3 vd = normalize(cameraPosition - base); vec3 lado = normalize(cross(ax, vd)); float L = 38.;
+        vec3 w = base + ax * position.y * L + lado * position.x * iF.z; vec4 mv = viewMatrix * vec4(w, 1.); float d = -mv.z;
+        vA = smoothstep(3., 14., d) * smoothstep(80., 40., d) * (.6 + .4 * sin(t * .35 + iF.w)); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `varying vec2 vUv; varying float vA; void main(){ float x = 1. - abs(vUv.x * 2. - 1.); float a = x * x * smoothstep(0., .25, vUv.y) * smoothstep(1., .45, vUv.y) * vA * .11; gl_FragColor = vec4(vec3(1.6, 1.3, .8) * a, a); }` });
+  const feixes = new THREE.Mesh(gF, matF); feixes.frustumCulled = false; cena.add(feixes); lixo.push(gF, qF, matF);
+
   // ANIMAIS que andam devagar pelo jardim (o leão descansa)
   const especies = [
     { n: 'leao', h: 1.15, q: 3, anda: 0 }, { n: 'cordeiro', h: 0.85, q: 6, anda: 0.5 }, { n: 'cervo', h: 1.75, q: 5, anda: 0.9 },
     { n: 'elefante', h: 3.2, q: 3, anda: 0.6 }, { n: 'girafa', h: 5.2, q: 3, anda: 0.7 }, { n: 'pavao', h: 1.1, q: 4, anda: 0.4 },
+    { n: 'onca', h: 0.95, q: 3, anda: 0.8 }, { n: 'anta', h: 1.1, q: 3, anda: 0.5 }, { n: 'capivara', h: 0.62, q: 10, anda: 0.35, rio: true },
   ];
   const bichos = [];
-  const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], elefante: [-26, 22], girafa: [24, 24], pavao: [5, 53] };   // um grupo à vista de quem pousa
-  for (const e of especies) { const lista = espalhar(e.q - 1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }]); const pp = PERTO[e.n]; if (pp && !naAgua(pp[0], pp[1])) lista.unshift({ x: pp[0], z: pp[1], s: 1, vira: e.n === 'leao' }); else lista.push(...espalhar(1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }])); const f = await figuras(e.n, lista, e.h, 0); if (!f) continue;
+  const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], elefante: [-26, 22], girafa: [24, 24], pavao: [5, 53], onca: [-16, 58], anta: [18, 60] };   // um grupo à vista de quem pousa
+  const margem = (n) => rios.flatMap((c) => Array.from({ length: n }, () => { const u = 0.05 + rnd() * 0.5, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = 9 + rnd() * 4; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.85 + rnd() * 0.3 }; })).filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) < 190);
+  for (const e of especies) { const lista = e.rio ? margem(3).slice(0, e.q - 1) : espalhar(e.q - 1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }]); const pp0 = PERTO[e.n], pw = pp0 ? T2W(pp0[0], pp0[1]) : null, pp = pw ? [pw.x, pw.z] : null; if (pp && !naAgua(pp[0], pp[1])) lista.unshift({ x: pp[0], z: pp[1], s: 1, vira: e.n === 'leao' }); else lista.push(...espalhar(1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }])); const f = await figuras(e.n, lista, e.h, 0); if (!f) continue;
     lista.forEach((o, i) => bichos.push({ f, i, e, x: o.x, z: o.z, alvo: null, espera: rnd() * 6, fase: rnd() * 6 })); }
   function moverBichos(dt) { for (const b of bichos) { if (!b.e.anda) continue;
-      if (!b.alvo) { b.espera -= dt; if (b.espera <= 0) { const a = rnd() * 6.283, r = 8 + rnd() * 25; let x = b.x + Math.cos(a) * r, z = b.z + Math.sin(a) * r; const rr = Math.hypot(x, z); if (rr > 200) { x *= 180 / rr; z *= 180 / rr; } if (!naAgua(x, z)) b.alvo = { x, z }; else b.espera = 1; } continue; }
+      if (!b.alvo) { b.espera -= dt; if (b.espera <= 0) { const a = rnd() * 6.283, r = b.e.rio ? 3 + rnd() * 6 : 8 + rnd() * 25; let x = b.x + Math.cos(a) * r, z = b.z + Math.sin(a) * r; if (b.e.rio && distRio(x, z)[0] > 18) { b.espera = 2; continue; } const rr = Math.hypot(x, z); if (rr > 200) { x *= 180 / rr; z *= 180 / rr; } if (!naAgua(x, z)) b.alvo = { x, z }; else b.espera = 1; } continue; }
       const dx = b.alvo.x - b.x, dz = b.alvo.z - b.z, d = Math.hypot(dx, dz); if (d < 0.5) { b.alvo = null; b.espera = 3 + rnd() * 8; continue; }
       const v = b.e.anda * dt; b.x += dx / d * v; b.z += dz / d * v;
       // vira a figura conforme o lado para onde anda (em relação a quem olha)
@@ -226,15 +260,16 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   async function voadores(nome, n, tam, modo) {
     const tex = await carregar(nome + '.png'); if (!tex) return; lixo.push(tex);
     const g = new THREE.InstancedBufferGeometry(); const q = new THREE.PlaneGeometry(1, 1); g.index = q.index; g.attributes.position = q.attributes.position; g.attributes.uv = q.attributes.uv; g.instanceCount = n; lixo.push(q);
-    const C = new Float32Array(n * 4); for (let i = 0; i < n; i++) { const a = rnd() * 6.283, r = modo ? 10 + rnd() * 140 : rnd() * 160; C.set([Math.cos(a) * r, modo ? 0 : 18 + rnd() * 45, Math.sin(a) * r, rnd() * 100], i * 4); if (modo) C[i * 4 + 1] = altura(C[i * 4], C[i * 4 + 2]); }
+    const C = new Float32Array(n * 4); const bandos = Array.from({ length: 8 }, () => [(rnd() * 2 - 1) * 120, 14 + rnd() * 22, (rnd() * 2 - 1) * 120, rnd() * 100]);
+    for (let i = 0; i < n; i++) { if (modo === 2) { const b = bandos[i % 8]; C.set([b[0] + (rnd() - 0.5) * 8, b[1] + (rnd() - 0.5) * 4, b[2] + (rnd() - 0.5) * 8, b[3] + rnd() * 0.25], i * 4); continue; } const a = rnd() * 6.283, r = modo ? 10 + rnd() * 140 : rnd() * 160; C.set([Math.cos(a) * r, modo ? 0 : 18 + rnd() * 45, Math.sin(a) * r, rnd() * 100], i * 4); if (modo) C[i * 4 + 1] = altura(C[i * 4], C[i * 4 + 2]); }
     g.setAttribute('iC', new THREE.InstancedBufferAttribute(C, 4));
     const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ transparent: false, side: THREE.DoubleSide, uniforms: { ...unif, map: { value: tex } },
       vertexShader: `uniform float t; attribute vec4 iC; varying vec2 vUv; varying float vD;
-        void main(){ vUv = uv; float f = iC.w; vec3 c;
-          ${modo ? `c = iC.xyz + vec3(sin(t*.7+f)*3. + sin(t*1.9+f*2.)*1.2, 1.1 + sin(t*1.3+f)*.6 + sin(t*3.7+f)*.2, cos(t*.6+f*1.3)*3. + cos(t*2.3+f)*1.);` : `float r = 30. + mod(f, 7.) * 9.; float wv = .12 + mod(f, 3.) * .03; c = vec3(iC.x + cos(t*wv + f) * r, iC.y + sin(t*.4+f)*4., iC.z + sin(t*wv + f) * r);`}
-          float bate = abs(sin(t * ${modo ? '14.' : '5.'} + f * 3.)); float esc = ${tam.toFixed(2)};
+        void main(){ vUv = uv; float f = iC.w; vec3 c; vec3 vel = vec3(0.);
+          ${modo === 2 ? `float fb = floor(f); float r = 40. + mod(fb, 5.) * 12.; float wv = .16 + mod(fb, 3.) * .03; float ang = t * wv + f; c = vec3(iC.x + cos(ang) * r, iC.y + sin(t * .5 + fb) * 3., iC.z + sin(ang) * r); vel = vec3(-sin(ang), 0., cos(ang));` : modo ? `c = iC.xyz + vec3(sin(t*.7+f)*3. + sin(t*1.9+f*2.)*1.2, 1.1 + sin(t*1.3+f)*.6 + sin(t*3.7+f)*.2, cos(t*.6+f*1.3)*3. + cos(t*2.3+f)*1.);` : `float r = 30. + mod(f, 7.) * 9.; float wv = .12 + mod(f, 3.) * .03; c = vec3(iC.x + cos(t*wv + f) * r, iC.y + sin(t*.4+f)*4., iC.z + sin(t*wv + f) * r);`}
+          float bate = abs(sin(t * ${modo === 1 ? '14.' : modo === 2 ? '7.' : '5.'} + f * 3.)); float esc = ${tam.toFixed(2)};
           vec3 dX = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]); vec3 dY = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-          vec3 w = c + dX * position.x * esc * (.25 + .75 * bate) + dY * position.y * esc;
+          ${modo === 2 ? `if (dot(vel, dX) < 0.) vUv.x = 1. - vUv.x; vec3 w = c + dX * position.x * esc + dY * position.y * esc * (.55 + .45 * bate);` : `vec3 w = c + dX * position.x * esc * (.25 + .75 * bate) + dY * position.y * esc;`}
           vec4 mv = viewMatrix * vec4(w, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
       fragmentShader: `uniform sampler2D map; uniform float dens; uniform vec3 nevoa; varying vec2 vUv; varying float vD;
         void main(){ vec4 c = texture2D(map, vUv); if (c.a < .5) discard; float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c.rgb, nevoa, f), 1.);
@@ -243,7 +278,42 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
         }` }));
     m.frustumCulled = false; cena.add(m); lixo.push(g, m.material);
   }
-  await Promise.all([voadores('passaro', toque ? 40 : 70, 1.6, 0), voadores('borboleta', toque ? 90 : 160, 0.22, 1)]);
+  await Promise.all([voadores('passaro', toque ? 24 : 40, 1.6, 0), voadores('borboleta', toque ? 90 : 160, 0.22, 1), voadores('arara-vermelha', toque ? 24 : 40, 1.3, 2), voadores('arara-azul', toque ? 24 : 40, 1.3, 2)]);
+
+  // NAS ÁRVORES: tucanos, macacos e preguiças nos galhos
+  const nosGalhos = (n, yMin, yMax) => espalhar(n, 14, 140, 4, [centroArv]).map((o) => ({ ...o, y: yMin + rnd() * (yMax - yMin) }));
+  await Promise.all([figuras('tucano', nosGalhos(toque ? 14 : 24, 3, 9), 0.75, 0.2), figuras('macaco', nosGalhos(toque ? 10 : 18, 2, 7), 0.7, 0.2), figuras('preguica', nosGalhos(toque ? 6 : 10, 4, 10), 1.3, 0.3)]);
+
+  // VITÓRIAS-RÉGIAS nas margens mansas do rio
+  const vrTex = await carregar('vitoria-regia.png');
+  if (vrTex) { lixo.push(vrTex); const NV = toque ? 120 : 220, gv = new THREE.PlaneGeometry(1, 1); gv.rotateX(-Math.PI / 2); const mv = new THREE.MeshLambertMaterial({ map: vrTex, alphaTest: 0.5, transparent: false });
+    const im = new THREE.InstancedMesh(gv, mv, NV), mt = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Vector3(); let k = 0;
+    for (let tent = 0; k < NV && tent < NV * 30; tent++) { const c = rios[Math.floor(rnd() * rios.length)], u = rnd() * 0.6, p = c.getPointAt(u), tg = c.getTangentAt(u), w = c === rios[0] ? 9 : 6.5, sx = rnd() > 0.5 ? 1 : -1, d = w * (0.45 + rnd() * 0.45);
+      const x = p.x - tg.z * sx * d, z = p.z + tg.x * sx * d; if (Math.hypot(x, z) < 20) continue; const sc = 1.4 + rnd() * 1.4; q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rnd() * 6.28); mt.compose(e.set(x, hBase(x, z) - 1.2, z), q, new THREE.Vector3(sc, 1, sc)); im.setMatrixAt(k++, mt); }
+    im.count = k; im.renderOrder = 3; cena.add(im); lixo.push(gv, mv); }
+
+  // CACHOEIRAS nas encostas ao redor do jardim, com a água descendo
+  if (pecas.cachoeira) { const f = await figuras('cachoeira', Array.from({ length: 7 }, (_, i) => { const a = i / 7 * 6.283 + 0.4, rr = 470 + rnd() * 60; return { x: Math.cos(a) * rr, z: Math.sin(a) * rr, s: 0.8 + rnd() * 0.4 }; }), 70, 0);
+    if (f) { const tx = f.m.material.uniforms.map.value; tx.wrapT = THREE.RepeatWrapping; tx.needsUpdate = true; f.m.material.fragmentShader = f.m.material.fragmentShader.replace('vec4 c = texture2D(map, vUv);', 'vec4 c = texture2D(map, vUv); float lum = dot(c.rgb, vec3(.33)); float sat = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b)); float ag = smoothstep(.62, .8, lum) * smoothstep(.22, .08, sat); vec3 c2 = texture2D(map, vec2(vUv.x, fract(vUv.y + t * .35))).rgb; c.rgb = mix(c.rgb, max(c.rgb, c2) * 1.05, ag * .7);').replace('uniform sampler2D map;', 'uniform sampler2D map; uniform float t;'); f.m.material.needsUpdate = true; } }
+
+  // PÓLEN dourado flutuando no ar à volta de quem anda (aparece nos feixes de luz)
+  const NPo = toque ? 1500 : 3000, pPo = new Float32Array(NPo * 3); for (let i = 0; i < NPo; i++) pPo.set([(rnd() * 2 - 1) * 40, rnd() * 14, (rnd() * 2 - 1) * 40], i * 3);
+  const gPo = new THREE.BufferGeometry(); gPo.setAttribute('position', new THREE.BufferAttribute(pPo, 3));
+  const matPo = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { ...unif, centro: { value: new THREE.Vector3() } },
+    vertexShader: `uniform float t; uniform vec3 centro; varying float vA; void main(){ vec3 p = position; float f = p.x * 1.7 + p.z * 2.3;
+      p.x += sin(t * .23 + f) * 2.; p.z += cos(t * .19 + f * 1.3) * 2.; p.y = mod(p.y + t * .15 * (.5 + fract(f)), 14.);
+      vec3 w = vec3(mod(p.x - centro.x + 40., 80.) - 40. + centro.x, centro.y + p.y - 2., mod(p.z - centro.z + 40., 80.) - 40. + centro.z);
+      vec4 mv = viewMatrix * vec4(w, 1.); float d = -mv.z; vA = smoothstep(40., 8., d) * (.5 + .5 * sin(t * 2. + f * 9.)); gl_PointSize = clamp(90. / d, 1., 6.); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - .5); float a = smoothstep(.5, 0., d) * vA; gl_FragColor = vec4(vec3(1.6, 1.3, .7) * a, a); }` });
+  const polen = new THREE.Points(gPo, matPo); polen.frustumCulled = false; cena.add(polen); lixo.push(gPo, matPo);
+  // sombras macias sob as copas
+  { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, 'rgba(0,0,0,.55)'); gr.addColorStop(0.6, 'rgba(0,0,0,.25)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+    const ts = new THREE.CanvasTexture(c), gs = new THREE.PlaneGeometry(1, 1); gs.rotateX(-Math.PI / 2); const ms = new THREE.MeshBasicMaterial({ map: ts, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, fog: true });
+    const ims = new THREE.InstancedMesh(gs, ms, obst.length), mt = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3();
+    obst.forEach((o, i) => { const sc = Math.max(3, o.r * 9); mt.compose(v.set(o.x + SOL.x * -sc * 0.25, altura(o.x, o.z) + 0.06, o.z + SOL.z * -sc * 0.25), q, new THREE.Vector3(sc, 1, sc)); ims.setMatrixAt(i, mt); });
+    ims.renderOrder = 1; cena.add(ims); lixo.push(ts, gs, ms); }
+  // o sol (forte, para nascerem os feixes de luz entre as copas)
+  const solDisco = new THREE.Mesh(new THREE.SphereGeometry(28, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(9, 7.2, 4.5), fog: false })); cena.add(solDisco); lixo.push(solDisco.geometry, solDisco.material);
 
   // A PRESENÇA: luz dourada e vento que passeiam pelo jardim, sem figura (Gn 3:8)
   const presenca = new THREE.Group(); cena.add(presenca);
@@ -265,7 +335,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
 
   // O EXPLORADOR (terceira pessoa): imagem do ChatGPT -> malha 3D (Hunyuan3D-2); a roupa é projetada das fotos de frente e de costas,
   // e o passo (pernas e braços) é feito no próprio desenho da malha
-  let avatar = null, matAv = null, modo = 'terceira', rumo = Math.PI, fasePasso = 0;
+  let avatar = null, matAv = null, modo = 'terceira', rumo = Math.atan2(0.6, 0.8), fasePasso = 0;
   try {
     const resp = pecas.explorador ? await fetch(base + 'explorador.malha?v=1') : null;
     if (resp && resp.ok) {
@@ -299,7 +369,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   const camPos = new THREE.Vector3(), olhoAlvo = new THREE.Vector3(); let camIni = false;
 
   // CÂMERA e CONTROLES
-  let yaw = Math.PI, pitch = -0.05, voando = chegada; const eu = new THREE.Vector3(0, 0, 70); const vel = new THREE.Vector3();
+  let yaw = Math.atan2(-0.6, -0.8), pitch = -0.05, voando = chegada; const eu = VT(2.5 * Math.sin(70 / 13), 70); const vel = new THREE.Vector3();
   const teclas = new Set(), joy = { x: 0, y: 0 }; let indo = null, olhar = null, ultimoToque = 0;
   const kd = (e) => { if (e.target.closest && e.target.closest('input,textarea')) return; const k = e.key.toLowerCase(); if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift'].includes(k)) { teclas.add(k); indo = null; if (voando) pularChegada(); e.preventDefault(); } if (k === 'escape') fechar(); };
   const ku = (e) => teclas.delete(e.key.toLowerCase());
@@ -335,19 +405,35 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   let cartaoAtual = null;
   function cartao(k) { if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } const [r, t] = VERSOS[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${NOTAS[k] ? `<small>${NOTAS[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
 
-  function ajustar() { const w = raiz.clientWidth, h = raiz.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: toque ? 0 : 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter });
+  const posCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), posCena = new THREE.Scene();
+  const matPos = new THREE.ShaderMaterial({ toneMapped: false, depthTest: false, depthWrite: false, uniforms: { cena: { value: rt.texture }, solTela: { value: new THREE.Vector2(0.5, 0.8) }, solVis: { value: 0 }, asp: { value: 1 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`,
+    fragmentShader: `uniform sampler2D cena; uniform vec2 solTela; uniform float solVis, asp; varying vec2 vUv;
+      vec3 aces(vec3 x){ return clamp((x * (2.51 * x + .03)) / (x * (2.43 * x + .59) + .14), 0., 1.); }
+      void main(){ vec3 c = texture(cena, vUv).rgb;
+        vec3 b = textureLod(cena, vUv, 3.).rgb * .45 + textureLod(cena, vUv, 5.).rgb * .35 + textureLod(cena, vUv, 7.).rgb * .3; c += max(b - .85, 0.) * .55;
+        vec2 d = (solTela - vUv) / 48.; vec2 uv = vUv; float dec = 1.; vec3 gr = vec3(0.);
+        for (int i = 0; i < 48; i++) { uv += d; vec3 sm = textureLod(cena, clamp(uv, 0., 1.), 2.).rgb; float l = max(dot(sm, vec3(.3, .59, .11)) - 1.15, 0.); gr += min(sm * l, vec3(4.)) * dec; dec *= .965; }
+        c += gr * .022 * solVis * vec3(1., .86, .62);
+        c *= 1.12; c = aces(c);
+        float lum = dot(c, vec3(.299, .587, .114)); c = mix(vec3(lum), c, 1.12); c = mix(c, c * vec3(1.05, 1.0, .9), smoothstep(.4, 1., lum)); c = mix(c, c * vec3(.92, 1.0, 1.05), smoothstep(.45, 0., lum));
+        vec2 q = vUv - .5; q.x *= asp; c *= 1. - .32 * smoothstep(.35, .95, length(q));
+        gl_FragColor = vec4(pow(c, vec3(1. / 2.2)), 1.); }` });
+  posCena.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), matPos)); lixo.push(rt, matPos);
+  function ajustar() { const w = raiz.clientWidth, h = raiz.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); const pr = renderer.getPixelRatio(); rt.setSize(Math.max(4, Math.floor(w * pr)), Math.max(4, Math.floor(h * pr))); matPos.uniforms.asp.value = w / Math.max(1, h); }
   const obs = new ResizeObserver(ajustar); obs.observe(raiz); ajustar();
 
   // CHEGADA DE DRONE: do alto, sobre o jardim, descendo em curva até pousar na trilha diante da árvore da vida
-  const voo = new THREE.CatmullRomCurve3([V(-200, 480).setY(260), V(-90, 330).setY(150), V(40, 220).setY(70), V(30, 150).setY(30), V(0, 72).setY(0)]);
-  if (avatar) { voo.points[voo.points.length - 1].set(0, 2.2, 76); voo.points[voo.points.length - 2].set(20, 30, 140); voo.updateArcLengths(); }
+  const voo = new THREE.CatmullRomCurve3([VT(-200, 480, 260), VT(-90, 330, 150), VT(40, 220, 70), VT(20, 150, 30), VT(0, 72, 0)]);
+  if (avatar) { const a = 2.5 * Math.sin(70 / 13); voo.points[voo.points.length - 1].copy(VT(a + 0.8, 73.5, 2.0)); voo.points[voo.points.length - 2].copy(VT(14, 140, 30)); voo.updateArcLengths(); }
   const DUR = 11000; let t0 = performance.now();
   if (voando) raiz.classList.add('voando');
   function pularChegada() { if (!voando) return; voando = false; raiz.classList.remove('voando'); cartao('chegada'); }
   let ativo = true, antes = performance.now(), passoBob = 0;
   function quadro(agora) { if (!ativo) return; const dt = Math.min(0.05, (agora - antes) / 1000); antes = agora; const t = agora / 1000; unif.t.value = t;
     if (voando) { const q = Math.min(1, (agora - t0) / DUR), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; const p = voo.getPointAt(e); const hc = altura(p.x, p.z); camera.position.set(p.x, Math.max(hc + 1.7, hc + p.y + 1.7), p.z);
-      const olhaPara = new THREE.Vector3(0, 10 * (1 - e) + 6 * e, 0); camera.lookAt(olhaPara); const fw = new THREE.Vector3(); camera.getWorldDirection(fw); yaw = Math.atan2(-fw.x, -fw.z); pitch = Math.asin(fw.y); if (modo === 'primeira' || !avatar) eu.set(p.x, 0, p.z); else { eu.set(0, 0, 70); rumo = Math.PI; } camPos.copy(camera.position); camIni = true;
+      const olhaPara = new THREE.Vector3(0, 10 * (1 - e) + 6 * e, 0); camera.lookAt(olhaPara); const fw = new THREE.Vector3(); camera.getWorldDirection(fw); yaw = Math.atan2(-fw.x, -fw.z); pitch = Math.asin(fw.y); if (modo === 'primeira' || !avatar) eu.set(p.x, 0, p.z); else { eu.copy(VT(2.5 * Math.sin(70 / 13), 70)); rumo = Math.atan2(0.6, 0.8); } camPos.copy(camera.position); camIni = true;
       if (q >= 1) pularChegada(); }
     else {
       // andar
@@ -370,11 +456,11 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
         fasePasso += vv * dt * 2.3; matAv.uniforms.fase.value = fasePasso; matAv.uniforms.amp.value += (Math.min(1.1, vv / 3.4) - matAv.uniforms.amp.value) * Math.min(1, dt * 8);
         avatar.visible = true; avatar.position.set(eu.x, hc - (agua ? 0.45 : 0.02), eu.z); avatar.rotation.y = rumo + (pecas.explorador.giro || 0);
         // câmera atrás do ombro, com atraso suave
-        const p2 = Math.max(-0.15, Math.min(1.1, -pitch + 0.22)), D = 3.5, dir = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)), dirX = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
-        const des = new THREE.Vector3(eu.x + dir.x * Math.cos(p2) * D + dirX.x * 0.6, hc + 1.55 + Math.sin(p2) * D, eu.z + dir.z * Math.cos(p2) * D + dirX.z * 0.6);
+        const p2 = Math.max(-0.15, Math.min(1.1, -pitch + 0.22)), D = 2.6, dir = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)), dirX = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+        const des = new THREE.Vector3(eu.x + dir.x * Math.cos(p2) * D + dirX.x * 0.85, hc + 1.5 + Math.sin(p2) * D, eu.z + dir.z * Math.cos(p2) * D + dirX.z * 0.85);
         des.y = Math.max(des.y, altura(des.x, des.z) + 0.5);
         if (!camIni) { camPos.copy(des); camIni = true; } camPos.lerp(des, 1 - Math.exp(-dt * 7)); camera.position.copy(camPos);
-        olhoAlvo.set(eu.x - dir.x * 2.2 + dirX.x * 0.6, hc + 1.45, eu.z - dir.z * 2.2 + dirX.z * 0.6); camera.lookAt(olhoAlvo);
+        olhoAlvo.set(eu.x - dir.x * 4 + dirX.x * 0.85, hc + 1.4, eu.z - dir.z * 4 + dirX.z * 0.85); camera.lookAt(olhoAlvo);
       } else {
         if (avatar) avatar.visible = false;
         camera.position.set(eu.x, hc + (agua ? 1.25 : 1.7) + Math.sin(passoBob * 2) * 0.035 * Math.min(1, vv / 3), eu.z);
@@ -392,7 +478,9 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     if (ceu) ceu.position.copy(camera.position);
     if (audio && somLigado) { const [d, w] = distRio(camera.position.x, camera.position.z), k = Math.max(0, 1 - Math.max(0, d - w) / 60); audio.gA.gain.setTargetAtTime(0.55 * k * k, audio.ctx.currentTime, 0.3); audio.gA2.gain.setTargetAtTime(0.10 * k * k, audio.ctx.currentTime, 0.3);
       const dP = Math.hypot(camera.position.x - posPresenca.x, camera.position.z - posPresenca.z); audio.gV.gain.setTargetAtTime(0.14 + 0.35 * Math.max(0, 1 - dP / 40) + 0.06 * Math.sin(t * 0.3), audio.ctx.currentTime, 0.5); }
-    renderer.render(cena, camera); requestAnimationFrame(quadro); }
+    solDisco.position.copy(camera.position).addScaledVector(SOL, 1300); matF.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); feixes.visible = polen.visible; matPo.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); polen.visible = !voando || camera.position.y - altura(camera.position.x, camera.position.z) < 30;
+    const sp = solDisco.position.clone().project(camera), fw = new THREE.Vector3(); camera.getWorldDirection(fw); matPos.uniforms.solTela.value.set(sp.x * 0.5 + 0.5, sp.y * 0.5 + 0.5); matPos.uniforms.solVis.value = Math.max(0, fw.dot(SOL)) ** 1.5 * (sp.z < 1 ? 1 : 0);
+    renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); }
   requestAnimationFrame((a) => { raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
 
   function fechar() { if (!ativo) return; ativo = false; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
