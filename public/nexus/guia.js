@@ -19,6 +19,7 @@ const CENAS = [
   [/nazare/, 'Nazaré', 'Nazaré'], [/cafarnaum/, 'Cafarnaum', 'Cafarnaum'], [/magdala/, 'Magdala', 'Magdala'], [/mar da galileia|genezare|tiberiades/, 'Mar da Galileia', 'o Mar da Galileia'],
 ];
 const IDS = ['queda', 'trombetas', 'eden', 'criacao', 'templo-herodes', 'templo-salomao', 'getsemani', 'ela', 'golgota', 'lazaro', 'nazare', 'cafarnaum', 'magdala', 'mar-galileia'];   // na mesma ordem de CENAS
+const JUNTO = [/frutoproibido|queda|serpente|genesis3|pecadooriginal/, /trombeta/, /eden|paraiso|jardim(?!dogetsemani|dasoliveiras)|arvoredavida/, /criacao|genesis1|noprincipio/, /templodeherodes|segundotemplo|templodejesus/, /templodesalomao|primeirotemplo|templo$/, /getsemani|hortodasoliveiras/, /valedeela|golias/, /golgota|calvario|santosepulcro/, /lazaro/, /nazare/, /cafarnaum/, /magdala/, /mardagalileia|genezare|tiberiades/];   // na mesma ordem de CENAS
 const CHAVE = 'nexus_guia';
 let hist = []; try { hist = JSON.parse(sessionStorage.getItem(CHAVE) || '[]'); } catch (_) { hist = []; }
 const guardar = () => { try { sessionStorage.setItem(CHAVE, JSON.stringify(hist.slice(-30))); } catch (_) {} };
@@ -95,7 +96,10 @@ export function iniciarGuia() {
     if (typeof window.NEXUS_MUNDO_ACAO === 'function') { const r = window.NEXUS_MUNDO_ACAO(q); if (r) { hist.push({ t: r, nota: 'no mundo · sem custo', hora: hora() }); guardar(); desenhar(); return; } }
     const pergunta = /\?$/.test(texto) || /^(o que|oque|por que|porque|pq|quem|como|qual|quais|quando|onde|sera|explique|me explica|fale|me fala|conte|me conta|voce acha)\b/.test(q);
     const comando = /\b(me leve|leve-me|me leva|leva|abra|abre|abrir|mostre|mostra|mostrar|quero ver|quero ir|quero andar|quero entrar|quero conhecer|vamos|ir para|ir ao|va para|entrar|entra|entre|visitar|visite|conhecer|passear|andar|vislumbre|visao|me de|me da|deixa eu ver|leve)\b/.test(q) || (!pergunta && q.split(/\s+/).length <= 4);
-    const cena = comando || /\b(estudo|sermao|pregacao)\b/.test(q) ? CENAS.find(([re]) => re.test(q)) : null;
+    // o mesmo pedido escrito tudo junto (sem espaços, como às vezes sai do teclado do tablet): 'meleveaojardimdoeden'
+    const junto = !/\s/.test(q) && q.length >= 8 ? q.replace(/[^a-z0-9]/g, '') : '';
+    let cena = comando || /\b(estudo|sermao|pregacao)\b/.test(q) ? CENAS.find(([re]) => re.test(q)) : null;
+    if (!cena && junto) { const i = JUNTO.findIndex((re) => re.test(junto)); if (i >= 0) cena = CENAS[i]; }
     if (cena) {   // a cena muda na hora (sem custo)
       const [, busca, nome, fn] = cena; await abrirCena(cena);
       const estudo = /\b(estudo|sermao|pregacao|mensagem)\b/.test(q);
