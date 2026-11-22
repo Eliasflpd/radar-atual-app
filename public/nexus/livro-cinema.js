@@ -42,6 +42,8 @@ export function tocarCinema(num, host, { aoTerminar, estudo = false } = {}) {
     .lc-raiz.on{opacity:1}
     .lc-q{position:absolute;inset:-6%;background-size:cover;background-position:center;opacity:0;transition:opacity 1.8s ease;will-change:transform,opacity}
     .lc-q.vis{opacity:1}
+    .lc-raiz.estudo .lc-q{right:22%;-webkit-mask-image:linear-gradient(90deg,#000 0%,#000 58%,rgba(0,0,0,.55) 75%,transparent 100%);mask-image:linear-gradient(90deg,#000 0%,#000 58%,rgba(0,0,0,.55) 75%,transparent 100%)}
+    .lc-raiz.estudo .lc-fundo{position:absolute;inset:-8%;background-size:cover;background-position:center;filter:blur(38px) brightness(.45) saturate(1.2);transition:background-image 1.5s ease}
     .lc-vin{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 50%,rgba(0,0,0,.65) 100%),linear-gradient(180deg,rgba(0,0,0,.35),transparent 25%,transparent 55%,rgba(0,0,0,.85))}
     .lc-tit{position:absolute;left:0;right:0;top:9%;text-align:center;color:#F3E2B3;font:600 15px Inter,sans-serif;letter-spacing:.5em;text-transform:uppercase;opacity:0;transition:opacity 2s ease 1s}
     .lc-raiz.on .lc-tit{opacity:.85}
@@ -59,7 +61,7 @@ export function tocarCinema(num, host, { aoTerminar, estudo = false } = {}) {
     .lc-dica{position:absolute;left:22px;top:22px;color:rgba(255,255,255,.65);font-size:12px}
     canvas.lc-poeira{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen}
   </style>
-  <div class="lc-quadros"></div><canvas class="lc-poeira"></canvas><div class="lc-vin"></div>
+  <div class="lc-fundo"></div><div class="lc-quadros"></div><canvas class="lc-poeira"></canvas><div class="lc-vin"></div>
   <div class="lc-tit">${C.livro} · ${C.titulo}</div>
   <div class="lc-ponto"></div><div class="lc-notas"></div><div class="lc-txt"></div><div class="lc-ref"></div><div class="lc-pontos">${C.quadros.map(() => '<i></i>').join('')}</div>
   <div class="lc-dica">${estudo ? 'Clique na imagem ou nos pontos para passar' : 'Clique para avançar'}</div>${C.nota ? `<div class="lc-nota">${C.nota}</div>` : ''}${estudo ? '<button type="button" class="lc-pulp">⛶ Modo púlpito</button>' : ''}<button type="button" class="lc-pular">${estudo ? '✕ Sair do mundo' : 'Entrar no livro ›'}</button>`;
@@ -71,7 +73,7 @@ export function tocarCinema(num, host, { aoTerminar, estudo = false } = {}) {
   let n = -1, t0 = 0, auto = 0, fim = false;
   function mostrar(k) {
     if (k >= C.quadros.length) { terminar(); return; }
-    els.forEach((e, i) => e.classList.toggle('vis', i === k)); n = k; t0 = performance.now();
+    els.forEach((e, i) => e.classList.toggle('vis', i === k)); n = k; t0 = performance.now(); { const f = raiz.querySelector('.lc-fundo'); if (f) f.style.backgroundImage = `url(/nexus/livros/${C.quadros[k].img}.jpg)`; }   // o fundo inteiro leva as cores da cena (desfocado), sem área preta
     pts.forEach((p, i) => p.classList.toggle('a', i === k));
     const q = C.quadros[k]; const pe = raiz.querySelector('.lc-ponto'), ne = raiz.querySelector('.lc-notas');
     pe.textContent = q.ponto ? `${k + 1}. ${q.ponto}` : ''; ne.innerHTML = estudo && q.notas ? q.notas.map((t) => `<div>${t}</div>`).join('') : ''; [...ne.children].forEach((d, i) => setTimeout(() => d.classList.add('v'), 1600 + i * 500));
@@ -90,7 +92,7 @@ export function tocarCinema(num, host, { aoTerminar, estudo = false } = {}) {
   let ativo = true;
   function quadro(t) {
     if (!ativo) return;
-    els.forEach((e, i) => { const dt = i === n ? (t - t0) / 1000 : 0; const s = 1.0 + Math.min(0.09, dt * 0.008), dx = Math.sin(i * 1.7) * dt * 0.25, dy = Math.cos(i * 1.3) * dt * 0.12; if (i === n) e.style.transform = `translate(${dx}%,${dy}%) scale(${s})`; });
+    els.forEach((e, i) => { if (i !== n) return; const s0 = t / 1000; const sc = 1.06 + 0.035 * Math.sin(s0 / 9 + i), dx = 1.6 * Math.sin(s0 / 13 + i * 1.7), dy = 0.9 * Math.cos(s0 / 11 + i * 1.3); e.style.transform = `translate(${dx}%,${dy}%) scale(${sc})`; });   // respira em laço, sem fim
     const w = cv.width = raiz.clientWidth, h = cv.height = raiz.clientHeight; g.clearRect(0, 0, w, h);
     for (const p of part) { p.y -= p.v * 16; p.x += Math.sin(t / 3000 + p.a) * 0.0002; if (p.y < -0.02) { p.y = 1.02; p.x = Math.random(); } g.globalAlpha = 0.35 + 0.35 * Math.sin(t / 900 + p.a); g.fillStyle = '#FFE9B8'; g.beginPath(); g.arc(p.x * w, p.y * h, p.r, 0, 6.29); g.fill(); }
     requestAnimationFrame(quadro);
