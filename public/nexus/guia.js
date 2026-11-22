@@ -20,13 +20,20 @@ const CENAS = [
 const CHAVE = 'nexus_guia';
 let hist = []; try { hist = JSON.parse(sessionStorage.getItem(CHAVE) || '[]'); } catch (_) { hist = []; }
 const guardar = () => { try { sessionStorage.setItem(CHAVE, JSON.stringify(hist.slice(-30))); } catch (_) {} };
-const par = (t) => esc(t).split(/\n\s*\n/).map((b) => '<p>' + b.replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') + '</p>').join('');
+const inl = (s) => s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<i>$2</i>');
+const par = (t) => esc(t).split(/\n\s*\n/).map((b) => { const ls = b.split('\n');
+  if (ls.every((l) => /^\s*([-•*]|\d+[.)])\s+/.test(l))) { const ord = /^\s*\d/.test(ls[0]); return `<${ord ? 'ol' : 'ul'}>` + ls.map((l) => '<li>' + inl(l.replace(/^\s*([-•*]|\d+[.)])\s+/, '')) + '</li>').join('') + `</${ord ? 'ol' : 'ul'}>`; }
+  const h = b.match(/^(#{1,4})\s+(.+)$/); if (h && ls.length === 1) return `<h4>${inl(h[2])}</h4>`;
+  return '<p>' + inl(b).replace(/\n/g, '<br>') + '</p>'; }).join('');
 
 export function iniciarGuia() {
   const el = document.createElement('div'); el.className = 'guia'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Guia do NEXUS');
   el.innerHTML = `<style>
     .guia{position:fixed;left:24px;bottom:24px;width:min(380px,calc(100vw - 32px));height:min(520px,calc(100vh - 140px));z-index:2147483000;display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(20,33,61,.72) 0%,rgba(10,18,40,.55) 45%,rgba(40,28,8,.45) 100%);border:1px solid rgba(243,211,142,.45);border-radius:16px;box-shadow:0 22px 50px rgba(0,0,0,.45);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);font:15px/1.55 Inter,system-ui,sans-serif;color:#F7F3E8;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.55)}
     body:has(.guia:not(.min)) .p3-card,body:has(.guia:not(.min)) .tp-ficha{left:auto!important;right:24px}body:has(.guia:not(.min)) .p3-cred,body:has(.guia:not(.min)) .mt-cred,body:has(.guia:not(.min)) .lr-cred{left:420px}
+    .guia.grande{left:auto!important;right:16px;top:76px!important;bottom:16px!important;width:min(620px,46vw);height:auto;font-size:16px}.guia.grande .guia-msg{max-width:96%}
+    .guia-msg h4{margin:6px 0 4px;font:700 17px 'Cormorant Garamond',Georgia,serif;color:#FFE3A3}.guia-msg ul,.guia-msg ol{margin:4px 0 6px 18px;padding:0}.guia-msg li{margin:2px 0}
+    .guia-digitando::after{content:'▍';animation:gpisca 1s steps(1) infinite;color:#F3D38E}@keyframes gpisca{50%{opacity:0}}
     .guia.min{height:auto;width:auto}.guia.min .guia-corpo,.guia.min .guia-form{display:none}
     .guia-topo{display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(90deg,rgba(20,33,61,.85),rgba(201,162,78,.35));border-bottom:1px solid rgba(243,211,142,.25);color:#F3E2B3;cursor:move;user-select:none}
     .guia-topo b{font:700 15px "Cormorant Garamond",Georgia,serif;letter-spacing:.04em;flex:1}.guia-topo small{color:rgba(243,226,179,.7);font-size:11px}
@@ -39,19 +46,21 @@ export function iniciarGuia() {
     .guia-form button{border:0;background:#C9A24E;color:#1B1405;border-radius:10px;padding:0 14px;font:700 13px Inter,sans-serif;cursor:pointer}
   .guia-acoes{display:flex;gap:6px;margin-top:8px}.guia-acoes button{border:1px solid rgba(243,211,142,.5);background:rgba(0,0,0,.25);color:#FFE7B0;border-radius:999px;padding:4px 10px;font:600 11.5px Inter,sans-serif;cursor:pointer}
   </style>
-  <div class="guia-topo"><b>✦ Guia do NEXUS</b><small>peça e a cena muda</small><button type="button" data-g="min" title="Minimizar" aria-label="Minimizar">–</button></div>
+  <div class="guia-topo"><b>✦ Guia do NEXUS</b><small>converse ou peça uma cena</small><button type="button" data-g="limpar" title="Nova conversa" aria-label="Nova conversa">🗑</button><button type="button" data-g="grande" title="Janela grande de conversa" aria-label="Aumentar">⤢</button><button type="button" data-g="min" title="Minimizar" aria-label="Minimizar">–</button></div>
   <div class="guia-corpo" aria-live="polite"></div>
-  <form class="guia-form"><textarea name="t" placeholder="Ex.: me leve ao Getsêmani · estudo sobre as 7 trombetas · quem foi Lázaro?"></textarea><button type="submit">Enviar</button></form>`;
+  <form class="guia-form"><textarea name="t" placeholder="Converse comigo… (ex.: por que Deus pôs a árvore no jardim? · me leve ao Getsêmani · sermão sobre Gn 3)"></textarea><button type="submit">Enviar</button></form>`;
   document.body.appendChild(el);
   const corpo = el.querySelector('.guia-corpo'), form = el.querySelector('.guia-form'), ta = form.querySelector('textarea'), btMin = el.querySelector('[data-g=min]');
   function desenhar() {
-    if (!hist.length) { corpo.innerHTML = `<div class="guia-msg guia-nx"><p>Olá! Peça um lugar, um tema ou um estudo e o NEXUS muda o ambiente. Também respondo perguntas.</p></div><div class="guia-sug">${['Me leve ao Éden', 'Estudo sobre as 7 trombetas', 'Templo de Herodes', 'Getsêmani', 'A criação'].map((s) => `<button type="button" data-s="${s}">${s}</button>`).join('')}</div>`; return; }
+    if (!hist.length) { corpo.innerHTML = `<div class="guia-msg guia-nx"><p>Olá! Vamos conversar. Pergunte o que quiser sobre a Bíblia, discuta um estudo ou um sermão comigo, ou peça um lugar e o ambiente muda.</p></div><div class="guia-sug">${['Me leve ao Éden', 'Por que Deus plantou um jardim?', 'Sermão sobre Gênesis 3', 'Getsêmani', 'O que é a árvore da vida?'].map((s) => `<button type="button" data-s="${s}">${s}</button>`).join('')}</div>`; return; }
     corpo.innerHTML = hist.map((m, i) => `<div class="guia-msg ${m.eu ? 'guia-eu' : 'guia-nx'}">${m.eu ? esc(m.t) : par(m.t)}${m.nota ? `<small>${esc(m.nota)}</small>` : ''}${!m.eu && m.claude ? `<div class="guia-acoes">${m.rascunho ? `<button type="button" data-baixar="${i}">⬇ Baixar</button><button type="button" data-copiar="${i}">⧉ Copiar</button>` : ''}${m.gptFeito ? '' : `<button type="button" data-gpt="${i}">🤖 Segunda opinião (GPT, grátis)</button>`}</div>` : ''}</div>`).join(''); corpo.scrollTop = corpo.scrollHeight;
   }
   async function pedir(texto) {
     texto = String(texto || '').trim(); if (!texto) return; const q = norm(texto);
     hist.push({ eu: true, t: texto }); desenhar();
-    const cena = CENAS.find(([re]) => re.test(q));
+    const pergunta = /\?$/.test(texto) || /^(o que|oque|por que|porque|pq|quem|como|qual|quais|quando|onde|sera|explique|me explica|fale|me fala|conte|me conta|voce acha)\b/.test(q);
+    const comando = /^(me leve|leve-me|leva|abra|abre|abrir|mostre|mostra|mostrar|quero ver|quero ir|vamos|ir para|va para|entrar|entra|entre)\b/.test(q) || (!pergunta && q.split(/\s+/).length <= 4);
+    const cena = comando || /\b(estudo|sermao|pregacao)\b/.test(q) ? CENAS.find(([re]) => re.test(q)) : null;
     if (cena) {   // a cena muda na hora (sem custo)
       const [, busca, nome, fn] = cena;
       if ((!window.__ceuPrevia || !document.body.classList.contains('ceu-universo')) && typeof window.NEXUS_ABRIR_CEU === 'function') await window.NEXUS_ABRIR_CEU();
@@ -83,9 +92,13 @@ export function iniciarGuia() {
       const r = await fetch('/api/nexus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'conversar', mensagens: hist.filter((m) => !m.pend).slice(-10).map((m) => ({ papel: m.eu ? 'eu' : 'claude', texto: m.t })), contexto: ctx, cracha: ler('radar_chave'), token: ler('lp_token') }) });
       j = await r.json(); } catch (_) { j = { ok: false, err: 'Sem conexão agora.' }; }
     hist.pop();
-    hist.push(j.ok ? { t: j.texto, claude: true, nota: j.reaproveitado ? 'resposta reaproveitada, sem custo' : (j.modelo ? j.modelo + ' · US$ ' + Number(j.custo_usd || 0).toFixed(4) : '') } : { t: j.motivo === 'particular' ? 'Para conversar comigo, entre com o PIN (botão de acesso no alto). As cenas abrem mesmo sem PIN.' : (j.err || 'Não consegui responder agora.') });
-    guardar(); desenhar();
+    const msg = j.ok ? { t: j.texto, claude: true, nota: j.reaproveitado ? 'resposta reaproveitada, sem custo' : (j.modelo ? j.modelo + ' · US$ ' + Number(j.custo_usd || 0).toFixed(4) : '') } : { t: j.motivo === 'particular' ? 'Para conversar comigo, entre com o PIN (botão de acesso no alto). As cenas abrem mesmo sem PIN.' : (j.err || 'Não consegui responder agora.') };
+    hist.push(msg); guardar(); if (j.ok) await digitar(msg); else desenhar();
   }
+  // efeito de digitação: a resposta vai aparecendo, como num bate-papo
+  async function digitar(msg) { const total = msg.t; const passo = Math.max(3, Math.ceil(total.length / 260)); msg.t = ''; desenhar(); const caixa = corpo.lastElementChild;
+    for (let n = 0; n < total.length; n += passo) { msg.t = total.slice(0, n); if (caixa) { caixa.innerHTML = par(msg.t) ; caixa.classList.add('guia-digitando'); } corpo.scrollTop = corpo.scrollHeight; await new Promise((ok) => setTimeout(ok, 16)); }
+    msg.t = total; desenhar(); }
   // segunda opinião: a mesma conversa (até a resposta escolhida) respondida pelo GPT aberto da OpenAI, de graça
   async function segundaOpiniao(i) {
     const conversa = hist.slice(0, i + 1).filter((m) => !m.pend && !m.gpt);
@@ -93,7 +106,7 @@ export function iniciarGuia() {
     let j; try { const ctx = { cena: (typeof window.NEXUS_CENA === 'function' && window.NEXUS_CENA()) || '' };
       const r = await fetch('/api/nexus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'segunda-opiniao', mensagens: conversa.slice(-10).map((m) => ({ papel: m.eu ? 'eu' : 'claude', texto: m.t })), contexto: ctx, cracha: ler('radar_chave'), token: ler('lp_token') }) });
       j = await r.json(); } catch (_) { j = { ok: false, err: 'Sem conexão agora.' }; }
-    const k = hist.findIndex((m) => m.pend && m.gpt); if (k >= 0) hist.splice(k, 1, j.ok ? { t: '🤖 Segunda opinião: ' + j.texto, gpt: true, nota: (j.modelo || 'GPT') + ' · grátis' } : { t: j.motivo === 'particular' ? 'Para a segunda opinião, entre com o PIN.' : (j.err || 'O GPT não respondeu agora.'), gpt: true });
+    const k = hist.findIndex((m) => m.pend && m.gpt); const nova = j.ok ? { t: '🤖 Segunda opinião: ' + j.texto, gpt: true, nota: (j.modelo || 'GPT') + ' · grátis' } : { t: j.motivo === 'particular' ? 'Para a segunda opinião, entre com o PIN.' : (j.err || 'O GPT não respondeu agora.'), gpt: true }; if (k >= 0) hist.splice(k, 1, nova);
     guardar(); desenhar();
   }
   form.addEventListener('submit', (e) => { e.preventDefault(); const t = ta.value; ta.value = ''; pedir(t); });
@@ -105,6 +118,9 @@ export function iniciarGuia() {
   // minimizar
   const minimizar = (sim) => { el.classList.toggle('min', sim); btMin.textContent = sim ? '▢' : '–'; btMin.title = sim ? 'Abrir' : 'Minimizar'; try { localStorage.setItem('nexus_guia_min', sim ? '1' : ''); } catch (_) {} };
   btMin.addEventListener('click', (e) => { e.stopPropagation(); minimizar(!el.classList.contains('min')); });
+  el.querySelector('[data-g=limpar]').addEventListener('click', (e) => { e.stopPropagation(); hist = []; guardar(); desenhar(); });
+  const btGr = el.querySelector('[data-g=grande]'); const grande = (sim) => { el.classList.toggle('grande', sim); btGr.textContent = sim ? '⤡' : '⤢'; if (sim) minimizar(false); try { localStorage.setItem('nexus_guia_grande', sim ? '1' : ''); } catch (_) {} corpo.scrollTop = corpo.scrollHeight; };
+  btGr.addEventListener('click', (e) => { e.stopPropagation(); grande(!el.classList.contains('grande')); }); try { if (localStorage.getItem('nexus_guia_grande')) grande(true); } catch (_) {}
   try { if (localStorage.getItem('nexus_guia_min')) minimizar(true); } catch (_) {}
   // arrastar pelo topo (mouse e dedo)
   const topo = el.querySelector('.guia-topo'); let arr = null;
