@@ -309,9 +309,11 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const grama = new THREE.Mesh(gramaGeo, matGrama); grama.frustumCulled = false; cena.add(grama); lixo.push(gramaGeo, matGrama, altTex, lamina);
 
   // FIGURAS (recortes do ChatGPT) que sempre olham para quem anda, com vento no alto das árvores
-  const matFig = (tex, vento) => new THREE.ShaderMaterial({ uniforms: { ...unif, map: { value: tex }, vento: { value: vento } },
+  // atl: folha de quadros de um VÍDEO REAL recortado (colunas, linhas): cada animal mostra o seu quadro do passo
+  const matFig = (tex, vento, atl) => new THREE.ShaderMaterial({ uniforms: { ...unif, map: { value: tex }, vento: { value: vento } },
     vertexShader: `uniform float t, vento; attribute vec3 iPos; attribute vec2 iTam; attribute float iFase, iVira; varying vec2 vUv; varying float vD;
-      void main(){ vUv = vec2(iVira > .5 ? 1. - uv.x : uv.x, uv.y);
+      ${atl ? 'attribute float iQuadro;' : ''}
+      void main(){ vUv = vec2(iVira > .5 ? 1. - uv.x : uv.x, uv.y);${atl ? ` float qd = floor(iQuadro); float cl = mod(qd, ${atl[0].toFixed(1)}), ln = floor(qd / ${atl[0].toFixed(1)}); vUv = vec2((cl + vUv.x) / ${atl[0].toFixed(1)}, 1. - (ln + 1. - vUv.y) / ${atl[1].toFixed(1)});` : ''}
         vec3 d3 = normalize(cameraPosition - iPos); vec3 dir = d3; dir.y = 0.; dir = normalize(dir + vec3(1e-4, 0., 0.)); vec3 dirX = vec3(dir.z, 0., -dir.x);
         float k = smoothstep(15., 140., cameraPosition.y - iPos.y) * .85; vec3 upV = normalize(mix(vec3(0., 1., 0.), cross(d3, dirX), k));
         float y = position.y; float sopro = (sin(t * 1.1 + iFase) * .6 + sin(t * 2.3 + iFase * 1.7) * .25) * vento * y * y;
@@ -325,13 +327,14 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const quad = new THREE.PlaneGeometry(1, 1); quad.translate(0, 0.5, 0); lixo.push(quad);
   const obst = [];   // troncos: o explorador não atravessa
   async function figuras(nome, lista, alturaReal, vento = 0) { await folga();
-    const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + '.png'); if (!tex) return null; lixo.push(tex);
+    const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + (pc.ext || '.png')); if (!tex) return null; lixo.push(tex);
     const asp = pc.w / pc.h, g = new THREE.InstancedBufferGeometry(); g.index = quad.index; g.attributes.position = quad.attributes.position; g.attributes.uv = quad.attributes.uv; g.instanceCount = lista.length;
     const P = new Float32Array(lista.length * 3), S = new Float32Array(lista.length * 2), F = new Float32Array(lista.length), R = new Float32Array(lista.length);
     lista.forEach((o, i) => { const hR = alturaReal * (o.s || 1); P.set([o.x, altura(o.x, o.z) - 0.15 + (o.y || 0), o.z], i * 3); S.set([hR * asp, hR], i * 2); F[i] = Math.random() * 6.28; R[i] = o.vira ? 1 : 0; });
     g.setAttribute('iPos', new THREE.InstancedBufferAttribute(P, 3)); g.setAttribute('iTam', new THREE.InstancedBufferAttribute(S, 2)); g.setAttribute('iFase', new THREE.InstancedBufferAttribute(F, 1)); g.setAttribute('iVira', new THREE.InstancedBufferAttribute(R, 1));
     if (/arvore|palmeira/.test(nome)) lista.forEach((o) => obst.push({ x: o.x, z: o.z, r: 0.35 + alturaReal * (o.s || 1) * 0.045 }));
-    const m = new THREE.Mesh(g, matFig(tex, vento)); m.frustumCulled = false; cena.add(m); lixo.push(g, m.material); return { m, P, R, g };
+    let Q = null; if (pc.quadros) { Q = new Float32Array(lista.length); for (let i = 0; i < Q.length; i++) Q[i] = Math.floor(Math.random() * pc.quadros); g.setAttribute('iQuadro', new THREE.InstancedBufferAttribute(Q, 1)); tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter; }
+    const m = new THREE.Mesh(g, matFig(tex, vento, pc.quadros ? [pc.cols, pc.rows] : null)); m.frustumCulled = false; cena.add(m); lixo.push(g, m.material); return { m, P, R, g, Q, pc };
   }
   // espalha posições evitando a água e o caminho de chegada
   function espalhar(n, rMin, rMax, folga = 6, evitar = []) { const out = []; let tent = 0;
@@ -431,12 +434,12 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   // ANIMAIS que andam devagar pelo jardim (o leão descansa)
   const especies = !E ? [] : [
     { n: 'leao', h: 1.15, q: 3, anda: 0 }, { n: 'cordeiro', h: 0.85, q: 6, anda: 0.5 }, { n: 'cervo', h: 1.75, q: 5, anda: 0.9 },
-    { n: 'elefante', h: 3.2, q: 3, anda: 0.6 }, { n: 'girafa', h: 5.2, q: 3, anda: 0.7 }, { n: 'pavao', h: 1.1, q: 4, anda: 0.4 },
+    { n: 'elefante-anda', h: 3.3, q: 3, anda: 1.0 }, { n: 'leao-anda', h: 1.3, q: 2, anda: 1.25 }, { n: 'girafa', h: 5.2, q: 3, anda: 0.7 }, { n: 'pavao', h: 1.1, q: 4, anda: 0.4 },
     { n: 'onca', h: 0.95, q: 3, anda: 0.8 }, { n: 'anta', h: 1.1, q: 3, anda: 0.5 }, { n: 'capivara', h: 0.62, q: 10, anda: 0.35, rio: true },
     { n: 'tigre', h: 1.05, q: 3, anda: 0.75 }, { n: 'tigre-rugindo', h: 1.2, q: 1, anda: 0 }, { n: 'tigre-deitado', h: 0.85, q: 2, anda: 0 },
   ];
   const bichos = [];
-  const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], elefante: [-26, 22], girafa: [24, 24], pavao: [5, 53], onca: [-16, 58], anta: [18, 60], 'tigre-rugindo': [-3.2, 96], tigre: [4, 128] };   // um grupo à vista de quem pousa
+  const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], 'elefante-anda': [-26, 22], 'leao-anda': [-16, 50], girafa: [24, 24], pavao: [5, 53], onca: [-16, 58], anta: [18, 60], 'tigre-rugindo': [-3.2, 96], tigre: [4, 128] };   // um grupo à vista de quem pousa
   const margem = (n) => rios.flatMap((c) => Array.from({ length: n }, () => { const u = 0.05 + rnd() * 0.5, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = (c === rios[0] ? 16 : 11) + 2 + rnd() * 4; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.85 + rnd() * 0.3 }; })).filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) < 190);
   for (const e of especies) { const lista = e.rio ? margem(3).slice(0, e.q - 1) : espalhar(e.q - 1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }]); const pp0 = PERTO[e.n], pw = pp0 ? T2W(pp0[0], pp0[1]) : null, pp = pw ? [pw.x, pw.z] : null; if (pp && !naAgua(pp[0], pp[1])) lista.unshift({ x: pp[0], z: pp[1], s: 1, vira: e.n === 'leao' }); else lista.push(...espalhar(1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }])); const f = await figuras(e.n, lista, e.h, 0); if (!f) continue;
     lista.forEach((o, i) => bichos.push({ f, i, e, x: o.x, z: o.z, alvo: null, espera: rnd() * 6, fase: rnd() * 6 })); }
@@ -447,7 +450,9 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       // vira a figura conforme o lado para onde anda (em relação a quem olha)
       const dirX = new THREE.Vector3().subVectors(camera.position, new THREE.Vector3(b.x, 0, b.z)); const ladoX = new THREE.Vector3(dirX.z, 0, -dirX.x).normalize(); const vaiDireita = (dx * ladoX.x + dz * ladoX.z) > 0;
       b.f.R[b.i] = vaiDireita === !!b.e.olhaEsq ? 1 : 0; b.f.g.attributes.iVira.needsUpdate = true;
-      b.f.P[b.i * 3] = b.x; b.f.P[b.i * 3 + 1] = altura(b.x, b.z) - 0.1 + Math.sin(b.fase += dt * b.e.anda * 2.6) * 0.006 * b.e.h; b.f.P[b.i * 3 + 2] = b.z; b.f.g.attributes.iPos.needsUpdate = true; } }
+      // vídeo real: o passo avança no ritmo do vídeo enquanto o animal anda (o balanço do corpo já vem do vídeo)
+      if (b.f.Q) { b.f.Q[b.i] = (b.f.Q[b.i] + dt * b.f.pc.quadros / b.f.pc.dur) % b.f.pc.quadros; b.f.g.attributes.iQuadro.needsUpdate = true; }
+      b.f.P[b.i * 3] = b.x; b.f.P[b.i * 3 + 1] = altura(b.x, b.z) - 0.1 + (b.f.Q ? 0 : Math.sin(b.fase += dt * b.e.anda * 2.6) * 0.006 * b.e.h); b.f.P[b.i * 3 + 2] = b.z; b.f.g.attributes.iPos.needsUpdate = true; } }
 
   // AVES em voo circular e BORBOLETAS perto das flores: tudo calculado na placa de vídeo
   async function voadores(nome, n, tam, modo) {
@@ -602,6 +607,14 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     if (/suba|subir|ver de cima|vista de cima|vista aerea/.test(q)) { subida = Math.min(LIM * 0.6, subida + 250); return 'Subindo para ver de cima.'; }
     if (/desca|descer|pousar|chao/.test(q)) { subida = 0; voarLivre = false; return 'Descendo.'; }
     if (/rocha|onde (ele|jesus) orou/.test(q) && G) { indo = new THREE.Vector3(TD.x * 3, 0, TD.z * 3); return 'Indo até a rocha onde Jesus orou.'; }
+    // VER UM ANIMAL de perto: 'me mostre o elefante', 'quero ver o leão'
+    if (E && bichos.length) { const NOMES = [[/elefante/, ['elefante-anda'], 'o elefante'], [/leao|leoa|leoes/, ['leao-anda', 'leao'], 'o leão'], [/girafa/, ['girafa'], 'a girafa'], [/tigre/, ['tigre', 'tigre-rugindo', 'tigre-deitado'], 'o tigre'], [/cervo|veado/, ['cervo'], 'o cervo'], [/onca/, ['onca'], 'a onça'], [/cordeiro|ovelha/, ['cordeiro'], 'o cordeiro'], [/pavao/, ['pavao'], 'o pavão'], [/capivara/, ['capivara'], 'a capivara'], [/anta/, ['anta'], 'a anta'], [/animais|bichos|animal/, ['elefante-anda', 'leao-anda'], 'os animais']];
+      const k = NOMES.find(([re]) => re.test(q)); if (k) { let alvo = null; for (const nm of k[1]) { const lst = bichos.filter((b) => b.e.n === nm); if (lst.length) { alvo = lst.reduce((a, b) => Math.hypot(b.x - eu.x, b.z - eu.z) < Math.hypot(a.x - eu.x, a.z - eu.z) ? b : a); break; } }
+        if (alvo) { const dist = 4 + alvo.e.h * 2.4, dx = eu.x - alvo.x, dz = eu.z - alvo.z, d = Math.hypot(dx, dz) || 1; let x = alvo.x + dx / d * dist, z = alvo.z + dz / d * dist; if (naAgua(x, z)) { x = alvo.x - dx / d * dist; z = alvo.z - dz / d * dist; }
+          pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); yaw = Math.atan2(-(alvo.x - x), -(alvo.z - z)); pitch = -0.06;
+          // e ele começa a andar de lado, atravessando a sua frente
+          if (alvo.e.anda) { const ax = alvo.x - x, az = alvo.z - z, al = Math.hypot(ax, az) || 1; for (const sg of [1, -1]) { const tx = alvo.x + az / al * 18 * sg, tz = alvo.z - ax / al * 18 * sg; if (!naAgua(tx, tz)) { alvo.alvo = { x: tx, z: tz }; break; } } }
+          return `Aqui está ${k[2]}.`; } } }
     if (/arvore da vida|meio do jardim/.test(q) && E) { indo = new THREE.Vector3(TD.x * 24, 0, TD.z * 24); return 'Indo até a árvore da vida.'; }
     if (/golias|meio do vale/.test(q) && L) { indo = new THREE.Vector3(0, 0, 25); return 'Descendo ao vale, até Golias.'; }
     if (/ribeiro|seixos|pedras/.test(q) && L) { indo = new THREE.Vector3(0, 0, ribZ(0) - 4); return 'Indo até o ribeiro dos seixos.'; }
