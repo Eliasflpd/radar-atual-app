@@ -804,7 +804,7 @@ export function criarCeu(container, estado, acoes) {
     else if (k === 'f' || k === 'F') { const el2 = container.closest('.palco') || container; if (document.fullscreenElement) document.exitFullscreen(); else el2.requestFullscreen && el2.requestFullscreen().catch(() => {}); }
     else if (k === 'Escape') { if (!pergaminho.hidden && pergFixo) { pergFixo = null; pergaminho.hidden = true; pergAssin = ''; } else if (!cartao.hidden) cartao.hidden = true; else if (!invest.hidden) invest.hidden = true; else if (modoTerra) sairTerra(); else feito = false; }
     else feito = false;
-    if (feito) { e.preventDefault(); interagiu = true; voo = null; }
+    if (feito) { e.preventDefault(); interagiu = true; if (/^Arrow|^[wasdWASD]$/.test(k)) voo = null; }
   });
   const mini = ui.querySelector('.cu-mini'), miniC = mini.querySelector('canvas'), mg = miniC.getContext('2d'); let miniEm = 0, miniCaixa = null;
   function desenharMini(t) {
@@ -1604,8 +1604,21 @@ export function criarCeu(container, estado, acoes) {
     if (!melhor) return false;
     const c = melhor.c; c.visivel = true; if (c.opacidade < 0.3) c.opacidade = 0.75; montarPainel(); abrirFichaCamada(c, melhor.r.i, true); return true;
   }
+  // a página do universo nunca rola (a roda e as teclas são do universo): se algo a rolar, volta ao topo
+  window.addEventListener('scroll', () => { if (ativo && document.body.classList.contains('ceu-universo') && (document.scrollingElement.scrollTop || document.body.scrollTop)) { document.scrollingElement.scrollTop = 0; document.body.scrollTop = 0; } }, true);
+  // TEMPLO DE SALOMÃO: o globo voa ao Monte Moriá (2 Cr 3:1) e o templo surge em 3D, por camadas
+  let temploAberto = null;
+  function abrirTemploSalomao() {
+    if (!atlasC) return false; const l = atlasC.lugares.find((x) => x.en === 'Mount Moriah') || atlasC.lugares.find((x) => x.en === 'Jerusalem');
+    if (!modoTerra) abrirTerra(); setTimeout(() => voarTerraPara(l, Math.max(6, RAIO_GLOBO * 0.01)), 60);
+    let aviso = ui.querySelector('.cu-aviso-templo'); if (!aviso) { aviso = document.createElement('div'); aviso.className = 'cu-aviso-templo'; aviso.style.cssText = 'position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:8;background:rgba(5,11,26,.9);border:1px solid rgba(233,200,120,.5);color:#FFE8B0;border-radius:999px;padding:8px 16px;font:600 13px Inter,system-ui,sans-serif;pointer-events:none;white-space:nowrap'; ui.appendChild(aviso); }
+    aviso.textContent = '🏛 Templo de Salomão · Monte Moriá, Jerusalém (2 Crônicas 3:1) · o templo vai surgir aqui'; aviso.hidden = false;
+    setTimeout(async () => { aviso.hidden = true; if (temploAberto) return; const m = await import('/nexus/templo-salomao.js?v=2'); temploAberto = m.abrirTemplo(THREE, ui, { aoFechar: () => { temploAberto = null; } }); }, 3400);
+    return true;
+  }
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
+    if (/^(o )?(templo de salomao|templo salomao|primeiro templo|templo de jerusalem|templo do senhor|casa do senhor)$/.test(q) || /^templo$/.test(q)) return abrirTemploSalomao();
     { const iE = livros.findIndex((lv) => norm(lv.nome) === q || norm(lv.abbrev) === q); if (iE >= 0) { comporLivro(iE); return true; } }   // nome exato de livro (Rute, Jó, Daniel) é o livro
     if (q.split(/\s+/).length <= 4 && !/\d/.test(q)) {
       const pend = CAMADAS.filter((c) => c.modulo && !c.criada);   // no tablet as camadas só baixam quando precisam: carrega e pesquisa
@@ -1835,6 +1848,7 @@ export function criarCeu(container, estado, acoes) {
         g2.save(); g2.beginPath(); g2.arc(p.x, p.y, eh ? 12 : 8, 0, 6.29); g2.strokeStyle = eh ? '#FFE3A3' : 'rgba(233,200,120,.85)'; g2.lineWidth = eh ? 3 : 2; if (x.conf === 'incerta') g2.setLineDash([4, 4]); g2.stroke(); g2.restore();
         texto(l.nome + (x.conf === 'incerta' ? ' (incerto)' : ''), p.x + (eh ? 24 : 18), p.y, (eh ? '800 14px' : '600 12.5px') + ' Inter, system-ui, sans-serif', eh ? '#FFFFFF' : '#FFE8B0', 'rgba(20,12,2,.82)', 1, false); });
     }
+    if (modoTerra && atlasC && ui.querySelector('.cu-aviso-templo') && !ui.querySelector('.cu-aviso-templo').hidden) { const lm = atlasC.lugares.find((x) => x.en === 'Mount Moriah'), p = lm && telaLugarV(lm); if (p) { const r = 14 + 4 * Math.sin(t / 250); g2.save(); g2.lineWidth = 3; g2.strokeStyle = '#FFE3A3'; g2.beginPath(); g2.arc(p.x, p.y, r, 0, 6.29); g2.stroke(); g2.restore(); texto('🏛 Templo de Salomão · Monte Moriá', p.x + 24, p.y, '800 14px Inter, system-ui, sans-serif', '#FFFFFF', 'rgba(20,12,2,.85)', 1, false); } }
     if (jornada && atlasC && camada('atlas').visivel && jornada.rota.length > 1) {
       const atual = jornada.passos[jornada.n].lugarVoo;
       jornada.rota.forEach((r, k) => { const l = atlasC.lugares[r.li], p = telaLugarV(l); if (!p || p.x < 0 || p.x > W || p.y < 0 || p.y > H) return; const eh = r.li === atual;
@@ -1904,7 +1918,7 @@ export function criarCeu(container, estado, acoes) {
       <div class="cu-perg-texto">${versos.map((t, i) => `<p class="${dest.has(chave(b, c, i + 1)) ? 'dest' : ''}" data-perg-v="${chave(b, c, i + 1)}"><sup>${i + 1}</sup>${esc(t)}</p>`).join('')}</div>
       <div class="cu-perg-pe">Almeida · ${versos.length} versículos</div><div class="cu-perg-rolo"></div>`;
     pergaminho.hidden = false; pergaminho.classList.toggle('fixo', !!fixo); pergaminho.dataset.b = b; pergaminho.dataset.c = c;
-    const d = pergaminho.querySelector('p.dest'); if (d) setTimeout(() => d.scrollIntoView({ block: 'center', behavior: 'smooth' }), 60);
+    const d = pergaminho.querySelector('p.dest'); if (d) setTimeout(() => { const cx = pergaminho.querySelector('.cu-perg-texto'); if (cx) cx.scrollTo({ top: d.offsetTop - cx.clientHeight / 2 + d.clientHeight / 2, behavior: 'smooth' }); }, 60);   // rola só o pergaminho, nunca a página
   }
   function lerPergaminho(b, c, destaques) { pergFixo = { b, c, destaques: destaques || [] }; pergAssin = ''; desenharPergaminho(b, c, pergFixo.destaques, true); }
   pergaminho.addEventListener('click', (e) => {
@@ -2087,7 +2101,7 @@ export function criarCeu(container, estado, acoes) {
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
-      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), buscarFicha: (t) => buscarCamadas(norm(t), 1), jornada: (n) => { const cP = camada('personagens'); const i = cP && cP.api ? cP.api.pessoas.findIndex((x) => x.nome === n || x.n === n) : -1; return i >= 0 && iniciarJornada(i); }, jornadaEstado: () => (jornada ? { n: jornada.n, total: jornada.passos.length, passos: jornada.passos.map((P) => P.livro + ' ' + P.c + (P.lugarVoo != null ? ' @' + atlasC.lugares[P.lugarVoo].nome : '') + (P.evs[0] ? ' · ' + P.evs[0].nome : '')) } : null), passoJornada: (k) => mostrarPasso(k), lerCap: (b, c) => lerPergaminho(b, c, []), caminho: () => { verCaminhoInteiro(); return jornada ? jornada.rota.map((r) => atlasC.lugares[r.li].nome) : null; }, estudo: () => (telaEstudo.hidden ? null : { cartoes: telaEstudo.querySelectorAll('[data-e-cartao]').length, vazios: telaEstudo.querySelectorAll('.cu-e-cartao.vazio').length, palavra: (telaEstudo.querySelector('.cu-e-palavra') || {}).textContent || null, img: !!telaEstudo.querySelector('.cu-e-img') }), abrirCartao: (id) => { cartaoAberto = id; desenharEstudo(); ligarChips(telaEstudo); }, investigar: (t) => investigarAssunto(t), investigacao: () => (investigacao ? { cand: investigacao.cand.rot, tipo: investigacao.cand.tipo, sementes: investigacao.sementes.length, acesas: investigacao.acesas || 0, folhas: Object.fromEntries(ORDEM_FOLHAS.map((id) => [id, investigacao.F[id] ? investigacao.F[id].map((x) => x.rot + ' [' + x.conf + ']') : null])), outros: investigacao.outros.map((o) => o.rot + ' (' + o.tipo + ')'), fontes: investigacao.fontes ? investigacao.fontes.blocos.map((b) => b.titulo + ': ' + b.itens.length) : null, incerto: !!investigacao.lugarIncerto } : null), abaInvestigacao: (a) => { if (investigacao) { investigacao.aba = a; desenharInvestigacao(); } },
+      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), buscarFicha: (t) => buscarCamadas(norm(t), 1), jornada: (n) => { const cP = camada('personagens'); const i = cP && cP.api ? cP.api.pessoas.findIndex((x) => x.nome === n || x.n === n) : -1; return i >= 0 && iniciarJornada(i); }, jornadaEstado: () => (jornada ? { n: jornada.n, total: jornada.passos.length, passos: jornada.passos.map((P) => P.livro + ' ' + P.c + (P.lugarVoo != null ? ' @' + atlasC.lugares[P.lugarVoo].nome : '') + (P.evs[0] ? ' · ' + P.evs[0].nome : '')) } : null), passoJornada: (k) => mostrarPasso(k), templo: () => temploAberto, lerCap: (b, c) => lerPergaminho(b, c, []), caminho: () => { verCaminhoInteiro(); return jornada ? jornada.rota.map((r) => atlasC.lugares[r.li].nome) : null; }, estudo: () => (telaEstudo.hidden ? null : { cartoes: telaEstudo.querySelectorAll('[data-e-cartao]').length, vazios: telaEstudo.querySelectorAll('.cu-e-cartao.vazio').length, palavra: (telaEstudo.querySelector('.cu-e-palavra') || {}).textContent || null, img: !!telaEstudo.querySelector('.cu-e-img') }), abrirCartao: (id) => { cartaoAberto = id; desenharEstudo(); ligarChips(telaEstudo); }, investigar: (t) => investigarAssunto(t), investigacao: () => (investigacao ? { cand: investigacao.cand.rot, tipo: investigacao.cand.tipo, sementes: investigacao.sementes.length, acesas: investigacao.acesas || 0, folhas: Object.fromEntries(ORDEM_FOLHAS.map((id) => [id, investigacao.F[id] ? investigacao.F[id].map((x) => x.rot + ' [' + x.conf + ']') : null])), outros: investigacao.outros.map((o) => o.rot + ' (' + o.tipo + ')'), fontes: investigacao.fontes ? investigacao.fontes.blocos.map((b) => b.titulo + ': ' + b.itens.length) : null, incerto: !!investigacao.lugarIncerto } : null), abaInvestigacao: (a) => { if (investigacao) { investigacao.aba = a; desenharInvestigacao(); } },
       fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
       abrirTerra: () => abrirTerra(), imagemTerra: () => (atlasC ? atlasC.imagemReal() : false), subsolar: () => pontoSubsolar(Date.now()),
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
