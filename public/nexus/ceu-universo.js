@@ -1031,6 +1031,10 @@ export function criarCeu(container, estado, acoes) {
   let investigacao = null;   // { cand, outros, sementes, folhas, fontes, lugarIncerto, t0 }
   const ORDEM_FOLHAS = ['universo', 'biblia', 'atlas', 'tempo', 'personagens', 'linguas', 'historia', 'manuscritos', 'teologia', 'tradicao'];
   const CONF_CAMADA = { tempo: 'tradicional', personagens: 'direta', linguas: 'direta', historia: 'interpretacao', teologia: 'interpretacao', tradicao: 'interpretacao', manuscritos: 'direta' };
+  function lugarPrincipal(cand, F) {   // o lugar do próprio assunto, ou o mais citado (com identificação ao menos provável)
+    if (!atlasC) return null; if (cand.lugar) return cand.lugar;
+    const x = (F.atlas || []).find((q) => atlasC.lugares[q.acao.lugar].conf >= 300); return x ? atlasC.lugares[x.acao.lugar] : null;
+  }
   function folhasDa(sementes, cand) {
     const S = new Set(sementes), F = {};
     // 01 Universo: onde o assunto está no cânon
@@ -1078,13 +1082,18 @@ export function criarCeu(container, estado, acoes) {
     if (modoTerra) sairTerra();
     limparComposicao();
     const sementes = [...new Set(cand.versos)].slice(0, 600), F = folhasDa(sementes, cand);
-    investigacao = { texto, cand, outros, sementes, F, fontes: null, aba: 'geral', t0: performance.now(), lugarIncerto: cand.lugar && cand.lugar.conf < 300 ? cand.lugar : null }; estudoAberto = true; cartaoAberto = null;
+    investigacao = { texto, cand, outros, sementes, F, fontes: null, aba: 'geral', t0: performance.now(), lugarIncerto: cand.lugar && cand.lugar.conf < 300 ? cand.lugar : null }; estudoAberto = false; cartaoAberto = null;
     // a composição: folhas afastadas e vistas em perspectiva, como lâminas
     separacao = Math.max(separacao, 2.2); sincronizarPainel();
     const js = sementes.map((k) => vIdx.get(k)).filter((j) => j != null);
     if (js.length) { const xs = js.map((j) => vBase[j * 3]), ys = js.map((j) => vBase[j * 3 + 1]), cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
       montarLaminas(cx, cy); mostrarLaminas(true);
-      incl = 0.9; voar(cx, cy + 15000, 40000); }   // de longe e inclinado: as dez lâminas empilhadas à vista
+      const principal = lugarPrincipal(cand, F);
+      if (principal && atlasC) {   // como no Google Earth: o globo gira e entra direto no lugar principal do assunto
+        investigacao.principal = principal.i; incl = 0.9;
+        setTimeout(() => { if (!investigacao || investigacao.cand !== cand) return; voarTerraPara(principal, Math.max(8, RAIO_GLOBO * 0.035)); atlasC.acender((F.atlas || []).map((x) => x.acao.lugar)); }, 150);
+      } else { incl = 0.9; voar(cx, cy + 15000, 40000); }   // sem lugar: as dez lâminas empilhadas à vista
+    }
     // as folhas acendem uma a uma (a revelação progressiva)
     realceCamada = new Set(js); fiosCamada = [];
     ORDEM_FOLHAS.forEach((id, n) => setTimeout(() => { if (!investigacao || investigacao.cand !== cand) return; acenderFolha(id); desenharInvestigacao(); }, 250 + n * 330));
@@ -1138,7 +1147,7 @@ export function criarCeu(container, estado, acoes) {
     let corpo = '';
     if (inv.aba === 'geral') {
       const pess = (F.personagens || []).filter((x) => x.conf !== 'hipotese').slice(0, 3).map((x) => x.rot), lugs = (F.atlas || []).slice(0, 3).map((x) => x.rot);
-      corpo = `${cand.tipo === 'pessoa' ? `<button type="button" class="cu-inv-jornada" data-inv-jornada="1">▶ Ver a jornada de ${esc(cand.rot.replace(/ · .*$/, ''))}, passo a passo</button>` : ''}<p><b>${esc(cand.rot)}</b> — ${esc(cand.tipo)}. Aparece em <b>${inv.sementes.length}</b> versículo(s)${inv.sementes[0] ? ', a começar por ' + esc(nomeRef(Math.min(...inv.sementes))) : ''}.</p>
+      corpo = `${cand.tipo === 'pessoa' ? `<button type="button" class="cu-inv-jornada" data-inv-jornada="1">▶ Ver a jornada de ${esc(cand.rot.replace(/ · .*$/, ''))}, passo a passo</button><button type="button" class="cu-inv-mini" data-inv-caminho="1">🗺 Caminho no mapa</button> ` : ''}<button type="button" class="cu-inv-mini" data-inv-cartoes="1">▦ Ver as 10 camadas em cartões</button> ${inv.principal != null ? '<button type="button" class="cu-inv-mini" data-inv-universo="1">✶ Ver as lâminas no universo</button>' : ''}<p><b>${esc(cand.rot)}</b> — ${esc(cand.tipo)}. Aparece em <b>${inv.sementes.length}</b> versículo(s)${inv.sementes[0] ? ', a começar por ' + esc(nomeRef(Math.min(...inv.sementes))) : ''}.</p>
         ${(() => { const fx = faixasDeReferencia(inv.sementes), lg = (F.atlas || []).slice(0, 5), ev = (F.tempo || []).filter((x) => x.conf !== 'hipotese').slice(0, 2);
           return `${fx.length ? `<h5>📖 Principais referências</h5><div class="cu-chips">${fx.map((x) => `<button type="button" data-verso="${chave(x.b, x.c0, 1)}">${esc(x.txt)}</button>`).join('')}</div>` : ''}
           ${lg.length ? `<h5>📍 Localizações principais (Atlas)</h5><div class="cu-chips">${lg.map((x) => `<button type="button" data-inv-lugar="${x.acao.lugar}">${esc(x.rot)}${x.conf === 'incerta' ? ' (incerto)' : ''}</button>`).join('')}</div>` : ''}
@@ -1182,6 +1191,8 @@ export function criarCeu(container, estado, acoes) {
     if (b.dataset.invTerra) { voarParaLugar(atlasC.lugares[+b.dataset.invTerra], []); return; }
     if (b.dataset.invSecao) { const q = secoes[+b.dataset.invSecao]; voar(q.cx, q.cy, q.raio * 3.4); return; }
     if (b.dataset.invJornada) { iniciarJornada(inv.cand.i); return; }
+    if (b.dataset.invCartoes) { estudoAberto = true; desenharInvestigacao(); return; }
+    if (b.dataset.invUniverso) { if (modoTerra) sairTerra(); const js = inv.sementes.map((k) => vIdx.get(k)).filter((j) => j != null); if (js.length) { const xs = js.map((j) => vBase[j * 3]), ys = js.map((j) => vBase[j * 3 + 1]); incl = 0.9; voar((Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2 + 15000, 40000); } return; }
     if (b.dataset.invCaminho) { if (iniciarJornada(inv.cand.i)) verCaminhoInteiro(); return; }
     if (b.dataset.invOutro) { investigarAssunto(inv.texto, inv.outros[+b.dataset.invOutro]); return; }
   });
@@ -1345,7 +1356,7 @@ export function criarCeu(container, estado, acoes) {
     }).join('');
     const fx = faixasDeReferencia(inv.sementes);
     telaEstudo.innerHTML = `<div class="cu-e-cab"><span class="cu-e-marca">✦</span><div><small>Estudo multidimensional</small><h2>Estudo: ${esc(nome)}</h2></div>
-        <div class="cu-e-bts">${cand.tipo === 'pessoa' ? `<button type="button" data-e="caminho">🗺 Caminho no mapa</button><button type="button" data-e="jornada">▶ Jornada</button>` : ''}<button type="button" data-e="3d">◫ Ver as lâminas em 3D</button><button type="button" data-e="fechar" aria-label="Fechar o estudo">✕</button></div></div>
+        <div class="cu-e-bts">${cand.tipo === 'pessoa' ? `<button type="button" data-e="caminho">🗺 Caminho no mapa</button><button type="button" data-e="jornada">▶ Jornada</button>` : ''}<button type="button" data-e="3d">◫ Voltar ao universo</button><button type="button" data-e="fechar" aria-label="Fechar o estudo">✕</button></div></div>
       <div class="cu-e-pilha">${cartoes}</div>
       <aside class="cu-e-fontes"><h4>Como o NEXUS pesquisou</h4><p>Uma pesquisa só percorre as dez camadas, a partir dos versículos de “${esc(nome)}”.</p>
         <h4>Fontes consultadas</h4><ul><li>Bíblia Almeida</li><li>Atlas: OpenBible (CC BY), NASA</li><li>Cronologia e personagens: Theographic</li><li>Hebraico, aramaico e grego: STEPBible</li><li>Manuscritos: STEPBible (edições comparadas)</li><li>História e teologia: Easton (1897)</li><li>Tradição: credos e confissões</li><li>Biblioteca particular (motor de descoberta)</li></ul>
@@ -1754,6 +1765,11 @@ export function criarCeu(container, estado, acoes) {
     if (vB && qf && vIdx.has(qf.ini)) {
       const j = vIdx.get(qf.ini), p = tela(vPos[j * 3], vPos[j * 3 + 1]);
       if (p) { const pulso = 9 + Math.sin(t / 380) * 3; g2.strokeStyle = 'rgba(242,214,140,.75)'; g2.lineWidth = 1.2; g2.beginPath(); g2.arc(p.x, p.y, pulso, 0, 6.29); g2.stroke(); if (dist > 520) texto(nomeRef(qf.ini), p.x + 14, p.y - 10, '700 13px Inter, system-ui, sans-serif', '#FFE8B0', 'rgba(2,5,14,.78)', 1, false); }
+    }
+    if (investigacao && !jornada && modoTerra && atlasC && investigacao.F.atlas) {
+      investigacao.F.atlas.forEach((x) => { const l = atlasC.lugares[x.acao.lugar], p = telaLugarV(l); if (!p || p.x < 0 || p.x > W || p.y < 0 || p.y > H) return; const eh = l.i === investigacao.principal;
+        g2.save(); g2.beginPath(); g2.arc(p.x, p.y, eh ? 12 : 8, 0, 6.29); g2.strokeStyle = eh ? '#FFE3A3' : 'rgba(233,200,120,.85)'; g2.lineWidth = eh ? 3 : 2; if (x.conf === 'incerta') g2.setLineDash([4, 4]); g2.stroke(); g2.restore();
+        texto(l.nome + (x.conf === 'incerta' ? ' (incerto)' : ''), p.x + 14, p.y, (eh ? '800 14px' : '600 12.5px') + ' Inter, system-ui, sans-serif', eh ? '#FFFFFF' : '#FFE8B0', 'rgba(20,12,2,.82)', 1, false); });
     }
     if (jornada && atlasC && camada('atlas').visivel && jornada.rota.length > 1) {
       const atual = jornada.passos[jornada.n].lugarVoo;
