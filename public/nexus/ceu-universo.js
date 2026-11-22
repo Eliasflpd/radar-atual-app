@@ -1608,16 +1608,17 @@ export function criarCeu(container, estado, acoes) {
   window.addEventListener('scroll', () => { if (ativo && document.body.classList.contains('ceu-universo') && (document.scrollingElement.scrollTop || document.body.scrollTop)) { document.scrollingElement.scrollTop = 0; document.body.scrollTop = 0; } }, true);
   // TEMPLO DE SALOMÃO: o globo voa ao Monte Moriá (2 Cr 3:1) e o templo surge em 3D, por camadas
   let temploAberto = null;
-  function abrirTemploSalomao() {
+  function abrirTemploSalomao(qual = 'salomao') {   // 'salomao' (1 Rs 6–7) ou 'herodes' (o templo do tempo de Jesus)
     if (!atlasC) return false; const l = atlasC.lugares.find((x) => x.en === 'Mount Moriah') || atlasC.lugares.find((x) => x.en === 'Jerusalem');
     if (!modoTerra) abrirTerra(); setTimeout(() => voarTerraPara(l, Math.max(6, RAIO_GLOBO * 0.01)), 60);
     let aviso = ui.querySelector('.cu-aviso-templo'); if (!aviso) { aviso = document.createElement('div'); aviso.className = 'cu-aviso-templo'; aviso.style.cssText = 'position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:8;background:rgba(5,11,26,.9);border:1px solid rgba(233,200,120,.5);color:#FFE8B0;border-radius:999px;padding:8px 16px;font:600 13px Inter,system-ui,sans-serif;pointer-events:none;white-space:nowrap'; ui.appendChild(aviso); }
-    aviso.textContent = '🏛 Templo de Salomão · Monte Moriá, Jerusalém (2 Crônicas 3:1) · o templo vai surgir aqui'; aviso.hidden = false;
-    setTimeout(async () => { aviso.hidden = true; if (temploAberto) return; const m = await import('/nexus/templo-maquete.js?v=6'); temploAberto = await m.abrirTemplo(THREE, ui, { aoFechar: () => { temploAberto = null; } }); }, 3400);
+    aviso.textContent = qual === 'herodes' ? '🏛 Templo de Herodes · o templo do tempo de Jesus · Jerusalém, século I · o templo vai surgir aqui' : '🏛 Templo de Salomão · Monte Moriá, Jerusalém (2 Crônicas 3:1) · o templo vai surgir aqui'; ui.dataset.templo = qual; aviso.hidden = false;
+    setTimeout(async () => { aviso.hidden = true; if (temploAberto) return; const m = await import(qual === 'herodes' ? '/nexus/templo-herodes.js?v=5' : '/nexus/templo-maquete.js?v=6'); temploAberto = await m.abrirTemplo(THREE, ui, { aoFechar: () => { temploAberto = null; } }); }, 3400);
     return true;
   }
   function buscar(texto) {
     const q = norm(texto); if (!q) return false;
+    if (/^(o )?(templo de herodes|templo herodiano|segundo templo|templo de jesus|templo do tempo de jesus|templo de zorobabel)$/.test(q)) return abrirTemploSalomao('herodes');
     if (/^(o )?(templo de salomao|templo salomao|primeiro templo|templo de jerusalem|templo do senhor|casa do senhor)$/.test(q) || /^templo$/.test(q)) return abrirTemploSalomao();
     { const iE = livros.findIndex((lv) => norm(lv.nome) === q || norm(lv.abbrev) === q); if (iE >= 0) { comporLivro(iE); return true; } }   // nome exato de livro (Rute, Jó, Daniel) é o livro
     if (q.split(/\s+/).length <= 4 && !/\d/.test(q)) {
@@ -1848,7 +1849,7 @@ export function criarCeu(container, estado, acoes) {
         g2.save(); g2.beginPath(); g2.arc(p.x, p.y, eh ? 12 : 8, 0, 6.29); g2.strokeStyle = eh ? '#FFE3A3' : 'rgba(233,200,120,.85)'; g2.lineWidth = eh ? 3 : 2; if (x.conf === 'incerta') g2.setLineDash([4, 4]); g2.stroke(); g2.restore();
         texto(l.nome + (x.conf === 'incerta' ? ' (incerto)' : ''), p.x + (eh ? 24 : 18), p.y, (eh ? '800 14px' : '600 12.5px') + ' Inter, system-ui, sans-serif', eh ? '#FFFFFF' : '#FFE8B0', 'rgba(20,12,2,.82)', 1, false); });
     }
-    if (modoTerra && atlasC && ui.querySelector('.cu-aviso-templo') && !ui.querySelector('.cu-aviso-templo').hidden) { const lm = atlasC.lugares.find((x) => x.en === 'Mount Moriah'), p = lm && telaLugarV(lm); if (p) { const r = 14 + 4 * Math.sin(t / 250); g2.save(); g2.lineWidth = 3; g2.strokeStyle = '#FFE3A3'; g2.beginPath(); g2.arc(p.x, p.y, r, 0, 6.29); g2.stroke(); g2.restore(); texto('🏛 Templo de Salomão · Monte Moriá', p.x + 24, p.y, '800 14px Inter, system-ui, sans-serif', '#FFFFFF', 'rgba(20,12,2,.85)', 1, false); } }
+    if (modoTerra && atlasC && ui.querySelector('.cu-aviso-templo') && !ui.querySelector('.cu-aviso-templo').hidden) { const lm = atlasC.lugares.find((x) => x.en === 'Mount Moriah'), p = lm && telaLugarV(lm); if (p) { const r = 14 + 4 * Math.sin(t / 250); g2.save(); g2.lineWidth = 3; g2.strokeStyle = '#FFE3A3'; g2.beginPath(); g2.arc(p.x, p.y, r, 0, 6.29); g2.stroke(); g2.restore(); texto(ui.dataset.templo === 'herodes' ? '🏛 Templo de Herodes · Monte do Templo' : '🏛 Templo de Salomão · Monte Moriá', p.x + 24, p.y, '800 14px Inter, system-ui, sans-serif', '#FFFFFF', 'rgba(20,12,2,.85)', 1, false); } }
     if (jornada && atlasC && camada('atlas').visivel && jornada.rota.length > 1) {
       const atual = jornada.passos[jornada.n].lugarVoo;
       jornada.rota.forEach((r, k) => { const l = atlasC.lugares[r.li], p = telaLugarV(l); if (!p || p.x < 0 || p.x > W || p.y < 0 || p.y > H) return; const eh = r.li === atual;
