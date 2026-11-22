@@ -79,7 +79,7 @@ export function iniciarGuia() {
     }
     // conversa com o Claude (com o contexto da tela e o rascunho anterior)
     hist.push({ t: 'Pensando…', pend: true }); desenhar();
-    let j; try { const ctx = typeof window.NEXUS_CONTEXTO === 'function' ? window.NEXUS_CONTEXTO() : null;
+    let j; try { const ctx = Object.assign({}, typeof window.NEXUS_CONTEXTO === 'function' ? window.NEXUS_CONTEXTO() : {}, { cena: (typeof window.NEXUS_CENA === 'function' && window.NEXUS_CENA()) || (document.querySelector('.lc-raiz') && window.__nexusQuadro) || '' });
       const r = await fetch('/api/nexus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'conversar', mensagens: hist.filter((m) => !m.pend).slice(-10).map((m) => ({ papel: m.eu ? 'eu' : 'claude', texto: m.t })), contexto: ctx, cracha: ler('radar_chave'), token: ler('lp_token') }) });
       j = await r.json(); } catch (_) { j = { ok: false, err: 'Sem conexão agora.' }; }
     hist.pop();
@@ -103,6 +103,6 @@ export function iniciarGuia() {
   desenhar();
   window.NEXUS_GUIA = pedir;
   // dentro de um mundo, o guia mostra os pontos do sermão: tocar num ponto leva a cena até ele
-  window.NEXUS_MUNDO_QUADRO = (k, C) => { let bar = el.querySelector('.guia-pontos'); if (!bar) { bar = document.createElement('div'); bar.className = 'guia-pontos'; bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;border-bottom:1px solid rgba(243,211,142,.25);background:rgba(0,0,0,.18)'; el.insertBefore(bar, corpo); bar.addEventListener('click', (e) => { const b = e.target.closest('[data-q]'); if (b && window.NEXUS_MUNDO_IR) window.NEXUS_MUNDO_IR(+b.dataset.q); }); }
+  window.NEXUS_MUNDO_QUADRO = (k, C) => { window.__nexusQuadro = `${C.livro} · ${C.titulo}, ponto ${k + 1}: ${(C.quadros[k] && (C.quadros[k].ponto || C.quadros[k].ref)) || ''}`; let bar = el.querySelector('.guia-pontos'); if (!bar) { bar = document.createElement('div'); bar.className = 'guia-pontos'; bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;border-bottom:1px solid rgba(243,211,142,.25);background:rgba(0,0,0,.18)'; el.insertBefore(bar, corpo); bar.addEventListener('click', (e) => { const b = e.target.closest('[data-q]'); if (b && window.NEXUS_MUNDO_IR) window.NEXUS_MUNDO_IR(+b.dataset.q); }); }
     bar.innerHTML = `<small style="width:100%;color:rgba(243,226,179,.8);font-size:11px;letter-spacing:.08em">${esc(C.livro)} · ${esc(C.titulo)} · PONTOS</small>` + C.quadros.map((q, i) => `<button type="button" data-q="${i}" style="border:1px solid rgba(243,211,142,${i === k ? '.9' : '.35'});background:${i === k ? 'rgba(201,162,78,.55)' : 'rgba(0,0,0,.3)'};color:#fff;border-radius:999px;padding:3px 9px;font:600 11.5px Inter,sans-serif;cursor:pointer">${i + 1}. ${esc(q.ponto || q.ref)}</button>`).join(''); };
 }

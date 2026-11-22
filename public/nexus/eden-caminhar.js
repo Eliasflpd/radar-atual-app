@@ -614,8 +614,11 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     camera.updateMatrixWorld(); refletir(); renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); }
   requestAnimationFrame((a) => { raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
 
-  function fechar() { if (!ativo) return; ativo = false; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
+  function fechar() { if (!ativo) return; ativo = false; window.NEXUS_CENA = null; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
     setTimeout(() => { lixo.forEach((o) => o && o.dispose && o.dispose()); renderer.dispose(); raiz.remove(); }, 1400); if (aoFechar) aoFechar(); }
   raiz.querySelector('.ej-sair').onclick = fechar;
+  // o guia sabe onde o pastor está dentro do jardim (para conversar sobre o que ele vê)
+  const LUGAR = { arvore: 'diante da árvore da vida, no meio do jardim (Gn 2:9)', rio: 'onde o rio que sai do Éden se divide em quatro braços (Gn 2:10)', animais: 'entre os animais do jardim (Gn 2:19)', presenca: 'junto da luz que representa a presença do Senhor passeando no jardim (Gn 3:8)', chegada: 'na trilha que leva à árvore da vida (Gn 2:8)', bom: 'nas partes distantes do jardim (Gn 1:31)' };
+  window.NEXUS_CENA = () => 'Jardim do Éden em 3D (reconstituição artística, ilustrativa), ' + (voando ? 'chegando de drone' : voarLivre ? 'voando sobre o jardim' : (LUGAR[cartaoAtual] || 'andando pelo jardim, entre a mata e os rios'));
   return { cena, fechar, estado: () => ({ x: eu.x, z: eu.z, yaw, pitch, voando, bichos: bichos.length, onde: bichos.map((b) => [b.e.n, Math.round(b.x), Math.round(b.z)]) }), olhar: (y, p) => { yaw = y; pitch = p; }, irPara: (x, z) => { pularChegada(); eu.set(x, 0, z); } };
 }

@@ -1427,8 +1427,8 @@ module.exports = async (req, res) => {
       if (!msgs.length || msgs[msgs.length - 1].papel !== 'eu') { res.json({ ok: false, err: 'escreva uma pergunta' }); return; }
       const ctx = b.contexto || {};
       const nome = (x) => (/^x:/.test(String((x && x.id) || '')) ? '' : String((x && x.rotulo) || '').slice(0, 80));   // obras externas nunca vão para a IA
-      const foco = nome(ctx.foco), sel = nome(ctx.sel);
-      const user = (foco || sel ? '[Na tela agora' + (foco ? ': passagem em foco ' + foco : '') + (sel ? '; elemento selecionado ' + sel : '') + ']' + NL + NL : '') +
+      const foco = nome(ctx.foco), sel = nome(ctx.sel), cena = String(ctx.cena || '').replace(/[\r\n]+/g, ' ').slice(0, 240);
+      const user = (cena ? '[O pastor está agora dentro desta cena do NEXUS: ' + cena + '. Converse sobre o que ele vê quando fizer sentido, separando o texto bíblico da reconstituição artística.]' + NL : '') + (foco || sel ? '[Na tela agora' + (foco ? ': passagem em foco ' + foco : '') + (sel ? '; elemento selecionado ' + sel : '') + ']' + NL + NL : '') +
         msgs.map((m) => (m.papel === 'eu' ? 'PASTOR: ' : 'CLAUDE: ') + m.texto).join(NL + NL) + NL + NL + 'CLAUDE:';
       const rr = await IA.executar(db, { tarefa: 'conversar', sys: SYS_CONVERSA, user, dono: donoDe(b), investigacao: null });
       res.json({ ok: !!rr.texto, texto: String(rr.texto || '').trim() || 'Não consegui responder agora.', modelo: rr.modelo || '', custo_usd: rr.custo || 0, reaproveitado: !!rr.reaproveitado, motivo: rr.motivo || '' });
