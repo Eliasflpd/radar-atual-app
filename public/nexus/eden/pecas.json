@@ -1,4 +1,12 @@
 {
+"explorador-costas": {
+"w": 524,
+"h": 1024
+},
+"explorador-frente": {
+"w": 496,
+"h": 1024
+},
 "arbusto-flores": {
 "w": 930,
 "h": 1024
@@ -54,5 +62,42 @@
 "pavao": {
 "w": 1024,
 "h": 684
+},
+"explorador": {
+"giro": 0,
+"frenteZ": 1,
+"glb": 1
+},
+"mata-arbusto": {
+"w": 1024,
+"h": 519
+},
+"mata-arvore-alta": {
+"w": 668,
+"h": 1024
+},
+"mata-bambu": {
+"w": 666,
+"h": 1024
+},
+"mata-folhagem": {
+"w": 1024,
+"h": 684
+},
+"mata-heliconia": {
+"w": 1024,
+"h": 1021
+},
+"mata-palmeira-acai": {
+"w": 663,
+"h": 1024
+},
+"mata-samambaia": {
+"w": 1023,
+"h": 1024
+},
+"mata-sumauma": {
+"w": 683,
+"h": 1024
 }
 }

@@ -9,6 +9,10 @@ src = sys.argv[1]
 dst = os.path.join(os.path.dirname(__file__), '..', 'public', 'nexus', 'eden')
 os.makedirs(dst, exist_ok=True)
 pecas = {}
+try:
+    pecas = json.load(open(os.path.join(dst, 'pecas.json')))
+except Exception:
+    pass
 for nome in sorted(os.listdir(src)):
     if not nome.lower().endswith('.png'):
         continue

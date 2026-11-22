@@ -22,7 +22,7 @@ const NOTAS = {
 export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}) {
   const BASES = [(window.NEXUS_MIDIA || '/nexus') + '/eden/', '/nexus/eden/'];
   let pecas = {}, base = BASES[0];
-  for (const b of BASES) { try { const r = await fetch(b + 'pecas.json?v=1'); if (r.ok) { pecas = await r.json(); base = b; break; } } catch (_) {} }
+  for (const b of BASES) { try { const r = await fetch(b + 'pecas.json', { cache: 'no-cache' }); if (r.ok) { pecas = await r.json(); base = b; break; } } catch (_) {} }
   const toque = matchMedia('(pointer: coarse)').matches;
 
   const raiz = document.createElement('div'); raiz.className = 'ej-raiz';
@@ -41,7 +41,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     .ej-mira{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:rgba(255,255,255,.6);pointer-events:none}
   </style><canvas></canvas><div class="ej-mira"></div>
   <div class="ej-cab"><h2>O jardim do Éden</h2><p>GÊNESIS 2:8–15 · ANDAR NO JARDIM</p></div>
-  <div class="ej-bts"><button type="button" class="ej-som">🔈 Som</button><button type="button" class="ej-sair">↩ Voltar</button></div>
+  <div class="ej-bts"><button type="button" class="ej-modo">👁 Primeira pessoa</button><button type="button" class="ej-som">🔈 Som</button><button type="button" class="ej-sair">↩ Voltar</button></div>
   <div class="ej-card"></div><div class="ej-joy"><b></b></div>
   <div class="ej-cred">Reconstituição artística: peças geradas pelo ChatGPT a pedido do NEXUS (ilustrativas). O texto bíblico não descreve a aparência do jardim.</div>
   <div class="ej-dica">${toque ? 'Joystick para andar · arraste para olhar · toque duplo no chão para ir até lá' : 'W A S D ou setas para andar · Shift corre · arraste para olhar · duplo clique no chão para ir até lá'}</div>`;
@@ -50,7 +50,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(toque ? 1.5 : 2, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
-  const cena = new THREE.Scene(); const NEVOA = new THREE.Color(0xc9d2b6), DENS = 0.0013;
+  const cena = new THREE.Scene(); const NEVOA = new THREE.Color(0xc4cfa8), DENS = 0.0019;
   cena.fog = new THREE.FogExp2(NEVOA, DENS); cena.background = NEVOA;
   const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 3000);
   const SOL = new THREE.Vector3(-0.55, 0.42, -0.72).normalize();
@@ -170,12 +170,14 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
 #include <colorspace_fragment>
       }` });
   const quad = new THREE.PlaneGeometry(1, 1); quad.translate(0, 0.5, 0); lixo.push(quad);
+  const obst = [];   // troncos: o explorador não atravessa
   async function figuras(nome, lista, alturaReal, vento = 0) {
     const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + '.png'); if (!tex) return null; lixo.push(tex);
     const asp = pc.w / pc.h, g = new THREE.InstancedBufferGeometry(); g.index = quad.index; g.attributes.position = quad.attributes.position; g.attributes.uv = quad.attributes.uv; g.instanceCount = lista.length;
     const P = new Float32Array(lista.length * 3), S = new Float32Array(lista.length * 2), F = new Float32Array(lista.length), R = new Float32Array(lista.length);
     lista.forEach((o, i) => { const hR = alturaReal * (o.s || 1); P.set([o.x, altura(o.x, o.z) - 0.15, o.z], i * 3); S.set([hR * asp, hR], i * 2); F[i] = Math.random() * 6.28; R[i] = o.vira ? 1 : 0; });
     g.setAttribute('iPos', new THREE.InstancedBufferAttribute(P, 3)); g.setAttribute('iTam', new THREE.InstancedBufferAttribute(S, 2)); g.setAttribute('iFase', new THREE.InstancedBufferAttribute(F, 1)); g.setAttribute('iVira', new THREE.InstancedBufferAttribute(R, 1));
+    if (/arvore|palmeira/.test(nome)) lista.forEach((o) => obst.push({ x: o.x, z: o.z, r: 0.35 + alturaReal * (o.s || 1) * 0.045 }));
     const m = new THREE.Mesh(g, matFig(tex, vento)); m.frustumCulled = false; cena.add(m); lixo.push(g, m.material); return { m, P, R, g };
   }
   // espalha posições evitando a água e o caminho de chegada
@@ -191,6 +193,15 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     figuras('arvore-fruto-2', espalhar(toque ? 120 : 200, 30, 520, 7, [centroArv]), 12, 1),
     figuras('palmeira', rios.flatMap((c) => Array.from({ length: 26 }, (_, k) => { const u = (k + 0.5) / 26, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = k % 2 ? 1 : -1, d = 14 + rnd() * 10; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.4, vira: rnd() > 0.5 }; })).filter((o) => Math.hypot(o.x, o.z) > 24 && !naAgua(o.x, o.z)), 14, 0.8),
     figuras('arbusto-flores', espalhar(toque ? 260 : 420, 10, 400, 3.5, [centroArv]), 1.6, 0.6),
+    // A MATA FECHADA, em camadas: gigantes que furam a copa, árvores altas, palmeiras, bambus, samambaias e folhagens no chão
+    figuras('mata-sumauma', espalhar(toque ? 40 : 70, 45, 560, 12, [centroArv]), 46, 0.35),
+    figuras('mata-arvore-alta', espalhar(toque ? 200 : 340, 28, 560, 8, [centroArv]), 26, 0.6),
+    figuras('mata-palmeira-acai', espalhar(toque ? 160 : 260, 18, 450, 5, [centroArv]), 13, 0.9),
+    figuras('mata-bambu', rios.flatMap((c) => Array.from({ length: 22 }, (_, k) => { const u = (k + rnd()) / 22, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = 11 + rnd() * 8; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.5, vira: rnd() > 0.5 }; })).filter((o) => Math.hypot(o.x, o.z) > 26 && !naAgua(o.x, o.z) && !(Math.abs(o.x) < 7 && o.z > 8 && o.z < 150)), 11, 0.9),
+    figuras('mata-samambaia', espalhar(toque ? 320 : 560, 12, 320, 3, [centroArv]), 5, 0.8),
+    figuras('mata-folhagem', espalhar(toque ? 600 : 1000, 6, 260, 2.2, [centroArv]), 2.3, 0.7),
+    figuras('mata-heliconia', espalhar(toque ? 300 : 520, 6, 260, 2.2, [centroArv]), 2.1, 0.7),
+    figuras('mata-arbusto', espalhar(toque ? 400 : 700, 5, 300, 2, [centroArv]), 1.4, 0.6),
   ]);
 
   // ANIMAIS que andam devagar pelo jardim (o leão descansa)
@@ -220,7 +231,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ transparent: false, side: THREE.DoubleSide, uniforms: { ...unif, map: { value: tex } },
       vertexShader: `uniform float t; attribute vec4 iC; varying vec2 vUv; varying float vD;
         void main(){ vUv = uv; float f = iC.w; vec3 c;
-          ${modo ? `c = iC.xyz + vec3(sin(t*.7+f)*3. + sin(t*1.9+f*2.)*1.2, 1.1 + sin(t*1.3+f)*.6 + sin(t*3.7+f)*.2, cos(t*.6+f*1.3)*3. + cos(t*2.3+f)*1.);` : `float r = 30. + mod(f, 7.) * 9.; float w = .12 + mod(f, 3.) * .03; c = vec3(iC.x + cos(t*w + f) * r, iC.y + sin(t*.4+f)*4., iC.z + sin(t*w + f) * r);`}
+          ${modo ? `c = iC.xyz + vec3(sin(t*.7+f)*3. + sin(t*1.9+f*2.)*1.2, 1.1 + sin(t*1.3+f)*.6 + sin(t*3.7+f)*.2, cos(t*.6+f*1.3)*3. + cos(t*2.3+f)*1.);` : `float r = 30. + mod(f, 7.) * 9.; float wv = .12 + mod(f, 3.) * .03; c = vec3(iC.x + cos(t*wv + f) * r, iC.y + sin(t*.4+f)*4., iC.z + sin(t*wv + f) * r);`}
           float bate = abs(sin(t * ${modo ? '14.' : '5.'} + f * 3.)); float esc = ${tam.toFixed(2)};
           vec3 dX = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]); vec3 dY = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
           vec3 w = c + dX * position.x * esc * (.25 + .75 * bate) + dY * position.y * esc;
@@ -251,6 +262,41 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   brilho.scale.set(26, 26, 1); brilho.position.y = 6; presenca.add(brilho); lixo.push(brilho.material);
   const caminhoPresenca = new THREE.CatmullRomCurve3([V(70, 60), V(120, -40), V(40, -120), V(-80, -90), V(-120, 20), V(-60, 110), V(30, 120)], true);
   const posPresenca = new THREE.Vector3();
+
+  // O EXPLORADOR (terceira pessoa): imagem do ChatGPT -> malha 3D (Hunyuan3D-2); a roupa é projetada das fotos de frente e de costas,
+  // e o passo (pernas e braços) é feito no próprio desenho da malha
+  let avatar = null, matAv = null, modo = 'terceira', rumo = Math.PI, fasePasso = 0;
+  try {
+    const resp = pecas.explorador ? await fetch(base + 'explorador.malha?v=1') : null;
+    if (resp && resp.ok) {
+      const buf = await resp.arrayBuffer(), [nv, ni] = new Uint32Array(buf, 0, 2);
+      const gm = new THREE.BufferGeometry(); gm.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf, 8, nv * 3), 3)); gm.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, 8 + nv * 12, ni), 1)); gm.computeVertexNormals(); lixo.push(gm);
+      const modelo = new THREE.Group(); modelo.add(new THREE.Mesh(gm)); modelo.updateMatrixWorld(true);
+      const cx = new THREE.Box3().setFromObject(modelo), tam = cx.getSize(new THREE.Vector3());
+      const [tf, tc] = await Promise.all([carregar('explorador-frente.png'), carregar('explorador-costas.png')]); lixo.push(tf, tc);
+      matAv = new THREE.ShaderMaterial({ uniforms: { ...unif, fr: { value: tf }, co: { value: tc }, bmin: { value: cx.min }, bmax: { value: cx.max }, fase: { value: 0 }, amp: { value: 0 }, sol: { value: SOL }, frenteZ: { value: pecas.explorador.frenteZ ?? 1 } },
+        vertexShader: `uniform vec3 bmin, bmax; uniform float fase, amp; varying vec2 vUv; varying vec3 vN, vON; varying float vD;
+          void main(){ vec3 p = position; vec3 tam = bmax - bmin; float hy = (p.y - bmin.y) / tam.y; float ux = (p.x - bmin.x) / tam.x; vUv = vec2(ux, hy); vON = normal;
+            float lado = sign(ux - .5); float perna = smoothstep(.48, .02, hy) * smoothstep(.0, .06, abs(ux - .5));
+            p.z += sin(fase) * lado * perna * amp * tam.y * .16; p.y += max(0., sin(fase * 2.)) * amp * tam.y * .012;
+            float braco = smoothstep(.45, .58, hy) * smoothstep(.82, .7, hy) * smoothstep(.2, .32, abs(ux - .5)); p.z -= sin(fase) * lado * braco * amp * tam.y * .08;
+            vN = normalize(mat3(modelMatrix) * normal); vec4 mv = modelViewMatrix * vec4(p, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
+        fragmentShader: `uniform sampler2D fr, co; uniform vec3 sol, nevoa; uniform float dens, frenteZ; varying vec2 vUv; varying vec3 vN, vON; varying float vD;
+          void main(){ vec4 a = texture2D(fr, vUv), b = texture2D(co, vec2(1. - vUv.x, vUv.y)); vec3 manto = vec3(.42,.33,.22);
+            vec3 ca = mix(manto, a.rgb, step(.5, a.a)), cb = mix(manto, b.rgb, step(.5, b.a)); float k = smoothstep(-.25, .25, vON.z * frenteZ);
+            vec3 c = mix(cb, ca, k) * (.62 + .55 * max(dot(normalize(vN), sol), 0.)); float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), 1.);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+          }` });
+      modelo.traverse((o) => { if (o.isMesh) { o.material = matAv; if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals(); o.frustumCulled = false; } });
+      const esc = 1.75 / tam.y; const piv = new THREE.Group(); modelo.scale.multiplyScalar(esc); modelo.position.set(-(cx.min.x + tam.x / 2) * esc, -cx.min.y * esc, -(cx.min.z + tam.z / 2) * esc); piv.add(modelo);
+      avatar = piv; cena.add(avatar); lixo.push(matAv);
+    }
+  } catch (e) { console.warn('explorador', e); avatar = null; }
+  if (!avatar) modo = 'primeira';
+  const btModo = raiz.querySelector('.ej-modo'); btModo.style.display = avatar ? '' : 'none';
+  btModo.onclick = () => { modo = modo === 'terceira' ? 'primeira' : 'terceira'; btModo.textContent = modo === 'terceira' ? '👁 Primeira pessoa' : '🎥 Terceira pessoa'; if (modo === 'terceira') pitch = -0.12; camIni = false; };
+  const camPos = new THREE.Vector3(), olhoAlvo = new THREE.Vector3(); let camIni = false;
 
   // CÂMERA e CONTROLES
   let yaw = Math.PI, pitch = -0.05, voando = chegada; const eu = new THREE.Vector3(0, 0, 70); const vel = new THREE.Vector3();
@@ -294,26 +340,46 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
 
   // CHEGADA DE DRONE: do alto, sobre o jardim, descendo em curva até pousar na trilha diante da árvore da vida
   const voo = new THREE.CatmullRomCurve3([V(-200, 480).setY(260), V(-90, 330).setY(150), V(40, 220).setY(70), V(30, 150).setY(30), V(0, 72).setY(0)]);
+  if (avatar) { voo.points[voo.points.length - 1].set(0, 2.2, 76); voo.points[voo.points.length - 2].set(20, 30, 140); voo.updateArcLengths(); }
   const DUR = 11000; let t0 = performance.now();
   if (voando) raiz.classList.add('voando');
   function pularChegada() { if (!voando) return; voando = false; raiz.classList.remove('voando'); cartao('chegada'); }
   let ativo = true, antes = performance.now(), passoBob = 0;
   function quadro(agora) { if (!ativo) return; const dt = Math.min(0.05, (agora - antes) / 1000); antes = agora; const t = agora / 1000; unif.t.value = t;
     if (voando) { const q = Math.min(1, (agora - t0) / DUR), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; const p = voo.getPointAt(e); const hc = altura(p.x, p.z); camera.position.set(p.x, Math.max(hc + 1.7, hc + p.y + 1.7), p.z);
-      const olhaPara = new THREE.Vector3(0, 10 * (1 - e) + 6 * e, 0); camera.lookAt(olhaPara); const fw = new THREE.Vector3(); camera.getWorldDirection(fw); yaw = Math.atan2(-fw.x, -fw.z); pitch = Math.asin(fw.y); eu.set(p.x, 0, p.z);
+      const olhaPara = new THREE.Vector3(0, 10 * (1 - e) + 6 * e, 0); camera.lookAt(olhaPara); const fw = new THREE.Vector3(); camera.getWorldDirection(fw); yaw = Math.atan2(-fw.x, -fw.z); pitch = Math.asin(fw.y); if (modo === 'primeira' || !avatar) eu.set(p.x, 0, p.z); else { eu.set(0, 0, 70); rumo = Math.PI; } camPos.copy(camera.position); camIni = true;
       if (q >= 1) pularChegada(); }
     else {
       // andar
       let fx = 0, fz = 0; if (teclas.has('w') || teclas.has('arrowup')) fz += 1; if (teclas.has('s') || teclas.has('arrowdown')) fz -= 1; if (teclas.has('a')) fx -= 1; if (teclas.has('d')) fx += 1;
       if (teclas.has('arrowleft')) yaw += dt * 1.6; if (teclas.has('arrowright')) yaw -= dt * 1.6;
       fx += joy.x; fz += -joy.y;
-      if (indo) { const dx = indo.x - eu.x, dz = indo.z - eu.z, d = Math.hypot(dx, dz); if (d < 1.2) indo = null; else { const alvoYaw = Math.atan2(-dx, -dz); let dy = alvoYaw - yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); yaw += dy * Math.min(1, dt * 3); fz = Math.min(1, d / 4); } }
-      const corre = teclas.has('shift') ? 2.6 : 1, vMax = 4.2 * corre; const sinY = Math.sin(yaw), cosY = Math.cos(yaw);
+      if (indo && !(modo === 'terceira' && avatar)) { const dx = indo.x - eu.x, dz = indo.z - eu.z, d = Math.hypot(dx, dz); if (d < 1.2) indo = null; else { const alvoYaw = Math.atan2(-dx, -dz); let dy = alvoYaw - yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); yaw += dy * Math.min(1, dt * 3); fz = Math.min(1, d / 4); } }
+      const terceira = modo === 'terceira' && avatar;
+      if (terceira && indo) { const dx = indo.x - eu.x, dz = indo.z - eu.z, d = Math.hypot(dx, dz); if (d < 1.2) indo = null; else { const sY = Math.sin(yaw), cY = Math.cos(yaw), ff = Math.min(1, d / 4) / d; fz = (-sY * dx - cY * dz) * ff; fx = (cY * dx - sY * dz) * ff; } }
+      const corre = teclas.has('shift') ? 2.6 : 1, vMax = (terceira ? 3.4 : 4.2) * corre; const sinY = Math.sin(yaw), cosY = Math.cos(yaw);
       const alvoV = new THREE.Vector3((-sinY * fz + cosY * fx) * vMax, 0, (-cosY * fz - sinY * fx) * vMax); vel.lerp(alvoV, Math.min(1, dt * 6));
-      eu.addScaledVector(vel, dt); const r = Math.hypot(eu.x, eu.z); if (r > 620) eu.multiplyScalar(620 / r);
-      const vv = vel.length(); passoBob += vv * dt * 1.9; const agua = naAgua(eu.x, eu.z);
-      camera.position.set(eu.x, altura(eu.x, eu.z) + (agua ? 1.25 : 1.7) + Math.sin(passoBob * 2) * 0.035 * Math.min(1, vv / 3), eu.z);
-      camera.rotation.set(0, 0, 0); camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = pitch;
+      eu.addScaledVector(vel, dt);
+      // não atravessa troncos nem animais
+      for (const o of obst) { const dx = eu.x - o.x, dz = eu.z - o.z, d = Math.hypot(dx, dz), m = o.r + 0.35; if (d < m && d > 1e-4) { eu.x = o.x + dx / d * m; eu.z = o.z + dz / d * m; } }
+      for (const b of bichos) { const dx = eu.x - b.x, dz = eu.z - b.z, d = Math.hypot(dx, dz), m = 0.3 + b.e.h * 0.45; if (d < m && d > 1e-4) { eu.x = b.x + dx / d * m; eu.z = b.z + dz / d * m; } }
+      const r = Math.hypot(eu.x, eu.z); if (r > 620) eu.multiplyScalar(620 / r);
+      const vv = vel.length(); passoBob += vv * dt * 1.9; const agua = naAgua(eu.x, eu.z), hc = altura(eu.x, eu.z);
+      if (terceira) {
+        if (vv > 0.3) { const alvo = Math.atan2(vel.x, vel.z); let d = alvo - rumo; d = Math.atan2(Math.sin(d), Math.cos(d)); rumo += d * Math.min(1, dt * 9); }
+        fasePasso += vv * dt * 2.3; matAv.uniforms.fase.value = fasePasso; matAv.uniforms.amp.value += (Math.min(1.1, vv / 3.4) - matAv.uniforms.amp.value) * Math.min(1, dt * 8);
+        avatar.visible = true; avatar.position.set(eu.x, hc - (agua ? 0.45 : 0.02), eu.z); avatar.rotation.y = rumo + (pecas.explorador.giro || 0);
+        // câmera atrás do ombro, com atraso suave
+        const p2 = Math.max(-0.15, Math.min(1.1, -pitch + 0.22)), D = 3.5, dir = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)), dirX = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+        const des = new THREE.Vector3(eu.x + dir.x * Math.cos(p2) * D + dirX.x * 0.6, hc + 1.55 + Math.sin(p2) * D, eu.z + dir.z * Math.cos(p2) * D + dirX.z * 0.6);
+        des.y = Math.max(des.y, altura(des.x, des.z) + 0.5);
+        if (!camIni) { camPos.copy(des); camIni = true; } camPos.lerp(des, 1 - Math.exp(-dt * 7)); camera.position.copy(camPos);
+        olhoAlvo.set(eu.x - dir.x * 2.2 + dirX.x * 0.6, hc + 1.45, eu.z - dir.z * 2.2 + dirX.z * 0.6); camera.lookAt(olhoAlvo);
+      } else {
+        if (avatar) avatar.visible = false;
+        camera.position.set(eu.x, hc + (agua ? 1.25 : 1.7) + Math.sin(passoBob * 2) * 0.035 * Math.min(1, vv / 3), eu.z);
+        camera.rotation.set(0, 0, 0); camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = pitch;
+      }
       // cartões por proximidade
       const dArv = Math.hypot(eu.x, eu.z), dForq = Math.hypot(eu.x - FORQ.x, eu.z - FORQ.z), dPres = Math.hypot(eu.x - posPresenca.x, eu.z - posPresenca.z);
       const perto = bichos.some((b) => Math.hypot(b.x - eu.x, b.z - eu.z) < 9);
@@ -321,7 +387,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     }
     moverBichos(dt);
     caminhoPresenca.getPointAt(((t / 160) % 1 + 1) % 1, posPresenca); presenca.position.set(posPresenca.x, altura(posPresenca.x, posPresenca.z), posPresenca.z); brilho.material.opacity = 0.75 + 0.25 * Math.sin(t * 1.7);
-    matGrama.uniforms.centro.value.set(camera.position.x, camera.position.z); grama.visible = camera.position.y - altura(camera.position.x, camera.position.z) < 25;
+    if (voando) matGrama.uniforms.centro.value.set(camera.position.x, camera.position.z); else matGrama.uniforms.centro.value.set(eu.x, eu.z); grama.visible = camera.position.y - altura(camera.position.x, camera.position.z) < 25;
+    if (avatar && voando) { avatar.visible = modo === 'terceira'; avatar.position.set(eu.x, altura(eu.x, eu.z), eu.z); avatar.rotation.y = rumo + (pecas.explorador.giro || 0); }
     if (ceu) ceu.position.copy(camera.position);
     if (audio && somLigado) { const [d, w] = distRio(camera.position.x, camera.position.z), k = Math.max(0, 1 - Math.max(0, d - w) / 60); audio.gA.gain.setTargetAtTime(0.55 * k * k, audio.ctx.currentTime, 0.3); audio.gA2.gain.setTargetAtTime(0.10 * k * k, audio.ctx.currentTime, 0.3);
       const dP = Math.hypot(camera.position.x - posPresenca.x, camera.position.z - posPresenca.z); audio.gV.gain.setTargetAtTime(0.14 + 0.35 * Math.max(0, 1 - dP / 40) + 0.06 * Math.sin(t * 0.3), audio.ctx.currentTime, 0.5); }
