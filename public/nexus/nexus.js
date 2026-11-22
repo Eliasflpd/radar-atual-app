@@ -99,7 +99,7 @@ window.NEXUS_CONTEXTO = () => { const no = (id) => (id && S.graph && S.graph.has
 import('/nexus/conversa.js?v=1').then((m) => m.iniciarConversa()).catch(() => {});
 import('/nexus/preparar.js?v=2').then((m) => m.iniciarPreparar()).catch(() => {});
 window.NEXUS_MIDIA = 'https://pub-4e9e380943cf4c73a98a95e5d5633c95.r2.dev';   // imagens e peças 3D no Cloudflare R2 (entrega rápida e gratuita)
-import('/nexus/guia.js?v=19').then((m) => m.iniciarGuia()).catch(() => {});   // guia flutuante: peça e a cena muda
+import('/nexus/guia.js?v=20').then((m) => m.iniciarGuia()).catch(() => {});   // guia flutuante: peça e a cena muda
 window.NEXUS_ABRIR_CEU = () => abrirCeu();   // a barra Preparar abre o universo para ele trabalhar
 function tirarExternos() {
   const g = S.graph; if (!g || !g.order) return;
@@ -477,7 +477,7 @@ async function abrirCeu() {
       const local = /^(localhost|127\.)/.test(location.hostname);
       const arquivo = PARAM_CEU === 'classico' ? '/nexus/ceu.js?v=9'
         : PARAM_CEU === 'previa' && local ? '/nexus/ceu-previa.js?v=1'
-        : new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' : '/nexus/ceu-universo.js?v=156';
+        : new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' : '/nexus/ceu-universo.js?v=157';
       const { criarCeu } = await import(arquivo);
       ceu = criarCeu($('ceu'), S, { visivelNo, visivelAresta, selecionar, expandir, painelAresta, abrirGrupo, indisponivel: ceuIndisponivel });
       window.__ceuPrevia = ceu;   // ganchos de teste (só leitura)

@@ -589,6 +589,23 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   btModo.onclick = () => { modo = modo === 'terceira' ? 'primeira' : 'terceira'; btModo.textContent = modo === 'terceira' ? '👁 Primeira pessoa' : '🎥 Terceira pessoa'; if (modo === 'terceira') pitch = -0.12; camIni = false; };
   const camPos = new THREE.Vector3(), olhoAlvo = new THREE.Vector3(); let camIni = false;
 
+  // SEGUIR ADIANTE: dentro de um mundo, o chat entende pedidos de lugar que estão à vista e leva você até lá (sem voltar ao globo)
+  let indoLonge = null;
+  window.NEXUS_MUNDO_ACAO = (q) => {
+    if (G && /templo|santuario|santo lugar|cidade|jerusalem|muralha|porta (oriental|dourada|formosa)/.test(q)) {
+      const santo = /dentro|santo|santuario|interior/.test(q), cidade = /cidade|jerusalem|muralha/.test(q) && !/templo/.test(q);
+      indoLonge = { t0: performance.now(), de: camera.position.clone(), para: new THREE.Vector3(-TD.x * 300, 60, -TD.z * 300), olhar: new THREE.Vector3(-TD.x * 340, 40, -TD.z * 340), dur: 6500,
+        fim: () => { raiz.style.transition = 'opacity .8s ease'; raiz.classList.remove('on'); setTimeout(() => { fechar(); if (typeof window.NEXUS_ENTRAR_TEMPLO === 'function') window.NEXUS_ENTRAR_TEMPLO(santo ? 'santo' : cidade ? 'esplanada' : 'entrada'); }, 700); } };
+      return santo ? 'Atravessando o vale do Cedrom e subindo ao Templo… vamos entrar no Santo Lugar.' : cidade ? 'Atravessando o vale do Cedrom até a cidade…' : 'Atravessando o vale do Cedrom até o Templo…';
+    }
+    if (/suba|subir|ver de cima|vista de cima|vista aerea/.test(q)) { subida = Math.min(LIM * 0.6, subida + 250); return 'Subindo para ver de cima.'; }
+    if (/desca|descer|pousar|chao/.test(q)) { subida = 0; voarLivre = false; return 'Descendo.'; }
+    if (/rocha|onde (ele|jesus) orou/.test(q) && G) { indo = new THREE.Vector3(TD.x * 3, 0, TD.z * 3); return 'Indo até a rocha onde Jesus orou.'; }
+    if (/arvore da vida|meio do jardim/.test(q) && E) { indo = new THREE.Vector3(TD.x * 24, 0, TD.z * 24); return 'Indo até a árvore da vida.'; }
+    if (/golias|meio do vale/.test(q) && L) { indo = new THREE.Vector3(0, 0, 25); return 'Descendo ao vale, até Golias.'; }
+    if (/ribeiro|seixos|pedras/.test(q) && L) { indo = new THREE.Vector3(0, 0, ribZ(0) - 4); return 'Indo até o ribeiro dos seixos.'; }
+    return null;
+  };
   // RODA DO MOUSE (ou pinça): para trás o drone sobe; o lugar some lá embaixo e você sai no globo (como no Google Earth); para frente, desce
   let subida = 0, saindo = false; const LIM = E ? 1500 : 800;
   const subir = (d) => { if (saindo) return; subida = Math.max(0, Math.min(LIM + 50, subida + d)); if (subida > LIM && typeof window.NEXUS_PARA_GLOBO === 'function' && MW.lat != null) { saindo = true; raiz.style.transition = 'opacity .9s ease'; raiz.classList.remove('on'); setTimeout(() => { window.NEXUS_PARA_GLOBO(MW.lat, MW.lon); fechar(); }, 700); } };
@@ -671,6 +688,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   function pularChegada() { if (!voando) return; voando = false; raiz.classList.remove('voando'); cartao('chegada'); }
   let ativo = true, antes = performance.now(), passoBob = 0;
   function quadro(agora) { if (!ativo) return; const dt = Math.min(0.05, (agora - antes) / 1000); antes = agora; const t = agora / 1000; unif.t.value = t;
+    if (indoLonge) { const q = Math.min(1, (agora - indoLonge.t0) / indoLonge.dur), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; camera.position.lerpVectors(indoLonge.de, indoLonge.para, e); camera.position.y += Math.sin(q * Math.PI) * 25; camera.lookAt(indoLonge.olhar);
+      if (q >= 1) { const f = indoLonge.fim; indoLonge = null; f(); } renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); return; }
     if (voando) { const q = Math.min(1, (agora - t0) / DUR), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; const p = voo.getPointAt(e); const hc = altura(p.x, p.z); camera.position.set(p.x, Math.max(hc + 1.7, hc + p.y + 1.7), p.z);
       const olhaPara = new THREE.Vector3(0, 10 * (1 - e) + 6 * e, 0); camera.lookAt(olhaPara); const fw = new THREE.Vector3(); camera.getWorldDirection(fw); yaw = Math.atan2(-fw.x, -fw.z); pitch = Math.asin(fw.y); if (modo === 'primeira' || !avatar) eu.set(p.x, 0, p.z); else { eu.copy(VT(2.5 * Math.sin(I / 13), I)); rumo = Math.atan2(-TD.x, -TD.z); } camPos.copy(camera.position); camIni = true;
       if (q >= 1) pularChegada(); }
@@ -725,7 +744,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     camera.updateMatrixWorld(); refletir(); renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); }
   requestAnimationFrame((a) => { raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
 
-  function fechar() { if (!ativo) return; ativo = false; window.NEXUS_CENA = null; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
+  function fechar() { if (!ativo) return; ativo = false; window.NEXUS_CENA = null; window.NEXUS_MUNDO_ACAO = null; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
     setTimeout(() => { lixo.forEach((o) => o && o.dispose && o.dispose()); renderer.dispose(); raiz.remove(); }, 1400); if (aoFechar) aoFechar(); }
   raiz.querySelector('.ej-sair').onclick = fechar;
   // o guia sabe onde o pastor está dentro do jardim (para conversar sobre o que ele vê)

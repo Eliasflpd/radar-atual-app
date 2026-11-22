@@ -91,6 +91,8 @@ export function iniciarGuia() {
     // foto de um lugar: vira cena 3D realista na hora (profundidade calculada no próprio aparelho)
     const foto = anexos.find((a) => a.tipo === 'imagem' && !a.video); if (foto) abrir3D(foto.url || foto.thumb, texto);
     if (anexos.length) { await conversar(texto || (foto ? 'Que lugar é este? Me conte o que você vê e a ligação com a Bíblia, se houver.' : 'Leia o anexo e me diga o essencial.'), anexos); return; }
+    // dentro de um mundo, o pedido de ir a algo que está à vista segue dali mesmo (não volta ao globo)
+    if (typeof window.NEXUS_MUNDO_ACAO === 'function') { const r = window.NEXUS_MUNDO_ACAO(q); if (r) { hist.push({ t: r, nota: 'no mundo · sem custo', hora: hora() }); guardar(); desenhar(); return; } }
     const pergunta = /\?$/.test(texto) || /^(o que|oque|por que|porque|pq|quem|como|qual|quais|quando|onde|sera|explique|me explica|fale|me fala|conte|me conta|voce acha)\b/.test(q);
     const comando = /\b(me leve|leve-me|me leva|leva|abra|abre|abrir|mostre|mostra|mostrar|quero ver|quero ir|quero andar|quero entrar|quero conhecer|vamos|ir para|ir ao|va para|entrar|entra|entre|visitar|visite|conhecer|passear|andar|vislumbre|visao|me de|me da|deixa eu ver|leve)\b/.test(q) || (!pergunta && q.split(/\s+/).length <= 4);
     const cena = comando || /\b(estudo|sermao|pregacao)\b/.test(q) ? CENAS.find(([re]) => re.test(q)) : null;
