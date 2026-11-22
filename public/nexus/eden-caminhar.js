@@ -21,10 +21,10 @@ const NOTAS = {
 
 // MUNDOS ANDÁVEIS: o mesmo motor monta o Éden e os lugares de Jesus. Cada mundo tem suas peças (pasta), céu, hora do dia e textos.
 export const MUNDOS_ANDAVEIS = {
-  eden: { titulo: 'O jardim do Éden', sub: 'GÊNESIS 2:8–15 · ANDAR NO JARDIM', pasta: 'eden', ceu: '/livros/eden-360-montanhas.jpg', noite: false, TD: { x: -0.6, z: -0.8 },
+  eden: { titulo: 'O jardim do Éden', sub: 'GÊNESIS 2:8–15 · ANDAR NO JARDIM', pasta: 'eden', ceu: '/livros/eden-360-montanhas.jpg', noite: false, lat: 31.0, lon: 47.4, TD: { x: -0.6, z: -0.8 },
     credito: 'Reconstituição artística: peças geradas pelo ChatGPT a pedido do NEXUS (ilustrativas). O texto bíblico não descreve a aparência do jardim.', versos: VERSOS, notas: NOTAS,
     lugar: { arvore: 'diante da árvore da vida, no meio do jardim (Gn 2:9)', rio: 'onde o rio que sai do Éden se divide em quatro braços (Gn 2:10)', animais: 'entre os animais do jardim (Gn 2:19)', presenca: 'junto da luz que representa a presença do Senhor passeando no jardim (Gn 3:8)', chegada: 'na trilha que leva à árvore da vida (Gn 2:8)', bom: 'nas partes distantes do jardim (Gn 1:31)' }, nome: 'Jardim do Éden' },
-  getsemani: { titulo: 'O Getsêmani', sub: 'MATEUS 26:36–46 · NOITE DE PÁSCOA, c. 30 d.C.', pasta: 'getsemani', ceu: '/getsemani/ceu-noite-360.jpg', noite: true, TD: { x: -0.766, z: 0.643 },   // a trilha desce do monte; de frente para a rocha, Jerusalém fica ao fundo (como no céu 360°)
+  getsemani: { titulo: 'O Getsêmani', sub: 'MATEUS 26:36–46 · NOITE DE PÁSCOA, c. 30 d.C.', pasta: 'getsemani', ceu: '/getsemani/ceu-noite-360.jpg', noite: true, lat: 31.7795, lon: 35.2398, TD: { x: -0.766, z: 0.643 },   // a trilha desce do monte; de frente para a rocha, Jerusalém fica ao fundo (como no céu 360°)
     credito: 'Reconstituição artística do olival na encosta do Monte das Oliveiras, de noite (peças do ChatGPT, ilustrativas). A Páscoa cai na lua cheia; a posição exata do jardim não é conhecida.',
     versos: {
       chegada: ['João 18:1', 'Tendo Jesus dito isto, saiu com seus discípulos para o outro lado do ribeiro de Cedrom, onde havia um jardim, e com eles ali entrou.'],
@@ -37,7 +37,7 @@ export const MUNDOS_ANDAVEIS = {
     },
     notas: { vigiai: 'As 8 oliveiras antigas de hoje, junto à Basílica da Agonia, foram datadas em parte por carbono-14: três têm troncos dos anos 1092, 1166 e 1198 (estudo italiano de 2012, publicado em 2015); as raízes podem ser mais antigas. Aqui elas representam o olival da época, não as árvores do ano 30.', cidade: 'Do outro lado do vale do Cedrom, a uns 300 m e mais alto que o olival: Jerusalém, com o Templo de Herodes no monte do Templo, as muralhas e a porta do lado leste; ao sul, a Cidade de Davi e o Monte Sião. (Lc 19:41 se passa nesta mesma encosta, alguns dias antes.)', rocha: 'Lucas 22:44 acrescenta a agonia e o suor “como grandes gotas de sangue”. A rocha aqui é ilustrativa; a tradição a mostra na Basílica da Agonia.', presenca: 'O anjo aparece só como luz, sem figura: o texto não o descreve.', chegada: '“Getsêmani” quer dizer “prensa de azeite”.' },
     lugar: { cidade: 'no mirante do Getsêmani, olhando Jerusalém e o Templo do outro lado do vale do Cedrom', rocha: 'junto da rocha onde Jesus orou (Mt 26:39)', vigiai: 'no olival, perto de onde os discípulos dormiram (Mt 26:38–43)', presenca: 'junto da luz que representa o anjo que o confortou (Lc 22:43)', tochas: 'vendo as tochas dos guardas subindo do vale do Cedrom (Jo 18:3)', chegada: 'na trilha que sobe do ribeiro de Cedrom (Jo 18:1)', bom: 'nas partes altas do Monte das Oliveiras' }, nome: 'Jardim do Getsêmani' },
-  ela: { titulo: 'O Vale de Elá', sub: '1 SAMUEL 17 · c. 1020 a.C.', pasta: 'ela', ceu: '/ela/ceu-ela-360.jpg', noite: false, TD: { x: 0, z: -1 }, inicio: 165,
+  ela: { titulo: 'O Vale de Elá', sub: '1 SAMUEL 17 · c. 1020 a.C.', pasta: 'ela', ceu: '/ela/ceu-ela-360.jpg', noite: false, lat: 31.69, lon: 34.96, TD: { x: 0, z: -1 }, inicio: 165,
     credito: 'Reconstituição do Vale de Elá na Sefelá (peças do ChatGPT, ilustrativas). O relevo segue a geografia do vale; a posição exata dos acampamentos é debatida.',
     versos: {
       israel: ['1 Samuel 17:2–3', 'Saul, porém, e os homens de Israel se ajuntaram e acamparam no vale de Elá, e ordenaram a batalha contra os filisteus. Os filisteus estavam num monte de um lado, e os israelitas estavam num monte do outro lado; e entre eles o vale.'],
@@ -589,6 +589,12 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   btModo.onclick = () => { modo = modo === 'terceira' ? 'primeira' : 'terceira'; btModo.textContent = modo === 'terceira' ? '👁 Primeira pessoa' : '🎥 Terceira pessoa'; if (modo === 'terceira') pitch = -0.12; camIni = false; };
   const camPos = new THREE.Vector3(), olhoAlvo = new THREE.Vector3(); let camIni = false;
 
+  // RODA DO MOUSE (ou pinça): para trás o drone sobe; o lugar some lá embaixo e você sai no globo (como no Google Earth); para frente, desce
+  let subida = 0, saindo = false; const LIM = E ? 1500 : 800;
+  const subir = (d) => { if (saindo) return; subida = Math.max(0, Math.min(LIM + 50, subida + d)); if (subida > LIM && typeof window.NEXUS_PARA_GLOBO === 'function' && MW.lat != null) { saindo = true; raiz.style.transition = 'opacity .9s ease'; raiz.classList.remove('on'); setTimeout(() => { window.NEXUS_PARA_GLOBO(MW.lat, MW.lon); fechar(); }, 700); } };
+  canvas.addEventListener('wheel', (e) => { e.preventDefault(); if (voando) return; subir(e.deltaY * (0.35 + subida / 900)); }, { passive: false });
+  let pin = null; canvas.addEventListener('touchmove', (e) => { if (e.touches.length !== 2) { pin = null; return; } const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); if (pin) subir((pin - d) * (1.2 + subida / 300)); pin = d; }, { passive: true });
+  canvas.addEventListener('touchend', () => { pin = null; });
   // VOAR: sobe como um drone para atravessar o jardim depressa; tocar de novo pousa
   let voarLivre = false, altVoo = 0; const btVoar = raiz.querySelector('.ej-voar');
   btVoar.onclick = () => { voarLivre = !voarLivre; btVoar.textContent = voarLivre ? '🦶 Pousar' : '🕊 Voar'; if (voarLivre) { pitch = Math.min(pitch, -0.3); if (modo === 'terceira') { modo = 'primeira'; } } };
@@ -696,7 +702,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
         olhoAlvo.set(eu.x - dir.x * 4 + dirX.x * 0.85, hc + 1.4, eu.z - dir.z * 4 + dirX.z * 0.85); camera.lookAt(olhoAlvo);
       } else {
         if (avatar) avatar.visible = false;
-        altVoo += ((voarLivre ? 55 : 0) - altVoo) * Math.min(1, dt * 1.5); camera.position.set(eu.x, Math.max(hc, hBase(eu.x, eu.z) - 1.0 - 0.6) + 1.7 + altVoo + Math.sin(passoBob * 2) * 0.035 * Math.min(1, vv / 3) * (voarLivre ? 0 : 1), eu.z);
+        altVoo += (Math.max(voarLivre ? 55 : 0, subida) - altVoo) * Math.min(1, dt * 2.5); if (subida > 30) pitch += (-Math.min(1.25, 0.25 + subida / 700) - pitch) * Math.min(1, dt * 2); camera.position.set(eu.x, Math.max(hc, hBase(eu.x, eu.z) - 1.0 - 0.6) + 1.7 + altVoo + Math.sin(passoBob * 2) * 0.035 * Math.min(1, vv / 3) * (voarLivre ? 0 : 1), eu.z);
         camera.rotation.set(0, 0, 0); camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = pitch;
       }
       // cartões por proximidade
