@@ -1628,7 +1628,7 @@ export function criarCeu(container, estado, acoes) {
   const cinemaVisto = new Set(); let cinemaMod = null;
   let mundoAtivo = null;
   window.NEXUS_MUNDO = async (id) => {   // o ambiente inteiro vira o mundo do tema (protótipo: 'trombetas')
-    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=3'); } catch (_) { return false; }
+    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=5'); } catch (_) { return false; }
     if (!cinemaMod.CINEMA[id]) return false; if (mundoAtivo) mundoAtivo.terminar();
     document.body.classList.add('mundo-ativo'); mundoAtivo = cinemaMod.tocarCinema(id, ui, { estudo: true, aoTerminar: () => { mundoAtivo = null; document.body.classList.remove('mundo-ativo'); } });
     return true;
@@ -1637,7 +1637,7 @@ export function criarCeu(container, estado, acoes) {
   async function entrarLivro(lv) {
     sobreLivro = null; info.hidden = true;
     const voa = () => voar(lv.cx, lv.cy, lv.raio * 4.2);
-    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=3'); } catch (_) { voa(); return; }
+    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=5'); } catch (_) { voa(); return; }
     const lista = await fetch('/nexus/livros/cinema.json?v=' + Math.floor(Date.now() / 60000)).then((r) => r.json()).catch(() => []);
     if (!cinemaMod.CINEMA[lv.num] || !lista.includes(lv.num) || cinemaVisto.has(lv.num)) { voa(); return; }
     cinemaVisto.add(lv.num); cinemaMod.tocarCinema(lv.num, ui, { aoTerminar: voa });
