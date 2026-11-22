@@ -293,10 +293,14 @@ export async function abrirTemplo(THREE, host, { aoFechar } = {}) {
     const luzS = new THREE.PointLight(0xffc27a, 0, 80, 1.4); luzS.position.set(-20, 14, 0); gMo.add(luzS); gMo.userData.luz = luzS; }
   // ═════ PESSOAS: escala humana (4 côvados) ═════
   const gPe = G('pessoas');
-  { const n = 520, p = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.42, 2.6, 3, 6), Me.pessoa, n); const cores = [0xe9e0cf, 0xcdb894, 0x8a6a4a, 0x6b7f9a, 0x9b5a44, 0xf2ece0]; const cc = new THREE.Color(); const m4 = new THREE.Matrix4();
-    for (let i = 0; i < n; i++) { let x, z, y; const q = rnd(); if (q < 0.35) { x = 105 + rnd() * 125; z = -60 + rnd() * 120; y = YM; } else if (q < 0.5) { x = 74 + rnd() * 22; z = -60 + rnd() * 120; y = YI; } else { x = -320 + rnd() * 620; z = -380 + rnd() * 960; y = YE; if (x > -125 && x < 262 && Math.abs(z) < 90) { x += 420; } }
-      m4.makeTranslation(x, y + 1.75, z); p.setMatrixAt(i, m4); p.setColorAt(i, cc.setHex(cores[Math.floor(rnd() * cores.length)])); }
-    p.castShadow = true; p.userData.info = I('Escala humana', 'Pessoas de cerca de quatro côvados dão a escala do templo.', 'Escala da maquete', 'Figuras ilustrativas.'); pecas.push(p); gPe.add(p); }
+  { // figuras humanas (manto até os pés + cabeça com véu/turbante), cerca de 4 côvados de altura: dão a escala do templo
+    const n = 520, manto = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.28, 0.75, 3.1, 10), Me.pessoa, n), cab = new THREE.InstancedMesh(new THREE.SphereGeometry(0.36, 12, 10), Me.pessoa, n);
+    const cores = [0xe9e0cf, 0xcdb894, 0x8a6a4a, 0x6b7f9a, 0x9b5a44, 0xf2ece0, 0xb8a27a], pele = [0xc99a72, 0xb07e58, 0xd8ad86], cc = new THREE.Color(), m4 = new THREE.Matrix4();
+    for (let i = 0; i < n; i++) { let x, z, y; const q = rnd(); if (q < 0.35) { x = 105 + rnd() * 125; z = -60 + rnd() * 120; y = YM; } else if (q < 0.5) { x = 74 + rnd() * 22; z = -60 + rnd() * 120; y = YI; } else { x = -320 + rnd() * 620; z = -380 + rnd() * 960; y = YE; if (x > -125 && x < 262 && Math.abs(z) < 90) x += 420; }
+      const esc = 0.9 + rnd() * 0.2; m4.compose(new THREE.Vector3(x, y + 1.55 * esc, z), new THREE.Quaternion(), new THREE.Vector3(esc, esc, esc)); manto.setMatrixAt(i, m4); manto.setColorAt(i, cc.setHex(cores[Math.floor(rnd() * cores.length)]));
+      m4.compose(new THREE.Vector3(x, y + 3.45 * esc, z), new THREE.Quaternion(), new THREE.Vector3(esc, esc * 1.1, esc)); cab.setMatrixAt(i, m4); cab.setColorAt(i, cc.setHex(rnd() < 0.6 ? cores[Math.floor(rnd() * cores.length)] : pele[Math.floor(rnd() * pele.length)])); }
+    const info = I('Pessoas (escala humana)', 'Figuras de cerca de quatro côvados (1,8 m) mostram o tamanho real do templo: a fachada tinha cem côvados, mais de vinte vezes a altura de uma pessoa.', MD('4:6'), 'Figuras ilustrativas; roupas e cores são interpretação.');
+    [manto, cab].forEach((m) => { m.castShadow = true; m.userData.info = info; pecas.push(m); gPe.add(m); }); }
   // ── painel de camadas ──
   const ROT = { terreno: 'Monte, vales e a cidade', esplanada: 'Esplanada e muros', portico_real: 'Pórtico Real e colunatas', antonia: 'Fortaleza Antônia', soreg: 'Soreg (balaustrada)', mulheres: 'Átrio das mulheres e os 15 degraus', atrio: 'Átrio de Israel, sacerdotes e altar', santuario: 'Santuário (paredes)', ouro: 'Ouro, pontas e videira', camaras: 'Câmaras laterais', mobiliario: 'Menorá, mesa, incenso e cortinas', pessoas: 'Pessoas (escala humana)' };
   raiz.querySelector('.tp-cam-l').innerHTML = Object.keys(ROT).map((id) => `<label><input type="checkbox" data-g="${id}" checked>${ROT[id]}</label>`).join('');
