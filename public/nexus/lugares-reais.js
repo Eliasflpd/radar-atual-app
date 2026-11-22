@@ -9,7 +9,7 @@ export const LUGARES = {
     nota: 'O nome vem do aramaico gat-shemanim, "prensa de azeite". A localização ao pé do Monte das Oliveiras, do outro lado do Cedrom, é antiga e bem aceita; o ponto exato do jardim é tradição (a Basílica da Agonia, de 1924, está sobre restos de igrejas dos séculos IV e XII).',
     status: 'Local tradicional, área bem aceita',
     hoje: { src: '/nexus/lugares/getsemani-hoje.jpg', credito: 'Oliveiras antigas do Jardim do Getsêmani · foto de Beko · CC BY-SA 4.0 · Wikimedia Commons' },
-    antes: { src: '/nexus/lugares/getsemani-30dC.png', credito: 'Reconstituição do ano 30 (imagem gerada pelo ChatGPT a pedido do NEXUS; ilustrativa)' },
+    antes: { src: '/nexus/lugares/getsemani-30dC.jpg', credito: 'Reconstituição do ano 30 (imagem gerada pelo ChatGPT a pedido do NEXUS; ilustrativa)' },
   },
   golgota: {
     titulo: 'Gólgota', atlas: 'Golgotha', sub: 'LUGAR DA CAVEIRA · JERUSALÉM',
@@ -17,7 +17,7 @@ export const LUGARES = {
     nota: 'Local tradicional: a Igreja do Santo Sepulcro, identificada no século IV (tempo de Constantino). A arqueologia mostrou que ali havia uma antiga pedreira com túmulos escavados na rocha, fora da muralha do tempo de Jesus. Alternativa: o Túmulo do Jardim, proposto no século XIX; seu túmulo, porém, é da Idade do Ferro (séc. VIII–VII a.C.), não um "sepulcro novo".',
     status: 'Local tradicional (Santo Sepulcro); alternativa: Túmulo do Jardim',
     hoje: { src: '/nexus/lugares/golgota-hoje.jpg', credito: 'Edícula do Santo Sepulcro, que guarda o túmulo · foto de Gary Todd · CC0 (domínio público) · Wikimedia Commons' },
-    antes: { src: '/nexus/lugares/golgota-30dC.png', credito: 'Reconstituição do ano 30 segundo a hipótese do Santo Sepulcro (imagem gerada pelo ChatGPT; ilustrativa)' },
+    antes: { src: '/nexus/lugares/golgota-30dC.jpg', credito: 'Reconstituição do ano 30 segundo a hipótese do Santo Sepulcro (imagem gerada pelo ChatGPT; ilustrativa)' },
   },
   lazaro: {
     titulo: 'Túmulo de Lázaro', atlas: 'Bethany 1', sub: 'BETÂNIA (AL-EIZARIYA) · MONTE DAS OLIVEIRAS',
@@ -25,7 +25,7 @@ export const LUGARES = {
     nota: 'Betânia fica a cerca de 3 km de Jerusalém (15 estádios, Jo 11:18), na encosta leste do Monte das Oliveiras; hoje é a vila de al-Eizariya ("lugar de Lázaro"). O túmulo venerado ali é citado por peregrinos desde o século IV (Eusébio; a peregrina de Bordeaux, 333 d.C.); que seja o túmulo exato é tradição.',
     status: 'Local tradicional (desde o século IV)',
     hoje: { src: '/nexus/lugares/lazaro-hoje.jpg', credito: 'Túmulo de Lázaro, Betânia · foto de Thomasccnawiki · CC BY-SA 4.0 · Wikimedia Commons' },
-    antes: { src: '/nexus/lugares/lazaro-30dC.png', credito: 'Reconstituição do ano 30 (imagem gerada pelo ChatGPT; ilustrativa)' },
+    antes: { src: '/nexus/lugares/lazaro-30dC.jpg', credito: 'Reconstituição do ano 30 (imagem gerada pelo ChatGPT; ilustrativa)' },
   },
 };
 
@@ -49,7 +49,7 @@ export function abrirLugar(id, host, { aoFechar } = {}) {
     .lr-cab p{margin:6px 0 0;font-size:12.5px;letter-spacing:.12em;color:rgba(255,255,255,.88)}
     .lr-cab .st{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:999px;background:rgba(201,162,78,.25);border:1px solid rgba(243,211,142,.5);font:600 11.5px Inter,sans-serif;letter-spacing:0;color:#FFE8B0}
     .lr-rot{position:absolute;top:120px;padding:4px 10px;border-radius:6px;background:rgba(0,0,0,.55);font:700 11.5px Inter,sans-serif;letter-spacing:.12em;pointer-events:none}
-    .lr-rot.h{right:24px}.lr-rot.a{left:24px;color:#FFE3A3}
+    .lr-rot.h{left:24px;top:232px}.lr-rot.a{right:24px;color:#FFE3A3}
     .lr-barra{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:4px;padding:5px;background:rgba(10,18,36,.75);backdrop-filter:blur(10px);border:1px solid rgba(233,200,120,.3);border-radius:999px}
     .lr-barra button{border:0;background:transparent;color:#EDE3C8;border-radius:999px;padding:8px 14px;font:600 12.5px Inter,sans-serif;cursor:pointer;white-space:nowrap}
     .lr-barra button.ativo{background:#C9A24E;color:#1B1405}.lr-barra button:hover:not(.ativo){background:rgba(233,200,120,.16)}
@@ -66,7 +66,7 @@ export function abrirLugar(id, host, { aoFechar } = {}) {
   <div class="lr-cab"><h2>${L.titulo}</h2><p>${L.sub}</p><span class="st">${L.status}</span></div>
   <div class="lr-rot a">NO ANO 30</div><div class="lr-rot h">HOJE</div>
   <button type="button" class="lr-sair">↩ Voltar ao globo</button>
-  <div class="lr-texto">${L.refs.map(([r, t]) => `<blockquote>“${t}”<cite>${r} · Almeida</cite></blockquote>`).join('')}<div class="nota">${L.nota}</div></div>
+  <div class="lr-texto fechado">${L.refs.map(([r, t]) => `<blockquote>“${t}”<cite>${r} · Almeida</cite></blockquote>`).join('')}<div class="nota">${L.nota}</div></div>
   <div class="lr-cred"></div>
   <div class="lr-barra"><button type="button" data-m="comparar" class="ativo">⟷ Comparar</button><button type="button" data-m="hoje">Hoje (foto real)</button><button type="button" data-m="antes">No ano 30</button><button type="button" data-m="texto">📖 Texto e fontes</button></div>`;
   host.appendChild(raiz);

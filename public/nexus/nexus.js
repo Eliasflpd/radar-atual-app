@@ -475,7 +475,7 @@ async function abrirCeu() {
       const local = /^(localhost|127\.)/.test(location.hostname);
       const arquivo = PARAM_CEU === 'classico' ? '/nexus/ceu.js?v=9'
         : PARAM_CEU === 'previa' && local ? '/nexus/ceu-previa.js?v=1'
-        : new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' : '/nexus/ceu-universo.js?v=113';
+        : new URLSearchParams(location.search).get('versao') === 'anterior' ? '/nexus/anterior/ceu-universo.js' : '/nexus/ceu-universo.js?v=115';
       const { criarCeu } = await import(arquivo);
       ceu = criarCeu($('ceu'), S, { visivelNo, visivelAresta, selecionar, expandir, painelAresta, abrirGrupo, indisponivel: ceuIndisponivel });
       window.__ceuPrevia = ceu;   // ganchos de teste (só leitura)
