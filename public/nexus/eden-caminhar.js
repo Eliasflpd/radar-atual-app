@@ -85,11 +85,11 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   const hBase = (x, z) => { const r = Math.hypot(x, z); return 2.6 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.3 * Math.sin(x * 0.031 + z * 0.027) + 0.5 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 480) ** 1.25 * 0.022 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
   const T = 1800, NS = toque ? 240 : 340;
   const geoT = new THREE.PlaneGeometry(T, T, NS, NS); geoT.rotateX(-Math.PI / 2);
-  const pos = geoT.attributes.position, cores = new Float32Array(pos.count * 3), alturas = new Float32Array(pos.count);
-  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i); const [d, w] = distRio(x, z); const leito = (1 - THREE.MathUtils.smoothstep(d, w * 0.95, w * 1.45)) * 1.5 + 6.2 * Math.pow(Math.max(0, 1 - d / w), 1.15); const h = hBase(x, z) - leito; pos.setY(i, h); alturas[i] = h;
+  const pos = geoT.attributes.position, cores = new Float32Array(pos.count * 3), alturas = new Float32Array(pos.count), relRio = new Float32Array(pos.count);
+  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i); const [d, w] = distRio(x, z); relRio[i] = d / w; const leito = (1 - THREE.MathUtils.smoothstep(d, w * 0.95, w * 1.45)) * 1.5 + 6.2 * Math.pow(Math.max(0, 1 - d / w), 1.15); const h = hBase(x, z) - leito; pos.setY(i, h); alturas[i] = h;
     const mar = THREE.MathUtils.smoothstep(d, w * 1.2, w * 2.4), longe = THREE.MathUtils.smoothstep(Math.hypot(x, z), 420, 700), v = 0.85 + 0.25 * Math.sin(x * 0.05) * Math.cos(z * 0.043);
     cores[i * 3] = (0.78 + 0.22 * (1 - mar)) * v * (1 + longe * 0.15); cores[i * 3 + 1] = (0.92 + 0.0 * mar) * v; cores[i * 3 + 2] = (0.72 + 0.18 * (1 - mar)) * v * (1 - longe * 0.1);
-    const banco = 1 - THREE.MathUtils.smoothstep(d, w * 1.0, w * 1.35); if (banco > 0) { cores[i * 3] = cores[i * 3] * (1 - banco) + 0.95 * banco; cores[i * 3 + 1] = cores[i * 3 + 1] * (1 - banco) + 0.72 * banco; cores[i * 3 + 2] = cores[i * 3 + 2] * (1 - banco) + 0.5 * banco; } }
+    const banco = 1 - THREE.MathUtils.smoothstep(d, w * 1.0, w * 1.35); if (banco > 0) { cores[i * 3] = cores[i * 3] * (1 - banco) + 0.85 * banco; cores[i * 3 + 1] = cores[i * 3 + 1] * (1 - banco) + 0.72 * banco; cores[i * 3 + 2] = cores[i * 3 + 2] * (1 - banco) + 0.55 * banco; } }
   geoT.setAttribute('color', new THREE.BufferAttribute(cores, 3)); geoT.computeVertexNormals();
   const chaoTex = await carregar('chao-grama.jpg'); if (chaoTex) { chaoTex.wrapS = chaoTex.wrapT = THREE.RepeatWrapping; chaoTex.repeat.set(T / 9, T / 9); lixo.push(chaoTex); }
   const terreno = new THREE.Mesh(geoT, new THREE.MeshStandardMaterial({ map: chaoTex, color: chaoTex ? 0xffffff : 0x6f8f3a, vertexColors: true, roughness: 0.96 }));
@@ -157,6 +157,51 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setAttribute('tg', new THREE.Float32BufferAttribute(TG, 3)); g.setAttribute('prof', new THREE.Float32BufferAttribute(PR, 1)); g.setIndex(I);
     const m = new THREE.Mesh(g, matAgua); m.renderOrder = 2; cena.add(m); aguas.push(m); lixo.push(g); });
   lixo.push(matAgua, reflRT);
+  // A MARGEM: faixa de areia molhada e cascalho dos dois lados de cada braço do rio, escurecida junto à água,
+  // com a espuma que avança e recua na beira; por cima, seixos e pedras meio enterrados
+  const matMargem = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8, uniforms: { ...unif, sol: { value: SOL } },
+    vertexShader: `attribute float m, ls; varying float vM, vS, vD; varying vec3 vW; void main(){ vM = m; vS = ls; vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; vec4 mv = viewMatrix * w; vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform float t, dens; uniform vec3 nevoa, sol; varying float vM, vS, vD; varying vec3 vW;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+      float fbm(vec2 p){ float s = 0., a = .5; for (int i = 0; i < 4; i++) { s += a * n(p); p = p * 2.07 + 5.3; a *= .5; } return s; }
+      vec3 cel(vec2 p){ vec2 i = floor(p), f = fract(p); float m1 = 9., id = 0.; for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) { vec2 g = vec2(x, y), o = .2 + .6 * vec2(h(i + g), h(i + g + 17.)); vec2 dv = (g + o - f) * vec2(1., 1.25); float d = length(dv); if (d < m1) { m1 = d; id = h(i + g + 3.1); } } return vec3(m1, id, 0.); }
+      void main(){ vec2 p = vW.xz;
+        vec3 c1 = cel(p * 3.2), c2 = cel(p * 9.);
+        float dsx = smoothstep(.3, .62, fbm(p * .3 + 3.)) * (1. - smoothstep(.7, 1., vM)) * .85;
+        float r1 = .2 + .25 * c1.y, s1 = step(1. - dsx, fract(c1.y * 7.31)) * smoothstep(r1, r1 - .07, c1.x);
+        float r2 = .15 + .2 * c2.y, s2 = step(1. - dsx * .7, fract(c2.y * 5.17)) * smoothstep(r2, r2 - .06, c2.x);
+        vec3 areia = mix(vec3(.36, .31, .23), vec3(.27, .24, .19), fbm(p * .9)) * (.9 + .2 * n(p * 40.));
+        vec3 pedra1 = mix(vec3(.30, .29, .26), vec3(.50, .46, .38), fract(c1.y * 13.7)) * (.8 + .4 * (1. - c1.x / max(r1, .01)));
+        vec3 pedra2 = mix(vec3(.26, .24, .21), vec3(.44, .40, .33), fract(c2.y * 11.3)) * (.8 + .3 * (1. - c2.x / max(r2, .01)));
+        vec3 c = mix(mix(areia, pedra2, s2), pedra1, s1); c *= mix(1., .75, smoothstep(r1 + .02, r1 - .02, c1.x) * (1. - s1) * dsx);
+        // molhado junto à água: mais escuro, mais saturado, com brilho do sol
+        float linha = .48 + .035 * sin(t * .9 + vS * .21) + .02 * sin(t * 1.7 + vS * .57);
+        float molhado = smoothstep(linha + .22, linha - .02, vM);
+        c = mix(c, c * vec3(.45, .47, .44), molhado);
+        vec3 olho = normalize(cameraPosition - vW); float bri = pow(max(dot(reflect(-sol, vec3(0., 1., 0.)), olho), 0.), 40.) * molhado * .6; c += vec3(1., .9, .7) * bri;
+        // espuma que avança e recua
+        float esp = smoothstep(.035, .0, abs(vM - linha + .01)) * smoothstep(.35, .65, fbm(vec2(vS * .6, vM * 9.) - vec2(t * .4, 0.)));
+        esp += smoothstep(.07, .0, abs(vM - linha + .05)) * .35 * smoothstep(.5, .75, fbm(vec2(vS * 1.2, t * .3)));
+        c = mix(c, vec3(.92, .94, .93), clamp(esp, 0., 1.) * .8);
+        float a = smoothstep(.0, .14, vM) * smoothstep(.95, .45 + .35 * fbm(p * .5), vM);
+        float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), a);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+      }` });
+  rios.forEach((c, i) => { const w = i === 0 ? 16 : 11, N = 700, M = 6;
+    for (const lado of [-1, 1]) { const P = [], MM = [], LS = [], I = []; let s = 0, ant = null;
+      for (let k = 0; k <= N; k++) { const u = k / N, p = c.getPointAt(u), tg = c.getTangentAt(u), ld = new THREE.Vector3(-tg.z, 0, tg.x).normalize(); if (ant) s += p.distanceTo(ant); ant = p;
+        for (let j = 0; j <= M; j++) { const m = j / M, off = w * (0.85 + m * 0.55), q = p.clone().addScaledVector(ld, lado * off); P.push(q.x, Math.max(altura(q.x, q.z), hBase(q.x, q.z) - 1.05) + 0.2, q.z); MM.push(m); LS.push(s); } }
+      for (let k = 0; k < N; k++) for (let j = 0; j < M; j++) { const a = k * (M + 1) + j, b = a + M + 1; I.push(a, b, a + 1, a + 1, b, b + 1); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('m', new THREE.Float32BufferAttribute(MM, 1)); g.setAttribute('ls', new THREE.Float32BufferAttribute(LS, 1)); g.setIndex(I);
+      const ms = new THREE.Mesh(g, matMargem); ms.renderOrder = 1; cena.add(ms); lixo.push(g); } });
+  lixo.push(matMargem);
+  { const gq = new THREE.IcosahedronGeometry(1, 2), pq = gq.attributes.position; for (let i = 0; i < pq.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(pq, i), k = 1 + 0.18 * Math.sin(v.x * 4.1 + v.z * 3.3) * Math.cos(v.y * 3.7); pq.setXYZ(i, v.x * k * 1.3, v.y * k * 0.55, v.z * k); } gq.computeVertexNormals();
+    const NQ = toque ? 260 : 520, mq = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), iq = new THREE.InstancedMesh(gq, mq, NQ), mt = new THREE.Matrix4(), qq = new THREE.Quaternion(); let k = 0;
+    for (let tent = 0; k < NQ && tent < NQ * 6; tent++) { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = ci === 0 ? 16 : 11, u = rnd() * 0.75, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (0.98 + rnd() * 0.4), x = p.x - tg.z * sx * d, z = p.z + tg.x * sx * d;
+      if (Math.hypot(x, z) < 22) continue; const sc = 0.18 + Math.pow(rnd(), 2.5) * 0.9; qq.setFromEuler(new THREE.Euler(rnd() * 0.5, rnd() * 6.28, rnd() * 0.5)); mt.compose(new THREE.Vector3(x, Math.max(altura(x, z), hBase(x, z) - 1.15) - sc * 0.15, z), qq, new THREE.Vector3(sc, sc, sc)); iq.setMatrixAt(k, mt); iq.setColorAt(k, new THREE.Color().setHSL(0.09 + rnd() * 0.06, 0.1 + rnd() * 0.12, 0.3 + rnd() * 0.2)); k++; }
+    iq.count = k; cena.add(iq); lixo.push(gq, mq); }
   // pedras grandes no rio (a água bate nelas e faz espuma)
   { const gp = new THREE.IcosahedronGeometry(1, 3), pp = gp.attributes.position; for (let i = 0; i < pp.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(pp, i); const k = 1 + 0.22 * Math.sin(v.x * 3.1 + v.y * 2.3) * Math.cos(v.z * 2.7) + 0.08 * Math.sin(v.x * 9 + v.z * 7); pp.setXYZ(i, v.x * k * 1.25, v.y * k * 0.75, v.z * k); } gp.computeVertexNormals();
     const mp = new THREE.MeshStandardMaterial({ color: 0x6b6a5e, roughness: 0.92, metalness: 0 }); const ip = new THREE.InstancedMesh(gp, mp, NPED), mt = new THREE.Matrix4(), qq = new THREE.Quaternion();
@@ -202,10 +247,10 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   for (let i = 0; i < NG; i++) { off[i * 3] = (Math.random() * 2 - 1) * RG; off[i * 3 + 1] = Math.random(); off[i * 3 + 2] = (Math.random() * 2 - 1) * RG; rot[i] = Math.random() * 6.28; esc[i] = 0.5 + Math.random() * 0.9; }
   gramaGeo.setAttribute('iOff', new THREE.InstancedBufferAttribute(off, 3)); gramaGeo.setAttribute('iRot', new THREE.InstancedBufferAttribute(rot, 1)); gramaGeo.setAttribute('iEsc', new THREE.InstancedBufferAttribute(esc, 1));
   // para a lâmina ficar no chão, o shader precisa da altura: usamos uma textura de altura do terreno
-  const altH = new Uint16Array(alturas.length); for (let i = 0; i < alturas.length; i++) altH[i] = THREE.DataUtils.toHalfFloat(alturas[i]);
-  const altTex = new THREE.DataTexture(altH, NS + 1, NS + 1, THREE.RedFormat, THREE.HalfFloatType); altTex.minFilter = altTex.magFilter = THREE.LinearFilter; altTex.needsUpdate = true;
+  const altH = new Uint16Array(alturas.length * 2); for (let i = 0; i < alturas.length; i++) { altH[i * 2] = THREE.DataUtils.toHalfFloat(alturas[i]); altH[i * 2 + 1] = THREE.DataUtils.toHalfFloat(Math.min(8, relRio[i])); }
+  const altTex = new THREE.DataTexture(altH, NS + 1, NS + 1, THREE.RGFormat, THREE.HalfFloatType); altTex.minFilter = altTex.magFilter = THREE.LinearFilter; altTex.needsUpdate = true;
   matGrama.uniforms.alt = { value: altTex };
-  matGrama.vertexShader = matGrama.vertexShader.replace('vec4 mv = viewMatrix * vec4(p + vec3(xz.x, 0., xz.y), 1.);', `vec2 uvA = (xz + ${(T / 2).toFixed(1)}) / ${T.toFixed(1)}; float hA = texture2D(alt, uvA).r; vec4 mv = viewMatrix * vec4(p + vec3(xz.x, hA, xz.y), 1.);`);
+  matGrama.vertexShader = matGrama.vertexShader.replace('vec4 mv = viewMatrix * vec4(p + vec3(xz.x, 0., xz.y), 1.);', `vec2 uvA = (xz + ${(T / 2).toFixed(1)}) / ${T.toFixed(1)}; vec2 tA = texture2D(alt, uvA).rg; float hA = tA.r; p.y *= smoothstep(1.3, 1.75, tA.g); vec4 mv = viewMatrix * vec4(p + vec3(xz.x, hA, xz.y), 1.);`);
   const grama = new THREE.Mesh(gramaGeo, matGrama); grama.frustumCulled = false; cena.add(grama); lixo.push(gramaGeo, matGrama, altTex, lamina);
 
   // FIGURAS (recortes do ChatGPT) que sempre olham para quem anda, com vento no alto das árvores
@@ -535,5 +580,5 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true } = {}
   function fechar() { if (!ativo) return; ativo = false; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
     setTimeout(() => { lixo.forEach((o) => o && o.dispose && o.dispose()); renderer.dispose(); raiz.remove(); }, 1400); if (aoFechar) aoFechar(); }
   raiz.querySelector('.ej-sair').onclick = fechar;
-  return { fechar, estado: () => ({ x: eu.x, z: eu.z, yaw, pitch, voando, bichos: bichos.length, onde: bichos.map((b) => [b.e.n, Math.round(b.x), Math.round(b.z)]) }), olhar: (y, p) => { yaw = y; pitch = p; }, irPara: (x, z) => { pularChegada(); eu.set(x, 0, z); } };
+  return { cena, fechar, estado: () => ({ x: eu.x, z: eu.z, yaw, pitch, voando, bichos: bichos.length, onde: bichos.map((b) => [b.e.n, Math.round(b.x), Math.round(b.z)]) }), olhar: (y, p) => { yaw = y; pitch = p; }, irPara: (x, z) => { pularChegada(); eu.set(x, 0, z); } };
 }
