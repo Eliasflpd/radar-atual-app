@@ -93,10 +93,10 @@ function estimativa(modelo, chars, max) {
 const MEMORIA = new Map();
 
 // executar: a única porta de IA do NEXUS.
-async function executar(db, { tarefa, sys, user, dono, investigacao }) {
+async function executar(db, { tarefa, sys, user, dono, investigacao, anexos }) {
   const t = TAREFAS[tarefa];
   if (!t) throw new Error('tarefa de IA desconhecida');
-  const chave = crypto.createHash('sha256').update(tarefa + '\n' + sys + '\n' + user).digest('hex');
+  const chave = crypto.createHash('sha256').update(tarefa + '\n' + sys + '\n' + user + (anexos && anexos.length ? '\n' + anexos.map((a) => (a.source && a.source.data || '').length + ':' + String(a.source && a.source.data || '').slice(0, 200)).join('|') : '')).digest('hex');
   const temBanco = await tabelas(db).catch(() => false);
   const registrar = async (r) => {
     if (!temBanco) return;
@@ -136,7 +136,8 @@ async function executar(db, { tarefa, sys, user, dono, investigacao }) {
   // 3) chamada (pela integração existente)
   const { iaTexto } = await import('./ia.js');
   let rr;
-  if (nivel) rr = await iaTexto({ sys, user, max_tokens: t.max, effort: t.effort, premium: true, modeloClaude: MODELO[nivel], tag: 'nexus-' + tarefa, prazoPremium: t.prazo || 45000 });
+  if (anexos && anexos.length && !nivel) return { texto: 'Para eu ver fotos, PDFs e vídeos preciso do Claude ligado, e ele está ' + (motivo || 'indisponível') + ' agora.', custo: 0, motivo };
+  if (nivel) rr = await iaTexto({ sys, user, max_tokens: t.max, effort: t.effort, premium: true, modeloClaude: MODELO[nivel], tag: 'nexus-' + tarefa, prazoPremium: t.prazo || 45000, anexos: anexos && anexos.length ? anexos : undefined });
   else rr = await iaTexto({ sys, user, max_tokens: t.max, temperature: 0.2, tag: 'nexus-' + tarefa + '-gratis' });
   const pagoClaude = rr.provedor === 'claude';
   const r = {

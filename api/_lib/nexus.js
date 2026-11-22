@@ -1452,7 +1452,10 @@ module.exports = async (req, res) => {
       const foco = nome(ctx.foco), sel = nome(ctx.sel), cena = String(ctx.cena || '').replace(/[\r\n]+/g, ' ').slice(0, 240);
       const user = (cena ? '[O pastor está agora dentro desta cena do NEXUS: ' + cena + '. Converse sobre o que ele vê quando fizer sentido, separando o texto bíblico da reconstituição artística.]' + NL : '') + (foco || sel ? '[Na tela agora' + (foco ? ': passagem em foco ' + foco : '') + (sel ? '; elemento selecionado ' + sel : '') + ']' + NL + NL : '') +
         msgs.map((m) => (m.papel === 'eu' ? 'PASTOR: ' : 'CLAUDE: ') + m.texto).join(NL + NL) + NL + NL + 'CLAUDE:';
-      const rr = await IA.executar(db, { tarefa: 'conversar', sys: SYS_CONVERSA, user, dono: donoDe(b), investigacao: null });
+      const TIPOS_IMG = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      const anexos = (Array.isArray(b.anexos) ? b.anexos : []).slice(0, 6).filter((a) => a && typeof a.dados === 'string' && /^[A-Za-z0-9+/=]+$/.test(a.dados.slice(0, 200)) && a.dados.length < 4.6e6)
+        .map((a) => a.tipo === 'pdf' ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: a.dados } } : { type: 'image', source: { type: 'base64', media_type: TIPOS_IMG.includes(a.mime) ? a.mime : 'image/jpeg', data: a.dados } });
+      const rr = await IA.executar(db, { tarefa: 'conversar', sys: SYS_CONVERSA + (anexos.length ? ' O PASTOR ANEXOU ' + anexos.length + ' ARQUIVO(S) NESTA MENSAGEM (fotos, quadros de um vídeo ou PDF): olhe com atenção, descreva o que realmente aparece, identifique o lugar ou o assunto só quando houver base visual clara (diga o grau de certeza) e faça a ligação bíblica quando existir, sem inventar. Se for foto de um lugar, ela também está virando uma cena 3D na tela dele.' : ''), user, dono: donoDe(b), investigacao: null, anexos });
       res.json({ ok: !!rr.texto, texto: String(rr.texto || '').trim() || 'Não consegui responder agora.', modelo: rr.modelo || '', custo_usd: rr.custo || 0, reaproveitado: !!rr.reaproveitado, motivo: rr.motivo || '' });
       return;
     }

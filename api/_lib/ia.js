@@ -429,9 +429,10 @@ function corpoAnthropic(degrau, modelo, p, stream) {
     // (p.modeloClaude). Sem isso, segue o modelo do degrau, como sempre foi.
     model: p.modeloClaude || modelo.id,
     max_tokens: p.max_tokens || 2200,
-    messages: conversa.map((m) => ({
+    messages: conversa.map((m, i) => ({
       role: (m.role === 'assistant' || m.role === 'model') ? 'assistant' : 'user',
-      content: String(m.content || ''),
+      // 22/11/2026 (NEXUS, pedido do Elias): fotos e PDFs do chat vão como blocos na última mensagem (só quando vierem em p.anexos)
+      content: (Array.isArray(p.anexos) && p.anexos.length && i === conversa.length - 1) ? [...p.anexos, { type: 'text', text: String(m.content || '') }] : String(m.content || ''),
     })),
     ...(modelo.extra || {}),
   };
