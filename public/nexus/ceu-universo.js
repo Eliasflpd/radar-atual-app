@@ -65,8 +65,9 @@ export function criarCeu(container, estado, acoes) {
       <button data-cu="camadas" title="Camadas: ligar, desligar e transparência" aria-label="Camadas" class="cu-bt-atlas ativo">◫</button>
       <button data-cu="terra" title="Terra: o globo como mundo próprio (imagem de satélite, dia e noite agora)" aria-label="Abrir a Terra">🌍</button>
     </div>
-    <div class="cu-nivel"></div>
-    <div class="cu-dica">Arraste para navegar · roda para aproximar · passe o mouse nas estrelas · duplo clique aproxima</div>
+    <div class="cu-nivel" aria-label="Onde você está"></div>
+    <div class="cu-mini" aria-label="Minimapa do universo"><canvas width="216" height="140"></canvas><div class="cu-mini-pe"><button type="button" data-mini="incl" title="Ver de cima ou inclinado (tecla T)">⟂ <span>de cima</span></button><button type="button" data-mini="teclas" title="Atalhos do teclado">⌨</button></div><div class="cu-mini-teclas" hidden><b>Teclado</b><br>Setas ou W A S D · mover<br>+ e − · aproximar e afastar<br>T · ver de cima / inclinado<br>PgUp e PgDn · inclinação fina<br>Home · visão geral<br>F · tela cheia · Esc · fechar</div></div>
+    <div class="cu-dica">Arraste para navegar · roda aproxima onde está o cursor · duplo clique entra · setas e + − no teclado · T inclina · Home volta ao todo</div>
     <div class="cu-dica-toque">Um dedo navega · dois dedos aproximam · toque seleciona · toque longo abre a investigação</div>
     <div class="cu-info" hidden></div>
     <div class="cu-lugar" hidden></div>
@@ -208,6 +209,16 @@ export function criarCeu(container, estado, acoes) {
     @media (max-width:1100px){.cu-busca{left:62px;right:262px;width:auto;transform:none}.cu-nivel{top:52px}.cu-invest{top:92px}}
     @media (max-width:760px){.cu-busca{width:calc(100% - 70px);left:auto;right:8px;transform:none}.cu-camadas{top:52px;right:8px}.cu-invest{left:8px;top:52px;width:calc(100% - 16px);max-height:45%}}
     .cu-controles button:hover{background:rgba(24,44,84,.88);border-color:rgba(233,210,150,.6)}
+    .cu-mini{pointer-events:auto;position:absolute;left:62px;bottom:40px;width:216px;background:rgba(3,8,22,.78);border:1px solid rgba(233,200,120,.28);border-radius:12px;overflow:visible;backdrop-filter:blur(6px);font:11.5px Inter,system-ui,sans-serif;color:#DDE3F0}
+    .ceu .cu-mini canvas{position:static;inset:auto;display:block;width:216px;height:140px;touch-action:auto;cursor:crosshair;border-radius:12px 12px 0 0}
+    .cu-mini-pe{display:flex;justify-content:space-between;padding:4px 6px 6px;border-top:1px solid rgba(233,200,120,.15)}
+    .cu-mini-pe button{border:1px solid rgba(233,200,120,.3);background:rgba(10,18,40,.7);color:#F2DFAE;border-radius:8px;height:26px;padding:0 9px;font:600 11.5px Inter,system-ui,sans-serif;cursor:pointer}
+    .cu-mini-pe button:hover{background:rgba(201,162,78,.22)}
+    .cu-mini-teclas{position:absolute;left:0;bottom:calc(100% + 6px);width:216px;box-sizing:border-box;background:rgba(3,8,22,.94);border:1px solid rgba(233,200,120,.3);border-radius:10px;padding:8px 10px;line-height:1.55;color:#E9EDF8}
+    .cu-mini-teclas[hidden]{display:none}
+    body.ceu-universo.modo-terra .cu-mini,body.cu-em-jornada .cu-mini,body.cu-modo-estudo .cu-mini{display:none!important}
+    @media (max-width:1100px),(pointer:coarse){.cu-mini{display:none}}
+    .cu-nivel{pointer-events:auto}.cu-nivel button{all:unset;cursor:pointer;color:rgba(242,223,174,.85)}.cu-nivel button:hover{color:#FFF3D0;text-decoration:underline}.cu-nivel i{font-style:normal;opacity:.45;margin:0 7px}.cu-nivel em{font-style:normal;color:rgba(200,210,230,.6);font-size:12px;letter-spacing:.08em;margin-left:10px}
     .cu-nivel{position:absolute;left:14px;top:12px;font-family:"Cormorant Garamond",Georgia,serif;font-size:15px;letter-spacing:.06em;color:rgba(242,223,174,.8);text-transform:uppercase}
     .cu-dica,.cu-dica-toque{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);color:rgba(220,222,232,.55);font-size:12px;white-space:nowrap;max-width:calc(100% - 90px);overflow:hidden;text-overflow:ellipsis}
     .cu-dica-toque{display:none}
@@ -623,6 +634,7 @@ export function criarCeu(container, estado, acoes) {
   const info = ui.querySelector('.cu-info');
   let mouse = { x: -1, y: -1 }, sobreLivro = null;
   function mostrarInfo() {
+    if (foraDoCanvas) { info.hidden = true; return; }
     if (constel && !constel.soltoEm) {
       const k = constel.origem, t = textoDe(k);
       info.innerHTML = `<b>${esc(nomeRef(k))}</b><em>“${esc(t.length > 140 ? t.slice(0, 138) + '…' : t)}”</em><small>${constel.alvos.length ? constel.alvos.length + ' referência(s) cruzada(s) acesas · OpenBible (interpretação)' : 'buscando ligações…'} · clique para investigar</small>`;
@@ -701,7 +713,7 @@ export function criarCeu(container, estado, acoes) {
       { const pc = pegarCamadas(x, y, 11); if (pc) { const { c, i } = pc; canvas.style.cursor = 'pointer'; info.innerHTML = c.api.info(i); info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!fichaCamada) ligarCamada(c, i, false); return; } }
       if (pairCamada && !fichaCamada) limparCamada(); pairCamada = null;
       const li = lugarPerto(x, y, 10);
-      if (li >= 0) { const l = atlasC.lugares[li]; const conf = l.conf >= 700 ? 'identificação segura' : l.conf >= 300 ? 'identificação provável' : 'identificação incerta'; canvas.style.cursor = 'pointer'; info.innerHTML = `<b>${esc(l.nome)}</b>${l.identificacao && l.identificacao !== l.nome ? `<em>hoje: ${esc(l.identificacao)}</em>` : ''}<small>Atlas · ${l.peso} versículo(s) · ${conf} (${l.conf}/1000) · OpenBible.info · clique para acender os versículos</small>`; info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!lugarAtivo && livroAtivo == null) { atlasC.acender([li]); fios = l.versos.slice(0, 80).map((k) => ({ l: li, j: vIdx.get(k) })).filter((f) => f.j != null); } return; }
+      if (li >= 0) { const l = atlasC.lugares[li]; const conf = l.conf >= 700 ? 'identificação segura' : l.conf >= 300 ? 'identificação provável' : 'identificação incerta'; canvas.style.cursor = 'pointer'; info.innerHTML = `<b>${esc(l.nome)}</b>${l.identificacao && l.identificacao !== l.nome ? `<em>hoje: ${esc(l.identificacao)}</em>` : ''}<small>Atlas · ${l.peso} versículo(s) · ${conf} (${l.conf}/1000) · OpenBible.info${l.nomeOrigem ? ` · nome como está na Almeida (fonte: ${esc(l.en)})` : ''} · clique para acender os versículos</small>`; info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; if (!lugarAtivo && livroAtivo == null) { atlasC.acender([li]); fios = l.versos.slice(0, 80).map((k) => ({ l: li, j: vIdx.get(k) })).filter((f) => f.j != null); } return; }
       const bV = !modoTerra && camada('biblia').visivel && camada('biblia').opacidade > 0.1;   // só pega o que está visível
       const s = bV && dist < 1800 ? satPerto(x, y, 12) : -1;
       if (s >= 0) { canvas.style.cursor = 'pointer'; info.innerHTML = `<b>${esc(sats[s].rotulo)}</b><small>${esc(NOME_TIPO[sats[s].tipo] || sats[s].tipo)} · ligado a ${esc(nomeRef(sats[s].k))} · clique para ver as evidências</small>`; info.hidden = false; info.style.left = Math.min(W - 310, x + 16) + 'px'; info.style.top = Math.min(H - 80, y + 14) + 'px'; return; }
@@ -727,7 +739,9 @@ export function criarCeu(container, estado, acoes) {
   };
   canvas.addEventListener('pointerup', fim);
   canvas.addEventListener('pointercancel', fim);
-  canvas.addEventListener('pointerleave', () => { if (!ponteiros.size) { soltar(); sobreLivro = null; info.hidden = true; } });
+  let foraDoCanvas = false;   // o cursor saiu do universo: nenhuma dica fica presa na tela
+  canvas.addEventListener('pointerleave', () => { foraDoCanvas = true; clearTimeout(pairarT); info.hidden = true; if (!ponteiros.size) { soltar(); sobreLivro = null; } });
+  canvas.addEventListener('pointerenter', () => { foraDoCanvas = false; });
   let cartaoT = 0;   // no toque, o cartão espera um instante (um segundo toque vira zoom)
   function clique(x, y, tipo) {
     const agora = performance.now(), duplo = agora - ultimoToque < 320; ultimoToque = agora;
@@ -756,7 +770,8 @@ export function criarCeu(container, estado, acoes) {
     e.preventDefault(); voo = null; interagiu = true;
     if (modoTerra) { if (!transicao) { posicionarTerra(); modoTerra.ancora = latLonNaTela(e.offsetX, e.offsetY); } modoTerra.cursor = { x: e.offsetX, y: e.offsetY }; modoTerra.altAlvo = Math.min(RAIO_GLOBO * 3.6, Math.max(1.5, modoTerra.altAlvo * Math.exp(e.deltaY * 0.0014))); return; }
     if (e.deltaY < 0 && atlasC && camada('atlas').visivel) { const pt = raioNoGlobo(e.offsetX, e.offsetY); if (pt && camera.position.distanceTo(atlasC.centroMundo()) < RAIO_GLOBO * 3.2) { entrarTerra(pt); modoTerra.cursor = { x: e.offsetX, y: e.offsetY }; modoTerra.altAlvo *= Math.exp(e.deltaY * 0.0014); return; } }
-    zoomEm(e.offsetX, e.offsetY, Math.exp(e.deltaY * 0.0016)); }, { passive: false });
+    const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY; zoomSuave = { x: e.offsetX, y: e.offsetY, log: (zoomSuave ? zoomSuave.log : 0) + Math.max(-0.9, Math.min(0.9, dy * 0.0016)) }; }, { passive: false });
+  let zoomSuave = null;   // { x, y, log }: o restante do zoom pedido pela roda (aplicado com amortecimento a cada quadro)
   // pinça no modo terra: aproxima do chão
   const pincaTerra = (fator) => { if (modoTerra) { modoTerra.cursor = pinca ? { x: pinca.cx, y: pinca.cy } : null; if (modoTerra.cursor && !modoTerra.ancoraPinca) { posicionarTerra(); modoTerra.ancora = latLonNaTela(modoTerra.cursor.x, modoTerra.cursor.y); modoTerra.ancoraPinca = true; } modoTerra.altAlvo = Math.min(RAIO_GLOBO * 3.6, Math.max(1.5, modoTerra.altAlvo * fator)); return true; } return false; };
   ui.querySelector('.cu-controles').addEventListener('click', (e) => {
@@ -771,6 +786,45 @@ export function criarCeu(container, estado, acoes) {
     else if (o === 'terra') { if (modoTerra) sairTerra(); else abrirTerra(); }
     else if (o === 'tela') { const el = container.closest('.palco') || container; if (document.fullscreenElement) document.exitFullscreen(); else el.requestFullscreen && el.requestFullscreen().catch(() => {}); }
   });
+  window.addEventListener('keydown', (e) => {
+    if (!ativo || e.ctrlKey || e.metaKey || e.altKey) return; const el = document.activeElement;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable)) return;
+    if (!container.offsetParent) return; const k = e.key; let feito = true; const passo = dist * 0.12;
+    if (modoTerra && /^(Arrow|[wasdWASD]$)/.test(k)) { const m = modoTerra, f = m.alt / RAIO_GLOBO * 18; if (k === 'ArrowUp' || k === 'w' || k === 'W') m.lat = Math.min(85, m.lat + f); else if (k === 'ArrowDown' || k === 's' || k === 'S') m.lat = Math.max(-85, m.lat - f); else if (k === 'ArrowLeft' || k === 'a' || k === 'A') m.lon -= f; else m.lon += f; posicionarTerra(); e.preventDefault(); return; }
+    if (k === 'ArrowUp' || k === 'w' || k === 'W') { inercia.set(0, passo / 10); }
+    else if (k === 'ArrowDown' || k === 's' || k === 'S') { inercia.set(0, -passo / 10); }
+    else if (k === 'ArrowLeft' || k === 'a' || k === 'A') { inercia.set(-passo / 10, 0); }
+    else if (k === 'ArrowRight' || k === 'd' || k === 'D') { inercia.set(passo / 10, 0); }
+    else if (k === '+' || k === '=') { if (modoTerra) modoTerra.altAlvo = Math.max(1.5, modoTerra.altAlvo * 0.6); else zoomSuave = { x: W / 2, y: H / 2, log: (zoomSuave ? zoomSuave.log : 0) - 0.5 }; }
+    else if (k === '-' || k === '_') { if (modoTerra) modoTerra.altAlvo = Math.min(RAIO_GLOBO * 3.6, modoTerra.altAlvo / 0.6); else zoomSuave = { x: W / 2, y: H / 2, log: (zoomSuave ? zoomSuave.log : 0) + 0.5 }; }
+    else if (k === 'Home' || k === '0') vistaGeral();
+    else if (k === 't' || k === 'T') { incl = incl > 0.3 ? 0 : 0.9; }
+    else if (k === 'PageUp') incl = Math.max(0, incl - 0.15);
+    else if (k === 'PageDown') incl = Math.min(1.15, incl + 0.15);
+    else if (k === 'f' || k === 'F') { const el2 = container.closest('.palco') || container; if (document.fullscreenElement) document.exitFullscreen(); else el2.requestFullscreen && el2.requestFullscreen().catch(() => {}); }
+    else if (k === 'Escape') { if (!pergaminho.hidden && pergFixo) { pergFixo = null; pergaminho.hidden = true; pergAssin = ''; } else if (!cartao.hidden) cartao.hidden = true; else if (!invest.hidden) invest.hidden = true; else if (modoTerra) sairTerra(); else feito = false; }
+    else feito = false;
+    if (feito) { e.preventDefault(); interagiu = true; voo = null; }
+  });
+  const mini = ui.querySelector('.cu-mini'), miniC = mini.querySelector('canvas'), mg = miniC.getContext('2d'); let miniEm = 0, miniCaixa = null;
+  function desenharMini(t) {
+    if (t - miniEm < 120 || !secoes.length || modoTerra || mini.offsetParent === null) return; miniEm = t;
+    const r = window.devicePixelRatio || 1; if (miniC.width !== 216 * r) { miniC.width = 216 * r; miniC.height = 140 * r; }
+    mg.setTransform(r, 0, 0, r, 0, 0); mg.clearRect(0, 0, 216, 140);
+    const x0 = Math.min(...secoes.map((q) => q.cx - q.raio)), x1 = Math.max(...secoes.map((q) => q.cx + q.raio)), y0 = Math.min(...secoes.map((q) => q.cy - q.raio)), y1 = Math.max(...secoes.map((q) => q.cy + q.raio));
+    const e = Math.min(200 / (x1 - x0), 124 / (y1 - y0)), ox = 108 - (x0 + x1) / 2 * e, oy = 70 + (y0 + y1) / 2 * e; miniCaixa = { e, ox, oy };
+    const M = (x, y) => [ox + x * e, oy - y * e];
+    secoes.forEach((q) => { const [a, b] = M(q.cx, q.cy); const g = mg.createRadialGradient(a, b, 0, a, b, q.raio * e); g.addColorStop(0, q.cor + '55'); g.addColorStop(1, q.cor + '00'); mg.fillStyle = g; mg.beginPath(); mg.arc(a, b, q.raio * e, 0, 6.29); mg.fill(); });
+    livros.forEach((lv) => { const [a, b] = M(lv.cx, lv.cy); mg.fillStyle = sobreLivro === lv ? '#FFF3D0' : lv.sec.cor; mg.globalAlpha = 0.85; mg.beginPath(); mg.arc(a, b, Math.max(1.2, lv.raio * e * 0.45), 0, 6.29); mg.fill(); }); mg.globalAlpha = 1;
+    // o que a câmera vê agora (o trapézio do chão visível)
+    const cs = [[0, 0], [W, 0], [W, H], [0, H]].map(([x, y]) => noPlano(x, y)).filter(Boolean);
+    if (cs.length === 4) { mg.beginPath(); cs.forEach((c, i) => { const [a, b] = M(Math.max(x0 - 4000, Math.min(x1 + 4000, c.x)), Math.max(y0 - 4000, Math.min(y1 + 4000, c.y))); i ? mg.lineTo(a, b) : mg.moveTo(a, b); }); mg.closePath(); mg.fillStyle = 'rgba(243,211,142,.10)'; mg.fill(); mg.strokeStyle = '#F3D38E'; mg.lineWidth = 1.3; mg.stroke(); }
+    const [ca, cb] = M(alvo.x, alvo.y); mg.fillStyle = '#FFF3D0'; mg.beginPath(); mg.arc(ca, cb, 2.6, 0, 6.29); mg.fill(); mg.strokeStyle = 'rgba(243,211,142,.9)'; mg.lineWidth = 1.2; mg.beginPath(); mg.arc(ca, cb, 7, 0, 6.29); mg.stroke();
+    mg.fillStyle = 'rgba(220,226,240,.6)'; mg.font = '600 10px Inter, system-ui, sans-serif'; mg.textAlign = 'right'; mg.fillText(dist > 9000 ? 'universo inteiro' : dist > 1200 ? 'galáxias' : dist > 520 ? 'capítulos' : 'versículos', 210, 134);
+    const bi = mini.querySelector('[data-mini="incl"] span'), txt = incl > 0.3 ? 'inclinado ' + Math.round(incl * 57.3) + '°' : 'de cima'; if (bi.textContent !== txt) bi.textContent = txt;
+  }
+  miniC.addEventListener('click', (e) => { if (!miniCaixa) return; const r = miniC.getBoundingClientRect(), x = (e.clientX - r.left - miniCaixa.ox) / miniCaixa.e, y = (miniCaixa.oy - (e.clientY - r.top)) / miniCaixa.e; voar(x, y, dist); });
+  mini.addEventListener('click', (e) => { const b = e.target.closest('[data-mini]'); if (!b) return; if (b.dataset.mini === 'incl') incl = incl > 0.3 ? 0 : 0.9; else { const tk = mini.querySelector('.cu-mini-teclas'); tk.hidden = !tk.hidden; } });
   // distância que mostra todas as regiões na tela (com folga)
   function caixaGeral() {
     const x0 = Math.min(...secoes.map((s) => s.cx - s.raio)), x1 = Math.max(...secoes.map((s) => s.cx + s.raio));
@@ -1018,7 +1072,14 @@ export function criarCeu(container, estado, acoes) {
     hipotese: ['hipótese', 'relação calculada pelo NEXUS (versículos em comum)'], incerta: ['incerta', 'identificação incerta'], provavel: ['provável', 'identificação provável'],
     tradicional: ['data tradicional', 'data da cronologia tradicional da fonte, não consenso'], segura: ['segura', 'identificação segura'] };
   const selo = (k) => `<span class="cu-selo cu-selo-${k}" title="${CONF[k][1]}">${CONF[k][0]}</span>`;
+  // títulos (Rei Davi, profeta Elias, apóstolo Paulo…): pesquisa o nome e dá preferência à pessoa
+  const TITULOS = /^\s*(?:o |a )?(rei|rainha|profeta|profetisa|ap[oó]stolo|sumo sacerdote|sacerdote|juiz|ju[ií]za|patriarca|s[aã]o|santo|santa|evangelista|di[aá]cono|imperador|fara[oó])\s+/i;
   function candidatosDe(texto) {
+    const m = String(texto).match(TITULOS);
+    if (m) { const r = candidatosBase(texto.slice(m[0].length)); r.forEach((x) => { if (x.tipo === 'pessoa') x.pont += 3; x.titulo = m[1]; }); r.sort((a, b) => b.pont - a.pont); if (r.length) return r; }
+    return candidatosBase(texto);
+  }
+  function candidatosBase(texto) {
     const qn = norm(texto), qt = trl(texto), out = [];
     if (atlasC) for (const l of atlasC.lugares) { let p = 0; for (const nm of [l.nome, l.en]) { const a = norm(nm), b = trl(nm); p = Math.max(p, a === qn ? 100 : b === qt ? 97 : qt.length >= 5 && lev(b, qt) <= 1 ? 82 : 0); }
       if (p) out.push({ tipo: 'lugar', rot: p >= 100 ? l.nome : `${texto.trim().replace(/^./, (c) => c.toUpperCase())} (${l.nome}, no Atlas)`, desc: `lugar bíblico · ${l.versos.length} versículo(s) · ${l.conf >= 700 ? 'identificação segura' : l.conf >= 300 ? 'identificação provável' : 'localização incerta'}`, pont: p + Math.min(2.5, Math.log2(1 + l.peso) / 3), lugar: l, versos: l.versos }); }
@@ -1041,7 +1102,7 @@ export function criarCeu(container, estado, acoes) {
     const porSec = new Map(); for (const k of S) { const b = decompor(k).b - 1; const si = SECOES.findIndex((q) => b >= q.de && b <= q.ate); porSec.set(si, (porSec.get(si) || 0) + 1); }
     F.universo = [...porSec.entries()].sort((a, b) => b[1] - a[1]).map(([si, n]) => ({ rot: SECOES[si].nome, desc: `${n} versículo(s) do assunto nesta região do cânon`, conf: 'direta', acao: { secao: si } }));
     // 02 Bíblia: os próprios versículos
-    F.biblia = [...S].sort((a, b) => a - b).slice(0, 14).map((k) => ({ rot: nomeRef(k), desc: textoDe(k), conf: 'direta', acao: { verso: k } }));
+    F.biblia = (() => { const o = [...S].sort((a, b) => a - b); if (o.length <= 14) return o; const porLivro = new Map(); o.forEach((k) => { const b = decompor(k).b; if (!porLivro.has(b)) porLivro.set(b, []); porLivro.get(b).push(k); }); const out = []; let r = 0; while (out.length < 14 && r < 50) { for (const lst of porLivro.values()) if (lst[r] != null && out.length < 14) out.push(lst[r]); r++; } return out.sort((a, b) => a - b); })().map((k) => ({ rot: nomeRef(k), desc: textoDe(k), conf: 'direta', acao: { verso: k } }));
     // 03 Atlas: lugares citados nesses versículos (com a confiança da identificação)
     const cont = new Map(); if (atlasC) for (const k of S) for (const li of atlasC.porVerso.get(k) || []) cont.set(li, (cont.get(li) || 0) + 1);
     if (cand.lugar) cont.set(cand.lugar.i, 999);
@@ -1055,8 +1116,8 @@ export function criarCeu(container, estado, acoes) {
     for (const id of ORDEM_FOLHAS.slice(3)) {
       const c = camada(id), x = c && indiceDe(c); if (!x) { F[id] = null; continue; }
       const n = new Map(); for (const k of S) for (const i of x.m.get(k) || []) n.set(i, (n.get(i) || 0) + 1);
-      const dir = [...n.entries()].filter(([i]) => (id !== 'linguas' || x.tam[i] < 1500) && !(cand.c && cand.c.id === id && cand.i === i))   // o próprio assunto não aparece como achado dele mesmo
-        .sort(id === 'linguas' ? (a, b) => x.tam[a[0]] - x.tam[b[0]] : (a, b) => b[1] - a[1] || x.tam[a[0]] - x.tam[b[0]]).slice(0, id === 'linguas' ? 8 : 6).map(([i, q]) => ({ rot: c.api.nome(i), desc: `${q} versículo(s) do assunto${id === 'linguas' ? ' · ' + x.tam[i] + ' versículo(s) na Bíblia toda' : ''}`, conf: CONF_CAMADA[id], acao: { c: id, i } }));
+      const dir = [...n.entries()].filter(([i, q]) => (id !== 'linguas' || (x.tam[i] < 3000 && (q >= 2 || S.size < 12))) && !(cand.c && cand.c.id === id && cand.i === i))   // o próprio assunto não aparece como achado dele mesmo
+        .sort(id === 'linguas' ? (a, b) => b[1] * Math.log(31102 / x.tam[b[0]]) ** 2 - a[1] * Math.log(31102 / x.tam[a[0]]) ** 2 : (a, b) => b[1] - a[1] || x.tam[a[0]] - x.tam[b[0]]).slice(0, id === 'linguas' ? 8 : 6).map(([i, q]) => ({ rot: c.api.nome(i), desc: `${q} versículo(s) do assunto${id === 'linguas' ? ' · ' + x.tam[i] + ' versículo(s) na Bíblia toda' : ''}`, conf: CONF_CAMADA[id], acao: { c: id, i } }));
       if (dir.length < 4 && id !== 'manuscritos' && id !== 'linguas') { const rel = relacionados(S2, cand.c ? { c: cand.c, i: cand.i } : null, 6).find((r) => r.c === c);
         if (rel) rel.lista.filter((q) => !n.has(q.i)).slice(0, 4 - dir.length).forEach((q) => dir.push({ rot: c.api.nome(q.i), desc: `${q.n} versículo(s) em comum${ponte ? ' com o assunto e com ' + ponte : ' com o assunto'}`, conf: 'hipotese', acao: { c: id, i: q.i } })); }
       F[id] = dir;
@@ -1081,7 +1142,7 @@ export function criarCeu(container, estado, acoes) {
     const cand = cands[0], outros = escolhido ? (investigacao ? investigacao.outros : []) : cands.slice(1, 7);
     if (modoTerra) sairTerra();
     limparComposicao();
-    const sementes = [...new Set(cand.versos)].slice(0, 600), F = folhasDa(sementes, cand);
+    const todosV = [...new Set(cand.versos)], passoS = Math.max(1, todosV.length / 2500), sementes = todosV.length > 2500 ? Array.from({ length: 2500 }, (_, q) => todosV[Math.floor(q * passoS)]) : todosV, F = folhasDa(sementes, cand);
     investigacao = { texto, cand, outros, sementes, F, fontes: null, aba: 'geral', t0: performance.now(), lugarIncerto: cand.lugar && cand.lugar.conf < 300 ? cand.lugar : null }; estudoAberto = false; cartaoAberto = null;
     // a composição: folhas afastadas e vistas em perspectiva, como lâminas
     separacao = Math.max(separacao, 2.2); sincronizarPainel();
@@ -1405,7 +1466,7 @@ export function criarCeu(container, estado, acoes) {
   const chipLugar = ui.querySelector('.cu-lugar'), invest = ui.querySelector('.cu-invest');
   async function montarAtlas() {
     try {
-      const d = await (await fetch('/nexus/atlas-dados.json')).json();
+      const d = await (await fetch('/nexus/atlas-dados.json?v=2')).json();
       const { criarGloboAtlas } = await import('/nexus/atlas-globo.js?v=6');
       const x0 = Math.min(...secoes.map((q) => q.cx - q.raio)), x1 = Math.max(...secoes.map((q) => q.cx + q.raio));
       const y0 = Math.min(...secoes.map((q) => q.cy - q.raio)), y1 = Math.max(...secoes.map((q) => q.cy + q.raio));
@@ -1673,6 +1734,8 @@ export function criarCeu(container, estado, acoes) {
 
   // ── rótulos em camadas (conforme o zoom e o espaço) ─────────────────────────────
   const nivelEl = ui.querySelector('.cu-nivel');
+  nivelEl.addEventListener('click', (e) => { const b = e.target.closest('[data-mig]'); if (!b) return; const m = b.dataset.mig;
+    if (m === 'geral') vistaGeral(); else if (m === 'sec') { const q = secoes[+b.dataset.i]; voar(q.cx, q.cy, q.raio * 3.4); } else { const lv = livros[+b.dataset.i - 1]; voar(lv.cx, lv.cy, lv.raio * 4.2); } });
   function rotulos(t) {
     g2.setTransform(escala, 0, 0, escala, 0, 0); g2.clearRect(0, 0, W, H);
     const ocup = [];
@@ -1744,7 +1807,7 @@ export function criarCeu(container, estado, acoes) {
       for (const lv of livros) {
         if (!vB || Math.hypot(lv.cx - alvo.x, lv.cy - alvo.y) > dist * 1.6 + lv.raio) continue;
         const p = tela(lv.cx, lv.cy - lv.raio * 1.05); if (p) texto(lv.nome, p.x, p.y, '700 17px "Cormorant Garamond", Georgia, serif', '#FFE8B0', 'rgba(2,5,14,.7)', 1);
-        for (const c of lv.capPos) { if (n > 90) break; const q = tela(c.x, c.y); if (q && q.x > 0 && q.x < W && q.y > 0 && q.y < H && texto(lv.abbrev.toUpperCase() + ' ' + c.c, q.x, q.y - 16, '600 12.5px Inter, system-ui, sans-serif', '#FFFFFF', null, 1)) n++; }
+        for (const c of lv.capPos) { if (n > 46) break; const q = tela(c.x, c.y); if (q && q.x > 40 && q.x < W - 40 && q.y > 30 && q.y < H - 30 && Math.hypot(q.x - W / 2, q.y - H / 2) < Math.max(W, H) * 0.42 && texto(String(c.c), q.x, q.y - 14, '600 11.5px Inter, system-ui, sans-serif', 'rgba(240,228,196,.9)', 'rgba(2,5,14,.35)', 0.9)) n++; }
       }
     } else {   // ESTRELAS (versículos)
       nivel = 'Estrelas · versículos';
@@ -1760,6 +1823,7 @@ export function criarCeu(container, estado, acoes) {
         }
       }
     }
+    desenharLigacoesLivro(t, texto);
     // a passagem em foco: farol discreto
     const qf = lerId(estado.foco);
     if (vB && qf && vIdx.has(qf.ini)) {
@@ -1769,7 +1833,7 @@ export function criarCeu(container, estado, acoes) {
     if (investigacao && !jornada && modoTerra && atlasC && investigacao.F.atlas) {
       investigacao.F.atlas.forEach((x) => { const l = atlasC.lugares[x.acao.lugar], p = telaLugarV(l); if (!p || p.x < 0 || p.x > W || p.y < 0 || p.y > H) return; const eh = l.i === investigacao.principal;
         g2.save(); g2.beginPath(); g2.arc(p.x, p.y, eh ? 12 : 8, 0, 6.29); g2.strokeStyle = eh ? '#FFE3A3' : 'rgba(233,200,120,.85)'; g2.lineWidth = eh ? 3 : 2; if (x.conf === 'incerta') g2.setLineDash([4, 4]); g2.stroke(); g2.restore();
-        texto(l.nome + (x.conf === 'incerta' ? ' (incerto)' : ''), p.x + 14, p.y, (eh ? '800 14px' : '600 12.5px') + ' Inter, system-ui, sans-serif', eh ? '#FFFFFF' : '#FFE8B0', 'rgba(20,12,2,.82)', 1, false); });
+        texto(l.nome + (x.conf === 'incerta' ? ' (incerto)' : ''), p.x + (eh ? 24 : 18), p.y, (eh ? '800 14px' : '600 12.5px') + ' Inter, system-ui, sans-serif', eh ? '#FFFFFF' : '#FFE8B0', 'rgba(20,12,2,.82)', 1, false); });
     }
     if (jornada && atlasC && camada('atlas').visivel && jornada.rota.length > 1) {
       const atual = jornada.passos[jornada.n].lugarVoo;
@@ -1785,9 +1849,47 @@ export function criarCeu(container, estado, acoes) {
         texto(`${l.nome}? · localização incerta (${l.conf}/1000)`, p.x + r * 1.9 + 6, p.y, '700 12.5px Inter, system-ui, sans-serif', '#FFE3A3', 'rgba(40,24,4,.85)', 1, false); }
     }
     if (modoTerra) nivel = 'Terra · ' + (modoTerra.alt > RAIO_GLOBO * 0.6 ? 'o globo' : modoTerra.alt > RAIO_GLOBO * 0.05 ? 'regiões' : 'cidades e lugares');
-    if (nivelEl.textContent !== nivel) nivelEl.textContent = nivel;
+    let migalha = '';
+    if (!modoTerra && secoes.length) {
+      const lvP = dist < 9000 ? livros.reduce((m, lv) => { const d = Math.hypot(lv.cx - alvo.x, lv.cy - alvo.y) / lv.raio; return d < 1.6 && (!m || d < m.d) ? { lv, d } : m; }, null) : null;
+      const secP = lvP ? lvP.lv.sec : (dist < 16000 ? secoes.reduce((m, q) => { const d = Math.hypot(q.cx - alvo.x, q.cy - alvo.y) / q.raio; return d < 1.3 && (!m || d < m.d) ? { q, d } : m; }, null)?.q : null);
+      const partes = ['<button type="button" data-mig="geral">Universo</button>'];
+      if (secP) partes.push(`<button type="button" data-mig="sec" data-i="${secoes.indexOf(secP)}">${esc(secP.nome)}</button>`);
+      if (lvP) partes.push(`<button type="button" data-mig="livro" data-i="${lvP.lv.num}">${esc(lvP.lv.nome)}</button>`);
+      if (lvP && dist <= 520 && leituraCap && leituraCap.b === lvP.lv.num) partes.push(`<span>cap. ${leituraCap.c}</span>`);
+      migalha = partes.join('<i>›</i>') + (partes.length > 1 || !/^Universo/.test(nivel) ? `<em>${esc(nivel)}</em>` : '<em>regiões do cânon</em>');
+    } else migalha = esc(nivel);
+    if (nivelEl.dataset.m !== migalha) { nivelEl.dataset.m = migalha; nivelEl.innerHTML = migalha; }
   }
 
+  // livros ligados pelas mesmas pessoas (camada Personagens: Theographic, versículo a versículo)
+  let pessoasPorLivro = null, ligLivroCache = new Map();
+  function livrosLigados(lv) {
+    const cp = camada('personagens'); if (!cp) return null;
+    if (!cp.criada) { if (!cp._prom) garantirCriada(cp); return null; }
+    if (!cp.api || !cp.api.pessoas) return null;
+    if (!pessoasPorLivro) { pessoasPorLivro = livros.map(() => new Set()); cp.api.pessoas.forEach((pe, ip) => { for (const k of pe.v || []) { const b = decompor(k).b; if (pessoasPorLivro[b - 1]) pessoasPorLivro[b - 1].add(ip); } }); }
+    if (ligLivroCache.has(lv.num)) return ligLivroCache.get(lv.num);
+    const meu = pessoasPorLivro[lv.num - 1], res = [];
+    livros.forEach((o) => { if (o === lv) return; let n = 0; for (const ip of pessoasPorLivro[o.num - 1]) if (meu.has(ip)) n++; if (n >= 3) res.push({ lv: o, n }); });
+    res.sort((a, b) => b.n - a.n); const top = res.slice(0, 7); ligLivroCache.set(lv.num, top); return top;
+  }
+  function desenharLigacoesLivro(t, texto) {
+    const lv = sobreLivro; if (!lv || modoTerra || dist < 1200 || longeR() > 0.5 && revela[secoes.indexOf(lv.sec)] < 0.3) return;
+    const lig = livrosLigados(lv); if (!lig || !lig.length) return; const p0 = tela(lv.cx, lv.cy); if (!p0) return;
+    const mx = lig[0].n;
+    lig.forEach((L, k) => { const p1 = tela(L.lv.cx, L.lv.cy); if (!p1) return; const forca = 0.35 + 0.65 * L.n / mx;
+      const mxp = (p0.x + p1.x) / 2, myp = (p0.y + p1.y) / 2, dx = p1.x - p0.x, dy = p1.y - p0.y, cx = mxp - dy * 0.18, cy = myp + dx * 0.18;
+      g2.save(); g2.globalAlpha = 0.25 + 0.55 * forca; g2.strokeStyle = '#F3D38E'; g2.lineWidth = 1 + 2.2 * forca; g2.setLineDash([2, 6]); g2.lineDashOffset = -t / 40;
+      g2.beginPath(); g2.moveTo(p0.x, p0.y); g2.quadraticCurveTo(cx, cy, p1.x, p1.y); g2.stroke(); g2.setLineDash([]);
+      const f = ((t / 1800) + k / 7) % 1, u = 1 - f, px = u * u * p0.x + 2 * u * f * cx + f * f * p1.x, py = u * u * p0.y + 2 * u * f * cy + f * f * p1.y;   // partícula correndo pelo fio
+      g2.globalAlpha = Math.sin(f * Math.PI); g2.fillStyle = '#FFF3D0'; g2.beginPath(); g2.arc(px, py, 2.4, 0, 6.29); g2.fill(); g2.restore();
+      const dentro = p1.x > 90 && p1.x < W - 300 && p1.y > 60 && p1.y < H - 60;
+      if (dentro) texto(`${L.lv.nome} · ${L.n} pessoas em comum`, p1.x, p1.y + 18, '600 12px Inter, system-ui, sans-serif', '#FFE8B0', 'rgba(2,5,14,.78)', 0.95);
+      else { const ang = Math.atan2(p1.y - p0.y, p1.x - p0.x), mx2 = Math.max(150, Math.min(W - 420, p0.x + Math.cos(ang) * 2000)), my2 = Math.max(70, Math.min(H - 70, p0.y + Math.sin(ang) * 2000)); const seta = Math.abs(Math.cos(ang)) > 0.5 ? (Math.cos(ang) > 0 ? '→' : '←') : (Math.sin(ang) > 0 ? '↓' : '↑');
+        texto(`${seta} ${L.lv.nome} · ${L.n} pessoas em comum`, mx2, my2 + k * 0, '600 12px Inter, system-ui, sans-serif', '#FFE8B0', 'rgba(2,5,14,.85)', 0.95); } });
+    texto(`${lv.nome}: ligado a outros livros pelas mesmas pessoas (camada Personagens)`, p0.x, p0.y + lv.raio * 0 + 34, '700 12.5px Inter, system-ui, sans-serif', '#FFFFFF', 'rgba(20,14,4,.85)', 1);
+  }
   // ── leitura do capítulo (perto) ───────────────────────────────────────────────
   function quebrar(txt, largura) { const out = []; let linha = ''; for (const p of String(txt).split(' ')) { const t2 = linha ? linha + ' ' + p : p; if (g2.measureText(t2).width > largura && linha) { out.push(linha); linha = p; } else linha = t2; } if (linha) out.push(linha); return out; }
   // LEITURA EM PERGAMINHO: fundo claro, letra grande e escura (o texto bíblico precisa ser lido, não decifrado).
@@ -1840,6 +1942,7 @@ export function criarCeu(container, estado, acoes) {
       dist = Math.exp(Math.log(voo.de.d) + (Math.log(voo.para.d) - Math.log(voo.de.d)) * e); posicionar();
       if (q >= 1) voo = null;
     } else if (!arrasto && inercia.lengthSq() > 1e-4) { alvo.x += inercia.x * dt / 16; alvo.y += inercia.y * dt / 16; inercia.multiplyScalar(0.92); posicionar(); }
+    if (zoomSuave && !modoTerra) { const passo = zoomSuave.log * Math.min(1, dt / 85); zoomEm(zoomSuave.x, zoomSuave.y, Math.exp(passo)); zoomSuave.log -= passo; if (Math.abs(zoomSuave.log) < 0.002) zoomSuave = null; }
     aplicarCamadas(); if (modoTerra && atlasC) { if (animarTerra()) posicionarTerra(); } else { alvo.z = zB; posicionar(); }
     if (transicao) { const q = Math.min(1, (performance.now() - transicao.t0) / 650), e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2; if (q >= 1) transicao = null; else { camera.position.lerpVectors(transicao.pos, camera.position.clone(), e); camera.quaternion.slerpQuaternions(transicao.quat, camera.quaternion.clone(), e); camera.updateMatrixWorld(); } }
     if (ceuR) ceuR.quadro(camera, t, alvo, modoTerra ? 26000 : dist, camada('universo').opacidade, camada('universo').visivel || !!modoTerra, !modoTerra || modoTerra.alt > RAIO_GLOBO * 0.02);   // o universo é visto do espaço: estrelas reais da hora, sem o azul do dia (só perto do chão, na Terra, o céu fica azul)   // na Terra, vista do espaço: céu negro com estrelas
@@ -1865,9 +1968,9 @@ export function criarCeu(container, estado, acoes) {
     if (secRevelada != null && performance.now() > revelaAte) secRevelada = null;
     for (let i = 0; i < 10; i++) revela[i] += ((secRevelada === i ? 1 : 0) - revela[i]) * Math.min(1, dt / 180);
     matVers.uniforms.longeR.value = longeR(); for (let i = 0; i < 10; i++) matVers.uniforms.revela.value[i] = revela[i];
-    galaxias.children.forEach((sp, i) => { const lv = livros[i]; const rvL = revela[secoes.indexOf(lv.sec)], fatR = 1 - longeR() * (1 - rvL); const esc2 = lv.raio * 2.9 * (0.35 + 0.65 * fatR); sp.scale.set(esc2, esc2, 1); sp.visible = fatR > 0.02;
+    galaxias.children.forEach((sp, i) => { const lv = livros[i]; const rvL = revela[secoes.indexOf(lv.sec)], fatR = Math.max(0.42, 1 - longeR() * (1 - rvL)); const esc2 = lv.raio * 2.9 * (0.35 + 0.65 * fatR); sp.scale.set(esc2, esc2, 1); sp.visible = fatR > 0.02;
       const foco = sobreLivro === lv ? 0.55 : 0; const pulso = reduzido ? 0 : 0.06 * Math.sin(t / 1000 * 0.8 + i * 1.7); const bb = sp.material.userData.base ?? 0.5; sp.material.userData.base = (bb + ((0.12 + 0.5 * longe + foco + pulso + (livroAtivo === i ? 0.6 : 0)) - bb) * 0.12); sp.material.opacity = sp.material.userData.base * fatR * camada('biblia').opacidade; });
-    nebulosas.children.forEach((sp, i) => { sp.material.userData.base = (0.025 + 0.06 * longe) * (reduzido ? 1 : 0.8 + 0.2 * Math.sin(t / 1000 * 0.25 + i * 0.9)) * (secAtiva != null && sp.userData.secao === secAtiva ? 3.2 : 1); });
+    nebulosas.children.forEach((sp, i) => { sp.material.userData.base = (0.035 + 0.1 * longe) * (reduzido ? 1 : 0.8 + 0.2 * Math.sin(t / 1000 * 0.25 + i * 0.9)) * (secAtiva != null && sp.userData.secao === secAtiva ? 3.2 : 1); });
     if (pronto) {
       // constelação: estrelas ligadas brilham e se aproximam um pouco; linhas acendem em sequência
       const lp = gLin.attributes.position, la = gLin.attributes.alfa, lc = gLin.attributes.cor;
@@ -1920,8 +2023,9 @@ export function criarCeu(container, estado, acoes) {
     if (ceuR) renderer.render(ceuR.cena, ceuR.camera);   // 1º o céu real (fundo da camada Universo)
     renderer.clearDepth();
     renderer.render(cena, camera);
-    rotulos(t);
-    if (constel || sobreLivro) mostrarInfo();
+    rotulos(t); desenharMini(t);
+    if (sobreLivro && (dist < 1200 || modoTerra)) sobreLivro = null;   // a dica de livro só vale no nível das galáxias
+    if (constel || sobreLivro || foraDoCanvas) mostrarInfo();
     if (pronto && t - salvoEm > 1500) { salvoEm = t; try { sessionStorage.setItem('nexus_universo_vista', JSON.stringify({ x: alvo.x, y: alvo.y, d: dist, i: incl })); } catch (_) {} }
     quadro = requestAnimationFrame(quadroDesenho);
   }
@@ -1959,7 +2063,7 @@ export function criarCeu(container, estado, acoes) {
       renderer.dispose(); canvas.remove(); rot.remove(); ui.remove(); estilo.remove();
     },
     _teste: {
-      pronto: () => pronto, dist: () => dist, alvo: () => ({ x: alvo.x, y: alvo.y }), nivel: () => nivelEl.textContent,
+      pronto: () => pronto, dist: () => dist, alvo: () => ({ x: alvo.x, y: alvo.y }), nivel: () => nivelEl.textContent, mini: () => !!miniCaixa,
       telaVerso: (k) => { const j = vIdx.get(k); return j == null ? null : tela(vPos[j * 3], vPos[j * 3 + 1]); },
       mundoVerso: (k) => { const j = vIdx.get(k); return j == null ? null : { x: vBase[j * 3], y: vBase[j * 3 + 1] }; },
       irPara: (x, y, d) => { voo = null; interagiu = true; alvo.set(x, y, 0); dist = d; posicionar(); },
