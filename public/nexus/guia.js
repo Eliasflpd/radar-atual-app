@@ -8,7 +8,7 @@ const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-
 const CENAS = [
   [/fruto|queda|adao|serpente|genesis 3\b|pecado original|arvore do conhecimento|escolha do homem|voz da mulher/, null, 'o mundo de Gênesis 3: a escolha do homem', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('queda')],
   [/(sete|7) trombetas|trombeta/, null, 'o mundo das sete trombetas (Apocalipse 8–11)', () => window.NEXUS_MUNDO && window.NEXUS_MUNDO('trombetas')],
-  [/\beden\b|paraiso/, 'Éden', 'o jardim do Éden para sobrevoar'],
+  [/\beden\b|paraiso/, 'Éden', 'o jardim do Éden: o drone desce e você anda dentro'],
   [/criacao|genesis 1\b|no principio/, null, 'a criação (Gênesis 1)', () => window.__ceuPrevia && window.__ceuPrevia._teste && window.__ceuPrevia._teste.entrarLivro(1)],
   [/templo de herodes|segundo templo|templo de jesus/, 'templo de Herodes', 'o templo de Herodes'],
   [/templo de salomao|primeiro templo|templo$/, 'templo de Salomão', 'o templo de Salomão'],
