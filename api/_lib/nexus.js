@@ -1421,6 +1421,28 @@ module.exports = async (req, res) => {
       res.json({ ok: false, err: 'modo desconhecido' });
       return;
     }
+    if (acao === 'segunda-opiniao') {   // a mesma conversa respondida pelo GPT aberto da OpenAI (gpt-oss-120b) no Groq: grátis, sem tocar no orçamento do Claude
+      const NL = String.fromCharCode(10);
+      const msgs = (Array.isArray(b.mensagens) ? b.mensagens : []).slice(-10).map((m) => ({ papel: m && m.papel === 'eu' ? 'eu' : 'claude', texto: String((m && m.texto) || '').slice(0, 6000) })).filter((m) => m.texto.trim());
+      if (!msgs.length) { res.json({ ok: false, err: 'nada para responder' }); return; }
+      const ctx = b.contexto || {}; const cena = String(ctx.cena || '').replace(/[\r\n]+/g, ' ').slice(0, 240);
+      const user = (cena ? '[O pastor está dentro desta cena do NEXUS: ' + cena + '.]' + NL : '') + msgs.map((m) => (m.papel === 'eu' ? 'PASTOR: ' : 'CLAUDE: ') + m.texto).join(NL + NL) + NL + NL +
+        'Você é a SEGUNDA OPINIÃO. Responda à última pergunta do pastor do seu jeito, com independência: concorde, discorde ou acrescente ao que o Claude disse, sempre com honestidade e rigor.' + NL + 'RESPOSTA:';
+      const chaves = String(process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '').split(/[\s,;]+/).filter(Boolean);
+      if (!chaves.length) { res.json({ ok: false, err: 'A segunda opinião gratuita precisa da chave do Groq no RADAR.' }); return; }
+      let texto = '', erro = '';
+      for (const k of chaves.sort(() => Math.random() - 0.5)) {
+        try {
+          const r = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { Authorization: 'Bearer ' + k, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'openai/gpt-oss-120b', reasoning_effort: 'low', max_tokens: 1600, temperature: 0.4, messages: [{ role: 'system', content: SYS_CONVERSA }, { role: 'user', content: user }] }) });
+          const j = await r.json().catch(() => ({}));
+          texto = String((j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '').trim();
+          if (texto) break; erro = (j.error && j.error.message) || ('HTTP ' + r.status);
+        } catch (e) { erro = String(e && e.message || e); }
+      }
+      res.json(texto ? { ok: true, texto, modelo: 'GPT-OSS 120B (OpenAI, modelo aberto) via Groq', custo_usd: 0 } : { ok: false, err: 'O GPT não respondeu agora (' + erro.slice(0, 80) + ').' });
+      return;
+    }
     if (acao === 'conversar') {   // barra lateral: dúvidas de uso e ajuda nos estudos (não consulta a biblioteca)
       const NL = String.fromCharCode(10);
       const msgs = (Array.isArray(b.mensagens) ? b.mensagens : []).slice(-10).map((m) => ({ papel: m && m.papel === 'eu' ? 'eu' : 'claude', texto: String((m && m.texto) || '').slice(0, 6000) })).filter((m) => m.texto.trim());

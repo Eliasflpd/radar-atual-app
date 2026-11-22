@@ -46,7 +46,7 @@ export function iniciarGuia() {
   const corpo = el.querySelector('.guia-corpo'), form = el.querySelector('.guia-form'), ta = form.querySelector('textarea'), btMin = el.querySelector('[data-g=min]');
   function desenhar() {
     if (!hist.length) { corpo.innerHTML = `<div class="guia-msg guia-nx"><p>Olá! Peça um lugar, um tema ou um estudo e o NEXUS muda o ambiente. Também respondo perguntas.</p></div><div class="guia-sug">${['Me leve ao Éden', 'Estudo sobre as 7 trombetas', 'Templo de Herodes', 'Getsêmani', 'A criação'].map((s) => `<button type="button" data-s="${s}">${s}</button>`).join('')}</div>`; return; }
-    corpo.innerHTML = hist.map((m, i) => `<div class="guia-msg ${m.eu ? 'guia-eu' : 'guia-nx'}">${m.eu ? esc(m.t) : par(m.t)}${m.nota ? `<small>${esc(m.nota)}</small>` : ''}${m.rascunho ? `<div class="guia-acoes"><button type="button" data-baixar="${i}">⬇ Baixar</button><button type="button" data-copiar="${i}">⧉ Copiar</button></div>` : ''}</div>`).join(''); corpo.scrollTop = corpo.scrollHeight;
+    corpo.innerHTML = hist.map((m, i) => `<div class="guia-msg ${m.eu ? 'guia-eu' : 'guia-nx'}">${m.eu ? esc(m.t) : par(m.t)}${m.nota ? `<small>${esc(m.nota)}</small>` : ''}${!m.eu && m.claude ? `<div class="guia-acoes">${m.rascunho ? `<button type="button" data-baixar="${i}">⬇ Baixar</button><button type="button" data-copiar="${i}">⧉ Copiar</button>` : ''}${m.gptFeito ? '' : `<button type="button" data-gpt="${i}">🤖 Segunda opinião (GPT, grátis)</button>`}</div>` : ''}</div>`).join(''); corpo.scrollTop = corpo.scrollHeight;
   }
   async function pedir(texto) {
     texto = String(texto || '').trim(); if (!texto) return; const q = norm(texto);
@@ -74,7 +74,7 @@ export function iniciarGuia() {
       let jp; try { const r = await fetch('/api/nexus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'preparar', tipo, tema: texto.slice(0, 160), dossie: dossie && !dossie.vazio ? dossie : null, cracha: ler('radar_chave'), token: ler('lp_token') }) }); jp = await r.json(); } catch (_) { jp = { ok: false, err: 'Sem conexão agora.' }; }
       hist.pop();
       const fonte = dossie && !dossie.vazio ? `${dossie.total_versos} versículo(s) e ${dossie.camadas.length} camada(s) do universo` : 'sem material do universo';
-      hist.push(jp.ok ? { t: jp.texto, rascunho: true, nota: (jp.modelo ? jp.modelo + ' · US$ ' + Number(jp.custo_usd || 0).toFixed(4) + ' · ' : '') + fonte + ' · peça ajustes: encurte o ponto 2, mais aplicação…' } : { t: jp.motivo === 'particular' ? 'Para escrever com o Claude, entre com o PIN (botão de acesso no alto).' : (jp.err || 'Não consegui preparar agora.') });
+      hist.push(jp.ok ? { t: jp.texto, rascunho: true, claude: true, nota: (jp.modelo ? jp.modelo + ' · US$ ' + Number(jp.custo_usd || 0).toFixed(4) + ' · ' : '') + fonte + ' · peça ajustes: encurte o ponto 2, mais aplicação…' } : { t: jp.motivo === 'particular' ? 'Para escrever com o Claude, entre com o PIN (botão de acesso no alto).' : (jp.err || 'Não consegui preparar agora.') });
       guardar(); desenhar(); return;
     }
     // conversa com o Claude (com o contexto da tela e o rascunho anterior)
@@ -83,13 +83,24 @@ export function iniciarGuia() {
       const r = await fetch('/api/nexus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'conversar', mensagens: hist.filter((m) => !m.pend).slice(-10).map((m) => ({ papel: m.eu ? 'eu' : 'claude', texto: m.t })), contexto: ctx, cracha: ler('radar_chave'), token: ler('lp_token') }) });
       j = await r.json(); } catch (_) { j = { ok: false, err: 'Sem conexão agora.' }; }
     hist.pop();
-    hist.push(j.ok ? { t: j.texto, nota: j.reaproveitado ? 'resposta reaproveitada, sem custo' : (j.modelo ? j.modelo + ' · US$ ' + Number(j.custo_usd || 0).toFixed(4) : '') } : { t: j.motivo === 'particular' ? 'Para conversar comigo, entre com o PIN (botão de acesso no alto). As cenas abrem mesmo sem PIN.' : (j.err || 'Não consegui responder agora.') });
+    hist.push(j.ok ? { t: j.texto, claude: true, nota: j.reaproveitado ? 'resposta reaproveitada, sem custo' : (j.modelo ? j.modelo + ' · US$ ' + Number(j.custo_usd || 0).toFixed(4) : '') } : { t: j.motivo === 'particular' ? 'Para conversar comigo, entre com o PIN (botão de acesso no alto). As cenas abrem mesmo sem PIN.' : (j.err || 'Não consegui responder agora.') });
+    guardar(); desenhar();
+  }
+  // segunda opinião: a mesma conversa (até a resposta escolhida) respondida pelo GPT aberto da OpenAI, de graça
+  async function segundaOpiniao(i) {
+    const conversa = hist.slice(0, i + 1).filter((m) => !m.pend && !m.gpt);
+    hist.splice(i + 1, 0, { t: 'O GPT está pensando…', pend: true, gpt: true }); desenhar();
+    let j; try { const ctx = { cena: (typeof window.NEXUS_CENA === 'function' && window.NEXUS_CENA()) || '' };
+      const r = await fetch('/api/nexus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'segunda-opiniao', mensagens: conversa.slice(-10).map((m) => ({ papel: m.eu ? 'eu' : 'claude', texto: m.t })), contexto: ctx, cracha: ler('radar_chave'), token: ler('lp_token') }) });
+      j = await r.json(); } catch (_) { j = { ok: false, err: 'Sem conexão agora.' }; }
+    const k = hist.findIndex((m) => m.pend && m.gpt); if (k >= 0) hist.splice(k, 1, j.ok ? { t: '🤖 Segunda opinião: ' + j.texto, gpt: true, nota: (j.modelo || 'GPT') + ' · grátis' } : { t: j.motivo === 'particular' ? 'Para a segunda opinião, entre com o PIN.' : (j.err || 'O GPT não respondeu agora.'), gpt: true });
     guardar(); desenhar();
   }
   form.addEventListener('submit', (e) => { e.preventDefault(); const t = ta.value; ta.value = ''; pedir(t); });
   ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
   corpo.addEventListener('click', (e) => { const b = e.target.closest('[data-s]'); if (b) pedir(b.dataset.s);
     const bx = e.target.closest('[data-baixar]'); if (bx) { const m = hist[+bx.dataset.baixar]; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([m.t], { type: 'text/markdown;charset=utf-8' })); a.download = 'NEXUS-' + (m.t.split('\n')[0].replace(/[^\wÀ-ú ]+/g, '').trim().slice(0, 50) || 'estudo') + '.md'; a.click(); }
+    const bg = e.target.closest('[data-gpt]'); if (bg) { const i = +bg.dataset.gpt; hist[i].gptFeito = true; segundaOpiniao(i); }
     const bc = e.target.closest('[data-copiar]'); if (bc) { try { navigator.clipboard.writeText(hist[+bc.dataset.copiar].t); bc.textContent = '✓ Copiado'; } catch (_) {} } });
   // minimizar
   const minimizar = (sim) => { el.classList.toggle('min', sim); btMin.textContent = sim ? '▢' : '–'; btMin.title = sim ? 'Abrir' : 'Minimizar'; try { localStorage.setItem('nexus_guia_min', sim ? '1' : ''); } catch (_) {} };
