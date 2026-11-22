@@ -1672,7 +1672,7 @@ export function criarCeu(container, estado, acoes) {
     if (/^(o )?(tumulo|sepulcro) de lazaro$/.test(q)) { abrirLugarReal('lazaro'); return true; }
     if (/^nazare$/.test(q)) { abrirLugarReal('nazare'); return true; }
     if (/(sete|7) trombetas|^trombetas$/.test(q)) { window.NEXUS_MUNDO('trombetas'); return true; }
-    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { fetch((window.NEXUS_MIDIA || '/nexus') + '/livros/eden-mapa.jpg', { method: 'HEAD' }).then((r) => (r.ok ? import('/nexus/mundo-terreno.js?v=18').then((m) => m.abrirMundo(THREE, 'eden', ui)) : import('/nexus/panorama360.js?v=6').then((m) => m.abrirPanorama(THREE, 'eden', ui)))); return true; }   // sobrevoo como no Google Earth; sem o mapa, o 360°
+    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { import('/nexus/eden-caminhar.js?v=12').then((m) => m.abrirJardim(THREE, ui, { chegada: true })).catch(() => import('/nexus/panorama360.js?v=6').then((m) => m.abrirPanorama(THREE, 'eden', ui))); return true; }   // direto no jardim realista: o drone desce e pousa dentro dele
     if (/^(cafarnaum|capernaum|casa de pedro)$/.test(q)) { abrirLugarReal('cafarnaum'); return true; }
     if (/^(magdala|sinagoga de magdala)$/.test(q)) { abrirLugarReal('magdala'); return true; }
     if (/^(o )?(mar da galileia|lago de genezare|mar de tiberiades|mar de genezare|lago da galileia)$/.test(q)) { abrirLugarReal('mar'); return true; }
