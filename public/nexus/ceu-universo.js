@@ -1115,6 +1115,7 @@ export function criarCeu(container, estado, acoes) {
   }
   function desenharInvestigacao() {
     const inv = investigacao; if (!inv) { painelInv.hidden = true; document.body.classList.remove('cu-com-investig'); desenharEstudo(); return; }
+    if (jornada) { painelInv.hidden = true; return; }   // durante a jornada o painel fica escondido
     painelInv.hidden = false; document.body.classList.add('cu-com-investig'); desenharEstudo(); ligarChips(telaEstudo);
     const F = inv.F, cand = inv.cand, n = inv.acesas || 0;
     const barra = ORDEM_FOLHAS.map((id, k) => { const c = camada(id), tem = F[id] && F[id].length; return `<i title="${esc(c ? c.nome : id)}${tem ? ': ' + F[id].length + ' achado(s)' : ': nada no acervo'}" class="${k < n ? (tem ? 'acesa' : 'vazia') : ''}" style="--c:${c ? c.cor : '#999'}">${String(k + 1).padStart(2, '0')}</i>`; }).join('');
@@ -1216,11 +1217,11 @@ export function criarCeu(container, estado, acoes) {
   }
   function iniciarJornada(iPessoa) {
     const j = montarJornada(iPessoa); if (!j || !j.passos.length) { chipLugar.innerHTML = 'Esta pessoa não aparece em capítulos narrativos suficientes para uma jornada. <button type="button" aria-label="Fechar">×</button>'; chipLugar.hidden = false; chipLugar.querySelector('button').onclick = () => { chipLugar.hidden = true; }; return false; }
-    jornada = j; invest.hidden = true; painelInv.hidden = true; telaEstudo.hidden = true; document.body.classList.add('cu-em-jornada'); document.body.classList.remove('cu-modo-estudo');
+    jornada = j; estudoAberto = false; invest.hidden = true; painelInv.hidden = true; telaEstudo.hidden = true; document.body.classList.add('cu-em-jornada'); document.body.classList.remove('cu-modo-estudo');
     if (atlasC && j.rota.length > 1) atlasC.definirRota(j.rota.map((r) => r.li));   // o caminho no globo
     mostrarPasso(0); return true;
   }
-  function sairJornada() { jornada = null; painelJ.hidden = true; document.body.classList.remove('cu-em-jornada'); if (modoTerra) sairTerra(); limparComposicao(); if (investigacao) desenharInvestigacao(); vistaGeral(); }
+  function sairJornada() { jornada = null; painelJ.hidden = true; document.body.classList.remove('cu-em-jornada'); if (modoTerra) sairTerra(); limparComposicao(); if (investigacao) { estudoAberto = true; desenharInvestigacao(); } vistaGeral(); }
   function mostrarPasso(n) {
     const j = jornada; if (!j) return; painelJ.classList.remove('mini'); j.n = Math.max(0, Math.min(j.passos.length - 1, n)); const P = j.passos[j.n], cP = camada('personagens'), cL = camada('linguas');
     // o universo acompanha: versículos do capítulo acesos; a pessoa e quem está com ela acesos na lâmina de Personagens
