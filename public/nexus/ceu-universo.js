@@ -776,12 +776,12 @@ export function criarCeu(container, estado, acoes) {
     if (s >= 0) { acoes.selecionar(sats[s].id, false, true); return; }
     const j = bV && dist < 5200 ? versoPerto(x, y, tipo === 'touch' ? 24 : 12) : -1;
     if (j >= 0) { formar(vChave[j]); clearTimeout(cartaoT); const kk = vChave[j]; if (tipo === 'touch') cartaoT = setTimeout(() => abrirCartao(kk), 330); else abrirCartao(kk); return; }
-    { const rotL = livroNoRotulo(x, y); if (rotL && dist > 1500) { sobreLivro = null; info.hidden = true; voar(rotL.lv.cx, rotL.lv.cy, rotL.lv.raio * 4.2); return; } }
+    { const rotL = livroNoRotulo(x, y); if (rotL && dist > 1500) { entrarLivro(rotL.lv); return; } }
     const riC = regiaoNoPonto(x, y);
-    { const lvC = bV ? livroPerto(x, y) : null; if (lvC && riC >= 0 && secoes.indexOf(lvC.sec) === riC && revela[riC] >= 0.3 && dist > 1500) { voar(lvC.cx, lvC.cy, lvC.raio * 4.2); return; } }
+    { const lvC = bV ? livroPerto(x, y) : null; if (lvC && riC >= 0 && secoes.indexOf(lvC.sec) === riC && revela[riC] >= 0.3 && dist > 1500) { entrarLivro(lvC); return; } }
     if (riC >= 0) { if (tipo === 'touch' && (secRevelada !== riC || revela[riC] < 0.6)) { revelar(riC, 5000); return; } voar(secoes[riC].cx, secoes[riC].cy, secoes[riC].raio * 3.4); return; }
     let lv = bV ? livroPerto(x, y) : null; if (livroOculto(lv)) lv = null;
-    if (lv && dist > 1500) { voar(lv.cx, lv.cy, lv.raio * 4.2); return; }
+    if (lv && dist > 1500) { entrarLivro(lv); return; }
     const sec = camada('universo').visivel ? secoes.find((s2) => { const p = tela(s2.cx, s2.cy, 0); return p && Math.hypot(p.x - x, p.y - y) < 40; }) : null;
     if (sec) { voar(sec.cx, sec.cy, sec.raio * 3.4); return; }
     if (ceuR && camada('universo').visivel) { const f = ceuR.tocar(x, y, W, H, tipo === 'touch' ? 24 : 14); if (f) { mostrarFichaCeu(f); return; } }
@@ -1625,6 +1625,15 @@ export function criarCeu(container, estado, acoes) {
     if (!melhor) return false;
     const c = melhor.c; c.visivel = true; if (c.opacidade < 0.3) c.opacidade = 0.75; montarPainel(); abrirFichaCamada(c, melhor.r.i, true); return true;
   }
+  const cinemaVisto = new Set(); let cinemaMod = null;
+  async function entrarLivro(lv) {
+    sobreLivro = null; info.hidden = true;
+    const voa = () => voar(lv.cx, lv.cy, lv.raio * 4.2);
+    try { if (!cinemaMod) cinemaMod = await import('/nexus/livro-cinema.js?v=1'); } catch (_) { voa(); return; }
+    const lista = await fetch('/nexus/livros/cinema.json?v=' + Math.floor(Date.now() / 60000)).then((r) => r.json()).catch(() => []);
+    if (!cinemaMod.CINEMA[lv.num] || !lista.includes(lv.num) || cinemaVisto.has(lv.num)) { voa(); return; }
+    cinemaVisto.add(lv.num); cinemaMod.tocarCinema(lv.num, ui, { aoTerminar: voa });
+  }
   // a página do universo nunca rola (a roda e as teclas são do universo): se algo a rolar, volta ao topo
   window.addEventListener('scroll', () => { if (ativo && document.body.classList.contains('ceu-universo') && (document.scrollingElement.scrollTop || document.body.scrollTop)) { document.scrollingElement.scrollTop = 0; document.body.scrollTop = 0; } }, true);
   // TEMPLO DE SALOMÃO: o globo voa ao Monte Moriá (2 Cr 3:1) e o templo surge em 3D, por camadas
@@ -1653,6 +1662,7 @@ export function criarCeu(container, estado, acoes) {
     if (/^(o )?(golgota|calvario|monte calvario|santo sepulcro|lugar da caveira|sepulcro de jesus|tumulo de jesus)$/.test(q)) { abrirLugarReal('golgota'); return true; }
     if (/^(o )?(tumulo|sepulcro) de lazaro$/.test(q)) { abrirLugarReal('lazaro'); return true; }
     if (/^nazare$/.test(q)) { abrirLugarReal('nazare'); return true; }
+    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { import('/nexus/panorama360.js?v=1').then((m) => m.abrirPanorama(THREE, 'eden', ui)); return true; }
     if (/^(cafarnaum|capernaum|casa de pedro)$/.test(q)) { abrirLugarReal('cafarnaum'); return true; }
     if (/^(magdala|sinagoga de magdala)$/.test(q)) { abrirLugarReal('magdala'); return true; }
     if (/^(o )?(mar da galileia|lago de genezare|mar de tiberiades|mar de genezare|lago da galileia)$/.test(q)) { abrirLugarReal('mar'); return true; }
@@ -2141,7 +2151,7 @@ export function criarCeu(container, estado, acoes) {
       lugarNaFrase: (t) => { const l = lugarNaFrase(norm(t)); return l ? { nome: l.nome, lat: l.lat, lon: l.lon, versos: l.versos.length } : null; },
       revelacao: () => ({ sec: secRevelada, valores: revela.map((v) => +v.toFixed(2)), longe: +longeR().toFixed(2) }), caixasRegiao: () => caixasRegiao,
       pegarTeste: (x, y) => { const m = pegarCamadas(x, y, 11); return m ? { id: m.c.id, i: m.i, d: m.d, info: m.c.api.info(m.i).slice(0, 80) } : null; },
-      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), buscarFicha: (t) => buscarCamadas(norm(t), 1), jornada: (n) => { const cP = camada('personagens'); const i = cP && cP.api ? cP.api.pessoas.findIndex((x) => x.nome === n || x.n === n) : -1; return i >= 0 && iniciarJornada(i); }, jornadaEstado: () => (jornada ? { n: jornada.n, total: jornada.passos.length, passos: jornada.passos.map((P) => P.livro + ' ' + P.c + (P.lugarVoo != null ? ' @' + atlasC.lugares[P.lugarVoo].nome : '') + (P.evs[0] ? ' · ' + P.evs[0].nome : '')) } : null), passoJornada: (k) => mostrarPasso(k), lugarReal: () => (lugarRealAberto ? lugarRealAberto.estado() : null), templo: () => temploAberto, lerCap: (b, c) => lerPergaminho(b, c, []), caminho: () => { verCaminhoInteiro(); return jornada ? jornada.rota.map((r) => atlasC.lugares[r.li].nome) : null; }, estudo: () => (telaEstudo.hidden ? null : { cartoes: telaEstudo.querySelectorAll('[data-e-cartao]').length, vazios: telaEstudo.querySelectorAll('.cu-e-cartao.vazio').length, palavra: (telaEstudo.querySelector('.cu-e-palavra') || {}).textContent || null, img: !!telaEstudo.querySelector('.cu-e-img') }), abrirCartao: (id) => { cartaoAberto = id; desenharEstudo(); ligarChips(telaEstudo); }, investigar: (t) => investigarAssunto(t), investigacao: () => (investigacao ? { cand: investigacao.cand.rot, tipo: investigacao.cand.tipo, sementes: investigacao.sementes.length, acesas: investigacao.acesas || 0, folhas: Object.fromEntries(ORDEM_FOLHAS.map((id) => [id, investigacao.F[id] ? investigacao.F[id].map((x) => x.rot + ' [' + x.conf + ']') : null])), outros: investigacao.outros.map((o) => o.rot + ' (' + o.tipo + ')'), fontes: investigacao.fontes ? investigacao.fontes.blocos.map((b) => b.titulo + ': ' + b.itens.length) : null, incerto: !!investigacao.lugarIncerto } : null), abaInvestigacao: (a) => { if (investigacao) { investigacao.aba = a; desenharInvestigacao(); } },
+      dbgPinca: () => ({ pinca, n: ponteiros.size, dist, incl }), buscarFicha: (t) => buscarCamadas(norm(t), 1), jornada: (n) => { const cP = camada('personagens'); const i = cP && cP.api ? cP.api.pessoas.findIndex((x) => x.nome === n || x.n === n) : -1; return i >= 0 && iniciarJornada(i); }, jornadaEstado: () => (jornada ? { n: jornada.n, total: jornada.passos.length, passos: jornada.passos.map((P) => P.livro + ' ' + P.c + (P.lugarVoo != null ? ' @' + atlasC.lugares[P.lugarVoo].nome : '') + (P.evs[0] ? ' · ' + P.evs[0].nome : '')) } : null), passoJornada: (k) => mostrarPasso(k), entrarLivro: (n) => entrarLivro(livros[n - 1]), lugarReal: () => (lugarRealAberto ? lugarRealAberto.estado() : null), templo: () => temploAberto, lerCap: (b, c) => lerPergaminho(b, c, []), caminho: () => { verCaminhoInteiro(); return jornada ? jornada.rota.map((r) => atlasC.lugares[r.li].nome) : null; }, estudo: () => (telaEstudo.hidden ? null : { cartoes: telaEstudo.querySelectorAll('[data-e-cartao]').length, vazios: telaEstudo.querySelectorAll('.cu-e-cartao.vazio').length, palavra: (telaEstudo.querySelector('.cu-e-palavra') || {}).textContent || null, img: !!telaEstudo.querySelector('.cu-e-img') }), abrirCartao: (id) => { cartaoAberto = id; desenharEstudo(); ligarChips(telaEstudo); }, investigar: (t) => investigarAssunto(t), investigacao: () => (investigacao ? { cand: investigacao.cand.rot, tipo: investigacao.cand.tipo, sementes: investigacao.sementes.length, acesas: investigacao.acesas || 0, folhas: Object.fromEntries(ORDEM_FOLHAS.map((id) => [id, investigacao.F[id] ? investigacao.F[id].map((x) => x.rot + ' [' + x.conf + ']') : null])), outros: investigacao.outros.map((o) => o.rot + ' (' + o.tipo + ')'), fontes: investigacao.fontes ? investigacao.fontes.blocos.map((b) => b.titulo + ': ' + b.itens.length) : null, incerto: !!investigacao.lugarIncerto } : null), abaInvestigacao: (a) => { if (investigacao) { investigacao.aba = a; desenharInvestigacao(); } },
       fichaVerso: (k) => fichaVerso(k), fiosEntre: () => fiosEntre.length, fiosCamada: () => fiosCamada.length,
       abrirTerra: () => abrirTerra(), imagemTerra: () => (atlasC ? atlasC.imagemReal() : false), subsolar: () => pontoSubsolar(Date.now()),
       camadaPronta: (id) => !!(camada(id) && camada(id).api), telaCamada: (id, i) => { const c = camada(id); const p = c && c.api && c.api.pos(i); return p ? tela(p.x, p.y, c.z) : null; },
