@@ -1423,7 +1423,7 @@ module.exports = async (req, res) => {
     }
     if (acao === 'conversar') {   // barra lateral: dúvidas de uso e ajuda nos estudos (não consulta a biblioteca)
       const NL = String.fromCharCode(10);
-      const msgs = (Array.isArray(b.mensagens) ? b.mensagens : []).slice(-10).map((m) => ({ papel: m && m.papel === 'eu' ? 'eu' : 'claude', texto: String((m && m.texto) || '').slice(0, 1500) })).filter((m) => m.texto.trim());
+      const msgs = (Array.isArray(b.mensagens) ? b.mensagens : []).slice(-10).map((m) => ({ papel: m && m.papel === 'eu' ? 'eu' : 'claude', texto: String((m && m.texto) || '').slice(0, 6000) })).filter((m) => m.texto.trim());
       if (!msgs.length || msgs[msgs.length - 1].papel !== 'eu') { res.json({ ok: false, err: 'escreva uma pergunta' }); return; }
       const ctx = b.contexto || {};
       const nome = (x) => (/^x:/.test(String((x && x.id) || '')) ? '' : String((x && x.rotulo) || '').slice(0, 80));   // obras externas nunca vão para a IA
