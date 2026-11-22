@@ -1256,7 +1256,7 @@ export function criarCeu(container, estado, acoes) {
     const j = jornada; if (!j || !j.rota.length || !atlasC) return; const ls = j.rota.map((r) => atlasC.lugares[r.li]);
     const v = ls.reduce((acc, l) => acc.add(vLL(l)), new THREE.Vector3()).normalize(), c = { lat: Math.asin(v.z) * 180 / Math.PI, lon: Math.atan2(v.y, v.x) * 180 / Math.PI };
     const raio = Math.max(...ls.map((l) => vLL(l).angleTo(vLL(c))));   // abertura do caminho (radianos)
-    voarTerraPara({ ...c, i: -1 }, Math.max(RAIO_GLOBO * 0.02, RAIO_GLOBO * raio * 3.2)); atlasC.acender(j.rota.map((r) => r.li));
+    voarTerraPara({ ...c, i: -1 }, Math.max(RAIO_GLOBO * 0.02, RAIO_GLOBO * raio * 1.9)); atlasC.acender(j.rota.map((r) => r.li));
     painelJ.classList.add('mini');   // o painel encolhe para o caminho aparecer inteiro
   }
   function concluirJornada() {
