@@ -920,7 +920,7 @@ export function criarCeu(container, estado, acoes) {
     }
     if (!arrasto && m.vel && (Math.abs(m.vel.lat) + Math.abs(m.vel.lon) > 1e-5)) { m.lat += m.vel.lat; m.lon += m.vel.lon; m.vel.lat *= 0.9; m.vel.lon *= 0.9; }
     if (m.altAlvo > RAIO_GLOBO * 3.3 && m.alt > RAIO_GLOBO * 3.1) { sairTerra(); return false; }
-    if (!m.voo && m.alt < 3.4 && performance.now() - mundoEntradaEm > 5000 && !ui.querySelector('.ej-raiz')) { const w = MUNDOS_GEO.find((w) => Math.abs(w.lat - m.lat) < 0.07 && Math.abs(w.lon - m.lon) < 0.09); if (w) { mundoEntradaEm = performance.now(); import('/nexus/eden-caminhar.js?v=19').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo: w.id })).catch(() => {}); } }
+    if (!m.voo && m.alt < 3.4 && performance.now() - mundoEntradaEm > 5000 && !ui.querySelector('.ej-raiz')) { const w = MUNDOS_GEO.find((w) => Math.abs(w.lat - m.lat) < 0.07 && Math.abs(w.lon - m.lon) < 0.09); if (w) { mundoEntradaEm = performance.now(); import('/nexus/eden-caminhar.js?v=22').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo: w.id })).catch(() => {}); } }
     return true;
   }
   function posicionarTerra() {
@@ -1677,7 +1677,9 @@ export function criarCeu(container, estado, acoes) {
     m.voo = { de: { lat, lon, alt: 2.2 }, para: { lat, lon, alt: RAIO_GLOBO * 0.05 }, topo: RAIO_GLOBO * 0.05, t0: performance.now(), dur: 3200 }; m.cursor = null; m.ancora = null; mundoEntradaEm = performance.now(); };
   async function viajarParaMundo(mundo, lat, lon, nome) {
     const veioDe = window.__nexusMundoAtual; const aberto = ui.querySelector('.ej-raiz'); if (aberto) { const b = aberto.querySelector('.ej-sair'); if (b) b.click(); await new Promise((ok) => setTimeout(ok, 900)); }
-    const abrir = () => import('/nexus/eden-caminhar.js?v=19').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo })).catch(() => {});
+    // o mundo começa a ser montado ESCONDIDO já no começo do voo; na chegada ele só aparece (sem travar)
+    const pre = import('/nexus/eden-caminhar.js?v=22').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo, oculto: true })).catch(() => null);
+    const abrir = () => pre.then((w) => { if (w) w.mostrar(); });
     if (!atlasC) { abrir(); return; }
     camada('atlas').visivel = true; if (!modoTerra) entrarTerra(null);
     const m = modoTerra, o = ORIGENS[veioDe]; if (o) { m.lat = o.lat; m.lon = o.lon; m.alt = Math.max(m.alt || 0, RAIO_GLOBO * 0.02); }
@@ -1694,7 +1696,7 @@ export function criarCeu(container, estado, acoes) {
     if (/^(o )?(tumulo|sepulcro) de lazaro$/.test(q)) { abrirLugarReal('lazaro'); return true; }
     if (/^nazare$/.test(q)) { abrirLugarReal('nazare'); return true; }
     if (/(sete|7) trombetas|^trombetas$/.test(q)) { window.NEXUS_MUNDO('trombetas'); return true; }
-    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { import('/nexus/eden-caminhar.js?v=19').then((m) => m.abrirJardim(THREE, ui, { chegada: true })).catch(() => import('/nexus/panorama360.js?v=6').then((m) => m.abrirPanorama(THREE, 'eden', ui))); return true; }   // direto no jardim realista: o drone desce e pousa dentro dele
+    if (/^(o )?(jardim do )?eden$|^paraiso$/.test(q)) { viajarParaMundo('eden', 31.0, 47.4, 'o Éden'); return true; }   // direto no jardim realista: o drone desce e pousa dentro dele
     if (/^(cafarnaum|capernaum|casa de pedro)$/.test(q)) { abrirLugarReal('cafarnaum'); return true; }
     if (/^(magdala|sinagoga de magdala)$/.test(q)) { abrirLugarReal('magdala'); return true; }
     if (/^(o )?(mar da galileia|lago de genezare|mar de tiberiades|mar de genezare|lago da galileia)$/.test(q)) { abrirLugarReal('mar'); return true; }

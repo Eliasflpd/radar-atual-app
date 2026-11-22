@@ -52,7 +52,8 @@ export const MUNDOS_ANDAVEIS = {
     lugar: { israel: 'no acampamento de Israel, na encosta norte do vale', filisteus: 'perto do acampamento filisteu, na encosta sul', golias: 'diante de Golias, no meio do vale', ribeiro: 'no ribeiro de seixos onde Davi pegou as cinco pedras', oeste: 'olhando para o oeste, para Gate e a planície costeira', davi: 'no fundo do vale de Elá', bom: 'no vale de Elá' }, nome: 'Vale de Elá' },
 };
 
-export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo = 'eden' } = {}) {
+export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo = 'eden', oculto = false } = {}) {
+  const folga = () => new Promise((ok) => setTimeout(ok, 0));   // montagem em pedaços: o globo continua girando liso enquanto o mundo é preparado
   const MW = MUNDOS_ANDAVEIS[mundo] || MUNDOS_ANDAVEIS.eden, E = MW === MUNDOS_ANDAVEIS.eden, G = MW === MUNDOS_ANDAVEIS.getsemani, L = MW === MUNDOS_ANDAVEIS.ela, N = !!MW.noite, I = MW.inicio || 70; window.__nexusMundoAtual = MW.pasta;
   const BASES = [(window.NEXUS_MIDIA || '/nexus') + '/' + MW.pasta + '/', '/nexus/' + MW.pasta + '/'];
   let pecas = {}, base = BASES[0];
@@ -127,7 +128,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const T = 4400, NS = toque ? 400 : 560;
   const geoT = new THREE.PlaneGeometry(T, T, NS, NS); geoT.rotateX(-Math.PI / 2);
   const pos = geoT.attributes.position, cores = new Float32Array(pos.count * 3), alturas = new Float32Array(pos.count), relRio = new Float32Array(pos.count);
-  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i); const [d, w] = distRio(x, z); relRio[i] = d / w; const leito = (1 - THREE.MathUtils.smoothstep(d, w * 0.95, w * 1.45)) * 1.5 + 6.2 * Math.pow(Math.max(0, 1 - d / w), 1.15); const h = hBase(x, z) - leito; pos.setY(i, h); alturas[i] = h;
+  for (let i = 0; i < pos.count; i++) { if (i % 12000 === 0) await folga(); const x = pos.getX(i), z = pos.getZ(i); const [d, w] = distRio(x, z); relRio[i] = d / w; const leito = (1 - THREE.MathUtils.smoothstep(d, w * 0.95, w * 1.45)) * 1.5 + 6.2 * Math.pow(Math.max(0, 1 - d / w), 1.15); const h = hBase(x, z) - leito; pos.setY(i, h); alturas[i] = h;
     const mar = THREE.MathUtils.smoothstep(d, w * 1.2, w * 2.4), longe = THREE.MathUtils.smoothstep(Math.hypot(x, z), 420, 700), v = 0.85 + 0.25 * Math.sin(x * 0.05) * Math.cos(z * 0.043);
     cores[i * 3] = (0.78 + 0.22 * (1 - mar)) * v * (1 + longe * 0.15); cores[i * 3 + 1] = (0.92 + 0.0 * mar) * v; cores[i * 3 + 2] = (0.72 + 0.18 * (1 - mar)) * v * (1 - longe * 0.1);
     const banco = 1 - THREE.MathUtils.smoothstep(d, w * 1.0, w * 1.35); if (banco > 0) { cores[i * 3] = cores[i * 3] * (1 - banco) + 0.85 * banco; cores[i * 3 + 1] = cores[i * 3 + 1] * (1 - banco) + 0.72 * banco; cores[i * 3 + 2] = cores[i * 3 + 2] * (1 - banco) + 0.55 * banco; } }
@@ -323,7 +324,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       }` });
   const quad = new THREE.PlaneGeometry(1, 1); quad.translate(0, 0.5, 0); lixo.push(quad);
   const obst = [];   // troncos: o explorador não atravessa
-  async function figuras(nome, lista, alturaReal, vento = 0) {
+  async function figuras(nome, lista, alturaReal, vento = 0) { await folga();
     const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + '.png'); if (!tex) return null; lixo.push(tex);
     const asp = pc.w / pc.h, g = new THREE.InstancedBufferGeometry(); g.index = quad.index; g.attributes.position = quad.attributes.position; g.attributes.uv = quad.attributes.uv; g.instanceCount = lista.length;
     const P = new Float32Array(lista.length * 3), S = new Float32Array(lista.length * 2), F = new Float32Array(lista.length), R = new Float32Array(lista.length);
@@ -742,7 +743,14 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const sp = solDisco.position.clone().project(camera), fw = new THREE.Vector3(); camera.getWorldDirection(fw); matPos.uniforms.solTela.value.set(sp.x * 0.5 + 0.5, sp.y * 0.5 + 0.5); matPos.uniforms.solVis.value = Math.max(0, fw.dot(SOL)) ** 1.5 * (sp.z < 1 ? 1 : 0);
     if (audio && somLigado) { const tg = bichos.find((b) => b.e.n === 'tigre-rugindo'); if (tg && Math.hypot(tg.x - camera.position.x, tg.z - camera.position.z) < 16 && t - (window.__ultRugido || 0) > 25) { window.__ultRugido = t; audio.rugir(); } }
     camera.updateMatrixWorld(); refletir(); renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); }
-  requestAnimationFrame((a) => { raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
+  const iniciar = () => requestAnimationFrame((a) => { raiz.style.pointerEvents = ''; raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
+  // aquecimento escondido: compila os shaders em paralelo e manda para a placa de vídeo uma peça por quadro (o globo segue liso durante o voo)
+  async function aquecer() { try { const p0 = voo.getPointAt(0); camera.position.set(p0.x, altura(p0.x, p0.z) + p0.y + 1.7, p0.z); camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
+      if (renderer.compileAsync) await renderer.compileAsync(cena, camera); const rtP = new THREE.WebGLRenderTarget(16, 16, { type: THREE.HalfFloatType }); const objs = cena.children.slice(), vis = objs.map((o) => o.visible), cul = objs.map((o) => o.frustumCulled);
+      objs.forEach((o) => { o.visible = false; o.frustumCulled = false; });
+      for (let i = 0; i < objs.length; i++) { objs[i].visible = vis[i]; renderer.setRenderTarget(rtP); renderer.render(cena, camera); await new Promise((ok) => requestAnimationFrame(ok)); }
+      objs.forEach((o, i) => { o.frustumCulled = cul[i]; }); renderer.setRenderTarget(rt); renderer.clear(); renderer.setRenderTarget(reflRT); renderer.clear(); renderer.setRenderTarget(null); rtP.dispose(); } catch (e) { console.warn('aquecer', e); } }
+  if (oculto) { raiz.style.pointerEvents = 'none'; await aquecer(); } else iniciar();   // compila os shaders sem travar (em paralelo) e sobe as texturas antes de aparecer
 
   function fechar() { if (!ativo) return; ativo = false; window.NEXUS_CENA = null; window.NEXUS_MUNDO_ACAO = null; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
     setTimeout(() => { lixo.forEach((o) => o && o.dispose && o.dispose()); renderer.dispose(); raiz.remove(); }, 1400); if (aoFechar) aoFechar(); }
@@ -751,5 +759,5 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const LUGAR0 = { arvore: 'diante da árvore da vida, no meio do jardim (Gn 2:9)', rio: 'onde o rio que sai do Éden se divide em quatro braços (Gn 2:10)', animais: 'entre os animais do jardim (Gn 2:19)', presenca: 'junto da luz que representa a presença do Senhor passeando no jardim (Gn 3:8)', chegada: 'na trilha que leva à árvore da vida (Gn 2:8)', bom: 'nas partes distantes do jardim (Gn 1:31)' };
   const LUGAR = MW.lugar || LUGAR0;
   window.NEXUS_CENA = () => MW.nome + ' em 3D (reconstituição artística, ilustrativa), ' + (voando ? 'chegando de drone' : voarLivre ? 'voando sobre o lugar' : (LUGAR[cartaoAtual] || 'andando pelo lugar'));
-  return { cena, fechar, estado: () => ({ x: eu.x, z: eu.z, yaw, pitch, voando, bichos: bichos.length, onde: bichos.map((b) => [b.e.n, Math.round(b.x), Math.round(b.z)]) }), olhar: (y, p) => { yaw = y; pitch = p; }, irPara: (x, z) => { pularChegada(); eu.set(x, 0, z); } };
+  return { cena, fechar, mostrar: () => { if (oculto) { oculto = false; iniciar(); } }, estado: () => ({ x: eu.x, z: eu.z, yaw, pitch, voando, bichos: bichos.length, onde: bichos.map((b) => [b.e.n, Math.round(b.x), Math.round(b.z)]) }), olhar: (y, p) => { yaw = y; pitch = p; }, irPara: (x, z) => { pularChegada(); eu.set(x, 0, z); } };
 }
