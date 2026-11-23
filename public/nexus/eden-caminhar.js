@@ -723,7 +723,18 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
 
   // CARTÕES com o texto bíblico quando se chega perto de cada lugar
   let cartaoAtual = null;
-  function cartao(k) { if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } if (!MW.versos[k]) { card.classList.remove('v'); return; } const [r, t] = MW.versos[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${MW.notas[k] ? `<small>${MW.notas[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
+  // MOMENTO DE CINEMA: um vídeo curto que aparece ao chegar num lugar (só se o arquivo existir; os de uso pessoal ficam só no PC)
+  const momentosVistos = new Set();
+  async function momento(id, url, legenda) { if (momentosVistos.has(id)) return; momentosVistos.add(id);
+    try { const r = await fetch(url, { method: 'HEAD' }); if (!r.ok) return; } catch (_) { return; }
+    const d = document.createElement('div'); d.className = 'ej-momento';
+    d.innerHTML = `<style>.ej-momento{position:absolute;right:22px;top:70px;height:min(62vh,640px);aspect-ratio:9/16;border-radius:18px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.55);border:1px solid rgba(243,211,142,.45);opacity:0;transform:translateY(12px) scale(.98);transition:opacity .8s ease,transform .8s ease;z-index:5;background:#000}.ej-momento.v{opacity:1;transform:none}.ej-momento video{width:100%;height:100%;object-fit:cover;display:block}.ej-momento b{position:absolute;left:12px;bottom:10px;right:50px;font:600 12px Inter,sans-serif;color:#FFF3D0;text-shadow:0 1px 6px #000}.ej-momento button{position:absolute;top:8px;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.45);color:#fff;font-size:15px;cursor:pointer}.ej-momento .x{right:8px}.ej-momento .som{right:48px}</style><video src="${url}" autoplay muted playsinline></video><b>${legenda}</b><button class="som" type="button">🔇</button><button class="x" type="button">✕</button>`;
+    raiz.appendChild(d); const v = d.querySelector('video'); requestAnimationFrame(() => d.classList.add('v'));
+    const fechar = () => { d.classList.remove('v'); setTimeout(() => d.remove(), 900); };
+    d.querySelector('.x').onclick = fechar; d.querySelector('.som').onclick = () => { v.muted = !v.muted; d.querySelector('.som').textContent = v.muted ? '🔇' : '🔊'; if (!v.muted) v.play(); };
+    v.onended = () => setTimeout(fechar, 600); }
+  window.NEXUS_MOMENTO = momento;
+  function cartao(k) { if (k === 'cachoeira' && E) momento('tigre', '/nexus/pessoal/tigre-bebendo.mp4', 'Momento: um tigre bebe no poço da cachoeira'); if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } if (!MW.versos[k]) { card.classList.remove('v'); return; } const [r, t] = MW.versos[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${MW.notas[k] ? `<small>${MW.notas[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
 
   const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: toque ? 0 : 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter });
   const posCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), posCena = new THREE.Scene();
@@ -794,7 +805,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       // cartões por proximidade
       const dArv = Math.hypot(eu.x, eu.z), dForq = Math.hypot(eu.x - FORQ.x, eu.z - FORQ.z), dPres = Math.hypot(eu.x - posPresenca.x, eu.z - posPresenca.z);
       const perto = bichos.some((b) => Math.hypot(b.x - eu.x, b.z - eu.z) < 9);
-      cartao(E ? (CQO && CQO.dentro ? 'caverna' : CQO && CQO.distQueda(eu.x, eu.z) < 45 ? 'cachoeira' : dPres < 16 ? 'presenca' : dArv < 30 ? 'arvore' : dForq < 26 ? 'rio' : perto ? 'animais' : dArv < 90 ? 'chegada' : r > 300 ? 'bom' : null)
+      cartao(E ? (CQO && CQO.dentro ? 'caverna' : CQO && CQO.distQueda(eu.x, eu.z) < 72 ? 'cachoeira' : dPres < 16 ? 'presenca' : dArv < 30 ? 'arvore' : dForq < 26 ? 'rio' : perto ? 'animais' : dArv < 90 ? 'chegada' : r > 300 ? 'bom' : null)
         : L ? (Math.hypot(eu.x - 0, eu.z - 40) < 25 ? 'golias' : Math.abs(eu.z - ribZ(eu.x)) < 10 && Math.abs(eu.x) < 400 ? 'ribeiro' : eu.x < -450 ? 'oeste' : eu.z < -105 ? 'israel' : eu.z > 120 ? 'filisteus' : Math.abs(eu.z) < 80 ? 'davi' : 'bom')
         : J ? (() => { let k = null, dm = 1e9; for (const [nm, [lx, lz]] of Object.entries(JC.LUGARES)) { const d = Math.hypot(eu.x - lx, eu.z - lz), lim = nm === 'santuario' ? 70 : nm === 'palacio' ? 90 : 40; if (d < lim && d < dm) { dm = d; k = nm; } } return k || (Math.abs(eu.x) < 150 && Math.abs(eu.z) < 242 ? 'chegada' : 'bom'); })()
         : (dPres < 5 ? 'presenca' : Math.hypot(eu.x + TD.x * 12, eu.z + TD.z * 12) < 7 ? 'cidade' : dArv < 10 ? 'rocha' : tochaPerto(eu.x, eu.z) < 30 ? 'tochas' : dArv < 45 ? 'vigiai' : dArv < 180 ? 'chegada' : 'bom'));
