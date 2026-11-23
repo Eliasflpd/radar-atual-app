@@ -8,6 +8,8 @@
 const VERSOS = {
   chegada: ['Gênesis 2:8', 'Então plantou o Senhor Deus um jardim, da banda do oriente, no Éden; e pôs ali o homem que tinha formado.'],
   arvore: ['Gênesis 2:9', 'E o Senhor Deus fez brotar da terra toda qualidade de árvores agradáveis à vista e boas para comida, bem como a árvore da vida no meio do jardim, e a árvore do conhecimento do bem e do mal.'],
+  cachoeira: ['Gênesis 2:6', 'Um vapor, porém, subia da terra, e regava toda a face da terra.'],
+  caverna: ['Salmos 104:24', 'Ó Senhor, quão variadas são as tuas obras! Todas as coisas fizeste com sabedoria; cheia está a terra das tuas riquezas.'],
   rio: ['Gênesis 2:10', 'E saía um rio do Éden para regar o jardim; e dali se dividia e se tornava em quatro braços.'],
   animais: ['Gênesis 2:19', 'Da terra formou, pois, o Senhor Deus todos os animais o campo e todas as aves do céu, e os trouxe ao homem, para ver como lhes chamaria; e tudo o que o homem chamou a todo ser vivente, isso foi o seu nome.'],
   presenca: ['Gênesis 3:8', 'E, ouvindo a voz do Senhor Deus, que passeava no jardim à tardinha, esconderam-se o homem e sua mulher da presença do Senhor Deus, entre as árvores do jardim.'],
@@ -144,7 +146,9 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const encosta = 85 * ss(az, 70, 300) * (0.78 + 0.22 * Math.sin(x * 0.004 + (z > 0 ? 1 : 2.5))), ondula = 4 * Math.sin(x * 0.011) * Math.cos(z * 0.013) + 2 * Math.sin(x * 0.03 + z * 0.02);
     const leito = -1.6 * (1 - ss(Math.abs(z - ribZ(x)), 2.2, 7)); return encosta * abre + ondula * (0.35 + 0.65 * ss(az, 60, 220)) + leste + leito - 12 * (1 - abre); };
   const JC = J ? await import('/nexus/jerusalem-cidade.js?v=7') : null;
-  const hBase = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z); return 2.6 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.3 * Math.sin(x * 0.031 + z * 0.027) + 0.5 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
+  const CQM = E ? await import('/nexus/eden-cachoeira.js?v=5') : null, CQ = E ? T2W(-110, 150) : null;   // a cachoeira: a oeste da trilha, uns 150 m de onde o drone pousa
+  const hBase0 = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z); return 2.6 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.3 * Math.sin(x * 0.031 + z * 0.027) + 0.5 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
+  const CQR = CQM ? CQM.relevoCachoeira(hBase0, CQ) : null, hBase = CQR ? CQR.h : hBase0;
   const T = 4400, NS = toque ? 400 : 560;
   const geoT = new THREE.PlaneGeometry(T, T, NS, NS); geoT.rotateX(-Math.PI / 2);
   const pos = geoT.attributes.position, cores = new Float32Array(pos.count * 3), alturas = new Float32Array(pos.count), relRio = new Float32Array(pos.count);
@@ -152,6 +156,9 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const mar = THREE.MathUtils.smoothstep(d, w * 1.2, w * 2.4), longe = THREE.MathUtils.smoothstep(Math.hypot(x, z), 420, 700), v = 0.85 + 0.25 * Math.sin(x * 0.05) * Math.cos(z * 0.043);
     cores[i * 3] = (0.78 + 0.22 * (1 - mar)) * v * (1 + longe * 0.15); cores[i * 3 + 1] = (0.92 + 0.0 * mar) * v; cores[i * 3 + 2] = (0.72 + 0.18 * (1 - mar)) * v * (1 - longe * 0.1);
     const banco = 1 - THREE.MathUtils.smoothstep(d, w * 1.0, w * 1.35); if (banco > 0) { cores[i * 3] = cores[i * 3] * (1 - banco) + 0.85 * banco; cores[i * 3 + 1] = cores[i * 3 + 1] * (1 - banco) + 0.72 * banco; cores[i * 3 + 2] = cores[i * 3 + 2] * (1 - banco) + 0.55 * banco; } }
+  // na cachoeira: sem grama no poço, na laje de pedra e na boca da caverna; o chão ali é rocha escura e molhada
+  if (CQ) for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), u = CQ.x - x, v = z - CQ.z, r = Math.hypot(u, v); if (r > 60) continue; const a = Math.atan2(v, u);
+    const pedra = r < 31 || (Math.abs(a) < 1.45 && r < 46); if (!pedra) continue; relRio[i] = 0; const v0 = 0.42 + 0.08 * Math.sin(x * 0.7) * Math.cos(z * 0.6); cores[i * 3] = v0; cores[i * 3 + 1] = v0 * 1.02; cores[i * 3 + 2] = v0 * 0.95; }
   if (J) for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), v = 0.9 + 0.12 * Math.sin(x * 0.07) * Math.cos(z * 0.05) + 0.06 * Math.sin(x * 0.31 + z * 0.23), oliv = THREE.MathUtils.smoothstep(x, 300, 600) * 0.5; cores[i * 3] = (0.86 - oliv * 0.18) * v; cores[i * 3 + 1] = (0.86 - oliv * 0.04) * v; cores[i * 3 + 2] = (0.84 - oliv * 0.1) * v; }   // terra rosa e calcário; oliveiras a leste
   geoT.setAttribute('color', new THREE.BufferAttribute(cores, 3)); geoT.computeVertexNormals();
   const chaoTex = await carregar(E ? 'chao-grama.jpg' : J ? 'chao-Diffuse.jpg' : G ? 'chao-terra.jpg' : 'chao-ela.jpg'); if (chaoTex) { chaoTex.wrapS = chaoTex.wrapT = THREE.RepeatWrapping; chaoTex.repeat.set(T / 9, T / 9); lixo.push(chaoTex); }
@@ -220,6 +227,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setAttribute('tg', new THREE.Float32BufferAttribute(TG, 3)); g.setAttribute('prof', new THREE.Float32BufferAttribute(PR, 1)); g.setIndex(I);
     const m = new THREE.Mesh(g, matAgua); m.renderOrder = 2; cena.add(m); aguas.push(m); lixo.push(g); }
   lixo.push(matAgua, reflRT);
+  const CQO = CQM ? await CQM.criarCachoeira(THREE, cena, { P: CQ, hP: CQR.hP, carregar, lixo, unif, SOL, toque }) : null;
   // A MARGEM: faixa de areia molhada e cascalho dos dois lados de cada braço do rio, escurecida junto à água,
   // com a espuma que avança e recua na beira; por cima, seixos e pedras meio enterrados
   const matMargem = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8, uniforms: { ...unif, sol: { value: SOL } },
@@ -350,7 +358,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const quad = new THREE.PlaneGeometry(1, 1); quad.translate(0, 0.5, 0); lixo.push(quad);
   const obst = [];   // troncos: o explorador não atravessa
   async function figuras(nome, lista, alturaReal, vento = 0) { await folga();
-    const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + (pc.ext || '.png')); if (!tex) return null; lixo.push(tex);
+    if (CQ) lista = lista.filter((o) => CQM.fora(CQ, o.x, o.z)); const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + (pc.ext || '.png')); if (!tex) return null; lixo.push(tex);
     const asp = pc.w / pc.h, g = new THREE.InstancedBufferGeometry(); g.index = quad.index; g.attributes.position = quad.attributes.position; g.attributes.uv = quad.attributes.uv; g.instanceCount = lista.length;
     const P = new Float32Array(lista.length * 3), S = new Float32Array(lista.length * 2), F = new Float32Array(lista.length), R = new Float32Array(lista.length);
     lista.forEach((o, i) => { const hR = alturaReal * (o.s || 1); P.set([o.x, altura(o.x, o.z) - 0.15 + (o.y || 0), o.z], i * 3); S.set([hR * asp, hR], i * 2); F[i] = Math.random() * 6.28; R[i] = o.vira ? 1 : 0; });
@@ -636,6 +644,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
         subida = { palacio: 70, torres: 60, siloe: 50, cidadeDavi: 60, oliveiras: 40, santuario: 9, antonia: 18 }[a[1]] || 0;   // na cidade e diante dos muros altos, vê-se de um pouco acima
         if (a[1] === 'oliveiras') pitch = -0.07; else if (a[1] === 'santuario') pitch = 0.2; else if (subida > 30) pitch = -0.22; else if (subida) pitch = 0.05;
         return `Aqui está ${a[3]}.`; } }
+    if (CQO && /cachoeira|queda d.?agua|catarata/.test(q)) { const [x, z] = CQO.frente; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); yaw = Math.atan2(-(CQ.x - x), -(CQ.z - z)); pitch = 0.32; return 'Aqui está a cachoeira. A caverna fica atrás da queda: vá pela laje de pedra à esquerda ou à direita, ou me peça para entrar.'; }
+    if (CQO && /caverna|gruta|atras da (agua|cachoeira|queda)/.test(q)) { const fundo = /fundo|salao|lago/.test(q); const [x, z] = fundo ? CQO.salao : CQO.boca; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); CQO.entrar(); yaw = fundo ? Math.atan2(-(CQO.boca[0] - x), -(CQO.boca[1] - z)) : Math.atan2(-(CQO.salao[0] - x), -(CQO.salao[1] - z)); pitch = 0.05; return fundo ? 'No fundo da caverna, no salão com a abertura no teto e o lago.' : 'Dentro da caverna, atrás da cortina de água. Siga em frente até o salão.'; }
     // VER UM ANIMAL de perto: 'me mostre o elefante', 'quero ver o leão'
     if (E && bichos.length) { const NOMES = [[/elefante/, ['elefante-anda'], 'o elefante'], [/leao|leoa|leoes/, ['leao-anda', 'leao'], 'o leão'], [/girafa/, ['girafa'], 'a girafa'], [/tigre/, ['tigre', 'tigre-rugindo', 'tigre-deitado'], 'o tigre'], [/cervo|veado/, ['cervo'], 'o cervo'], [/onca/, ['onca'], 'a onça'], [/cordeiro|ovelha/, ['cordeiro'], 'o cordeiro'], [/pavao/, ['pavao'], 'o pavão'], [/capivara/, ['capivara'], 'a capivara'], [/anta/, ['anta'], 'a anta'], [/animais|bichos|animal/, ['elefante-anda', 'leao-anda'], 'os animais']];
       const k = NOMES.find(([re]) => re.test(q)); if (k) { let alvo = null; for (const nm of k[1]) { const lst = bichos.filter((b) => b.e.n === nm); if (lst.length) { alvo = lst.reduce((a, b) => Math.hypot(b.x - eu.x, b.z - eu.z) < Math.hypot(a.x - eu.x, a.z - eu.z) ? b : a); break; } }
@@ -753,7 +763,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       for (const o of obst) { const dx = eu.x - o.x, dz = eu.z - o.z, d = Math.hypot(dx, dz), m = o.r + 0.35; if (d < m && d > 1e-4) { eu.x = o.x + dx / d * m; eu.z = o.z + dz / d * m; } }
       for (const b of bichos) { const dx = eu.x - b.x, dz = eu.z - b.z, d = Math.hypot(dx, dz), m = 0.3 + b.e.h * 0.45; if (d < m && d > 1e-4) { eu.x = b.x + dx / d * m; eu.z = b.z + dz / d * m; } }
       const r = Math.hypot(eu.x, eu.z); if (r > 1500) eu.multiplyScalar(1500 / r);
-      const vv = vel.length(); passoBob += vv * dt * 1.9; const agua = naAgua(eu.x, eu.z), hc = altura(eu.x, eu.z);
+      if (CQO && !voarLivre) CQO.andar(eu, { x: ex, z: ez });
+      const vv = vel.length(); passoBob += vv * dt * 1.9; const agua = naAgua(eu.x, eu.z), hc = CQO ? CQO.altura(altura(eu.x, eu.z)) : altura(eu.x, eu.z);
       if (terceira) {
         if (vv > 0.3) { const alvo = Math.atan2(vel.x, vel.z); let d = alvo - rumo; d = Math.atan2(Math.sin(d), Math.cos(d)); rumo += d * Math.min(1, dt * 9); }
         fasePasso += vv * dt * 2.3; matAv.uniforms.fase.value = fasePasso; matAv.uniforms.amp.value += (Math.min(1.1, vv / 3.4) - matAv.uniforms.amp.value) * Math.min(1, dt * 8);
@@ -766,13 +777,13 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
         olhoAlvo.set(eu.x - dir.x * 4 + dirX.x * 0.85, hc + 1.4, eu.z - dir.z * 4 + dirX.z * 0.85); camera.lookAt(olhoAlvo);
       } else {
         if (avatar) avatar.visible = false;
-        altVoo += (Math.max(voarLivre ? 55 : 0, subida) - altVoo) * Math.min(1, dt * 2.5); if (subida > 30) pitch += (-Math.min(1.25, 0.25 + subida / 700) - pitch) * Math.min(1, dt * 2); camera.position.set(eu.x, Math.max(hc, hBase(eu.x, eu.z) - 1.0 - 0.6) + 1.7 + altVoo + Math.sin(passoBob * 2) * 0.035 * Math.min(1, vv / 3) * (voarLivre ? 0 : 1), eu.z);
+        altVoo += (Math.max(voarLivre ? 55 : 0, subida) - altVoo) * Math.min(1, dt * 2.5); if (subida > 30) pitch += (-Math.min(1.25, 0.25 + subida / 700) - pitch) * Math.min(1, dt * 2); camera.position.set(eu.x, Math.max(hc, CQO && CQO.dentro ? hc : hBase(eu.x, eu.z) - 1.0 - 0.6) + 1.7 + altVoo + Math.sin(passoBob * 2) * 0.035 * Math.min(1, vv / 3) * (voarLivre ? 0 : 1), eu.z);
         camera.rotation.set(0, 0, 0); camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = pitch;
       }
       // cartões por proximidade
       const dArv = Math.hypot(eu.x, eu.z), dForq = Math.hypot(eu.x - FORQ.x, eu.z - FORQ.z), dPres = Math.hypot(eu.x - posPresenca.x, eu.z - posPresenca.z);
       const perto = bichos.some((b) => Math.hypot(b.x - eu.x, b.z - eu.z) < 9);
-      cartao(E ? (dPres < 16 ? 'presenca' : dArv < 30 ? 'arvore' : dForq < 26 ? 'rio' : perto ? 'animais' : dArv < 90 ? 'chegada' : r > 300 ? 'bom' : null)
+      cartao(E ? (CQO && CQO.dentro ? 'caverna' : CQO && CQO.distQueda(eu.x, eu.z) < 45 ? 'cachoeira' : dPres < 16 ? 'presenca' : dArv < 30 ? 'arvore' : dForq < 26 ? 'rio' : perto ? 'animais' : dArv < 90 ? 'chegada' : r > 300 ? 'bom' : null)
         : L ? (Math.hypot(eu.x - 0, eu.z - 40) < 25 ? 'golias' : Math.abs(eu.z - ribZ(eu.x)) < 10 && Math.abs(eu.x) < 400 ? 'ribeiro' : eu.x < -450 ? 'oeste' : eu.z < -105 ? 'israel' : eu.z > 120 ? 'filisteus' : Math.abs(eu.z) < 80 ? 'davi' : 'bom')
         : J ? (() => { let k = null, dm = 1e9; for (const [nm, [lx, lz]] of Object.entries(JC.LUGARES)) { const d = Math.hypot(eu.x - lx, eu.z - lz), lim = nm === 'santuario' ? 70 : nm === 'palacio' ? 90 : 40; if (d < lim && d < dm) { dm = d; k = nm; } } return k || (Math.abs(eu.x) < 150 && Math.abs(eu.z) < 242 ? 'chegada' : 'bom'); })()
         : (dPres < 5 ? 'presenca' : Math.hypot(eu.x + TD.x * 12, eu.z + TD.z * 12) < 7 ? 'cidade' : dArv < 10 ? 'rocha' : tochaPerto(eu.x, eu.z) < 30 ? 'tochas' : dArv < 45 ? 'vigiai' : dArv < 180 ? 'chegada' : 'bom'));
@@ -782,7 +793,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     if (voando) matGrama.uniforms.centro.value.set(camera.position.x, camera.position.z); else matGrama.uniforms.centro.value.set(eu.x, eu.z); grama.visible = camera.position.y - altura(camera.position.x, camera.position.z) < 25;
     if (avatar && voando) { avatar.visible = modo === 'terceira'; avatar.position.set(eu.x, altura(eu.x, eu.z), eu.z); avatar.rotation.y = rumo + (pecas.explorador.giro || 0); }
     if (ceu) ceu.position.copy(camera.position);
-    if (audio && somLigado) { const [d, w] = distRio(camera.position.x, camera.position.z), k = Math.max(0, 1 - Math.max(0, d - w) / 60); audio.gA.gain.setTargetAtTime(0.95 * k * k, audio.ctx.currentTime, 0.3); audio.gA2.gain.setTargetAtTime(0.10 * k * k, audio.ctx.currentTime, 0.3);
+    if (audio && somLigado) { const [d, w] = distRio(camera.position.x, camera.position.z), k = Math.max(0, 1 - Math.max(0, d - w) / 60, CQO ? 1.15 - CQO.distQueda(camera.position.x, camera.position.z) / 110 : 0); audio.gA.gain.setTargetAtTime(0.95 * k * k, audio.ctx.currentTime, 0.3); audio.gA2.gain.setTargetAtTime(0.10 * k * k, audio.ctx.currentTime, 0.3);
       const dP = Math.hypot(camera.position.x - posPresenca.x, camera.position.z - posPresenca.z); audio.gV.gain.setTargetAtTime(0.14 + 0.35 * Math.max(0, 1 - dP / 40) + 0.06 * Math.sin(t * 0.3), audio.ctx.currentTime, 0.5); }
     solDisco.position.copy(camera.position).addScaledVector(SOL, 3500); matF.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); feixes.visible = polen.visible; matPo.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); polen.visible = !voando || camera.position.y - altura(camera.position.x, camera.position.z) < 30;
     const sp = solDisco.position.clone().project(camera), fw = new THREE.Vector3(); camera.getWorldDirection(fw); matPos.uniforms.solTela.value.set(sp.x * 0.5 + 0.5, sp.y * 0.5 + 0.5); matPos.uniforms.solVis.value = Math.max(0, fw.dot(SOL)) ** 1.5 * (sp.z < 1 ? 1 : 0);
