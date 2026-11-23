@@ -135,11 +135,15 @@ export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd, 
   portico(x0 + 2, z1 - 32, x0 + 2, z0 + 2, 15, 12);       // oeste
   portico(x1 - 2, z1 - 2, x0 + 2, z1 - 2, 32, 24, 4, 6.2); // sul: o Pórtico Real, quatro fileiras de colunas (162 colunas, Josefo)
   for (let i = 0; i < colunas.length; i += 400) { const parte = colunas.slice(i, i + 400); const im = new THREE.InstancedMesh(colGeo, branco, parte.length); const M = new THREE.Matrix4();
-    parte.forEach(([x, z, a], k) => { M.makeScale(1, a, 1); M.setPosition(x, 0, z); im.setMatrixAt(k, M); }); im.frustumCulled = false; im.castShadow = true; cena.add(im); lixo.push(im); }
+    parte.forEach(([x, z, a], k) => { M.makeScale(1, a - 1.6, 1); M.setPosition(x, 0.5, z); im.setMatrixAt(k, M); caixa(1.7, 0.5, 1.7, branco, x, 0, z); caixa(1.9, 1.1, 1.9, branco, x, a - 1.1, z); }); im.frustumCulled = false; im.castShadow = true; cena.add(im); lixo.push(im); }
   // a nave central do Pórtico Real é mais alta (basílica)
   caixa(x1 - x0 - 10, 6, 12, pedra, 0, 24, z1 - 17);
   await folga();
 
+  { const hz = z1 + 1; const hb = altura(-40, z1 + 40);
+    for (let d = 0; d < 14; d++) caixa(64, Math.max(0.3, -hb - d * (-hb / 14)), 3, pedra, -40, hb, hz + 2 + d * 2.6);   // escadaria monumental diante das portas de Hulda
+    for (const gx of [-95, -10, 10, 35]) { caixa(8, 9, 1.2, new THREE.MeshStandardMaterial({ color: 0x2a2219, roughness: 1 }), gx, Math.max(hb, -14), z1 + 0.3); }   // portas (duplas e triplas) no muro sul
+    const ra = altura(x0 - 15, z1 - 12); caixa(15, 2.4, 15, pedra, x0 - 7.5, -2.4, z1 - 12); caixa(4, -ra - 2.4, 15, pedra, x0 - 17, ra, z1 - 12); }   // o arco de Robinson: escada que subia da rua do Tiropeon até o Pórtico Real
   // 3. O SANTUÁRIO e os PÁTIOS (Middot; Josefo, Guerra 5.184–237): pátio das mulheres a leste, a Porta de Nicanor, o pátio de Israel e dos sacerdotes,
   // o altar, e o Santuário de 100 côvados (~50 m) de altura e largura na frente, voltado para o leste
   const S = LUGARES.santuario; const cx = S[0], cz = S[1];
@@ -169,7 +173,16 @@ export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd, 
   caixa(54, 2, 31, ouro, cx - 20, yS + 34, cz); caixa(11.4, 1.6, 50.4, ouro, cx + 12, yS + 50, cz);   // as pontas de ouro no telhado (Guerra 5.224)
   caixa(0.4, 22, 10, new THREE.MeshStandardMaterial({ color: 0x3a1f3f, roughness: 0.9 }), cx + 17.7, yS, cz);   // a grande entrada sem portas com a cortina (Guerra 5.211–212)
   caixa(0.6, 3, 14, ouro, cx + 17.8, yS + 23, cz);   // a videira de ouro acima da entrada (Guerra 5.210; Ant. 15.395)
-  bloco(cx - 75, cz - 64, cx + 147, cz + 64);   // não se atravessa os muros dos pátios (por enquanto o interior é só para ver)
+  { const fx = cx + 17.5;   // face leste
+    for (const dz of [-21, -13.5, 13.5, 21]) caixa(1.4, 46, 2.6, marmore, fx + 0.5, yS + 1, cz + dz);            // pilastras
+    for (const dz of [-21, -13.5, 13.5, 21]) caixa(2, 1.6, 3.4, ouro, fx + 0.7, yS + 45.5, cz + dz);            // capitéis dourados
+    for (const hy of [16, 34, 48.4]) caixa(1.8, 1.2, 51, marmore, fx + 0.6, yS + hy, cz);                       // cornijas
+    caixa(1.2, 26, 1.6, ouro, fx + 0.3, yS, cz - 6.2); caixa(1.2, 26, 1.6, ouro, fx + 0.3, yS, cz + 6.2); caixa(1.2, 1.6, 14, ouro, fx + 0.3, yS + 25.4, cz);   // moldura de ouro do portal
+    for (let k = -24; k <= 24; k += 1.6) caixa(0.25, 1.2, 0.25, ouro, fx - 5, yS + 51.6, cz + k);                // pontas de ouro no alto da fachada
+    for (let k = -46; k <= 6; k += 1.6) { caixa(0.25, 1.2, 0.25, ouro, cx + k, yS + 35.6, cz - 14.6); caixa(0.25, 1.2, 0.25, ouro, cx + k, yS + 35.6, cz + 14.6); }
+    for (let d = 0; d < 6; d++) caixa(2, 0.5 * (6 - d), 46 - d, branco, fx + 2 + d * 2, yP + 2, cz);            // os doze degraus diante do pórtico (simplificados)
+  }
+  bloco(cx - 64, cz - 36, cx + 70, cz + 36);   // o pátio de Israel e dos sacerdotes não se atravessa; o pátio das mulheres, sim (entra-se pela Porta Formosa)   // não se atravessa os muros dos pátios (por enquanto o interior é só para ver)
   await folga();
 
   // 4. A FORTALEZA ANTÔNIA no canto noroeste (Guerra 5.238–246): quatro torres, a do sudeste mais alta (70 côvados)

@@ -143,7 +143,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const hEla = (x, z) => { const ss = THREE.MathUtils.smoothstep, az = Math.abs(z), abre = ss(x, -1700, -600), leste = Math.max(0, x - 1000) * 0.12;
     const encosta = 85 * ss(az, 70, 300) * (0.78 + 0.22 * Math.sin(x * 0.004 + (z > 0 ? 1 : 2.5))), ondula = 4 * Math.sin(x * 0.011) * Math.cos(z * 0.013) + 2 * Math.sin(x * 0.03 + z * 0.02);
     const leito = -1.6 * (1 - ss(Math.abs(z - ribZ(x)), 2.2, 7)); return encosta * abre + ondula * (0.35 + 0.65 * ss(az, 60, 220)) + leste + leito - 12 * (1 - abre); };
-  const JC = J ? await import('/nexus/jerusalem-cidade.js?v=5') : null;
+  const JC = J ? await import('/nexus/jerusalem-cidade.js?v=7') : null;
   const hBase = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z); return 2.6 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.3 * Math.sin(x * 0.031 + z * 0.027) + 0.5 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
   const T = 4400, NS = toque ? 400 : 560;
   const geoT = new THREE.PlaneGeometry(T, T, NS, NS); geoT.rotateX(-Math.PI / 2);
@@ -630,11 +630,11 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     if (/desca|descer|pousar|chao/.test(q)) { subida = 0; voarLivre = false; return 'Descendo.'; }
     if (/rocha|onde (ele|jesus) orou/.test(q) && G) { indo = new THREE.Vector3(TD.x * 3, 0, TD.z * 3); return 'Indo até a rocha onde Jesus orou.'; }
     // JERUSALÉM: 'me leve ao santuário', 'vá até a Porta Formosa', 'quero ver a Antônia'… vai a pé (num salto) e fica de frente
-    if (J) { const ALVOS = [[/porta formosa|patio das mulheres/, 'portaFormosa', [62, 4], 'a Porta Formosa'], [/santuario|santo|templo|altar|nicanor/, 'santuario', [0, 92], 'o Santuário'], [/portico real|pedras|edificios/, 'porticoReal', [0, -40], 'o Pórtico Real'], [/salomao|alpendre/, 'salomao', [-25, 0], 'o Pórtico de Salomão'],
+    if (J) { const ALVOS = [[/porta formosa|patio das mulheres/, 'portaFormosa', [62, 4], 'a Porta Formosa'], [/fachada|santuario|santo|templo|altar|nicanor/, 'santuario', [128, 0], 'o Santuário, visto do Pátio das Mulheres'], [/portico real|pedras|edificios/, 'porticoReal', [0, -40], 'o Pórtico Real'], [/salomao|alpendre/, 'salomao', [-25, 0], 'o Pórtico de Salomão'],
         [/antonia|fortaleza/, 'antonia', [40, 130], 'a fortaleza Antônia'], [/palacio|herodes|pretorio|pilatos/, 'palacio', [170, 0], 'o palácio de Herodes'], [/torre|hipico|fasael|mariane/, 'torres', [40, 60], 'as torres de Herodes'], [/siloe|tanque/, 'siloe', [0, -45], 'o tanque de Siloé'], [/cidade de davi|siao|ofel/, 'cidadeDavi', [0, 40], 'a Cidade de Davi'], [/oliveiras|ver a cidade|vista/, 'oliveiras', [0, 0], 'o Monte das Oliveiras, de onde se vê a cidade']];
       const a = ALVOS.find(([re]) => re.test(q)); if (a) { const [lx, lz] = JC.LUGARES[a[1]]; const x = lx + a[2][0], z = lz + a[2][1]; pularChegada(); voarLivre = false; subida = 0; eu.set(x, 0, z); const ox = a[1] === 'oliveiras' ? 0 : lx, oz = a[1] === 'oliveiras' ? 0 : lz; yaw = Math.atan2(-(ox - x), -(oz - z)); pitch = a[1] === 'santuario' ? 0.18 : a[1] === 'portaFormosa' ? 0.12 : a[1] === 'oliveiras' ? -0.1 : 0;
-        subida = { palacio: 70, torres: 60, siloe: 50, cidadeDavi: 60, oliveiras: 40, santuario: 22, antonia: 18 }[a[1]] || 0;   // na cidade e diante dos muros altos, vê-se de um pouco acima
-        if (a[1] === 'oliveiras') pitch = -0.07; else if (subida > 30) pitch = -0.22; else if (subida) pitch = 0.05;
+        subida = { palacio: 70, torres: 60, siloe: 50, cidadeDavi: 60, oliveiras: 40, santuario: 9, antonia: 18 }[a[1]] || 0;   // na cidade e diante dos muros altos, vê-se de um pouco acima
+        if (a[1] === 'oliveiras') pitch = -0.07; else if (a[1] === 'santuario') pitch = 0.2; else if (subida > 30) pitch = -0.22; else if (subida) pitch = 0.05;
         return `Aqui está ${a[3]}.`; } }
     // VER UM ANIMAL de perto: 'me mostre o elefante', 'quero ver o leão'
     if (E && bichos.length) { const NOMES = [[/elefante/, ['elefante-anda'], 'o elefante'], [/leao|leoa|leoes/, ['leao-anda', 'leao'], 'o leão'], [/girafa/, ['girafa'], 'a girafa'], [/tigre/, ['tigre', 'tigre-rugindo', 'tigre-deitado'], 'o tigre'], [/cervo|veado/, ['cervo'], 'o cervo'], [/onca/, ['onca'], 'a onça'], [/cordeiro|ovelha/, ['cordeiro'], 'o cordeiro'], [/pavao/, ['pavao'], 'o pavão'], [/capivara/, ['capivara'], 'a capivara'], [/anta/, ['anta'], 'a anta'], [/animais|bichos|animal/, ['elefante-anda', 'leao-anda'], 'os animais']];
