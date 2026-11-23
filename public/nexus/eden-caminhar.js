@@ -133,7 +133,15 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     [FORQ, V(130, 150), V(260, 330), V(330, 560), V(520, 900), V(800, 1500), V(1000, 2100)],
     [FORQ, V(10, 170), V(-90, 330), V(-160, 560), V(-260, 900), V(-420, 1500), V(-520, 2100)],
     [FORQ, V(-60, 90), V(-230, 120), V(-430, 60), V(-900, 140), V(-1500, 260), V(-2100, 180)],
-  ] : []).map((p) => new THREE.CatmullRomCurve3(p, false, 'catmullrom', 0.5));
+  ] : []).map((p, ri) => {
+    // rio de verdade não corre em linha reta: meandros (curvas que se alternam), com comprimento de onda de umas 10 larguras;
+    // perto da árvore da vida e da trilha as curvas são suaves, para a água não cortar o caminho
+    const base = new THREE.CatmullRomCurve3(p, false, 'catmullrom', 0.5), L = base.getLength(), n = Math.max(8, Math.round(L / 22)), out = [], fase = ri * 2.1;
+    for (let k = 0; k <= n; k++) { const u = k / n, q = base.getPointAt(u), tg = base.getTangentAt(u), sArc = u * L, r = Math.hypot(q.x, q.z);
+      const A = (ri === 0 ? 48 : 40) * (0.4 * THREE.MathUtils.smoothstep(r, 55, 160) + 0.6 * THREE.MathUtils.smoothstep(r, 170, 520)) * THREE.MathUtils.smoothstep(sArc, 0, 45) * THREE.MathUtils.smoothstep(L - sArc, 0, 80);
+      const off = A * (Math.sin(sArc / 165 + fase) + 0.45 * Math.sin(sArc / 61 + fase * 1.7) + 0.2 * Math.sin(sArc / 29 + fase * 0.6));
+      out.push(new THREE.Vector3(q.x - tg.z * off, 0, q.z + tg.x * off)); }
+    return new THREE.CatmullRomCurve3(out, false, 'catmullrom', 0.5); });
   const amostras = []; rios.forEach((c, i) => { for (let k = 0; k <= 700; k++) { const p = c.getPointAt(k / 700); amostras.push(p.x, p.z, i === 0 ? 16 : 11); } });
   const CEL = 60, grade = new Map(); for (let i = 0; i < amostras.length; i += 3) { const k = (Math.floor(amostras[i] / CEL) + 2048) * 4096 + Math.floor(amostras[i + 1] / CEL) + 2048; if (!grade.has(k)) grade.set(k, []); grade.get(k).push(i); }
   function distRio(x, z) { let m = 1e9, w = 11; const cx = Math.floor(x / CEL), cz = Math.floor(z / CEL); for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const l = grade.get((cx + a + 2048) * 4096 + cz + b + 2048); if (!l) continue; for (const i of l) { const dx = x - amostras[i], dz = z - amostras[i + 1], d = dx * dx + dz * dz; if (d < m) { m = d; w = amostras[i + 2]; } } } return [m < 1e9 ? Math.sqrt(m) : 999, w]; }
