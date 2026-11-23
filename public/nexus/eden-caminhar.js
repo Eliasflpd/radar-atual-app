@@ -483,12 +483,15 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   function moverBichos(dt) { for (const b of bichos) { if (!b.e.anda) continue;
       if (!b.alvo) { b.espera -= dt; if (b.espera <= 0) { const a = rnd() * 6.283, r = b.e.rio ? 3 + rnd() * 6 : 8 + rnd() * 25; let x = b.x + Math.cos(a) * r, z = b.z + Math.sin(a) * r; if (b.e.rio && distRio(x, z)[0] > 18) { b.espera = 2; continue; } const rr = Math.hypot(x, z); if (rr > 200) { x *= 180 / rr; z *= 180 / rr; } if (!naAgua(x, z)) b.alvo = { x, z }; else b.espera = 1; } continue; }
       const dx = b.alvo.x - b.x, dz = b.alvo.z - b.z, d = Math.hypot(dx, dz); if (d < 0.5) { b.alvo = null; b.espera = 3 + rnd() * 8; continue; }
-      const v = b.e.anda * dt; b.x += dx / d * v; b.z += dz / d * v;
+      // anda em curva: o rumo vira aos poucos para o alvo, com um leve vaguear (nada de linha reta de régua)
+      if (b.rumo === undefined) b.rumo = Math.atan2(dx, dz); { let alvoR = Math.atan2(dx, dz) + Math.sin(performance.now() / 3000 + b.fase) * 0.55, dr = Math.atan2(Math.sin(alvoR - b.rumo), Math.cos(alvoR - b.rumo)); b.rumo += Math.max(-0.7 * dt, Math.min(0.7 * dt, dr)); }
+      const v = b.e.anda * dt * (0.75 + 0.25 * Math.sin(performance.now() / 1700 + b.fase)); let nx = b.x + Math.sin(b.rumo) * v, nz = b.z + Math.cos(b.rumo) * v; if (naAgua(nx, nz)) { b.alvo = null; b.espera = 1 + rnd() * 2; continue; } b.x = nx; b.z = nz;
+      if (b.f.Q && rnd() < dt * 0.04) { b.alvo = null; b.espera = 4 + rnd() * 9; }   // às vezes para no meio do caminho
       // vira a figura conforme o lado para onde anda (em relação a quem olha)
-      const dirX = new THREE.Vector3().subVectors(camera.position, new THREE.Vector3(b.x, 0, b.z)); const ladoX = new THREE.Vector3(dirX.z, 0, -dirX.x).normalize(); const vaiDireita = (dx * ladoX.x + dz * ladoX.z) > 0;
+      const dirX = new THREE.Vector3().subVectors(camera.position, new THREE.Vector3(b.x, 0, b.z)); const ladoX = new THREE.Vector3(dirX.z, 0, -dirX.x).normalize(); const vaiDireita = (Math.sin(b.rumo) * ladoX.x + Math.cos(b.rumo) * ladoX.z) > 0;
       b.f.R[b.i] = vaiDireita === !!b.e.olhaEsq ? 1 : 0; b.f.g.attributes.iVira.needsUpdate = true;
       // vídeo real: o passo avança no ritmo do vídeo enquanto o animal anda (o balanço do corpo já vem do vídeo)
-      if (b.f.Q) { b.f.Q[b.i] = (b.f.Q[b.i] + dt * b.f.pc.quadros / b.f.pc.dur) % b.f.pc.quadros; b.f.g.attributes.iQuadro.needsUpdate = true; }
+      if (b.f.Q) { b.f.Q[b.i] = (b.f.Q[b.i] + dt * (0.75 + 0.25 * Math.sin(performance.now() / 1700 + b.fase)) * b.f.pc.quadros / b.f.pc.dur) % b.f.pc.quadros; b.f.g.attributes.iQuadro.needsUpdate = true; }
       b.f.P[b.i * 3] = b.x; b.f.P[b.i * 3 + 1] = altura(b.x, b.z) - 0.1 + (b.f.Q ? 0 : Math.sin(b.fase += dt * b.e.anda * 2.6) * 0.006 * b.e.h); b.f.P[b.i * 3 + 2] = b.z; b.f.g.attributes.iPos.needsUpdate = true; } }
 
   // AVES em voo circular e BORBOLETAS perto das flores: tudo calculado na placa de vídeo
