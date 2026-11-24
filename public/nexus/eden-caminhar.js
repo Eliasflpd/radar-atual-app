@@ -544,7 +544,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
 
   // ANIMAIS 3D (Éden): carregados por trás; aparecem já compilados, sem engasgo
   let A3D = null;
-  if (E) setTimeout(() => import('/nexus/eden-animais3d.js?v=2').then((m) => m.criarAnimais3D(THREE, cena, { base, altura, naAgua, distRio, rios, rnd, lixo, toque,
+  if (E) setTimeout(() => import('/nexus/eden-animais3d.js?v=6').then((m) => m.criarAnimais3D(THREE, cena, { base, altura, naAgua, distRio, rios, rnd, lixo, toque,
       posicoesPerto: { elefante: [T2W(-26, 22).x, T2W(-26, 22).z], leoa: [T2W(-16, 50).x, T2W(-16, 50).z], tigre: [T2W(16, 58).x, T2W(16, 58).z] } }))
     .then(async (a) => { if (!ativo) return; a.bichos.forEach((b) => { b.raiz.visible = false; if (b.sombra) b.sombra.visible = false; }); try { if (renderer.compileAsync) await renderer.compileAsync(cena, camera); } catch (_) {} a.bichos.forEach((b) => { b.raiz.visible = true; if (b.sombra) b.sombra.visible = true; }); A3D = a; })
     .catch((e) => console.warn('animais 3D', e)), 2500);
