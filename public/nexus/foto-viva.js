@@ -13,10 +13,10 @@ export async function abrirFotoViva(THREE, host, cfg) {
   const aspecto = tFoto.image.width / tFoto.image.height, fov = cfg.fov || 52;
   const camera = new THREE.PerspectiveCamera(fov, W() / H(), 0.05, 2000);
   // a malha: uma grade que cobre a imagem; o vértice vai para a distância que a profundidade manda, no raio da câmera original
-  const NX = 640, NY = Math.round(NX / aspecto), geo = new THREE.PlaneGeometry(1, 1, NX, NY);
+  const ESF = !!cfg.esfera; const NX = ESF ? 768 : 640, NY = ESF ? 384 : Math.round(NX / aspecto), geo = new THREE.PlaneGeometry(1, 1, NX, NY);
   const tg = Math.tan(THREE.MathUtils.degToRad(fov) / 2);
-  { const uvA = geo.attributes.uv; for (let i = 0; i < uvA.count; i++) uvA.setXY(i, uvA.getX(i) * 1.4 - 0.2, uvA.getY(i) * 1.4 - 0.2); }   // a malha passa um pouco da borda da foto (a borda se estende), para nunca aparecer o vazio
-  const ajustaFov = () => { const a = W() / H(); camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(0.9 * Math.min(tg, tg * aspecto / a))); camera.aspect = a; camera.updateProjectionMatrix(); }; ajustaFov();
+  if (!ESF) { const uvA = geo.attributes.uv; for (let i = 0; i < uvA.count; i++) uvA.setXY(i, uvA.getX(i) * 1.4 - 0.2, uvA.getY(i) * 1.4 - 0.2); }   // a malha passa um pouco da borda da foto (a borda se estende), para nunca aparecer o vazio
+  const ajustaFov = () => { const a = W() / H(); camera.fov = ESF ? (a > 1 ? 68 : 80) : THREE.MathUtils.radToDeg(2 * Math.atan(0.9 * Math.min(tg, tg * aspecto / a))); camera.aspect = a; camera.updateProjectionMatrix(); }; ajustaFov();
   const agua = (cfg.agua || []).flat(), queda = cfg.queda || [0, 0, 0, 0];
   const poli = new Float32Array(32); agua.forEach((n, i) => { if (i < 32) poli[i] = n; });
   const unif = { t: { value: 0 }, foto: { value: tFoto }, prof: { value: tProf }, tg: { value: tg }, asp: { value: aspecto }, perto: { value: cfg.perto || 1.6 }, longe: { value: cfg.longe || 70 },
@@ -28,11 +28,14 @@ export async function abrirFotoViva(THREE, host, cfg) {
     float dentro(vec2 q){ bool c = false; int N = int(np); for (int i = 0; i < 16; i++) { if (i >= N) break; int j = i == 0 ? N - 1 : i - 1; vec2 a = vec2(poli[i * 2], poli[i * 2 + 1]), b = vec2(poli[j * 2], poli[j * 2 + 1]);
       if (((a.y > q.y) != (b.y > q.y)) && (q.x < (b.x - a.x) * (q.y - a.y) / (b.y - a.y) + a.x)) c = !c; } return c ? 1. : 0.; }
     float dist(float d){ return 1. / (d * (1. / perto - 1. / longe) + 1. / longe); }`;
-  const mat = new THREE.ShaderMaterial({ uniforms: unif, side: THREE.DoubleSide,
+  const mat = new THREE.ShaderMaterial({ uniforms: unif, side: THREE.DoubleSide, defines: ESF ? { ESFERA: 1 } : {},
     vertexShader: comum + `
       varying vec2 vUv; varying float vD;
       void main(){ vUv = uv; vec2 im = vec2(uv.x, 1. - uv.y); float d = texture2D(prof, uv).r; float z = dist(d);
         vec2 nd = uv * 2. - 1.; vec3 p = vec3(nd.x * tg * asp * z, nd.y * tg * z, -z);
+        #ifdef ESFERA
+        { float lon = (uv.x - .5) * 6.2831853, lat = (uv.y - .5) * 3.1415927; p = vec3(sin(lon) * cos(lat), sin(lat), -cos(lon) * cos(lat)) * z; }
+        #endif
         // folhas perto da câmera (em cima e nos cantos) balançam com o vento
         float folha = smoothstep(.35, .7, d) * (smoothstep(.5, .0, im.y) + smoothstep(.75, 1., im.y) * .6);
         float bal = (fbm(vec2(uv.x * 3. + t * .35, uv.y * 3.)) - .5) * folha * vento;
@@ -61,7 +64,7 @@ export async function abrirFotoViva(THREE, host, cfg) {
   const prof8 = await (async () => { const c = document.createElement('canvas'), img = tProf.image; c.width = 256; c.height = Math.round(256 / aspecto); const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height); return { w: c.width, h: c.height, d: g.getImageData(0, 0, c.width, c.height).data }; })();
   const dAt = (u, v) => prof8.d[(Math.min(prof8.h - 1, Math.floor(v * prof8.h)) * prof8.w + Math.min(prof8.w - 1, Math.floor(u * prof8.w))) * 4] / 255;
   const dist = (d) => 1 / (d * (1 / unif.perto.value - 1 / unif.longe.value) + 1 / unif.longe.value);
-  const ponto = (u, v, z) => { z = z || dist(dAt(u, v)); return new THREE.Vector3((u * 2 - 1) * tg * aspecto * z, (1 - v * 2) * tg * z, -z); };
+  const ponto = (u, v, z) => { z = z || dist(dAt(u, v)); if (ESF) { const lon = (u - 0.5) * Math.PI * 2, lat = (0.5 - v) * Math.PI; return new THREE.Vector3(Math.sin(lon) * Math.cos(lat) * z, Math.sin(lat) * z, -Math.cos(lon) * Math.cos(lat) * z); } return new THREE.Vector3((u * 2 - 1) * tg * aspecto * z, (1 - v * 2) * tg * z, -z); };
   // FEIXES DE LUZ: faixas aditivas inclinadas que descem da copa, respirando devagar
   const lixo = [geo, mat, tFoto, tProf];
   const gF = new THREE.PlaneGeometry(1, 1); gF.translate(0, -0.5, 0); lixo.push(gF);
@@ -95,7 +98,7 @@ export async function abrirFotoViva(THREE, host, cfg) {
   let yaw = 0, pitch = 0, alvoYaw = 0, alvoPitch = 0, px = 0, pz = 0, vx = 0, vz = 0; const teclas = {}; const LIM = cfg.passo || 1.2;
   const el = renderer.domElement; let arr = null;
   el.addEventListener('pointerdown', (e) => { arr = [e.clientX, e.clientY, alvoYaw, alvoPitch]; el.setPointerCapture(e.pointerId); el.style.cursor = 'grabbing'; });
-  el.addEventListener('pointermove', (e) => { if (!arr) return; alvoYaw = THREE.MathUtils.clamp(arr[2] - (e.clientX - arr[0]) * 0.0025, -0.16, 0.16); alvoPitch = THREE.MathUtils.clamp(arr[3] - (e.clientY - arr[1]) * 0.0022, -0.08, 0.08); });
+  el.addEventListener('pointermove', (e) => { if (!arr) return; alvoYaw = ESF ? arr[2] - (e.clientX - arr[0]) * 0.003 : THREE.MathUtils.clamp(arr[2] - (e.clientX - arr[0]) * 0.0025, -0.16, 0.16); alvoPitch = THREE.MathUtils.clamp(arr[3] - (e.clientY - arr[1]) * 0.0022, ESF ? -0.9 : -0.08, ESF ? 0.9 : 0.08); });
   const solta = () => { arr = null; el.style.cursor = 'grab'; }; el.addEventListener('pointerup', solta); el.addEventListener('pointercancel', solta);
   const kd = (e) => { teclas[e.key.toLowerCase()] = e.type === 'keydown'; }; addEventListener('keydown', kd); addEventListener('keyup', kd);
   const redim = () => { renderer.setSize(W(), H()); ajustaFov(); }; addEventListener('resize', redim);
@@ -107,7 +110,7 @@ export async function abrirFotoViva(THREE, host, cfg) {
   let ativo = true, t0 = performance.now(), ult = t0;
   (function laco(agora) { if (!ativo) return; requestAnimationFrame(laco); agora = agora || performance.now(); const dt = Math.min(0.05, (agora - ult) / 1000); ult = agora; unif.t.value = (agora - t0) / 1000;
     const fr = (teclas.w || teclas.arrowup ? 1 : 0) - (teclas.s || teclas.arrowdown ? 1 : 0), ld = (teclas.d ? 1 : 0) - (teclas.a ? 1 : 0); const gira = (teclas.arrowright ? 1 : 0) - (teclas.arrowleft ? 1 : 0);
-    alvoYaw = THREE.MathUtils.clamp(alvoYaw - gira * dt * 0.5, -0.16, 0.16);
+    alvoYaw = ESF ? alvoYaw - gira * dt * 0.9 : THREE.MathUtils.clamp(alvoYaw - gira * dt * 0.5, -0.16, 0.16);
     vx += ((Math.cos(yaw) * ld - Math.sin(yaw) * fr) * 0.7 - vx) * Math.min(1, dt * 4); vz += ((-Math.sin(yaw) * ld - Math.cos(yaw) * fr) * 0.7 - vz) * Math.min(1, dt * 4);
     px = THREE.MathUtils.clamp(px + vx * dt, -LIM * 0.3, LIM * 0.3); pz = THREE.MathUtils.clamp(pz + vz * dt, -LIM * 0.7, LIM * 0.15);
     yaw += (alvoYaw - yaw) * Math.min(1, dt * 5); pitch += (alvoPitch - pitch) * Math.min(1, dt * 5);
