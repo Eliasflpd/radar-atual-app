@@ -173,7 +173,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const encosta = 85 * ss(az, 70, 300) * (0.78 + 0.22 * Math.sin(x * 0.004 + (z > 0 ? 1 : 2.5))), ondula = 4 * Math.sin(x * 0.011) * Math.cos(z * 0.013) + 2 * Math.sin(x * 0.03 + z * 0.02);
     const leito = -1.6 * (1 - ss(Math.abs(z - ribZ(x)), 2.2, 7)); return encosta * abre + ondula * (0.35 + 0.65 * ss(az, 60, 220)) + leste + leito - 12 * (1 - abre); };
   const JC = J ? await import('/nexus/jerusalem-cidade.js?v=7') : null;
-  const CQM = E ? await import('/nexus/eden-cachoeira.js?v=5') : null, CQ = E ? T2W(-110, 150) : null;   // a cachoeira: a oeste da trilha, uns 150 m de onde o drone pousa
+  const CQM = E ? await import('/nexus/eden-cachoeira.js?v=7') : null, CQ = E ? (() => { const c = rios[0]; let uu = 0.5; for (let k = 0; k <= 800; k++) { const u = k / 800, q = c.getPointAt(u); if (Math.hypot(q.x, q.z) < 420) { uu = u; break; } } const q = c.getPointAt(uu), tg = c.getTangentAt(uu); return { x: q.x, z: q.z, dx: -tg.x, dz: -tg.z, u: uu }; })() : null;   // a cachoeira fica NO rio principal, uns 420 m rio acima da árvore da vida
   const manchaMata = (x, z) => 0.5 + 0.5 * (0.55 * Math.sin(x / 170 + 1.3) * Math.cos(z / 210 - 0.7) + 0.3 * Math.sin((x + z) / 97 + 2.1) + 0.15 * Math.sin(x / 41 - z / 53));
   const hBase0 = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z), dv = Math.max(0, distRio(x, z)[0] - 18), vale = 30 * THREE.MathUtils.smoothstep(dv, 8, 300) * (0.7 + 0.3 * Math.sin(x * 0.0041 + 1.1) * Math.cos(z * 0.0037)) * THREE.MathUtils.smoothstep(r, 20, 90); return vale + 2.0 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.0 * Math.sin(x * 0.031 + z * 0.027) + 0.4 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
   const CQR = CQM ? CQM.relevoCachoeira(hBase0, CQ) : null, hBase = CQR ? CQR.h : hBase0;
@@ -691,7 +691,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const camPos = new THREE.Vector3(), olhoAlvo = new THREE.Vector3(); let camIni = false;
 
   // SEGUIR ADIANTE: dentro de um mundo, o chat entende pedidos de lugar que estão à vista e leva você até lá (sem voltar ao globo)
-  let indoLonge = null;
+  let indoLonge = null, rota = null;
   window.NEXUS_MUNDO_ACAO = (q) => {
     if (G && /templo|santuario|santo lugar|cidade|jerusalem|muralha|porta (oriental|dourada|formosa)/.test(q)) {
       const santo = /dentro|santo|santuario|interior/.test(q), cidade = /cidade|jerusalem|muralha/.test(q) && !/templo/.test(q);
@@ -709,6 +709,11 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
         subida = { palacio: 70, torres: 60, siloe: 50, cidadeDavi: 60, oliveiras: 40, santuario: 9, antonia: 18 }[a[1]] || 0;   // na cidade e diante dos muros altos, vê-se de um pouco acima
         if (a[1] === 'oliveiras') pitch = -0.07; else if (a[1] === 'santuario') pitch = 0.2; else if (subida > 30) pitch = -0.22; else if (subida) pitch = 0.05;
         return `Aqui está ${a[3]}.`; } }
+    if (CQO && /sig(a|o)|seguir|subir|suba|acompanh/.test(q) && /rio|agua|corrente|fluxo/.test(q)) { const c = rios[0]; let u0 = 0.98, dm = 1e9; for (let k = 0; k <= 200; k++) { const u = CQ.u + (1 - CQ.u) * k / 200, p0 = c.getPointAt(u), d = Math.hypot(p0.x - eu.x, p0.z - eu.z); if (d < dm) { dm = d; u0 = u; } }
+      const pts = []; for (let k = 0; k <= 40; k++) { const u = u0 + (CQ.u + 0.012 - u0) * k / 40, p0 = c.getPointAt(Math.max(0, Math.min(1, u))); pts.push(new THREE.Vector3(p0.x, hBase(p0.x, p0.z) + 9, p0.z)); }
+      const [fx, fz] = CQO.frente; pts.push(new THREE.Vector3(fx, altura(fx, fz) + 4, fz)); const curva = new THREE.CatmullRomCurve3(pts); pularChegada(); subida = 0; voarLivre = false;
+      rota = { curva, t0: performance.now(), dur: Math.max(9000, curva.getLength() / 14 * 1000), fim: () => { eu.set(fx, 0, fz); yaw = Math.atan2(-(CQ.x - fx), -(CQ.z - fz)); pitch = 0.3; } };
+      return 'Seguindo o rio, rio acima, até onde ele despenca do planalto.'; }
     if (CQO && /cachoeira|queda d.?agua|catarata/.test(q)) { const [x, z] = CQO.frente; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); yaw = Math.atan2(-(CQ.x - x), -(CQ.z - z)); pitch = 0.32; return 'Aqui está a cachoeira. A caverna fica atrás da queda: vá pela laje de pedra à esquerda ou à direita, ou me peça para entrar.'; }
     if (CQO && /caverna|gruta|atras da (agua|cachoeira|queda)/.test(q)) { const fundo = /fundo|salao|lago/.test(q); const [x, z] = fundo ? CQO.salao : CQO.boca; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); CQO.entrar(); yaw = fundo ? Math.atan2(-(CQO.boca[0] - x), -(CQO.boca[1] - z)) : Math.atan2(-(CQO.salao[0] - x), -(CQO.salao[1] - z)); pitch = 0.05; return fundo ? 'No fundo da caverna, no salão com a abertura no teto e o lago.' : 'Dentro da caverna, atrás da cortina de água. Siga em frente até o salão.'; }
     // VER UM ANIMAL de perto: 'me mostre o elefante', 'quero ver o leão'
@@ -820,6 +825,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   function pularChegada() { if (!voando) return; voando = false; raiz.classList.remove('voando'); cartao('chegada'); }
   let ativo = true, antes = performance.now(), passoBob = 0;
   function quadro(agora) { if (!ativo) return; const dt = Math.min(0.05, (agora - antes) / 1000); antes = agora; const t = agora / 1000; unif.t.value = t;
+    if (rota) { const q = Math.min(1, (agora - rota.t0) / rota.dur), e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2; const p0 = rota.curva.getPointAt(e), p1 = rota.curva.getPointAt(Math.min(1, e + 0.04)); camera.position.copy(p0); camera.lookAt(p1.x, p1.y - 2, p1.z);
+      if (q >= 1) { const f = rota.fim; rota = null; f(); } renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); return; }
     if (indoLonge) { const q = Math.min(1, (agora - indoLonge.t0) / indoLonge.dur), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; camera.position.lerpVectors(indoLonge.de, indoLonge.para, e); camera.position.y += Math.sin(q * Math.PI) * 25; camera.lookAt(indoLonge.olhar);
       if (q >= 1) { const f = indoLonge.fim; indoLonge = null; f(); } renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); return; }
     { const hc = camera.position.y - altura(camera.position.x, camera.position.z), kN = 1 - 0.7 * THREE.MathUtils.smoothstep(hc, 25, 260); cena.fog.density = DENS * kN; unif.dens.value = DENS * kN; }   // do alto (drone) a névoa abre: o jardim aparece inteiro, sem a tela clara

@@ -1,37 +1,41 @@
 // A CACHOEIRA DO ÉDEN e a CAVERNA atrás da queda: um paredão de pedra com musgo, a água despencando num poço,
 // névoa subindo e uma gruta para entrar e explorar (salão no fundo com abertura no teto e um lago interno).
-// Coordenadas locais: P = centro do poço; 'u' entra no paredão (para oeste), 'v' é o lado.
+// A queda fica NO RIO principal: ele desce do planalto ao norte, despenca no poço e segue para o jardim.
+// Coordenadas locais: P = centro do poço; 'u' entra no paredão (rio acima, direção P.dx/P.dz), 'v' é o lado.
 // Texturas de rocha: Poly Haven (CC0) — mossy_rock (paredão) e rock_face_03 (gruta).
 
 const ss = (x, a, b) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const RP = 23, RL = 27, ALT = 38, ARCO = 1.3;   // raio do poço, raio do paredão, altura do paredão, meia-abertura do arco (rad)
-const CAMINHO = [[RL - 1, 0], [38, 1], [52, -2], [66, 2.5], [80, 6], [92, 6]];   // a galeria, da boca até o salão
-const SALAO = [104, 6], RSAL = 15, HSAL = 11;
+const CAMINHO = [[RL - 1, 0], [35, 2], [42, 10], [48, 24], [52, 40], [55, 54]];   // a galeria, da boca até o salão (desvia de lado, para não passar debaixo do leito do rio)
+const SALAO = [58, 68], RSAL = 15, HSAL = 11;
+const loc = (P, x, z) => { const dx = x - P.x, dz = z - P.z; return [dx * P.dx + dz * P.dz, dx * P.dz - dz * P.dx]; };
+const mundo = (P, u, v) => [P.x + P.dx * u + P.dz * v, P.z + P.dz * u - P.dx * v];
 const larg = (s) => 4.6 + 2.2 * ss(s, 0.15, 0.9);   // a galeria se alarga para dentro
 
 export function relevoCachoeira(hNat, P) {
   const hP = hNat(P.x, P.z);
-  const h = (x, z) => { const u = P.x - x, v = z - P.z, r = Math.hypot(u, v), a = Math.atan2(v, u); let y = hNat(x, z);
-    // o planalto acima do paredão
-    const w = ss(r, RL + 6, RL + 14) * ss(ARCO + 0.12 - Math.abs(a), 0, 0.25) * ss(190 - r, 0, 40); if (w > 0) y = y + (Math.max(y, hP + ALT + 2 * Math.sin(x * 0.05) * Math.cos(z * 0.04)) - y) * w;
+  const h = (x, z) => { const [u, v] = loc(P, x, z), r = Math.hypot(u, v), a = Math.atan2(v, u); let y = hNat(x, z);
+    // o planalto acima do paredão: rio acima, todo o terreno fica no alto (o rio corre lá em cima e despenca aqui)
+    const perto = ss(r, RL + 6, RL + 14) * ss(ARCO + 0.12 - Math.abs(a), 0, 0.25), longe = ss(u, RL + 10, RL + 70) * ss(760 - Math.abs(v), 0, 320);
+    const w = Math.max(perto, longe); if (w > 0) y = y + (Math.max(y, hP + ALT + 2 * Math.sin(x * 0.05) * Math.cos(z * 0.04)) - y) * w;
     // a laje de pedra em volta do poço e o poço fundo
     if (r < RL + 6) { const k = ss(RL + 6, RL - 2, r) ; y = y + (hP - y) * Math.max(k, r < RP + 1 ? 1 : 0); }
     if (r < RP) y = hP - 5.5 * (1 - (r / RP) ** 2);
     // a terra não entra na galeria: logo atrás do paredão (debaixo da borda de rocha) ela desce abaixo do chão da gruta
-    if (u > RL - 2) { const [d, s0] = distCaminho(u, v); if (d < larg(s0) + 8 || Math.hypot(u - SALAO[0], v - SALAO[1]) < RSAL + 9) y = Math.min(y, hP - 1.5); }
+    if (u > RL - 2 && r < RL + 18) { const [d, s0] = distCaminho(u, v); if (d < larg(s0) + 8) y = Math.min(y, hP - 1.5); }
     return y; };
   return { h, hP };
 }
 
 // onde não pode nascer árvore nem planta: o poço, a laje e o caminho da caverna (por dentro do paredão)
-export function fora(P, x, z) { const u = P.x - x, v = z - P.z; if (Math.hypot(u, v) < 34) return false; if (u > RL - 4) { const [d, s0] = distCaminho(u, v); if (d < larg(s0) + 9 || Math.hypot(u - SALAO[0], v - SALAO[1]) < RSAL + 10) return false; } return true; }
+export function fora(P, x, z) { const [u, v] = loc(P, x, z); if (Math.hypot(u, v) < 44) return false; if (u > RL - 4) { const [d, s0] = distCaminho(u, v); if (d < larg(s0) + 9 || Math.hypot(u - SALAO[0], v - SALAO[1]) < RSAL + 10) return false; } return true; }
 const lin = (A, B, t) => [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t];
 function distCaminho(u, v) { let best = 1e9, sAcc = 0, sBest = 0, tot = 0; const L = []; for (let i = 0; i < CAMINHO.length - 1; i++) { const l = Math.hypot(CAMINHO[i + 1][0] - CAMINHO[i][0], CAMINHO[i + 1][1] - CAMINHO[i][1]); L.push(l); tot += l; }
   for (let i = 0; i < CAMINHO.length - 1; i++) { const [ax, ay] = CAMINHO[i], [bx, by] = CAMINHO[i + 1], dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy; let t = ((u - ax) * dx + (v - ay) * dy) / L2; t = Math.max(0, Math.min(1, t)); const d = Math.hypot(u - ax - dx * t, v - ay - dy * t); if (d < best) { best = d; sBest = (sAcc + L[i] * t) / tot; } sAcc += L[i]; }
   return [best, sBest]; }
 
 export async function criarCachoeira(THREE, cena, { P, hP, carregar, lixo, unif, SOL, toque }) {
-  const W = (u, v) => [P.x - u, P.z + v];   // local -> mundo
+  const W = (u, v) => mundo(P, u, v);   // local -> mundo
   const tex = async (n, rep) => { const t = await carregar(n); if (t) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; if (rep) t.repeat.set(rep, rep); lixo.push(t); } return t; };
   const pbr = async (nome) => { const [m, n, r] = await Promise.all([tex(nome + '-Diffuse.jpg'), tex(nome + '-nor_gl.jpg'), tex(nome + '-Rough.jpg')]); if (n) n.colorSpace = THREE.NoColorSpace; if (r) r.colorSpace = THREE.NoColorSpace; return { m, n, r }; };
   const [RM, RC] = await Promise.all([pbr('rocha-musgo'), pbr('rocha-caverna')]);
@@ -87,7 +91,7 @@ export async function criarCachoeira(THREE, cena, { P, hP, carregar, lixo, unif,
   }
 
   // 3. A ÁGUA: a queda (cortina que desce rápida), o poço verde-esmeralda com espuma e a névoa que sobe
-  const RQ = RP + 0.2, MQ = 0.42, topo = hP + ALT, baseQ = hP - 0.55;
+  const RQ = RP + 0.2, MQ = 0.62, topo = hP + ALT, baseQ = hP - 0.55;
   { const NA = 60, NY = 60, P3 = [], UV = [], I = [];
     for (let j = 0; j <= NY; j++) for (let i = 0; i <= NA; i++) { const a = -MQ + 2 * MQ * i / NA, f = j / NY, y = topo + 0.6 - (topo + 0.6 - baseQ) * f, rr = RQ + (RL - RQ - 0.6) * Math.exp(-f * 9) + 0.3 * Math.sin(a * 30 + f * 4);
       const [x, z] = W(rr * Math.cos(a), rr * Math.sin(a)); P3.push(x, y, z); UV.push(i / NA, f); }
@@ -136,11 +140,11 @@ export async function criarCachoeira(THREE, cena, { P, hP, carregar, lixo, unif,
     nevoaQ = new THREE.Points(g, m); nevoaQ.frustumCulled = false; nevoaQ.renderOrder = 4; cena.add(nevoaQ); lixo.push(g, m); }
 
   // ANDAR NA CAVERNA: dentro dela o chão é o da gruta (e não o planalto lá em cima); entra-se pela boca, atrás da queda
-  const local = (x, z) => [P.x - x, z - P.z];
+  const local = (x, z) => loc(P, x, z);
   const naGaleria = (x, z, folga = 0) => { const [u, v] = local(x, z); if (Math.hypot(u - SALAO[0], v - SALAO[1]) < RSAL - 1.2 + folga) return true; const [d, s] = distCaminho(u, v); return u > RL - 1.5 && d < larg(s) - 0.9 + folga; };
   let dentro = false;
   return {
-    P, hP, chao, centro: W(RQ - 9, 0), boca: W(RL + 2, 0), salao: W(SALAO[0], SALAO[1]), frente: W(-42, 0),
+    P, hP, chao, centro: W(RQ - 9, 0), boca: W(RL + 2, 0), salao: W(SALAO[0], SALAO[1]), frente: W(-26, 16),
     get dentro() { return dentro; },
     entrar() { dentro = true; },
     // corrige a posição de quem anda: entra/sai pela boca, não atravessa a rocha
