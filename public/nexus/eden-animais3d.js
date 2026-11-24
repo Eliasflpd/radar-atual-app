@@ -3,14 +3,15 @@
 // Modelos do Sketchfab (licenças na lista CREDITOS), texturas reduzidas por scripts/glb-texturas.py.
 const CDN = 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/';
 export const CREDITOS = [
-  'Elefante africano: "African Elephant" (Sketchfab, CC BY)', 'Tigre: "Tiger" (Sketchfab, CC BY)', 'Leoa: "LIONESS – Realistic 3D Model (demo)" (Sketchfab, CC BY-NC)',
-  'Sucuri: "Anaconda attack jungle" (Sketchfab, CC BY)', 'Arara-vermelha: "Scarlet Macaw" (Sketchfab, CC BY)',
+  'Elefante africano: "African Elephant" (Sketchfab, CC BY)', 'Tigre: "Tiger" (Sketchfab, CC BY)', 'Leoa: "LIONESS – Realistic 3D Model (demo)" (Sketchfab, CC BY-NC — PROVISÓRIO: só uso não comercial; trocar por modelo CC BY/CC0 antes de abrir o NEXUS ao público ou vender)',
+  'Sucuri: "Anaconda attack jungle" (Sketchfab, CC BY)', 'Girafa: "Giraffe+motions" (Sketchfab, CC BY-NC — PROVISÓRIO: só uso não comercial; trocar por modelo CC BY/CC0 antes de abrir o NEXUS ao público ou vender)', 'Arara-vermelha: "Scarlet Macaw" (Sketchfab, CC BY)',
 ];
 // especie: arquivo, altura real (m), quantos, velocidade ao andar (m/s), nomes das animações
 const ESPECIES = [
   { id: 'elefante', h: 3.3, q: 3, v: 0.95, andar: 'Loco_WalkSlow', parado: ['Stand_01', 'Stand_02', 'Stand_00'], deitar: 'Lying_01', extra: ['Roar'] },
   { id: 'tigre', h: 1.05, q: 2, v: 0.85, giro: Math.PI / 2, andar: 'Walk', parado: ['Eat', 'Howl'], deitar: 'Idle_Lie Prone' },
   { id: 'leoa', h: 1.0, q: 2, v: 1.6, andar: 'Lioness_WalkFast_F', parado: ['Lioness_Idle', 'Lioness_Breathing'] },
+  { id: 'girafa', h: 5.2, q: 3, v: 1.3, andar: 'loopWalk', parado: ['loopIdle01', 'loopEating', 'loopIdle01'] },
   { id: 'sucuri', h: 0.45, q: 2, v: 0.35, andar: 'walk', parado: ['idle'], rio: true, comprimento: 6 },
   { id: 'arara', h: 0.6, q: 8, comprimento: 1.1, voa: true, andar: 'Fly01', parado: ['Fly01'] },
 ];
