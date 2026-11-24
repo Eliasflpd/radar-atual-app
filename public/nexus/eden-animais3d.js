@@ -17,7 +17,10 @@ const ESPECIES = [
 ];
 const ss = (x, a, b) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
-export async function criarAnimais3D(THREE, cena, { base, altura, naAgua, distRio, rios, rnd, lixo, toque, posicoesPerto }) {
+export async function criarAnimais3D(THREE, cena, { base, altura, naAgua, distRio, rios, rnd, lixo, toque, posicoesPerto, troncos = [] }) {
+  // grade dos troncos (para os bichos contornarem as árvores sem testar todas)
+  const CEL = 12, grade = new Map(); for (const o of troncos) { const k = Math.floor(o.x / CEL) * 4096 + Math.floor(o.z / CEL); if (!grade.has(k)) grade.set(k, []); grade.get(k).push(o); }
+  const bate = (x, z, raio) => { const cx = Math.floor(x / CEL), cz = Math.floor(z / CEL); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { const l = grade.get((cx + a) * 4096 + cz + b); if (!l) continue; for (const o of l) { const d = Math.hypot(x - o.x, z - o.z); if (d < o.r + raio) return o; } } return null; };
   const [{ GLTFLoader }, SU] = await Promise.all([import(CDN + 'loaders/GLTFLoader.js'), import(CDN + 'utils/SkeletonUtils.js')]);
   const loader = new GLTFLoader();
   const sombraTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 2, 32, 32, 31); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); const t = new THREE.CanvasTexture(c); return t; })();
@@ -46,7 +49,7 @@ export async function criarAnimais3D(THREE, cena, { base, altura, naAgua, distRi
       const mixer = new THREE.AnimationMixer(obj), acoes = {};
       for (const [nm, c] of Object.entries(clips)) acoes[nm] = mixer.clipAction(c);
       const [x, z] = lugar(e, k); window.__a3dInfo = window.__a3dInfo || {}; window.__a3dInfo[e.id] = [tam.x.toFixed(2), tam.y.toFixed(2), tam.z.toFixed(2)]; const b = { e, raiz, mixer, acoes, x, z, rumo: rnd() * 6.283, estado: 'parado', tempo: 2 + rnd() * 6, alvo: null, atual: null, fase: rnd() * 100, alt: e.voa ? 18 + rnd() * 20 : 0 };
-      if (false) { const sh = new THREE.Mesh(sombraGeo, sombraMat); const r = Math.max(tam.x, tam.z) * esc * 0.65; sh.scale.set(r, 1, r); b.sombra = sh; cena.add(sh); }
+      if (!e.voa) { const sh = new THREE.Mesh(sombraGeo, sombraMat); const r = Math.max(tam.x, tam.z) * esc * 0.65; sh.scale.set(r, 1, r * 0.7); b.sombra = sh; b.raio = Math.min(2.2, Math.min(tam.x, tam.z) * esc * 0.5 + 0.3); cena.add(sh); }
       bichos.push(b); tocar(b, e.voa ? e.andar : e.parado[0], 0);
     }
   }));
@@ -69,12 +72,16 @@ export async function criarAnimais3D(THREE, cena, { base, altura, naAgua, distRi
         if (b.estado === 'andar' && b.alvo) { const dx = b.alvo.x - b.x, dz = b.alvo.z - b.z, d = Math.hypot(dx, dz);
           if (d < 1.2) { b.alvo = null; decidir(b); }
           else { const alvoR = Math.atan2(dx, dz) + Math.sin(t * 0.35 + b.fase) * 0.35, dr = Math.atan2(Math.sin(alvoR - b.rumo), Math.cos(alvoR - b.rumo)); b.rumo += Math.max(-0.9 * dt, Math.min(0.9 * dt, dr));
-            const fv = Math.abs(dr) > 0.8 ? 0.45 : 1; if (b.atual) b.atual.timeScale = fv; const v = e.v * dt * fv; const nx = b.x + Math.sin(b.rumo) * v, nz = b.z + Math.cos(b.rumo) * v; if (naAgua(nx, nz) && !e.rio) { b.alvo = null; decidir(b); } else { b.x = nx; b.z = nz; } } }
+            const fv = Math.abs(dr) > 0.8 ? 0.45 : 1; if (b.atual) b.atual.timeScale = fv; const v = e.v * dt * fv; const raio = b.raio || 0.6;
+            const olhaX = b.x + Math.sin(b.rumo) * (raio + 1.2), olhaZ = b.z + Math.cos(b.rumo) * (raio + 1.2), tronco = bate(olhaX, olhaZ, raio);
+            if (tronco) { const lado = Math.sign(Math.sin(b.rumo) * (tronco.z - b.z) - Math.cos(b.rumo) * (tronco.x - b.x)) || 1; b.rumo -= lado * 1.6 * dt; b.desvio = (b.desvio || 0) + dt; if (b.desvio > 4) { b.desvio = 0; b.alvo = null; decidir(b); } }
+            else b.desvio = 0;
+            const nx = b.x + Math.sin(b.rumo) * v, nz = b.z + Math.cos(b.rumo) * v; if ((naAgua(nx, nz) && !e.rio) || bate(nx, nz, raio * 0.7)) { if (naAgua(nx, nz) && !e.rio) { b.alvo = null; decidir(b); } } else { b.x = nx; b.z = nz; } } }
         else { b.tempo -= dt; if (b.tempo <= 0) decidir(b); }
         // quem chega perto demais assusta os bichos menores: eles se afastam
         if (cam && !e.rio && e.id !== 'elefante') { const dc = Math.hypot(cam.x - b.x, cam.z - b.z); if (dc < 5 && b.estado !== 'andar') { b.rumo = Math.atan2(b.x - cam.x, b.z - cam.z); b.alvo = { x: b.x + Math.sin(b.rumo) * 18, z: b.z + Math.cos(b.rumo) * 18 }; b.estado = 'andar'; tocar(b, e.andar, 0.3); } }
         const y = altura(b.x, b.z); b.raiz.position.set(b.x, y - 0.05, b.z); b.raiz.rotation.y = b.rumo;
-        if (b.sombra) b.sombra.position.set(b.x, y + 0.04, b.z); }
+        if (b.sombra) { b.sombra.position.set(b.x, y + 0.06, b.z); b.sombra.rotation.y = b.rumo; } }
     },
     encontrar(id) { const lst = bichos.filter((b) => b.e.id === id); return lst[0] || null; },
     fazerAndarDeLado(b, cam) { const ax = b.x - cam.x, az = b.z - cam.z, al = Math.hypot(ax, az) || 1; b.alvo = { x: b.x + az / al * 16, z: b.z - ax / al * 16 }; b.estado = 'andar'; tocar(b, b.e.andar, 0.4); },

@@ -398,7 +398,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const P = new Float32Array(lista.length * 3), S = new Float32Array(lista.length * 2), F = new Float32Array(lista.length), R = new Float32Array(lista.length);
     lista.forEach((o, i) => { const hR = alturaReal * (o.s || 1); P.set([o.x, altura(o.x, o.z) - 0.15 + (o.y || 0), o.z], i * 3); S.set([hR * asp, hR], i * 2); F[i] = Math.random() * 6.28; R[i] = o.vira ? 1 : 0; });
     g.setAttribute('iPos', new THREE.InstancedBufferAttribute(P, 3)); g.setAttribute('iTam', new THREE.InstancedBufferAttribute(S, 2)); g.setAttribute('iFase', new THREE.InstancedBufferAttribute(F, 1)); g.setAttribute('iVira', new THREE.InstancedBufferAttribute(R, 1));
-    if (/arvore|palmeira/.test(nome)) lista.forEach((o) => obst.push({ x: o.x, z: o.z, r: 0.35 + alturaReal * (o.s || 1) * 0.045 }));
+    if (/arvore|palmeira|sumauma|acai|bambu/.test(nome)) lista.forEach((o) => obst.push({ x: o.x, z: o.z, r: 0.35 + alturaReal * (o.s || 1) * 0.045 }));
     let Q = null; if (pc.quadros) { Q = new Float32Array(lista.length); for (let i = 0; i < Q.length; i++) Q[i] = Math.floor(Math.random() * pc.quadros); g.setAttribute('iQuadro', new THREE.InstancedBufferAttribute(Q, 1)); if (!pc.mipmaps) { tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter; } }
     const m = new THREE.Mesh(g, matFig(tex, vento, pc.quadros ? [pc.cols, pc.rows] : null)); m.frustumCulled = false; cena.add(m); lixo.push(g, m.material); return { m, P, R, g, Q, pc };
   }
@@ -552,8 +552,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const f = await figuras('zebras-manada', lista, 1.75, 0); window.__manadaDbg = { f: !!f, n: lista.length, p0: lista[0] }; if (f) manadas = { f, lista, longe, a0 }; } else window.__manadaDbg = { semPeca: true, E };
   // ANIMAIS 3D (Éden): carregados por trás; aparecem já compilados, sem engasgo
   let A3D = null;
-  if (E) setTimeout(() => import('/nexus/eden-animais3d.js?v=7').then((m) => m.criarAnimais3D(THREE, cena, { base, altura, naAgua, distRio, rios, rnd, lixo, toque,
-      posicoesPerto: { elefante: [T2W(-26, 22).x, T2W(-26, 22).z], leoa: [T2W(-16, 50).x, T2W(-16, 50).z], tigre: [T2W(16, 58).x, T2W(16, 58).z], girafa: [T2W(24, 34).x, T2W(24, 34).z] } }))
+  if (E) setTimeout(() => import('/nexus/eden-animais3d.js?v=8').then((m) => m.criarAnimais3D(THREE, cena, { base, altura, naAgua, distRio, rios, rnd, lixo, toque,
+      posicoesPerto: { elefante: [T2W(-26, 22).x, T2W(-26, 22).z], leoa: [T2W(-16, 50).x, T2W(-16, 50).z], tigre: [T2W(16, 58).x, T2W(16, 58).z], girafa: [T2W(24, 34).x, T2W(24, 34).z] }, troncos: obst }))
     .then(async (a) => { if (!ativo) return; a.bichos.forEach((b) => { b.raiz.visible = false; if (b.sombra) b.sombra.visible = false; }); try { if (renderer.compileAsync) await renderer.compileAsync(cena, camera); } catch (_) {} a.bichos.forEach((b) => { b.raiz.visible = true; if (b.sombra) b.sombra.visible = true; }); A3D = a; })
     .catch((e) => console.warn('animais 3D', e)), 2500);
   // AVES em voo circular e BORBOLETAS perto das flores: tudo calculado na placa de vídeo
