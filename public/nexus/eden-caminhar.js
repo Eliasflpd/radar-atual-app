@@ -834,7 +834,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     d.querySelector('.x').onclick = fechar; d.querySelector('.som').onclick = () => { v.muted = !v.muted; d.querySelector('.som').textContent = v.muted ? '🔇 Som' : '🔊 Som'; v.play(); };
     v.onended = () => setTimeout(fechar, 500); }
   window.NEXUS_MOMENTO = momento;
-  function cartao(k) { if (k === 'cachoeira' && E) momento('tigre', '/nexus/pessoal/tigre-bebendo.mp4', 'Momento: um tigre bebe no poço da cachoeira'); if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } if (!MW.versos[k]) { card.classList.remove('v'); return; } const [r, t] = MW.versos[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${MW.notas[k] ? `<small>${MW.notas[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
+  function cartao(k) { if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } if (!MW.versos[k]) { card.classList.remove('v'); return; } const [r, t] = MW.versos[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${MW.notas[k] ? `<small>${MW.notas[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
 
   const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: toque ? 0 : 4, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter });
   const posCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), posCena = new THREE.Scene();
