@@ -18,6 +18,37 @@ const CENAS = [
   [/lazaro/, 'túmulo de Lázaro', 'o túmulo de Lázaro em Betânia'],
   [/nazare/, 'Nazaré', 'Nazaré'], [/cafarnaum/, 'Cafarnaum', 'Cafarnaum'], [/magdala/, 'Magdala', 'Magdala'], [/mar da galileia|genezare|tiberiades/, 'Mar da Galileia', 'o Mar da Galileia'],
 ];
+// JORNADAS: o WP leva de lugar em lugar sozinho, voando pelo globo e descendo em cada mundo, com o versículo de cada parada
+const JORNADAS = {
+  paixao: { nome: 'A última semana de Jesus', paradas: [
+    { cena: 'lazaro', titulo: 'Betânia', ref: 'João 12:1', t: 'Foi, pois, Jesus seis dias antes da páscoa a Betânia, onde estava Lázaro, o que falecera, e a quem ressuscitara dentre os mortos.' },
+    { cena: 'jerusalem', acao: 'monte das oliveiras', titulo: 'Diante da cidade, no Monte das Oliveiras', ref: 'Lucas 19:41', t: 'E quando chegou perto e viu a cidade, chorou sobre ela,' },
+    { cena: 'jerusalem', acao: 'santuario', titulo: 'No Templo', ref: 'Mateus 21:12', t: 'E entrou Jesus no templo de Deus, e expulsou todos os que vendiam e compravam no templo, e derribou as mesas dos cambistas e as cadeiras dos que vendiam pombas;' },
+    { cena: 'getsemani', titulo: 'No Getsêmani', ref: 'Mateus 26:39', t: 'E adiantando-se um pouco, prostrou-se com o rosto em terra e orou, dizendo: Meu Pai, se é possível, passa de mim este cálice; todavia, não seja como eu quero, mas como tu queres.' },
+    { cena: 'jerusalem', acao: 'palacio de herodes', titulo: 'No pretório', ref: 'Mateus 27:27', t: 'E logo os soldados do presidente, conduzindo Jesus à audiência, reuniram junto dele toda a coorte.' },
+    { cena: 'golgota', titulo: 'No Gólgota', ref: 'João 19:17', t: 'E, levando ele às costas a sua cruz, saiu para o lugar chamado Caveira, que em hebraico se chama Gólgota,' },
+    { cena: 'golgota', titulo: 'O túmulo vazio', ref: 'Lucas 24:6', t: 'Não está aqui, mas ressuscitou. Lembrai-vos como vos falou, estando ainda na Galileia,' },
+  ] },
+  vida: { nome: 'Os passos de Jesus', paradas: [
+    { cena: 'nazare', titulo: 'Nazaré', ref: 'Lucas 2:51', t: 'E desceu com eles, e foi para Nazaré, e era-lhes sujeito. E sua mãe guardava no seu coração todas estas coisas.' },
+    { cena: 'mar da galileia', titulo: 'O mar da Galileia', ref: 'Mateus 4:18', t: 'E Jesus, andando junto ao mar da Galileia, viu a dois irmãos, Simão, chamado Pedro, e André, os quais lançavam as redes ao mar, porque eram pescadores;' },
+    { cena: 'cafarnaum', titulo: 'Cafarnaum', ref: 'Marcos 1:21', t: 'Entraram em Cafarnaum e, logo no sábado, indo ele à sinagoga, ali ensinava.' },
+    { cena: 'jerusalem', acao: 'portico de salomao', titulo: 'No Pórtico de Salomão', ref: 'João 10:23', t: 'E Jesus andava passeando no templo, no alpendre de Salomão.' },
+    { cena: 'getsemani', titulo: 'No Getsêmani', ref: 'Mateus 26:39', t: 'E adiantando-se um pouco, prostrou-se com o rosto em terra e orou, dizendo: Meu Pai, se é possível, passa de mim este cálice; todavia, não seja como eu quero, mas como tu queres.' },
+    { cena: 'golgota', titulo: 'No Gólgota', ref: 'João 19:17', t: 'E, levando ele às costas a sua cruz, saiu para o lugar chamado Caveira, que em hebraico se chama Gólgota,' },
+  ] },
+  davi: { nome: 'Davi', paradas: [
+    { cena: 'vale de ela', acao: 'golias', titulo: 'No vale de Elá', ref: '1 Samuel 17:45', t: 'Davi, porém, lhe respondeu: Tu vens a mim com espada, com lança e com escudo; mas eu venho a ti em nome do Senhor dos exércitos, o Deus dos exércitos de Israel, a quem tens afrontado.' },
+    { cena: 'jerusalem', acao: 'cidade de davi', titulo: 'Na Cidade de Davi', ref: '2 Samuel 5:7', t: 'Porém Davi tomou a fortaleza de Sião; esta é a cidade de Davi.' },
+  ] },
+  redencao: { nome: 'Do Éden à cruz', paradas: [
+    { cena: 'eden', titulo: 'No Éden', ref: 'Gênesis 3:15', t: 'E porei inimizade entre ti e a mulher, e entre a tua semente e a sua semente; esta te ferirá a cabeça, e tu lhe ferirás o calcanhar.' },
+    { cena: 'getsemani', titulo: 'No Getsêmani', ref: 'Mateus 26:39', t: 'E adiantando-se um pouco, prostrou-se com o rosto em terra e orou, dizendo: Meu Pai, se é possível, passa de mim este cálice; todavia, não seja como eu quero, mas como tu queres.' },
+    { cena: 'golgota', titulo: 'No Gólgota', ref: 'João 19:17', t: 'E, levando ele às costas a sua cruz, saiu para o lugar chamado Caveira, que em hebraico se chama Gólgota,' },
+    { cena: 'golgota', titulo: 'O túmulo vazio', ref: 'Lucas 24:6', t: 'Não está aqui, mas ressuscitou. Lembrai-vos como vos falou, estando ainda na Galileia,' },
+  ] },
+};
+const QUAL_JORNADA = (q) => /(ultima|última) semana|semana santa|paixao de (jesus|cristo)/.test(q) ? 'paixao' : /(vida|passos|jornada|caminhos?) de (jesus|cristo)/.test(q) ? 'vida' : /(vida|historia|jornada) de davi/.test(q) ? 'davi' : /(do eden|da queda) (a|ao|até a|ate a) (cruz|golgota|calvario)|redencao/.test(q) ? 'redencao' : null;
 const IDS = ['queda', 'trombetas', 'eden', 'criacao', 'templo-herodes', 'templo-salomao', 'getsemani', 'ela', 'golgota', 'lazaro', 'nazare', 'cafarnaum', 'magdala', 'mar-galileia'];   // na mesma ordem de CENAS
 const JUNTO = [/frutoproibido|queda|serpente|genesis3|pecadooriginal/, /trombeta/, /eden|paraiso|jardim(?!dogetsemani|dasoliveiras)|arvoredavida/, /criacao|genesis1|noprincipio/, /templodeherodes|segundotemplo|templodejesus|jerusalem|portaformosa|porticodesalomao|antonia|siloe/, /templodesalomao|primeirotemplo|templo$/, /getsemani|hortodasoliveiras/, /valedeela|golias/, /golgota|calvario|santosepulcro/, /lazaro/, /nazare/, /cafarnaum/, /magdala/, /mardagalileia|genezare|tiberiades/];   // na mesma ordem de CENAS
 const CHAVE = 'nexus_guia';
@@ -75,7 +106,7 @@ export function iniciarGuia() {
   document.body.appendChild(el);
   const corpo = el.querySelector('.guia-corpo'), form = el.querySelector('.guia-form'), ta = form.querySelector('textarea'), btMin = el.querySelector('[data-g=min]');
   function desenhar() {
-    if (!hist.length) { corpo.innerHTML = `<div class="guia-msg guia-nx"><p>Olá! Vamos conversar. Pergunte o que quiser sobre a Bíblia, discuta um estudo ou um sermão comigo, ou peça um lugar e o ambiente muda.</p></div><div class="guia-sug">${['Me leve ao Éden', 'Por que Deus plantou um jardim?', 'Sermão sobre Gênesis 3', 'Getsêmani', 'O que é a árvore da vida?'].map((s) => `<button type="button" data-s="${s}">${s}</button>`).join('')}</div>`; return; }
+    if (!hist.length) { corpo.innerHTML = `<div class="guia-msg guia-nx"><p>Olá! Vamos conversar. Pergunte o que quiser sobre a Bíblia, discuta um estudo ou um sermão comigo, ou peça um lugar e o ambiente muda.</p></div><div class="guia-sug">${['A última semana de Jesus', 'Me leve a Jerusalém', 'Me leve ao Éden', 'Getsêmani', 'Por que Deus plantou um jardim?', 'Sermão sobre Gênesis 3'].map((s) => `<button type="button" data-s="${s}">${s}</button>`).join('')}</div>`; return; }
     corpo.innerHTML = hist.map((m, i) => `<div class="guia-msg ${m.eu ? 'guia-eu' : 'guia-nx'}">${(m.anexos || []).map((a, k) => a.thumb ? `<span class="guia-anexo" data-ver="${i}:${k}"><img src="${a.thumb}" alt=""></span>` : `<div class="guia-doc"><span>${a.tipo === 'pdf' ? '📄' : '🎬'}</span>${esc(a.nome || '')}</div>`).join('')}${m.eu ? esc(m.t) : par(m.t)}${m.nota ? `<small>${esc(m.nota)}</small>` : ''}${!m.eu && m.claude ? `<div class="guia-acoes">${m.rascunho ? `<button type="button" data-baixar="${i}">⬇ Baixar</button><button type="button" data-copiar="${i}">⧉ Copiar</button>` : ''}${m.gptFeito ? '' : `<button type="button" data-gpt="${i}">🤖 Segunda opinião (GPT, grátis)</button>`}</div>` : ''}<span class="guia-hora">${m.hora || ''}${m.eu ? '<i>✓✓</i>' : ''}</span></div>`).join(''); corpo.scrollTop = corpo.scrollHeight;
   }
   async function abrirCena(cena) { const [, busca, , fn] = cena;
@@ -84,11 +115,30 @@ export function iniciarGuia() {
     document.querySelectorAll('.mt-sair,.p3-sair,.lr-sair,.tp-sair,.lc-pular,.ej-sair').forEach((b) => { try { b.click(); } catch (_) {} });   // fecha a cena aberta
     await new Promise((ok) => setTimeout(ok, 700));
     try { if (fn) fn(); else window.__ceuPrevia._teste.buscar(busca); } catch (_) {} }
+  // jornada: uma parada depois da outra; qualquer mensagem sua interrompe
+  let jornadaId = 0;
+  const cenaAberta = () => document.querySelector('.ej-raiz.on:not(.voando), .lr-raiz.on, .tp-raiz.on, .lc-raiz.on');
+  async function jornada(id) {
+    const J = JORNADAS[id]; const meu = ++jornadaId; const s = (ms) => new Promise((ok) => setTimeout(ok, ms)); let anterior = null;
+    hist.push({ t: `**Jornada: ${J.nome}** — ${J.paradas.length} paradas. Eu levo você de lugar em lugar; escreva qualquer coisa para parar.`, nota: 'jornada · sem custo', hora: hora() }); guardar(); desenhar();
+    for (let i = 0; i < J.paradas.length; i++) { const P = J.paradas[i]; if (meu !== jornadaId) return;
+      if (P.cena !== anterior) { const c = CENAS.find(([re]) => re.test(P.cena)); if (c) await abrirCena(c);
+        await s(1500); for (let k = 0; k < 90 && !cenaAberta() && meu === jornadaId; k++) await s(500); await s(1200); }
+      if (meu !== jornadaId) return;
+      if (P.acao && typeof window.NEXUS_MUNDO_ACAO === 'function') { try { window.NEXUS_MUNDO_ACAO(norm(P.acao)); } catch (_) {} }
+      anterior = P.cena;
+      hist.push({ t: `**${i + 1}/${J.paradas.length} · ${P.titulo}**\n\n“${P.t}”\n— ${P.ref} (Almeida)`, nota: 'jornada · sem custo', hora: hora() }); guardar(); desenhar();
+      if (window.NEXUS_FALAR) try { window.NEXUS_FALAR(P.t + ' ' + P.ref); } catch (_) {}
+      await s(i === J.paradas.length - 1 ? 1000 : 15000); }
+    if (meu === jornadaId) { hist.push({ t: `Fim da jornada: ${J.nome}. Pode continuar andando aqui ou me perguntar sobre qualquer parada.`, nota: 'jornada · sem custo', hora: hora() }); guardar(); desenhar(); }
+  }
   const abrir3D = (url, leg) => import('/nexus/foto3d.js?v=2').then((m) => m.abrirFoto3D(url, leg)).catch((e) => console.warn('foto 3D', e));
   const hora = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   async function pedir(texto, anexos) {
     texto = String(texto || '').trim(); anexos = anexos || []; if (!texto && !anexos.length) return; const q = norm(texto);
     hist.push({ eu: true, t: texto, hora: hora(), anexos: anexos.map((a) => ({ tipo: a.tipo, nome: a.nome, thumb: a.thumb })) }); desenhar();
+    jornadaId++;   // a sua mensagem interrompe uma jornada em andamento
+    { const jn = QUAL_JORNADA(q); if (jn) { jornada(jn); return; } if (/^(jornadas|quais jornadas|me mostre as jornadas)/.test(q)) { hist.push({ t: 'Jornadas que eu faço com você, voando de lugar em lugar:\n\n- **A última semana de Jesus** (Betânia, Templo, Getsêmani, pretório, Gólgota, túmulo vazio)\n- **Os passos de Jesus** (Nazaré, Galileia, Cafarnaum, Templo, Getsêmani, Gólgota)\n- **Davi** (vale de Elá, Cidade de Davi)\n- **Do Éden à cruz**\n\nÉ só pedir pelo nome.', nota: 'sem custo', hora: hora() }); guardar(); desenhar(); return; } }
     // foto de um lugar: vira cena 3D realista na hora (profundidade calculada no próprio aparelho)
     const foto = anexos.find((a) => a.tipo === 'imagem' && !a.video); if (foto) abrir3D(foto.url || foto.thumb, texto);
     if (anexos.length) { await conversar(texto || (foto ? 'Que lugar é este? Me conte o que você vê e a ligação com a Bíblia, se houver.' : 'Leia o anexo e me diga o essencial.'), anexos); return; }
@@ -186,6 +236,8 @@ export function iniciarGuia() {
   topo.addEventListener('pointerup', () => { arr = null; });
   desenhar();
   window.NEXUS_GUIA = pedir;
+  // a voz lê o versículo de cada parada (voz do próprio aparelho, sem custo)
+  window.NEXUS_FALAR = (t) => { try { if (!('speechSynthesis' in window)) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'pt-BR'; u.rate = 0.95; const v = speechSynthesis.getVoices().find((x) => /pt[-_]BR/i.test(x.lang)); if (v) u.voice = v; speechSynthesis.speak(u); } catch (_) {} };
   // dentro de um mundo, o guia mostra os pontos do sermão: tocar num ponto leva a cena até ele
   window.NEXUS_MUNDO_QUADRO = (k, C) => { window.__nexusQuadro = `${C.livro} · ${C.titulo}, ponto ${k + 1}: ${(C.quadros[k] && (C.quadros[k].ponto || C.quadros[k].ref)) || ''}`; let bar = el.querySelector('.guia-pontos'); if (!bar) { bar = document.createElement('div'); bar.className = 'guia-pontos'; bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;border-bottom:1px solid rgba(243,211,142,.25);background:rgba(0,0,0,.18)'; el.insertBefore(bar, corpo); bar.addEventListener('click', (e) => { const b = e.target.closest('[data-q]'); if (b && window.NEXUS_MUNDO_IR) window.NEXUS_MUNDO_IR(+b.dataset.q); }); }
     bar.innerHTML = `<small style="width:100%;color:rgba(243,226,179,.8);font-size:11px;letter-spacing:.08em">${esc(C.livro)} · ${esc(C.titulo)} · PONTOS</small>` + C.quadros.map((q, i) => `<button type="button" data-q="${i}" style="border:1px solid rgba(243,211,142,${i === k ? '.9' : '.35'});background:${i === k ? 'rgba(201,162,78,.55)' : 'rgba(0,0,0,.3)'};color:#fff;border-radius:999px;padding:3px 9px;font:600 11.5px Inter,sans-serif;cursor:pointer">${i + 1}. ${esc(q.ponto || q.ref)}</button>`).join(''); };

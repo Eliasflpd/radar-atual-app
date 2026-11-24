@@ -86,7 +86,14 @@ export const LUGARES = {
   santuario: [-30, -100], portaFormosa: [60, -100], salomao: [150, -60], porticoReal: [0, 228], antonia: [-95, -275], palacio: [-730, 170], torres: [-740, 45], siloe: [-40, 905], cidadeDavi: [60, 520], oliveiras: [760, -70], golgota: [-640, -230], tiropeon: [-225, 60],
 };
 
-export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd }) {
+export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd, carregar, renderer }) {
+  // TEXTURAS DE FOTO REAL (Poly Haven, CC0): cor, relevo (normal) e aspereza de pedra de verdade; se faltar, cai na desenhada
+  const carregarTex = async (n) => { const t = carregar ? await carregar(n) : null; if (t) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; lixo.push(t); } return t; };
+  const pbr = async (nome) => { const [map, nor, rou] = await Promise.all([carregarTex(nome + '-Diffuse.jpg'), carregarTex(nome + '-nor_gl.jpg'), carregarTex(nome + '-Rough.jpg')]); if (nor) nor.colorSpace = THREE.NoColorSpace; if (rou) rou.colorSpace = THREE.NoColorSpace; return map ? { map, nor, rou } : null; };
+  const [PH, PM, PC, PL, PMa] = await Promise.all(['herodiano', 'muralha', 'casa', 'lajes', 'marmore'].map(pbr));
+  // material com a textura real na escala certa: 'tam' = metros que uma repetição da foto cobre
+  const matReal = (P, tam, base, cor = 0xffffff, rough = 0.9, escU = 18, escV = 18) => { if (!P) return null; const r = (t) => { if (!t) return null; const c = t.clone(); c.needsUpdate = true; c.repeat.set(escU / tam, escV / tam); lixo.push(c); return c; };
+    const m = new THREE.MeshStandardMaterial({ map: r(P.map), normalMap: r(P.nor), roughnessMap: r(P.rou), color: cor, roughness: rough }); m.normalScale.set(1.2, 1.2); lixo.push(m); return m; };
   const tHer = blocosHerodianos(THREE), tCasa = pedraCasa(THREE), tLaje = lajes(THREE), tTeto = telhado(THREE); lixo.push(tHer, tCasa, tLaje, tTeto);
   const mat = (map, rep, cor = 0xffffff, rough = 0.9) => { const t = map.clone(); t.needsUpdate = true; t.repeat.set(rep[0], rep[1]); lixo.push(t); const m = new THREE.MeshStandardMaterial({ map: t, color: cor, roughness: rough }); lixo.push(m); return m; };
   const juntar = new Map();   // material -> geometrias já posicionadas: centenas de caixas viram poucas malhas (monta e aquece muito mais rápido)
@@ -94,7 +101,7 @@ export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd }
       const P = new Float32Array(nv * 3), Nn = new Float32Array(nv * 3), U = new Float32Array(nv * 2), I = new Uint32Array(ni); let ov = 0, oi = 0;
       for (const g of gs) { P.set(g.attributes.position.array, ov * 3); Nn.set(g.attributes.normal.array, ov * 3); U.set(g.attributes.uv.array, ov * 2); const ix = g.index.array; for (let k = 0; k < ix.length; k++) I[oi + k] = ix[k] + ov; ov += g.attributes.position.count; oi += ix.length; g.dispose(); }
       const G = new THREE.BufferGeometry(); G.setAttribute('position', new THREE.BufferAttribute(P, 3)); G.setAttribute('normal', new THREE.BufferAttribute(Nn, 3)); G.setAttribute('uv', new THREE.BufferAttribute(U, 2)); G.setIndex(new THREE.BufferAttribute(I, 1)); G.computeBoundingSphere();
-      const ms = new THREE.Mesh(G, m); cena.add(ms); lixo.push(G); } juntar.clear(); };
+      const ms = new THREE.Mesh(G, m); ms.castShadow = ms.receiveShadow = true; cena.add(ms); lixo.push(G); } juntar.clear(); };
   const caixa = (w, h, d, m, x, y, z, ry = 0) => { const g = new THREE.BoxGeometry(w, h, d); { const uv = g.attributes.uv, F = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]]; for (let f = 0; f < 6; f++) for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, uv.getX(i) * F[f][0] / 18, uv.getY(i) * F[f][1] / 18); } } g.rotateY(ry); g.translate(x, y + h / 2, z); if (!juntar.has(m)) juntar.set(m, []); juntar.get(m).push(g); };
   const obst = [];   // caixas que não se atravessa: [x0,z0,x1,z1]
   const bloco = (x0, z0, x1, z1) => obst.push([Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1)]);
@@ -105,13 +112,13 @@ export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd }
   for (const [ax, az, bx, bz] of lados) { const L = Math.hypot(bx - ax, bz - az), n = Math.ceil(L / 4), P = [], U = [], I = [];
     for (let i = 0; i <= n; i++) { const t = i / n, x = ax + (bx - ax) * t, z = az + (bz - az) * t, hb = Math.min(-2, altura(x + (bz - az) / L * 3, z - (bx - ax) / L * 3)) - 3; P.push(x, hb, z, x, 1.6, z); U.push(t * L / 18, hb / 9, t * L / 18, 1.6 / 9); if (i) { const a = (i - 1) * 2; I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I); g.computeVertexNormals();
-    const t = tHer.clone(); t.needsUpdate = true; lixo.push(g, t); const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: t, roughness: 0.85, side: THREE.DoubleSide })); lixo.push(m.material); cena.add(m); }
+    const t = tHer.clone(); t.needsUpdate = true; lixo.push(g, t); const mr = matReal(PH, 4.5, null, 0xf6eedd, 0.9, 18, 9); if (mr) mr.side = THREE.DoubleSide; const m = new THREE.Mesh(g, mr || new THREE.MeshStandardMaterial({ map: t, roughness: 0.85, side: THREE.DoubleSide })); if (!mr) lixo.push(m.material); m.castShadow = m.receiveShadow = true; cena.add(m); }
   // chão da esplanada: lajes claras
-  { const g = new THREE.PlaneGeometry(x1 - x0, z1 - z0); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, mat(tLaje, [(x1 - x0) / 9, (z1 - z0) / 9], 0xffffff, 0.8)); m.position.set((x0 + x1) / 2, 0.02, (z0 + z1) / 2); cena.add(m); lixo.push(g); }
+  { const g = new THREE.PlaneGeometry(x1 - x0, z1 - z0); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, matReal(PL, 4, null, 0xfffaf0, 0.85, x1 - x0, z1 - z0) || mat(tLaje, [(x1 - x0) / 9, (z1 - z0) / 9], 0xffffff, 0.8)); m.receiveShadow = true; m.position.set((x0 + x1) / 2, 0.02, (z0 + z1) / 2); cena.add(m); lixo.push(g); }
   await folga();
 
   // 2. PÓRTICOS em volta da esplanada (colunas de 12 m e teto de cedro); o PÓRTICO REAL ao sul, mais alto (Josefo, Ant. 15.411–416)
-  const pedra = mat(tHer, [1, 1], 0xfaf6ee, 0.8), branco = new THREE.MeshStandardMaterial({ color: 0xf1e8d6, roughness: 0.6 }), ouro = new THREE.MeshStandardMaterial({ color: 0xd9b45a, metalness: 0.85, roughness: 0.3 }), cedro = new THREE.MeshStandardMaterial({ color: 0x7a4a26, roughness: 0.7 });
+  const pedra = matReal(PH, 4.5, null, 0xf6eedd, 0.9) || mat(tHer, [1, 1], 0xfaf6ee, 0.8), pedraMuralha = matReal(PM, 3.2, null, 0xfff6e6, 0.95) || pedra, marmore = matReal(PMa, 6, null, 0xffffff, 0.35) || new THREE.MeshStandardMaterial({ color: 0xf1e8d6, roughness: 0.6 }), branco = new THREE.MeshStandardMaterial({ color: 0xf3ece0, roughness: 0.55 }), ouro = new THREE.MeshStandardMaterial({ color: 0xd9b45a, metalness: 0.85, roughness: 0.3 }), cedro = new THREE.MeshStandardMaterial({ color: 0x7a4a26, roughness: 0.7 });
   lixo.push(branco, ouro, cedro);
   const colGeo = new THREE.CylinderGeometry(0.55, 0.65, 1, 14); colGeo.translate(0, 0.5, 0); lixo.push(colGeo);
   const colunas = []; // [x, z, altura]
@@ -128,11 +135,15 @@ export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd }
   portico(x0 + 2, z1 - 32, x0 + 2, z0 + 2, 15, 12);       // oeste
   portico(x1 - 2, z1 - 2, x0 + 2, z1 - 2, 32, 24, 4, 6.2); // sul: o Pórtico Real, quatro fileiras de colunas (162 colunas, Josefo)
   for (let i = 0; i < colunas.length; i += 400) { const parte = colunas.slice(i, i + 400); const im = new THREE.InstancedMesh(colGeo, branco, parte.length); const M = new THREE.Matrix4();
-    parte.forEach(([x, z, a], k) => { M.makeScale(1, a, 1); M.setPosition(x, 0, z); im.setMatrixAt(k, M); }); im.frustumCulled = false; cena.add(im); lixo.push(im); }
+    parte.forEach(([x, z, a], k) => { M.makeScale(1, a - 1.6, 1); M.setPosition(x, 0.5, z); im.setMatrixAt(k, M); caixa(1.7, 0.5, 1.7, branco, x, 0, z); caixa(1.9, 1.1, 1.9, branco, x, a - 1.1, z); }); im.frustumCulled = false; im.castShadow = true; cena.add(im); lixo.push(im); }
   // a nave central do Pórtico Real é mais alta (basílica)
   caixa(x1 - x0 - 10, 6, 12, pedra, 0, 24, z1 - 17);
   await folga();
 
+  { const hz = z1 + 1; const hb = altura(-40, z1 + 40);
+    for (let d = 0; d < 14; d++) caixa(64, Math.max(0.3, -hb - d * (-hb / 14)), 3, pedra, -40, hb, hz + 2 + d * 2.6);   // escadaria monumental diante das portas de Hulda
+    for (const gx of [-95, -10, 10, 35]) { caixa(8, 9, 1.2, new THREE.MeshStandardMaterial({ color: 0x2a2219, roughness: 1 }), gx, Math.max(hb, -14), z1 + 0.3); }   // portas (duplas e triplas) no muro sul
+    const ra = altura(x0 - 15, z1 - 12); caixa(15, 2.4, 15, pedra, x0 - 7.5, -2.4, z1 - 12); caixa(4, -ra - 2.4, 15, pedra, x0 - 17, ra, z1 - 12); }   // o arco de Robinson: escada que subia da rua do Tiropeon até o Pórtico Real
   // 3. O SANTUÁRIO e os PÁTIOS (Middot; Josefo, Guerra 5.184–237): pátio das mulheres a leste, a Porta de Nicanor, o pátio de Israel e dos sacerdotes,
   // o altar, e o Santuário de 100 côvados (~50 m) de altura e largura na frente, voltado para o leste
   const S = LUGARES.santuario; const cx = S[0], cz = S[1];
@@ -157,12 +168,21 @@ export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd }
   // o SANTUÁRIO: frente (pórtico) 50 m de largura e 50 m de altura; atrás, a casa de 30 m de largura; mármore branco e ouro
   const yS = yP + 6;
   caixa(8, 3, 50, branco, cx + 21, yP + 2, cz);   // degraus (12) diante do pórtico
-  caixa(11, 50, 50, branco, cx + 12, yS, cz);     // fachada em T
-  caixa(54, 34, 30, branco, cx - 20, yS, cz);     // o Santo e o Santíssimo
+  caixa(11, 50, 50, marmore, cx + 12, yS, cz);     // fachada em T
+  caixa(54, 34, 30, marmore, cx - 20, yS, cz);     // o Santo e o Santíssimo
   caixa(54, 2, 31, ouro, cx - 20, yS + 34, cz); caixa(11.4, 1.6, 50.4, ouro, cx + 12, yS + 50, cz);   // as pontas de ouro no telhado (Guerra 5.224)
   caixa(0.4, 22, 10, new THREE.MeshStandardMaterial({ color: 0x3a1f3f, roughness: 0.9 }), cx + 17.7, yS, cz);   // a grande entrada sem portas com a cortina (Guerra 5.211–212)
   caixa(0.6, 3, 14, ouro, cx + 17.8, yS + 23, cz);   // a videira de ouro acima da entrada (Guerra 5.210; Ant. 15.395)
-  bloco(cx - 75, cz - 64, cx + 147, cz + 64);   // não se atravessa os muros dos pátios (por enquanto o interior é só para ver)
+  { const fx = cx + 17.5;   // face leste
+    for (const dz of [-21, -13.5, 13.5, 21]) caixa(1.4, 46, 2.6, marmore, fx + 0.5, yS + 1, cz + dz);            // pilastras
+    for (const dz of [-21, -13.5, 13.5, 21]) caixa(2, 1.6, 3.4, ouro, fx + 0.7, yS + 45.5, cz + dz);            // capitéis dourados
+    for (const hy of [16, 34, 48.4]) caixa(1.8, 1.2, 51, marmore, fx + 0.6, yS + hy, cz);                       // cornijas
+    caixa(1.2, 26, 1.6, ouro, fx + 0.3, yS, cz - 6.2); caixa(1.2, 26, 1.6, ouro, fx + 0.3, yS, cz + 6.2); caixa(1.2, 1.6, 14, ouro, fx + 0.3, yS + 25.4, cz);   // moldura de ouro do portal
+    for (let k = -24; k <= 24; k += 1.6) caixa(0.25, 1.2, 0.25, ouro, fx - 5, yS + 51.6, cz + k);                // pontas de ouro no alto da fachada
+    for (let k = -46; k <= 6; k += 1.6) { caixa(0.25, 1.2, 0.25, ouro, cx + k, yS + 35.6, cz - 14.6); caixa(0.25, 1.2, 0.25, ouro, cx + k, yS + 35.6, cz + 14.6); }
+    for (let d = 0; d < 6; d++) caixa(2, 0.5 * (6 - d), 46 - d, branco, fx + 2 + d * 2, yP + 2, cz);            // os doze degraus diante do pórtico (simplificados)
+  }
+  bloco(cx - 64, cz - 36, cx + 70, cz + 36);   // o pátio de Israel e dos sacerdotes não se atravessa; o pátio das mulheres, sim (entra-se pela Porta Formosa)   // não se atravessa os muros dos pátios (por enquanto o interior é só para ver)
   await folga();
 
   // 4. A FORTALEZA ANTÔNIA no canto noroeste (Guerra 5.238–246): quatro torres, a do sudeste mais alta (70 côvados)
@@ -177,9 +197,9 @@ export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd }
   // 6. MURALHAS com torres (12 m; torres de 18 m a cada ~70 m)
   const muralha = (P, alt) => { const tor = []; for (let i = 0; i < P.length - 1; i++) { const [ax, az] = P[i], [bx, bz] = P[i + 1], L = Math.hypot(bx - ax, bz - az); if (L < 1) continue; const n = Math.ceil(L / 8);
       for (let k = 0; k < n; k++) { const t0 = k / n, t1 = (k + 1) / n, xa = ax + (bx - ax) * t0, za = az + (bz - az) * t0, xb = ax + (bx - ax) * t1, zb = az + (bz - az) * t1, xm = (xa + xb) / 2, zm = (za + zb) / 2;
-        if (xm > x0 - 1 && xm < x1 + 1 && zm > z0 - 1 && zm < z1 + 1) continue; const hb = Math.min(altura(xa, za), altura(xb, zb)) - 2; caixa(L / n + 0.4, alt + 2, 4, pedra, xm, hb, zm, Math.atan2(-(zb - za), xb - xa)); }
+        if (xm > x0 - 1 && xm < x1 + 1 && zm > z0 - 1 && zm < z1 + 1) continue; const hb = Math.min(altura(xa, za), altura(xb, zb)) - 2; caixa(L / n + 0.4, alt + 2, 4, pedraMuralha, xm, hb, zm, Math.atan2(-(zb - za), xb - xa)); }
       for (let s = 35; s < L; s += 70) tor.push([ax + (bx - ax) * s / L, az + (bz - az) * s / L]); }
-    for (const [tx, tz] of tor) { if (tx > x0 - 5 && tx < x1 + 5 && tz > z0 - 5 && tz < z1 + 5) continue; caixa(11, alt + 8, 11, pedra, tx, altura(tx, tz) - 2, tz); } };
+    for (const [tx, tz] of tor) { if (tx > x0 - 5 && tx < x1 + 5 && tz > z0 - 5 && tz < z1 + 5) continue; caixa(11, alt + 8, 11, pedraMuralha, tx, altura(tx, tz) - 2, tz); } };
   muralha(PRIMEIRA, 12); muralha(SEGUNDA, 11);
   await folga();
 
@@ -193,12 +213,12 @@ export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd }
     if (!livre(x, z, Math.max(w, d) / 2 + 1) || naRua(x, z)) continue; const h0 = altura(x, z); if (Math.abs(altura(x + 4, z) - h0) > 6) continue;
     casas.push([x, z, w, d, (alta ? 6 : 3.8) + rnd() * (alta ? 4 : 2.5), h0, (rnd() - 0.5) * 0.25 + (rnd() < 0.5 ? 0 : Math.PI / 2)]); if (casas.length % 600 === 0) await folga(); }
   { const gC = new THREE.BoxGeometry(1, 1, 1); gC.translate(0, 0.5, 0); const uv = gC.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2, uv.getY(i)); lixo.push(gC);
-    const mC = mat(tCasa, [1, 1], 0xf2e6cc, 0.95), mT = mat(tTeto, [1, 1], 0xffffff, 1);
+    const mC = matReal(PC, 3, null, 0xfff4e2, 0.95, 2, 1) || mat(tCasa, [1, 1], 0xf2e6cc, 0.95), mT = mat(tTeto, [1, 1], 0xffffff, 1);
     const paredes = new THREE.InstancedMesh(gC, mC, casas.length), tetos = new THREE.InstancedMesh(gC, mT, casas.length), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), Sx = new THREE.Vector3(), P = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0);
     const cor = new THREE.Color();
     casas.forEach(([x, z, w, d, h, h0, ry], i) => { Q.setFromAxisAngle(Y, ry); Sx.set(w, h + 3, d); P.set(x, h0 - 3, z); M.compose(P, Q, Sx); paredes.setMatrixAt(i, M); const v = 0.86 + rnd() * 0.18; cor.setRGB(v, v * (0.97 + rnd() * 0.04), v * (0.9 + rnd() * 0.08)); paredes.setColorAt(i, cor);
       Sx.set(w + 0.3, 0.35, d + 0.3); P.set(x, h0 + h, z); M.compose(P, Q, Sx); tetos.setMatrixAt(i, M); });
-    paredes.frustumCulled = tetos.frustumCulled = false; cena.add(paredes, tetos); lixo.push(paredes, tetos); }
+    paredes.frustumCulled = tetos.frustumCulled = false; paredes.castShadow = paredes.receiveShadow = tetos.receiveShadow = true; cena.add(paredes, tetos); lixo.push(paredes, tetos); }
   // as casas também não se atravessa
   for (const [x, z, w, d] of casas) { const r = Math.max(w, d) / 2; obst.push([x - r * 0.8, z - r * 0.8, x + r * 0.8, z + r * 0.8]); }
 
@@ -211,5 +231,11 @@ export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd }
     const it = new THREE.InstancedMesh(tronco, mt, pts.length), ic = new THREE.InstancedMesh(copa, mcop, pts.length), M = new THREE.Matrix4();
     pts.forEach(([x, z, s], i) => { M.makeScale(s, s, s); M.setPosition(x, altura(x, z) - 0.2, z); it.setMatrixAt(i, M); ic.setMatrixAt(i, M); }); it.frustumCulled = ic.frustumCulled = false; cena.add(it, ic); lixo.push(it, ic); }
   fecharJuntas();
-  return { obst };
+  const sol = cena.children.find((o) => o.isDirectionalLight); let quadro = null;
+  if (sol && renderer) { renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; sol.castShadow = true; const R = toque ? 160 : 230, sc = sol.shadow.camera;
+    sol.shadow.mapSize.set(toque ? 2048 : 4096, toque ? 2048 : 4096); sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 10; sc.far = 1600; sol.shadow.bias = -0.0004; sol.shadow.normalBias = 0.6; sc.updateProjectionMatrix();
+    const dir = sol.position.clone().normalize(); cena.add(sol.target);
+    quadro = (p) => { const x = Math.round(p.x / 8) * 8, z = Math.round(p.z / 8) * 8; sol.target.position.set(x, 0, z); sol.position.set(x + dir.x * 700, dir.y * 700, z + dir.z * 700); sol.target.updateMatrixWorld(); }; }
+  const terreno = cena.children.find((o) => o.isMesh && o.geometry && o.geometry.attributes.color); if (terreno) terreno.receiveShadow = true;
+  return { obst, quadro };
 }
