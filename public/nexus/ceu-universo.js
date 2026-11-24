@@ -920,7 +920,7 @@ export function criarCeu(container, estado, acoes) {
     }
     if (!arrasto && m.vel && (Math.abs(m.vel.lat) + Math.abs(m.vel.lon) > 1e-5)) { m.lat += m.vel.lat; m.lon += m.vel.lon; m.vel.lat *= 0.9; m.vel.lon *= 0.9; }
     if (m.altAlvo > RAIO_GLOBO * 3.3 && m.alt > RAIO_GLOBO * 3.1) { sairTerra(); return false; }
-    if (!m.voo && m.alt < 3.4 && performance.now() - mundoEntradaEm > 5000 && !ui.querySelector('.ej-raiz')) { const w = MUNDOS_GEO.find((w) => Math.abs(w.lat - m.lat) < 0.07 && Math.abs(w.lon - m.lon) < 0.09); if (w) { mundoEntradaEm = performance.now(); import('/nexus/eden-caminhar.js?v=86').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo: w.id })).catch(() => {}); } }
+    if (!m.voo && m.alt < 3.4 && performance.now() - mundoEntradaEm > 5000 && !ui.querySelector('.ej-raiz')) { const w = MUNDOS_GEO.find((w) => Math.abs(w.lat - m.lat) < 0.07 && Math.abs(w.lon - m.lon) < 0.09); if (w) { mundoEntradaEm = performance.now(); import('/nexus/eden-caminhar.js?v=88').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo: w.id })).catch(() => {}); } }
     return true;
   }
   function posicionarTerra() {
@@ -1672,7 +1672,7 @@ export function criarCeu(container, estado, acoes) {
   const MUNDOS_GEO = Object.entries(ORIGENS).map(([id, p]) => ({ id, ...p })); let mundoEntradaEm = 0;
   // ENTRAR NO TEMPLO DE HERODES direto (vindo do Getsêmani): abre a maquete já na vista pedida (Escada de Nicanor, Santo Lugar…)
   // vindo do Getsêmani: atravessa o Cedrom e entra no mundo de Jerusalém (o drone desce do Monte das Oliveiras até a esplanada)
-  window.NEXUS_ENTRAR_TEMPLO = async (vista) => { const mm = await import('/nexus/eden-caminhar.js?v=86'); const w = await mm.abrirJardim(THREE, ui, { chegada: true, mundo: 'jerusalem' }); if (w && vista && window.NEXUS_MUNDO_ACAO) setTimeout(() => window.NEXUS_MUNDO_ACAO(vista === 'santo' ? 'santuario' : vista === 'esplanada' ? 'cidade de davi' : 'santuario'), 9500); };
+  window.NEXUS_ENTRAR_TEMPLO = async (vista) => { const mm = await import('/nexus/eden-caminhar.js?v=88'); const w = await mm.abrirJardim(THREE, ui, { chegada: true, mundo: 'jerusalem' }); if (w && vista && window.NEXUS_MUNDO_ACAO) setTimeout(() => window.NEXUS_MUNDO_ACAO(vista === 'santo' ? 'santuario' : vista === 'esplanada' ? 'cidade de davi' : 'santuario'), 9500); };
   window.NEXUS_ENTRAR_TEMPLO_MAQUETE = async (vista) => { if (temploAberto) return; const m = await import('/nexus/templo-herodes.js?v=6'); temploAberto = await m.abrirTemplo(THREE, ui, { aoFechar: () => { temploAberto = null; } }); ui.dataset.templo = 'herodes';
     if (vista) setTimeout(() => { const b = ui.querySelector(`.tp-raiz [data-v="${vista}"]`); if (b) b.click(); }, 1800); };
   window.NEXUS_PARA_GLOBO = (lat, lon) => { if (!atlasC) return; camada('atlas').visivel = true; if (!modoTerra) entrarTerra(null); const m = modoTerra; m.lat = lat; m.lon = lon; m.alt = m.altAlvo = 2.2;
@@ -1680,7 +1680,7 @@ export function criarCeu(container, estado, acoes) {
   async function viajarParaMundo(mundo, lat, lon, nome) {
     const veioDe = window.__nexusMundoAtual; const aberto = ui.querySelector('.ej-raiz'); if (aberto) { const b = aberto.querySelector('.ej-sair'); if (b) b.click(); await new Promise((ok) => setTimeout(ok, 900)); }
     // o mundo começa a ser montado ESCONDIDO já no começo do voo; na chegada ele só aparece (sem travar)
-    const pre = import('/nexus/eden-caminhar.js?v=86').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo, oculto: true })).catch(() => null);
+    const pre = import('/nexus/eden-caminhar.js?v=88').then((mm) => mm.abrirJardim(THREE, ui, { chegada: true, mundo, oculto: true })).catch(() => null);
     const abrir = () => pre.then((w) => { if (w) w.mostrar(); });
     if (!atlasC) { abrir(); return; }
     camada('atlas').visivel = true; if (!modoTerra) entrarTerra(null);

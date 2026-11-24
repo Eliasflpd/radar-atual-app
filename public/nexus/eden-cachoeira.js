@@ -90,10 +90,14 @@ export async function criarCachoeira(THREE, cena, { P, hP, carregar, lixo, unif,
       im.frustumCulled = false; cena.add(im); lixo.push(im); }
   }
 
+  // 2b. A FACHADA REALISTA: a cachoeira na rocha coberta de mata (recorte em foto), presa no paredão de frente para o rio
+  const LF = 40, HF = 64, fachadaTex = await tex('cachoeira-real.png'); let comFachada = false;
+  if (fachadaTex) { fachadaTex.wrapS = fachadaTex.wrapT = THREE.ClampToEdgeWrapping; const g = new THREE.PlaneGeometry(LF, HF); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: fachadaTex, alphaTest: 0.5, color: 0xf2f2ec, side: THREE.DoubleSide }));   // a foto já tem a luz certa: sem iluminação por cima
+    const [fx, fz] = W(RL - 3.2, 0); m.position.set(fx, hP - 1.5 + HF / 2, fz); m.rotation.y = Math.atan2(-P.dx, -P.dz); m.renderOrder = 1; cena.add(m); lixo.push(g, m.material); comFachada = true; }
   // 3. A ÁGUA: a queda (cortina que desce rápida), o poço verde-esmeralda com espuma e a névoa que sobe
-  const RQ = RP + 0.2, MQ = 0.62, topo = hP + ALT, baseQ = hP - 0.55;
+  const RQ = comFachada ? RL - 3.6 : RP + 0.2, MQ = comFachada ? 0.13 : 0.62, topo = comFachada ? hP - 1.5 + HF * 0.86 : hP + ALT, baseQ = hP - 0.55;
   { const NA = 60, NY = 60, P3 = [], UV = [], I = [];
-    for (let j = 0; j <= NY; j++) for (let i = 0; i <= NA; i++) { const a = -MQ + 2 * MQ * i / NA, f = j / NY, y = topo + 0.6 - (topo + 0.6 - baseQ) * f, rr = RQ + (RL - RQ - 0.6) * Math.exp(-f * 9) + 0.3 * Math.sin(a * 30 + f * 4);
+    for (let j = 0; j <= NY; j++) for (let i = 0; i <= NA; i++) { const a = -MQ + 2 * MQ * i / NA, f = j / NY, y = topo + 0.6 - (topo + 0.6 - baseQ) * f, rr = comFachada ? RQ - 0.2 - f * 0.6 : RQ + (RL - RQ - 0.6) * Math.exp(-f * 9) + 0.3 * Math.sin(a * 30 + f * 4);
       const [x, z] = W(rr * Math.cos(a), rr * Math.sin(a)); P3.push(x, y, z); UV.push(i / NA, f); }
     for (let j = 0; j < NY; j++) for (let i = 0; i < NA; i++) { const k = j * (NA + 1) + i; I.push(k, k + 1, k + NA + 1, k + 1, k + NA + 2, k + NA + 1); }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); g.setIndex(I);
@@ -107,7 +111,7 @@ export async function criarCachoeira(THREE, cena, { P, hP, carregar, lixo, unif,
           float fios = fbm(q * vec2(1., .35)) * .6 + fbm(q * vec2(3., 1.) + 3.1) * .4; float bord = smoothstep(0., .08, vUv.x) * smoothstep(1., .92, vUv.x);
           float a = clamp(.35 + fios * .85, 0., 1.) * bord * (.75 + .25 * smoothstep(0., .1, y)); float branco = smoothstep(.45, .8, fios) * (.5 + y * .7);
           vec3 c = mix(vec3(.62, .78, .76), vec3(.97, .99, 1.), branco); c *= .9 + .2 * sin(vUv.x * 80. + t);
-          float f = 1. - exp(-dens * dens * length(vW - cameraPosition) * length(vW - cameraPosition)); gl_FragColor = vec4(mix(c, nevoa, f), a * .92);
+          float f = 1. - exp(-dens * dens * length(vW - cameraPosition) * length(vW - cameraPosition)); gl_FragColor = vec4(mix(c, nevoa, f), a * ${comFachada ? '.55' : '.92'});
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
         }` }));
