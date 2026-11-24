@@ -104,7 +104,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(toque ? 1.5 : 2, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
-  const cena = new THREE.Scene(); const NEVOA = new THREE.Color(E ? 0xc4cfa8 : G ? 0x141c30 : 0xd9cfb4), DENS = E ? 0.0011 : G ? 0.0019 : 0.00055;
+  const cena = new THREE.Scene(); const NEVOA = new THREE.Color(E ? 0xbfccc9 : G ? 0x141c30 : 0xd9cfb4), DENS = E ? 0.00075 : G ? 0.0019 : 0.00055;
   cena.fog = new THREE.FogExp2(NEVOA, DENS); cena.background = NEVOA;
   const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 9000);
   const SOL = (J ? new THREE.Vector3(0.62, 0.58, 0.5) : E ? new THREE.Vector3(-0.55, 0.42, -0.72) : G ? new THREE.Vector3(-0.188, 0.656, -0.731) : new THREE.Vector3(0.78, 0.32, -0.3)).normalize();   // sol no Éden; lua cheia no Getsêmani
@@ -119,7 +119,26 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   // CÉU: o 360° das montanhas do Éden ao fundo
   const ceuTex = await new THREE.TextureLoader().loadAsync((window.NEXUS_MIDIA || '/nexus') + MW.ceu).catch(() => new THREE.TextureLoader().loadAsync('/nexus' + MW.ceu).catch(() => null));
   let ceu = null;
-  if (ceuTex) { ceuTex.colorSpace = THREE.SRGBColorSpace; const g = new THREE.SphereGeometry(4000, 64, 32); g.scale(-1, 1, 1); ceu = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: ceuTex, color: E ? new THREE.Color(1.25, 1.2, 1.1) : G ? new THREE.Color(1, 1, 1.05) : new THREE.Color(1.12, 1.1, 1.05), fog: false, depthWrite: false })); ceu.renderOrder = -1; cena.add(ceu); lixo.push(ceuTex); }
+  // ÉDEN: céu de verdade feito na placa de vídeo — azul no alto, bruma no horizonte (da mesma cor da névoa, sem emenda), brilho do sol
+  // e nuvens altas que andam devagar; nada de paisagem pintada flutuando quando o drone sobe
+  if (E) { const g = new THREE.SphereGeometry(4000, 64, 32); g.scale(-1, 1, 1);
+    ceu = new THREE.Mesh(g, new THREE.ShaderMaterial({ depthWrite: false, fog: false, uniforms: { t: unif.t, nevoa: { value: NEVOA }, sol: { value: SOL.clone() } },
+      vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+      fragmentShader: `uniform float t; uniform vec3 nevoa, sol; varying vec3 vD;
+        float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+        float fbm(vec2 p){ float s = 0., a = .5; for (int i = 0; i < 6; i++) { s += a * n(p); p = p * 2.03 + 7.1; a *= .5; } return s; }
+        void main(){ vec3 d = normalize(vD); float y = d.y; vec3 zen = vec3(.18, .38, .72), meio = vec3(.46, .63, .86);
+          vec3 c = mix(meio, zen, smoothstep(.05, .7, y)); c = mix(nevoa * 1.06, c, smoothstep(-.02, .2, y));
+          float sd = max(dot(d, normalize(sol)), 0.); c += vec3(1., .85, .6) * (pow(sd, 8.) * .35 + pow(sd, 64.) * .6);
+          if (y > 0.) { vec2 q = d.xz / (y + .12) * 1.6 + vec2(t * .004, t * .002); float nu = fbm(q) * .65 + fbm(q * 2.7 + 3.) * .35; float cob = smoothstep(.5, .78, nu) * smoothstep(.0, .18, y);
+            vec3 nuvem = mix(vec3(.72, .74, .78), vec3(1.05, 1.02, .97), smoothstep(.55, .9, nu)) + vec3(1., .8, .55) * pow(sd, 6.) * .4; c = mix(c, nuvem, cob * .9); }
+          c = mix(c, nevoa * 1.06, 1. - smoothstep(-.06, .06, y));
+          gl_FragColor = vec4(c, 1.);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+        }` })); ceu.renderOrder = -1; cena.add(ceu); lixo.push(g, ceu.material); }
+  else if (ceuTex) { ceuTex.colorSpace = THREE.SRGBColorSpace; const g = new THREE.SphereGeometry(4000, 64, 32); g.scale(-1, 1, 1); ceu = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: ceuTex, color: E ? new THREE.Color(1.25, 1.2, 1.1) : G ? new THREE.Color(1, 1, 1.05) : new THREE.Color(1.12, 1.1, 1.05), fog: false, depthWrite: false })); ceu.renderOrder = -1; cena.add(ceu); lixo.push(ceuTex); }
 
   // RIOS: um rio vem do norte, passa ao lado da árvore da vida e se divide em quatro braços (Gn 2:10)
   const V = (x, z) => new THREE.Vector3(x, 0, z);
@@ -155,7 +174,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const leito = -1.6 * (1 - ss(Math.abs(z - ribZ(x)), 2.2, 7)); return encosta * abre + ondula * (0.35 + 0.65 * ss(az, 60, 220)) + leste + leito - 12 * (1 - abre); };
   const JC = J ? await import('/nexus/jerusalem-cidade.js?v=7') : null;
   const CQM = E ? await import('/nexus/eden-cachoeira.js?v=5') : null, CQ = E ? T2W(-110, 150) : null;   // a cachoeira: a oeste da trilha, uns 150 m de onde o drone pousa
-  const hBase0 = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z); return 2.6 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.3 * Math.sin(x * 0.031 + z * 0.027) + 0.5 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
+  const manchaMata = (x, z) => 0.5 + 0.5 * (0.55 * Math.sin(x / 170 + 1.3) * Math.cos(z / 210 - 0.7) + 0.3 * Math.sin((x + z) / 97 + 2.1) + 0.15 * Math.sin(x / 41 - z / 53));
+  const hBase0 = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z), dv = Math.max(0, distRio(x, z)[0] - 18), vale = 30 * THREE.MathUtils.smoothstep(dv, 8, 300) * (0.7 + 0.3 * Math.sin(x * 0.0041 + 1.1) * Math.cos(z * 0.0037)) * THREE.MathUtils.smoothstep(r, 20, 90); return vale + 2.0 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.0 * Math.sin(x * 0.031 + z * 0.027) + 0.4 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
   const CQR = CQM ? CQM.relevoCachoeira(hBase0, CQ) : null, hBase = CQR ? CQR.h : hBase0;
   const T = 4400, NS = toque ? 400 : 560;
   const geoT = new THREE.PlaneGeometry(T, T, NS, NS); geoT.rotateX(-Math.PI / 2);
@@ -164,6 +184,12 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const mar = THREE.MathUtils.smoothstep(d, w * 1.2, w * 2.4), longe = THREE.MathUtils.smoothstep(Math.hypot(x, z), 420, 700), v = 0.85 + 0.25 * Math.sin(x * 0.05) * Math.cos(z * 0.043);
     cores[i * 3] = (0.78 + 0.22 * (1 - mar)) * v * (1 + longe * 0.15); cores[i * 3 + 1] = (0.92 + 0.0 * mar) * v; cores[i * 3 + 2] = (0.72 + 0.18 * (1 - mar)) * v * (1 - longe * 0.1);
     const banco = 1 - THREE.MathUtils.smoothstep(d, w * 1.0, w * 1.35); if (banco > 0) { cores[i * 3] = cores[i * 3] * (1 - banco) + 0.85 * banco; cores[i * 3 + 1] = cores[i * 3 + 1] * (1 - banco) + 0.72 * banco; cores[i * 3 + 2] = cores[i * 3 + 2] * (1 - banco) + 0.55 * banco; } }
+  // as montanhas em volta: cobertas de mata, azuladas pela distância (perspectiva aérea), e no fim se desfazem na névoa
+  if (E) for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), r = Math.max(Math.abs(x), Math.abs(z)) * 0.6 + Math.hypot(x, z) * 0.4; if (r < 1300) continue; const k = THREE.MathUtils.smoothstep(r, 1300, 1900), hh = alturas[i], fim = THREE.MathUtils.smoothstep(r, 1850, 2150);
+    const alto = THREE.MathUtils.smoothstep(hh, 40, 110); cores[i * 3] = cores[i * 3] * (1 - k) + (0.30 + 0.25 * alto) * k; cores[i * 3 + 1] = cores[i * 3 + 1] * (1 - k) + (0.42 + 0.2 * alto) * k; cores[i * 3 + 2] = cores[i * 3 + 2] * (1 - k) + (0.38 + 0.3 * alto) * k; cores[i * 3] += (NEVOA.r * 0.82 - cores[i * 3]) * fim; cores[i * 3 + 1] += (NEVOA.g * 0.82 - cores[i * 3 + 1]) * fim; cores[i * 3 + 2] += (NEVOA.b * 0.82 - cores[i * 3 + 2]) * fim; }
+  if (E) for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), F = manchaMata(x, z), r = Math.hypot(x, z); if (r < 60) continue;
+    const mata = THREE.MathUtils.smoothstep(F, 0.47, 0.62) * THREE.MathUtils.smoothstep(r, 60, 120), campo = 1 - THREE.MathUtils.smoothstep(F, 0.36, 0.48);
+    cores[i * 3] *= 1 - 0.5 * mata + 0.1 * campo; cores[i * 3 + 1] *= 1 - 0.32 * mata + 0.04 * campo; cores[i * 3 + 2] *= 1 - 0.45 * mata - 0.1 * campo; }   // chão de mata fechada, escuro; campo, mais claro e dourado
   // na cachoeira: sem grama no poço, na laje de pedra e na boca da caverna; o chão ali é rocha escura e molhada
   if (CQ) for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), u = CQ.x - x, v = z - CQ.z, r = Math.hypot(u, v); if (r > 60) continue; const a = Math.atan2(v, u);
     const pedra = r < 31 || (Math.abs(a) < 1.45 && r < 46); if (!pedra) continue; relRio[i] = 0; const v0 = 0.42 + 0.08 * Math.sin(x * 0.7) * Math.cos(z * 0.6); cores[i * 3] = v0; cores[i * 3 + 1] = v0 * 1.02; cores[i * 3 + 2] = v0 * 0.95; }
@@ -381,6 +407,28 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       const [d, w] = distRio(x, z); if (d < w + folga) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; if (G && -tt.s > 3 && Math.abs(tt.lado) < -tt.s * 0.5 + 5 && -tt.s < 420) continue; if (G && -tt.s > 105) continue; } if (evitar.some((e) => Math.hypot(e.x - x, e.z - z) < e.r)) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
     return out; }
   const centroArv = { x: 0, z: 0, r: E ? 26 : G ? 9 : 30 };
+  // PAISAGEM ORGANIZADA (Éden): cada planta no seu lugar, como na natureza — mata ciliar ao longo dos rios, campos abertos e pomares
+  // nas encostas perto do centro, florestas fechadas em manchas grandes com bordas e clareiras, gigantes só no miolo da mata
+  const manchaPomar = (x, z) => 0.5 + 0.5 * (0.6 * Math.sin(x / 63 + 0.4) * Math.cos(z / 71 + 1.9) + 0.4 * Math.sin((x - z) / 37));
+  const zona = (x, z) => { const r = Math.hypot(x, z), F = manchaMata(x, z), [d, w] = distRio(x, z), dr = d - w;
+    const nucleo = THREE.MathUtils.smoothstep(F, 0.54, 0.68), borda = THREE.MathUtils.smoothstep(F, 0.42, 0.54) * (1 - nucleo), campo = 1 - THREE.MathUtils.smoothstep(F, 0.38, 0.5);
+    return { r, F, dr, nucleo, borda, campo, ciliar: 1 - THREE.MathUtils.smoothstep(dr, 6, 42), clareira: THREE.MathUtils.smoothstep(r, 55, 95), pomar: THREE.MathUtils.smoothstep(manchaPomar(x, z), 0.52, 0.7) }; };
+  function zonas(n, rMin, rMax, peso, minF = 0) { const out = []; let tent = 0;
+    while (out.length < n && tent++ < n * 40) { const a = rnd() * 6.283, r = Math.sqrt(rMin * rMin + rnd() * (rMax * rMax - rMin * rMin)), x = Math.cos(a) * r, z = Math.sin(a) * r;
+      if (minF && manchaMata(x, z) < minF) continue; if (naAgua(x, z)) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; }
+      if (rnd() > peso(zona(x, z))) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
+    return out; }
+  const T2 = toque ? 0.62 : 1;   // no tablet, menos plantas
+  const Z = {
+    gigante: (z) => z.nucleo * z.clareira * (1 - z.ciliar) * THREE.MathUtils.smoothstep(z.r, 120, 220),
+    alta: (z) => Math.max(z.nucleo, 0.45 * z.borda) * z.clareira * (1 - 0.6 * z.ciliar),
+    acai: (z) => Math.max(0.9 * z.ciliar, 0.45 * z.borda) * z.clareira,
+    fruto: (z) => (0.45 * z.campo + 0.8 * z.borda) * z.pomar * THREE.MathUtils.smoothstep(z.r, 35, 70) * (1 - 0.7 * z.nucleo),
+    florida: (z) => (0.55 * z.campo + 0.4 * z.borda) * (1 - z.nucleo) * THREE.MathUtils.smoothstep(z.r, 30, 60),
+    flores: (z) => (0.8 * z.campo + 0.35 * z.borda) * (1 - z.nucleo),
+    baixa: (z) => Math.max(0.85 * z.nucleo, 0.8 * z.ciliar, 0.6 * z.borda) * THREE.MathUtils.smoothstep(z.r, 18, 40),
+    heliconia: (z) => Math.max(0.9 * z.ciliar, 0.5 * z.borda, 0.4 * z.nucleo) * THREE.MathUtils.smoothstep(z.r, 18, 40),
+  };
   // VALE DE ELÁ: terebintos (Elá = terebinto), carvalhos e oliveiras nas encostas; trigo no fundo do vale; os dois exércitos e Golias
   if (L) {
     const naFaixa = (n, x0, x1, z0, z1) => Array.from({ length: n }, () => ({ x: x0 + rnd() * (x1 - x0), z: z0 + rnd() * (z1 - z0), s: 0.85 + rnd() * 0.3, vira: rnd() > 0.5 }));
@@ -415,19 +463,19 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   ]);
   if (E) await Promise.all([
     figuras('arvore-vida', [{ x: 0, z: 0, s: 1 }], 34, 0.5),
-    figuras('arvore-fruto-1', [...espalhar(toque ? 150 : 240, 30, 520, 7, [centroArv]), ...espalhar(Math.round((toque ? 150 : 240) * (toque ? 2.2 : 3)), 520, 520 * 2.7, 7, [centroArv])], 15, 1),
-    figuras('arvore-fruto-2', [...espalhar(toque ? 120 : 200, 30, 520, 7, [centroArv]), ...espalhar(Math.round((toque ? 120 : 200) * (toque ? 2.2 : 3)), 520, 520 * 2.7, 7, [centroArv])], 12, 1),
+    figuras('arvore-fruto-1', zonas(Math.round(560 * T2), 30, 1400, Z.fruto), 15, 1),
+    figuras('arvore-fruto-2', zonas(Math.round(460 * T2), 30, 1400, Z.fruto), 12, 1),
     figuras('palmeira', rios.flatMap((c) => Array.from({ length: 70 }, (_, k) => { const u = (k + 0.5) / 70, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = k % 2 ? 1 : -1, d = (c === rios[0] ? 16 : 11) + 6 + rnd() * 10; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.4, vira: rnd() > 0.5 }; })).filter((o) => Math.hypot(o.x, o.z) > 24 && !naAgua(o.x, o.z)), 14, 0.8),
-    figuras('arbusto-flores', [...espalhar(toque ? 260 : 420, 10, 400, 3.5, [centroArv]), ...espalhar(Math.round((toque ? 260 : 420) * (toque ? 2.2 : 3)), 400, 400 * 2.7, 3.5, [centroArv])], 1.6, 0.6),
+    figuras('arbusto-flores', zonas(Math.round(1100 * T2), 12, 1100, Z.flores), 1.6, 0.6),
     // A MATA FECHADA, em camadas: gigantes que furam a copa, árvores altas, palmeiras, bambus, samambaias e folhagens no chão
-    figuras('mata-sumauma', [...espalhar(toque ? 40 : 70, 45, 560, 12, [centroArv]), ...espalhar(Math.round((toque ? 40 : 70) * (toque ? 2.2 : 3)), 560, 560 * 2.7, 12, [centroArv])], 46, 0.35),
-    figuras('mata-arvore-alta', [...espalhar(toque ? 200 : 340, 28, 560, 8, [centroArv]), ...espalhar(Math.round((toque ? 200 : 340) * (toque ? 2.2 : 3)), 560, 560 * 2.7, 8, [centroArv])], 26, 0.6),
-    figuras('mata-palmeira-acai', [...espalhar(toque ? 160 : 260, 18, 450, 5, [centroArv]), ...espalhar(Math.round((toque ? 160 : 260) * (toque ? 2.2 : 3)), 450, 450 * 2.7, 5, [centroArv])], 13, 0.9),
+    figuras('mata-sumauma', zonas(Math.round(700 * T2), 110, 1500, Z.gigante, 0.54), 46, 0.35),
+    figuras('mata-arvore-alta', zonas(Math.round(7000 * T2), 50, 1500, Z.alta, 0.42), 26, 0.6),
+    figuras('mata-palmeira-acai', zonas(Math.round(2600 * T2), 30, 1400, Z.acai), 13, 0.9),
     figuras('mata-bambu', rios.flatMap((c) => Array.from({ length: 60 }, (_, k) => { const u = (k + rnd()) / 60, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = (c === rios[0] ? 16 : 11) + 4 + rnd() * 8; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.5, vira: rnd() > 0.5 }; })).filter((o) => Math.hypot(o.x, o.z) > 26 && !naAgua(o.x, o.z) && !(Math.abs(o.x) < 7 && o.z > 8 && o.z < 150)), 11, 0.9),
-    figuras('mata-samambaia', [...espalhar(toque ? 320 : 560, 12, 320, 3, [centroArv]), ...espalhar(Math.round((toque ? 320 : 560) * (toque ? 2.2 : 3)), 320, 320 * 2.7, 3, [centroArv])], 5, 0.8),
-    figuras('mata-folhagem', [...espalhar(toque ? 600 : 1000, 6, 260, 2.2, [centroArv]), ...espalhar(Math.round((toque ? 600 : 1000) * (toque ? 2.2 : 3)), 260, 260 * 2.7, 2.2, [centroArv])], 2.3, 0.7),
-    figuras('mata-heliconia', [...espalhar(toque ? 300 : 520, 6, 260, 2.2, [centroArv]), ...espalhar(Math.round((toque ? 300 : 520) * (toque ? 2.2 : 3)), 260, 260 * 2.7, 2.2, [centroArv])], 2.1, 0.7),
-    figuras('mata-arbusto', [...espalhar(toque ? 400 : 700, 5, 300, 2, [centroArv]), ...espalhar(Math.round((toque ? 400 : 700) * (toque ? 2.2 : 3)), 300, 300 * 2.7, 2, [centroArv])], 1.4, 0.6),
+    figuras('mata-samambaia', zonas(Math.round(1700 * T2), 14, 900, Z.baixa), 5, 0.8),
+    figuras('mata-folhagem', zonas(Math.round(2600 * T2), 10, 700, Z.baixa), 2.3, 0.7),
+    figuras('mata-heliconia', zonas(Math.round(1300 * T2), 10, 700, Z.heliconia), 2.1, 0.7),
+    figuras('mata-arbusto', zonas(Math.round(1900 * T2), 8, 800, Z.baixa), 1.4, 0.6),
   ]);
 
   // TRILHA de terra batida que leva até a árvore da vida
@@ -453,10 +501,10 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const beiraRio = (n) => Array.from({ length: n }, () => { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = ci === 0 ? 16 : 11, u = rnd() * 0.7, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (1.42 + rnd() * 0.5); return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => Math.hypot(o.x, o.z) > 24);
   const flores = !E ? [] : [['flor-lirios', 1.1, 1], ['flor-hibisco', 1.7, 0.4], ['flor-roxa', 1.0, 1], ['flor-ave-paraiso', 1.5, 0.7], ['flor-rosa', 0.8, 1.2]];
   await Promise.all([
-    ...flores.map(([nm, h, q]) => figuras(nm, [...beiraTrilha(Math.round((toque ? 40 : 70) * q), 1.25, 4.5), ...beiraRio(Math.round((toque ? 50 : 90) * q)), ...espalhar(Math.round((toque ? 40 : 80) * q), 8, 220, 2, [centroArv])], h, 0.5)),
-    E && figuras('arvore-florida', [...espalhar(toque ? 30 : 55, 25, 420, 6, [centroArv]), ...espalhar(Math.round((toque ? 30 : 55) * (toque ? 2.2 : 3)), 420, 420 * 2.7, 6, [centroArv])], 11, 0.8),
-    E && figuras('romazeira', [...beiraTrilha(toque ? 8 : 14, 5, 9), ...[...espalhar(toque ? 15 : 30, 20, 300, 4, [centroArv]), ...espalhar(Math.round((toque ? 15 : 30) * (toque ? 2.2 : 3)), 300, 300 * 2.7, 4, [centroArv])]], 5.5, 0.7),
-    E && figuras('videira', [...beiraTrilha(toque ? 8 : 14, 4.5, 8), ...[...espalhar(toque ? 12 : 24, 20, 260, 4, [centroArv]), ...espalhar(Math.round((toque ? 12 : 24) * (toque ? 2.2 : 3)), 260, 260 * 2.7, 4, [centroArv])]], 4.2, 0.5),
+    ...flores.map(([nm, h, q]) => figuras(nm, [...beiraTrilha(Math.round((toque ? 40 : 70) * q), 1.25, 4.5), ...beiraRio(Math.round((toque ? 50 : 90) * q)), ...(E ? zonas(Math.round((toque ? 120 : 220) * q), 10, 700, Z.flores) : espalhar(Math.round((toque ? 40 : 80) * q), 8, 220, 2, [centroArv]))], h, 0.5)),
+    E && figuras('arvore-florida', zonas(Math.round(220 * T2), 30, 1200, Z.florida), 11, 0.8),
+    E && figuras('romazeira', [...beiraTrilha(toque ? 8 : 14, 5, 9), ...zonas(Math.round(140 * T2), 25, 800, Z.fruto)], 5.5, 0.7),
+    E && figuras('videira', [...beiraTrilha(toque ? 8 : 14, 4.5, 8), ...zonas(Math.round(110 * T2), 25, 700, Z.fruto)], 4.2, 0.5),
   ]);
   // FEIXES DE SOL atravessando a copa (raios de luz no ar úmido), sempre em volta de quem anda
   const NF = toque ? 18 : 30, gF = new THREE.InstancedBufferGeometry(), qF = new THREE.PlaneGeometry(1, 1); qF.translate(0, 0.5, 0); gF.index = qF.index; gF.attributes.position = qF.attributes.position; gF.attributes.uv = qF.attributes.uv; gF.instanceCount = NF;
@@ -765,7 +813,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   function quadro(agora) { if (!ativo) return; const dt = Math.min(0.05, (agora - antes) / 1000); antes = agora; const t = agora / 1000; unif.t.value = t;
     if (indoLonge) { const q = Math.min(1, (agora - indoLonge.t0) / indoLonge.dur), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; camera.position.lerpVectors(indoLonge.de, indoLonge.para, e); camera.position.y += Math.sin(q * Math.PI) * 25; camera.lookAt(indoLonge.olhar);
       if (q >= 1) { const f = indoLonge.fim; indoLonge = null; f(); } renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); return; }
-    { const hc = camera.position.y - altura(camera.position.x, camera.position.z), kN = 1 - 0.8 * THREE.MathUtils.smoothstep(hc, 25, 260); cena.fog.density = DENS * kN; unif.dens.value = DENS * kN; }   // do alto (drone) a névoa abre: o jardim aparece inteiro, sem a tela clara
+    { const hc = camera.position.y - altura(camera.position.x, camera.position.z), kN = 1 - 0.7 * THREE.MathUtils.smoothstep(hc, 25, 260); cena.fog.density = DENS * kN; unif.dens.value = DENS * kN; }   // do alto (drone) a névoa abre: o jardim aparece inteiro, sem a tela clara
     if (voando) { const q = Math.min(1, (agora - t0) / DUR), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; const p = voo.getPointAt(e); const hc = altura(p.x, p.z); camera.position.set(p.x, Math.max(hc + 1.7, hc + p.y + 1.7), p.z);
       const olhaPara = new THREE.Vector3(0, 10 * (1 - e) + 6 * e, 0); camera.lookAt(olhaPara); const fw = new THREE.Vector3(); camera.getWorldDirection(fw); yaw = Math.atan2(-fw.x, -fw.z); pitch = Math.asin(fw.y); if (modo === 'primeira' || !avatar) eu.set(p.x, 0, p.z); else { eu.copy(VT(2.5 * Math.sin(I / 13), I)); rumo = Math.atan2(-TD.x, -TD.z); } camPos.copy(camera.position); camIni = true;
       if (q >= 1) pularChegada(); }
