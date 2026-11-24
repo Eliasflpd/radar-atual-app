@@ -152,7 +152,6 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     [FORQ, V(130, 150), V(260, 330), V(330, 560), V(520, 900), V(800, 1500), V(1000, 2100)],
     [FORQ, V(10, 170), V(-90, 330), V(-160, 560), V(-260, 900), V(-420, 1500), V(-520, 2100)],
     [FORQ, V(-60, 90), V(-230, 120), V(-430, 60), V(-900, 140), V(-1500, 260), V(-2100, 180)],
-    [V(-345, -128), V(-285, -100), V(-225, -78), V(-170, -52), V(-125, -12), V(-92, 38), V(-80, 86)],   // o riacho da clareira (nasce na pequena queda)
   ] : []).map((p, ri) => {
     // rio de verdade não corre em linha reta: meandros (curvas que se alternam), com comprimento de onda de umas 10 larguras;
     // perto da árvore da vida e da trilha as curvas são suaves, para a água não cortar o caminho
@@ -181,7 +180,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const JC = J ? await import('/nexus/jerusalem-cidade.js?v=7') : null;
   const CQM = E ? await import('/nexus/eden-cachoeira.js?v=9') : null, CQ = E ? (() => { const c = rios[0]; let uu = 0.5; for (let k = 0; k <= 800; k++) { const u = k / 800, q = c.getPointAt(u); if (Math.hypot(q.x, q.z) < 420) { uu = u; break; } } const q = c.getPointAt(uu), tg = c.getTangentAt(uu); return { x: q.x, z: q.z, dx: -tg.x, dz: -tg.z, u: uu }; })() : null;   // a cachoeira fica NO rio principal, uns 420 m rio acima da árvore da vida
   const manchaMata = (x, z) => 0.5 + 0.5 * (0.55 * Math.sin(x / 170 + 1.3) * Math.cos(z / 210 - 0.7) + 0.3 * Math.sin((x + z) / 97 + 2.1) + 0.15 * Math.sin(x / 41 - z / 53));
-  const hBase0 = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z), dv = Math.max(0, distRio(x, z)[0] - 18), vale = 30 * THREE.MathUtils.smoothstep(dv, 8, 300) * (0.7 + 0.3 * Math.sin(x * 0.0041 + 1.1) * Math.cos(z * 0.0037)) * THREE.MathUtils.smoothstep(r, 20, 90); return vale + (E ? 24 * Math.exp(-((x + 372) ** 2 + (z + 140) ** 2) / 4200) : 0) + 2.0 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.0 * Math.sin(x * 0.031 + z * 0.027) + 0.4 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
+  const hBase0 = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z), dv = Math.max(0, distRio(x, z)[0] - 18), vale = 30 * THREE.MathUtils.smoothstep(dv, 8, 300) * (0.7 + 0.3 * Math.sin(x * 0.0041 + 1.1) * Math.cos(z * 0.0037)) * THREE.MathUtils.smoothstep(r, 20, 90); return vale + 2.0 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.0 * Math.sin(x * 0.031 + z * 0.027) + 0.4 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
   const CQR = CQM ? CQM.relevoCachoeira(hBase0, CQ) : null, hBase = CQR ? CQR.h : hBase0;
   const T = 4400, NS = toque ? 400 : 560;
   const geoT = new THREE.PlaneGeometry(T, T, NS, NS); geoT.rotateX(-Math.PI / 2);
