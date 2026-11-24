@@ -520,7 +520,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
 
   // ANIMAIS que andam devagar pelo jardim (o leão descansa)
   // só animais tirados de VÍDEO REAL (andam de verdade); as figuras paradas saíram a pedido do Elias (22/11/2026)
-  const especies = !E ? [] : [
+  const especies = true ? [] : [
     { n: 'elefante-anda', h: 3.3, q: 3, anda: 1.0 }, { n: 'leao-anda', h: 1.3, q: 3, anda: 1.25 },
   ];
   const bichos = [];
@@ -542,6 +542,12 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       if (b.f.Q) { b.f.Q[b.i] = (b.f.Q[b.i] + dt * (0.75 + 0.25 * Math.sin(performance.now() / 1700 + b.fase)) * b.f.pc.quadros / b.f.pc.dur) % b.f.pc.quadros; b.f.g.attributes.iQuadro.needsUpdate = true; }
       b.f.P[b.i * 3] = b.x; b.f.P[b.i * 3 + 1] = altura(b.x, b.z) - 0.1 + (b.f.Q ? 0 : Math.sin(b.fase += dt * b.e.anda * 2.6) * 0.006 * b.e.h); b.f.P[b.i * 3 + 2] = b.z; b.f.g.attributes.iPos.needsUpdate = true; } }
 
+  // ANIMAIS 3D (Éden): carregados por trás; aparecem já compilados, sem engasgo
+  let A3D = null;
+  if (E) setTimeout(() => import('/nexus/eden-animais3d.js?v=2').then((m) => m.criarAnimais3D(THREE, cena, { base, altura, naAgua, distRio, rios, rnd, lixo, toque,
+      posicoesPerto: { elefante: [T2W(-26, 22).x, T2W(-26, 22).z], leoa: [T2W(-16, 50).x, T2W(-16, 50).z], tigre: [T2W(16, 58).x, T2W(16, 58).z] } }))
+    .then(async (a) => { if (!ativo) return; a.bichos.forEach((b) => { b.raiz.visible = false; if (b.sombra) b.sombra.visible = false; }); try { if (renderer.compileAsync) await renderer.compileAsync(cena, camera); } catch (_) {} a.bichos.forEach((b) => { b.raiz.visible = true; if (b.sombra) b.sombra.visible = true; }); A3D = a; })
+    .catch((e) => console.warn('animais 3D', e)), 2500);
   // AVES em voo circular e BORBOLETAS perto das flores: tudo calculado na placa de vídeo
   async function voadores(nome, n, tam, modo) {
     const tex = await carregar(nome + '.png'); if (!tex) return; lixo.push(tex);
@@ -706,6 +712,9 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     if (CQO && /cachoeira|queda d.?agua|catarata/.test(q)) { const [x, z] = CQO.frente; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); yaw = Math.atan2(-(CQ.x - x), -(CQ.z - z)); pitch = 0.32; return 'Aqui está a cachoeira. A caverna fica atrás da queda: vá pela laje de pedra à esquerda ou à direita, ou me peça para entrar.'; }
     if (CQO && /caverna|gruta|atras da (agua|cachoeira|queda)/.test(q)) { const fundo = /fundo|salao|lago/.test(q); const [x, z] = fundo ? CQO.salao : CQO.boca; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); CQO.entrar(); yaw = fundo ? Math.atan2(-(CQO.boca[0] - x), -(CQO.boca[1] - z)) : Math.atan2(-(CQO.salao[0] - x), -(CQO.salao[1] - z)); pitch = 0.05; return fundo ? 'No fundo da caverna, no salão com a abertura no teto e o lago.' : 'Dentro da caverna, atrás da cortina de água. Siga em frente até o salão.'; }
     // VER UM ANIMAL de perto: 'me mostre o elefante', 'quero ver o leão'
+    if (E && A3D) { const M3 = [[/elefante/, 'elefante', 'o elefante'], [/leao|leoa|leoes/, 'leoa', 'a leoa'], [/tigre/, 'tigre', 'o tigre'], [/sucuri|anaconda|cobra|serpente/, 'sucuri', 'a sucuri'], [/arara|passaro|ave/, 'arara', 'as araras'], [/animais|bichos|animal/, 'elefante', 'os animais']];
+      const k = M3.find(([re]) => re.test(q)); if (k) { const b = A3D.encontrar(k[1]); if (b) { const voa = b.e.voa, dist = voa ? 30 : 5 + b.e.h * 3.2, ang = rnd() * 6.283; let x = b.x + Math.sin(ang) * dist, z = b.z + Math.cos(ang) * dist; if (naAgua(x, z)) { x = b.x - Math.sin(ang) * dist; z = b.z - Math.cos(ang) * dist; }
+          pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); yaw = Math.atan2(-(b.x - x), -(b.z - z)); pitch = voa ? 0.45 : -0.05; if (!voa) A3D.fazerAndarDeLado(b, eu); return `Aqui está ${k[2]}.`; } } }
     if (E && bichos.length) { const NOMES = [[/elefante/, ['elefante-anda'], 'o elefante'], [/leao|leoa|leoes/, ['leao-anda', 'leao'], 'o leão'], [/girafa/, ['girafa'], 'a girafa'], [/tigre/, ['tigre', 'tigre-rugindo', 'tigre-deitado'], 'o tigre'], [/cervo|veado/, ['cervo'], 'o cervo'], [/onca/, ['onca'], 'a onça'], [/cordeiro|ovelha/, ['cordeiro'], 'o cordeiro'], [/pavao/, ['pavao'], 'o pavão'], [/capivara/, ['capivara'], 'a capivara'], [/anta/, ['anta'], 'a anta'], [/animais|bichos|animal/, ['elefante-anda', 'leao-anda'], 'os animais']];
       const k = NOMES.find(([re]) => re.test(q)); if (k) { let alvo = null; for (const nm of k[1]) { const lst = bichos.filter((b) => b.e.n === nm); if (lst.length) { alvo = lst.reduce((a, b) => Math.hypot(b.x - eu.x, b.z - eu.z) < Math.hypot(a.x - eu.x, a.z - eu.z) ? b : a); break; } }
         if (alvo) { const dist = 4 + alvo.e.h * 2.4, dx = eu.x - alvo.x, dz = eu.z - alvo.z, d = Math.hypot(dx, dz) || 1; let x = alvo.x + dx / d * dist, z = alvo.z + dz / d * dist; if (naAgua(x, z)) { x = alvo.x - dx / d * dist; z = alvo.z - dz / d * dist; }
@@ -858,7 +867,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
         : J ? (() => { let k = null, dm = 1e9; for (const [nm, [lx, lz]] of Object.entries(JC.LUGARES)) { const d = Math.hypot(eu.x - lx, eu.z - lz), lim = nm === 'santuario' ? 70 : nm === 'palacio' ? 90 : 40; if (d < lim && d < dm) { dm = d; k = nm; } } return k || (Math.abs(eu.x) < 150 && Math.abs(eu.z) < 242 ? 'chegada' : 'bom'); })()
         : (dPres < 5 ? 'presenca' : Math.hypot(eu.x + TD.x * 12, eu.z + TD.z * 12) < 7 ? 'cidade' : dArv < 10 ? 'rocha' : tochaPerto(eu.x, eu.z) < 30 ? 'tochas' : dArv < 45 ? 'vigiai' : dArv < 180 ? 'chegada' : 'bom'));
     }
-    moverBichos(dt); if (tochas.mover) tochas.mover(t); if (quadroJ) quadroJ(camera.position);
+    moverBichos(dt); if (A3D) A3D.atualizar(dt, t, eu); if (tochas.mover) tochas.mover(t); if (quadroJ) quadroJ(camera.position);
     caminhoPresenca.getPointAt(((t / 160) % 1 + 1) % 1, posPresenca); presenca.position.set(posPresenca.x, altura(posPresenca.x, posPresenca.z), posPresenca.z); brilho.material.opacity = 0.75 + 0.25 * Math.sin(t * 1.7);
     if (voando) matGrama.uniforms.centro.value.set(camera.position.x, camera.position.z); else matGrama.uniforms.centro.value.set(eu.x, eu.z); grama.visible = camera.position.y - altura(camera.position.x, camera.position.z) < 25;
     if (avatar && voando) { avatar.visible = modo === 'terceira'; avatar.position.set(eu.x, altura(eu.x, eu.z), eu.z); avatar.rotation.y = rumo + (pecas.explorador.giro || 0); }
