@@ -152,16 +152,22 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     [FORQ, V(130, 150), V(260, 330), V(330, 560), V(520, 900), V(800, 1500), V(1000, 2100)],
     [FORQ, V(10, 170), V(-90, 330), V(-160, 560), V(-260, 900), V(-420, 1500), V(-520, 2100)],
     [FORQ, V(-60, 90), V(-230, 120), V(-430, 60), V(-900, 140), V(-1500, 260), V(-2100, 180)],
+    [V(-345, -128), V(-285, -100), V(-225, -78), V(-170, -52), V(-125, -12), V(-92, 38), V(-80, 86)],   // o riacho da clareira (nasce na pequena queda)
   ] : []).map((p, ri) => {
     // rio de verdade não corre em linha reta: meandros (curvas que se alternam), com comprimento de onda de umas 10 larguras;
     // perto da árvore da vida e da trilha as curvas são suaves, para a água não cortar o caminho
     const base = new THREE.CatmullRomCurve3(p, false, 'catmullrom', 0.5), L = base.getLength(), n = Math.max(8, Math.round(L / 22)), out = [], fase = ri * 2.1;
     for (let k = 0; k <= n; k++) { const u = k / n, q = base.getPointAt(u), tg = base.getTangentAt(u), sArc = u * L, r = Math.hypot(q.x, q.z);
-      const A = (ri === 0 ? 48 : 40) * (0.4 * THREE.MathUtils.smoothstep(r, 55, 160) + 0.6 * THREE.MathUtils.smoothstep(r, 170, 520)) * THREE.MathUtils.smoothstep(sArc, 0, 45) * THREE.MathUtils.smoothstep(L - sArc, 0, 80);
+      const A = (ri === 0 ? 48 : ri === 5 ? 7 : 40) * (0.4 * THREE.MathUtils.smoothstep(r, 55, 160) + 0.6 * THREE.MathUtils.smoothstep(r, 170, 520)) * THREE.MathUtils.smoothstep(sArc, 0, 45) * THREE.MathUtils.smoothstep(L - sArc, 0, 80);
       const off = A * (Math.sin(sArc / 165 + fase) + 0.45 * Math.sin(sArc / 61 + fase * 1.7) + 0.2 * Math.sin(sArc / 29 + fase * 0.6));
       out.push(new THREE.Vector3(q.x - tg.z * off, 0, q.z + tg.x * off)); }
     return new THREE.CatmullRomCurve3(out, false, 'catmullrom', 0.5); });
-  const amostras = []; rios.forEach((c, i) => { for (let k = 0; k <= 700; k++) { const p = c.getPointAt(k / 700); amostras.push(p.x, p.z, i === 0 ? 16 : 11); } });
+  const LARG = (i) => (i === 0 ? 16 : i === 5 ? 4.2 : 11);   // largura de cada curso d'água (o riacho é estreito)
+  // distância ao riacho da clareira (só ele): o chão em volta vira terra escura com musgo, sem capim alto
+  const ptsRiacho = []; if (E && rios[5]) for (let k = 0; k <= 160; k++) { const p = rios[5].getPointAt(k / 160); ptsRiacho.push(p.x, p.z); }
+  const bbR = [1e9, -1e9, 1e9, -1e9]; for (let k = 0; k < ptsRiacho.length; k += 2) { bbR[0] = Math.min(bbR[0], ptsRiacho[k] - 40); bbR[1] = Math.max(bbR[1], ptsRiacho[k] + 40); bbR[2] = Math.min(bbR[2], ptsRiacho[k + 1] - 40); bbR[3] = Math.max(bbR[3], ptsRiacho[k + 1] + 40); }
+  const dRiacho = (x, z) => { if (!ptsRiacho.length || x < bbR[0] || x > bbR[1] || z < bbR[2] || z > bbR[3]) return 1e9; let m = 1e9; for (let k = 0; k < ptsRiacho.length; k += 2) { const dx = x - ptsRiacho[k], dz = z - ptsRiacho[k + 1], q = dx * dx + dz * dz; if (q < m) m = q; } return Math.sqrt(m); };
+  const amostras = []; rios.forEach((c, i) => { for (let k = 0; k <= 700; k++) { const p = c.getPointAt(k / 700); amostras.push(p.x, p.z, LARG(i)); } });
   const CEL = 60, grade = new Map(); for (let i = 0; i < amostras.length; i += 3) { const k = (Math.floor(amostras[i] / CEL) + 2048) * 4096 + Math.floor(amostras[i + 1] / CEL) + 2048; if (!grade.has(k)) grade.set(k, []); grade.get(k).push(i); }
   function distRio(x, z) { let m = 1e9, w = 11; const cx = Math.floor(x / CEL), cz = Math.floor(z / CEL); for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) { const l = grade.get((cx + a + 2048) * 4096 + cz + b + 2048); if (!l) continue; for (const i of l) { const dx = x - amostras[i], dz = z - amostras[i + 1], d = dx * dx + dz * dz; if (d < m) { m = d; w = amostras[i + 2]; } } } return [m < 1e9 ? Math.sqrt(m) : 999, w]; }
 
@@ -175,7 +181,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const JC = J ? await import('/nexus/jerusalem-cidade.js?v=7') : null;
   const CQM = E ? await import('/nexus/eden-cachoeira.js?v=9') : null, CQ = E ? (() => { const c = rios[0]; let uu = 0.5; for (let k = 0; k <= 800; k++) { const u = k / 800, q = c.getPointAt(u); if (Math.hypot(q.x, q.z) < 420) { uu = u; break; } } const q = c.getPointAt(uu), tg = c.getTangentAt(uu); return { x: q.x, z: q.z, dx: -tg.x, dz: -tg.z, u: uu }; })() : null;   // a cachoeira fica NO rio principal, uns 420 m rio acima da árvore da vida
   const manchaMata = (x, z) => 0.5 + 0.5 * (0.55 * Math.sin(x / 170 + 1.3) * Math.cos(z / 210 - 0.7) + 0.3 * Math.sin((x + z) / 97 + 2.1) + 0.15 * Math.sin(x / 41 - z / 53));
-  const hBase0 = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z), dv = Math.max(0, distRio(x, z)[0] - 18), vale = 30 * THREE.MathUtils.smoothstep(dv, 8, 300) * (0.7 + 0.3 * Math.sin(x * 0.0041 + 1.1) * Math.cos(z * 0.0037)) * THREE.MathUtils.smoothstep(r, 20, 90); return vale + 2.0 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.0 * Math.sin(x * 0.031 + z * 0.027) + 0.4 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
+  const hBase0 = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z), dv = Math.max(0, distRio(x, z)[0] - 18), vale = 30 * THREE.MathUtils.smoothstep(dv, 8, 300) * (0.7 + 0.3 * Math.sin(x * 0.0041 + 1.1) * Math.cos(z * 0.0037)) * THREE.MathUtils.smoothstep(r, 20, 90); return vale + (E ? 24 * Math.exp(-((x + 372) ** 2 + (z + 140) ** 2) / 4200) : 0) + 2.0 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.0 * Math.sin(x * 0.031 + z * 0.027) + 0.4 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
   const CQR = CQM ? CQM.relevoCachoeira(hBase0, CQ) : null, hBase = CQR ? CQR.h : hBase0;
   const T = 4400, NS = toque ? 400 : 560;
   const geoT = new THREE.PlaneGeometry(T, T, NS, NS); geoT.rotateX(-Math.PI / 2);
@@ -190,6 +196,12 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   if (E) for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), F = manchaMata(x, z), r = Math.hypot(x, z); if (r < 60) continue;
     const mata = THREE.MathUtils.smoothstep(F, 0.47, 0.62) * THREE.MathUtils.smoothstep(r, 60, 120), campo = 1 - THREE.MathUtils.smoothstep(F, 0.36, 0.48);
     cores[i * 3] *= 1 - 0.5 * mata + 0.1 * campo; cores[i * 3 + 1] *= 1 - 0.32 * mata + 0.04 * campo; cores[i * 3 + 2] *= 1 - 0.45 * mata - 0.1 * campo; }   // chão de mata fechada, escuro; campo, mais claro e dourado
+  window.__clrChao = 0; if (E && ptsRiacho.length) for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), d = dRiacho(x, z); if (d > 30) continue; window.__clrChao++; const k = 1 - THREE.MathUtils.smoothstep(d, 18, 30);
+    if (d > 4) relRio[i] = Math.min(relRio[i], 1.2 + 0.6 * THREE.MathUtils.smoothstep(d, 20, 30));   // sem capim alto na clareira
+    const trilha = 1 - THREE.MathUtils.smoothstep(Math.abs(d - 7.5), 0.6, 1.8), mus = 0.5 + 0.5 * Math.sin(x * 0.9) * Math.cos(z * 0.7);
+    const r0 = 0.36 + 0.06 * mus, g0 = 0.40 + 0.12 * mus, b0 = 0.24, rT = 0.50, gT = 0.40, bT = 0.28;
+    const R = r0 * (1 - trilha) + rT * trilha, G = g0 * (1 - trilha) + gT * trilha, B = b0 * (1 - trilha) + bT * trilha;
+    cores[i * 3] += (R - cores[i * 3]) * k; cores[i * 3 + 1] += (G - cores[i * 3 + 1]) * k; cores[i * 3 + 2] += (B - cores[i * 3 + 2]) * k; }
   // na cachoeira: sem grama no poço, na laje de pedra e na boca da caverna; o chão ali é rocha escura e molhada
   if (CQ) for (let i = 0; i < pos.count; i++) { const x = pos.getX(i), z = pos.getZ(i), u = CQ.x - x, v = z - CQ.z, r = Math.hypot(u, v); if (r > 60) continue; const a = Math.atan2(v, u);
     const pedra = r < 31 || (Math.abs(a) < 1.45 && r < 46); if (!pedra) continue; relRio[i] = 0; const v0 = 0.42 + 0.08 * Math.sin(x * 0.7) * Math.cos(z * 0.6); cores[i * 3] = v0; cores[i * 3 + 1] = v0 * 1.02; cores[i * 3 + 2] = v0 * 0.95; }
@@ -205,7 +217,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   // O RIO: largo, fundo e com correnteza forte. Raso e transparente nas margens (vê-se a areia e as pedras do fundo),
   // escuro como esmeralda no meio (a profundidade engole a luz), ondas que descem com a corrente, linhas de espuma,
   // reflexo real das árvores e do céu (espelho calculado a cada quadro) e água branca batendo nas pedras.
-  const PEDRAS = []; rios.forEach((c, i) => { const w = i === 0 ? 16 : 11; for (let k = 0; k < (i === 0 ? 14 : 7); k++) { const u = 0.04 + rnd() * 0.3, p = c.getPointAt(u), tg = c.getTangentAt(u), lado = (rnd() * 2 - 1) * w * 0.85; const x = p.x - tg.z * lado, z = p.z + tg.x * lado; if (Math.hypot(x, z) < 24) continue; PEDRAS.push({ x, z, r: 0.8 + rnd() * 2.2 }); } });
+  const PEDRAS = []; rios.forEach((c, i) => { const w = LARG(i); for (let k = 0; k < (i === 0 ? 14 : 7); k++) { const u = 0.04 + rnd() * 0.3, p = c.getPointAt(u), tg = c.getTangentAt(u), lado = (rnd() * 2 - 1) * w * 0.85; const x = p.x - tg.z * lado, z = p.z + tg.x * lado; if (Math.hypot(x, z) < 24) continue; PEDRAS.push({ x, z, r: 0.8 + rnd() * 2.2 }); } });
   const NPED = Math.min(48, PEDRAS.length), pedU = Array.from({ length: 48 }, (_, i) => i < NPED ? new THREE.Vector3(PEDRAS[i].x, PEDRAS[i].z, PEDRAS[i].r) : new THREE.Vector3(1e5, 1e5, 0));
   const reflRT = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
   const reflCam = new THREE.PerspectiveCamera(); const texMat = new THREE.Matrix4();
@@ -254,7 +266,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
 #include <colorspace_fragment>
       }` });
   const aguas = [];
-  for (const [i, c] of rios.entries()) { await folga(); const N = 1700, M = 14, w = i === 0 ? 16 : 11, P = [], U = [], TG = [], PR = [], I = []; let s = 0, ant = null;
+  for (const [i, c] of rios.entries()) { await folga(); const N = 1700, M = 14, w = LARG(i), P = [], U = [], TG = [], PR = [], I = []; let s = 0, ant = null;
     for (let k = 0; k <= N; k++) { const u = k / N, p = c.getPointAt(u), tg = c.getTangentAt(u), lado = new THREE.Vector3(-tg.z, 0, tg.x).normalize(); if (ant) s += p.distanceTo(ant); ant = p;
       for (let j = 0; j <= M; j++) { const a = j / M, q = p.clone().addScaledVector(lado, (a * 2 - 1) * w * 1.08), y = hBase(q.x, q.z) - 1.0; P.push(q.x, y, q.z); U.push(a, s); TG.push(tg.x, 0, tg.z); PR.push(Math.max(0, y - altura(q.x, q.z))); } }
     for (let k = 0; k < N; k++) for (let j = 0; j < M; j++) { const a = k * (M + 1) + j, b = a + M + 1; I.push(a, b, a + 1, a + 1, b, b + 1); }
@@ -294,7 +306,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
       }` });
-  for (const [i, c] of rios.entries()) { await folga(); const w = i === 0 ? 16 : 11, N = 1700, M = 6;
+  for (const [i, c] of rios.entries()) { await folga(); const w = LARG(i), N = 1700, M = 6;
     for (const lado of [-1, 1]) { const P = [], MM = [], LS = [], I = []; let s = 0, ant = null;
       for (let k = 0; k <= N; k++) { const u = k / N, p = c.getPointAt(u), tg = c.getTangentAt(u), ld = new THREE.Vector3(-tg.z, 0, tg.x).normalize(); if (ant) s += p.distanceTo(ant); ant = p;
         for (let j = 0; j <= M; j++) { const m = j / M, off = w * (0.85 + m * 0.55), q = p.clone().addScaledVector(ld, lado * off); P.push(q.x, Math.max(altura(q.x, q.z), hBase(q.x, q.z) - 1.05) + 0.2, q.z); MM.push(m); LS.push(s); } }
@@ -304,7 +316,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   lixo.push(matMargem);
   { const gq = new THREE.IcosahedronGeometry(1, 2), pq = gq.attributes.position; for (let i = 0; i < pq.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(pq, i), k = 1 + 0.18 * Math.sin(v.x * 4.1 + v.z * 3.3) * Math.cos(v.y * 3.7); pq.setXYZ(i, v.x * k * 1.3, v.y * k * 0.55, v.z * k); } gq.computeVertexNormals();
     const NQ = !rios.length ? 0 : toque ? 600 : 1300, mq = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), iq = new THREE.InstancedMesh(gq, mq, NQ), mt = new THREE.Matrix4(), qq = new THREE.Quaternion(); let k = 0;
-    for (let tent = 0; k < NQ && tent < NQ * 6; tent++) { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = ci === 0 ? 16 : 11, u = rnd() * 0.75, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (0.98 + rnd() * 0.4), x = p.x - tg.z * sx * d, z = p.z + tg.x * sx * d;
+    for (let tent = 0; k < NQ && tent < NQ * 6; tent++) { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = LARG(ci), u = rnd() * 0.75, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (0.98 + rnd() * 0.4), x = p.x - tg.z * sx * d, z = p.z + tg.x * sx * d;
       if (Math.hypot(x, z) < 22) continue; const sc = 0.18 + Math.pow(rnd(), 2.5) * 0.9; qq.setFromEuler(new THREE.Euler(rnd() * 0.5, rnd() * 6.28, rnd() * 0.5)); mt.compose(new THREE.Vector3(x, Math.max(altura(x, z), hBase(x, z) - 1.15) - sc * 0.15, z), qq, new THREE.Vector3(sc, sc, sc)); iq.setMatrixAt(k, mt); iq.setColorAt(k, new THREE.Color().setHSL(0.09 + rnd() * 0.06, 0.1 + rnd() * 0.12, 0.3 + rnd() * 0.2)); k++; }
     iq.count = k; cena.add(iq); lixo.push(gq, mq); }
   // pedras grandes no rio (a água bate nelas e faz espuma)
@@ -416,7 +428,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     return { r, F, dr, nucleo, borda, campo, ciliar: 1 - THREE.MathUtils.smoothstep(dr, 6, 42), clareira: THREE.MathUtils.smoothstep(r, 55, 95), pomar: THREE.MathUtils.smoothstep(manchaPomar(x, z), 0.52, 0.7) }; };
   function zonas(n, rMin, rMax, peso, minF = 0) { const out = []; let tent = 0;
     while (out.length < n && tent++ < n * 40) { const a = rnd() * 6.283, r = Math.sqrt(rMin * rMin + rnd() * (rMax * rMax - rMin * rMin)), x = Math.cos(a) * r, z = Math.sin(a) * r;
-      if (minF && manchaMata(x, z) < minF) continue; if (naAgua(x, z)) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; }
+      if (minF && manchaMata(x, z) < minF) continue; if (naAgua(x, z) || dRiacho(x, z) < 10) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; }
       if (rnd() > peso(zona(x, z))) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
     return out; }
   const T2 = toque ? 0.62 : 1;   // no tablet, menos plantas
@@ -468,13 +480,13 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     figuras('arvore-vida', [{ x: 0, z: 0, s: 1 }], 34, 0.5),
     figuras('arvore-fruto-1', zonas(Math.round(560 * T2), 30, 1400, Z.fruto), 15, 1),
     figuras('arvore-fruto-2', zonas(Math.round(460 * T2), 30, 1400, Z.fruto), 12, 1),
-    figuras('palmeira', rios.flatMap((c) => Array.from({ length: 70 }, (_, k) => { const u = (k + 0.5) / 70, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = k % 2 ? 1 : -1, d = (c === rios[0] ? 16 : 11) + 6 + rnd() * 10; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.4, vira: rnd() > 0.5 }; })).filter((o) => Math.hypot(o.x, o.z) > 24 && !naAgua(o.x, o.z)), 14, 0.8),
+    figuras('palmeira', rios.flatMap((c) => Array.from({ length: 70 }, (_, k) => { const u = (k + 0.5) / 70, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = k % 2 ? 1 : -1, d = (LARG(rios.indexOf(c))) + 6 + rnd() * 10; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.4, vira: rnd() > 0.5 }; })).filter((o) => Math.hypot(o.x, o.z) > 24 && !naAgua(o.x, o.z)), 14, 0.8),
     figuras('arbusto-flores', zonas(Math.round(1100 * T2), 12, 1100, Z.flores), 1.6, 0.6),
     // A MATA FECHADA, em camadas: gigantes que furam a copa, árvores altas, palmeiras, bambus, samambaias e folhagens no chão
     figuras('mata-sumauma', zonas(Math.round(700 * T2), 110, 1500, Z.gigante, 0.54), 46, 0.35),
     figuras('mata-arvore-alta', zonas(Math.round(7000 * T2), 50, 1500, Z.alta, 0.42), 26, 0.6),
     figuras('mata-palmeira-acai', zonas(Math.round(2600 * T2), 30, 1400, Z.acai), 13, 0.9),
-    figuras('mata-bambu', rios.flatMap((c) => Array.from({ length: 60 }, (_, k) => { const u = (k + rnd()) / 60, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = (c === rios[0] ? 16 : 11) + 4 + rnd() * 8; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.5, vira: rnd() > 0.5 }; })).filter((o) => Math.hypot(o.x, o.z) > 26 && !naAgua(o.x, o.z) && !(Math.abs(o.x) < 7 && o.z > 8 && o.z < 150)), 11, 0.9),
+    figuras('mata-bambu', rios.flatMap((c) => Array.from({ length: 60 }, (_, k) => { const u = (k + rnd()) / 60, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = (LARG(rios.indexOf(c))) + 4 + rnd() * 8; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.5, vira: rnd() > 0.5 }; })).filter((o) => Math.hypot(o.x, o.z) > 26 && !naAgua(o.x, o.z) && !(Math.abs(o.x) < 7 && o.z > 8 && o.z < 150)), 11, 0.9),
     figuras('mata-samambaia', zonas(Math.round(1700 * T2), 14, 900, Z.baixa), 5, 0.8),
     figuras('mata-folhagem', zonas(Math.round(2600 * T2), 10, 700, Z.baixa), 2.3, 0.7),
     figuras('mata-heliconia', zonas(Math.round(1300 * T2), 10, 700, Z.heliconia), 2.1, 0.7),
@@ -501,7 +513,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   else if (G) { const pw = T2W(5.5, 42); await Promise.all([figuras('oliveira-1', moldura.filter((_, i) => i % 2 === 0), 7.5, 0.5), figuras('oliveira-2', moldura.filter((_, i) => i % 2 === 1), 6.5, 0.5), figuras('prensa-azeite', [{ x: pw.x, z: pw.z, s: 1 }], 2.2, 0)]); }
   // FLORES em camadas: à beira da trilha (perto e grandes), nas margens do rio e espalhadas; árvores floridas, romãzeiras e videiras
   const beiraTrilha = (n, a0, a1) => Array.from({ length: n }, () => { const z = 14 + rnd() * 155, sx = rnd() > 0.5 ? 1 : -1, w = T2W(trilhaX(z) + sx * (a0 + rnd() * (a1 - a0)), z); return { x: w.x, z: w.z, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => !naAgua(o.x, o.z));
-  const beiraRio = (n) => Array.from({ length: n }, () => { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = ci === 0 ? 16 : 11, u = rnd() * 0.7, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (1.42 + rnd() * 0.5); return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => Math.hypot(o.x, o.z) > 24);
+  const beiraRio = (n) => Array.from({ length: n }, () => { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = LARG(ci), u = rnd() * 0.7, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (1.42 + rnd() * 0.5); return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => Math.hypot(o.x, o.z) > 24);
   const flores = !E ? [] : [['flor-lirios', 1.1, 1], ['flor-hibisco', 1.7, 0.4], ['flor-roxa', 1.0, 1], ['flor-ave-paraiso', 1.5, 0.7], ['flor-rosa', 0.8, 1.2]];
   await Promise.all([
     ...flores.map(([nm, h, q]) => figuras(nm, [...beiraTrilha(Math.round((toque ? 40 : 70) * q), 1.25, 4.5), ...beiraRio(Math.round((toque ? 50 : 90) * q)), ...(E ? zonas(Math.round((toque ? 120 : 220) * q), 10, 700, Z.flores) : espalhar(Math.round((toque ? 40 : 80) * q), 8, 220, 2, [centroArv]))], h, 0.5)),
@@ -528,7 +540,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   ];
   const bichos = [];
   const PERTO = { leao: [-10, 46], cordeiro: [-6, 44], cervo: [13, 40], 'elefante-anda': [-26, 22], 'leao-anda': [-16, 50], girafa: [24, 24], pavao: [5, 53], onca: [-16, 58], anta: [18, 60], 'tigre-rugindo': [-3.2, 96], tigre: [4, 128] };   // um grupo à vista de quem pousa
-  const margem = (n) => rios.flatMap((c) => Array.from({ length: n }, () => { const u = 0.05 + rnd() * 0.5, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = (c === rios[0] ? 16 : 11) + 2 + rnd() * 4; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.85 + rnd() * 0.3 }; })).filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) < 190);
+  const margem = (n) => rios.flatMap((c) => Array.from({ length: n }, () => { const u = 0.05 + rnd() * 0.5, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = (LARG(rios.indexOf(c))) + 2 + rnd() * 4; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.85 + rnd() * 0.3 }; })).filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) < 190);
   for (const e of especies) { const lista = e.rio ? margem(3).slice(0, e.q - 1) : espalhar(e.q - 1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }]); const pp0 = PERTO[e.n], pw = pp0 ? T2W(pp0[0], pp0[1]) : null, pp = pw ? [pw.x, pw.z] : null; if (pp && !naAgua(pp[0], pp[1])) lista.unshift({ x: pp[0], z: pp[1], s: 1, vira: e.n === 'leao' }); else lista.push(...espalhar(1, 22, 150, 5, [{ x: 0, z: 0, r: 18 }])); const f = await figuras(e.n, lista, e.h, 0); if (!f) continue;
     lista.forEach((o, i) => bichos.push({ f, i, e, x: o.x, z: o.z, alvo: null, espera: rnd() * 6, fase: rnd() * 6 })); }
   function moverBichos(dt) { for (const b of bichos) { if (!b.e.anda) continue;
@@ -556,6 +568,10 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       posicoesPerto: { elefante: [T2W(-26, 22).x, T2W(-26, 22).z], leoa: [T2W(-16, 50).x, T2W(-16, 50).z], tigre: [T2W(16, 58).x, T2W(16, 58).z], girafa: [T2W(24, 34).x, T2W(24, 34).z] }, troncos: obst }))
     .then(async (a) => { if (!ativo) return; a.bichos.forEach((b) => { b.raiz.visible = false; if (b.sombra) b.sombra.visible = false; }); try { if (renderer.compileAsync) await renderer.compileAsync(cena, camera); } catch (_) {} a.bichos.forEach((b) => { b.raiz.visible = true; if (b.sombra) b.sombra.visible = true; }); A3D = a; })
     .catch((e) => console.warn('animais 3D', e)), 2500);
+  // A CLAREIRA DO RIACHO: pedras com musgo, samambaias, tronco caído e a pequena queda (modelos 3D reais), carregada por trás
+  let CLR = null;
+  window.__clrDbg = 'E=' + E + ' rios=' + rios.length; if (E && rios[5]) setTimeout(() => (window.__clrDbg += ' importando', import('/nexus/eden-clareira.js?v=5')).then((m) => m.criarClareira(THREE, cena, { base, altura, rio: rios[5], largura: LARG(5), carregar, lixo, toque, rnd, unif, distRio }))
+    .then(async (c) => { window.__clrDbg += ' criada ' + !!c; if (!ativo || !c) return; try { if (renderer.compileAsync) await renderer.compileAsync(cena, camera); } catch (_) {} CLR = c; window.__clrDbg += ' pronta'; }).catch((e) => { window.__clrDbg += ' ERRO ' + e.message; console.warn('clareira', e); }), 4000);
   // AVES em voo circular e BORBOLETAS perto das flores: tudo calculado na placa de vídeo
   async function voadores(nome, n, tam, modo) {
     const tex = await carregar(nome + '.png'); if (!tex) return; lixo.push(tex);
@@ -589,7 +605,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const vrTex = E ? await carregar('vitoria-regia.png') : null;
   if (vrTex) { lixo.push(vrTex); const NV = toque ? 300 : 600, gv = new THREE.PlaneGeometry(1, 1); gv.rotateX(-Math.PI / 2); const mv = new THREE.MeshLambertMaterial({ map: vrTex, alphaTest: 0.5, transparent: false });
     const im = new THREE.InstancedMesh(gv, mv, NV), mt = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Vector3(); let k = 0;
-    for (let tent = 0; k < NV && tent < NV * 30; tent++) { const c = rios[Math.floor(rnd() * rios.length)], u = rnd() * 0.6, p = c.getPointAt(u), tg = c.getTangentAt(u), w = c === rios[0] ? 16 : 11, sx = rnd() > 0.5 ? 1 : -1, d = w * (0.75 + rnd() * 0.25);
+    for (let tent = 0; k < NV && tent < NV * 30; tent++) { const c = rios[Math.floor(rnd() * rios.length)], u = rnd() * 0.6, p = c.getPointAt(u), tg = c.getTangentAt(u), w = LARG(rios.indexOf(c)), sx = rnd() > 0.5 ? 1 : -1, d = w * (0.75 + rnd() * 0.25);
       const x = p.x - tg.z * sx * d, z = p.z + tg.x * sx * d; if (Math.hypot(x, z) < 20) continue; const sc = 1.4 + rnd() * 1.4; q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rnd() * 6.28); mt.compose(e.set(x, hBase(x, z) - 0.96, z), q, new THREE.Vector3(sc, 1, sc)); im.setMatrixAt(k++, mt); }
     im.count = k; im.renderOrder = 3; cena.add(im); lixo.push(gv, mv); }
 
@@ -725,6 +741,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     if (CQO && /cachoeira|queda d.?agua|catarata/.test(q)) { const [x, z] = CQO.frente; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); yaw = Math.atan2(-(CQ.x - x), -(CQ.z - z)); pitch = 0.32; return 'Aqui está a cachoeira. A caverna fica atrás da queda: vá pela laje de pedra à esquerda ou à direita, ou me peça para entrar.'; }
     if (CQO && /caverna|gruta|atras da (agua|cachoeira|queda)/.test(q)) { const fundo = /fundo|salao|lago/.test(q); const [x, z] = fundo ? CQO.salao : CQO.boca; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); CQO.entrar(); yaw = fundo ? Math.atan2(-(CQO.boca[0] - x), -(CQO.boca[1] - z)) : Math.atan2(-(CQO.salao[0] - x), -(CQO.salao[1] - z)); pitch = 0.05; return fundo ? 'No fundo da caverna, no salão com a abertura no teto e o lago.' : 'Dentro da caverna, atrás da cortina de água. Siga em frente até o salão.'; }
     // VER UM ANIMAL de perto: 'me mostre o elefante', 'quero ver o leão'
+    if (CLR && /riacho|clareira|corrego|regato/.test(q)) { const [x, z] = CLR.vista; pularChegada(); voarLivre = false; subida = 0; eu.set(x, 0, z); yaw = Math.atan2(-(CLR.olhar[0] - x), -(CLR.olhar[1] - z)); pitch = 0.04; return 'A clareira do riacho: a água desce da pequena queda entre pedras cobertas de musgo.'; }
     if (manadas && /manada|zebra/.test(q)) { const m = manadas.lista[0], a = Math.atan2(m.z, m.x), x = m.x - Math.cos(a) * 48, z = m.z - Math.sin(a) * 48; pularChegada(); voarLivre = false; eu.set(x, 0, z); subida = 3; yaw = Math.atan2(-(m.x - x), -(m.z - z)); pitch = -0.05; return 'Lá adiante, uma manada de zebras pastando no campo aberto.'; }
     if (E && A3D) { const M3 = [[/elefante/, 'elefante', 'o elefante'], [/leao|leoa|leoes/, 'leoa', 'a leoa'], [/tigre/, 'tigre', 'o tigre'], [/sucuri|anaconda|cobra|serpente/, 'sucuri', 'a sucuri'], [/girafa/, 'girafa', 'a girafa'], [/arara|passaro|ave/, 'arara', 'as araras'], [/animais|bichos|animal/, 'elefante', 'os animais']];
       const k = M3.find(([re]) => re.test(q)); if (k) { const b = A3D.encontrar(k[1]); if (b) { const voa = b.e.voa, dist = voa ? 30 : 5 + b.e.h * 3.2, ang = rnd() * 6.283; let x = b.x + Math.sin(ang) * dist, z = b.z + Math.cos(ang) * dist; if (naAgua(x, z)) { x = b.x - Math.sin(ang) * dist; z = b.z - Math.cos(ang) * dist; }
