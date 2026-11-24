@@ -391,14 +391,15 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       }` });
   const quad = new THREE.PlaneGeometry(1, 1); quad.translate(0, 0.5, 0); lixo.push(quad);
   const obst = [];   // troncos: o explorador não atravessa
+  let camposManada = [];
   async function figuras(nome, lista, alturaReal, vento = 0) { await folga();
-    if (CQ) lista = lista.filter((o) => CQM.fora(CQ, o.x, o.z)); const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + (pc.ext || '.png')); if (!tex) return null; lixo.push(tex);
+    if (CQ) lista = lista.filter((o) => CQM.fora(CQ, o.x, o.z)); if (camposManada.length && !/zebras/.test(nome)) lista = lista.filter((o) => camposManada.every((c) => Math.hypot(o.x - c.x, o.z - c.z) > 75)); const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + (pc.ext || '.png')); if (!tex) return null; lixo.push(tex);
     const asp = pc.w / pc.h, g = new THREE.InstancedBufferGeometry(); g.index = quad.index; g.attributes.position = quad.attributes.position; g.attributes.uv = quad.attributes.uv; g.instanceCount = lista.length;
     const P = new Float32Array(lista.length * 3), S = new Float32Array(lista.length * 2), F = new Float32Array(lista.length), R = new Float32Array(lista.length);
     lista.forEach((o, i) => { const hR = alturaReal * (o.s || 1); P.set([o.x, altura(o.x, o.z) - 0.15 + (o.y || 0), o.z], i * 3); S.set([hR * asp, hR], i * 2); F[i] = Math.random() * 6.28; R[i] = o.vira ? 1 : 0; });
     g.setAttribute('iPos', new THREE.InstancedBufferAttribute(P, 3)); g.setAttribute('iTam', new THREE.InstancedBufferAttribute(S, 2)); g.setAttribute('iFase', new THREE.InstancedBufferAttribute(F, 1)); g.setAttribute('iVira', new THREE.InstancedBufferAttribute(R, 1));
     if (/arvore|palmeira/.test(nome)) lista.forEach((o) => obst.push({ x: o.x, z: o.z, r: 0.35 + alturaReal * (o.s || 1) * 0.045 }));
-    let Q = null; if (pc.quadros) { Q = new Float32Array(lista.length); for (let i = 0; i < Q.length; i++) Q[i] = Math.floor(Math.random() * pc.quadros); g.setAttribute('iQuadro', new THREE.InstancedBufferAttribute(Q, 1)); tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter; }
+    let Q = null; if (pc.quadros) { Q = new Float32Array(lista.length); for (let i = 0; i < Q.length; i++) Q[i] = Math.floor(Math.random() * pc.quadros); g.setAttribute('iQuadro', new THREE.InstancedBufferAttribute(Q, 1)); if (!pc.mipmaps) { tex.generateMipmaps = false; tex.minFilter = THREE.LinearFilter; } }
     const m = new THREE.Mesh(g, matFig(tex, vento, pc.quadros ? [pc.cols, pc.rows] : null)); m.frustumCulled = false; cena.add(m); lixo.push(g, m.material); return { m, P, R, g, Q, pc };
   }
   // espalha posições evitando a água e o caminho de chegada
@@ -419,6 +420,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       if (rnd() > peso(zona(x, z))) continue; out.push({ x, z, s: 0.75 + rnd() * 0.5, vira: rnd() > 0.5 }); }
     return out; }
   const T2 = toque ? 0.62 : 1;   // no tablet, menos plantas
+  const campoManada = (dmin, dmax, ang0) => { for (let t = 0; t < 400; t++) { const a = ang0 + (rnd() - 0.5) * 1.6, r = dmin + rnd() * (dmax - dmin), x = Math.cos(a) * r, z = Math.sin(a) * r; if (naAgua(x, z) || distRio(x, z)[0] < 60) continue; const zz = zona(x, z); if (zz.campo > 0.5) return { x, z, s: 1, vira: rnd() > 0.5 }; } return null; };
+  camposManada = E ? (() => { const a0 = Math.atan2(-TD.z, -TD.x); return [campoManada(180, 300, a0), campoManada(220, 360, a0 + 1.0), campoManada(200, 340, a0 - 1.1)].filter(Boolean); })() : [];
   const Z = {
     gigante: (z) => z.nucleo * z.clareira * (1 - z.ciliar) * THREE.MathUtils.smoothstep(z.r, 120, 220),
     alta: (z) => Math.max(z.nucleo, 0.45 * z.borda) * z.clareira * (1 - 0.6 * z.ciliar),
@@ -542,6 +545,11 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       if (b.f.Q) { b.f.Q[b.i] = (b.f.Q[b.i] + dt * (0.75 + 0.25 * Math.sin(performance.now() / 1700 + b.fase)) * b.f.pc.quadros / b.f.pc.dur) % b.f.pc.quadros; b.f.g.attributes.iQuadro.needsUpdate = true; }
       b.f.P[b.i * 3] = b.x; b.f.P[b.i * 3 + 1] = altura(b.x, b.z) - 0.1 + (b.f.Q ? 0 : Math.sin(b.fase += dt * b.e.anda * 2.6) * 0.006 * b.e.h); b.f.P[b.i * 3 + 2] = b.z; b.f.g.attributes.iPos.needsUpdate = true; } }
 
+  // MANADAS AO LONGE (vídeo real recortado): zebras pastando em campos abertos, a centenas de metros; se alguém se aproxima, a manada vai pastar mais longe
+  let manadas = null;
+  if (E && pecas['zebras-manada']) { const longe = (dmin, dmax, ang0) => { for (let t = 0; t < 300; t++) { const a = ang0 + (rnd() - 0.5) * 1.6, r = dmin + rnd() * (dmax - dmin), x = Math.cos(a) * r, z = Math.sin(a) * r; if (naAgua(x, z)) continue; const zz = zona(x, z); if (zz.campo > 0.6 && zz.ciliar < 0.2) return { x, z, s: 1, vira: rnd() > 0.5 }; } return { x: 300, z: 300, s: 1 }; };
+    const a0 = Math.atan2(-TD.z, -TD.x); const lista = camposManada.length ? camposManada.map((c) => ({ ...c })) : [longe(230, 360, a0)];
+    const f = await figuras('zebras-manada', lista, 1.75, 0); window.__manadaDbg = { f: !!f, n: lista.length, p0: lista[0] }; if (f) manadas = { f, lista, longe, a0 }; } else window.__manadaDbg = { semPeca: true, E };
   // ANIMAIS 3D (Éden): carregados por trás; aparecem já compilados, sem engasgo
   let A3D = null;
   if (E) setTimeout(() => import('/nexus/eden-animais3d.js?v=6').then((m) => m.criarAnimais3D(THREE, cena, { base, altura, naAgua, distRio, rios, rnd, lixo, toque,
@@ -717,6 +725,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     if (CQO && /cachoeira|queda d.?agua|catarata/.test(q)) { const [x, z] = CQO.frente; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); yaw = Math.atan2(-(CQ.x - x), -(CQ.z - z)); pitch = 0.32; return 'Aqui está a cachoeira. A caverna fica atrás da queda: vá pela laje de pedra à esquerda ou à direita, ou me peça para entrar.'; }
     if (CQO && /caverna|gruta|atras da (agua|cachoeira|queda)/.test(q)) { const fundo = /fundo|salao|lago/.test(q); const [x, z] = fundo ? CQO.salao : CQO.boca; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); CQO.entrar(); yaw = fundo ? Math.atan2(-(CQO.boca[0] - x), -(CQO.boca[1] - z)) : Math.atan2(-(CQO.salao[0] - x), -(CQO.salao[1] - z)); pitch = 0.05; return fundo ? 'No fundo da caverna, no salão com a abertura no teto e o lago.' : 'Dentro da caverna, atrás da cortina de água. Siga em frente até o salão.'; }
     // VER UM ANIMAL de perto: 'me mostre o elefante', 'quero ver o leão'
+    if (manadas && /manada|zebra/.test(q)) { const m = manadas.lista[0], a = Math.atan2(m.z, m.x), x = m.x - Math.cos(a) * 48, z = m.z - Math.sin(a) * 48; pularChegada(); voarLivre = false; eu.set(x, 0, z); subida = 3; yaw = Math.atan2(-(m.x - x), -(m.z - z)); pitch = -0.05; return 'Lá adiante, uma manada de zebras pastando no campo aberto.'; }
     if (E && A3D) { const M3 = [[/elefante/, 'elefante', 'o elefante'], [/leao|leoa|leoes/, 'leoa', 'a leoa'], [/tigre/, 'tigre', 'o tigre'], [/sucuri|anaconda|cobra|serpente/, 'sucuri', 'a sucuri'], [/arara|passaro|ave/, 'arara', 'as araras'], [/animais|bichos|animal/, 'elefante', 'os animais']];
       const k = M3.find(([re]) => re.test(q)); if (k) { const b = A3D.encontrar(k[1]); if (b) { const voa = b.e.voa, dist = voa ? 30 : 5 + b.e.h * 3.2, ang = rnd() * 6.283; let x = b.x + Math.sin(ang) * dist, z = b.z + Math.cos(ang) * dist; if (naAgua(x, z)) { x = b.x - Math.sin(ang) * dist; z = b.z - Math.cos(ang) * dist; }
           pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); yaw = Math.atan2(-(b.x - x), -(b.z - z)); pitch = voa ? 0.45 : -0.05; if (!voa) A3D.fazerAndarDeLado(b, eu); return `Aqui está ${k[2]}.`; } } }
@@ -789,12 +798,24 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const momentosVistos = new Set();
   async function momento(id, url, legenda) { if (momentosVistos.has(id)) return; momentosVistos.add(id);
     try { const r = await fetch(url, { method: 'HEAD' }); if (!r.ok) return; } catch (_) { return; }
-    const d = document.createElement('div'); d.className = 'ej-momento';
-    d.innerHTML = `<style>.ej-momento{position:absolute;right:22px;top:70px;height:min(62vh,640px);aspect-ratio:9/16;border-radius:18px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.55);border:1px solid rgba(243,211,142,.45);opacity:0;transform:translateY(12px) scale(.98);transition:opacity .8s ease,transform .8s ease;z-index:5;background:#000}.ej-momento.v{opacity:1;transform:none}.ej-momento video{width:100%;height:100%;object-fit:cover;display:block}.ej-momento b{position:absolute;left:12px;bottom:10px;right:50px;font:600 12px Inter,sans-serif;color:#FFF3D0;text-shadow:0 1px 6px #000}.ej-momento button{position:absolute;top:8px;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.45);color:#fff;font-size:15px;cursor:pointer}.ej-momento .x{right:8px}.ej-momento .som{right:48px}</style><video src="${url}" autoplay muted playsinline></video><b>${legenda}</b><button class="som" type="button">🔇</button><button class="x" type="button">✕</button>`;
-    raiz.appendChild(d); const v = d.querySelector('video'); requestAnimationFrame(() => d.classList.add('v'));
-    const fechar = () => { d.classList.remove('v'); setTimeout(() => d.remove(), 900); };
-    d.querySelector('.x').onclick = fechar; d.querySelector('.som').onclick = () => { v.muted = !v.muted; d.querySelector('.som').textContent = v.muted ? '🔇' : '🔊'; if (!v.muted) v.play(); };
-    v.onended = () => setTimeout(fechar, 600); }
+    // TELA DE CINEMA: escurece, faixas pretas entram, o vídeo ocupa a tela (com o próprio vídeo desfocado atrás), som ligado; no fim, volta ao mundo
+    const d = document.createElement('div'); d.className = 'ej-cinema';
+    d.innerHTML = `<style>.ej-cinema{position:absolute;inset:0;z-index:30;background:#000;opacity:0;transition:opacity 1.1s ease;overflow:hidden}.ej-cinema.v{opacity:1}
+      .ej-cinema .fundo{position:absolute;inset:-40px;width:calc(100% + 80px);height:calc(100% + 80px);object-fit:cover;filter:blur(28px) brightness(.55) saturate(1.2)}
+      .ej-cinema .frente{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+      .ej-cinema .faixa{position:absolute;left:0;right:0;height:9vh;background:#000;transition:transform 1.2s cubic-bezier(.2,.8,.2,1);z-index:2}.ej-cinema .t{top:0;transform:translateY(-100%)}.ej-cinema .b{bottom:0;transform:translateY(100%)}.ej-cinema.v .faixa{transform:none}
+      .ej-cinema b{position:absolute;left:0;right:0;bottom:2.4vh;text-align:center;z-index:3;font:500 15px 'Cormorant Garamond',Georgia,serif;letter-spacing:.06em;color:#F3E2B3;opacity:.9}
+      .ej-cinema button{position:absolute;top:2.2vh;z-index:4;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.35);color:#fff;border-radius:999px;padding:7px 14px;font:600 12px Inter,sans-serif;cursor:pointer}.ej-cinema .x{right:18px}.ej-cinema .som{right:190px}</style>
+      <video class="fundo" src="${url}" muted playsinline></video><video class="frente" src="${url}" playsinline></video><div class="faixa t"></div><div class="faixa b"></div><b>${legenda}</b><button class="som" type="button">🔊 Som</button><button class="x" type="button">Voltar ao jardim ✕</button>`;
+    raiz.appendChild(d); const vf = d.querySelector('.fundo'), v = d.querySelector('.frente');
+    const sincroniza = () => { if (Math.abs(vf.currentTime - v.currentTime) > 0.2) vf.currentTime = v.currentTime; };
+    v.addEventListener('timeupdate', sincroniza); let pausouMundo = false;
+    const fechar = () => { d.classList.remove('v'); setTimeout(() => d.remove(), 1200); if (audio && pausouMundo) try { audio.ctx.resume(); } catch (_) {} };
+    requestAnimationFrame(() => d.classList.add('v'));
+    setTimeout(async () => { if (audio && audio.ctx.state === 'running') { try { await audio.ctx.suspend(); pausouMundo = true; } catch (_) {} }
+      try { await v.play(); } catch (_) { v.muted = true; d.querySelector('.som').textContent = '🔇 Som'; try { await v.play(); } catch (_) {} } vf.play().catch(() => {}); }, 700);
+    d.querySelector('.x').onclick = fechar; d.querySelector('.som').onclick = () => { v.muted = !v.muted; d.querySelector('.som').textContent = v.muted ? '🔇 Som' : '🔊 Som'; v.play(); };
+    v.onended = () => setTimeout(fechar, 500); }
   window.NEXUS_MOMENTO = momento;
   function cartao(k) { if (k === 'cachoeira' && E) momento('tigre', '/nexus/pessoal/tigre-bebendo.mp4', 'Momento: um tigre bebe no poço da cachoeira'); if (cartaoAtual === k) return; cartaoAtual = k; if (!k) { card.classList.remove('v'); return; } if (!MW.versos[k]) { card.classList.remove('v'); return; } const [r, t] = MW.versos[k]; card.classList.remove('v'); setTimeout(() => { card.innerHTML = `<p>“${t}”</p><cite>${r} · Almeida</cite>${MW.notas[k] ? `<small>${MW.notas[k]}</small>` : ''}`; card.classList.add('v'); }, 350); }
 
@@ -874,7 +895,10 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
         : J ? (() => { let k = null, dm = 1e9; for (const [nm, [lx, lz]] of Object.entries(JC.LUGARES)) { const d = Math.hypot(eu.x - lx, eu.z - lz), lim = nm === 'santuario' ? 70 : nm === 'palacio' ? 90 : 40; if (d < lim && d < dm) { dm = d; k = nm; } } return k || (Math.abs(eu.x) < 150 && Math.abs(eu.z) < 242 ? 'chegada' : 'bom'); })()
         : (dPres < 5 ? 'presenca' : Math.hypot(eu.x + TD.x * 12, eu.z + TD.z * 12) < 7 ? 'cidade' : dArv < 10 ? 'rocha' : tochaPerto(eu.x, eu.z) < 30 ? 'tochas' : dArv < 45 ? 'vigiai' : dArv < 180 ? 'chegada' : 'bom'));
     }
-    moverBichos(dt); if (A3D) A3D.atualizar(dt, t, eu); if (tochas.mover) tochas.mover(t); if (quadroJ) quadroJ(camera.position);
+    moverBichos(dt); if (A3D) A3D.atualizar(dt, t, eu);
+    if (manadas) { const { f, lista } = manadas, pc = f.pc; for (let i = 0; i < lista.length; i++) { f.Q[i] = (t * pc.quadros / pc.dur + i * 11) % pc.quadros;
+        if (Math.hypot(lista[i].x - eu.x, lista[i].z - eu.z) < 38) { const n = manadas.longe(240, 420, Math.atan2(lista[i].z - eu.z, lista[i].x - eu.x)); lista[i].x = n.x; lista[i].z = n.z; f.P[i * 3] = n.x; f.P[i * 3 + 1] = altura(n.x, n.z) - 0.15; f.P[i * 3 + 2] = n.z; f.g.attributes.iPos.needsUpdate = true; } }
+      f.g.attributes.iQuadro.needsUpdate = true; } if (tochas.mover) tochas.mover(t); if (quadroJ) quadroJ(camera.position);
     caminhoPresenca.getPointAt(((t / 160) % 1 + 1) % 1, posPresenca); presenca.position.set(posPresenca.x, altura(posPresenca.x, posPresenca.z), posPresenca.z); brilho.material.opacity = 0.75 + 0.25 * Math.sin(t * 1.7);
     if (voando) matGrama.uniforms.centro.value.set(camera.position.x, camera.position.z); else matGrama.uniforms.centro.value.set(eu.x, eu.z); grama.visible = camera.position.y - altura(camera.position.x, camera.position.z) < 25;
     if (avatar && voando) { avatar.visible = modo === 'terceira'; avatar.position.set(eu.x, altura(eu.x, eu.z), eu.z); avatar.rotation.y = rumo + (pecas.explorador.giro || 0); }
