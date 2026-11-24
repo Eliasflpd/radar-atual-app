@@ -593,8 +593,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       const x = p.x - tg.z * sx * d, z = p.z + tg.x * sx * d; if (Math.hypot(x, z) < 20) continue; const sc = 1.4 + rnd() * 1.4; q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rnd() * 6.28); mt.compose(e.set(x, hBase(x, z) - 0.96, z), q, new THREE.Vector3(sc, 1, sc)); im.setMatrixAt(k++, mt); }
     im.count = k; im.renderOrder = 3; cena.add(im); lixo.push(gv, mv); }
 
-  // CACHOEIRAS nas encostas ao redor do jardim, com a água descendo
-  if (E && pecas.cachoeira) { const f = await figuras('cachoeira', Array.from({ length: 14 }, (_, i) => { const a = i / 14 * 6.283 + 0.2, rr = 1640 + rnd() * 120; return { x: Math.cos(a) * rr, z: Math.sin(a) * rr, s: 0.8 + rnd() * 0.5 }; }), 160, 0);
+  // (as cachoeiras recortadas espalhadas no horizonte saíram: ficavam soltas no meio do campo; a cachoeira de verdade fica no rio, no planalto)
+  if (false && E && pecas.cachoeira) { const f = await figuras('cachoeira', Array.from({ length: 14 }, (_, i) => { const a = i / 14 * 6.283 + 0.2, rr = 1640 + rnd() * 120; return { x: Math.cos(a) * rr, z: Math.sin(a) * rr, s: 0.8 + rnd() * 0.5 }; }), 160, 0);
     if (f) { const tx = f.m.material.uniforms.map.value; tx.wrapT = THREE.RepeatWrapping; tx.needsUpdate = true; f.m.material.fragmentShader = f.m.material.fragmentShader.replace('vec4 c = texture2D(map, vUv);', 'vec4 c = texture2D(map, vUv); float lum = dot(c.rgb, vec3(.33)); float sat = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b)); float ag = smoothstep(.62, .8, lum) * smoothstep(.22, .08, sat); vec3 c2 = texture2D(map, vec2(vUv.x, fract(vUv.y + t * .35))).rgb; c.rgb = mix(c.rgb, max(c.rgb, c2) * 1.05, ag * .7);').replace('uniform sampler2D map;', 'uniform sampler2D map; uniform float t;'); f.m.material.needsUpdate = true; } }
 
   // PÓLEN dourado flutuando no ar à volta de quem anda (aparece nos feixes de luz)
