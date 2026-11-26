@@ -213,6 +213,22 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const passo = T / NS;
   function altura(x, z) { const fx = (x + T / 2) / passo, fz = (z + T / 2) / passo, ix = Math.max(0, Math.min(NS - 1, Math.floor(fx))), iz = Math.max(0, Math.min(NS - 1, Math.floor(fz))), ax = fx - ix, az = fz - iz, n = NS + 1;
     const a = alturas[iz * n + ix], b = alturas[iz * n + ix + 1], c = alturas[(iz + 1) * n + ix], d = alturas[(iz + 1) * n + ix + 1]; return (a * (1 - ax) + b * ax) * (1 - az) + (c * (1 - ax) + d * ax) * az; }
+  // O ÉDEN DE VERDADE (eden-real.js): árvores, plantas, flores, pedras e chão de fotogrametria (CC0) no lugar dos recortes desenhados
+  const obstR = [], ER = E ? await import('/nexus/eden-real.js?v=1').then((m) => m.criarEdenReal(THREE, cena, { base: '/nexus/eden/real/', altura, unif, toque, lixo, SOL, rnd, obst: obstR, renderer })).catch((e) => { console.warn('eden-real', e); return null; }) : null;
+  if (ER) { const ss = THREE.MathUtils.smoothstep, nrm = geoT.attributes.normal, pA = new Float32Array(pos.count * 4), pB = new Float32Array(pos.count * 2);
+    for (let i = 0; i < pos.count; i++) { if (i % 4000 === 0) await folga(); const x = pos.getX(i), z = pos.getZ(i), r = Math.hypot(x, z), ny = nrm.getY(i), rr = relRio[i];
+      const n1 = 0.5 + 0.5 * (0.6 * Math.sin(x * 0.021 + 1.7) * Math.cos(z * 0.017 - 0.4) + 0.4 * Math.sin((x - z) * 0.047)), F = manchaMata(x, z);
+      const mata = ss(F, 0.45, 0.6) * ss(r, 35, 80), margem = 1 - ss(rr, 1.0, 1.7), lama = (1 - ss(rr, 1.4, 2.6)) * (1 - margem);
+      let rocha = 1 - ss(ny, 0.72, 0.86); rocha = Math.max(rocha, ss(alturas[i], 70, 140) * ss(r, 1300, 1600));
+      if (CQ) { const u = CQ.x - x, v = z - CQ.z, rc = Math.hypot(u, v), a = Math.atan2(v, u); if (rc < 31 || (Math.abs(a) < 1.45 && rc < 46)) rocha = 1; }
+      const dr = dRiacho(x, z), clr = dr < 30 ? 1 - ss(dr, 18, 30) : 0;
+      let campo = (1 - mata * 0.6) * (1 - clr), musgo = mata * 0.4 + clr * 0.7, grama = campo * (0.35 + 0.65 * n1), terra = campo * (0.65 - 0.65 * n1) * 0.55 + clr * 0.2;
+      const resto = (1 - rocha) * (1 - margem * 0.9); grama *= resto; terra *= resto; musgo *= resto; const lm = lama * (1 - rocha), cs = margem * (1 - rocha);
+      const sum = grama + terra + musgo + cs + lm + rocha + 1e-5; pA.set([grama / sum, terra / sum, musgo / sum, cs / sum], i * 4); pB.set([lm / sum, rocha / sum], i * 2); }
+    if (!(await ER.chao(terreno, pA, pB))) console.warn('chão real não carregou');
+    // SOMBRAS de verdade do sol (só perto de quem anda, onde as árvores são 3D)
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; sol.shadow.radius = 3; sol.shadow.intensity = 0.62; sol.castShadow = true; sol.shadow.mapSize.set(toque ? 1024 : 2048, toque ? 1024 : 2048);
+    { const sc = sol.shadow.camera, L = toque ? 40 : 65; sc.left = -L; sc.right = L; sc.top = L; sc.bottom = -L; sc.near = 10; sc.far = 700; sc.updateProjectionMatrix(); } sol.shadow.bias = -0.0004; sol.shadow.normalBias = 0.06; cena.add(sol.target); }
 
   // O RIO: largo, fundo e com correnteza forte. Raso e transparente nas margens (vê-se a areia e as pedras do fundo),
   // escuro como esmeralda no meio (a profundidade engole a luz), ondas que descem com a corrente, linhas de espuma,
@@ -343,23 +359,23 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   // JERUSALÉM: esplanada, pórticos, Santuário, Antônia, palácio, muralhas e casas (jerusalem-cidade.js)
   let caixasJ = null, quadroJ = null; if (J) { const r = await JC.construir(THREE, cena, { altura, folga, lixo, toque, rnd, carregar, renderer }); caixasJ = r.obst; quadroJ = r.quadro; window.__mundoJ = { cena, altura, r }; }
   // GRAMA ALTA que balança ao vento em volta de quem anda
-  const NG = Math.round((toque ? 70000 : 150000) * (E ? 1 : G ? 0.45 : J ? 0 : 0.7)), RG = 30;
+  const NG = Math.round((toque ? 70000 : 150000) * (E ? (ER ? 1.7 : 1) : G ? 0.45 : J ? 0 : 0.7)), RG = 30;
   // lâmina fina, afinando até a ponta, em 5 gomos (para poder curvar)
-  const lamina = new THREE.PlaneGeometry(0.035, 1, 1, 5); lamina.translate(0, 0.5, 0);
+  const lamina = new THREE.PlaneGeometry(ER ? 0.024 : 0.035, 1, 1, 5); lamina.translate(0, 0.5, 0);
   { const p = lamina.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); p.setX(i, p.getX(i) * (1 - Math.pow(y, 1.6) * 0.96)); } }
   const matGrama = new THREE.ShaderMaterial({ side: THREE.DoubleSide, uniforms: { ...unif, centro: { value: new THREE.Vector2() }, sol: { value: SOL } },
     vertexShader: `uniform float t; uniform vec2 centro; attribute vec3 iOff; attribute float iRot, iEsc; varying float vY, vD, vFl, vX, vTr; varying vec3 vC, vFc; uniform sampler2D alt; uniform vec3 sol;
       void main(){ vec2 rel = mod(iOff.xz - centro + ${RG}.0, ${(RG * 2).toFixed(1)}) - ${RG}.0; vec2 xz = centro + rel; float dist = length(rel);
         float esc = iEsc * smoothstep(${RG}.0, ${(RG * 0.55).toFixed(1)}, dist); float ts = dot(xz, vec2(${TD.x.toFixed(3)}, ${TD.z.toFixed(3)})), tl = dot(xz, vec2(${TP.x.toFixed(3)}, ${TP.z.toFixed(3)})); if (ts > 12. && ts < 170.) esc *= smoothstep(.55, 1.25, abs(tl - 2.5 * sin(ts / 13.)));
         float r2 = fract(iRot * 7.13), r3 = fract(iEsc * 13.7 + iOff.y * 3.1);
-        float y = position.y; float altL = esc * (.18 + .42 * r3 * r3 + .12 * iOff.y);   // alturas variadas: muitas baixas, algumas altas
+        float y = position.y; float altL = esc * ${ER ? '(.10 + .34 * r3 * r3 + .06 * iOff.y)' : '(.18 + .42 * r3 * r3 + .12 * iOff.y)'};   // alturas variadas: muitas baixas, algumas altas
         // curva natural da lâmina (cai para um lado) e vento que vem em ondas pelo campo
         float curva = (.25 + .5 * r2) * y * y; vec3 p = vec3(position.x * (.7 + .6 * r3), y * altL, curva * altL * .9);
         float c = cos(iRot), s = sin(iRot); p = vec3(c * p.x - s * p.z, p.y, s * p.x + c * p.z);
         float onda = sin(t * 1.3 - xz.x * .11 - xz.y * .07) * .5 + .5; float vento = (onda * .7 + sin(t * 3.7 + xz.x * .9 + xz.y * .6) * .12) * y * y * altL;
         p.x += vento * .55; p.z += vento * .25; p.y -= vento * vento * .6;
         vY = y; vX = position.x / .035 + .5;
-        vec3 verde = mix(vec3(.10, .24, .05), vec3(.20, .36, .07), iOff.y), amarelo = vec3(.42, .45, .14), seco = vec3(.40, .34, .17);
+        ${ER ? 'vec3 verde = mix(vec3(.045, .09, .022), vec3(.10, .155, .035), iOff.y), amarelo = vec3(.20, .20, .07), seco = vec3(.22, .18, .09);' : 'vec3 verde = mix(vec3(.10, .24, .05), vec3(.20, .36, .07), iOff.y), amarelo = vec3(.42, .45, .14), seco = vec3(.40, .34, .17);'}
         vC = mix(verde, amarelo, r2 * r2 * .4); vC = mix(vC, seco, step(.93, r3) * .7);${G ? ' vC = mix(vC, vec3(.30, .28, .15), .6);' : L ? ' vC = mix(vC, vec3(.42, .40, .16), .3);' : ''}
         vFl = step(.965, iOff.y) * step(.82, y); vFc = iOff.y > .99 ? vec3(1.2, 1.15, 1.05) : iOff.y > .978 ? vec3(1.3, .95, .2) : vec3(1.1, .3, .45);
         vTr = pow(max(dot(normalize(vec3(xz.x, cameraPosition.y - 1.2, xz.y) - cameraPosition), sol), 0.), 3.);
@@ -367,8 +383,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     fragmentShader: `uniform float dens; uniform vec3 nevoa, sol, luz; varying float vY, vD, vFl, vX, vTr; varying vec3 vC, vFc;
       void main(){ float base = smoothstep(.0, .55, vY);   // sombra na base, onde a luz não chega
         float meio = 1. - abs(vX * 2. - 1.); vec3 c = vC * (.28 + .9 * base) * (.8 + .3 * meio);
-        c += vec3(.10, .16, .02) * pow(vY, 3.) * .5;   // ponta mais clara, a luz atravessa
-        c += vec3(.10, .18, .03) * vTr * vY;
+        c += vec3(.10, .16, .02) * pow(vY, 3.) * ${ER ? '.18' : '.5'};   // ponta mais clara, a luz atravessa
+        c += vec3(.10, .18, .03) * vTr * vY * ${ER ? '.35' : '1.'};
         c = mix(c, vFc, vFl); c *= luz; float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), 1.);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
@@ -402,7 +418,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
 #include <colorspace_fragment>
       }` });
   const quad = new THREE.PlaneGeometry(1, 1); quad.translate(0, 0.5, 0); lixo.push(quad);
-  const obst = [];   // troncos: o explorador não atravessa
+  const obst = obstR;   // troncos: o explorador não atravessa
   let camposManada = [];
   async function figuras(nome, lista, alturaReal, vento = 0) { await folga();
     if (CQ) lista = lista.filter((o) => CQM.fora(CQ, o.x, o.z)); if (camposManada.length && !/zebras/.test(nome)) lista = lista.filter((o) => camposManada.every((c) => Math.hypot(o.x - c.x, o.z - c.z) > 75)); const pc = pecas[nome]; if (!pc || !lista.length) return null; const tex = await carregar(nome + (pc.ext || '.png')); if (!tex) return null; lixo.push(tex);
@@ -476,7 +492,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     figuras('arbusto-seco', [...espalhar(toque ? 300 : 520, 5, 300, 1.5, [centroArv]), ...espalhar(toque ? 300 : 600, 300, 1200, 1.5, [centroArv])], 1.0, 0.4),
     figuras('cipreste', espalhar(toque ? 50 : 90, 40, 1100, 5, [centroArv]), 15, 0.3),
   ]);
-  if (E) await Promise.all([
+  if (E && !ER) await Promise.all([
     figuras('arvore-vida', [{ x: 0, z: 0, s: 1 }], 34, 0.5),
     figuras('arvore-fruto-1', zonas(Math.round(560 * T2), 30, 1400, Z.fruto), 15, 1),
     figuras('arvore-fruto-2', zonas(Math.round(460 * T2), 30, 1400, Z.fruto), 12, 1),
@@ -497,11 +513,16 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const trilhaX = (z) => 2.5 * Math.sin(z / 13);
   if (!J) { const P = [], U = [], I = []; let k = 0; for (let z = 170; z >= 12; z -= 0.8) { const x = trilhaX(z); for (const sx of [-1, 1]) { const w = T2W(x + sx * 0.95, z); P.push(w.x, altura(w.x, w.z) + 0.05, w.z); U.push(sx < 0 ? 0 : 1, z / 3); } if (k) { const a = (k - 1) * 2; I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } k++; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I);
-    const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, uniforms: unif,
+    const tTr = ER ? await carregar('real/trilha.jpg') : null; if (tTr) { tTr.wrapS = tTr.wrapT = THREE.RepeatWrapping; lixo.push(tTr); }
+    const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, uniforms: { ...unif, tTr: { value: tTr } }, defines: tTr ? { TRILHA_FOTO: 1 } : {},
       vertexShader: `varying vec2 vUv; varying float vD; void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
-      fragmentShader: `uniform float dens; uniform vec3 nevoa, luz; varying vec2 vUv; varying float vD; float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+      fragmentShader: `uniform float dens; uniform vec3 nevoa, luz; uniform sampler2D tTr; varying vec2 vUv; varying float vD; float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
         float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
-        void main(){ vec2 p = vec2(vUv.x * 2., vUv.y * 3.); float k = n(p * 3.) * .5 + n(p * 9.) * .3 + n(p * 27.) * .2; vec3 c = mix(vec3(.30, .22, .14), vec3(.52, .41, .28), k); c *= .85 + .3 * step(.78, n(p * 14.)); c *= luz;
+        void main(){ vec2 p = vec2(vUv.x * 2., vUv.y * 3.); float k = n(p * 3.) * .5 + n(p * 9.) * .3 + n(p * 27.) * .2; vec3 c = mix(vec3(.30, .22, .14), vec3(.52, .41, .28), k); c *= .85 + .3 * step(.78, n(p * 14.));
+#ifdef TRILHA_FOTO
+          c = texture2D(tTr, vec2(vUv.x * .95, vUv.y * 1.5)).rgb * vec3(.78, .74, .70) * (.85 + .3 * n(p * .7));
+#endif
+          c *= luz;
           float a = smoothstep(0., .28 + .15 * n(p * 4.), vUv.x) * smoothstep(1., .72 - .15 * n(p * 4. + 7.), vUv.x); float f = 1. - exp(-dens * dens * vD * vD); gl_FragColor = vec4(mix(c, nevoa, f), a);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
@@ -509,18 +530,40 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const tr = new THREE.Mesh(g, m); tr.renderOrder = 1; cena.add(tr); lixo.push(g, m); }
   // árvores frutíferas grandes dos dois lados da trilha, emoldurando o caminho
   const moldura = []; for (let z = 30; z < 165; z += 13) { const x = trilhaX(z); for (const sx of [-1, 1]) { const w = T2W(x + sx * (6 + rnd() * 3), z + rnd() * 6), xx = w.x, zz = w.z; if (!naAgua(xx, zz)) moldura.push({ x: xx, z: zz, s: 0.9 + rnd() * 0.35, vira: rnd() > 0.5 }); } }
-  if (E) await Promise.all([figuras('arvore-fruto-1', moldura.filter((_, i) => i % 2 === 0), 15, 1), figuras('arvore-fruto-2', moldura.filter((_, i) => i % 2 === 1), 12, 1)]);
+  if (E && !ER) await Promise.all([figuras('arvore-fruto-1', moldura.filter((_, i) => i % 2 === 0), 15, 1), figuras('arvore-fruto-2', moldura.filter((_, i) => i % 2 === 1), 12, 1)]);
   else if (G) { const pw = T2W(5.5, 42); await Promise.all([figuras('oliveira-1', moldura.filter((_, i) => i % 2 === 0), 7.5, 0.5), figuras('oliveira-2', moldura.filter((_, i) => i % 2 === 1), 6.5, 0.5), figuras('prensa-azeite', [{ x: pw.x, z: pw.z, s: 1 }], 2.2, 0)]); }
   // FLORES em camadas: à beira da trilha (perto e grandes), nas margens do rio e espalhadas; árvores floridas, romãzeiras e videiras
   const beiraTrilha = (n, a0, a1) => Array.from({ length: n }, () => { const z = 14 + rnd() * 155, sx = rnd() > 0.5 ? 1 : -1, w = T2W(trilhaX(z) + sx * (a0 + rnd() * (a1 - a0)), z); return { x: w.x, z: w.z, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => !naAgua(o.x, o.z));
   const beiraRio = (n) => Array.from({ length: n }, () => { const ci = Math.floor(rnd() * rios.length), c = rios[ci], w = LARG(ci), u = rnd() * 0.7, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = w * (1.42 + rnd() * 0.5); return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.7 + rnd() * 0.6, vira: rnd() > 0.5 }; }).filter((o) => Math.hypot(o.x, o.z) > 24);
-  const flores = !E ? [] : [['flor-lirios', 1.1, 1], ['flor-hibisco', 1.7, 0.4], ['flor-roxa', 1.0, 1], ['flor-ave-paraiso', 1.5, 0.7], ['flor-rosa', 0.8, 1.2]];
+  const flores = !E || ER ? [] : [['flor-lirios', 1.1, 1], ['flor-hibisco', 1.7, 0.4], ['flor-roxa', 1.0, 1], ['flor-ave-paraiso', 1.5, 0.7], ['flor-rosa', 0.8, 1.2]];
   await Promise.all([
     ...flores.map(([nm, h, q]) => figuras(nm, [...beiraTrilha(Math.round((toque ? 40 : 70) * q), 1.25, 4.5), ...beiraRio(Math.round((toque ? 50 : 90) * q)), ...(E ? zonas(Math.round((toque ? 120 : 220) * q), 10, 700, Z.flores) : espalhar(Math.round((toque ? 40 : 80) * q), 8, 220, 2, [centroArv]))], h, 0.5)),
-    E && figuras('arvore-florida', zonas(Math.round(220 * T2), 30, 1200, Z.florida), 11, 0.8),
-    E && figuras('romazeira', [...beiraTrilha(toque ? 8 : 14, 5, 9), ...zonas(Math.round(140 * T2), 25, 800, Z.fruto)], 5.5, 0.7),
-    E && figuras('videira', [...beiraTrilha(toque ? 8 : 14, 4.5, 8), ...zonas(Math.round(110 * T2), 25, 700, Z.fruto)], 4.2, 0.5),
+    E && !ER && figuras('arvore-florida', zonas(Math.round(220 * T2), 30, 1200, Z.florida), 11, 0.8),
+    E && !ER && figuras('romazeira', [...beiraTrilha(toque ? 8 : 14, 5, 9), ...zonas(Math.round(140 * T2), 25, 800, Z.fruto)], 5.5, 0.7),
+    E && !ER && figuras('videira', [...beiraTrilha(toque ? 8 : 14, 4.5, 8), ...zonas(Math.round(110 * T2), 25, 700, Z.fruto)], 4.2, 0.5),
   ]);
+  // PLANTIO REAL (Éden): a mesma organização da paisagem (mata ciliar, campos, pomares, mata fechada em manchas), agora com plantas 3D
+  if (ER) { const T3 = toque ? 0.6 : 1, parte = (l, k, n) => l.filter((_, i) => i % n === k), naoAgua = (l) => l.filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) > 22);
+    const ciliar = naoAgua(rios.flatMap((c) => Array.from({ length: 70 }, (_, k) => { const u = (k + rnd()) / 70, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = LARG(rios.indexOf(c)) + 5 + rnd() * 12; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.45 }; })));
+    const alta = zonas(Math.round(9000 * T3), 40, 1500, Z.alta, 0.42), fruto = zonas(Math.round(1500 * T3), 30, 1400, Z.fruto);
+    await Promise.all([
+      ER.arvores('jac', [{ x: 0, z: 0, s: 1 }], 30),   // a árvore da vida, no meio do jardim (aparência ilustrativa: o texto não a descreve)
+      ER.arvores('jac', zonas(Math.round(600 * T3), 110, 1500, Z.gigante, 0.54), 26), ER.arvores('jac', zonas(Math.round(160 * T3), 30, 1200, Z.florida), 15),
+      ER.arvores('arv1', [...parte(alta, 0, 4), ...parte(fruto, 0, 2), ...moldura.filter((_, i) => i % 2 === 0)], 13), ER.arvores('arv2', [...parte(alta, 1, 4), ...parte(fruto, 1, 2), ...moldura.filter((_, i) => i % 2 === 1)], 10),
+      ER.arvores('arv4', [...parte(alta, 2, 4), ...zonas(Math.round(1800 * T3), 30, 1400, Z.acai), ...parte(ciliar, 0, 2)], 15), ER.arvores('arv3', [...parte(alta, 3, 4), ...parte(ciliar, 1, 2)], 7),
+      ER.plantas('samambaia.glb', zonas(Math.round(2600 * T3), 10, 900, Z.baixa), 0.9, { raio: 55 }),
+      ER.plantas('folhagem2.glb', zonas(Math.round(2200 * T3), 10, 700, Z.baixa), 0.8, { raio: 45 }), ER.plantas('folhagem3.glb', zonas(Math.round(1800 * T3), 10, 700, Z.heliconia), 1.0, { raio: 45 }),
+      ER.plantas('folhagem1.glb', zonas(Math.round(1300 * T3), 10, 700, Z.heliconia), 1.9, { raio: 60, sombra: true }),
+      ER.plantas('arbusto1.glb', zonas(Math.round(1600 * T3), 12, 1100, Z.flores), 1.9, { raio: 70, sombra: true }),
+      ER.plantas('mato1.glb', zonas(Math.round(2200 * T3), 8, 800, Z.baixa), 0.7, { raio: 40 }), ER.plantas('mato3.glb', zonas(Math.round(1600 * T3), 8, 800, Z.baixa), 0.6, { raio: 35 }),
+      ER.plantas('capim1.glb', zonas(Math.round(9000 * T3), 6, 1100, (z) => 0.4 + 0.6 * z.campo), 0.55, { raio: 38, vento: 0.5 }), ER.plantas('capim2.glb', zonas(Math.round(6000 * T3), 6, 1100, (z) => 0.4 + 0.6 * z.campo), 0.7, { raio: 38, vento: 0.5 }),
+      ER.plantas('flor2.glb', [...beiraTrilha(Math.round(70 * T3), 1.2, 4.5), ...beiraRio(Math.round(200 * T3)), ...zonas(Math.round(1000 * T3), 10, 700, Z.flores)], 0.45, { raio: 40, vento: 0.4 }),
+      ER.plantas('flor3.glb', [...beiraTrilha(Math.round(70 * T3), 1.2, 4), ...zonas(Math.round(900 * T3), 10, 700, Z.flores)], 0.4, { raio: 35, vento: 0.4 }),
+      ER.plantas('flor4.glb', zonas(Math.round(1200 * T3), 10, 700, Z.flores), 0.3, { raio: 30, vento: 0.6 }),
+      ER.plantas('pedra2.glb', rios.flatMap((c, ci) => Array.from({ length: 40 }, () => { const u = rnd() * 0.75, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = LARG(ci) * (1.05 + rnd() * 0.5); return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.6 + rnd() * 0.8 }; })).filter((o) => Math.hypot(o.x, o.z) > 20), 1.1, { raio: 90, vento: 0, sombra: true, enterra: 0.25 }),
+      ER.plantas('pedra1.glb', zonas(Math.round(260 * T3), 20, 900, (z) => 0.3 + 0.7 * z.borda), 1.6, { raio: 90, vento: 0, sombra: true, enterra: 0.3 }),
+    ]);
+    ER.montarArvores(); window.__ER = ER; const cr = raiz.querySelector('.ej-cred'); if (cr) cr.textContent = 'Reconstituição artística: árvores, plantas, flores, pedras e chão em 3D de fotogrametria de plantas reais (Poly Haven e ambientCG, CC0). O texto bíblico não descreve a aparência do jardim.'; }
   // FEIXES DE SOL atravessando a copa (raios de luz no ar úmido), sempre em volta de quem anda
   const NF = toque ? 18 : 30, gF = new THREE.InstancedBufferGeometry(), qF = new THREE.PlaneGeometry(1, 1); qF.translate(0, 0.5, 0); gF.index = qF.index; gF.attributes.position = qF.attributes.position; gF.attributes.uv = qF.attributes.uv; gF.instanceCount = NF;
   const iF = new Float32Array(NF * 4); for (let i = 0; i < NF; i++) iF.set([(rnd() * 2 - 1) * 45, (rnd() * 2 - 1) * 45, 1.5 + rnd() * 3.5, rnd() * 100], i * 4); gF.setAttribute('iF', new THREE.InstancedBufferAttribute(iF, 4));
@@ -925,6 +968,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     solDisco.position.copy(camera.position).addScaledVector(SOL, 3500); matF.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); feixes.visible = polen.visible; matPo.uniforms.centro.value.set(voando ? camera.position.x : eu.x, altura(eu.x, eu.z), voando ? camera.position.z : eu.z); polen.visible = !voando || camera.position.y - altura(camera.position.x, camera.position.z) < 30;
     const sp = solDisco.position.clone().project(camera), fw = new THREE.Vector3(); camera.getWorldDirection(fw); matPos.uniforms.solTela.value.set(sp.x * 0.5 + 0.5, sp.y * 0.5 + 0.5); matPos.uniforms.solVis.value = Math.max(0, fw.dot(SOL)) ** 1.5 * (sp.z < 1 ? 1 : 0);
     if (audio && somLigado) { const tg = bichos.find((b) => b.e.n === 'leao-anda'); if (tg && Math.hypot(tg.x - camera.position.x, tg.z - camera.position.z) < 16 && t - (window.__ultRugido || 0) > 25) { window.__ultRugido = t; audio.rugir(); } }
+    if (ER) { ER.atualizar(camera.position, t); const fx = voando ? camera.position.x : eu.x, fz = voando ? camera.position.z : eu.z, px = Math.round(fx / 2) * 2, pz = Math.round(fz / 2) * 2, py = altura(px, pz); sol.target.position.set(px, py, pz); sol.position.set(px + SOL.x * 300, py + SOL.y * 300, pz + SOL.z * 300); sol.target.updateMatrixWorld(); }
     camera.updateMatrixWorld(); refletir(); renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); }
   const iniciar = () => requestAnimationFrame((a) => { raiz.style.pointerEvents = ''; raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
   // aquecimento escondido: compila os shaders em paralelo e manda para a placa de vídeo uma peça por quadro (o globo segue liso durante o voo)
@@ -944,5 +988,5 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const LUGAR0 = { arvore: 'diante da árvore da vida, no meio do jardim (Gn 2:9)', rio: 'onde o rio que sai do Éden se divide em quatro braços (Gn 2:10)', animais: 'entre os animais do jardim (Gn 2:19)', presenca: 'junto da luz que representa a presença do Senhor passeando no jardim (Gn 3:8)', chegada: 'na trilha que leva à árvore da vida (Gn 2:8)', bom: 'nas partes distantes do jardim (Gn 1:31)' };
   const LUGAR = MW.lugar || LUGAR0;
   window.NEXUS_CENA = () => MW.nome + ' em 3D (reconstituição artística, ilustrativa), ' + (voando ? 'chegando de drone' : voarLivre ? 'voando sobre o lugar' : (LUGAR[cartaoAtual] || 'andando pelo lugar'));
-  return window.__mundoW = { cena, fechar, mostrar: () => { if (oculto) { oculto = false; iniciar(); } }, estado: () => ({ x: eu.x, z: eu.z, yaw, pitch, voando, cam: [Math.round(camera.position.x), Math.round(camera.position.y), Math.round(camera.position.z)], bichos: bichos.length, onde: bichos.map((b) => [b.e.n, Math.round(b.x), Math.round(b.z)]) }), olhar: (y, p) => { yaw = y; pitch = p; }, irPara: (x, z) => { pularChegada(); eu.set(x, 0, z); } };
+  return window.__mundoW = { cena, fechar, info: () => ({ tri: renderer.info.render.triangles, calls: renderer.info.render.calls, geo: renderer.info.memory.geometries, tex: renderer.info.memory.textures }), ir: (x, z, y_, p_) => { pularChegada(); eu.x = x; eu.z = z; if (y_ != null) yaw = y_; if (p_ != null) pitch = p_; }, voar: (h) => { subida = h; }, mostrar: () => { if (oculto) { oculto = false; iniciar(); } }, estado: () => ({ x: eu.x, z: eu.z, yaw, pitch, voando, cam: [Math.round(camera.position.x), Math.round(camera.position.y), Math.round(camera.position.z)], bichos: bichos.length, onde: bichos.map((b) => [b.e.n, Math.round(b.x), Math.round(b.z)]) }), olhar: (y, p) => { yaw = y; pitch = p; }, irPara: (x, z) => { pularChegada(); eu.set(x, 0, z); } };
 }
