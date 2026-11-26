@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script></head>
+<body><script type="module">
+// assa um IMPOSTOR: a árvore fotografada de 12 lados x 3 alturas (cor e normal), para as árvores distantes
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const p = new URLSearchParams(location.search), AZ = 12, EL = [8, 38, 68], F = +(p.get('f') || 256);
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true, premultipliedAlpha: false }); r.setPixelRatio(1); r.setSize(AZ * F, EL.length * F); document.body.appendChild(r.domElement);
+r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.NoToneMapping; r.setClearColor(0x000000, 0);
+const g = await new GLTFLoader().loadAsync(p.get('m')); const s = new THREE.Scene(); s.add(g.scene); g.scene.updateMatrixWorld(true);
+const box = new THREE.Box3().setFromObject(g.scene), sph = box.getBoundingSphere(new THREE.Sphere()); const c = sph.center, R = sph.radius;
+const albedo = [], normal = [];
+g.scene.traverse((o) => { if (!o.isMesh) return; const m = o.material; const at = m.alphaTest > 0 || m.alphaMode === 'MASK' ? 0.5 : (m.transparent && m.map ? 0.5 : 0);
+  albedo.push([o, new THREE.MeshBasicMaterial({ map: m.map, color: m.color, alphaTest: at, side: THREE.DoubleSide, transparent: false })]);
+  normal.push([o, new THREE.ShaderMaterial({ side: THREE.DoubleSide, uniforms: { map: { value: m.map }, at: { value: at } },
+    vertexShader: 'varying vec3 vN; varying vec2 vUv; void main(){ vUv = uv; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+    fragmentShader: 'uniform sampler2D map; uniform float at; varying vec3 vN; varying vec2 vUv; void main(){ if (at > 0. && texture2D(map, vUv).a < at) discard; vec3 n = normalize(vN); if (!gl_FrontFacing) n = -n; gl_FragColor = vec4(n * .5 + .5, 1.); }' })]); });
+const cam = new THREE.OrthographicCamera(-R, R, R, -R, 0.01, R * 6);
+async function assar(lista) { lista.forEach(([o, m]) => (o.material = m)); r.setScissorTest(true); r.setViewport(0, 0, AZ * F, EL.length * F); r.setScissor(0, 0, AZ * F, EL.length * F); r.clear();
+  EL.forEach((el, j) => { for (let i = 0; i < AZ; i++) { const az = i / AZ * Math.PI * 2, e = el * Math.PI / 180; const d = new THREE.Vector3(Math.cos(e) * Math.sin(az), Math.sin(e), Math.cos(e) * Math.cos(az));
+    cam.position.copy(c).addScaledVector(d, R * 3); cam.up.set(0, 1, 0); cam.lookAt(c); cam.updateMatrixWorld();
+    const y = (EL.length - 1 - j) * F; r.setViewport(i * F, y, F, F); r.setScissor(i * F, y, F, F); r.render(s, cam); } });
+  return r.domElement.toDataURL('image/png'); }
+window.__info = { c: c.toArray(), R, AZ, EL, F, cor: await assar(albedo), nor: await assar(normal) }; window.__pronto = true;
+</script></body></html>
