@@ -82,8 +82,8 @@ const dentroPol = (x, z, P) => { let c = false; for (let i = 0, j = P.length - 1
 export const PRIMEIRA = [[-770, 40], [-790, 300], [-760, 560], [-600, 820], [-380, 930], [-140, 960], [40, 920], [170, 780], [205, 560], [190, 330], [150, 242], [150, -242], [-150, -242], [-150, -60], [-420, 20], [-770, 40]];
 export const SEGUNDA = [[-560, 25], [-560, -160], [-470, -320], [-300, -360], [-150, -300], [-150, -242]];   // traçado presumido (Gênate → Antônia); o Gólgota fica FORA, a oeste
 export const CIDADE = [[-770, 40], [-790, 300], [-760, 560], [-600, 820], [-380, 930], [-140, 960], [40, 920], [170, 780], [205, 560], [190, 330], [150, 242], [150, -242], [-150, -300], [-300, -360], [-470, -320], [-560, -160], [-560, 25]];
-export const LUGARES = {
-  santuario: [-30, -100], portaFormosa: [60, -100], salomao: [150, -60], porticoReal: [0, 228], antonia: [-95, -275], palacio: [-730, 170], torres: [-740, 45], siloe: [-40, 905], cidadeDavi: [60, 520], oliveiras: [760, -70], golgota: [-640, -230], tiropeon: [-225, 60],
+export const LUGARES = {   // portaFormosa = o portão em si (santuário + 137 m a leste), para a câmera e o cartão ficarem nele
+  santuario: [-30, -100], portaFormosa: [107, -100], salomao: [150, -60], porticoReal: [0, 228], antonia: [-95, -275], palacio: [-730, 170], torres: [-740, 45], siloe: [-40, 905], cidadeDavi: [60, 520], oliveiras: [760, -70], golgota: [-640, -230], tiropeon: [-225, 60],
 };
 
 export async function construir(THREE, cena, { altura, folga, lixo, toque, rnd, carregar, renderer }) {
