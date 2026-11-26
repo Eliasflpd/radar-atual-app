@@ -82,15 +82,16 @@ export async function criarEdenReal(THREE, cena, { base, altura, unif, toque, li
 #include <colorspace_fragment>
       }` });
   async function carregarArvore(id) { if (especies[id]) return especies[id];
-    // no tablet a versão "perto" é a média (download e memória menores)
-    const [perto, medio, info, cor, nor] = await Promise.all([toque ? null : pega(id + '-perto.glb'), pega(id + '-medio.glb'), fetch(base + id + '-imp.json').then((r) => r.json()).catch(() => null), tex(id + '-imp-cor.webp'), tex(id + '-imp-nor.webp', false)]);
+    // primeiro só a versão média e o impostor (leves); a versão "perto" (pesada) vem depois, por trás, e só no computador
+    const [perto, medio, info, cor, nor] = await Promise.all([null, pega(id + '-medio.glb'), fetch(base + id + '-imp.json').then((r) => r.json()).catch(() => null), tex(id + '-imp-cor.webp'), tex(id + '-imp-nor.webp', false)]);
     const fv = 0.0035 * 5 / ARV[id].h, M = medio && fundir(medio, fv), P = perto ? fundir(perto, fv) : M;
-    const e = { id, h: ARV[id].h, P, M: perto ? M : null, info, cor, nor, lista: [] };
+    const e = { id, h: ARV[id].h, P, M, info, cor, nor, lista: [] };
     especies[id] = e; return e; }
   // planta árvores: lista de {x,z,s}, alturaAlvo em metros
-  async function arvores(id, lista, alturaAlvo) { if (!lista.length) return; const e = await carregarArvore(id); if (!e.P || !e.info) return;
+  let parado = false;
+  async function arvores(id, lista, alturaAlvo) { if (!lista.length || parado) return; const e = await carregarArvore(id); if (parado || !e.P || !e.info) return;
     for (const o of lista) { const h = alturaAlvo * (o.s || 1), esc = h / e.h, y = altura(o.x, o.z) - 0.1 * esc; e.lista.push({ x: o.x, y, z: o.z, esc, yaw: rnd() * 6.283, h }); obst.push({ x: o.x, z: o.z, r: 0.25 + 0.06 * h }); } }
-  function montarArvores() { for (const e of Object.values(especies)) { if (!e.lista.length) continue; const n = e.lista.length;
+  function montarArvores() { if (parado) return; for (const e of Object.values(especies)) { if (!e.lista.length || e.imp) continue; const n = e.lista.length;
       // impostor: um quadro por árvore, todos de uma vez (a troca para o 3D é decidida no próprio shader)
       const q = new THREE.PlaneGeometry(1, 1); const g = new THREE.InstancedBufferGeometry(); g.index = q.index; g.attributes.position = q.attributes.position; g.attributes.uv = q.attributes.uv; g.instanceCount = n;
       const P = new Float32Array(n * 4), E = new Float32Array(n * 2); e.lista.forEach((o, i) => { P.set([o.x, o.y, o.z, o.h], i * 4); E.set([o.esc, o.yaw], i * 2); });
@@ -106,13 +107,13 @@ export async function criarEdenReal(THREE, cena, { base, altura, unif, toque, li
   // ---------- PLANTAS, FLORES E PEDRAS (só perto) ----------
   const conjuntos = [];
   async function plantas(arquivo, lista, alturaAlvo, { raio = 60, vento: fv = 0.06, sombra = false, giro = true, enterra = 0.05, deitada = false } = {}) { if (!lista.length) return;
-    const obj = await pega(arquivo); const vs = variantes(obj, fv); if (!vs.length) return;
+    if (parado) return; const obj = await pega(arquivo); if (parado) return; const vs = variantes(obj, fv); if (!vs.length) return;
     const c = { nome: arquivo, vs, raio: raio * (toque ? 0.7 : 1), lista: [], ims: [] };
     for (const o of lista) { const v = Math.floor(rnd() * vs.length), alvo = alturaAlvo * (o.s || 1), esc = deitada ? alvo / Math.max(vs[v].lar, 0.05) : alvo / Math.max(vs[v].alt, vs[v].lar * 0.5, 0.05);   // planta rasteira (larga e baixa) não vira gigante
       c.lista.push({ x: o.x, z: o.z, y: altura(o.x, o.z) - enterra * esc * vs[v].alt, esc, yaw: giro ? rnd() * 6.283 : (o.giro || 0), v }); }
     c.ims = vs.map((v, k) => { const cnt = c.lista.filter((o) => o.v === k).length; const im = new THREE.InstancedMesh(v.g, v.ms, Math.max(1, Math.min(cnt, toque ? 700 : 1600))); im.count = 0; im.frustumCulled = false; im.castShadow = sombra; im.receiveShadow = sombra; cena.add(im); return im; });
     c.grade = new Map(); c.lista.forEach((o, i) => { const k = Math.floor(o.x / 40) * 4096 + Math.floor(o.z / 40); if (!c.grade.has(k)) c.grade.set(k, []); c.grade.get(k).push(i); });
-    conjuntos.push(c); }
+    conjuntos.push(c); ult = null; }
 
   // ---------- ATUALIZAR: escolhe quem aparece em 3D, a cada ~meio metro andado ----------
   const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(), Pv = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0); let ult = null, ultT = 0;
@@ -157,5 +158,10 @@ export async function criarEdenReal(THREE, cena, { base, altura, unif, toque, li
           .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness - .15 * vPB.x;'); };
     m.customProgramCacheKey = () => 'chaoReal'; terreno.material.dispose(); terreno.material = m; terreno.receiveShadow = true; lixo.push(m); return true; }
 
-  return { arvores, plantas, montarArvores, atualizar, chao, especies, conjuntos };
+  // a versão "perto" de cada árvore, carregada por último (uma de cada vez, para não disputar a rede com o resto)
+  async function subirPerto() { if (toque) return; for (const e of Object.values(especies)) { if (parado) return; if (!e.imP || e.perto) continue;
+      const obj = await pega(e.id + '-perto.glb'); if (parado || !obj) continue; const P = fundir(obj, 0.0035 * 5 / e.h); if (!P) continue;
+      const im = new THREE.InstancedMesh(P.g, P.ms, Math.min(e.lista.length, 40)); im.count = 0; im.frustumCulled = false; im.castShadow = true; im.receiveShadow = true;
+      cena.remove(e.imP); e.imP.dispose(); e.imP = im; e.perto = true; cena.add(im); ult = null; } }
+  return { arvores, plantas, montarArvores, atualizar, chao, especies, conjuntos, subirPerto, refrescar: () => { ult = null; }, parar: () => { parado = true; } };
 }

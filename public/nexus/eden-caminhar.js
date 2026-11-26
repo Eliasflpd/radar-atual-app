@@ -92,8 +92,10 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     .ej-raiz.voando .ej-joy{opacity:0;pointer-events:none}
     .ej-cred{position:absolute;right:20px;bottom:44px;max-width:420px;text-align:right;font-size:10.5px;color:rgba(255,255,255,.85);text-shadow:0 1px 4px #000}
     .ej-dica{position:absolute;right:20px;bottom:20px;font-size:12px;color:#fff;text-shadow:0 1px 4px #000}
+    .ej-carga{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);padding:8px 16px;border-radius:20px;background:rgba(20,28,22,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;font:500 13px system-ui,sans-serif;text-shadow:0 1px 2px #0008;pointer-events:none;opacity:0;transition:opacity .6s}
+    .ej-carga.on{opacity:1}
     .ej-mira{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:rgba(255,255,255,.6);pointer-events:none}
-  </style><canvas></canvas><div class="ej-mira"></div>
+  </style><canvas></canvas><div class="ej-mira"></div><div class="ej-carga"></div>
   <div class="ej-cab"><h2>${MW.titulo}</h2><p>${MW.sub}</p></div>
   <div class="ej-bts"><button type="button" class="ej-modo">👁 Primeira pessoa</button><button type="button" class="ej-voar">🕊 Voar</button><button type="button" class="ej-som">🔈 Som</button><button type="button" class="ej-sair">↩ Voltar</button></div>
   <div class="ej-card"></div><div class="ej-joy"><b></b></div>
@@ -101,6 +103,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   <div class="ej-dica">${toque ? 'Joystick para andar · arraste para olhar · toque duplo no chão para ir até lá' : 'W A S D ou setas para andar · Shift corre · arraste para olhar · duplo clique no chão para ir até lá'}</div>`;
   host.appendChild(raiz);
   const canvas = raiz.querySelector('canvas'), card = raiz.querySelector('.ej-card');
+  const carga = (t) => { const el = raiz.querySelector('.ej-carga'); if (!el) return; if (t) el.textContent = t; el.classList.toggle('on', !!t); };
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(toque ? 1.5 : 2, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
@@ -213,8 +216,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   function altura(x, z) { const fx = (x + T / 2) / passo, fz = (z + T / 2) / passo, ix = Math.max(0, Math.min(NS - 1, Math.floor(fx))), iz = Math.max(0, Math.min(NS - 1, Math.floor(fz))), ax = fx - ix, az = fz - iz, n = NS + 1;
     const a = alturas[iz * n + ix], b = alturas[iz * n + ix + 1], c = alturas[(iz + 1) * n + ix], d = alturas[(iz + 1) * n + ix + 1]; return (a * (1 - ax) + b * ax) * (1 - az) + (c * (1 - ax) + d * ax) * az; }
   // O ÉDEN DE VERDADE (eden-real.js): árvores, plantas, flores, pedras e chão de fotogrametria (CC0) no lugar dos recortes desenhados
-  const obstR = [], ER = E ? await import('/nexus/eden-real.js?v=1').then((m) => m.criarEdenReal(THREE, cena, { base: '/nexus/eden/real/', altura, unif, toque, lixo, SOL, rnd, obst: obstR, renderer })).catch((e) => { console.warn('eden-real', e); return null; }) : null;
-  if (ER) { const ss = THREE.MathUtils.smoothstep, nrm = geoT.attributes.normal, pA = new Float32Array(pos.count * 4), pB = new Float32Array(pos.count * 2);
+  const obstR = [], ER = E ? await import('/nexus/eden-real.js?v=2').then((m) => m.criarEdenReal(THREE, cena, { base: '/nexus/eden/real/', altura, unif, toque, lixo, SOL, rnd, obst: obstR, renderer })).catch((e) => { console.warn('eden-real', e); return null; }) : null;
+  if (ER) (async () => { await folga(); const ss = THREE.MathUtils.smoothstep, nrm = geoT.attributes.normal, pA = new Float32Array(pos.count * 4), pB = new Float32Array(pos.count * 2);
     for (let i = 0; i < pos.count; i++) { if (i % 4000 === 0) await folga(); const x = pos.getX(i), z = pos.getZ(i), r = Math.hypot(x, z), ny = nrm.getY(i), rr = relRio[i];
       const n1 = 0.5 + 0.5 * (0.6 * Math.sin(x * 0.021 + 1.7) * Math.cos(z * 0.017 - 0.4) + 0.4 * Math.sin((x - z) * 0.047)), F = manchaMata(x, z);
       const mata = ss(F, 0.45, 0.6) * ss(r, 35, 80), margem = 1 - ss(rr, 1.0, 1.7), lama = (1 - ss(rr, 1.4, 2.6)) * (1 - margem);
@@ -224,7 +227,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       let campo = (1 - mata * 0.6) * (1 - clr), musgo = mata * 0.4 + clr * 0.7, grama = campo * (0.35 + 0.65 * n1), terra = campo * (0.65 - 0.65 * n1) * 0.55 + clr * 0.2;
       const resto = (1 - rocha) * (1 - margem * 0.9); grama *= resto; terra *= resto; musgo *= resto; const lm = lama * (1 - rocha), cs = margem * (1 - rocha);
       const sum = grama + terra + musgo + cs + lm + rocha + 1e-5; pA.set([grama / sum, terra / sum, musgo / sum, cs / sum], i * 4); pB.set([lm / sum, rocha / sum], i * 2); }
-    if (!(await ER.chao(terreno, pA, pB))) console.warn('chão real não carregou');
+    if (!(await ER.chao(terreno, pA, pB))) console.warn('chão real não carregou'); })();
+  if (ER) {
     // SOMBRAS de verdade do sol (só perto de quem anda, onde as árvores são 3D)
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; sol.shadow.radius = 3; sol.shadow.intensity = 0.62; sol.castShadow = true; sol.shadow.mapSize.set(toque ? 1024 : 2048, toque ? 1024 : 2048);
     { const sc = sol.shadow.camera, L = toque ? 40 : 65; sc.left = -L; sc.right = L; sc.top = L; sc.bottom = -L; sc.near = 10; sc.far = 700; sc.updateProjectionMatrix(); } sol.shadow.bias = -0.0004; sol.shadow.normalBias = 0.06; cena.add(sol.target); }
@@ -512,7 +516,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const trilhaX = (z) => 2.5 * Math.sin(z / 13);
   if (!J) { const P = [], U = [], I = []; let k = 0; for (let z = 170; z >= 12; z -= 0.8) { const x = trilhaX(z); for (const sx of [-1, 1]) { const w = T2W(x + sx * 0.95, z); P.push(w.x, altura(w.x, w.z) + 0.05, w.z); U.push(sx < 0 ? 0 : 1, z / 3); } if (k) { const a = (k - 1) * 2; I.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } k++; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I);
-    const tTr = ER ? await carregar('real/trilha.jpg') : null; if (tTr) { tTr.wrapS = tTr.wrapT = THREE.RepeatWrapping; lixo.push(tTr); }
+    // a foto da trilha chega por trás; até lá, uma cor de terra
+    const tTr = ER ? new THREE.DataTexture(new Uint8Array([120, 96, 70, 255]), 1, 1) : null; if (tTr) { tTr.needsUpdate = true; lixo.push(tTr); carregar('real/trilha.jpg').then((t) => { if (!t) return; t.wrapS = t.wrapT = THREE.RepeatWrapping; lixo.push(t); m.uniforms.tTr.value = t; }).catch(() => {}); }
     const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, uniforms: { ...unif, tTr: { value: tTr } }, defines: tTr ? { TRILHA_FOTO: 1 } : {},
       vertexShader: `varying vec2 vUv; varying float vD; void main(){ vUv = uv; vec4 mv = modelViewMatrix * vec4(position, 1.); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
       fragmentShader: `uniform float dens; uniform vec3 nevoa, luz; uniform sampler2D tTr; varying vec2 vUv; varying float vD; float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -542,14 +547,17 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     E && !ER && figuras('videira', [...beiraTrilha(toque ? 8 : 14, 4.5, 8), ...zonas(Math.round(110 * T2), 25, 700, Z.fruto)], 4.2, 0.5),
   ]);
   // PLANTIO REAL (Éden): a mesma organização da paisagem (mata ciliar, campos, pomares, mata fechada em manchas), agora com plantas 3D
-  if (ER) { const T3 = toque ? 0.6 : 1, parte = (l, k, n) => l.filter((_, i) => i % n === k), naoAgua = (l) => l.filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) > 22);
+  // planta tudo POR TRÁS, em etapas: o jardim abre na hora com chão e grama; árvores, depois plantas, depois as árvores de perto
+  if (ER) (async () => { carga('Carregando as árvores do jardim…'); await folga(); const T3 = toque ? 0.6 : 1, parte = (l, k, n) => l.filter((_, i) => i % n === k), naoAgua = (l) => l.filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) > 22);
     const ciliar = naoAgua(rios.flatMap((c) => Array.from({ length: 70 }, (_, k) => { const u = (k + rnd()) / 70, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = LARG(rios.indexOf(c)) + 5 + rnd() * 12; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.45 }; })));
-    const alta = zonas(Math.round(9000 * T3), 40, 1500, Z.alta, 0.42), fruto = zonas(Math.round(1500 * T3), 30, 1400, Z.fruto);
+    await folga(); const alta = zonas(Math.round(9000 * T3), 40, 1500, Z.alta, 0.42); await folga(); const fruto = zonas(Math.round(1500 * T3), 30, 1400, Z.fruto); await folga();
     await Promise.all([
       ER.arvores('jac', [{ x: 0, z: 0, s: 1 }], 30),   // a árvore da vida, no meio do jardim (aparência ilustrativa: o texto não a descreve)
       ER.arvores('jac', zonas(Math.round(600 * T3), 110, 1500, Z.gigante, 0.54), 26), ER.arvores('jac', zonas(Math.round(160 * T3), 30, 1200, Z.florida), 15),
       ER.arvores('arv1', [...parte(alta, 0, 4), ...parte(fruto, 0, 2), ...moldura.filter((_, i) => i % 2 === 0)], 13), ER.arvores('arv2', [...parte(alta, 1, 4), ...parte(fruto, 1, 2), ...moldura.filter((_, i) => i % 2 === 1)], 10),
       ER.arvores('arv4', [...parte(alta, 2, 4), ...zonas(Math.round(1800 * T3), 30, 1400, Z.acai), ...parte(ciliar, 0, 2)], 15), ER.arvores('arv3', [...parte(alta, 3, 4), ...parte(ciliar, 1, 2)], 7),
+    ]); ER.montarArvores(); ER.refrescar(); carga('Carregando plantas e flores…'); await folga();
+    await Promise.all([
       ER.plantas('samambaia.glb', zonas(Math.round(2600 * T3), 10, 900, Z.baixa), 0.9, { raio: 55 }),
       ER.plantas('folhagem2.glb', zonas(Math.round(2200 * T3), 10, 700, Z.baixa), 0.8, { raio: 45 }), ER.plantas('folhagem3.glb', zonas(Math.round(1800 * T3), 10, 700, Z.heliconia), 1.0, { raio: 45 }),
       ER.plantas('folhagem1.glb', zonas(Math.round(1300 * T3), 10, 700, Z.heliconia), 1.9, { raio: 60, sombra: true }),
@@ -562,7 +570,8 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       ER.plantas('pedra2.glb', rios.flatMap((c, ci) => Array.from({ length: 40 }, () => { const u = rnd() * 0.75, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = LARG(ci) * (1.05 + rnd() * 0.5); return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.6 + rnd() * 0.8 }; })).filter((o) => Math.hypot(o.x, o.z) > 20), 1.1, { raio: 90, vento: 0, sombra: true, enterra: 0.25 }),
       ER.plantas('pedra1.glb', zonas(Math.round(260 * T3), 20, 900, (z) => 0.3 + 0.7 * z.borda), 1.6, { raio: 90, vento: 0, sombra: true, enterra: 0.3 }),
     ]);
-    ER.montarArvores(); window.__ER = ER; const cr = raiz.querySelector('.ej-cred'); if (cr) cr.textContent = 'Reconstituição artística: árvores, plantas, flores, pedras e chão em 3D de fotogrametria de plantas reais (Poly Haven e ambientCG, CC0). O texto bíblico não descreve a aparência do jardim.'; }
+    ER.refrescar(); carga(null); window.__ER = ER; const cr = raiz.querySelector('.ej-cred'); if (cr) cr.textContent = 'Reconstituição artística: árvores, plantas, flores, pedras e chão em 3D de fotogrametria de plantas reais (Poly Haven e ambientCG, CC0). O texto bíblico não descreve a aparência do jardim.';
+    await ER.subirPerto(); })().catch((e) => { console.warn('plantio do Éden', e); carga(null); });
   // FEIXES DE SOL atravessando a copa (raios de luz no ar úmido), sempre em volta de quem anda
   const NF = toque ? 18 : 30, gF = new THREE.InstancedBufferGeometry(), qF = new THREE.PlaneGeometry(1, 1); qF.translate(0, 0.5, 0); gF.index = qF.index; gF.attributes.position = qF.attributes.position; gF.attributes.uv = qF.attributes.uv; gF.instanceCount = NF;
   const iF = new Float32Array(NF * 4); for (let i = 0; i < NF; i++) iF.set([(rnd() * 2 - 1) * 45, (rnd() * 2 - 1) * 45, 1.5 + rnd() * 3.5, rnd() * 100], i * 4); gF.setAttribute('iF', new THREE.InstancedBufferAttribute(iF, 4));
@@ -1000,7 +1009,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       objs.forEach((o, i) => { o.frustumCulled = cul[i]; }); renderer.setRenderTarget(rt); renderer.clear(); renderer.setRenderTarget(reflRT); renderer.clear(); renderer.setRenderTarget(null); rtP.dispose(); } catch (e) { console.warn('aquecer', e); } }
   if (oculto) { raiz.style.pointerEvents = 'none'; await aquecer(); } else iniciar();   // compila os shaders sem travar (em paralelo) e sobe as texturas antes de aparecer
 
-  function fechar() { if (!ativo) return; ativo = false; window.NEXUS_CENA = null; window.NEXUS_MUNDO_ACAO = null; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
+  function fechar() { if (!ativo) return; ativo = false; if (ER) ER.parar(); carga(null); window.NEXUS_CENA = null; window.NEXUS_MUNDO_ACAO = null; obs.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); raiz.classList.remove('on'); if (audio) try { audio.ctx.close(); } catch (_) {}
     setTimeout(() => { lixo.forEach((o) => o && o.dispose && o.dispose()); renderer.dispose(); raiz.remove(); }, 1400); if (aoFechar) aoFechar(); }
   raiz.querySelector('.ej-sair').onclick = fechar;
   // o guia sabe onde o pastor está dentro do jardim (para conversar sobre o que ele vê)
