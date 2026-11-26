@@ -31,7 +31,11 @@ export async function abrirFotoViva(THREE, host, cfg) {
   const mat = new THREE.ShaderMaterial({ uniforms: unif, side: THREE.DoubleSide, defines: ESF ? { ESFERA: 1 } : {},
     vertexShader: comum + `
       varying vec2 vUv; varying float vD;
-      void main(){ vUv = uv; vec2 im = vec2(uv.x, 1. - uv.y); float d = texture2D(prof, uv).r; float z = dist(d);
+      void main(){ vUv = uv; vec2 im = vec2(uv.x, 1. - uv.y); float d = texture2D(prof, uv).r;
+        #ifdef ESFERA
+        { float w = smoothstep(.04, 0., min(uv.x, 1. - uv.x)); d = mix(d, .5 * (texture2D(prof, vec2(.002, uv.y)).r + texture2D(prof, vec2(.998, uv.y)).r), w); }
+        #endif
+        float z = dist(d);
         vec2 nd = uv * 2. - 1.; vec3 p = vec3(nd.x * tg * asp * z, nd.y * tg * z, -z);
         #ifdef ESFERA
         { float lon = (uv.x - .5) * 6.2831853, lat = (uv.y - .5) * 3.1415927; p = vec3(sin(lon) * cos(lat), sin(lat), -cos(lon) * cos(lat)) * z; }
