@@ -106,9 +106,19 @@ export async function criarEdenReal(THREE, cena, { base, altura, unif, toque, li
 
   // ---------- PLANTAS, FLORES E PEDRAS (só perto) ----------
   const conjuntos = [];
-  async function plantas(arquivo, lista, alturaAlvo, { raio = 60, vento: fv = 0.06, sombra = false, giro = true, enterra = 0.05, deitada = false } = {}) { if (!lista.length) return;
+  // lista: [{x,z,s}] fixa, ou { dens: plantas por m², peso: (x,z) => 0..1 } para mata fechada gerada em volta de quem anda (sem limite de quantidade)
+  async function plantas(arquivo, lista, alturaAlvo, { raio = 60, vento: fv = 0.06, sombra = false, giro = true, enterra = 0.05, deitada = false } = {}) { const proc = !Array.isArray(lista); if (!proc && !lista.length) return;
     if (parado) return; const obj = await pega(arquivo); if (parado) return; const vs = variantes(obj, fv); if (!vs.length) return;
     const c = { nome: arquivo, vs, raio: raio * (toque ? 0.7 : 1), lista: [], ims: [] };
+    const por = (o, v) => { const alvo = alturaAlvo * (o.s || 1), esc = deitada ? alvo / Math.max(vs[v].lar, 0.05) : alvo / Math.max(vs[v].alt, vs[v].lar * 0.5, 0.05); return { x: o.x, z: o.z, y: altura(o.x, o.z) - enterra * esc * vs[v].alt, esc, yaw: giro ? o.yaw : (o.giro || 0), v }; };
+    if (proc) { let hn = 0; for (const ch of arquivo) hn = (hn * 31 + ch.charCodeAt(0)) | 0; const feitas = new Set(), n = lista.dens * 1600 * (toque ? 0.6 : 1);
+      c.gerar = (gx, gz) => { const k = gx * 4096 + gz; if (feitas.has(k)) return; feitas.add(k); let a = (gx * 73856093) ^ (gz * 19349663) ^ hn;
+        const r = () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+        const l = []; for (let i = 0; i < n; i++) { const x = (gx + r()) * 40, z = (gz + r()) * 40, w = lista.peso(x, z), u = r(), s = 0.7 + 0.6 * r(), yaw = r() * 6.283, v = Math.floor(r() * vs.length); if (u > w) continue;
+          l.push(c.lista.length); c.lista.push(por({ x, z, s, yaw }, v)); } c.grade.set(k, l); };
+      const cap = Math.min(toque ? 2500 : 6000, Math.ceil(lista.dens * (toque ? 0.6 : 1) * Math.PI * c.raio * c.raio / vs.length) + 20);
+      c.ims = vs.map((v) => { const im = new THREE.InstancedMesh(v.g, v.ms, cap); im.count = 0; im.frustumCulled = false; im.castShadow = sombra; im.receiveShadow = sombra; cena.add(im); return im; });
+      c.grade = new Map(); conjuntos.push(c); ult = null; return; }
     for (const o of lista) { const v = Math.floor(rnd() * vs.length), alvo = alturaAlvo * (o.s || 1), esc = deitada ? alvo / Math.max(vs[v].lar, 0.05) : alvo / Math.max(vs[v].alt, vs[v].lar * 0.5, 0.05);   // planta rasteira (larga e baixa) não vira gigante
       c.lista.push({ x: o.x, z: o.z, y: altura(o.x, o.z) - enterra * esc * vs[v].alt, esc, yaw: giro ? rnd() * 6.283 : (o.giro || 0), v }); }
     c.ims = vs.map((v, k) => { const cnt = c.lista.filter((o) => o.v === k).length; const im = new THREE.InstancedMesh(v.g, v.ms, Math.max(1, Math.min(cnt, toque ? 700 : 1600))); im.count = 0; im.frustumCulled = false; im.castShadow = sombra; im.receiveShadow = sombra; cena.add(im); return im; });
@@ -120,15 +130,18 @@ export async function criarEdenReal(THREE, cena, { base, altura, unif, toque, li
   function atualizar(pos, agora) { if (ult && Math.hypot(pos.x - ult.x, pos.z - ult.z) < 0.6 && Math.abs(pos.y - ult.y) < 2 && agora - ultT < 1.5) return; ult = { x: pos.x, y: pos.y, z: pos.z }; ultT = agora;
     const alto = pos.y - altura(pos.x, pos.z) > 40;   // do alto (drone) fica tudo impostor; plantas baixas somem
     for (const e of Object.values(especies)) { if (!e.imP) continue; let np = 0, nm = 0; const capP = e.imP.instanceMatrix.count, capM = e.imM ? e.imM.instanceMatrix.count : 0;
-      if (!alto) { const R = DM * 2.4, cx = Math.floor(pos.x / 50), cz = Math.floor(pos.z / 50), rr = Math.ceil(R / 50);
+      // mais perto primeiro: se a mata for densa demais para o 3D, o limite desta espécie encolhe e o impostor cobre o resto, sem buracos
+      let lim = DM; if (!alto) { const R = DM * 2.4, cx = Math.floor(pos.x / 50), cz = Math.floor(pos.z / 50), rr = Math.ceil(R / 50), cand = [];
         for (let a = -rr; a <= rr; a++) for (let b = -rr; b <= rr; b++) { const l = e.grade.get((cx + a) * 4096 + cz + b); if (!l) continue;
-          for (const i of l) { const o = e.lista[i], d = Math.hypot(o.x - pos.x, o.y + o.h * 0.5 - pos.y, o.z - pos.z), k = Math.min(2.4, Math.max(0.8, o.h / 12)); if (d > DM * k) continue;
-            Q.setFromAxisAngle(Y, o.yaw); S.setScalar(o.esc); M4.compose(Pv.set(o.x, o.y, o.z), Q, S);
-            if (d < DP * k && np < capP) e.imP.setMatrixAt(np++, M4); else if (nm < capM) e.imM.setMatrixAt(nm++, M4); } } }
+          for (const i of l) { const o = e.lista[i], d = Math.hypot(o.x - pos.x, o.y + o.h * 0.5 - pos.y, o.z - pos.z), k = Math.min(2.4, Math.max(0.8, o.h / 12)); if (d < DM * k) cand.push([d / k, i]); } }
+        if (cand.length > capP + capM) { cand.sort((u, v) => u[0] - v[0]); lim = Math.max(DP + 6, cand[capP + capM][0]); cand.length = capP + capM; }
+        for (const [dn, i] of cand) { if (dn >= lim) continue; const o = e.lista[i]; Q.setFromAxisAngle(Y, o.yaw); S.setScalar(o.esc); M4.compose(Pv.set(o.x, o.y, o.z), Q, S);
+          if (dn < DP && np < capP) e.imP.setMatrixAt(np++, M4); else if (nm < capM) e.imM.setMatrixAt(nm++, M4); else if (np < capP) e.imP.setMatrixAt(np++, M4); } }
+      if (e.imp) e.imp.material.uniforms.DM.value = lim;
       e.imP.count = np; e.imP.instanceMatrix.needsUpdate = true; if (e.imM) { e.imM.count = nm; e.imM.instanceMatrix.needsUpdate = true; } }
     for (const c of conjuntos) { const cont = c.ims.map(() => 0);
       if (!alto) { const R = c.raio, cx = Math.floor(pos.x / 40), cz = Math.floor(pos.z / 40), rr = Math.ceil(R / 40);
-        for (let a = -rr; a <= rr; a++) for (let b = -rr; b <= rr; b++) { const l = c.grade.get((cx + a) * 4096 + cz + b); if (!l) continue;
+        for (let a = -rr; a <= rr; a++) for (let b = -rr; b <= rr; b++) { if (c.gerar) c.gerar(cx + a, cz + b); const l = c.grade.get((cx + a) * 4096 + cz + b); if (!l) continue;
           for (const i of l) { const o = c.lista[i], d = Math.hypot(o.x - pos.x, o.z - pos.z); if (d > R) continue; const im = c.ims[o.v]; if (cont[o.v] >= im.instanceMatrix.count) continue;
             const k = ss(d, R, R * 0.8); Q.setFromAxisAngle(Y, o.yaw); S.setScalar(o.esc * k); M4.compose(Pv.set(o.x, o.y, o.z), Q, S); im.setMatrixAt(cont[o.v]++, M4); } } }
       c.ims.forEach((im, k) => { im.count = cont[k]; im.instanceMatrix.needsUpdate = true; }); } }
@@ -158,10 +171,24 @@ export async function criarEdenReal(THREE, cena, { base, altura, unif, toque, li
           .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness - .15 * vPB.x;'); };
     m.customProgramCacheKey = () => 'chaoReal'; terreno.material.dispose(); terreno.material = m; terreno.receiveShadow = true; lixo.push(m); return true; }
 
+  // CIPÓS pendurados das copas (geometria própria, uma malha só para todos)
+  function cipos(maxR = 700, max = toque ? 1200 : 3200) { if (parado) return; const P = [], C = [], I = []; let n = 0;
+    const lista = Object.values(especies).filter((e) => e.id !== 'arv3').flatMap((e) => e.lista).filter((o) => Math.hypot(o.x, o.z) < maxR && o.h > 8);
+    for (const o of lista) { if (n >= max) break; if (rnd() > 0.45) continue; const k = 1 + Math.floor(rnd() * 3);
+      for (let j = 0; j < k && n < max; j++, n++) { const a = rnd() * 6.283, r0 = o.h * (0.12 + rnd() * 0.15), y0 = o.y + o.h * (0.62 + rnd() * 0.25), x0 = o.x + Math.cos(a) * r0, z0 = o.z + Math.sin(a) * r0;
+        const solto = rnd() < 0.55, a2 = a + (rnd() - 0.5) * 1.2, r1 = r0 + (solto ? rnd() * 1.5 : o.h * (0.15 + rnd() * 0.3)), x1 = o.x + Math.cos(a2) * r1, z1 = o.z + Math.sin(a2) * r1;
+        const y1 = solto ? y0 - o.h * (0.25 + rnd() * 0.45) : altura(x1, z1) - 0.2, sag = solto ? 0 : o.h * (0.05 + rnd() * 0.1), esp = 0.025 + rnd() * 0.035, cor = [0.10 + rnd() * 0.05, 0.11 + rnd() * 0.06, 0.05];
+        const SEG = 10, base = P.length / 3;
+        for (let s2 = 0; s2 <= SEG; s2++) { const t = s2 / SEG, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, y = y0 + (y1 - y0) * t - sag * 4 * t * (1 - t) + Math.sin(t * 9 + a) * 0.08;
+          for (let q = 0; q < 3; q++) { const ang = q * 2.094; P.push(x + Math.cos(ang) * esp, y, z + Math.sin(ang) * esp); const f = 0.8 + 0.4 * ((q + s2) % 2); C.push(cor[0] * f, cor[1] * f, cor[2] * f); } }
+        for (let s2 = 0; s2 < SEG; s2++) for (let q = 0; q < 3; q++) { const a1 = base + s2 * 3 + q, b1 = base + s2 * 3 + (q + 1) % 3, c1 = a1 + 3, d1 = b1 + 3; I.push(a1, c1, b1, b1, c1, d1); } } }
+    if (!n) return; const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); g.setIndex(I); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide })); m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; cena.add(m); lixo.push(g, m.material); return n; }
+
   // a versão "perto" de cada árvore, carregada por último (uma de cada vez, para não disputar a rede com o resto)
   async function subirPerto() { if (toque) return; for (const e of Object.values(especies)) { if (parado) return; if (!e.imP || e.perto) continue;
       const obj = await pega(e.id + '-perto.glb'); if (parado || !obj) continue; const P = fundir(obj, 0.0035 * 5 / e.h); if (!P) continue;
       const im = new THREE.InstancedMesh(P.g, P.ms, Math.min(e.lista.length, 40)); im.count = 0; im.frustumCulled = false; im.castShadow = true; im.receiveShadow = true;
       cena.remove(e.imP); e.imP.dispose(); e.imP = im; e.perto = true; cena.add(im); ult = null; } }
-  return { arvores, plantas, montarArvores, atualizar, chao, especies, conjuntos, subirPerto, refrescar: () => { ult = null; }, parar: () => { parado = true; } };
+  return { arvores, plantas, montarArvores, atualizar, chao, especies, conjuntos, subirPerto, cipos, refrescar: () => { ult = null; }, parar: () => { parado = true; } };
 }

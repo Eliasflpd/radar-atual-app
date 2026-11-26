@@ -107,7 +107,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(toque ? 1.5 : 2, devicePixelRatio || 1)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
-  const cena = new THREE.Scene(); const NEVOA = new THREE.Color(E ? 0xbfccc9 : G ? 0x141c30 : 0xd9cfb4), DENS = E ? 0.00075 : G ? 0.0019 : 0.00055;
+  const cena = new THREE.Scene(); const NEVOA = new THREE.Color(E ? 0xbfccc9 : G ? 0x141c30 : 0xd9cfb4), DENS = E ? 0.0012 : G ? 0.0019 : 0.00055;
   cena.fog = new THREE.FogExp2(NEVOA, DENS); cena.background = NEVOA;
   const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 9000);
   const SOL = (J ? new THREE.Vector3(0.62, 0.58, 0.5) : E ? new THREE.Vector3(-0.55, 0.42, -0.72) : G ? new THREE.Vector3(-0.188, 0.656, -0.731) : new THREE.Vector3(0.78, 0.32, -0.3)).normalize();   // sol no Éden; lua cheia no Getsêmani
@@ -217,7 +217,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   function altura(x, z) { const fx = (x + T / 2) / passo, fz = (z + T / 2) / passo, ix = Math.max(0, Math.min(NS - 1, Math.floor(fx))), iz = Math.max(0, Math.min(NS - 1, Math.floor(fz))), ax = fx - ix, az = fz - iz, n = NS + 1;
     const a = alturas[iz * n + ix], b = alturas[iz * n + ix + 1], c = alturas[(iz + 1) * n + ix], d = alturas[(iz + 1) * n + ix + 1]; return (a * (1 - ax) + b * ax) * (1 - az) + (c * (1 - ax) + d * ax) * az; }
   // O ÉDEN DE VERDADE (eden-real.js): árvores, plantas, flores, pedras e chão de fotogrametria (CC0) no lugar dos recortes desenhados
-  const obstR = [], ER = E ? await import('/nexus/eden-real.js?v=2').then((m) => m.criarEdenReal(THREE, cena, { base: '/nexus/eden/real/', altura, unif, toque, lixo, SOL, rnd, obst: obstR, renderer })).catch((e) => { console.warn('eden-real', e); return null; }) : null;
+  const obstR = [], ER = E ? await import('/nexus/eden-real.js?v=3').then((m) => m.criarEdenReal(THREE, cena, { base: '/nexus/eden/real/', altura, unif, toque, lixo, SOL, rnd, obst: obstR, renderer })).catch((e) => { console.warn('eden-real', e); return null; }) : null;
   if (ER) (async () => { await folga(); const ss = THREE.MathUtils.smoothstep, nrm = geoT.attributes.normal, pA = new Float32Array(pos.count * 4), pB = new Float32Array(pos.count * 2);
     for (let i = 0; i < pos.count; i++) { if (i % 4000 === 0) await folga(); const x = pos.getX(i), z = pos.getZ(i), r = Math.hypot(x, z), ny = nrm.getY(i), rr = relRio[i];
       const n1 = 0.5 + 0.5 * (0.6 * Math.sin(x * 0.021 + 1.7) * Math.cos(z * 0.017 - 0.4) + 0.4 * Math.sin((x - z) * 0.047)), F = manchaMata(x, z);
@@ -225,7 +225,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       let rocha = 1 - ss(ny, 0.72, 0.86); rocha = Math.max(rocha, ss(alturas[i], 70, 140) * ss(r, 1300, 1600));
       if (CQ) { const u = CQ.x - x, v = z - CQ.z, rc = Math.hypot(u, v), a = Math.atan2(v, u); if (rc < 31 || (Math.abs(a) < 1.45 && rc < 46)) rocha = 1; }
       const dr = dRiacho(x, z), clr = dr < 30 ? 1 - ss(dr, 18, 30) : 0;
-      let campo = (1 - mata * 0.6) * (1 - clr), musgo = mata * 0.4 + clr * 0.7, grama = campo * (0.35 + 0.65 * n1), terra = campo * (0.65 - 0.65 * n1) * 0.55 + clr * 0.2;
+      let campo = (1 - mata * 0.92) * (1 - clr), musgo = mata * 0.5 + clr * 0.7, grama = campo * (0.35 + 0.65 * n1), terra = campo * (0.65 - 0.65 * n1) * 0.55 + clr * 0.2 + mata * 0.45;   // chão da mata: musgo e folhas, quase sem grama
       const resto = (1 - rocha) * (1 - margem * 0.9); grama *= resto; terra *= resto; musgo *= resto; const lm = lama * (1 - rocha), cs = margem * (1 - rocha);
       const sum = grama + terra + musgo + cs + lm + rocha + 1e-5; pA.set([grama / sum, terra / sum, musgo / sum, cs / sum], i * 4); pB.set([lm / sum, rocha / sum], i * 2); }
     if (!(await ER.chao(terreno, pA, pB))) console.warn('chão real não carregou'); })();
@@ -370,7 +370,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const matGrama = new THREE.ShaderMaterial({ side: THREE.DoubleSide, uniforms: { ...unif, centro: { value: new THREE.Vector2() }, sol: { value: SOL } },
     vertexShader: `uniform float t; uniform vec2 centro; attribute vec3 iOff; attribute float iRot, iEsc; varying float vY, vD, vFl, vX, vTr; varying vec3 vC, vFc; uniform sampler2D alt; uniform vec3 sol;
       void main(){ vec2 rel = mod(iOff.xz - centro + ${RG}.0, ${(RG * 2).toFixed(1)}) - ${RG}.0; vec2 xz = centro + rel; float dist = length(rel);
-        float esc = iEsc * smoothstep(${RG}.0, ${(RG * 0.55).toFixed(1)}, dist); float ts = dot(xz, vec2(${TD.x.toFixed(3)}, ${TD.z.toFixed(3)})), tl = dot(xz, vec2(${TP.x.toFixed(3)}, ${TP.z.toFixed(3)})); if (ts > 12. && ts < 170.) esc *= smoothstep(.55, 1.25, abs(tl - 2.5 * sin(ts / 13.)));
+        float esc = iEsc * smoothstep(${RG}.0, ${(RG * 0.55).toFixed(1)}, dist); float ts = dot(xz, vec2(${TD.x.toFixed(3)}, ${TD.z.toFixed(3)})), tl = dot(xz, vec2(${TP.x.toFixed(3)}, ${TP.z.toFixed(3)})); if (ts > 12. && ts < 170.) esc *= smoothstep(.55, 1.25, abs(tl - 2.5 * sin(ts / 13.)));${ER ? ' float F = .5 + .5 * (.55 * sin(xz.x / 170. + 1.3) * cos(xz.y / 210. - .7) + .3 * sin((xz.x + xz.y) / 97. + 2.1) + .15 * sin(xz.x / 41. - xz.y / 53.)); esc *= 1. - .85 * smoothstep(.44, .58, F) * smoothstep(38., 70., length(xz));' : ''}
         float r2 = fract(iRot * 7.13), r3 = fract(iEsc * 13.7 + iOff.y * 3.1);
         float y = position.y; float altL = esc * ${ER ? '(.10 + .34 * r3 * r3 + .06 * iOff.y)' : '(.18 + .42 * r3 * r3 + .12 * iOff.y)'};   // alturas variadas: muitas baixas, algumas altas
         // curva natural da lâmina (cai para um lado) e vento que vem em ondas pelo campo
@@ -445,7 +445,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const manchaPomar = (x, z) => 0.5 + 0.5 * (0.6 * Math.sin(x / 63 + 0.4) * Math.cos(z / 71 + 1.9) + 0.4 * Math.sin((x - z) / 37));
   const zona = (x, z) => { const r = Math.hypot(x, z), F = manchaMata(x, z), [d, w] = distRio(x, z), dr = d - w;
     const nucleo = THREE.MathUtils.smoothstep(F, 0.54, 0.68), borda = THREE.MathUtils.smoothstep(F, 0.42, 0.54) * (1 - nucleo), campo = 1 - THREE.MathUtils.smoothstep(F, 0.38, 0.5);
-    return { r, F, dr, nucleo, borda, campo, ciliar: 1 - THREE.MathUtils.smoothstep(dr, 6, 42), clareira: THREE.MathUtils.smoothstep(r, 55, 95), pomar: THREE.MathUtils.smoothstep(manchaPomar(x, z), 0.52, 0.7) }; };
+    return { r, F, dr, nucleo, borda, campo, ciliar: 1 - THREE.MathUtils.smoothstep(dr, 6, 42), clareira: THREE.MathUtils.smoothstep(r, ER ? 38 : 55, ER ? 70 : 95), pomar: THREE.MathUtils.smoothstep(manchaPomar(x, z), 0.52, 0.7) }; };
   function zonas(n, rMin, rMax, peso, minF = 0) { const out = []; let tent = 0;
     while (out.length < n && tent++ < n * 40) { const a = rnd() * 6.283, r = Math.sqrt(rMin * rMin + rnd() * (rMax * rMax - rMin * rMin)), x = Math.cos(a) * r, z = Math.sin(a) * r;
       if (minF && manchaMata(x, z) < minF) continue; if (naAgua(x, z) || dRiacho(x, z) < 10) continue; { const tt = W2T(x, z); if (Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 7 && tt.s > 8 && tt.s < 172) continue; }
@@ -456,7 +456,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   camposManada = E ? (() => { const a0 = Math.atan2(-TD.z, -TD.x); return [campoManada(180, 300, a0), campoManada(220, 360, a0 + 1.0), campoManada(200, 340, a0 - 1.1)].filter(Boolean); })() : [];
   const Z = {
     gigante: (z) => z.nucleo * z.clareira * (1 - z.ciliar) * THREE.MathUtils.smoothstep(z.r, 120, 220),
-    alta: (z) => Math.max(z.nucleo, 0.45 * z.borda) * z.clareira * (1 - 0.6 * z.ciliar),
+    alta: (z) => Math.max(z.nucleo, ER ? 0.75 * z.borda : 0.45 * z.borda, ER ? 0.16 * z.campo : 0) * z.clareira * (1 - 0.6 * z.ciliar),   // no Éden real: mata fechada e árvores soltas também nos campos
     acai: (z) => Math.max(0.9 * z.ciliar, 0.45 * z.borda) * z.clareira,
     fruto: (z) => (0.45 * z.campo + 0.8 * z.borda) * z.pomar * THREE.MathUtils.smoothstep(z.r, 35, 70) * (1 - 0.7 * z.nucleo),
     florida: (z) => (0.55 * z.campo + 0.4 * z.borda) * (1 - z.nucleo) * THREE.MathUtils.smoothstep(z.r, 30, 60),
@@ -551,23 +551,28 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   // planta tudo POR TRÁS, em etapas: o jardim abre na hora com chão e grama; árvores, depois plantas, depois as árvores de perto
   if (ER) (async () => { carga('Carregando as árvores do jardim…'); await folga(); const T3 = toque ? 0.6 : 1, parte = (l, k, n) => l.filter((_, i) => i % n === k), naoAgua = (l) => l.filter((o) => !naAgua(o.x, o.z) && Math.hypot(o.x, o.z) > 22);
     const ciliar = naoAgua(rios.flatMap((c) => Array.from({ length: 70 }, (_, k) => { const u = (k + rnd()) / 70, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = LARG(rios.indexOf(c)) + 5 + rnd() * 12; return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.8 + rnd() * 0.45 }; })));
-    await folga(); const alta = zonas(Math.round(9000 * T3), 40, 1500, Z.alta, 0.42); await folga(); const fruto = zonas(Math.round(1500 * T3), 30, 1400, Z.fruto); await folga();
+    const mataPeso = (x, z) => { if (naAgua(x, z) || dRiacho(x, z) < 6) return 0; const tt = W2T(x, z); if (tt.s > 8 && tt.s < 172 && Math.abs(tt.lado - 2.5 * Math.sin(tt.s / 13)) < 2.6) return 0; const zz = zona(x, z); return Math.max(zz.nucleo, 0.75 * zz.borda, 0.6 * zz.ciliar) * zz.clareira; };
+    await folga(); const alta = zonas(Math.round(26000 * T3), 32, 1500, Z.alta); await folga(); const fruto = zonas(Math.round(1500 * T3), 30, 1400, Z.fruto); await folga();
     await Promise.all([
       ER.arvores('jac', [{ x: 0, z: 0, s: 1 }], 30),   // a árvore da vida, no meio do jardim (aparência ilustrativa: o texto não a descreve)
-      ER.arvores('jac', zonas(Math.round(600 * T3), 110, 1500, Z.gigante, 0.54), 26), ER.arvores('jac', zonas(Math.round(160 * T3), 30, 1200, Z.florida), 15),
+      ER.arvores('jac', zonas(Math.round(1600 * T3), 90, 1500, Z.gigante, 0.5), 26), ER.arvores('jac', zonas(Math.round(160 * T3), 30, 1200, Z.florida), 15),
       ER.arvores('arv1', [...parte(alta, 0, 4), ...parte(fruto, 0, 2), ...moldura.filter((_, i) => i % 2 === 0)], 13), ER.arvores('arv2', [...parte(alta, 1, 4), ...parte(fruto, 1, 2), ...moldura.filter((_, i) => i % 2 === 1)], 10),
-      ER.arvores('arv4', [...parte(alta, 2, 4), ...zonas(Math.round(1800 * T3), 30, 1400, Z.acai), ...parte(ciliar, 0, 2)], 15), ER.arvores('arv3', [...parte(alta, 3, 4), ...parte(ciliar, 1, 2)], 7),
-    ]); ER.montarArvores(); ER.refrescar(); carga('Carregando plantas e flores…'); await folga();
+      ER.arvores('arv4', [...parte(alta, 2, 4), ...zonas(Math.round(4500 * T3), 26, 1400, Z.acai), ...parte(ciliar, 0, 2)], 15), ER.arvores('arv3', [...parte(alta, 3, 4), ...parte(ciliar, 1, 2)], 7),
+    ]); ER.montarArvores(); ER.cipos(); ER.refrescar(); carga('Carregando plantas e flores…'); await folga();
     await Promise.all([
       ER.plantas('samambaia.glb', zonas(Math.round(2600 * T3), 10, 900, Z.baixa), 0.9, { raio: 55 }),
       ER.plantas('folhagem2.glb', zonas(Math.round(2200 * T3), 10, 700, Z.baixa), 0.8, { raio: 45 }), ER.plantas('folhagem3.glb', zonas(Math.round(1800 * T3), 10, 700, Z.heliconia), 1.0, { raio: 45 }),
       ER.plantas('folhagem1.glb', zonas(Math.round(1300 * T3), 10, 700, Z.heliconia), 1.9, { raio: 60, sombra: true }),
-      ER.plantas('arbusto1.glb', zonas(Math.round(1600 * T3), 12, 1100, Z.flores), 1.9, { raio: 70, sombra: true }),
+      ER.plantas('arbusto1.glb', zonas(Math.round(4800 * T3), 12, 1100, Z.flores), 1.9, { raio: 70, sombra: true }),
       ER.plantas('mato1.glb', zonas(Math.round(2200 * T3), 8, 800, Z.baixa), 0.7, { raio: 40 }), ER.plantas('mato3.glb', zonas(Math.round(1600 * T3), 8, 800, Z.baixa), 0.6, { raio: 35 }),
       ER.plantas('capim1.glb', zonas(Math.round(9000 * T3), 6, 1100, (z) => 0.4 + 0.6 * z.campo), 0.55, { raio: 38, vento: 0.5 }), ER.plantas('capim2.glb', zonas(Math.round(6000 * T3), 6, 1100, (z) => 0.4 + 0.6 * z.campo), 0.7, { raio: 38, vento: 0.5 }),
       ER.plantas('flor2.glb', [...beiraTrilha(Math.round(70 * T3), 1.2, 4.5), ...beiraRio(Math.round(200 * T3)), ...zonas(Math.round(1000 * T3), 10, 700, Z.flores)], 0.45, { raio: 40, vento: 0.4 }),
       ER.plantas('flor3.glb', [...beiraTrilha(Math.round(70 * T3), 1.2, 4), ...zonas(Math.round(900 * T3), 10, 700, Z.flores)], 0.4, { raio: 35, vento: 0.4 }),
       ER.plantas('flor4.glb', zonas(Math.round(1200 * T3), 10, 700, Z.flores), 0.3, { raio: 30, vento: 0.6 }),
+      // MATA FECHADA: sub-bosque gerado em volta de quem anda (samambaias, folhagens largas, helicônias), denso como numa selva de verdade
+      ER.plantas('samambaia.glb', { dens: 0.35, peso: mataPeso }, 0.95, { raio: 45 }), ER.plantas('folhagem2.glb', { dens: 0.15, peso: mataPeso }, 0.9, { raio: 45 }),
+      ER.plantas('folhagem1.glb', { dens: 0.04, peso: mataPeso }, 2.1, { raio: 55, sombra: true }), ER.plantas('folhagem3.glb', { dens: 0.06, peso: mataPeso }, 1.2, { raio: 45 }),
+      ER.plantas('mato1.glb', { dens: 0.12, peso: mataPeso }, 0.7, { raio: 35 }),
       ER.plantas('pedra2.glb', rios.flatMap((c, ci) => Array.from({ length: 40 }, () => { const u = rnd() * 0.75, p = c.getPointAt(u), tg = c.getTangentAt(u), sx = rnd() > 0.5 ? 1 : -1, d = LARG(ci) * (1.05 + rnd() * 0.5); return { x: p.x - tg.z * sx * d, z: p.z + tg.x * sx * d, s: 0.6 + rnd() * 0.8 }; })).filter((o) => Math.hypot(o.x, o.z) > 20), 1.1, { raio: 90, vento: 0, sombra: true, enterra: 0.25 }),
       ER.plantas('pedra1.glb', zonas(Math.round(260 * T3), 20, 900, (z) => 0.3 + 0.7 * z.borda), 1.6, { raio: 90, vento: 0, sombra: true, enterra: 0.3 }),
     ]);
