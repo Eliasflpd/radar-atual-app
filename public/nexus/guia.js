@@ -152,6 +152,9 @@ export function iniciarGuia() {
     if (!cena && junto) { const i = JUNTO.findIndex((re) => re.test(junto)); if (i >= 0) cena = CENAS[i]; }
     if (cena) {   // a cena muda na hora (sem custo)
       const [, busca, nome, fn] = cena; await abrirCena(cena);
+      if (busca === 'Jerusalém' && /porta formosa|patio das mulheres|portico de salomao|alpendre de salomao|antonia|siloe/.test(q)) (async () => {   // pediu um lugar dentro de Jerusalém: o drone segue direto até ele
+        for (let k = 0; k < 80 && !document.querySelector('.ej-raiz.on'); k++) await new Promise((ok) => setTimeout(ok, 250)); await new Promise((ok) => setTimeout(ok, 2500));
+        if (typeof window.NEXUS_MUNDO_ACAO === 'function') try { window.NEXUS_MUNDO_ACAO(q); } catch (_) {} })();
       const estudo = /\b(estudo|sermao|pregacao|mensagem)\b/.test(q);
       hist.push({ t: `Abrindo ${nome}.` + (estudo ? ' Agora vou preparar o texto com o universo; ele aparece aqui quando estiver pronto.' : ' Pode me perguntar sobre o que está vendo.'), nota: 'cena do NEXUS · sem custo' }); guardar(); desenhar();
       if (!estudo) return;

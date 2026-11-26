@@ -178,7 +178,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const hEla = (x, z) => { const ss = THREE.MathUtils.smoothstep, az = Math.abs(z), abre = ss(x, -1700, -600), leste = Math.max(0, x - 1000) * 0.12;
     const encosta = 85 * ss(az, 70, 300) * (0.78 + 0.22 * Math.sin(x * 0.004 + (z > 0 ? 1 : 2.5))), ondula = 4 * Math.sin(x * 0.011) * Math.cos(z * 0.013) + 2 * Math.sin(x * 0.03 + z * 0.02);
     const leito = -1.6 * (1 - ss(Math.abs(z - ribZ(x)), 2.2, 7)); return encosta * abre + ondula * (0.35 + 0.65 * ss(az, 60, 220)) + leste + leito - 12 * (1 - abre); };
-  const JC = J ? await import('/nexus/jerusalem-cidade.js?v=7') : null;
+  const JC = J ? await import('/nexus/jerusalem-cidade.js?v=8') : null;
   const CQM = E ? await import('/nexus/eden-cachoeira.js?v=9') : null, CQ = E ? (() => { const c = rios[0]; let uu = 0.5; for (let k = 0; k <= 800; k++) { const u = k / 800, q = c.getPointAt(u); if (Math.hypot(q.x, q.z) < 420) { uu = u; break; } } const q = c.getPointAt(uu), tg = c.getTangentAt(uu); return { x: q.x, z: q.z, dx: -tg.x, dz: -tg.z, u: uu }; })() : null;   // a cachoeira fica NO rio principal, uns 420 m rio acima da árvore da vida
   const manchaMata = (x, z) => 0.5 + 0.5 * (0.55 * Math.sin(x / 170 + 1.3) * Math.cos(z / 210 - 0.7) + 0.3 * Math.sin((x + z) / 97 + 2.1) + 0.15 * Math.sin(x / 41 - z / 53));
   const hBase0 = (x, z) => { if (J) return JC.hJer(x, z); if (G) return hGets(x, z); if (L) return hEla(x, z); const r = Math.hypot(x, z), dv = Math.max(0, distRio(x, z)[0] - 18), vale = 30 * THREE.MathUtils.smoothstep(dv, 8, 300) * (0.7 + 0.3 * Math.sin(x * 0.0041 + 1.1) * Math.cos(z * 0.0037)) * THREE.MathUtils.smoothstep(r, 20, 90); return vale + (E ? 24 * Math.exp(-((x + 372) ** 2 + (z + 140) ** 2) / 4200) : 0) + 2.0 * Math.sin(x * 0.013) * Math.cos(z * 0.011) + 1.0 * Math.sin(x * 0.031 + z * 0.027) + 0.4 * Math.sin(x * 0.09 - z * 0.07) + Math.max(0, r - 1550) ** 1.25 * 0.03 * (0.6 + 0.4 * Math.sin(Math.atan2(z, x) * 5)); };
@@ -715,7 +715,13 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   const camPos = new THREE.Vector3(), olhoAlvo = new THREE.Vector3(); let camIni = false;
 
   // SEGUIR ADIANTE: dentro de um mundo, o chat entende pedidos de lugar que estão à vista e leva você até lá (sem voltar ao globo)
-  let indoLonge = null, rota = null;
+  let indoLonge = null, rota = null, cine = null; const olhoCine = new THREE.Vector3();
+  // PLANO DE CINEMA (drone): decola de onde está, faz um arco largo e pousa no eixo do alvo, sempre de olho nele; no fim fica exatamente de frente (sem tranco)
+  function planoCinema(pts, alvo, final, fim) { pularChegada(); voarLivre = false; indo = null; const S = camera.position.clone();
+    const curva = new THREE.CatmullRomCurve3([S, new THREE.Vector3(S.x, Math.max(S.y + 25, 40), S.z), ...pts, final], false, 'centripetal');
+    const fw = new THREE.Vector3(); camera.getWorldDirection(fw); const olhar0 = S.clone().addScaledVector(fw, Math.max(30, S.distanceTo(alvo) * 0.5));
+    cine = { curva, alvo: alvo.clone(), olhar0, t0: performance.now(), dur: THREE.MathUtils.clamp(curva.getLength() / 24 * 1000, 9000, 16000),
+      fim: () => { const dx = alvo.x - final.x, dy = alvo.y - final.y, dz = alvo.z - final.z; eu.set(final.x, 0, final.z); vel.set(0, 0, 0); subida = altVoo = Math.max(0, final.y - 1.7 - Math.max(altura(final.x, final.z), hBase(final.x, final.z) - 1.6)); yaw = Math.atan2(-dx, -dz); pitch = Math.atan2(dy, Math.hypot(dx, dz)); camPos.copy(final); if (fim) fim(); } }; }
   window.NEXUS_MUNDO_ACAO = (q) => {
     if (G && /templo|santuario|santo lugar|cidade|jerusalem|muralha|porta (oriental|dourada|formosa)/.test(q)) {
       const santo = /dentro|santo|santuario|interior/.test(q), cidade = /cidade|jerusalem|muralha/.test(q) && !/templo/.test(q);
@@ -727,6 +733,10 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     if (/desca|descer|pousar|chao/.test(q)) { subida = 0; voarLivre = false; return 'Descendo.'; }
     if (/rocha|onde (ele|jesus) orou/.test(q) && G) { indo = new THREE.Vector3(TD.x * 3, 0, TD.z * 3); return 'Indo até a rocha onde Jesus orou.'; }
     // JERUSALÉM: 'me leve ao santuário', 'vá até a Porta Formosa', 'quero ver a Antônia'… vai a pé (num salto) e fica de frente
+    if (J && /porta formosa|patio das mulheres|^(a )?formosa$/.test(q)) {   // a Porta Formosa (At 3:2): chegada de drone e enquadramento central, de frente para os batentes de bronze
+      const [gx, gz] = JC.LUGARES.portaFormosa, alvo = new THREE.Vector3(gx, 12, gz), final = new THREE.Vector3(gx + 24, 13.5, gz);   // pairando à altura do lintel: a porta inteira no centro e o Santuário erguendo-se atrás
+      planoCinema([new THREE.Vector3(gx + 125, 70, gz + 200), new THREE.Vector3(gx + 45, 32, gz + 110), new THREE.Vector3(gx + 22, 18, gz + 45)], alvo, final);
+      return 'Indo até a Porta Formosa, onde Pedro e João encontraram o coxo (Atos 3:2).'; }
     if (J) { const ALVOS = [[/porta formosa|patio das mulheres/, 'portaFormosa', [62, 4], 'a Porta Formosa'], [/fachada|santuario|santo|templo|altar|nicanor/, 'santuario', [128, 0], 'o Santuário, visto do Pátio das Mulheres'], [/portico real|pedras|edificios/, 'porticoReal', [0, -40], 'o Pórtico Real'], [/salomao|alpendre/, 'salomao', [-25, 0], 'o Pórtico de Salomão'],
         [/antonia|fortaleza/, 'antonia', [40, 130], 'a fortaleza Antônia'], [/palacio|herodes|pretorio|pilatos/, 'palacio', [170, 0], 'o palácio de Herodes'], [/torre|hipico|fasael|mariane/, 'torres', [40, 60], 'as torres de Herodes'], [/siloe|tanque/, 'siloe', [0, -45], 'o tanque de Siloé'], [/cidade de davi|siao|ofel/, 'cidadeDavi', [0, 40], 'a Cidade de Davi'], [/oliveiras|ver a cidade|vista/, 'oliveiras', [0, 0], 'o Monte das Oliveiras, de onde se vê a cidade']];
       const a = ALVOS.find(([re]) => re.test(q)); if (a) { const [lx, lz] = JC.LUGARES[a[1]]; const x = lx + a[2][0], z = lz + a[2][1]; pularChegada(); voarLivre = false; subida = 0; eu.set(x, 0, z); const ox = a[1] === 'oliveiras' ? 0 : lx, oz = a[1] === 'oliveiras' ? 0 : lz; yaw = Math.atan2(-(ox - x), -(oz - z)); pitch = a[1] === 'santuario' ? 0.18 : a[1] === 'portaFormosa' ? 0.12 : a[1] === 'oliveiras' ? -0.1 : 0;
@@ -863,6 +873,11 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   function pularChegada() { if (!voando) return; voando = false; raiz.classList.remove('voando'); cartao('chegada'); }
   let ativo = true, antes = performance.now(), passoBob = 0;
   function quadro(agora) { if (!ativo) return; const dt = Math.min(0.05, (agora - antes) / 1000); antes = agora; const t = agora / 1000; unif.t.value = t;
+    if (cine) { const q = THREE.MathUtils.clamp((agora - cine.t0) / cine.dur, 0, 1), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; cine.curva.getPointAt(e, camera.position);
+      olhoCine.lerpVectors(cine.olhar0, cine.alvo, THREE.MathUtils.smoothstep(e, 0, 0.5)); camera.lookAt(olhoCine);
+      { const hc = camera.position.y - altura(camera.position.x, camera.position.z), kN = 1 - 0.7 * THREE.MathUtils.smoothstep(hc, 25, 260); cena.fog.density = DENS * kN; unif.dens.value = DENS * kN; }
+      if (quadroJ) try { quadroJ(camera.position); } catch (_) {}
+      if (q >= 1) { const f = cine.fim; cine = null; f(); } renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); return; }
     if (rota) { const q = Math.min(1, (agora - rota.t0) / rota.dur), e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2; const p0 = rota.curva.getPointAt(e), p1 = rota.curva.getPointAt(Math.min(1, e + 0.04)); camera.position.copy(p0); camera.lookAt(p1.x, p1.y - 2, p1.z);
       if (q >= 1) { const f = rota.fim; rota = null; f(); } renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); return; }
     if (indoLonge) { const q = Math.min(1, (agora - indoLonge.t0) / indoLonge.dur), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2; camera.position.lerpVectors(indoLonge.de, indoLonge.para, e); camera.position.y += Math.sin(q * Math.PI) * 25; camera.lookAt(indoLonge.olhar);
