@@ -106,8 +106,9 @@ export async function abrirFotoViva(THREE, host, cfg) {
         // spray: névoa branca subindo da base, para além do fim da queda
         if (im.x > queda.x && im.x < queda.z && im.y >= queda.w && im.y < queda.w + .06) {
           float bx = (im.x - queda.x) / (queda.z - queda.x), by = (im.y - queda.w) / .06;
-          float sp = n(vec2(bx * 26. + 3. * n(vec2(bx * 6., by * 2. - t * .8)), by * 5. - t * 2.5));
-          c = mix(c, vec3(.96, .98, 1.), smoothstep(.5, .9, sp) * (1. - by) * .45); }
+          float sp = fbm(vec2(bx * 5. + t * .15, by * 3. - t * .9));   // névoa em nuvem (sem fios verticais), bordas todas suaves
+          float borda = smoothstep(0., .3, bx) * smoothstep(1., .7, bx) * smoothstep(0., .25, by) * smoothstep(1., .45, by);
+          c = mix(c, vec3(.94, .96, .98), smoothstep(.35, .8, sp) * borda * .32); }
         gl_FragColor = vec4(c, 1.);
         #include <colorspace_fragment>
       }` });
