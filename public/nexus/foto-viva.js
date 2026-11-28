@@ -85,11 +85,29 @@ export async function abrirFotoViva(THREE, host, cfg) {
             float brilho = pow(clamp(n(P * 9. + F * 2.) * n(P * 13. + F * 2.) * 1.9, 0., 1.), 7.);
             cw += vec3(1., .93, .78) * brilho * coluna * 2.4 * am; cw += vec3(1., .9, .7) * coluna * .05 * am; }
           c = mix(c, cw, am); }
-        // a CACHOEIRA: a água desce (faixas que escorrem) e espuma embaixo
+        // a CACHOEIRA: a própria foto escorre (amostra deslocada para cima, com o tempo), acelerando de cima para baixo.
+        // Só a parte branca (água) se mexe; a borda de cima fica parada; embaixo a espuma borbulha; a névoa sobe da base.
         if (im.x > queda.x && im.x < queda.z && im.y > queda.y && im.y < queda.w) { vec2 qq = vec2((im.x - queda.x) / (queda.z - queda.x), (im.y - queda.y) / (queda.w - queda.y));
           float lum = dot(c, vec3(.3, .59, .11)); float agua = smoothstep(.45, .7, lum);
-          float fio = n(vec2(qq.x * 40., qq.y * 6. - t * 4.5)) * .6 + n(vec2(qq.x * 90., qq.y * 14. - t * 7.)) * .4;
-          c = mix(c, c * .75 + vec3(.95) * fio * .45, agua * .85); c += vec3(1.) * smoothstep(.8, 1., qq.y) * fio * .15 * agua; }
+          float mov = smoothstep(0., .25, qq.y);                          // borda de cima parada
+          float vel = .5 + 2.4 * qq.y;                                    // mais rápido embaixo
+          float fase = fract(t * .35 * vel), fase2 = fract(fase + .5);   // dois ciclos defasados, misturados sem salto
+          float wA = 1. - abs(2. * fase - 1.), wB = 1. - wA;
+          float A = .05 * (queda.w - queda.y);                            // quanto a amostra sobe no ciclo
+          float ond = (n(vec2(qq.x * 9., qq.y * 3. - t * vel)) - .5) * .02 * mov;   // irregularidade na largura dos fios
+          vec3 sA = texture2D(foto, uv + vec2(ond, fase * A * mov)).rgb, sB = texture2D(foto, uv + vec2(ond, fase2 * A * mov)).rgb;
+          vec3 wat = mix(sB, sA, wA);
+          float fi = n(vec2(qq.x * 140. + 2. * n(vec2(qq.x * 9., qq.y * 3. - t * vel)), qq.y * 5. - t * vel * 3.));   // fios finos irregulares
+          wat *= .9 + .2 * fi;
+          c = mix(c, wat, agua * .9);
+          float fm = smoothstep(.72, 1., qq.y);                           // espuma embaixo, borbulhando
+          float bol = n(vec2(qq.x * 60., qq.y * 20. - t * 4.)) * n(vec2(qq.x * 25., qq.y * 10. - t * 2.5));
+          c += vec3(1., .98, .95) * smoothstep(.4, .85, bol) * fm * agua * .5; }
+        // spray: névoa branca subindo da base, para além do fim da queda
+        if (im.x > queda.x && im.x < queda.z && im.y >= queda.w && im.y < queda.w + .06) {
+          float bx = (im.x - queda.x) / (queda.z - queda.x), by = (im.y - queda.w) / .06;
+          float sp = n(vec2(bx * 26. + 3. * n(vec2(bx * 6., by * 2. - t * .8)), by * 5. - t * 2.5));
+          c = mix(c, vec3(.96, .98, 1.), smoothstep(.5, .9, sp) * (1. - by) * .45); }
         gl_FragColor = vec4(c, 1.);
         #include <colorspace_fragment>
       }` });
