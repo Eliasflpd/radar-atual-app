@@ -158,7 +158,7 @@ export async function abrirFotoViva(THREE, host, cfg) {
   const redim = () => { renderer.setSize(W(), H()); ajustaFov(); }; addEventListener('resize', redim);
   const saidas = (cfg.saidas || []).map((sd) => { const b = document.createElement('button'); b.className = 'fv-saida'; b.innerHTML = '<span>➜</span>' + sd.rotulo;
     b.style.cssText = 'position:absolute;z-index:3;transform:translate(-50%,-50%);padding:9px 16px 9px 12px;border-radius:22px;border:1px solid rgba(255,255,255,.55);background:rgba(10,20,14,.38);color:#fff;font:600 14px system-ui;letter-spacing:.02em;cursor:pointer;backdrop-filter:blur(6px);display:flex;gap:8px;align-items:center;transition:opacity .4s;white-space:nowrap';
-    host.appendChild(b); const alvo = ponto(sd.u, sd.v, sd.z); b.onclick = (e) => { e.stopPropagation(); if (saindo) return; saindo = { t: 0, ir: sd.ir }; saidas.forEach((x) => { x.b.style.opacity = '0'; }); }; return { b, alvo }; });
+    host.appendChild(b); const alvo = ponto(sd.u, sd.v, sd.z); b.onclick = (e) => { e.stopPropagation(); if (saindo) return; const d = alvo.clone(); d.y = 0; const dist = d.length() || 1; d.normalize(); saindo = { t: 0, ir: sd.ir, dir: d, passo: Math.min(dist * 0.28, 1.3), base: new THREE.Vector3(px, 0, pz) }; if (ESF) alvoYaw = yaw + Math.atan2(Math.sin(Math.atan2(-d.x, -d.z) - yaw), Math.cos(Math.atan2(-d.x, -d.z) - yaw)); saidas.forEach((x) => { x.b.style.opacity = '0'; }); }; return { b, alvo }; });
   const veu = document.createElement('div'); veu.style.cssText = 'position:absolute;inset:0;z-index:4;pointer-events:none;background:#f4f1e6;opacity:0'; host.appendChild(veu);
   let saindo = null; const V3 = new THREE.Vector3();
   let ativo = true, t0 = performance.now(), ult = t0;
@@ -169,7 +169,7 @@ export async function abrirFotoViva(THREE, host, cfg) {
     px = THREE.MathUtils.clamp(px + vx * dt, -LIM * 0.3, LIM * 0.3); pz = THREE.MathUtils.clamp(pz + vz * dt, -LIM * 0.7, LIM * 0.15);
     yaw += (alvoYaw - yaw) * Math.min(1, dt * 5); pitch += (alvoPitch - pitch) * Math.min(1, dt * 5);
     const resp = unif.t.value; camera.position.set(px + Math.sin(resp * 0.23) * 0.06, Math.sin(resp * 0.31) * 0.04, pz); camera.rotation.set(pitch, yaw + Math.sin(resp * 0.11) * 0.012, 0, 'YXZ');
-    if (saindo) { saindo.t += dt; const k = Math.min(1, saindo.t / 1.4); pz = -LIM * 0.7 - k * k * 2.2; veu.style.opacity = String(Math.max(0, (k - 0.45) / 0.55)); if (k >= 1 && !saindo.feito) { saindo.feito = true; cfg.aoSair && cfg.aoSair(saindo.ir); } }
+    if (saindo) { saindo.t += dt; const k = Math.min(1, saindo.t / 1.6), m = Math.max(0, (k - 0.25) / 0.75), e = m * m * (3 - 2 * m); camera.position.copy(saindo.base).addScaledVector(saindo.dir, saindo.passo * e); camera.position.y += Math.sin(unif.t.value * 0.31) * 0.04; veu.style.opacity = String(Math.max(0, (k - 0.4) / 0.6)); if (k >= 1 && !saindo.feito) { saindo.feito = true; cfg.aoSair && cfg.aoSair(saindo.ir); } }
     saidas.forEach(({ b, alvo }) => { V3.copy(alvo).project(camera); const vis = V3.z < 1 && Math.abs(V3.x) < 0.95 && Math.abs(V3.y) < 0.9; b.style.display = vis ? 'flex' : 'none'; if (vis) { b.style.left = ((V3.x * 0.5 + 0.5) * W()) + 'px'; b.style.top = ((-V3.y * 0.5 + 0.5) * H()) + 'px'; } });
     renderer.render(cena, camera); })();
   // chegada: o véu claro some devagar
