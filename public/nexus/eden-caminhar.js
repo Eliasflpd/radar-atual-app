@@ -633,7 +633,17 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       agua: [[0.06, 0.70], [0.14, 0.60], [0.24, 0.57], [0.31, 0.60], [0.33, 0.66], [0.29, 0.74], [0.24, 0.84], [0.14, 0.88], [0.06, 0.84]], queda: [0.240, 0.572, 0.295, 0.638],
       feixes: [[0.73, 0.24, -0.30, 1.0, 1.0, 16], [0.69, 0.27, 0.25, 0.8, 0.9, 18], [0.77, 0.26, -0.55, 0.7, 0.9, 15]],
       nevoa: [[0.66, 0.46, 0.25, 0.25], [0.27, 0.58, 0.10, 0.30], [0.15, 0.46, 0.25, 0.18]],
-      saidas: [{ u: 0.645, v: 0.58, z: 9, rotulo: 'Seguir a trilha até o riacho', ir: 'clareira' }] },
+      saidas: [{ u: 0.645, v: 0.58, z: 9, rotulo: 'Entrar pela trilha', ir: 'trilha1' }] },
+    // a TRILHA: pontos a cada uns 15 metros, gerados a partir da foto da entrada (mesmas árvores, mesma luz); a câmera avança de um para o outro
+    trilha1: { titulo: 'A trilha na mata', sub: 'Éden · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-trilha1.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-trilha1-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.66,
+      feixes: [[0.68, 0.22, -0.30, 1.0, 1.0, 16], [0.64, 0.25, 0.25, 0.8, 0.9, 18], [0.72, 0.24, -0.5, 0.7, 0.9, 15]],
+      nevoa: [[0.66, 0.46, 0.25, 0.25], [0.2, 0.47, 0.2, 0.18]],
+      saidas: [{ u: 0.66, v: 0.58, z: 9, rotulo: 'Seguir pela trilha', ir: 'trilha2' }, { u: 0.11, v: 0.6, z: 8, rotulo: 'Voltar à entrada', ir: 'entrada' }] },
+    trilha2: { titulo: 'No coração da mata', sub: 'Éden · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-trilha2.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-trilha2-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.56, aguaCor: true,
+      agua: [[0.80, 0.50], [0.90, 0.47], [0.97, 0.52], [0.97, 0.66], [0.88, 0.68], [0.82, 0.60]],
+      feixes: [[0.66, 0.18, -0.30, 1.0, 1.0, 16], [0.62, 0.21, 0.25, 0.8, 0.9, 18], [0.70, 0.2, -0.5, 0.7, 0.9, 15]],
+      nevoa: [[0.6, 0.45, 0.3, 0.25], [0.88, 0.52, 0.12, 0.3]],
+      saidas: [{ u: 0.875, v: 0.56, z: 7, rotulo: 'Seguir o riacho até o rio', ir: 'rio' }, { u: 0.56, v: 0.56, z: 10, rotulo: 'Para o meio do jardim', ir: 'arvore' }, { u: 0.10, v: 0.58, z: 8, rotulo: 'Voltar pela trilha', ir: 'trilha1' }] },
     rio: { titulo: 'O rio que se divide', sub: 'Éden · foto viva 360 · Gn 2:10', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-rio.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-rio-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.5, sol: [0.31, 0.29], fluxo: [0, -0.22],
       agua: [[0.12, 0.505], [0.40, 0.495], [0.70, 0.495], [0.94, 0.50], [0.93, 0.58], [0.84, 0.64], [0.78, 0.70], [0.66, 0.76], [0.50, 0.80], [0.36, 0.76], [0.28, 0.68], [0.22, 0.61], [0.15, 0.56]],
       feixes: [[0.31, 0.30, 0.45, 1.0, 1.0, 20], [0.33, 0.31, 0.15, 0.7, 0.9, 22]],
@@ -644,14 +654,16 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   async function abrirFotoVivaEden(k, chegando) { const c = FOTOS_VIVAS[k]; if (!c) return; if (!fvDisp[k]) { try { const r = await fetch(c.foto, { method: 'HEAD' }); if (!r.ok) throw 0; } catch (_) { return; } }
     let caixa = fotoViva && fotoViva.caixa;
     if (!caixa) { caixa = document.createElement('div'); caixa.style.cssText = 'position:absolute;inset:0;z-index:30;background:#0d120e;opacity:0;transition:opacity .8s'; raiz.appendChild(caixa); fotoViva = { caixa };
-      const volta = document.createElement('button'); volta.textContent = '↩ Voltar ao jardim'; volta.style.cssText = 'position:absolute;right:22px;top:20px;z-index:5;padding:8px 16px;border-radius:20px;border:1px solid #fff6;background:#0006;color:#fff;font:600 14px system-ui;cursor:pointer;backdrop-filter:blur(6px)';
+      const volta = document.createElement('button'); volta.textContent = E ? '↟ Ver o jardim em 3D' : '↩ Voltar ao jardim'; volta.style.cssText = 'position:absolute;right:22px;top:20px;z-index:5;padding:8px 16px;border-radius:20px;border:1px solid #fff6;background:#0006;color:#fff;font:600 14px system-ui;cursor:pointer;backdrop-filter:blur(6px)';
       const tit = document.createElement('div'); tit.className = 'fv-tit'; tit.style.cssText = 'position:absolute;left:28px;top:22px;z-index:5;color:#fff;font:600 30px/1.1 Cormorant Garamond,Georgia,serif;text-shadow:0 2px 12px #0008;pointer-events:none';
       caixa.append(tit, volta); requestAnimationFrame(() => { caixa.style.opacity = '1'; });
       volta.onclick = () => { caixa.style.opacity = '0'; setTimeout(() => { try { fotoViva.cena.fechar(); } catch (_) {} caixa.remove(); fotoViva = null; }, 800); }; }
-    else if (fotoViva.cena) { try { fotoViva.cena.fechar(); } catch (_) {} fotoViva.cena = null; }
+    const velha = fotoViva.cena; fotoViva.cena = null;
     caixa.querySelector('.fv-tit').innerHTML = c.titulo + '<small style="display:block;font:500 12px/1.6 system-ui;letter-spacing:.18em;text-transform:uppercase;opacity:.85">' + c.sub + '</small>';
-    const cfg = { ...c, chegando: !!chegando, saidas: (c.saidas || []).filter((sd) => sd.ir === 'jardim' || FOTOS_VIVAS[sd.ir]), aoSair: (ir) => { if (ir === 'jardim') caixa.querySelector('button').click(); else abrirFotoVivaEden(ir, true); } };
-    try { const m = await import('/nexus/foto-viva.js?v=16'); fotoViva.cena = await m.abrirFotoViva(THREE, caixa, cfg); caixa.querySelector('canvas').style.zIndex = '0'; } catch (e) { console.warn('foto viva', e); caixa.remove(); fotoViva = null; } }
+    const cfg = { ...c, chegando: !!chegando, saidas: (c.saidas || []).filter((sd) => sd.ir === 'jardim' || (FOTOS_VIVAS[sd.ir] && fvDisp[sd.ir])), /* só mostra a seta se a foto do destino existe (no site, a clareira pessoal não existe) */ aoSair: (ir) => { if (ir === 'jardim') caixa.querySelector('button').click(); else abrirFotoVivaEden(ir, true); } };
+    try { const m = await import('/nexus/foto-viva.js?v=16'); fotoViva.cena = await m.abrirFotoViva(THREE, caixa, cfg); caixa.querySelectorAll('canvas').forEach((cv) => { cv.style.zIndex = '0'; }); if (velha) try { velha.fechar(); } catch (_) {}
+      (c.saidas || []).forEach((sd) => { const d = FOTOS_VIVAS[sd.ir]; if (d && fvDisp[sd.ir]) { new Image().src = d.foto; new Image().src = d.prof; } });   // já baixa os próximos lugares
+    } catch (e) { console.warn('foto viva', e); if (velha) try { velha.fechar(); } catch (_) {} caixa.remove(); fotoViva = null; } }
   window.__clrDbg = 'E=' + E + ' rios=' + rios.length; if (E && rios[5]) setTimeout(() => (window.__clrDbg += ' importando', import('/nexus/eden-clareira.js?v=5')).then((m) => m.criarClareira(THREE, cena, { base, altura, rio: rios[5], largura: LARG(5), carregar, lixo, toque, rnd, unif, distRio }))
     .then(async (c) => { window.__clrDbg += ' criada ' + !!c; if (!ativo || !c) return; try { if (renderer.compileAsync) await renderer.compileAsync(cena, camera); } catch (_) {} CLR = c; window.__clrDbg += ' pronta'; }).catch((e) => { window.__clrDbg += ' ERRO ' + e.message; console.warn('clareira', e); }), 4000);
   // AVES em voo circular e BORBOLETAS perto das flores: tudo calculado na placa de vídeo
@@ -1011,7 +1023,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     if (audio && somLigado) { const tg = bichos.find((b) => b.e.n === 'leao-anda'); if (tg && Math.hypot(tg.x - camera.position.x, tg.z - camera.position.z) < 16 && t - (window.__ultRugido || 0) > 25) { window.__ultRugido = t; audio.rugir(); } }
     if (ER) { ER.atualizar(camera.position, t); const fx = voando ? camera.position.x : eu.x, fz = voando ? camera.position.z : eu.z, px = Math.round(fx / 2) * 2, pz = Math.round(fz / 2) * 2, py = altura(px, pz); sol.target.position.set(px, py, pz); sol.position.set(px + SOL.x * 300, py + SOL.y * 300, pz + SOL.z * 300); sol.target.updateMatrixWorld(); }
     camera.updateMatrixWorld(); refletir(); renderer.setRenderTarget(rt); renderer.render(cena, camera); renderer.setRenderTarget(null); renderer.render(posCena, posCam); requestAnimationFrame(quadro); }
-  const iniciar = () => requestAnimationFrame((a) => { raiz.style.pointerEvents = ''; raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); });
+  const iniciar = () => requestAnimationFrame((a) => { raiz.style.pointerEvents = ''; raiz.classList.add('on'); t0 = a; antes = a; if (!voando) cartao('chegada'); quadro(a); if (E && !/[?&]so3d/.test(location.search)) { let k = 0; const tenta = () => { if (!ativo || fotoViva) return; if (fvDisp.entrada) abrirFotoVivaEden('entrada', true); else if (k++ < 30) setTimeout(tenta, 500); }; setTimeout(tenta, 2500); } });   // o Éden abre na entrada em foto viva 360
   // aquecimento escondido: compila os shaders em paralelo e manda para a placa de vídeo uma peça por quadro (o globo segue liso durante o voo)
   async function aquecer() { try { const p0 = voo.getPointAt(0); camera.position.set(p0.x, altura(p0.x, p0.z) + p0.y + 1.7, p0.z); camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
       if (renderer.compileAsync) await renderer.compileAsync(cena, camera); const rtP = new THREE.WebGLRenderTarget(16, 16, { type: THREE.HalfFloatType }); const objs = cena.children.slice(), vis = objs.map((o) => o.visible), cul = objs.map((o) => o.frustumCulled);
