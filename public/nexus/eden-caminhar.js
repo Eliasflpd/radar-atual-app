@@ -623,19 +623,19 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
   let CLR = null;
   // FOTO VIVA: lugares que são uma foto com volume (profundidade calculada), água, névoa e luz vivas; o jardim pausa por trás
   let fotoViva = null;
-  const FOTOS_VIVAS = { clareira: { titulo: 'A clareira do riacho', sub: 'Éden · foto viva', foto: '/nexus/pessoal/clareira.jpg', prof: '/nexus/pessoal/clareira-prof.png', perto: 2.2, longe: 80, fov: 52,
+  const FOTOS_VIVAS = { clareira: { titulo: 'A clareira do riacho', sub: 'Éden · foto viva', foto: '/nexus/pessoal/clareira.jpg', prof: '/nexus/pessoal/clareira-prof.png', perto: 2.2, longe: 80, fov: 52, fluxo: [-0.12, 0.45],
     agua: [[0.562, 0.600], [0.718, 0.600], [0.825, 0.681], [1.0, 0.791], [1.0, 1.0], [0.670, 1.0], [0.616, 0.851], [0.592, 0.702]], queda: [0.712, 0.436, 0.780, 0.574],
     feixes: [[0.42, 0.05, -0.38, 1.0, 1.0, 16], [0.50, 0.04, -0.40, 0.7, 1.0, 18], [0.33, 0.08, -0.33, 1.3, 0.9, 13], [0.58, 0.05, -0.42, 0.6, 0.9, 22]],
     nevoa: [[0.745, 0.50, 0.22, 0.45], [0.60, 0.44, 0.35, 0.28], [0.40, 0.42, 0.30, 0.22], [0.78, 0.58, 0.18, 0.35]],
     saidas: [{ u: 0.36, v: 0.80, z: 6, rotulo: 'Seguir a trilha', ir: 'entrada' }, { u: 0.50, v: 0.62, z: 14, rotulo: 'Para o meio do jardim', ir: 'arvore' }] },
     // panoramas 360 (ChatGPT, profundidade calculada), servidos do R2
-    entrada: { titulo: 'A entrada do jardim', sub: 'Éden · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-entrada.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-entrada-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.62, aguaCor: true,
+    entrada: { titulo: 'A entrada do jardim', sub: 'Éden · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-entrada.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-entrada-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.62, aguaCor: true, sol: [0.21, 0.37], fluxo: [-0.28, -0.10],
       agua: [[0.06, 0.70], [0.14, 0.60], [0.24, 0.57], [0.31, 0.60], [0.33, 0.66], [0.29, 0.74], [0.24, 0.84], [0.14, 0.88], [0.06, 0.84]], queda: [0.240, 0.572, 0.295, 0.638],
       feixes: [[0.73, 0.24, -0.30, 1.0, 1.0, 16], [0.69, 0.27, 0.25, 0.8, 0.9, 18], [0.77, 0.26, -0.55, 0.7, 0.9, 15]],
       nevoa: [[0.66, 0.46, 0.25, 0.25], [0.27, 0.58, 0.10, 0.30], [0.15, 0.46, 0.25, 0.18]],
       saidas: [{ u: 0.645, v: 0.58, z: 9, rotulo: 'Seguir a trilha até o riacho', ir: 'clareira' }] },
-    rio: { titulo: 'O rio que se divide', sub: 'Éden · foto viva 360 · Gn 2:10', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-rio.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-rio-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.5, aguaCor: true,
-      agua: [[0.12, 0.50], [0.33, 0.49], [0.65, 0.49], [0.95, 0.49], [0.93, 0.62], [0.80, 0.72], [0.60, 0.80], [0.40, 0.80], [0.25, 0.72], [0.14, 0.62]],
+    rio: { titulo: 'O rio que se divide', sub: 'Éden · foto viva 360 · Gn 2:10', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-rio.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-rio-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.5, sol: [0.31, 0.29], fluxo: [0, -0.22],
+      agua: [[0.12, 0.505], [0.40, 0.495], [0.70, 0.495], [0.94, 0.50], [0.93, 0.58], [0.84, 0.64], [0.78, 0.70], [0.66, 0.76], [0.50, 0.80], [0.36, 0.76], [0.28, 0.68], [0.22, 0.61], [0.15, 0.56]],
       feixes: [[0.31, 0.30, 0.45, 1.0, 1.0, 20], [0.33, 0.31, 0.15, 0.7, 0.9, 22]],
       nevoa: [[0.70, 0.37, 0.30, 0.25], [0.36, 0.38, 0.25, 0.20], [0.86, 0.40, 0.20, 0.20], [0.55, 0.47, 0.30, 0.15]],
       saidas: [{ u: 0.06, v: 0.62, z: 6, rotulo: 'Para o meio do jardim', ir: 'arvore' }, { u: 0.88, v: 0.66, z: 6, rotulo: 'Descer pela margem', ir: 'margem' }] } };
@@ -651,7 +651,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     else if (fotoViva.cena) { try { fotoViva.cena.fechar(); } catch (_) {} fotoViva.cena = null; }
     caixa.querySelector('.fv-tit').innerHTML = c.titulo + '<small style="display:block;font:500 12px/1.6 system-ui;letter-spacing:.18em;text-transform:uppercase;opacity:.85">' + c.sub + '</small>';
     const cfg = { ...c, chegando: !!chegando, saidas: (c.saidas || []).filter((sd) => sd.ir === 'jardim' || FOTOS_VIVAS[sd.ir]), aoSair: (ir) => { if (ir === 'jardim') caixa.querySelector('button').click(); else abrirFotoVivaEden(ir, true); } };
-    try { const m = await import('/nexus/foto-viva.js?v=11'); fotoViva.cena = await m.abrirFotoViva(THREE, caixa, cfg); caixa.querySelector('canvas').style.zIndex = '0'; } catch (e) { console.warn('foto viva', e); caixa.remove(); fotoViva = null; } }
+    try { const m = await import('/nexus/foto-viva.js?v=14'); fotoViva.cena = await m.abrirFotoViva(THREE, caixa, cfg); caixa.querySelector('canvas').style.zIndex = '0'; } catch (e) { console.warn('foto viva', e); caixa.remove(); fotoViva = null; } }
   window.__clrDbg = 'E=' + E + ' rios=' + rios.length; if (E && rios[5]) setTimeout(() => (window.__clrDbg += ' importando', import('/nexus/eden-clareira.js?v=5')).then((m) => m.criarClareira(THREE, cena, { base, altura, rio: rios[5], largura: LARG(5), carregar, lixo, toque, rnd, unif, distRio }))
     .then(async (c) => { window.__clrDbg += ' criada ' + !!c; if (!ativo || !c) return; try { if (renderer.compileAsync) await renderer.compileAsync(cena, camera); } catch (_) {} CLR = c; window.__clrDbg += ' pronta'; }).catch((e) => { window.__clrDbg += ' ERRO ' + e.message; console.warn('clareira', e); }), 4000);
   // AVES em voo circular e BORBOLETAS perto das flores: tudo calculado na placa de vídeo
