@@ -28,7 +28,7 @@ export async function abrirFotoViva(THREE, host, cfg) {
     float dentro(vec2 q){ bool c = false; int N = int(np); for (int i = 0; i < 16; i++) { if (i >= N) break; int j = i == 0 ? N - 1 : i - 1; vec2 a = vec2(poli[i * 2], poli[i * 2 + 1]), b = vec2(poli[j * 2], poli[j * 2 + 1]);
       if (((a.y > q.y) != (b.y > q.y)) && (q.x < (b.x - a.x) * (q.y - a.y) / (b.y - a.y) + a.x)) c = !c; } return c ? 1. : 0.; }
     float dist(float d){ return 1. / (d * (1. / perto - 1. / longe) + 1. / longe); }`;
-  const mat = new THREE.ShaderMaterial({ uniforms: unif, side: THREE.DoubleSide, defines: ESF ? { ESFERA: 1 } : {},
+  const mat = new THREE.ShaderMaterial({ uniforms: unif, side: THREE.DoubleSide, defines: { ...(ESF ? { ESFERA: 1 } : {}), ...(cfg.aguaCor ? { AGUACOR: 1 } : {}) },
     vertexShader: comum + `
       varying vec2 vUv; varying float vD;
       void main(){ vUv = uv; vec2 im = vec2(uv.x, 1. - uv.y); float d = texture2D(prof, uv).r;
@@ -51,6 +51,9 @@ export async function abrirFotoViva(THREE, host, cfg) {
         // o RIACHO: a imagem é amostrada com um deslocamento que corre em direção a quem olha, com brilho móvel
         float a = (dentro(im) * 2. + dentro(im + vec2(.012, 0.)) + dentro(im - vec2(.012, 0.)) + dentro(im + vec2(0., .012)) + dentro(im - vec2(0., .012))) / 6.;   // borda suave
         vec3 c = texture2D(foto, uv).rgb;
+        #ifdef AGUACOR
+        { float lu = dot(c, vec3(.3, .59, .11)); a *= max(smoothstep(.42, .62, lu), smoothstep(.0, .07, c.b - c.g)); }   // só onde a cor é de água (branca ou azulada), não nas pedras de musgo
+        #endif
         if (a > .01) { float perspectiva = mix(4., 22., smoothstep(.95, .55, im.y));
           vec2 q = vec2(im.x * 30., im.y * perspectiva - t * 1.6);
           vec2 off = vec2(fbm(q) - .5, fbm(q + 7.3) - .5) * vec2(.006, .010) * smoothstep(.55, .9, im.y + .2) * a;
@@ -99,7 +102,8 @@ export async function abrirFotoViva(THREE, host, cfg) {
     fragmentShader: 'varying float vA; void main(){ float r = length(gl_PointCoord - .5); if (r > .5) discard; gl_FragColor = vec4(vec3(1., .95, .8) * vA * smoothstep(.5, 0., r), 1.); }' });
   const pts = new THREE.Points(gP, mP); pts.frustumCulled = false; cena.add(pts); lixo.push(gP, mP);
   // CÂMERA: olhar em volta (arrastar) e dar uns passos (WASD/setas, ou o dedo); um balanço leve de respiração
-  let yaw = 0, pitch = 0, alvoYaw = 0, alvoPitch = 0, px = 0, pz = 0, vx = 0, vz = 0; const teclas = {}; const LIM = cfg.passo || 1.2;
+  const Y0 = ESF && cfg.olhar != null ? -(cfg.olhar - 0.5) * Math.PI * 2 : 0;   // no 360, cfg.olhar (u da foto) diz para onde a câmera olha ao chegar
+  let yaw = Y0, pitch = 0, alvoYaw = Y0, alvoPitch = 0, px = 0, pz = 0, vx = 0, vz = 0; const teclas = {}; const LIM = cfg.passo || 1.2;
   const el = renderer.domElement; let arr = null;
   el.addEventListener('pointerdown', (e) => { arr = [e.clientX, e.clientY, alvoYaw, alvoPitch]; el.setPointerCapture(e.pointerId); el.style.cursor = 'grabbing'; });
   el.addEventListener('pointermove', (e) => { if (!arr) return; alvoYaw = ESF ? arr[2] - (e.clientX - arr[0]) * 0.003 : THREE.MathUtils.clamp(arr[2] - (e.clientX - arr[0]) * 0.0025, -0.16, 0.16); alvoPitch = THREE.MathUtils.clamp(arr[3] - (e.clientY - arr[1]) * 0.0022, ESF ? -0.9 : -0.08, ESF ? 0.9 : 0.08); });
