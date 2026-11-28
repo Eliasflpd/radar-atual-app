@@ -680,7 +680,17 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       agua: [[0.82, 0.55], [0.97, 0.55], [0.98, 0.75], [0.85, 0.72]], queda: [0.84, 0.43, 0.86, 0.50],
       feixes: [[0.28, 0.40, 0.3, 1.2, 0.9, 20]],
       nevoa: [[0.85, 0.47, 0.2, 0.25], [0.15, 0.47, 0.2, 0.2]],
-      saidas: [{ u: 0.1, v: 0.6, z: 8, rotulo: 'Voltar ao campo dos animais', ir: 'campo' }] },
+      saidas: [{ u: 0.45, v: 0.56, z: 30, rotulo: 'Para a borda leste do jardim', ir: 'leste' }, { u: 0.1, v: 0.6, z: 8, rotulo: 'Voltar ao campo dos animais', ir: 'campo' }] },
+    divisao: { titulo: 'Onde o rio se divide em quatro', sub: 'Éden · Gênesis 2:10-14 · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-divisao.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-divisao-prof.png', esfera: true, perto: 1.8, longe: 120, olhar: 0.5, aguaCor: true,
+      agua: [[0.0, 0.47], [1.0, 0.47], [1.0, 0.9], [0.0, 0.9]],
+      feixes: [[0.6, 0.30, 0.25, 1.2, 0.9, 30]],
+      nevoa: [[0.5, 0.48, 0.35, 0.25], [0.2, 0.48, 0.3, 0.2], [0.8, 0.48, 0.3, 0.2]],
+      saidas: [{ u: 0.02, v: 0.52, z: 12, rotulo: 'Voltar ao rio', ir: 'rio' }] },
+    leste: { titulo: 'A borda leste do jardim', sub: 'Éden · Gênesis 3:24 · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-leste.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-leste-prof.png', esfera: true, perto: 2.0, longe: 200, olhar: 0.48, aguaCor: true,
+      agua: [[0.86, 0.53], [0.97, 0.53], [0.97, 0.66], [0.88, 0.64]],
+      feixes: [[0.48, 0.45, 0.0, 1.4, 0.7, 40], [0.16, 0.38, 0.3, 0.9, 0.9, 14]],
+      nevoa: [[0.48, 0.49, 0.4, 0.3], [0.2, 0.47, 0.2, 0.18]],
+      saidas: [{ u: 0.12, v: 0.6, z: 8, rotulo: 'Voltar ao jardim', ir: 'flores' }] },
     arvore: { titulo: 'A árvore no meio do jardim', sub: 'Éden · Gênesis 2:9 · foto viva 360 · aparência ilustrativa', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-arvore.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-arvore-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.62,
       feixes: [[0.17, 0.30, 0.35, 1.2, 1.0, 14], [0.21, 0.32, 0.1, 0.8, 0.9, 16], [0.13, 0.31, 0.6, 0.7, 0.9, 13]],
       nevoa: [[0.5, 0.46, 0.35, 0.22], [0.75, 0.47, 0.25, 0.2]],
@@ -694,10 +704,10 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       agua: [[0.12, 0.505], [0.40, 0.495], [0.70, 0.495], [0.94, 0.50], [0.93, 0.58], [0.84, 0.64], [0.78, 0.70], [0.66, 0.76], [0.50, 0.80], [0.36, 0.76], [0.28, 0.68], [0.22, 0.61], [0.15, 0.56]],
       feixes: [[0.31, 0.30, 0.45, 1.0, 1.0, 20], [0.33, 0.31, 0.15, 0.7, 0.9, 22]],
       nevoa: [[0.70, 0.37, 0.30, 0.25], [0.36, 0.38, 0.25, 0.20], [0.86, 0.40, 0.20, 0.20], [0.55, 0.47, 0.30, 0.15]],
-      saidas: [{ u: 0.06, v: 0.62, z: 6, rotulo: 'Para o meio do jardim', ir: 'arvore' }, { u: 0.88, v: 0.66, z: 6, rotulo: 'Descer pela margem', ir: 'margem' }] } };
+      saidas: [{ u: 0.5, v: 0.5, z: 30, rotulo: 'Ir até onde o rio se divide', ir: 'divisao' }, { u: 0.06, v: 0.62, z: 6, rotulo: 'Para o meio do jardim', ir: 'arvore' }, { u: 0.88, v: 0.66, z: 6, rotulo: 'Descer pela margem', ir: 'margem' }] } };
   const fvDisp = {}; Object.entries(FOTOS_VIVAS).forEach(([k, c]) => fetch(c.foto, { method: 'HEAD' }).then((r) => { fvDisp[k] = r.ok && /image/.test(r.headers.get('content-type') || ''); }).catch(() => {}));   // só oferece a foto viva se o arquivo existir
   // abre um lugar em foto viva; as saídas (setas na foto) levam de um lugar a outro com a câmera avançando e um véu claro
-  const SOM_AGUA = { flores: 0.25, mirante: 0.05, riacho: 0.95, cachoeira: 1, gruta: 1, margem: 0.4, clareira: 0.7, rio: 0.55, entrada: 0.35, trilha2: 0.3, campo: 0.3 };
+  const SOM_AGUA = { divisao: 0.9, leste: 0.15, flores: 0.25, mirante: 0.05, riacho: 0.95, cachoeira: 1, gruta: 1, margem: 0.4, clareira: 0.7, rio: 0.55, entrada: 0.35, trilha2: 0.3, campo: 0.3 };
   function somDoLugar() { if (!audio || !somLigado || !fotoViva) return; const k = SOM_AGUA[fotoViva.aqui] ?? 0.04, t = audio.ctx.currentTime; audio.gA.gain.setTargetAtTime(0.9 * k, t, 0.8); audio.gA2.gain.setTargetAtTime(0.12 * k, t, 0.8); }
   function andarSozinho() { if (!fotoViva || !fotoViva.auto || !fotoViva.saidas) return; const vai = fotoViva.saidas.find((sd) => sd.ir !== 'jardim' && sd.ir !== fotoViva.anterior) || fotoViva.saidas.find((sd) => sd.ir !== 'jardim');
     if (!vai) { fotoViva.auto = false; const b = fotoViva.caixa.querySelector('.fv-anda'); if (b) b.textContent = '▶ Caminhar'; return; }
@@ -716,7 +726,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     const velha = fotoViva.cena; fotoViva.cena = null;
     caixa.querySelector('.fv-tit').innerHTML = c.titulo + '<small style="display:block;font:500 12px/1.6 system-ui;letter-spacing:.18em;text-transform:uppercase;opacity:.85">' + c.sub + '</small>';
     const cfg = { ...c, chegando: !!chegando, saidas: (c.saidas || []).filter((sd) => sd.ir === 'jardim' || (FOTOS_VIVAS[sd.ir] && fvDisp[sd.ir])), /* só mostra a seta se a foto do destino existe (no site, a clareira pessoal não existe) */ aoSair: (ir) => { if (ir === 'jardim') caixa.querySelector('button').click(); else { fotoViva.anterior = k; fotoViva.aqui = null; abrirFotoVivaEden(ir, true); } } }; fotoViva.aqui = k; fotoViva.saidas = cfg.saidas;
-    try { const m = await import('/nexus/foto-viva.js?v=16'); fotoViva.cena = await m.abrirFotoViva(THREE, caixa, cfg); caixa.querySelectorAll('canvas').forEach((cv) => { cv.style.zIndex = '0'; }); if (velha) try { velha.fechar(); } catch (_) {}
+    try { const m = await import('/nexus/foto-viva.js?v=17'); fotoViva.cena = await m.abrirFotoViva(THREE, caixa, cfg); caixa.querySelectorAll('canvas').forEach((cv) => { cv.style.zIndex = '0'; }); if (velha) try { velha.fechar(); } catch (_) {}
       (c.saidas || []).forEach((sd) => { const d = FOTOS_VIVAS[sd.ir]; if (d && fvDisp[sd.ir]) { new Image().src = d.foto; new Image().src = d.prof; } });   // já baixa os próximos lugares
       clearTimeout(fotoViva.tAuto); if (fotoViva.auto) fotoViva.tAuto = setTimeout(() => andarSozinho(), 9000); somDoLugar();
     } catch (e) { console.warn('foto viva', e); if (velha) try { velha.fechar(); } catch (_) {} caixa.remove(); fotoViva = null; } }
