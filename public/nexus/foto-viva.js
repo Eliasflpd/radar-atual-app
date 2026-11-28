@@ -20,15 +20,16 @@ export async function abrirFotoViva(THREE, host, cfg) {
   const agua = (cfg.agua || []).flat(), queda = cfg.queda || [0, 0, 0, 0];
   const poli = new Float32Array(32); agua.forEach((n, i) => { if (i < 32) poli[i] = n; });
   const unif = { t: { value: 0 }, foto: { value: tFoto }, prof: { value: tProf }, tg: { value: tg }, asp: { value: aspecto }, perto: { value: cfg.perto || 1.6 }, longe: { value: cfg.longe || 70 },
-    poli: { value: poli }, np: { value: Math.min(16, agua.length / 2) }, queda: { value: new THREE.Vector4(...queda) }, vento: { value: 1 } };
-  const comum = `uniform float t, tg, asp, perto, longe, np, vento; uniform sampler2D foto, prof; uniform float poli[32]; uniform vec4 queda;
+    poli: { value: poli }, np: { value: Math.min(16, agua.length / 2) }, queda: { value: new THREE.Vector4(...queda) }, vento: { value: 1 },
+    sol: { value: new THREE.Vector2(...(cfg.sol || [-1, -1])) }, fluxo: { value: new THREE.Vector2(...(cfg.fluxo || [0, 0.25])) } };   // 360: sol (u,v na foto) para os brilhos na água; fluxo da correnteza no plano da água
+  const comum = `uniform float t, tg, asp, perto, longe, np, vento; uniform sampler2D foto, prof; uniform float poli[32]; uniform vec4 queda; uniform vec2 sol, fluxo;
     float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
     float fbm(vec2 p){ float s = 0., a = .5; for (int k = 0; k < 4; k++) { s += a * n(p); p *= 2.03; a *= .5; } return s; }
     float dentro(vec2 q){ bool c = false; int N = int(np); for (int i = 0; i < 16; i++) { if (i >= N) break; int j = i == 0 ? N - 1 : i - 1; vec2 a = vec2(poli[i * 2], poli[i * 2 + 1]), b = vec2(poli[j * 2], poli[j * 2 + 1]);
       if (((a.y > q.y) != (b.y > q.y)) && (q.x < (b.x - a.x) * (q.y - a.y) / (b.y - a.y) + a.x)) c = !c; } return c ? 1. : 0.; }
     float dist(float d){ return 1. / (d * (1. / perto - 1. / longe) + 1. / longe); }`;
-  const mat = new THREE.ShaderMaterial({ uniforms: unif, side: THREE.DoubleSide, defines: ESF ? { ESFERA: 1 } : {},
+  const mat = new THREE.ShaderMaterial({ uniforms: unif, side: THREE.DoubleSide, defines: { ...(ESF ? { ESFERA: 1 } : {}), ...(cfg.aguaCor ? { AGUACOR: 1 } : {}) },
     vertexShader: comum + `
       varying vec2 vUv; varying float vD;
       void main(){ vUv = uv; vec2 im = vec2(uv.x, 1. - uv.y); float d = texture2D(prof, uv).r;
@@ -51,15 +52,63 @@ export async function abrirFotoViva(THREE, host, cfg) {
         // o RIACHO: a imagem é amostrada com um deslocamento que corre em direção a quem olha, com brilho móvel
         float a = (dentro(im) * 2. + dentro(im + vec2(.012, 0.)) + dentro(im - vec2(.012, 0.)) + dentro(im + vec2(0., .012)) + dentro(im - vec2(0., .012))) / 6.;   // borda suave
         vec3 c = texture2D(foto, uv).rgb;
-        if (a > .01) { float perspectiva = mix(4., 22., smoothstep(.95, .55, im.y));
-          vec2 q = vec2(im.x * 30., im.y * perspectiva - t * 1.6);
-          vec2 off = vec2(fbm(q) - .5, fbm(q + 7.3) - .5) * vec2(.006, .010) * smoothstep(.55, .9, im.y + .2) * a;
-          vec3 cw = texture2D(foto, uv + off).rgb; float br = pow(fbm(q * vec2(.6, 1.4) + 3.), 4.) * 1.4; cw += vec3(.95, .97, 1.) * br * .22; c = mix(c, cw, a); }
-        // a CACHOEIRA: a água desce (faixas que escorrem) e espuma embaixo
+        #ifdef AGUACOR
+        { float lu = dot(c, vec3(.3, .59, .11)); a *= max(smoothstep(.42, .62, lu), smoothstep(.0, .07, c.b - c.g)); }   // só onde a cor é de água (branca ou azulada), não nas pedras de musgo
+        #endif
+        // ÁGUA REAL (360 e clareira): ondas no plano da água, a foto refrata e o reflexo se alonga na vertical.
+        // A ÚNICA deriva é F = fluxo*t: o padrão anda no sentido de -fluxo (nada de desvio fixo, nada de onda que viaja sozinha)
+        #ifdef ESFERA
+        bool na = a > .01 && im.y > .502;
+        float beta = (im.y - .5) * 3.1415927, D = 1.6 / tan(beta), lon = (im.x - .5) * 6.2831853;
+        vec2 P = vec2(sin(lon), cos(lon)) * D;
+        #else
+        float zz = dist(texture2D(prof, uv).r), D = zz;
+        bool na = a > .01;
+        vec2 P = vec2((uv.x * 2. - 1.) * tg * asp * zz, zz);   // plano da água pela própria profundidade: x lateral, zz para frente
+        #endif
+        if (na) {
+          vec2 F = fluxo * t;
+          float lod = exp(-D / 26.), e = .03 + D * .004;
+          #define ONDA(Q) (fbm((Q) * 1.7 + F) * .55 + fbm((Q) * 4.3 + F * 1.6) * .3 * lod + sin(dot((Q) + F, vec2(.83, .55)) * 5.) * .08 * lod)
+          float h0 = ONDA(P); vec2 g = vec2(ONDA(P + vec2(e, 0.)) - h0, ONDA(P + vec2(0., e)) - h0) / e;
+          #ifdef ESFERA
+          float pt = 1. / (1. + D * .35), am = a * smoothstep(.502, .53, im.y);
+          vec2 off = vec2(g.x * .003, g.y * .0105) * pt * am;   // o reflexo estica e treme mais na vertical, como na água de verdade
+          #else
+          float pt = 1. / (1. + zz * .03), am = a;
+          vec2 off = vec2(g.x * .004, g.y * .004) * pt * am;
+          #endif
+          vec3 cw = texture2D(foto, uv + off).rgb + texture2D(foto, uv + off * 1.9).rgb; cw *= .5;
+          cw *= 1. + clamp(g.y * .10 * pt, -.12, .14);   // as faces das ondas viradas para o céu clareiam, as outras escurecem
+          if (sol.x >= 0.) { float dl = abs(fract(im.x - sol.x + .5) - .5) * 6.2831853;
+            float coluna = exp(-dl * dl / (.004 + .05 * (im.y - .5)));   // a faixa de brilho embaixo do sol, mais larga perto
+            float brilho = pow(clamp(n(P * 9. + F * 2.) * n(P * 13. + F * 2.) * 1.9, 0., 1.), 7.);
+            cw += vec3(1., .93, .78) * brilho * coluna * 2.4 * am; cw += vec3(1., .9, .7) * coluna * .05 * am; }
+          c = mix(c, cw, am); }
+        // a CACHOEIRA: a própria foto escorre (amostra deslocada para cima, com o tempo), acelerando de cima para baixo.
+        // Só a parte branca (água) se mexe; a borda de cima fica parada; embaixo a espuma borbulha; a névoa sobe da base.
         if (im.x > queda.x && im.x < queda.z && im.y > queda.y && im.y < queda.w) { vec2 qq = vec2((im.x - queda.x) / (queda.z - queda.x), (im.y - queda.y) / (queda.w - queda.y));
           float lum = dot(c, vec3(.3, .59, .11)); float agua = smoothstep(.45, .7, lum);
-          float fio = n(vec2(qq.x * 40., qq.y * 6. - t * 4.5)) * .6 + n(vec2(qq.x * 90., qq.y * 14. - t * 7.)) * .4;
-          c = mix(c, c * .75 + vec3(.95) * fio * .45, agua * .85); c += vec3(1.) * smoothstep(.8, 1., qq.y) * fio * .15 * agua; }
+          float mov = smoothstep(0., .25, qq.y);                          // borda de cima parada
+          float vel = .5 + 2.4 * qq.y;                                    // mais rápido embaixo
+          float fase = fract(t * .35 * vel), fase2 = fract(fase + .5);   // dois ciclos defasados, misturados sem salto
+          float wA = 1. - abs(2. * fase - 1.), wB = 1. - wA;
+          float A = .05 * (queda.w - queda.y);                            // quanto a amostra sobe no ciclo
+          float ond = (n(vec2(qq.x * 9., qq.y * 3. - t * vel)) - .5) * .02 * mov;   // irregularidade na largura dos fios
+          vec3 sA = texture2D(foto, uv + vec2(ond, fase * A * mov)).rgb, sB = texture2D(foto, uv + vec2(ond, fase2 * A * mov)).rgb;
+          vec3 wat = mix(sB, sA, wA);
+          float fi = n(vec2(qq.x * 140. + 2. * n(vec2(qq.x * 9., qq.y * 3. - t * vel)), qq.y * 5. - t * vel * 3.));   // fios finos irregulares
+          wat *= .9 + .2 * fi;
+          c = mix(c, wat, agua * .9);
+          float fm = smoothstep(.72, 1., qq.y);                           // espuma embaixo, borbulhando
+          float bol = n(vec2(qq.x * 60., qq.y * 20. - t * 4.)) * n(vec2(qq.x * 25., qq.y * 10. - t * 2.5));
+          c += vec3(1., .98, .95) * smoothstep(.4, .85, bol) * fm * agua * .5; }
+        // spray: névoa branca subindo da base, para além do fim da queda
+        if (im.x > queda.x && im.x < queda.z && im.y >= queda.w && im.y < queda.w + .06) {
+          float bx = (im.x - queda.x) / (queda.z - queda.x), by = (im.y - queda.w) / .06;
+          float sp = fbm(vec2(bx * 5. + t * .15, by * 3. - t * .9));   // névoa em nuvem (sem fios verticais), bordas todas suaves
+          float borda = smoothstep(0., .3, bx) * smoothstep(1., .7, bx) * smoothstep(0., .25, by) * smoothstep(1., .45, by);
+          c = mix(c, vec3(.94, .96, .98), smoothstep(.35, .8, sp) * borda * .32); }
         gl_FragColor = vec4(c, 1.);
         #include <colorspace_fragment>
       }` });
@@ -99,7 +148,8 @@ export async function abrirFotoViva(THREE, host, cfg) {
     fragmentShader: 'varying float vA; void main(){ float r = length(gl_PointCoord - .5); if (r > .5) discard; gl_FragColor = vec4(vec3(1., .95, .8) * vA * smoothstep(.5, 0., r), 1.); }' });
   const pts = new THREE.Points(gP, mP); pts.frustumCulled = false; cena.add(pts); lixo.push(gP, mP);
   // CÂMERA: olhar em volta (arrastar) e dar uns passos (WASD/setas, ou o dedo); um balanço leve de respiração
-  let yaw = 0, pitch = 0, alvoYaw = 0, alvoPitch = 0, px = 0, pz = 0, vx = 0, vz = 0; const teclas = {}; const LIM = cfg.passo || 1.2;
+  const Y0 = ESF && cfg.olhar != null ? -(cfg.olhar - 0.5) * Math.PI * 2 : 0;   // no 360, cfg.olhar (u da foto) diz para onde a câmera olha ao chegar
+  let yaw = Y0, pitch = 0, alvoYaw = Y0, alvoPitch = 0, px = 0, pz = 0, vx = 0, vz = 0; const teclas = {}; const LIM = cfg.passo || 1.2;
   const el = renderer.domElement; let arr = null;
   el.addEventListener('pointerdown', (e) => { arr = [e.clientX, e.clientY, alvoYaw, alvoPitch]; el.setPointerCapture(e.pointerId); el.style.cursor = 'grabbing'; });
   el.addEventListener('pointermove', (e) => { if (!arr) return; alvoYaw = ESF ? arr[2] - (e.clientX - arr[0]) * 0.003 : THREE.MathUtils.clamp(arr[2] - (e.clientX - arr[0]) * 0.0025, -0.16, 0.16); alvoPitch = THREE.MathUtils.clamp(arr[3] - (e.clientY - arr[1]) * 0.0022, ESF ? -0.9 : -0.08, ESF ? 0.9 : 0.08); });
