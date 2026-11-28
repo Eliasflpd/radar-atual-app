@@ -633,7 +633,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       agua: [[0.06, 0.70], [0.14, 0.60], [0.24, 0.57], [0.31, 0.60], [0.33, 0.66], [0.29, 0.74], [0.24, 0.84], [0.14, 0.88], [0.06, 0.84]], queda: [0.240, 0.572, 0.295, 0.638],
       feixes: [[0.73, 0.24, -0.30, 1.0, 1.0, 16], [0.69, 0.27, 0.25, 0.8, 0.9, 18], [0.77, 0.26, -0.55, 0.7, 0.9, 15]],
       nevoa: [[0.66, 0.46, 0.25, 0.25], [0.27, 0.58, 0.10, 0.30], [0.15, 0.46, 0.25, 0.18]],
-      saidas: [{ u: 0.645, v: 0.58, z: 9, rotulo: 'Entrar pela trilha', ir: 'trilha1' }] },
+      saidas: [{ u: 0.645, v: 0.58, z: 9, rotulo: 'Entrar pela trilha', ir: 'trilha1' }, { u: 0.92, v: 0.56, z: 12, rotulo: 'Subir ao mirante', ir: 'mirante' }] },
     // a TRILHA: pontos a cada uns 15 metros, gerados a partir da foto da entrada (mesmas árvores, mesma luz); a câmera avança de um para o outro
     trilha1: { titulo: 'A trilha na mata', sub: 'Éden · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-trilha1.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-trilha1-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.66,
       feixes: [[0.68, 0.22, -0.30, 1.0, 1.0, 16], [0.64, 0.25, 0.25, 0.8, 0.9, 18], [0.72, 0.24, -0.5, 0.7, 0.9, 15]],
@@ -643,7 +643,53 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       agua: [[0.80, 0.50], [0.90, 0.47], [0.97, 0.52], [0.97, 0.66], [0.88, 0.68], [0.82, 0.60]],
       feixes: [[0.66, 0.18, -0.30, 1.0, 1.0, 16], [0.62, 0.21, 0.25, 0.8, 0.9, 18], [0.70, 0.2, -0.5, 0.7, 0.9, 15]],
       nevoa: [[0.6, 0.45, 0.3, 0.25], [0.88, 0.52, 0.12, 0.3]],
-      saidas: [{ u: 0.875, v: 0.56, z: 7, rotulo: 'Seguir o riacho até o rio', ir: 'rio' }, { u: 0.56, v: 0.56, z: 10, rotulo: 'Para o meio do jardim', ir: 'arvore' }, { u: 0.10, v: 0.58, z: 8, rotulo: 'Voltar pela trilha', ir: 'trilha1' }] },
+      saidas: [{ u: 0.875, v: 0.56, z: 7, rotulo: 'Descer ao riacho', ir: 'riacho' }, { u: 0.56, v: 0.56, z: 10, rotulo: 'Para o meio do jardim', ir: 'meio' }, { u: 0.10, v: 0.58, z: 8, rotulo: 'Voltar pela trilha', ir: 'trilha1' }] },
+    riacho: { titulo: 'O riacho na mata', sub: 'Éden · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-riacho.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-riacho-prof.png', esfera: true, perto: 1.6, longe: 80, olhar: 0.6, aguaCor: true,
+      agua: [[0.30, 0.56], [0.52, 0.50], [0.62, 0.47], [0.70, 0.50], [0.80, 0.56], [0.86, 0.66], [0.80, 0.80], [0.55, 0.82], [0.32, 0.76], [0.27, 0.66]], queda: [0.55, 0.47, 0.75, 0.62],
+      feixes: [[0.66, 0.20, -0.25, 1.0, 1.0, 14], [0.62, 0.22, 0.25, 0.8, 0.9, 16], [0.70, 0.21, -0.5, 0.7, 0.9, 13]],
+      nevoa: [[0.62, 0.50, 0.25, 0.3], [0.5, 0.46, 0.3, 0.18]],
+      saidas: [{ u: 0.38, v: 0.55, z: 10, rotulo: 'Seguir até a clareira', ir: 'meio' }, { u: 0.66, v: 0.49, z: 14, rotulo: 'Subir o riacho até a cachoeira', ir: 'cachoeira' }, { u: 0.78, v: 0.64, z: 8, rotulo: 'Descer o riacho até o rio', ir: 'rio' }, { u: 0.12, v: 0.6, z: 8, rotulo: 'Voltar pela trilha', ir: 'trilha2' }] },
+    meio: { titulo: 'A clareira no meio do jardim', sub: 'Éden · Gênesis 2:9 · foto viva 360 · aparência ilustrativa', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-meio.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-meio-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.53,
+      feixes: [[0.70, 0.30, -0.35, 1.2, 1.0, 16], [0.66, 0.32, 0.2, 0.8, 0.9, 18], [0.74, 0.31, -0.6, 0.7, 0.9, 15]],
+      nevoa: [[0.53, 0.47, 0.35, 0.22], [0.25, 0.47, 0.25, 0.18]],
+      saidas: [{ u: 0.53, v: 0.6, z: 12, rotulo: 'Chegar perto da árvore', ir: 'arvore' }, { u: 0.3, v: 0.58, z: 10, rotulo: 'Ir ao pomar', ir: 'pomar' }, { u: 0.9, v: 0.6, z: 10, rotulo: 'Para o campo dos animais', ir: 'campo' }, { u: 0.1, v: 0.62, z: 8, rotulo: 'Voltar ao riacho', ir: 'riacho' }] },
+    pomar: { titulo: 'O pomar do jardim', sub: 'Éden · Gênesis 2:9 · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-pomar.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-pomar-prof.png', esfera: true, perto: 1.8, longe: 85, olhar: 0.58,
+      feixes: [[0.64, 0.20, -0.30, 1.0, 1.0, 14], [0.60, 0.22, 0.25, 0.8, 0.9, 16], [0.68, 0.21, -0.55, 0.7, 0.9, 13]],
+      nevoa: [[0.58, 0.47, 0.3, 0.2], [0.12, 0.47, 0.2, 0.18]],
+      saidas: [{ u: 0.58, v: 0.56, z: 10, rotulo: 'Seguir até o campo dos animais', ir: 'campo' }, { u: 0.09, v: 0.6, z: 8, rotulo: 'Voltar à clareira', ir: 'meio' }] },
+    cachoeira: { titulo: 'A cachoeira do Éden', sub: 'Éden · Gênesis 2:10 · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-cachoeira.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-cachoeira-prof.png', esfera: true, perto: 1.6, longe: 80, olhar: 0.58, aguaCor: true,
+      agua: [[0.36, 0.56], [0.80, 0.56], [0.86, 0.66], [0.82, 0.84], [0.40, 0.86], [0.28, 0.74]], queda: [0.51, 0.40, 0.64, 0.555],
+      feixes: [[0.69, 0.17, -0.35, 1.0, 1.0, 14], [0.65, 0.19, 0.2, 0.8, 0.9, 16], [0.73, 0.18, -0.6, 0.7, 0.9, 13]],
+      nevoa: [[0.58, 0.53, 0.22, 0.5], [0.52, 0.5, 0.18, 0.35], [0.65, 0.51, 0.18, 0.35]],
+      saidas: [{ u: 0.58, v: 0.47, z: 14, rotulo: 'Entrar atrás da cachoeira', ir: 'gruta' }, { u: 0.07, v: 0.6, z: 8, rotulo: 'Descer pelo riacho', ir: 'riacho' }] },
+    gruta: { titulo: 'Atrás da cachoeira', sub: 'Éden · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-gruta.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-gruta-prof.png', esfera: true, perto: 1.4, longe: 60, olhar: 0.5, aguaCor: true,
+      agua: [[0.18, 0.55], [0.80, 0.55], [0.86, 0.72], [0.14, 0.72]], queda: [0.28, 0.12, 0.74, 0.58],
+      nevoa: [[0.5, 0.52, 0.3, 0.45], [0.35, 0.45, 0.2, 0.3], [0.65, 0.45, 0.2, 0.3]],
+      saidas: [{ u: 0.1, v: 0.55, z: 8, rotulo: 'Sair da gruta', ir: 'cachoeira' }] },
+    margem: { titulo: 'A margem do grande rio', sub: 'Éden · Gênesis 2:10 · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-margem.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-margem-prof.png', esfera: true, perto: 2.0, longe: 120, olhar: 0.5, aguaCor: true,
+      agua: [[0.22, 0.52], [0.85, 0.52], [0.88, 0.75], [0.55, 0.82], [0.2, 0.78]],
+      feixes: [[0.63, 0.40, 0.2, 1.2, 0.8, 30]],
+      nevoa: [[0.6, 0.48, 0.35, 0.25], [0.35, 0.48, 0.3, 0.2]],
+      saidas: [{ u: 0.06, v: 0.6, z: 8, rotulo: 'Voltar ao rio', ir: 'rio' }] },
+    // O JARDIM VISTO DO ALTO: o mirante de onde se vê o Éden inteiro e o rio se dividindo em quatro (Gn 2:10)
+    mirante: { titulo: 'O jardim visto do alto', sub: 'Éden · Gênesis 2:8-14 · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-mirante.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-mirante-prof.png', esfera: true, perto: 2.0, longe: 400, olhar: 0.5,
+      feixes: [[0.66, 0.30, 0.3, 1.4, 0.9, 40]],
+      nevoa: [[0.45, 0.46, 0.4, 0.3], [0.62, 0.45, 0.3, 0.25], [0.3, 0.47, 0.3, 0.2]],
+      saidas: [{ u: 0.5, v: 0.44, z: 60, rotulo: 'Descer até a cachoeira', ir: 'cachoeira' }, { u: 0.62, v: 0.5, z: 40, rotulo: 'Descer até o grande rio', ir: 'margem' }, { u: 0.06, v: 0.6, z: 8, rotulo: 'Descer à entrada do jardim', ir: 'entrada' }] },
+    flores: { titulo: 'O campo de flores', sub: 'Éden · Gênesis 2:19-20 · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-flores.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-flores-prof.png', esfera: true, perto: 2.0, longe: 100, olhar: 0.55, aguaCor: true,
+      agua: [[0.82, 0.55], [0.97, 0.55], [0.98, 0.75], [0.85, 0.72]], queda: [0.84, 0.43, 0.86, 0.50],
+      feixes: [[0.28, 0.40, 0.3, 1.2, 0.9, 20]],
+      nevoa: [[0.85, 0.47, 0.2, 0.25], [0.15, 0.47, 0.2, 0.2]],
+      saidas: [{ u: 0.1, v: 0.6, z: 8, rotulo: 'Voltar ao campo dos animais', ir: 'campo' }] },
+    arvore: { titulo: 'A árvore no meio do jardim', sub: 'Éden · Gênesis 2:9 · foto viva 360 · aparência ilustrativa', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-arvore.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-arvore-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.62,
+      feixes: [[0.17, 0.30, 0.35, 1.2, 1.0, 14], [0.21, 0.32, 0.1, 0.8, 0.9, 16], [0.13, 0.31, 0.6, 0.7, 0.9, 13]],
+      nevoa: [[0.5, 0.46, 0.35, 0.22], [0.75, 0.47, 0.25, 0.2]],
+      saidas: [{ u: 0.95, v: 0.6, z: 10, rotulo: 'Para o campo dos animais', ir: 'campo' }, { u: 0.73, v: 0.6, z: 14, rotulo: 'Para o rio', ir: 'rio' }, { u: 0.45, v: 0.62, z: 9, rotulo: 'Voltar à clareira', ir: 'meio' }] },
+    campo: { titulo: 'O campo dos animais', sub: 'Éden · Gênesis 2:19-20 · foto viva 360', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-campo.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-campo-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.45, aguaCor: true,
+      agua: [[0.76, 0.56], [0.99, 0.55], [0.99, 0.74], [0.86, 0.76], [0.78, 0.66]], queda: [0.82, 0.45, 0.845, 0.56],
+      feixes: [[0.19, 0.30, 0.35, 1.2, 1.0, 14], [0.23, 0.32, 0.1, 0.8, 0.9, 16]],
+      nevoa: [[0.85, 0.48, 0.2, 0.3], [0.55, 0.47, 0.35, 0.15]],
+      saidas: [{ u: 0.62, v: 0.62, z: 10, rotulo: 'Voltar à árvore', ir: 'arvore' }, { u: 0.3, v: 0.6, z: 10, rotulo: 'Para o campo de flores', ir: 'flores' }] },
     rio: { titulo: 'O rio que se divide', sub: 'Éden · foto viva 360 · Gn 2:10', foto: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-rio.jpg', prof: (window.NEXUS_MIDIA || '/nexus') + '/eden/fv-rio-prof.png', esfera: true, perto: 2.0, longe: 90, olhar: 0.5, sol: [0.31, 0.29], fluxo: [0, -0.22],
       agua: [[0.12, 0.505], [0.40, 0.495], [0.70, 0.495], [0.94, 0.50], [0.93, 0.58], [0.84, 0.64], [0.78, 0.70], [0.66, 0.76], [0.50, 0.80], [0.36, 0.76], [0.28, 0.68], [0.22, 0.61], [0.15, 0.56]],
       feixes: [[0.31, 0.30, 0.45, 1.0, 1.0, 20], [0.33, 0.31, 0.15, 0.7, 0.9, 22]],
@@ -651,18 +697,28 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
       saidas: [{ u: 0.06, v: 0.62, z: 6, rotulo: 'Para o meio do jardim', ir: 'arvore' }, { u: 0.88, v: 0.66, z: 6, rotulo: 'Descer pela margem', ir: 'margem' }] } };
   const fvDisp = {}; Object.entries(FOTOS_VIVAS).forEach(([k, c]) => fetch(c.foto, { method: 'HEAD' }).then((r) => { fvDisp[k] = r.ok && /image/.test(r.headers.get('content-type') || ''); }).catch(() => {}));   // só oferece a foto viva se o arquivo existir
   // abre um lugar em foto viva; as saídas (setas na foto) levam de um lugar a outro com a câmera avançando e um véu claro
+  const SOM_AGUA = { flores: 0.25, mirante: 0.05, riacho: 0.95, cachoeira: 1, gruta: 1, margem: 0.4, clareira: 0.7, rio: 0.55, entrada: 0.35, trilha2: 0.3, campo: 0.3 };
+  function somDoLugar() { if (!audio || !somLigado || !fotoViva) return; const k = SOM_AGUA[fotoViva.aqui] ?? 0.04, t = audio.ctx.currentTime; audio.gA.gain.setTargetAtTime(0.9 * k, t, 0.8); audio.gA2.gain.setTargetAtTime(0.12 * k, t, 0.8); }
+  function andarSozinho() { if (!fotoViva || !fotoViva.auto || !fotoViva.saidas) return; const vai = fotoViva.saidas.find((sd) => sd.ir !== 'jardim' && sd.ir !== fotoViva.anterior) || fotoViva.saidas.find((sd) => sd.ir !== 'jardim');
+    if (!vai) { fotoViva.auto = false; const b = fotoViva.caixa.querySelector('.fv-anda'); if (b) b.textContent = '▶ Caminhar'; return; }
+    const bt = [...fotoViva.caixa.querySelectorAll('.fv-saida')].find((x) => x.textContent.includes(vai.rotulo)); if (bt) bt.click(); }
   async function abrirFotoVivaEden(k, chegando) { const c = FOTOS_VIVAS[k]; if (!c) return; if (!fvDisp[k]) { try { const r = await fetch(c.foto, { method: 'HEAD' }); if (!r.ok) throw 0; } catch (_) { return; } }
     let caixa = fotoViva && fotoViva.caixa;
     if (!caixa) { caixa = document.createElement('div'); caixa.style.cssText = 'position:absolute;inset:0;z-index:30;background:#0d120e;opacity:0;transition:opacity .8s'; raiz.appendChild(caixa); fotoViva = { caixa };
       const volta = document.createElement('button'); volta.textContent = E ? '↟ Ver o jardim em 3D' : '↩ Voltar ao jardim'; volta.style.cssText = 'position:absolute;right:22px;top:20px;z-index:5;padding:8px 16px;border-radius:20px;border:1px solid #fff6;background:#0006;color:#fff;font:600 14px system-ui;cursor:pointer;backdrop-filter:blur(6px)';
       const tit = document.createElement('div'); tit.className = 'fv-tit'; tit.style.cssText = 'position:absolute;left:28px;top:22px;z-index:5;color:#fff;font:600 30px/1.1 Cormorant Garamond,Georgia,serif;text-shadow:0 2px 12px #0008;pointer-events:none';
-      caixa.append(tit, volta); requestAnimationFrame(() => { caixa.style.opacity = '1'; });
+      const anda = document.createElement('button'); anda.className = 'fv-anda'; anda.textContent = '▶ Caminhar'; anda.style.cssText = volta.style.cssText; anda.style.right = '236px';
+      anda.onclick = () => { fotoViva.auto = !fotoViva.auto; anda.textContent = fotoViva.auto ? '❚❚ Parar' : '▶ Caminhar'; clearTimeout(fotoViva.tAuto); if (fotoViva.auto) fotoViva.tAuto = setTimeout(() => andarSozinho(), 2500); };
+      const som = document.createElement('button'); som.className = 'fv-som'; som.textContent = somLigado ? '🔊 Som' : '🔈 Som'; som.style.cssText = volta.style.cssText; som.style.right = '378px';
+      som.onclick = () => { if (!somLigado) ligarSom(); else { somLigado = false; audio && audio.ctx.suspend(); btSom.textContent = '🔈 Som'; } som.textContent = somLigado ? '🔊 Som' : '🔈 Som'; somDoLugar(); };
+      caixa.append(tit, volta, anda, som); requestAnimationFrame(() => { caixa.style.opacity = '1'; });
       volta.onclick = () => { caixa.style.opacity = '0'; setTimeout(() => { try { fotoViva.cena.fechar(); } catch (_) {} caixa.remove(); fotoViva = null; }, 800); }; }
     const velha = fotoViva.cena; fotoViva.cena = null;
     caixa.querySelector('.fv-tit').innerHTML = c.titulo + '<small style="display:block;font:500 12px/1.6 system-ui;letter-spacing:.18em;text-transform:uppercase;opacity:.85">' + c.sub + '</small>';
-    const cfg = { ...c, chegando: !!chegando, saidas: (c.saidas || []).filter((sd) => sd.ir === 'jardim' || (FOTOS_VIVAS[sd.ir] && fvDisp[sd.ir])), /* só mostra a seta se a foto do destino existe (no site, a clareira pessoal não existe) */ aoSair: (ir) => { if (ir === 'jardim') caixa.querySelector('button').click(); else abrirFotoVivaEden(ir, true); } };
+    const cfg = { ...c, chegando: !!chegando, saidas: (c.saidas || []).filter((sd) => sd.ir === 'jardim' || (FOTOS_VIVAS[sd.ir] && fvDisp[sd.ir])), /* só mostra a seta se a foto do destino existe (no site, a clareira pessoal não existe) */ aoSair: (ir) => { if (ir === 'jardim') caixa.querySelector('button').click(); else { fotoViva.anterior = k; fotoViva.aqui = null; abrirFotoVivaEden(ir, true); } } }; fotoViva.aqui = k; fotoViva.saidas = cfg.saidas;
     try { const m = await import('/nexus/foto-viva.js?v=16'); fotoViva.cena = await m.abrirFotoViva(THREE, caixa, cfg); caixa.querySelectorAll('canvas').forEach((cv) => { cv.style.zIndex = '0'; }); if (velha) try { velha.fechar(); } catch (_) {}
       (c.saidas || []).forEach((sd) => { const d = FOTOS_VIVAS[sd.ir]; if (d && fvDisp[sd.ir]) { new Image().src = d.foto; new Image().src = d.prof; } });   // já baixa os próximos lugares
+      clearTimeout(fotoViva.tAuto); if (fotoViva.auto) fotoViva.tAuto = setTimeout(() => andarSozinho(), 9000); somDoLugar();
     } catch (e) { console.warn('foto viva', e); if (velha) try { velha.fechar(); } catch (_) {} caixa.remove(); fotoViva = null; } }
   window.__clrDbg = 'E=' + E + ' rios=' + rios.length; if (E && rios[5]) setTimeout(() => (window.__clrDbg += ' importando', import('/nexus/eden-clareira.js?v=5')).then((m) => m.criarClareira(THREE, cena, { base, altura, rio: rios[5], largura: LARG(5), carregar, lixo, toque, rnd, unif, distRio }))
     .then(async (c) => { window.__clrDbg += ' criada ' + !!c; if (!ativo || !c) return; try { if (renderer.compileAsync) await renderer.compileAsync(cena, camera); } catch (_) {} CLR = c; window.__clrDbg += ' pronta'; }).catch((e) => { window.__clrDbg += ' ERRO ' + e.message; console.warn('clareira', e); }), 4000);
@@ -836,6 +892,7 @@ export async function abrirJardim(THREE, host, { aoFechar, chegada = true, mundo
     if (CQO && /caverna|gruta|atras da (agua|cachoeira|queda)/.test(q)) { const fundo = /fundo|salao|lago/.test(q); const [x, z] = fundo ? CQO.salao : CQO.boca; pularChegada(); subida = 0; voarLivre = false; eu.set(x, 0, z); CQO.entrar(); yaw = fundo ? Math.atan2(-(CQO.boca[0] - x), -(CQO.boca[1] - z)) : Math.atan2(-(CQO.salao[0] - x), -(CQO.salao[1] - z)); pitch = 0.05; return fundo ? 'No fundo da caverna, no salão com a abertura no teto e o lago.' : 'Dentro da caverna, atrás da cortina de água. Siga em frente até o salão.'; }
     // VER UM ANIMAL de perto: 'me mostre o elefante', 'quero ver o leão'
     if (E && fvDisp.rio && /quatro (bracos|rios|cabeceiras)|rio (que )?se divide|divide em quatro/.test(q)) { abrirFotoVivaEden('rio'); return 'O rio que sai do Éden e se divide em quatro braços (Gênesis 2:10). Arraste para olhar em volta.'; }
+    if (E && fvDisp.mirante && /mirante|olhos de deus|visto do alto|vista do alto|de cima/.test(q)) { abrirFotoVivaEden('mirante'); return 'O jardim visto do alto: o Éden inteiro e o rio que sai dele e se divide em quatro braços (Gênesis 2:10). Toque nas setas para descer.'; }
     if (E && fvDisp.entrada && /entrada do (jardim|eden)|porta do jardim|trilha (da|de) entrada/.test(q)) { abrirFotoVivaEden('entrada'); return 'A entrada do jardim: a trilha de terra entra na mata entre figueiras e romãzeiras. Atrás, a planície. Arraste para olhar em volta.'; }
     if (E && fvDisp.clareira && /riacho|clareira|corrego|regato/.test(q)) { abrirFotoVivaEden('clareira'); return 'A clareira do riacho: a água desce da pequena cachoeira entre pedras com musgo. Arraste para olhar; W e S dão alguns passos.'; }
     if (manadas && /manada|zebra/.test(q)) { const m = manadas.lista[0], a = Math.atan2(m.z, m.x), x = m.x - Math.cos(a) * 48, z = m.z - Math.sin(a) * 48; pularChegada(); voarLivre = false; eu.set(x, 0, z); subida = 3; yaw = Math.atan2(-(m.x - x), -(m.z - z)); pitch = -0.05; return 'Lá adiante, uma manada de zebras pastando no campo aberto.'; }
